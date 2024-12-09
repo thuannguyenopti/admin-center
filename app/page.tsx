@@ -7,13 +7,12 @@ import {
   TabsList,
   Sidenav,
   SidenavBody,
-  SidenavHeader,
   SidenavItem,
   TabsTrigger,
   Button
 } from "@optiaxiom/react";
 
-import { IconPencil, IconTrash, IconBinaryTree, IconFlag2 } from "@tabler/icons-react";
+import { IconBinaryTree, IconFlag2 } from "@tabler/icons-react";
 import { useState } from "react";
 import RootLayout from "./layout";
   
