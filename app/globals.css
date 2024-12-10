@@ -1,23 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
 @layer optiaxiom.base {
-  * {
-    box-sizing: border-box;
-  }
- 
-  a {
-    color: #228be6;
-  }
- 
-  /* etc. */
-}
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
 }
 
 /* @media (prefers-color-scheme: dark) {
@@ -28,7 +12,19 @@
 } */
 
 body {
-  color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
 }
+
+.parent {
+  display: grid;
+  grid-template-columns: 0fr 1fr;
+  grid-template-rows: 0fr 1fr;
+  grid-column-gap: 0px;
+  grid-row-gap: 0px;
+}
+  
+.div1 { grid-area: 1 / 1 / 2 / 6; }
+.div2 { grid-area: 2 / 1 / 6 / 2; }
+.div3 { grid-area: 2 / 2 / 6 / 6; }
