@@ -2,18 +2,6 @@
 
 import { Box, Input, Field } from "@optiaxiom/react";
 
-const rows = [
-    {
-      url: "/cms/settings/applications/mosey-bank/settings", 
-      children: [
-        {label: "Mosey Bank"},
-        {label: "1234"},
-        {label: "www"},
-        {label: "..."}
-      ]
-    }
-]
-
 export default function Home() {
   return (
     <Box gap="16" display="flex" flexDirection="column">

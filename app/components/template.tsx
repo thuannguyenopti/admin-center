@@ -12,10 +12,9 @@ import { IconChartBar, IconDashboard, IconPencil, IconSettings } from "@tabler/i
 import { useRouter, usePathname } from 'next/navigation'
 import VT from "./VT";
   
-export default function Template({children, description, vt}: Readonly<{
+export default function Template({children, description}: Readonly<{
   children: React.ReactNode;
-  description?: string, 
-  vt?: Array<{label: string, url?: string}>
+  description?: string
 }>) {
   const router = useRouter()
   const path = usePathname()
