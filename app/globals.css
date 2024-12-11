@@ -28,3 +28,36 @@ body {
 .div1 { grid-area: 1 / 1 / 2 / 6; }
 .div2 { grid-area: 2 / 1 / 6 / 2; }
 .div3 { grid-area: 2 / 2 / 6 / 6; }
+
+
+.vt {
+  overflow: hidden;
+}
+
+.vt {
+  animation: slide .2s cubic-bezier(0.175, 0.885, 0.32, 0.875);
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-4px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0px);
+    opacity: 1;
+  }
+}
+
+.appear {
+  animation: appear .3s;
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,4 +1,5 @@
 'use client'
+import Template from "./components/template";
 import "./globals.css";
 import { AxiomProvider } from "@optiaxiom/react";
 
@@ -11,7 +12,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AxiomProvider>
-          {children}
+          <Template>
+            {children}
+          </Template>
         </AxiomProvider>
       </body>
     </html>

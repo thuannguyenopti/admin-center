@@ -1,0 +1,41 @@
+'use client';
+
+import { Text, Box, SearchInput , Button, Link, Input, Field } from "@optiaxiom/react";
+import {Table, Th, Tr, Td} from "../../../../../components/Table"
+
+const rows = [
+    {
+      url: "/cms/settings/applications/mosey-bank/settings", 
+      children: [
+        {label: "Mosey Bank"},
+        {label: "1234"},
+        {label: "www"},
+        {label: "..."}
+      ]
+    }
+]
+
+export default function Home() {
+  return (
+    <Box gap="16" display="flex" flexDirection="column">
+      <Field
+        label="Application Name"
+        required
+      >
+        <Input defaultValue="Mosey Bank" size="lg" />
+      </Field>
+      <Field
+          label="APP ID"
+          required
+      >
+        <Input defaultValue="moseybank" size="lg" />
+      </Field>
+      <Field
+          label="Start Page"
+          required
+      >
+        <Input placeholder="Enter text..." size="lg" />
+      </Field>
+    </Box>
+  );
+}
