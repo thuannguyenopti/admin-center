@@ -1,7 +1,6 @@
 'use client';
 
-import { Text, Box, SearchInput , Button, Link, Input, Field } from "@optiaxiom/react";
-import {Table, Th, Tr, Td} from "../../../../../components/Table"
+import { Box, Input, Field } from "@optiaxiom/react";
 
 const rows = [
     {
