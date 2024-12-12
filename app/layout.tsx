@@ -49,12 +49,14 @@ export default function RootLayout({
         children: [
           {label: "Configure"},
           {label: "Applications", url: "/cms/settings/applications",
-            children: {title: "Mosey Bank", 
+            children: {
+              title: "Mosey Bank", 
               children: [
-              {label: "Settings", url: "/cms/settings/applications/mosey-bank/settings"},
-              {label: "Advanced"},
-              {label: "Hostnames", url: "/cms/settings/applications/mosey-bank/hostnames"},
-            ]}
+                {label: "Settings", url: "/cms/settings/applications/mosey-bank/settings"},
+                {label: "Advanced"},
+                {label: "Hostnames", url: "/cms/settings/applications/mosey-bank/hostnames"},
+              ]
+            }
           },  
           {label: "Access Rights", url: "/cms/settings/access-rights"},    
           {label: "API Clients", url: "/cms/settings/api-clients"},    
@@ -88,9 +90,23 @@ export default function RootLayout({
       },
       {
         label: "Content Sources",
-        url: "/graph/content-sources",
+        url: "/graph/content-sources/sources",
         highlight: "/graph/content-sources",
-        icon: <IconHierarchy3 />
+        icon: <IconHierarchy3 />,
+        children: [
+          {
+            label: "Content Sources", url: "/graph/content-sources/sources",
+            children: {
+              title: "ODP (Integration)",
+              children: [
+                {label: "Details",  url: "/graph/content-sources/sources/odp/details"},
+                {label: "Content",  url: "/graph/content-sources/sources/odp/content"},
+                {label: "Schema",   url: "/graph/content-sources/sources/odp/schema"},
+                {label: "Settings", url: "/graph/content-sources/sources/odp/settings"},
+              ]
+            }
+          },
+        ]
       },
       {
         label: "Sync Log",

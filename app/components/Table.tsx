@@ -19,12 +19,12 @@ export const Tr = ({children, url}: {children: ReactNode, url?: string}) => {
 }
 export const Th = ({children}: {children?: ReactNode}) => {
   return (
-    <th className={"text-left p-4 text-xs font-normal text-[#66708C] py-3"}>{children}</th>
+    <th className={"text-left p-4 text-xs font-normal text-[#66708C] py-3 align-top"}>{children}</th>
   );
 }
 
 export const Td = ({children}: {children: ReactNode}) => {
   return (
-    <td className="p-4 border-t color-[#ccc]">{children}</td>
+    <td className="p-4 border-t color-[#ccc] align-top">{children}</td>
   );
 }

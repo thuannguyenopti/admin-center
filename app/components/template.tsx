@@ -50,7 +50,7 @@ export default function Template({children, description, structure}: Readonly<{
               }
             </SidenavBody>
           </Sidenav>
-          {highlight1?.children && <VT 
+          {((highlight1?.children?.length > 1) || lvl3) && <VT 
             backLink={lvl3 ? lvl2 : undefined} 
             title={lvl3 ? lvl2?.children?.title : undefined} 
             items={lvl3 ? lvl2?.children?.children : highlight1?.children} 
