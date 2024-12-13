@@ -59,7 +59,7 @@ export default function Home() {
         <tbody>
           {rows.map(row => <Tr key={row.children[0].label}>
             {row.children.map((col, i) => <Td key={col.label}>
-              <Text color="fg.default" leading="loose" fontWeight={i === 0 ? "500" : "400"}>{col.label}</Text>
+              {col.label}
             </Td>)}
           </Tr>)}
         </tbody>
