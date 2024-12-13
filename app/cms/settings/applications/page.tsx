@@ -7,10 +7,10 @@ const rows = [
     {
       url: "/cms/settings/applications/mosey-bank/settings", 
       children: [
-        {label: "Mosey Bank"},
+        {label: "Mosey Bank", type: "header"},
         {label: "1234"},
         {label: "www"},
-        {label: "..."}
+        {label: "...", type: "button"}
       ]
     }
 ]
@@ -39,7 +39,7 @@ export default function Home() {
         </thead>
         <tbody>
           {rows.map(row => <Tr url={row.url} key={row.children[0].label}>
-          {row.children.map((col, i) => <Td key={col.label}><Text leading="loose" color="fg.default" fontWeight={i === 0 ? "500" : "400"}>{col.label}</Text></Td>)}
+          {row.children.map((col, i) => <Td type={col.type} key={col.label}>{col.label}</Td>)}
           </Tr>)}
         </tbody>
       </Table>

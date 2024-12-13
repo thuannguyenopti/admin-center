@@ -56,10 +56,10 @@ export default function Template({children, description, structure}: Readonly<{
             items={lvl3 ? lvl2?.children?.children : highlight1?.children} 
           />}
         </Box>
-        <Box p="xl" className="appear" bg="bg.page">
-          <Heading level="3" color="fg.default">{heading || highlight1?.label}</Heading>
+        <Box p="xl" className="appear" bg="bg.page" color="fg.default">
+          <Heading level="3">{heading || highlight1?.label}</Heading>
           {description && <Text color="fg.secondary" mt="xs">{description}</Text>}
-          <Box mt="md">
+          <Box mt="md" leading="loose">
             {children}
           </Box>
         </Box>

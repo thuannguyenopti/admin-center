@@ -4,23 +4,48 @@ import { Text, Box, SearchInput , Button, Badge } from "@optiaxiom/react";
 import {Table, Th, Tr, Td} from "../../../../../components/Table"
 
 const columns = [
-  {label: "Source"},
+  {label: "Name"},
   {label: "ID"},
-  {label: "Status"},
-  {label: "Last Result"},
-  {label: "Last Synced"},
+  {label: "Updated"},
+  {label: "Content Items", type: "numeric"},
 ]
 const rows = [
-    {
-      url: "/graph/content-sources/opd/details", 
-      children: [
-        {label: "ODP", description: "Some note text"},
-        {label: "1234"},
-        {label: "Fail", type: "badge"},
-        {label: "Last Result"},
-        {label: "Jan 11, 2024", description: "15:50:45"},
-      ]
-    }
+  {
+    url: "/graph/content-sources/opd/details", 
+    children: [
+      {label: "Article", type: "header"},
+      {label: "1234"},
+      {label: "Jan 11, 2024", description: "15:50:45"},
+      {label: "5678", type: "numeric"},
+    ]
+  },
+  {
+    url: "/graph/content-sources/opd/details", 
+    children: [
+      {label: "Article", type: "header"},
+      {label: "1234"},
+      {label: "Jan 11, 2024", description: "15:50:45"},
+      {label: "5678", type: "numeric"},
+    ]
+  },
+  {
+    url: "/graph/content-sources/opd/details", 
+    children: [
+      {label: "Article", type: "header"},
+      {label: "1234"},
+      {label: "Jan 11, 2024", description: "15:50:45"},
+      {label: "5678", type: "numeric"},
+    ]
+  },
+  {
+    url: "/graph/content-sources/opd/details", 
+    children: [
+      {label: "Article", type: "header"},
+      {label: "1234"},
+      {label: "Jan 11, 2024", description: "15:50:45"},
+      {label: "5678", type: "numeric"},
+    ]
+  },
 ]
 
 export default function Home() {
@@ -33,28 +58,16 @@ export default function Home() {
       <Table>
         <thead>
           <Tr>
-            {columns.map(col => <Th key={col.label}>{col.label}</Th>)}
+            {columns.map(col => <Th key={col.label} align={col.type === "numeric" ? "right" : "left"}>{col.label}</Th>)}
           </Tr>
         </thead>
         <tbody>
-          {rows.map(row => <Tr url={row.url} key={row.children[0].label}>
-              {row.children.map((col, i) => <Td key={col.label}>
-                {col.type === "badge" ? 
-                  <Badge intent={
-                    ({ Fail: "danger", Success: "success" }[col.label] || "neutral") as
-                      | "primary"
-                      | "danger"
-                      | "success"
-                      | "neutral"
-                      | "information"
-                      | "warning"
-                  }>{col.label}</Badge> : 
-                    <>
-                      <Text color="fg.default" leading="loose" fontWeight={i === 0 ? "500" : "400"}>{col.label}</Text>
-                      {col.description && <Text color="fg.tertiary" fontSize="sm">{col.description}</Text>}
-                    </>
-                }
-            </Td>)}
+        {rows.map((row, i) => <Tr url={row.url} key={row.children[0].label + i}>
+              {row.children.map((col, i) => 
+                <Td type={col.type} key={col.label} description={col.description}>
+                  {col.label}
+                </Td>
+          )}
           </Tr>)}
         </tbody>
       </Table>
