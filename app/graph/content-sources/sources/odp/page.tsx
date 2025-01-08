@@ -50,7 +50,7 @@ export default function Home() {
                       | "warning"
                   }>{col.label}</Badge> : 
                     <>
-                      <Text color="fg.default" leading="loose" fontWeight={i === 0 ? "500" : "400"}>{col.label}</Text>
+                      <Text color="fg.default" fontWeight={i === 0 ? "500" : "400"}>{col.label}</Text>
                       {col.description && <Text color="fg.tertiary" fontSize="sm">{col.description}</Text>}
                     </>
                 }

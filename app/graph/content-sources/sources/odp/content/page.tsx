@@ -63,7 +63,7 @@ export default function Home() {
         </thead>
         <tbody>
         {rows.map((row, i) => <Tr url={row.url} key={row.children[0].label + i}>
-              {row.children.map((col, i) => 
+              {row.children.map((col) => 
                 <Td type={col.type} key={col.label} description={col.description}>
                   {col.label}
                 </Td>

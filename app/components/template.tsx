@@ -5,8 +5,8 @@ import {
   SidenavItem,
   Text,
   Heading,
-  Link,
 } from "@optiaxiom/react";
+import Link from "next/link";
 
 import { useRouter, usePathname } from 'next/navigation'
 import VT from "./VT";
@@ -56,10 +56,10 @@ export default function Template({children, description, structure}: Readonly<{
             items={lvl3 ? lvl2?.children?.children : highlight1?.children} 
           />}
         </Box>
-        <Box p="xl" className="appear" bg="bg.page" color="fg.default">
+        <Box p="24" className="appear" bg="bg.page" color="fg.default">
           <Heading level="3">{heading || highlight1?.label}</Heading>
-          {description && <Text color="fg.secondary" mt="xs">{description}</Text>}
-          <Box mt="md" leading="loose">
+          {description && <Text color="fg.secondary" mt="16">{description}</Text>}
+          <Box mt="16">
             {children}
           </Box>
         </Box>

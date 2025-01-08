@@ -1,6 +1,7 @@
 'use client';
 
-import { Box, Link, Button } from "@optiaxiom/react";
+import { Box, Button } from "@optiaxiom/react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -8,7 +9,7 @@ export default function Home() {
         w="full" 
         h="full" 
         display="flex" 
-        p="xl" 
+        p="24" 
         gap="12" 
         flexDirection="column" 
         alignItems="center" 
@@ -16,6 +17,7 @@ export default function Home() {
       >
         <Link href="/cms/dashboard"><Button size="lg">To CMS</Button></Link>
         <Link href="/graph/dashboard"><Button size="lg">To Graph</Button></Link>
+        <Link href="/fe-hosting/applications/apps"><Button size="lg">To FE Hosting</Button></Link>
       </Box>
   );
 }

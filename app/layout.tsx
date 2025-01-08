@@ -3,6 +3,7 @@ import Template from "./components/template";
 import "./globals.css";
 import { AxiomProvider } from "@optiaxiom/react";
 import { usePathname } from 'next/navigation'
+import { useState } from "react";
 import { 
   IconChartBar, 
   IconDashboard, 
@@ -11,7 +12,8 @@ import {
   IconHierarchy3,
   IconLogs,
   IconSettings,
-  IconSearch
+  IconSearch,
+  IconList
  } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -22,7 +24,7 @@ export default function RootLayout({
 
   const path = usePathname()
   const structure = {
-    cms: [
+    "cms": [
       {
         label: "Dashboard",
         highlight: "cms/dashboard",
@@ -75,7 +77,7 @@ export default function RootLayout({
         ]
       },
     ], 
-    graph: [
+    "graph": [
       {
         label: "Dashboard",
         url: "/graph/dashboard",
@@ -126,10 +128,33 @@ export default function RootLayout({
         highlight: "/graph/optimize-search",
         icon: <IconSearch />
       },
+    ],
+    "fe-hosting": [
+      {
+        label: "Applications",
+        url: "/fe-hosting/applications/apps",
+        highlight: "/fe-hosting/applications",
+        icon: <IconList />,
+        children: [
+          {
+            label: "Applications", 
+            url: "/fe-hosting/applications/apps",
+            children: {
+              title: "Mosey Bank",
+              children: [
+                {label: "Overview",  url: "/fe-hosting/applications/apps/mosey-bank/overview"},
+                {label: "Settings",  url: "/fe-hosting/applications/apps/mosey-bank/settings"},
+              ]
+            }
+          },
+        ]
+      },
     ]
   }
   const key: string = path.split("/")[1]
   const menu = structure[key as keyof typeof structure]
+
+  const [feHostingState, setFeHostingState] = useState({});
 
   return (
     <html lang="en">

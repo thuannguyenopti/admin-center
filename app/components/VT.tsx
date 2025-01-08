@@ -3,9 +3,10 @@ import {
   SidenavBody,
   Text,
   SidenavItem,
-  Link,
   Box,
 } from "@optiaxiom/react";
+import { Url } from "next/dist/shared/lib/router/router";
+import Link from 'next/link'
 
 import { useRouter, usePathname } from 'next/navigation'
   
@@ -24,7 +25,7 @@ export default function VT({items, backLink, title}: Readonly<{
   return (
     <Sidenav expanded className="h-full vt">
       {backLink && <Box px="24" py="16">
-        <Link href={backLink.url} color="fg.accent" fontSize="sm">{backLink.label}</Link>
+        <Link href={backLink.url as Url}><Text color="fg.accent" fontSize="sm">← {backLink.label}</Text></Link>
         <Text fontSize="lg" fontWeight="600" color="fg.default">{title}</Text>
       </Box>}
       <SidenavBody>

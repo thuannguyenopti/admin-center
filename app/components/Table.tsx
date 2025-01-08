@@ -41,12 +41,12 @@ export const Td = ({
   return (
     <td className={`p-4 border-t color-[#ccc] align-top`}>
       {type === undefined && <>
-          <Text leading="normal" color="fg.default">{children}</Text>
+          <Text color="fg.default">{children}</Text>
           {description && <Text fontSize="sm" color="fg.secondary">{description}</Text>}
         </>
       }
       {type === "header" && <>
-          <Text leading="normal" color="fg.default" fontWeight="500">{children}</Text>
+          <Text color="fg.default" fontWeight="500">{children}</Text>
           {description && <Text fontSize="sm" color="fg.tertiary">{description}</Text>}
         </>
       }

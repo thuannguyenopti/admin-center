@@ -35,19 +35,19 @@ export default function Home() {
       <Box display="flex" flexDirection="column" gap="8" justifyContent="space-between" pb="24">
         <Box>
           <Text color="fg.tertiary" fontSize="sm">ID</Text>
-          <Text leading="loose" color="fg.default" fontSize="md">00aa1a8a-7de7-4d82-9f8a-09941d84a23d</Text>
+          <Text color="fg.default" fontSize="md">00aa1a8a-7de7-4d82-9f8a-09941d84a23d</Text>
         </Box>
         <Box>
           <Text color="fg.tertiary" fontSize="sm">Name</Text>
-          <Text leading="loose" color="fg.default">CMS (Integration) <Link>Edit...</Link></Text>
+          <Text color="fg.default">CMS (Integration) <Link>Edit...</Link></Text>
         </Box>
         <Box>
           <Text color="fg.tertiary" fontSize="sm">Description</Text>
-          <Text leading="loose" color="fg.default">Builds and resets the full eSales index, use this if you need to refresh available products. <Link>Edit...</Link></Text>
+          <Text color="fg.default">Builds and resets the full eSales index, use this if you need to refresh available products. <Link>Edit...</Link></Text>
         </Box>
         <Box>
           <Text color="fg.tertiary" fontSize="sm">Last Sync</Text>
-          <Text leading="loose" color="fg.default"><Badge intent="danger" mr="4">Failed</Badge>No connection with database.</Text>
+          <Text color="fg.default"><Badge intent="danger" mr="4">Failed</Badge>No connection with database.</Text>
         </Box>
       </Box>
       <Table>
