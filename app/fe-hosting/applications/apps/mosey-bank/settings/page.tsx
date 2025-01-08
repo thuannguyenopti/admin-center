@@ -33,10 +33,8 @@ export default function Home() {
       setOpen={setOpen}
       footerPrimaryText="Delete Application"
       footerAppearance="danger"
-      footerSecondaryText="Cancel"
       footerPrimaryAction={onDelete}
-    >
-    </AbstractDialog>
+    />
   </>
   );
 }

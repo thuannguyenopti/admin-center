@@ -142,8 +142,11 @@ export default function RootLayout({
             children: {
               title: "Mosey Bank",
               children: [
-                {label: "Overview",  url: "/fe-hosting/applications/apps/mosey-bank/overview"},
+                {
+                  label: "Overview",  url: "/fe-hosting/applications/apps/mosey-bank/overview",
+                },
                 {label: "Settings",  url: "/fe-hosting/applications/apps/mosey-bank/settings"},
+                {label: "Deployment 5", description: "Continuously generated from Ben-Holme/odesign",  url: "/fe-hosting/applications/apps/mosey-bank/deploy-5"},
               ]
             }
           },

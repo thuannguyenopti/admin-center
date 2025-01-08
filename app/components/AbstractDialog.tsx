@@ -23,7 +23,7 @@ export default function AbstractDialog({
   footerPrimaryText = "Close",  
   footerPrimaryAction = () => setOpen(false),
   footerAppearance,
-  footerSecondaryText
+  footerSecondaryText = "Cancel"
 }: {
   size?: "sm" | "md" | "lg" | "fullscreen" | undefined, 
   title: string, 
