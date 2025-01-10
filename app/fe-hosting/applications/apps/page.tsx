@@ -9,7 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   Box,
-  SearchInput
+  SearchInput,
+  Pagination
  } from "@optiaxiom/react";
 
 import { useState, useEffect } from "react";
@@ -27,6 +28,7 @@ export default function Home() {
   const [sites, setSites] = usePersistentState("sites", []);
   const [open, setOpen] = useState(false);
   const [dropped, setDropped] = useState(false);
+  const [search, setSearch] = useState("");
   // In a server-rendered page/component
   const connectGitHub = () => {
     setOpen(false)
@@ -34,7 +36,28 @@ export default function Home() {
       [
         ...sites,
         {
-          name: "Mosey Bank",
+          name: [
+            "AlphaSite",
+            "BetaBase",
+            "GammaGround",
+            "DeltaDomain",
+            "EpsilonEmpire",
+            "ZetaZone",
+            "EtaEstate",
+            "ThetaTerritory",
+            "IotaIsland",
+            "KappaKingdom",
+            "LambdaLand",
+            "MuMetropolis",
+            "NuNexus",
+            "XiXanadu",
+            "OmicronOasis",
+            "PiPlace",
+            "RhoRealm",
+            "SigmaSanctuary",
+            "TauTown",
+            "UpsilonUtopia"
+          ][Math.floor(Math.random() * 20)],
           url: "/fe-hosting/applications/apps/mosey-bank/overview",
           description: "Mosey’s official webiste",
           status: "Published",
@@ -61,8 +84,8 @@ export default function Home() {
             description: site.description,
             type: "header"
           },
-          {label: site.status, type: "badge", badge: "information"},
-          {label: site.deployStatus, type: "badge", badge: "success"},
+          {label: site.status, type: "badge", data: "information"},
+          {label: site.deployStatus, type: "badge", data: "success"},
           {label: "Jan 11, 2024", description: "15:50:45"},
         ]
       }
@@ -73,28 +96,31 @@ export default function Home() {
       {sites.length ?
       <>
         <Box display="flex" justifyContent="space-between" pb="16" style={{maxWidth: "1280px"}}>
-          <SearchInput  />
+          <SearchInput defaultValue="" value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="lg" appearance="primary" onClick={() => setOpen(true)}>Create Application...</Button>
         </Box>
-        <Table  style={{maxWidth: "1280px"}}>
+        <Table style={{maxWidth: "1280px"}}>
           <thead>
             <Tr>
               {columns.map((col : any) => <Th key={col.label}>{col.label}</Th>)}
             </Tr>
           </thead>
           <tbody>
-            {rows.map((row : any, i: number) => <Tr url={row.url} key={i + row.children[0].label}>
-                {row.children.map((col: any, i: number) => 
-                  <Td type={col.type} badge={col.badge} key={i + col.label} description={col.description}>
-                    {col.label}
-                  </Td>
+            {rows.filter((row: any) => row.children[0].label.toLowerCase().includes(search.toLowerCase())).map((row : any, i: number) => <Tr url={row.url} key={i + row.children[0].label}>
+              {row.children.map((col: any, i: number) => 
+                <Td type={col.type} data={col.data} key={i + col.label} description={col.description}>
+                {col.label}
+                </Td>
             )}
             </Tr>)}
           </tbody>
         </Table>
+        {rows.length > 5 && 
+        <Box style={{maxWidth: "1280px"}} mt="16" justifyContent="center" display="flex">
+          <Pagination total={10}>1</Pagination>
+        </Box>}
       </>
              : 
-                
         <EmptyList 
           heading="No Applications yet!" 
           body="This is where you will find all your applications."

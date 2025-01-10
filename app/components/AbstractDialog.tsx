@@ -9,11 +9,19 @@ import {
   DialogHeader,
   DialogClose,
   DialogDescription,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogTitle,
   } from "@optiaxiom/react"
 
 import { ReactNode } from "react"
 
 export default function AbstractDialog({
+  isAlert,
   title, 
   description, 
   open, 
@@ -25,7 +33,8 @@ export default function AbstractDialog({
   footerAppearance,
   footerSecondaryText = "Cancel"
 }: {
-  size?: "sm" | "md" | "lg" | "fullscreen" | undefined, 
+  isAlert?: boolean,
+  size?: "sm" | "md" | "lg" | undefined, 
   title: string, 
   description: string, 
   open: boolean, 
@@ -37,6 +46,26 @@ export default function AbstractDialog({
   footerSecondaryText?: string}) {
 
   return (
+    <>
+    {isAlert ?
+    <AlertDialog
+    open={open}
+    onOpenChange={setOpen}>
+      <AlertDialogContent 
+        size={size}>
+      <AlertDialogTitle>{title}</AlertDialogTitle>
+      <AlertDialogBody>
+        {description}
+      </AlertDialogBody>
+      <AlertDialogFooter>
+        <AlertDialogCancel />
+        <AlertDialogAction onClick={() => footerPrimaryAction()}>
+          {footerPrimaryText}
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+    : 
     <Dialog
       open={open}
       onOpenChange={setOpen}>
@@ -54,6 +83,7 @@ export default function AbstractDialog({
           {footerPrimaryText && <DialogClose onClick={() => footerPrimaryAction()} appearance={footerAppearance} size="lg">{footerPrimaryText}</DialogClose>}
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog>}
+    </>
   );
 }

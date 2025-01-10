@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import {Badge, Button, Text, Box} from "@optiaxiom/react"
+import {Badge, Button, Text, Box, Avatar, Tooltip} from "@optiaxiom/react"
 import { 
   IconDots as IconMenu
  } from "@tabler/icons-react";
@@ -31,12 +31,12 @@ export const Td = ({
   children, 
   type, 
   description,
-  badge
+  data,
 }: {
   children: ReactNode, 
   type?: string, 
   description?: string,
-  badge?: any,
+  data?: any
 }) => {
   return (
     <td className={`p-4 border-t color-[#ccc] align-top`}>
@@ -50,7 +50,8 @@ export const Td = ({
           {description && <Text fontSize="sm" color="fg.tertiary">{description}</Text>}
         </>
       }
-      {type === "badge" && <Badge intent={badge}>{children}</Badge>}  
+      {type === "badge" && <Badge intent={data}>{children}</Badge>}  
+      {type === "avatar" && <Tooltip content={children}><Avatar src={data} size="md" name={children as string} /></Tooltip>}  
       {type === "button" && <Box textAlign="end"><Button aria-label={"Actions"} size="sm" icon={<IconMenu />} appearance="subtle" /></Box>}  
       {type === "numeric" && 
           <Text color="fg.default" textAlign="end">{children}</Text>}      

@@ -39,14 +39,16 @@ export default function Home() {
       {
         label: "Fail",
         type: "badge",
-        badge: "danger"
+        data: "danger"
       },
       {
         label: "Jan 11, 2024", 
         description: "15:50:45",
       },
       {
-        label: "Jane", 
+        label: "Jane",
+        type: "avatar",
+        data: "https://i.pravatar.cc/150?img=5"
       },
     ]},
     {children: [
@@ -69,7 +71,9 @@ export default function Home() {
         description: "15:50:45",
       },
       {
-        label: "Jane", 
+        label: "Jane",
+        type: "avatar",
+        data: "https://i.pravatar.cc/300?u=jane@doe.example"
       },
     ]},
     {children: [
@@ -85,14 +89,16 @@ export default function Home() {
       {
         label: "Fail",
         type: "badge",
-        badge: "danger"
+        data: "danger"
       },
       {
         label: "Jan 11, 2024", 
         description: "15:50:45",
       },
       {
-        label: "Jane", 
+        label: "Jane",
+        type: "avatar",
+        data: "https://i.pravatar.cc/300?u=jane@doe.example"
       },
     ]},
   ]
@@ -142,9 +148,9 @@ export default function Home() {
               </Tr>
             </thead>
             <tbody>
-              {rows.map((row, i) => <Tr url="deploy-5" key={"row-" + i + row.children[0].label}>
+              {rows.map((row, i) => <Tr url="overview/deploy-5" key={"row-" + i + row.children[0].label}>
                   {row.children.map((col, i) => 
-                    <Td type={col.type} badge={col.badge} key={"cell-" + i + col.label} description={col.description}>
+                    <Td type={col.type} data={col.data} key={"cell-" + i + col.label} description={col.description}>
                       {col.label}
                     </Td>
               )}

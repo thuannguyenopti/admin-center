@@ -28,9 +28,11 @@ export default function Template({children, description, structure}: Readonly<{
 
   const highlight1 = menuItems.find((item: any) => path.includes(item.highlight))
   const lvl2 = highlight1?.children?.find((item: any) => (item.url ? path.includes(item.url) : false))
-  const lvl3 = lvl2?.children?.children.find((item: any) => item.url === path)
+  const lvl3 = lvl2?.children?.children.find((item: any) => (item.url ? path.includes(item.url) : false))
+  const lvl4 = lvl3?.children?.children.find((item: any) => (item.url ? path.includes(item.url) : false))
 
-  const heading = lvl3?.label || lvl2?.label
+  const heading = lvl4?.label || lvl3?.label || lvl2?.label
+  console.log(lvl4)
 
   return (
       <div className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]">
@@ -50,13 +52,13 @@ export default function Template({children, description, structure}: Readonly<{
               }
             </SidenavBody>
           </Sidenav>
-          {((highlight1?.children?.length > 1) || lvl3) && <VT 
-            backLink={lvl3 ? lvl2 : undefined} 
-            title={lvl3 ? lvl2?.children?.title : undefined} 
-            items={lvl3 ? lvl2?.children?.children : highlight1?.children} 
+          {((highlight1?.children?.length > 1) || lvl3 || lvl4) && <VT 
+            backLink={lvl4 ? lvl3 : (lvl3 ? lvl2 : undefined)} 
+            title={lvl4 ? lvl3.children.title : (lvl3 ? lvl2?.children?.title : undefined)} 
+            items={lvl4 ? lvl3.children.children : (lvl3 ? lvl2?.children?.children : highlight1?.children)} 
           />}
         </Box>
-        <Box p="24" className="appear" bg="bg.page" color="fg.default">
+        <Box p="24" className="appear" bg="bg.page" color="fg.default" overflow="auto">
           <Heading level="3">{heading || highlight1?.label}</Heading>
           {description && <Text color="fg.secondary" mt="16">{description}</Text>}
           <Box mt="16">

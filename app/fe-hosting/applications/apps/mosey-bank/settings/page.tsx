@@ -27,6 +27,7 @@ export default function Home() {
     <Text mt="12">This will delete this application. You cannot undo the deletion.</Text>
     <Button size="lg" mt="24" appearance="danger-outline" onClick={() => setOpen(true)}>Delete Application</Button>
     <AbstractDialog
+      isAlert
       title="Delete Application"
       description="This will permanently remove this application and cannot be undone."
       open={open}

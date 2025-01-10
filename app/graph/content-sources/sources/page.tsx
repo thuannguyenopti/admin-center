@@ -16,7 +16,7 @@ const rows = [
       children: [
         {label: "ODP (Integration)", description: "Some note text", type: "header"},
         {label: "1234"},
-        {label: "Fail", type: "badge", badge: "danger"},
+        {label: "Fail", type: "badge", data: "danger"},
         {label: "Last Result"},
         {label: "Jan 11, 2024", description: "15:50:45"},
       ]
@@ -39,7 +39,7 @@ export default function Home() {
         <tbody>
           {rows.map(row => <Tr url={row.url} key={row.children[0].label}>
               {row.children.map((col, i) => 
-                <Td type={col.type} badge={col.badge} key={col.label} description={col.description}>
+                <Td type={col.type} data={col.data} key={i + col.label} description={col.description}>
                   {col.label}
                 </Td>
           )}
