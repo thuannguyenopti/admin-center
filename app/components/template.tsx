@@ -53,9 +53,14 @@ export default function Template({children, description, structure}: Readonly<{
               }
             </SidenavBody>
           </Sidenav>
+            <Box style={{
+              marginLeft: "-224px",
+              transform: showVT ? "translatex(224px)" : "translatex(0px)",
+              borderRight: showVT ? "1px solid rgb(202, 207, 220)" : "1px solid transparent",
+              transition: ".7s cubic-bezier(0, 1, 0, 1)"
+            }} className="slide w-[224px]" h="full" overflow="hidden" bg="bg.default">
           {showVT && 
-            <Box className="slide w-[224px]" borderColor="border.default" borderR="1" h="full" overflow="hidden" bg="bg.default">
-              <Box className="flex"  h="full" style={{transform: `translateX(-${224 * (lvl4 ? 2 : (lvl3 ? 1 : 0))}px)`, transition: ".7s cubic-bezier(0, 1, 0, 1)"}}>
+              <Box className="flex"  h="full" style={{transform: `translateX(-${224 * (lvl4 ? 2 : (lvl3 ? 1 : 0))}px)`, transition: "inherit"}}>
                 {showVT && lvl2 && <VT 
                   backLink={undefined} 
                   title={highlight1?.children?.title || undefined} 
@@ -72,10 +77,15 @@ export default function Template({children, description, structure}: Readonly<{
                   items={lvl3.children?.children} 
                 />}
               </Box>
-            </Box>
           }
+            </Box>
         </Box>
-        <Box p="24" className={`${showVT ? "slide" : "tjenna"}`} color="fg.default" overflow="auto">
+        <Box style={{
+              marginLeft: "224px",
+              transform: showVT ? "translatex(0px)" : "translatex(-224px)",
+              borderRight: showVT ? "1px solid rgb(202, 207, 220)" : "1px solid transparent",
+              transition: ".7s cubic-bezier(0, 1, 0, 1)"
+            }} p="24" color="fg.default" overflow="auto">
           <Heading level="3">{heading || highlight1?.label}</Heading>
           {description && <Text color="fg.secondary" mt="16">{description}</Text>}
           <Box mt="16">

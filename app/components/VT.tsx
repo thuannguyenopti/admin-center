@@ -23,7 +23,7 @@ export default function VT({items, backLink, title}: Readonly<{
   }
 
   return (
-    <Sidenav expanded className="h-full" style={{border: "0px"}}>
+    <Sidenav expanded className="h-full appear" style={{border: "0px"}}>
       {backLink && <Box px="24" py="16">
         <Link href={backLink.url as Url}><Text color="fg.accent" fontSize="sm">← {backLink.label}</Text></Link>
         <Text fontSize="lg" fontWeight="600" color="fg.default">{title}</Text>

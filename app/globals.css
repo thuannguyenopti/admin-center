@@ -34,16 +34,21 @@ body {
   overflow: hidden;
 }
 
-.slide{
+.noSlide {
+  transform: translateX(0px);
+  transition: transform .7s cubic-bezier(0, 1, 0, 1);
+}
+
+.slidex{
   animation: slide .7s both cubic-bezier(0, 1, 0, 1);
 }
 
 @keyframes slide {
   0% {
-    transform: translateX(-224px);
+    transform: translateX(0px);
   }
   100% {
-    transform: translateX(0px);
+    transform: translateX(224px);
   }
 }
 
