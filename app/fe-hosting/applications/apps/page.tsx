@@ -26,7 +26,7 @@ const GitHub = <svg width="21" height="20" viewBox="0 0 21 20" fill="none" xmlns
 
 export default function Home() {
 
-  const [sites, setSites] = usePersistentState("sites", []);
+  const [sites, setSites] = usePersistentState("sites", {status: "loading", sites: []});
   const [open, setOpen] = useState(false);
   const [dropped, setDropped] = useState(false);
   const [search, setSearch] = useState("");
@@ -34,8 +34,8 @@ export default function Home() {
   const connectGitHub = () => {
     setOpen(false)
     setSites(
-      [
-        ...sites,
+      {status: "ok", sites:[
+        ...sites.sites,
         {
           name: [
             "AlphaSite",
@@ -66,7 +66,7 @@ export default function Home() {
           lastPublishedDate: "Jan 13, 2024",
           lastPublishedTime: "03:50 PM",
         }
-      ]
+      ]}
     )
   }
 
@@ -76,7 +76,7 @@ export default function Home() {
     {label: "Last Deploy Status"},
     {label: "Last Published"},
   ]
-  const rows = sites.map((site: any) => {
+  const rows = sites.sites?.map((site: any) => {
       return {
         url: site.url, 
         children: [
@@ -96,8 +96,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 500)
-  }, [loading, setLoading]);
+    setLoading(sites.status === "loading");
+  }, [loading, setLoading, sites, setSites]);
   
   return (<>
       {
@@ -160,7 +160,7 @@ export default function Home() {
           </Table>
           </>
          :
-      sites.length ?
+      sites.sites?.length ?
       <>
         <Box display="flex" justifyContent="space-between" pb="16" style={{maxWidth: "1280px"}}>
           <SearchInput defaultValue="" value={search} onChange={(e) => setSearch(e.target.value)} />

@@ -17,7 +17,7 @@ export default function Home() {
 
   const router = useRouter()
   const onDelete = () => {
-    setSites([])
+    setSites({status: "ok", sites: []})
     setOpen(false)
     router.push("/fe-hosting/applications/apps")
   }

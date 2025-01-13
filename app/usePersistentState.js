@@ -7,7 +7,6 @@ function usePersistentState(key, defaultValue) {
 
   useEffect(() => {
     // On the client side, read from localStorage and update the state
-    console.log('usePersistentState useEffect');
     try {
       const storedValue = localStorage.getItem(key);
       if (storedValue) {
@@ -24,12 +23,13 @@ function usePersistentState(key, defaultValue) {
     if (isHydrated) {
       try {
         if (state === undefined || state === null) {
-          localStorage.removeItem(key); // Clean up invalid values
+            localStorage.removeItem(key); // Clean up invalid values
         } else {
-          localStorage.setItem(key, JSON.stringify(state));
+            state.status = "ok"
+            localStorage.setItem(key, JSON.stringify(state));
         }
       } catch (error) {
-        console.error(`Error saving key "${key}" to localStorage:`, error);
+            console.error(`Error saving key "${key}" to localStorage:`, error);
       }
     }
   }, [key, state, isHydrated]);
