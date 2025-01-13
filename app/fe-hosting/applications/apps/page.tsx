@@ -10,7 +10,8 @@ import {
   DropdownMenuTrigger,
   Box,
   SearchInput,
-  Pagination
+  Pagination,
+  Skeleton
  } from "@optiaxiom/react";
 
 import { useState, useEffect } from "react";
@@ -91,9 +92,75 @@ export default function Home() {
       }
     }
   )
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 500)
+  }, [loading, setLoading]);
   
   return (<>
-      {sites.length ?
+      {
+        loading ?
+        <>
+          <Box display="flex" justifyContent="space-between" pb="16" style={{maxWidth: "1280px"}}>
+            <SearchInput disabled defaultValue="" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Button disabled size="lg" appearance="primary" onClick={() => setOpen(true)}>Create Application...</Button>
+          </Box>
+          <Table style={{maxWidth: "1280px"}}>
+            <thead>
+              <Tr>
+                {columns.map((col : any) => <Th key={col.label}>{col.label}</Th>)}
+              </Tr>
+            </thead>
+            <tbody>
+              <Tr>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+              </Tr>
+              <Tr>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+              </Tr>
+              <Tr>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+                  <Td>
+                    <Skeleton />
+                  </Td>
+              </Tr>
+            </tbody>
+          </Table>
+          </>
+         :
+      sites.length ?
       <>
         <Box display="flex" justifyContent="space-between" pb="16" style={{maxWidth: "1280px"}}>
           <SearchInput defaultValue="" value={search} onChange={(e) => setSearch(e.target.value)} />
