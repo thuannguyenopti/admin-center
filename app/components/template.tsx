@@ -7,6 +7,7 @@ import {
   Heading,
 } from "@optiaxiom/react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 import { useRouter, usePathname } from 'next/navigation'
 import VT from "./VT";
@@ -32,10 +33,10 @@ export default function Template({children, description, structure}: Readonly<{
   const lvl4 = lvl3?.children?.children.find((item: any) => (item.url ? path.includes(item.url) : false))
 
   const heading = lvl4?.label || lvl3?.label || lvl2?.label
-  console.log(lvl4)
+  const showVT = (highlight1?.children?.length > 1) || typeof(lvl3) !== "undefined" || typeof(lvl4) !== "undefined"
 
   return (
-      <div className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]">
+      <Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]" bg="bg.page" >
         <Box gridColumn="2" bg="bg.accent.subtle" p="16"><Link href="/">DXP</Link></Box>
         <Box display="flex">
           <Sidenav className="h-full z-10 relative">
@@ -52,19 +53,35 @@ export default function Template({children, description, structure}: Readonly<{
               }
             </SidenavBody>
           </Sidenav>
-          {((highlight1?.children?.length > 1) || lvl3 || lvl4) && <VT 
-            backLink={lvl4 ? lvl3 : (lvl3 ? lvl2 : undefined)} 
-            title={lvl4 ? lvl3.children.title : (lvl3 ? lvl2?.children?.title : undefined)} 
-            items={lvl4 ? lvl3.children.children : (lvl3 ? lvl2?.children?.children : highlight1?.children)} 
-          />}
+          {showVT && 
+            <Box className="slide w-[224px]" borderColor="border.default" borderR="1" h="full" overflow="hidden" bg="bg.default">
+              <Box className="flex"  h="full" style={{transform: `translateX(-${224 * (lvl4 ? 2 : (lvl3 ? 1 : 0))}px)`, transition: ".7s cubic-bezier(0, 1, 0, 1)"}}>
+                {showVT && lvl2 && <VT 
+                  backLink={undefined} 
+                  title={highlight1?.children?.title || undefined} 
+                  items={highlight1?.children} 
+                />}
+                {showVT && lvl3 &&  <VT 
+                  backLink={lvl2} 
+                  title={lvl2.children?.title} 
+                  items={lvl2.children?.children} 
+                />}
+                {showVT && lvl4 && <VT 
+                  backLink={lvl3} 
+                  title={lvl3.children?.title} 
+                  items={lvl3.children?.children} 
+                />}
+              </Box>
+            </Box>
+          }
         </Box>
-        <Box p="24" className="appear" bg="bg.page" color="fg.default" overflow="auto">
+        <Box p="24" className={`${showVT ? "slide" : "tjenna"}`} color="fg.default" overflow="auto">
           <Heading level="3">{heading || highlight1?.label}</Heading>
           {description && <Text color="fg.secondary" mt="16">{description}</Text>}
           <Box mt="16">
             {children}
           </Box>
         </Box>
-      </div>
+      </Box>
   );
 }

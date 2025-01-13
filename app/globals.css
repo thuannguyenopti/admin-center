@@ -34,18 +34,16 @@ body {
   overflow: hidden;
 }
 
-.vt {
-  animation: slide .2s cubic-bezier(0.175, 0.885, 0.32, 0.875);
+.slide{
+  animation: slide .7s both cubic-bezier(0, 1, 0, 1);
 }
 
 @keyframes slide {
   0% {
-    transform: translateX(-4px);
-    opacity: 0;
+    transform: translateX(-224px);
   }
   100% {
     transform: translateX(0px);
-    opacity: 1;
   }
 }
 
