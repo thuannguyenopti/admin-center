@@ -1,14 +1,11 @@
 'use client';
 
-import { Text, Box, SearchInput , Button, Badge } from "@optiaxiom/react";
-import {
-  Table,
+import { Text, Box, SearchInput , Button, Badge, Table,
   TableBody,
   TableCell,
   TableHeader,
   TableHeaderCell,
-  TableRow,
-} from "@optiaxiom/react/unstable";
+  TableRow, } from "@optiaxiom/react";
 
 export default function Home() {
   return (
