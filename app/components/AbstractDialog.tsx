@@ -2,20 +2,18 @@
 
 import { 
   DialogContent,
-  DialogTitle,
   DialogBody,
   DialogFooter,
   Dialog,
   DialogHeader,
   DialogClose,
-  DialogDescription,
   AlertDialog,
   AlertDialogBody,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogFooter,
-  AlertDialogTitle,
+  AlertDialogHeader,
   } from "@optiaxiom/react"
 
 import { ReactNode } from "react"
@@ -53,7 +51,7 @@ export default function AbstractDialog({
     onOpenChange={setOpen}>
       <AlertDialogContent 
         size={size}>
-      <AlertDialogTitle>{title}</AlertDialogTitle>
+      <AlertDialogHeader>{title}</AlertDialogHeader>
       <AlertDialogBody>
         {description}
       </AlertDialogBody>
@@ -72,8 +70,7 @@ export default function AbstractDialog({
         <DialogContent 
           size={size}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogHeader description={description}>{title}</DialogHeader>
         </DialogHeader>
         <DialogBody>
           {children}
