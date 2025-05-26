@@ -325,7 +325,7 @@ export default function VBPrototype() {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 setCurrentEle("none");
-            }
+                setCurrentHoverEle("none");}
         };
 
         
