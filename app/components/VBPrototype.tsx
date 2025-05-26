@@ -186,8 +186,8 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
                             <label>
                                 <input
                                     type="checkbox"
-                                    checked={prop.value || false}
-                                    onChange={(e) => onInputChange(e.currentTarget.checked ? "checked" : "unchecked", ind)}
+                                    checked={prop.value === "true" ? true : false}
+                                    onChange={(e) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
                                     className="mr-2"
                                 />
                                 {prop.label}
@@ -204,7 +204,7 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
 export default function VBPrototype() {
 
     
-    const onInputChange = (value: string, propIndex: number) => {
+    const onInputChange = (value: any, propIndex: number) => {
         if (currentEle !== "none" && currentEle in theEles) {
             setTheEles((prev: any) => {
                 const oldProps = prev[currentEle as keyof typeof prev].props;
@@ -431,7 +431,7 @@ export default function VBPrototype() {
                                         }
                                             <label>
                                                 {theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}
-                                                {theEles[element.id]?.props.find((prop: any) => prop.label === "Required")?.value && <span className="text-[#ff5500]"> *</span>}
+                                                {theEles[element.id]?.props.find((prop: any) => prop.label === "Required")?.value === "true" && <span className="text-[#ff5500]"> *</span>}
                                             </label>
                                             <input type="text" placeholder={theEles[element.id]?.props.find((prop: any) => prop.label === "Placeholder")?.value || null} className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]" />
                                         </div>
