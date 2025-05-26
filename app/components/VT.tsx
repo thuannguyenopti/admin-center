@@ -1,9 +1,9 @@
 import {
-  Sidenav,
-  SidenavBody,
   Text,
-  SidenavItem,
   Box,
+  NavBody,
+  NavList,
+  NavItem,
 } from "@optiaxiom/react";
 import { Url } from "next/dist/shared/lib/router/router";
 import Link from 'next/link'
@@ -23,27 +23,27 @@ export default function VT({items, backLink, title}: Readonly<{
   }
 
   return (
-    <Sidenav expanded className="h-full appear" style={{border: "0px"}}>
-      {backLink && <Box px="24" py="16">
-        <Link href={backLink.url as Url}><Text color="fg.accent" fontSize="sm">← {backLink.label}</Text></Link>
-        <Text fontSize="lg" fontWeight="600" color="fg.default">{title}</Text>
-      </Box>}
-      <SidenavBody>
-        {
-          items?.map(menuItem => 
-            menuItem.url ? <SidenavItem 
-              onClick={() => menuClick(menuItem.url || "")} 
-              active={menuItem.url === path} 
-              key={menuItem.label} 
-              aria-label={menuItem.label}
-            >
-              {menuItem.label}
-            </SidenavItem> : <Text 
-              key={menuItem.label} 
-              fontSize="xs" px="20" mx="4" pb="4" pt="12" color="fg.tertiary">{menuItem.label}</Text>
-          )
-        }
-      </SidenavBody>
-    </Sidenav>
+    <NavBody>
+      <NavList className="appear">
+          {backLink && <Box px="24" py="16">
+            <Link href={backLink.url as Url}><Text color="fg.accent" fontSize="sm">← {backLink.label}</Text></Link>
+            <Text fontSize="lg" fontWeight="600" color="fg.default">{title}</Text>
+          </Box>}
+            {
+              items?.map(menuItem => 
+                menuItem.url ? <NavItem 
+                  onClick={() => menuClick(menuItem.url || "")} 
+                  active={menuItem.url === path} 
+                  key={menuItem.label} 
+                  aria-label={menuItem.label}
+                >
+                  {menuItem.label}
+                </NavItem> : <Text 
+                  key={menuItem.label} 
+                  fontSize="xs" px="20" mx="4" pb="4" pt="12" color="fg.tertiary">{menuItem.label}</Text>
+              )
+            }
+      </NavList>
+    </NavBody>
   );
 }
