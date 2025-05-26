@@ -36,6 +36,7 @@ export default function VT({items, backLink, title}: Readonly<{
                   active={menuItem.url === path} 
                   key={menuItem.label} 
                   aria-label={menuItem.label}
+                  
                 >
                   {menuItem.label}
                 </NavItem> : <Text 
