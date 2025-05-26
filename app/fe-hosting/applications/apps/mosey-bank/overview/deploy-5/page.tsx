@@ -3,23 +3,13 @@
 import { 
   Box,
   Heading,
-  Tabs,
-  TabsList,
-  TabsTrigger,
   Text,
-  TabsContent,
   Badge,
   Link,
   Alert, } from "@optiaxiom/react";
 
-import { useState } from "react";
-import { Table } from "@optiaxiom/react/unstable";
-import { Tr, Th, Td } from "@/app/components/Table";
-
-
 export default function Home() {
       
-  const [value, setValue] = useState("first");
   const code = `[12:24:51.034] Running build in Washington, D.C., USA (East) – iad1 \
   [12:24:51.147] Cloning github.com/Ben-Holme/axiom-play (Branch: main, Commit: 3be39fa)
 [12:24:51.569] Cloning completed: 421.594ms

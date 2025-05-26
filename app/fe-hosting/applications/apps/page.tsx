@@ -11,11 +11,11 @@ import {
   Box,
   SearchInput,
   Pagination,
-  Skeleton
+  Skeleton,
+  Table
  } from "@optiaxiom/react";
 
 import { useState, useEffect } from "react";
-import { Table } from "@optiaxiom/react/unstable";
 import { Tr, Th, Td } from "@/app/components/Table";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import { IconChevronDown } from "@tabler/icons-react";

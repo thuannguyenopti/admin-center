@@ -9,12 +9,11 @@ import {
   Text,
   TabsContent,
   Badge,
+  Table,
   Link, } from "@optiaxiom/react";
 
 import { useState } from "react";
-import { Table } from "@optiaxiom/react/unstable";
 import { Tr, Th, Td } from "@/app/components/Table";
-import { IconExternalLink } from "@tabler/icons-react";
 
 
 export default function Home() {
