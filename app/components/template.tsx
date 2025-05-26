@@ -65,6 +65,7 @@ export default function Template({children, description, structure}: Readonly<{
             }} className="slide w-[224px]" h="full" overflow="hidden" bg="bg.default">
           {showVT && 
               <Box className="flex"  h="full" style={{transform: `translateX(-${224 * (lvl4 ? 2 : (lvl3 ? 1 : 0))}px)`, transition: "inherit"}}>
+                <Sidebar>
                 {showVT && lvl2 && <VT 
                   backLink={undefined} 
                   title={highlight1?.children?.title || undefined} 
@@ -80,6 +81,7 @@ export default function Template({children, description, structure}: Readonly<{
                   title={lvl3.children?.title} 
                   items={lvl3.children?.children} 
                 />}
+                </Sidebar>
               </Box>
           }
             </Box>
