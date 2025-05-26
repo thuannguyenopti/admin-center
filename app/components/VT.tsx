@@ -23,7 +23,7 @@ export default function VT({items, backLink, title}: Readonly<{
   }
 
   return (
-    <NavBody>
+    <NavBody style={{width: "224px"}}>
       <NavList className="appear">
           {backLink && <Box px="24" py="16">
             <Link href={backLink.url as Url}><Text color="fg.accent" fontSize="sm">← {backLink.label}</Text></Link>
@@ -41,7 +41,7 @@ export default function VT({items, backLink, title}: Readonly<{
                   {menuItem.label}
                 </NavItem> : <Text 
                   key={menuItem.label} 
-                  fontSize="xs" px="20" mx="4" pb="4" pt="12" color="fg.tertiary">{menuItem.label}</Text>
+                  fontSize="xs" px="8" mx="4" pb="4" pt="12" color="fg.tertiary">{menuItem.label}</Text>
               )
             }
       </NavList>

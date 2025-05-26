@@ -165,7 +165,7 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
             </Box>
             </> : <>
                 <Text fontSize="sm" px="24" pt="16" fontWeight="400" color="fg.accent" onClick={() => setCurrentEle("none")} className="cursor-pointer">{"<-"} My Form</Text> 
-                <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" py="4">
+                <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4">
                     <Text fontSize="lg" fontWeight="600">{currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}</Text>
                     <Box display="flex" alignItems="center" gap="8">
                         <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -368,7 +368,7 @@ export default function VBPrototype() {
                 <div className="rounded-lg bg-white shadow-lg grow w-full" onClick={() => setCurrentEle("none")} style={{
                     background: "radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)"
                 }}>
-                    <div className="w-[600px] m-auto p-4 min-h-[80vh] pt-24">   
+                    <div className="w-[500px] m-auto p-4 min-h-[80vh] pt-24">   
                     {data.map((row, index) => 
                         <section className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 text-white" key={index}>
                             {row.children.map((col, colIndex) => 
