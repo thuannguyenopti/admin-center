@@ -1,8 +1,16 @@
 'use client';
 
-import { Box, Button, Heading, Text } from "@optiaxiom/react";
-import { ReactNode, useEffect, Fragment } from "react";
-import { useState } from "react";
+import { Box, Button, Field, Heading, Text, Input as Input2 } from "@optiaxiom/react";
+import { ReactNode, useEffect, Fragment, Children } from "react";
+import { useState } from "react";import { 
+    IconPlus,
+    IconDots,
+    IconUpload,
+    IconBooks,
+    IconLink,
+    IconSparkles,
+   } from "@tabler/icons-react";
+import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
 
 
 const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop, onChange, propIndex }) => {
@@ -12,73 +20,105 @@ const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop
     </div>
 }
         
-const Row: React.FC<{ children: ReactNode }> = ({ children }) => {
+const Row: React.FC<{ children: ReactNode, addCol: any}> = ({ children, addCol }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
-        <Box w="full" p="2" >
+        <div className="p-1 py-0 -mr-[24px]">
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full"
+                className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5"
             >
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                        transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)",
-                        transition: "transform 0.2s",
-                    }}
-                >
-                    <path
-                        d="M6.39844 8.64844C6.16406 8.88281 5.8125 8.88281 5.60156 8.64844L1.85156 4.89844C1.61719 4.6875 1.61719 4.33594 1.85156 4.125C2.0625 3.89062 2.41406 3.89062 2.625 4.125L5.97656 7.47656L9.35156 4.10156C9.5625 3.89062 9.91406 3.89062 10.125 4.10156C10.3594 4.33594 10.3594 4.6875 10.125 4.89844L6.39844 8.64844Z"
-                        fill="#66708C"
-                    />
-                </svg>
-                <Text>Row</Text>
+                <div className="flex gap-1 items-center">
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                            transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                            transition: "transform 0.2s",
+                        }}
+                    >
+                        <path
+                            d="M6.39844 8.64844C6.16406 8.88281 5.8125 8.88281 5.60156 8.64844L1.85156 4.89844C1.61719 4.6875 1.61719 4.33594 1.85156 4.125C2.0625 3.89062 2.41406 3.89062 2.625 4.125L5.97656 7.47656L9.35156 4.10156C9.5625 3.89062 9.91406 3.89062 10.125 4.10156C10.3594 4.33594 10.3594 4.6875 10.125 4.89844L6.39844 8.64844Z"
+                            fill="#66708C"
+                        />
+                    </svg>
+                    <Text>Row</Text>
+                </div>
+                <Button className="group-hover:visible invisible" onClick={addCol} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
             </div>
             <div style={{ display: isOpen ? "block" : "none" }}>{children}</div>
-        </Box>
+        </div>
     );
 }
 
-const Col: React.FC<{ children: ReactNode }> = ({ children }) => {
+const Col: React.FC<{ children: ReactNode, addElement: any }> = ({ children, addElement }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
         <Box>
             <div
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-1 pl-3 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full"
+                className="group p-1 pl-3 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5"
             >
-                <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{
-                        transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)",
-                        transition: "transform 0.2s",
-                    }}
-                >
-                    <path
-                        d="M6.39844 8.64844C6.16406 8.88281 5.8125 8.88281 5.60156 8.64844L1.85156 4.89844C1.61719 4.6875 1.61719 4.33594 1.85156 4.125C2.0625 3.89062 2.41406 3.89062 2.625 4.125L5.97656 7.47656L9.35156 4.10156C9.5625 3.89062 9.91406 3.89062 10.125 4.10156C10.3594 4.33594 10.3594 4.6875 10.125 4.89844L6.39844 8.64844Z"
-                        fill="#66708C"
-                    />
-                </svg>
-                <Text>Column</Text>
+                <div className="flex gap-1 items-center" 
+                onClick={() => setIsOpen(!isOpen)}>
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                            transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                            transition: "transform 0.2s",
+                        }}
+                    >
+                        <path
+                            d="M6.39844 8.64844C6.16406 8.88281 5.8125 8.88281 5.60156 8.64844L1.85156 4.89844C1.61719 4.6875 1.61719 4.33594 1.85156 4.125C2.0625 3.89062 2.41406 3.89062 2.625 4.125L5.97656 7.47656L9.35156 4.10156C9.5625 3.89062 9.91406 3.89062 10.125 4.10156C10.3594 4.33594 10.3594 4.6875 10.125 4.89844L6.39844 8.64844Z"
+                            fill="#66708C"
+                        />
+                    </svg>
+                    <Text>Column</Text>
+                </div>
+                <Menu options={[
+                    {
+                        group: {label: "Add Element"},
+                        addon: <IconUpload size={16} />,
+                        label: "Heading",
+                        execute: () => addElement("Heading"),
+                    },
+                    {
+                        addon: <IconLink size={16} />,
+                        label: "Text",
+                        execute: () => addElement("Text"),
+                    },
+                    {
+                        addon: <IconSparkles size={16} />,
+                        label: "Input",
+                        execute: () => addElement("Input"),
+                    },
+                    {
+                        addon: <IconSparkles size={16} />,
+                        label: "Button",
+                        execute: () => addElement("Button"),
+                    },
+                    ]}>
+                    <MenuTrigger icon={<IconPlus />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                    <MenuContent />
+                </Menu>
+
             </div>
             <div style={{ display: isOpen ? "block" : "none" }}>{children}</div>
         </Box>
     );
 }
 
-const Ele: React.FC<{ element: any, setCurrentEle: any, setCurrentHoverEle: any, label: string }> = ({ element, setCurrentEle, setCurrentHoverEle, label }) => {
+const Ele: React.FC<{ element: any, setCurrentEle: any, type: any, setCurrentHoverEle: any, label: string }> = ({ element, setCurrentEle, type, setCurrentHoverEle, label }) => {
     return (
-        <Box pl="32" py="2">
+        <Box pl="32" py="2" pr="20">
             <div
             onMouseEnter={() => setCurrentHoverEle(element.id)}
             onMouseLeave={() => setCurrentHoverEle("none")}
@@ -87,7 +127,7 @@ const Ele: React.FC<{ element: any, setCurrentEle: any, setCurrentHoverEle: any,
             >
                 <div className="flex gap-1 items-center w-full group-hover:w-[calc(100%-24px)]" style={{ color: label ? "#2E3442" : "#66708C" }}>
                         <div className="min-w-5">{(() => {
-                            switch (element.type) {
+                            switch (type) {
                                 case "Heading":
                                     return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M1 1.75C1 1.34375 1.3125 1 1.75 1H5.25C5.65625 1 6 1.34375 6 1.75C6 2.1875 5.65625 2.5 5.25 2.5H4.25V7H11.75V2.5H10.75C10.3125 2.5 10 2.1875 10 1.75C10 1.34375 10.3125 1 10.75 1H14.25C14.6562 1 15 1.34375 15 1.75C15 2.1875 14.6562 2.5 14.25 2.5H13.25V13.5H14.25C14.6562 13.5 15 13.8438 15 14.25C15 14.6875 14.6562 15 14.25 15H10.75C10.3125 15 10 14.6875 10 14.25C10 13.8438 10.3125 13.5 10.75 13.5H11.75V8.5H4.25V13.5H5.25C5.65625 13.5 6 13.8438 6 14.25C6 14.6875 5.65625 15 5.25 15H1.75C1.3125 15 1 14.6875 1 14.25C1 13.8438 1.3125 13.5 1.75 13.5H2.75V2.5H1.75C1.3125 2.5 1 2.1875 1 1.75Z" fill="currentColor"/>
@@ -116,7 +156,7 @@ const Ele: React.FC<{ element: any, setCurrentEle: any, setCurrentHoverEle: any,
                             }
                         })()}</div> 
 
-                    <span className="truncate overflow-hidden text-ellipsis">{label || <span className="italic text-[#66708C]">{`Empty ${element.type}`}</span>}</span>   
+                    <span className="truncate overflow-hidden text-ellipsis">{label || <span className="italic text-[#66708C]">{`Empty ${type}`}</span>}</span>   
                 </div>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="min-w-[24px] hidden group-hover:block">
                     <path d="M5.99072 10C4.86572 10 3.99072 10.9062 3.99072 12C3.99072 13.125 4.86572 14 5.99072 14C7.08447 14 7.99072 13.125 7.99072 12C7.99072 10.9062 7.08447 10 5.99072 10ZM11.9907 10C10.8657 10 9.99072 10.9062 9.99072 12C9.99072 13.125 10.8657 14 11.9907 14C13.0845 14 13.9907 13.125 13.9907 12C13.9907 10.9062 13.0845 10 11.9907 10ZM17.9907 10C16.8657 10 15.9907 10.9062 15.9907 12C15.9907 13.125 16.8657 14 17.9907 14C19.0845 14 19.9907 13.125 19.9907 12C19.9907 10.9062 19.0845 10 17.9907 10Z" fill="#2E3442"/>
@@ -131,79 +171,142 @@ interface OutlineProps {
     theEles: Record<string, any>;
     onInputChange: (value: string, propIndex: number) => void;
     setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
+    setData: React.Dispatch<React.SetStateAction<any[]>>;
     setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
+    setTheEles: React.Dispatch<React.SetStateAction<Record<string, any>>>;
     data: any;
 }
 
-const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, setCurrentEle, setCurrentHoverEle, data }) => {
+const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, setCurrentEle, setCurrentHoverEle, data, setData, setTheEles }) => {
 
+    const addCol = (e: any, row: number) => {
+        e.stopPropagation();
     
+        setData(prev => [
+            ...prev.slice(0, row),
+            {
+                ...prev[row],
+                children: [
+                    ...prev[row].children,
+                    { label: "Column", children: [] }
+                ]
+            },
+            ...prev.slice(row + 1)
+        ]);
+    };
+
+    const addElement = (type: string, colIndex: number, rowIndex: number) => {
+        const uKey = `${type}-${Date.now()}`;
+        setTheEles(prev => ({
+            ...prev,
+            [uKey]: {
+            type: type,
+            props: (() => {
+                switch (type) {
+                case "Heading":
+                    return [{ type: "text", label: "Text" }];
+                case "Text":
+                    return [{ type: "text", label: "Text" }];
+                case "Input":
+                    return [
+                    { type: "text", label: "Label" },
+                    { type: "text", label: "Placeholder" },
+                    { type: "text", label: "Tooltip" },
+                    { type: "checkbox", label: "Required", value: false }
+                    ];
+                case "Button":
+                    return [{ type: "text", label: "Label" }];
+                default:
+                    return [];
+                }
+            })()
+            }
+        }));
+        setData(prev => {
+            const updatedRow = {
+                ...prev[rowIndex],
+                children: prev[rowIndex].children.map((col: any, index: number) => {
+                    if (index === colIndex) {
+                        return {
+                            ...col,
+                            children: [
+                                ...col.children,
+                                { id: uKey }
+                            ]
+                        };
+                    }
+                    return col;
+                })
+            };
+
+            return [
+                ...prev.slice(0, rowIndex),
+                updatedRow,
+                ...prev.slice(rowIndex + 1)
+            ];
+        });
+    };
 
     return (
-        <>
-        {currentEle === "none" ? 
-        <>
-            <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="12">
-                <Text fontSize="lg" fontWeight="600">Outline</Text>
-                <Box display="flex" alignItems="center" gap="8">
-                    <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M9 14.5C11.3125 14.5 13.4375 13.2812 14.625 11.25C15.7812 9.25 15.7812 6.78125 14.625 4.75C13.4375 2.75 11.3125 1.5 9 1.5C6.65625 1.5 4.53125 2.75 3.34375 4.75C2.1875 6.78125 2.1875 9.25 3.34375 11.25C4.53125 13.2812 6.65625 14.5 9 14.5ZM9 0C11.8438 0 14.4688 1.53125 15.9062 4C17.3438 6.5 17.3438 9.53125 15.9062 12C14.4688 14.5 11.8438 16 9 16C6.125 16 3.5 14.5 2.0625 12C0.625 9.53125 0.625 6.5 2.0625 4C3.5 1.53125 6.125 0 9 0ZM10 8C10 8.5625 9.53125 9 9 9C8.4375 9 8 8.5625 8 8C8 7.46875 8.4375 7 9 7C9.53125 7 10 7.46875 10 8ZM12 7C12.5312 7 13 7.46875 13 8C13 8.5625 12.5312 9 12 9C11.4375 9 11 8.5625 11 8C11 7.46875 11.4375 7 12 7ZM7 8C7 8.5625 6.53125 9 6 9C5.4375 9 5 8.5625 5 8C5 7.46875 5.4375 7 6 7C6.53125 7 7 7.46875 7 8Z" fill="#2E3442"/>
-                    </svg>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 5.5C9.65625 5.5 7.53125 6.75 6.34375 8.75C5.1875 10.7812 5.1875 13.25 6.34375 15.25C7.53125 17.2812 9.65625 18.5 12 18.5C14.3125 18.5 16.4375 17.2812 17.625 15.25C18.7812 13.25 18.7812 10.7812 17.625 8.75C16.4375 6.75 14.3125 5.5 12 5.5ZM12 20C9.125 20 6.5 18.5 5.0625 16C3.625 13.5312 3.625 10.5 5.0625 8C6.5 5.53125 9.125 4 12 4C14.8438 4 17.4688 5.53125 18.9062 8C20.3438 10.5 20.3438 13.5312 18.9062 16C17.4688 18.5 14.8438 20 12 20ZM11.25 14.75V12.75H9.25C8.8125 12.75 8.5 12.4375 8.5 12C8.5 11.5938 8.8125 11.25 9.25 11.25H11.25V9.25C11.25 8.84375 11.5625 8.5 12 8.5C12.4062 8.5 12.75 8.84375 12.75 9.25V11.25H14.75C15.1562 11.25 15.5 11.5938 15.5 12C15.5 12.4375 15.1562 12.75 14.75 12.75H12.75V14.75C12.75 15.1875 12.4062 15.5 12 15.5C11.5625 15.5 11.25 15.1875 11.25 14.75Z" fill="#4F576E"/>
-                    </svg>
-                </Box>
-            </Box>
-            <Box fontSize="sm" className="text-[#66708C]">
-                {data.map((item: any, index: number) => (
-                    <Row key={index} >
-                        {item.children && item.children.map((child: any, i: number) => 
-                            <Col key={"col" + i}>{child.children.map((element: any, j: number) => 
-                                <Ele key={"ele" + j} element={element} label={theEles[element.id]?.props[0]?.value || undefined} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} />)}</Col>)}
-                    </Row>
-                ))}   
-            </Box>
-            </> : <>
-                <Text fontSize="sm" px="24" pt="16" fontWeight="400" color="fg.accent" onClick={() => setCurrentEle("none")} className="cursor-pointer">{"<-"} My Form</Text> 
-                <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4">
-                    <Text fontSize="lg" fontWeight="600">{currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}</Text>
-                    <Box display="flex" alignItems="center" gap="8">
-                        <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M9 14.5C11.3125 14.5 13.4375 13.2812 14.625 11.25C15.7812 9.25 15.7812 6.78125 14.625 4.75C13.4375 2.75 11.3125 1.5 9 1.5C6.65625 1.5 4.53125 2.75 3.34375 4.75C2.1875 6.78125 2.1875 9.25 3.34375 11.25C4.53125 13.2812 6.65625 14.5 9 14.5ZM9 0C11.8438 0 14.4688 1.53125 15.9062 4C17.3438 6.5 17.3438 9.53125 15.9062 12C14.4688 14.5 11.8438 16 9 16C6.125 16 3.5 14.5 2.0625 12C0.625 9.53125 0.625 6.5 2.0625 4C3.5 1.53125 6.125 0 9 0ZM10 8C10 8.5625 9.53125 9 9 9C8.4375 9 8 8.5625 8 8C8 7.46875 8.4375 7 9 7C9.53125 7 10 7.46875 10 8ZM12 7C12.5312 7 13 7.46875 13 8C13 8.5625 12.5312 9 12 9C11.4375 9 11 8.5625 11 8C11 7.46875 11.4375 7 12 7ZM7 8C7 8.5625 6.53125 9 6 9C5.4375 9 5 8.5625 5 8C5 7.46875 5.4375 7 6 7C6.53125 7 7 7.46875 7 8Z" fill="#2E3442"/>
-                        </svg>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 5.5C9.65625 5.5 7.53125 6.75 6.34375 8.75C5.1875 10.7812 5.1875 13.25 6.34375 15.25C7.53125 17.2812 9.65625 18.5 12 18.5C14.3125 18.5 16.4375 17.2812 17.625 15.25C18.7812 13.25 18.7812 10.7812 17.625 8.75C16.4375 6.75 14.3125 5.5 12 5.5ZM12 20C9.125 20 6.5 18.5 5.0625 16C3.625 13.5312 3.625 10.5 5.0625 8C6.5 5.53125 9.125 4 12 4C14.8438 4 17.4688 5.53125 18.9062 8C20.3438 10.5 20.3438 13.5312 18.9062 16C17.4688 18.5 14.8438 20 12 20ZM11.25 14.75V12.75H9.25C8.8125 12.75 8.5 12.4375 8.5 12C8.5 11.5938 8.8125 11.25 9.25 11.25H11.25V9.25C11.25 8.84375 11.5625 8.5 12 8.5C12.4062 8.5 12.75 8.84375 12.75 9.25V11.25H14.75C15.1562 11.25 15.5 11.5938 15.5 12C15.5 12.4375 15.1562 12.75 14.75 12.75H12.75V14.75C12.75 15.1875 12.4062 15.5 12 15.5C11.5625 15.5 11.25 15.1875 11.25 14.75Z" fill="#4F576E"/>
-                        </svg>
+        <div className="">
+            <div className="flex w-[200%] transition duration-300" style={{ transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)" }}>
+                <div className="min-w-[50%] w-[50%]" >
+                    <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4" mt="32">
+                        <Text fontSize="lg" fontWeight="600">Outline</Text>
+                        <Box display="flex" alignItems="center" gap="2">
+                            <Button onClick={() => setData(prev => [...prev, {label: "Row", children: []}])} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
+                        </Box>
                     </Box>
-                </Box>
-                {theEles[currentEle]?.props?.map((prop: any, ind: number) => 
-                    <Fragment key={ind}>
-                    {prop.type === "text" && (
-                        <Input prop={prop} propIndex={ind} onChange={onInputChange} />
+                    <Box fontSize="sm" className="text-[#66708C]">
+                        {data.map((item: any, index: number) => (
+                            <Row addCol={(e: any) => addCol(e, index)} key={index}>
+                                {item.children && item.children.map((child: any, i: number) => 
+                                    <Col addElement={(e: any, ) => addElement(e, i, index)} key={"col" + i}>{child.children.map((element: any, j: number) => 
+                                        <Ele key={"ele" + j} type={theEles[element.id].type} element={element} label={theEles[element.id]?.props[0]?.value || undefined} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} />)}</Col>)}
+                            </Row>
+                        ))}   
+                    </Box>
+                </div>
+                <div className="min-w-[50%] w-[50%]">
+                    <Text fontSize="sm" px="24" pt="16" fontWeight="400" color="fg.accent" onClick={() => setCurrentEle("none")} className="cursor-pointer">{"<-"} Outline</Text> 
+                    <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4">
+                        <Text fontSize="lg" fontWeight="600">{currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}</Text>
+                        <Box display="flex" alignItems="center" gap="8">
+                            <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 14.5C11.3125 14.5 13.4375 13.2812 14.625 11.25C15.7812 9.25 15.7812 6.78125 14.625 4.75C13.4375 2.75 11.3125 1.5 9 1.5C6.65625 1.5 4.53125 2.75 3.34375 4.75C2.1875 6.78125 2.1875 9.25 3.34375 11.25C4.53125 13.2812 6.65625 14.5 9 14.5ZM9 0C11.8438 0 14.4688 1.53125 15.9062 4C17.3438 6.5 17.3438 9.53125 15.9062 12C14.4688 14.5 11.8438 16 9 16C6.125 16 3.5 14.5 2.0625 12C0.625 9.53125 0.625 6.5 2.0625 4C3.5 1.53125 6.125 0 9 0ZM10 8C10 8.5625 9.53125 9 9 9C8.4375 9 8 8.5625 8 8C8 7.46875 8.4375 7 9 7C9.53125 7 10 7.46875 10 8ZM12 7C12.5312 7 13 7.46875 13 8C13 8.5625 12.5312 9 12 9C11.4375 9 11 8.5625 11 8C11 7.46875 11.4375 7 12 7ZM7 8C7 8.5625 6.53125 9 6 9C5.4375 9 5 8.5625 5 8C5 7.46875 5.4375 7 6 7C6.53125 7 7 7.46875 7 8Z" fill="#2E3442"/>
+                            </svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 5.5C9.65625 5.5 7.53125 6.75 6.34375 8.75C5.1875 10.7812 5.1875 13.25 6.34375 15.25C7.53125 17.2812 9.65625 18.5 12 18.5C14.3125 18.5 16.4375 17.2812 17.625 15.25C18.7812 13.25 18.7812 10.7812 17.625 8.75C16.4375 6.75 14.3125 5.5 12 5.5ZM12 20C9.125 20 6.5 18.5 5.0625 16C3.625 13.5312 3.625 10.5 5.0625 8C6.5 5.53125 9.125 4 12 4C14.8438 4 17.4688 5.53125 18.9062 8C20.3438 10.5 20.3438 13.5312 18.9062 16C17.4688 18.5 14.8438 20 12 20ZM11.25 14.75V12.75H9.25C8.8125 12.75 8.5 12.4375 8.5 12C8.5 11.5938 8.8125 11.25 9.25 11.25H11.25V9.25C11.25 8.84375 11.5625 8.5 12 8.5C12.4062 8.5 12.75 8.84375 12.75 9.25V11.25H14.75C15.1562 11.25 15.5 11.5938 15.5 12C15.5 12.4375 15.1562 12.75 14.75 12.75H12.75V14.75C12.75 15.1875 12.4062 15.5 12 15.5C11.5625 15.5 11.25 15.1875 11.25 14.75Z" fill="#4F576E"/>
+                            </svg>
+                        </Box>
+                    </Box>
+                    {theEles[currentEle]?.props?.map((prop: any, ind: number) => 
+                        <Fragment key={ind}>
+                        {prop.type === "text" && (
+                            <Input prop={prop} propIndex={ind} onChange={onInputChange} />
+                        )}
+                        {prop.type === "checkbox" && (
+                            <div className="p-6 pr-0 py-2">
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={prop.value === "true" ? true : false}
+                                        onChange={(e) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
+                                        className="mr-2"
+                                    />
+                                    {prop.label}
+                                </label>
+                            </div>
+                        )}
+                        </Fragment>
                     )}
-                    {prop.type === "checkbox" && (
-                        <div className="p-6 pr-0 py-2">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={prop.value === "true" ? true : false}
-                                    onChange={(e) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
-                                    className="mr-2"
-                                />
-                                {prop.label}
-                            </label>
-                        </div>
-                    )}
-                    </Fragment>
-                )}
-            </>}
-        </>
+                </div>
+            </div>
+        </div>
     )
 }
 
 export default function VBPrototype() {
-
-    
     const onInputChange = (value: any, propIndex: number) => {
         if (currentEle !== "none" && currentEle in theEles) {
             setTheEles((prev: any) => {
@@ -225,7 +328,9 @@ export default function VBPrototype() {
     const [currentEle, setCurrentEle] = useState<string>("none");
     const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
     const [theEles, setTheEles] = useState<any>({
-        "heading": {"type": "Heading", props: [
+        "heading": {
+            type: "Heading", 
+            props: [
             {type: "text", label: "Text"},
         ]},
         "text": {"label": "Text", "type": "Text", props: [
@@ -254,71 +359,27 @@ export default function VBPrototype() {
             {type: "text", label: "Placeholder"},
             {type: "text", label: "Tooltip"},
             {type: "checkbox", label: "Required", value: false},
+        ]},
+        "job title": {"type": "Input", props: [
+            {type: "text", label: "Label"},
+            {type: "text", label: "Placeholder"},
+            {type: "text", label: "Tooltip"},
+            {type: "checkbox", label: "Required", value: false},
+        ]},
+        "products": {"type": "Input", props: [
+            {type: "text", label: "Label"},
+            {type: "text", label: "Placeholder"},
+            {type: "text", label: "Tooltip"},
+            {type: "checkbox", label: "Required", value: false},
+        ]},
+        "button": {"type": "Button", props: [
+            {type: "text", label: "Label"},
         ]}
     });
 
-    const data = [
-        {
-            label: "row",
-            children: [
-                { label: "col",
-                    children: [
-                        { 
-                            type: "Heading",
-                            id: "heading",
-                            label: "" 
-                        },
-                        { 
-                            type: "Text",
-                            id: "text"
-                        },
-                    ]
-                },
-            ]
-        },
-        {
-            label: "row",
-            children: [
-                { label: "col",
-                    children: [
-                        { 
-                            type: "Input",
-                            id: "first name"
-                        },
-                    ]
-                },
-                { label: "col",
-                    children: [
-                        { 
-                            type: "Input",
-                            id: "last name"
-                        },
-                    ]
-                },
-            ]
-        },
-        {
-            label: "row",
-            children: [
-                { label: "col",
-                    children: [
-                        { 
-                            type: "Input",
-                            id: "email"
-                        },
-                    ]
-                },
-                { label: "col",
-                    children: [
-                        { 
-                            type: "Input",
-                            id: "company"
-                        },
-                    ]
-                },
-            ]
-        }
-    ];
+    const [data, setData] = useState<any[]>([
+    ]);
+
 
     // Add escape key event listener
     useEffect(() => {
@@ -362,18 +423,18 @@ export default function VBPrototype() {
                 </Box>
             </Box>
             <Box w="224" >
-                <Outline data={data} currentEle={currentEle} theEles={theEles} onInputChange={onInputChange} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} /> 
+                <Outline data={data} setTheEles={setTheEles} setData={setData} currentEle={currentEle} theEles={theEles} onInputChange={onInputChange} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} /> 
             </Box>
-            <div className="p-6 pt-3 flex items-stretch">
+            <div className="p-6 pt-3 flex items-stretch z-10">
                 <div className="rounded-lg bg-white shadow-lg grow w-full" onClick={() => setCurrentEle("none")} style={{
                     background: "radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)"
                 }}>
                     <div className="w-[500px] m-auto p-4 min-h-[80vh] pt-24">   
                     {data.map((row, index) => 
                         <section className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 text-white" key={index}>
-                            {row.children.map((col, colIndex) => 
+                            {row.children.map((col: any, colIndex: any) => 
                                 <div key={"col" + colIndex}>
-                                    {col.children.map((element, eleIndex) => 
+                                    {col.children.map((element: any, eleIndex: any) => 
                                         <div key={"ele" + eleIndex} className="relative group">
                                             <div onClick={(e) => { e.stopPropagation(); setCurrentEle(element.id); setCurrentHoverEle("none") }} style={{
                                                 visibility: (currentEle === element.id || currentHoverEle === element.id) ?     "visible" : undefined,
@@ -384,7 +445,7 @@ export default function VBPrototype() {
                                                 bottom:     (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined
                                             }} className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none">
                                                 <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">{(() => {
-                            switch (element.type) {
+                            switch (theEles[element.id].type) {
                                 case "Heading":
                                     return <svg width="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M1 1.75C1 1.34375 1.3125 1 1.75 1H5.25C5.65625 1 6 1.34375 6 1.75C6 2.1875 5.65625 2.5 5.25 2.5H4.25V7H11.75V2.5H10.75C10.3125 2.5 10 2.1875 10 1.75C10 1.34375 10.3125 1 10.75 1H14.25C14.6562 1 15 1.34375 15 1.75C15 2.1875 14.6562 2.5 14.25 2.5H13.25V13.5H14.25C14.6562 13.5 15 13.8438 15 14.25C15 14.6875 14.6562 15 14.25 15H10.75C10.3125 15 10 14.6875 10 14.25C10 13.8438 10.3125 13.5 10.75 13.5H11.75V8.5H4.25V13.5H5.25C5.65625 13.5 6 13.8438 6 14.25C6 14.6875 5.65625 15 5.25 15H1.75C1.3125 15 1 14.6875 1 14.25C1 13.8438 1.3125 13.5 1.75 13.5H2.75V2.5H1.75C1.3125 2.5 1 2.1875 1 1.75Z" fill="currentColor"/>
@@ -414,7 +475,7 @@ export default function VBPrototype() {
                         })()}{theEles[element.id].type}</div>
                                             </div>
                                             {(() => {
-                            switch (element.type) {
+                            switch (theEles[element.id].type) {
                                 case "Heading":
                                     return <h1 className="text-3xl mb-5 font-bold">{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}</h1>
                                     ;
@@ -437,9 +498,9 @@ export default function VBPrototype() {
                                         </div>
                                     ;
                                 case "Button":
-                                    return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M14 3.5H2C1.71875 3.5 1.5 3.75 1.5 4V12C1.5 12.2812 1.71875 12.5 2 12.5H14C14.25 12.5 14.5 12.2812 14.5 12V4C14.5 3.75 14.25 3.5 14 3.5ZM2 2H14C15.0938 2 16 2.90625 16 4V12C16 13.125 15.0938 14 14 14H2C0.875 14 0 13.125 0 12V4C0 2.90625 0.875 2 2 2Z" fill="currentColor"/>
-                                    </svg>
+                                    return <div className="text-right mt-4">
+                                        <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">{theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}</div>
+                                    </div>
                                     ;
                                 default:
                                     return <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
