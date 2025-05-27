@@ -9,6 +9,7 @@ import { useState } from "react";import {
     IconBooks,
     IconLink,
     IconSparkles,
+    IconTrash,
    } from "@tabler/icons-react";
 import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
 
@@ -20,16 +21,15 @@ const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop
     </div>
 }
         
-const Row: React.FC<{ children: ReactNode, addCol: any}> = ({ children, addCol }) => {
+const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any}> = ({ children, addCol, removeRow }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
         <div className="p-1 py-0 -mr-[24px]">
             <div
-                onClick={() => setIsOpen(!isOpen)}
                 className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5"
             >
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-1 items-center" onClick={() => setIsOpen(!isOpen)}>
                     <svg
                         width="12"
                         height="12"
@@ -48,14 +48,28 @@ const Row: React.FC<{ children: ReactNode, addCol: any}> = ({ children, addCol }
                     </svg>
                     <Text>Row</Text>
                 </div>
-                <Button className="group-hover:visible invisible" onClick={addCol} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
+                <div className="group-hover:visible invisible" >
+                <Menu options={[
+                        {
+                            addon: <IconTrash size={16} />,
+                            label: "Remove Row",
+                            intent: "danger",
+                            execute: removeRow,
+                        }
+                        ]}>
+                        <MenuTrigger icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                        <MenuContent />
+                    </Menu>
+                    <Button onClick={addCol} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
+
+                </div>
             </div>
             <div style={{ display: isOpen ? "block" : "none" }}>{children}</div>
         </div>
     );
 }
 
-const Col: React.FC<{ children: ReactNode, addElement: any }> = ({ children, addElement }) => {
+const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any }> = ({ children, addElement, removeCol }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -83,33 +97,45 @@ const Col: React.FC<{ children: ReactNode, addElement: any }> = ({ children, add
                     </svg>
                     <Text>Column</Text>
                 </div>
-                <Menu options={[
-                    {
-                        group: {label: "Add Element"},
-                        addon: <IconUpload size={16} />,
-                        label: "Heading",
-                        execute: () => addElement("Heading"),
-                    },
-                    {
-                        addon: <IconLink size={16} />,
-                        label: "Text",
-                        execute: () => addElement("Text"),
-                    },
-                    {
-                        addon: <IconSparkles size={16} />,
-                        label: "Input",
-                        execute: () => addElement("Input"),
-                    },
-                    {
-                        addon: <IconSparkles size={16} />,
-                        label: "Button",
-                        execute: () => addElement("Button"),
-                    },
-                    ]}>
-                    <MenuTrigger icon={<IconPlus />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
-                    <MenuContent />
-                </Menu>
-
+                <div className="group-hover:visible invisible">
+                    <Menu options={[
+                        {
+                            addon: <IconTrash size={16} />,
+                            label: "Remove Column",
+                            intent: "danger",
+                            execute: removeCol,
+                        }
+                        ]}>
+                        <MenuTrigger icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                        <MenuContent />
+                    </Menu>
+                    <Menu options={[
+                        {
+                            group: {label: "Add Element"},
+                            addon: <IconUpload size={16} />,
+                            label: "Heading",
+                            execute: () => addElement("Heading"),
+                        },
+                        {
+                            addon: <IconLink size={16} />,
+                            label: "Text",
+                            execute: () => addElement("Text"),
+                        },
+                        {
+                            addon: <IconSparkles size={16} />,
+                            label: "Input",
+                            execute: () => addElement("Input"),
+                        },
+                        {
+                            addon: <IconSparkles size={16} />,
+                            label: "Button",
+                            execute: () => addElement("Button"),
+                        },
+                        ]}>
+                        <MenuTrigger icon={<IconPlus />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                        <MenuContent />
+                    </Menu>
+                </div>
             </div>
             <div style={{ display: isOpen ? "block" : "none" }}>{children}</div>
         </Box>
@@ -247,6 +273,25 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
         });
     };
 
+    const removeCol = (e: any, colIndex: number, rowIndex: number) => {
+        setData(prev => {
+            const updatedRow = {
+                ...prev[rowIndex],
+                children: prev[rowIndex].children.filter((_: any, index: number) => index !== colIndex)
+            };
+
+            return [
+                ...prev.slice(0, rowIndex),
+                updatedRow,
+                ...prev.slice(rowIndex + 1)
+            ];
+        });}
+
+    const removeRow = (rowIndex: number) => {
+
+        setData(prev => prev.filter((_, index: number) => index !== rowIndex));
+    }
+
     return (
         <div className="">
             <div className="flex w-[200%] transition duration-300" style={{ transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)" }}>
@@ -259,9 +304,9 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
                     </Box>
                     <Box fontSize="sm" className="text-[#66708C]">
                         {data.map((item: any, index: number) => (
-                            <Row addCol={(e: any) => addCol(e, index)} key={index}>
+                            <Row removeRow={(e:any) => removeRow(index)} addCol={(e: any) => addCol(e, index)} key={index}>
                                 {item.children && item.children.map((child: any, i: number) => 
-                                    <Col addElement={(e: any, ) => addElement(e, i, index)} key={"col" + i}>{child.children.map((element: any, j: number) => 
+                                    <Col removeCol={(e: any) => removeCol(e, i, index)} addElement={(e: any, ) => addElement(e, i, index)} key={"col" + i}>{child.children.map((element: any, j: number) => 
                                         <Ele key={"ele" + j} type={theEles[element.id].type} element={element} label={theEles[element.id]?.props[0]?.value || undefined} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} />)}</Col>)}
                             </Row>
                         ))}   
