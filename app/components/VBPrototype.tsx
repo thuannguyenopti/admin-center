@@ -476,7 +476,7 @@ export default function VBPrototype() {
                 }}>
                     <div className="w-[500px] m-auto p-4 min-h-[80vh] pt-24">   
                     {data.map((row, index) => 
-                        <section className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 text-white" key={index}>
+                        <section className="grid grid-flow-col auto-cols-fr gap-4 text-white" key={index}>
                             {row.children.map((col: any, colIndex: any) => 
                                 <div key={"col" + colIndex}>
                                     {col.children.map((element: any, eleIndex: any) => 
