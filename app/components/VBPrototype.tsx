@@ -21,11 +21,11 @@ const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop
     </div>
 }
         
-const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any}> = ({ children, addCol, removeRow }) => {
+const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragStart: any}> = ({ children, addCol, removeRow, onDragStart }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
-        <div className="p-1 py-0 -mr-[24px]">
+        <div className="p-1 py-0 -mr-[24px]" onDragStart={onDragStart} draggable>
             <div
                 className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5"
             >
@@ -194,16 +194,18 @@ const Ele: React.FC<{ element: any, setCurrentEle: any, type: any, setCurrentHov
 
 interface OutlineProps {
     currentEle: string;
+    currentHoverEle: string;
     theEles: Record<string, any>;
     onInputChange: (value: string, propIndex: number) => void;
     setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
+    setDragging: React.Dispatch<React.SetStateAction<string>>;
     setData: React.Dispatch<React.SetStateAction<any[]>>;
     setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
     setTheEles: React.Dispatch<React.SetStateAction<Record<string, any>>>;
     data: any;
 }
 
-const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, setCurrentEle, setCurrentHoverEle, data, setData, setTheEles }) => {
+const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onInputChange, setCurrentEle, currentHoverEle, setCurrentHoverEle, data, setData, setTheEles }) => {
 
     const addCol = (e: any, row: number) => {
         e.stopPropagation();
@@ -292,6 +294,11 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
         setData(prev => prev.filter((_, index: number) => index !== rowIndex));
     }
 
+    const onDragStart = () => {
+        console.log("Drag started");
+        setDragging(currentHoverEle);
+    }
+
     return (
         <div className="">
             <div className="flex w-[200%] transition duration-300" style={{ transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)" }}>
@@ -304,7 +311,7 @@ const Outline: React.FC<OutlineProps> = ({ currentEle, theEles, onInputChange, s
                     </Box>
                     <Box fontSize="sm" className="text-[#66708C]">
                         {data.map((item: any, index: number) => (
-                            <Row removeRow={(e:any) => removeRow(index)} addCol={(e: any) => addCol(e, index)} key={index}>
+                            <Row onDragStart={(e: any) => onDragStart()} removeRow={(e:any) => removeRow(index)} addCol={(e: any) => addCol(e, index)} key={index}>
                                 {item.children && item.children.map((child: any, i: number) => 
                                     <Col removeCol={(e: any) => removeCol(e, i, index)} addElement={(e: any, ) => addElement(e, i, index)} key={"col" + i}>{child.children.map((element: any, j: number) => 
                                         <Ele key={"ele" + j} type={theEles[element.id].type} element={element} label={theEles[element.id]?.props[0]?.value || undefined} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} />)}</Col>)}
@@ -369,6 +376,8 @@ export default function VBPrototype() {
             });
         }
     }
+
+    const [dragging, setDragging] = useState<any>(null);
 
     const [currentEle, setCurrentEle] = useState<string>("none");
     const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
@@ -468,7 +477,17 @@ export default function VBPrototype() {
                 </Box>
             </Box>
             <Box w="224" >
-                <Outline data={data} setTheEles={setTheEles} setData={setData} currentEle={currentEle} theEles={theEles} onInputChange={onInputChange} setCurrentEle={setCurrentEle} setCurrentHoverEle={setCurrentHoverEle} /> 
+                <Outline 
+                setDragging={setDragging} 
+                currentHoverEle={currentHoverEle} 
+                setCurrentEle={setCurrentEle} 
+                data={data} 
+                setTheEles={setTheEles} 
+                setData={setData} 
+                currentEle={currentEle} 
+                theEles={theEles} 
+                onInputChange={onInputChange} 
+                setCurrentHoverEle={setCurrentHoverEle} /> 
             </Box>
             <div className="p-6 pt-3 flex items-stretch z-10">
                 <div className="rounded-lg bg-white shadow-lg grow w-full" onClick={() => setCurrentEle("none")} style={{
