@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Button, Field, Heading, Text, Input as Input2 } from "@optiaxiom/react";
+import { Box, Button, Field, Heading, Text, Input as Input2, Checkbox } from "@optiaxiom/react";
 import { ReactNode, useEffect, Fragment, Children } from "react";
 import { useState } from "react";import { 
     IconPlus,
@@ -10,19 +10,30 @@ import { useState } from "react";import {
     IconLink,
     IconSparkles,
     IconTrash,
+    IconPilcrow,
+    IconForms,
+    IconRectangle,
+    IconHeading,
+    IconBrackets,
    } from "@tabler/icons-react";
 import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
 
 
 const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop, onChange, propIndex }) => {
     return <div className="p-6 pr-0 py-2">
-        <label>{prop.label}</label>
-        <input onChange={e => onChange(e.currentTarget.value, propIndex)} type="text" value={prop.value || ""} className="w-full p-2 border rounded-[4px] border-[#CACFDC] hover:boder-[#838DA4] focus:boder-[#838DA4] outline-none" />
+        <Field label={prop.label}>
+            <Input2
+            placeholder={prop.placeholder || ""}
+            value={prop.value || ""}
+                onChange={e => onChange(e.currentTarget.value, propIndex)}
+            />
+        </Field>
     </div>
 }
         
 const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragStart: any}> = ({ children, addCol, removeRow, onDragStart }) => {
     const [isOpen, setIsOpen] = useState(true);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     return (
         <div className="p-1 py-0 -mr-[24px]">
@@ -49,13 +60,15 @@ const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragSt
                     </svg>
                     <Text>Row</Text>
                 </div>
-                <div className="group-hover:visible invisible" >
-                <Menu options={[
+                <div className="group-hover:visible invisible" style={{
+                    visibility: menuOpen ? "visible" : undefined,
+                }}>
+                <Menu onOpenChange={() => setMenuOpen(!menuOpen)} open={menuOpen} options={[
                         {
                             addon: <IconTrash size={16} />,
                             label: "Remove Row",
                             intent: "danger",
-                            execute: removeRow,
+                            execute: () => {removeRow(); setMenuOpen(false);},
                         }
                         ]}>
                         <MenuTrigger icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
@@ -72,6 +85,8 @@ const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragSt
 
 const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDragStart: any }> = ({ children, addElement, removeCol, onDragStart }) => {
     const [isOpen, setIsOpen] = useState(true);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);
 
     return (
         <Box>
@@ -102,37 +117,39 @@ const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDr
                     </svg>
                     <Text>Column</Text>
                 </div>
-                <div className="group-hover:visible invisible">
-                    <Menu options={[
+                <div className="group-hover:visible invisible" style={{
+                    visibility: (menuOpen || addOpen) ? "visible" : undefined,
+                }}>
+                    <Menu onOpenChange={() => setMenuOpen(!menuOpen)} open={menuOpen} options={[
                         {
                             addon: <IconTrash size={16} />,
                             label: "Remove Column",
                             intent: "danger",
-                            execute: removeCol,
+                            execute: () => {removeCol(); setMenuOpen(false); },
                         }
                         ]}>
                         <MenuTrigger icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
                         <MenuContent />
                     </Menu>
-                    <Menu options={[
+                    <Menu onOpenChange={() => setAddOpen(!addOpen)} open={addOpen} options={[
                         {
                             group: {label: "Add Element"},
-                            addon: <IconUpload size={16} />,
+                            addon: <IconHeading size={16} />,
                             label: "Heading",
-                            execute: () => addElement("Heading"),
+                            execute: () => {addElement("Heading")},
                         },
                         {
-                            addon: <IconLink size={16} />,
+                            addon: <IconPilcrow size={16} />,
                             label: "Text",
                             execute: () => addElement("Text"),
                         },
                         {
-                            addon: <IconSparkles size={16} />,
+                            addon: <IconForms size={16} />,
                             label: "Input",
                             execute: () => addElement("Input"),
                         },
                         {
-                            addon: <IconSparkles size={16} />,
+                            addon: <IconRectangle size={16} />,
                             label: "Button",
                             execute: () => addElement("Button"),
                         },
@@ -147,7 +164,8 @@ const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDr
     );
 }
 
-const Ele: React.FC<{ element: any, setCurrentEle: any, type: any, setCurrentHoverEle: any, label: string, onDragStart: any }> = ({ element, setCurrentEle, type, setCurrentHoverEle, label, onDragStart }) => {
+const Ele: React.FC<{ element: any, removeEle: any, setCurrentEle: any, type: any, setCurrentHoverEle: any, label: string, onDragStart: any }> = ({ element, removeEle, setCurrentEle, type, setCurrentHoverEle, label, onDragStart }) => {
+    const [menuOpen, setMenuOpen] = useState(false);
     return (
         <Box pl="32" py="2" pr="20">
             <div
@@ -155,45 +173,47 @@ const Ele: React.FC<{ element: any, setCurrentEle: any, type: any, setCurrentHov
             onMouseLeave={() => setCurrentHoverEle("none")}
             draggable
             onDragStart={onDragStart}
-            onClick={() => setCurrentEle(element.id)}
+            onClick={() => {if (!menuOpen) setCurrentEle(element.id)}}
                 className="group p-2 py-0 text-sm h-[40px] pl-3 cursor-pointer border border-[#CACFDC] hover:border-[#838DA4] rounded-[4px] hover:bg-[#091E4208] gap-1 items-center w-full bg-white flex justify-between"
             >
                 <div className="flex gap-1 items-center w-full group-hover:w-[calc(100%-24px)]" style={{ color: label ? "#2E3442" : "#66708C" }}>
                         <div className="min-w-5">{(() => {
                             switch (type) {
                                 case "Heading":
-                                    return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 1.75C1 1.34375 1.3125 1 1.75 1H5.25C5.65625 1 6 1.34375 6 1.75C6 2.1875 5.65625 2.5 5.25 2.5H4.25V7H11.75V2.5H10.75C10.3125 2.5 10 2.1875 10 1.75C10 1.34375 10.3125 1 10.75 1H14.25C14.6562 1 15 1.34375 15 1.75C15 2.1875 14.6562 2.5 14.25 2.5H13.25V13.5H14.25C14.6562 13.5 15 13.8438 15 14.25C15 14.6875 14.6562 15 14.25 15H10.75C10.3125 15 10 14.6875 10 14.25C10 13.8438 10.3125 13.5 10.75 13.5H11.75V8.5H4.25V13.5H5.25C5.65625 13.5 6 13.8438 6 14.25C6 14.6875 5.65625 15 5.25 15H1.75C1.3125 15 1 14.6875 1 14.25C1 13.8438 1.3125 13.5 1.75 13.5H2.75V2.5H1.75C1.3125 2.5 1 2.1875 1 1.75Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconHeading size={16} />
                                     ;
                                 case "Text":
-                                    return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M2.5 2.5V4C2.5 4.4375 2.15625 4.75 1.75 4.75C1.3125 4.75 1 4.4375 1 4V2.25C1 1.5625 1.53125 1 2.25 1H13.75C14.4375 1 15 1.5625 15 2.25V4C15 4.4375 14.6562 4.75 14.25 4.75C13.8125 4.75 13.5 4.4375 13.5 4V2.5H8.75V13.5H10.25C10.6562 13.5 11 13.8438 11 14.25C11 14.6875 10.6562 15 10.25 15H5.75C5.3125 15 5 14.6875 5 14.25C5 13.8438 5.3125 13.5 5.75 13.5H7.25V2.5H2.5Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconPilcrow size={16} />
                                     ;
                                 case "Input":
-                                    return <svg className="-translate-x-[4px] -translate-y-[2px]" width="20" height="16" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17.7812 1.87505C17.4688 1.56255 17 1.56255 16.7188 1.87505L16.0625 2.5313L17.5 3.9688L18.1562 3.2813C18.4375 3.00005 18.4375 2.5313 18.1562 2.2188L17.7812 1.87505ZM11.2188 7.4063C11.125 7.5313 11.0625 7.6563 11.0312 7.7813L10.7188 9.3438L12.25 9.0313C12.4062 9.00005 12.5312 8.9063 12.625 8.81255L16.4375 5.00005L15 3.5938L11.2188 7.4063ZM15.6562 0.812551C16.5312 -0.0624486 17.9375 -0.0936986 18.8438 0.812551L19.2188 1.18755C20.0938 2.06255 20.0938 3.4688 19.2188 4.3438L13.6875 9.87505C13.375 10.1876 13 10.4063 12.5625 10.5001L9.875 11.0313C9.65625 11.0938 9.375 11.0313 9.21875 10.8438C9.03125 10.6563 8.9375 10.4063 9 10.1563L9.5625 7.4688C9.65625 7.06255 9.875 6.6563 10.1562 6.37505L15.6562 0.812551ZM2.25 4.00005H8.25C8.65625 4.00005 9 4.3438 9 4.75005C9 5.18755 8.65625 5.50005 8.25 5.50005H2.25C1.8125 5.50005 1.5 5.8438 1.5 6.25005V13.7501C1.5 14.1876 1.8125 14.5001 2.25 14.5001H15.75C16.1562 14.5001 16.5 14.1876 16.5 13.7501V9.75005C16.5 9.3438 16.8125 9.00005 17.25 9.00005C17.6562 9.00005 18 9.3438 18 9.75005V13.7501C18 15.0001 16.9688 16.0001 15.75 16.0001H2.25C1 16.0001 0 15.0001 0 13.7501V6.25005C0 5.0313 1 4.00005 2.25 4.00005ZM4 11.0001C3.4375 11.0001 3 10.5626 3 10.0001C3 9.4688 3.4375 9.00005 4 9.00005C4.53125 9.00005 5 9.4688 5 10.0001C5 10.5626 4.53125 11.0001 4 11.0001ZM8 10.0001C8 10.5626 7.53125 11.0001 7 11.0001C6.4375 11.0001 6 10.5626 6 10.0001C6 9.4688 6.4375 9.00005 7 9.00005C7.53125 9.00005 8 9.4688 8 10.0001Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconForms size={16} />
                                     ;
                                 case "Button":
-                                    return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M14 3.5H2C1.71875 3.5 1.5 3.75 1.5 4V12C1.5 12.2812 1.71875 12.5 2 12.5H14C14.25 12.5 14.5 12.2812 14.5 12V4C14.5 3.75 14.25 3.5 14 3.5ZM2 2H14C15.0938 2 16 2.90625 16 4V12C16 13.125 15.0938 14 14 14H2C0.875 14 0 13.125 0 12V4C0 2.90625 0.875 2 2 2Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconRectangle size={16} />
                                     ;
                                 default:
-                                    return <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5.75 1H7.25C7.65625 1 8 1.34375 8 1.75C8 2.1875 7.65625 2.5 7.25 2.5H5.75C5.03125 2.5 4.5 3.0625 4.5 3.75V5.1875C4.5 5.90625 4.1875 6.625 3.6875 7.125L2.78125 8L3.6875 8.90625C4.1875 9.40625 4.5 10.125 4.5 10.8438V12.25C4.5 12.9688 5.03125 13.5 5.75 13.5H7.25C7.65625 13.5 8 13.8438 8 14.25C8 14.6875 7.65625 15 7.25 15H5.75C4.21875 15 3 13.7812 3 12.25V10.8438C3 10.5 2.84375 10.1875 2.625 9.96875L1.21875 8.53125C0.90625 8.25 0.90625 7.78125 1.21875 7.46875L2.625 6.0625C2.84375 5.84375 3 5.53125 3 5.1875V3.75C3 2.25 4.21875 1 5.75 1ZM14.25 1C15.75 1 17 2.25 17 3.75V5.1875C17 5.53125 17.125 5.84375 17.3438 6.0625L18.7812 7.5C19.0625 7.78125 19.0625 8.25 18.7812 8.53125L17.3438 9.96875C17.125 10.1875 17 10.5 17 10.8438V12.25C17 13.7812 15.75 15 14.25 15H12.75C12.3125 15 12 14.6875 12 14.25C12 13.8438 12.3125 13.5 12.75 13.5H14.25C14.9375 13.5 15.5 12.9688 15.5 12.25V10.8438C15.5 10.125 15.7812 9.40625 16.2812 8.90625L17.1875 8L16.2812 7.125C15.7812 6.625 15.5 5.90625 15.5 5.1875V3.75C15.5 3.0625 14.9375 2.5 14.25 2.5H12.75C12.3125 2.5 12 2.1875 12 1.75C12 1.34375 12.3125 1 12.75 1H14.25Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconBrackets size={16} />
                                     ;
                             }
                         })()}</div> 
 
                     <span className="truncate overflow-hidden text-ellipsis">{label || <span className="italic text-[#66708C]">{`Empty ${type}`}</span>}</span>   
                 </div>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="min-w-[24px] hidden group-hover:block">
-                    <path d="M5.99072 10C4.86572 10 3.99072 10.9062 3.99072 12C3.99072 13.125 4.86572 14 5.99072 14C7.08447 14 7.99072 13.125 7.99072 12C7.99072 10.9062 7.08447 10 5.99072 10ZM11.9907 10C10.8657 10 9.99072 10.9062 9.99072 12C9.99072 13.125 10.8657 14 11.9907 14C13.0845 14 13.9907 13.125 13.9907 12C13.9907 10.9062 13.0845 10 11.9907 10ZM17.9907 10C16.8657 10 15.9907 10.9062 15.9907 12C15.9907 13.125 16.8657 14 17.9907 14C19.0845 14 19.9907 13.125 19.9907 12C19.9907 10.9062 19.0845 10 17.9907 10Z" fill="#2E3442"/>
-                </svg>
+                <div className="min-w-[24px] invisible group-hover:visible" style={{
+                    visibility: menuOpen ? "visible" : undefined,
+                }}>
+                    <Menu onOpenChange={(e) => setMenuOpen(!menuOpen)} open={menuOpen} options={[
+                        {
+                            addon: <IconTrash size={16} />,
+                            label: "Remove Element",
+                            intent: "danger",
+                            execute: () => {removeEle(); setMenuOpen(false);},
+                        }
+                    ]} >
+                        <MenuTrigger onClick={e => {e.stopPropagation(); setMenuOpen(true)}} icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                        <MenuContent />
+                    </Menu>
+                </div>
             </div>
         </Box>
     );
@@ -295,10 +315,26 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                 updatedRow,
                 ...prev.slice(rowIndex + 1)
             ];
-        });}
+        })
+    ;}
+
+    const removeEle = (id: string) => {
+        setData(prev => {
+            return prev.map(row => {
+                return {
+                    ...row,
+                    children: row.children.map((col: any) => {
+                        return {
+                            ...col,
+                            children: col.children.filter((ele: any) => ele.id !== id)
+                        };
+                    })
+                };
+            });
+        })
+    };
 
     const removeRow = (rowIndex: number) => {
-
         setData(prev => prev.filter((_, index: number) => index !== rowIndex));
     }
 
@@ -354,11 +390,12 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                                             <div
                                             key={"ele" + j} >
                                                 {dragging && (!dragging.startsWith("col-") && !dragging.startsWith("row-")) && 
-                                                    <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-8 mr-0" onMouseEnter={(e) => onDragHover(e, element.id)} >
+                                                    <div className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-8 mr-0" onMouseEnter={(e) => onDragHover(e, element.id)} >
                                                         <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
                                                     </div>
                                                 }
                                                 <Ele 
+                                                    removeEle={(e: any) => removeEle(element.id)} 
                                                     onDragStart={(e: any) => onDragStart(e, element.id)} 
                                                     type={theEles[element.id].type} 
                                                     element={element} 
@@ -368,7 +405,7 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                                                 />
                                             </div>)}
                                             {dragging && (!dragging.startsWith("col-") && !dragging.startsWith("row-")) && 
-                                                <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-8 mr-0" onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)} >
+                                                <div className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-8 mr-0" onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)} >
                                                     <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
                                                 </div>}
                                         </Col>
@@ -406,15 +443,10 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                         )}
                         {prop.type === "checkbox" && (
                             <div className="p-6 pr-0 py-2">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={prop.value === "true" ? true : false}
-                                        onChange={(e) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
-                                        className="mr-2"
-                                    />
-                                    {prop.label}
-                                </label>
+                                <Checkbox
+                                    checked={prop.value === "true" ? true : false}
+                                    onChange={(e) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
+                                >{prop.label}</Checkbox>
                             </div>
                         )}
                         </Fragment>
@@ -445,57 +477,58 @@ export default function VBPrototype() {
     }
 
     const [dragging, setDragging] = useState<any>(null);
+    const [cloning, setCloning] = useState<boolean>(false);
 
     const [currentEle, setCurrentEle] = useState<string>("none");
     const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
     const [theEles, setTheEles] = useState<any>({
-        "heading": {
-            type: "Heading", 
-            props: [
-            {type: "text", label: "Text"},
-        ]},
-        "text": {"label": "Text", "type": "Text", props: [
-            {type: "text", label: "Text"},
-        ]},
-        "first name": {"type": "Input", props: [
-            {type: "text", label: "Label"},
-            {type: "text", label: "Placeholder"},
-            {type: "text", label: "Tooltip"},
-            {type: "checkbox", label: "Required", value: false},
-        ]},
-        "last name": {"type": "Input", props: [
-            {type: "text", label: "Label"},
-            {type: "text", label: "Placeholder"},
-            {type: "text", label: "Tooltip"},
-            {type: "checkbox", label: "Required", value: false},
-        ]},
-        "email": {"type": "Input", props: [
-            {type: "text", label: "Label"},
-            {type: "text", label: "Placeholder"},
-            {type: "text", label: "Tooltip"},
-            {type: "checkbox", label: "Required", value: false},
-        ]},
-        "company": {"type": "Input", props: [
-            {type: "text", label: "Label"},
-            {type: "text", label: "Placeholder"},
-            {type: "text", label: "Tooltip"},
-            {type: "checkbox", label: "Required", value: false},
-        ]},
-        "job title": {"type": "Input", props: [
-            {type: "text", label: "Label"},
-            {type: "text", label: "Placeholder"},
-            {type: "text", label: "Tooltip"},
-            {type: "checkbox", label: "Required", value: false},
-        ]},
-        "products": {"type": "Input", props: [
-            {type: "text", label: "Label"},
-            {type: "text", label: "Placeholder"},
-            {type: "text", label: "Tooltip"},
-            {type: "checkbox", label: "Required", value: false},
-        ]},
-        "button": {"type": "Button", props: [
-            {type: "text", label: "Label"},
-        ]}
+        // "heading": {
+        //     type: "Heading", 
+        //     props: [
+        //     {type: "text", label: "Text"},
+        // ]},
+        // "text": {"label": "Text", "type": "Text", props: [
+        //     {type: "text", label: "Text"},
+        // ]},
+        // "first name": {"type": "Input", props: [
+        //     {type: "text", label: "Label"},
+        //     {type: "text", label: "Placeholder"},
+        //     {type: "text", label: "Tooltip"},
+        //     {type: "checkbox", label: "Required", value: false},
+        // ]},
+        // "last name": {"type": "Input", props: [
+        //     {type: "text", label: "Label"},
+        //     {type: "text", label: "Placeholder"},
+        //     {type: "text", label: "Tooltip"},
+        //     {type: "checkbox", label: "Required", value: false},
+        // ]},
+        // "email": {"type": "Input", props: [
+        //     {type: "text", label: "Label"},
+        //     {type: "text", label: "Placeholder"},
+        //     {type: "text", label: "Tooltip"},
+        //     {type: "checkbox", label: "Required", value: false},
+        // ]},
+        // "company": {"type": "Input", props: [
+        //     {type: "text", label: "Label"},
+        //     {type: "text", label: "Placeholder"},
+        //     {type: "text", label: "Tooltip"},
+        //     {type: "checkbox", label: "Required", value: false},
+        // ]},
+        // "job title": {"type": "Input", props: [
+        //     {type: "text", label: "Label"},
+        //     {type: "text", label: "Placeholder"},
+        //     {type: "text", label: "Tooltip"},
+        //     {type: "checkbox", label: "Required", value: false},
+        // ]},
+        // "products": {"type": "Input", props: [
+        //     {type: "text", label: "Label"},
+        //     {type: "text", label: "Placeholder"},
+        //     {type: "text", label: "Tooltip"},
+        //     {type: "checkbox", label: "Required", value: false},
+        // ]},
+        // "button": {"type": "Button", props: [
+        //     {type: "text", label: "Label"},
+        // ]}
     });
 
     const [data, setData] = useState<any[]>([
@@ -504,11 +537,6 @@ export default function VBPrototype() {
 
     // Add escape key event listener
     useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
-                setCurrentEle("none");
-                setCurrentHoverEle("none");}
-        };
 
         const handleMouseUp = (e: MouseEvent) => {
             console.log("Mouse up, resetting dragging state");
@@ -642,46 +670,78 @@ export default function VBPrototype() {
                     !currentHoverEle.startsWith("col-") && 
                     !currentHoverEle.startsWith("row-") &&
                     !currentHoverEle.startsWith("last-ele")) {
-                    setData(prev => {
-                        const updatedData = [...prev];
-
-                        let draggedElement = null;
-
-                        // Find and remove the dragged element from its current position
-                        for (const row of updatedData) {
-                            for (const col of row.children) {
-                                const elementIndex = col.children.findIndex((ele: any) => ele.id === dragging);
-                                if (elementIndex !== -1) {
-                                    draggedElement = col.children.splice(elementIndex, 1)[0];
-                                    break;
+                        const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                        setData(prev => {
+                            const updatedData = [...prev];
+                        
+                            let draggedElement = null;
+                        
+                            // Find and remove (or find without removing if cloning) the dragged element
+                            outerLoop:
+                            for (const row of updatedData) {
+                                for (const col of row.children) {
+                                    const elementIndex = col.children.findIndex((ele: any) => ele.id === dragging);
+                                    if (elementIndex !== -1) {
+                                        if (cloning) {
+                                            // Clone reference but do NOT remove original
+                                            draggedElement = { ...col.children[elementIndex] };
+                                        } else {
+                                            // Move: remove the element
+                                            draggedElement = col.children.splice(elementIndex, 1)[0];
+                                        }
+                                        break outerLoop;
+                                    }
                                 }
                             }
-                            if (draggedElement) break;
-                        }
-
-                        if (!draggedElement) {
-                            console.warn("Dragged element not found.");
-                            return updatedData;
-                        }
-
-                        // Find the target column and insert the dragged element at the correct position
-                        for (const row of updatedData) {
-                            for (const col of row.children) {
-                                const elementIndex = col.children.findIndex((ele: any) => ele.id === currentHoverEle);
-                                if (elementIndex !== -1) {
-                                    col.children.splice(elementIndex, 0, draggedElement);
+                        
+                            if (!draggedElement) {
+                                console.warn("Dragged element not found: ", dragging);
+                                return updatedData;
+                            }
+                        
+                            if (cloning) {
+                        
+                                // Clone the actual element in theEles and assign it the new id
+                                const originalEle = theEles[dragging];
+                                if (!originalEle) {
+                                    console.warn("Original element not found in theEles: ", dragging);
                                     return updatedData;
                                 }
+                        
+                                const newElementClone = { ...originalEle, id: newid };
+                                setTheEles((prevEles: any) => ({
+                                    ...prevEles,
+                                    [newid]: newElementClone
+                                }));
+                        
+                                // Update the reference used in Data
+                                draggedElement.id = newid;
                             }
-                        }
-
-                        console.warn("Target position not found.");
-                        return updatedData;
-                    });
+                        
+                            // Find the target column and insert the (moved or cloned) element
+                            outerInsertLoop:
+                            for (const row of updatedData) {
+                                for (const col of row.children) {
+                                    const elementIndex = col.children.findIndex((ele: any) => ele.id === currentHoverEle);
+                                    if (elementIndex !== -1) {
+                                        // Check if the element is already present in the column
+                                        const isAlreadyPresent = col.children.some((ele: any) => ele.id === draggedElement.id);
+                                        if (!isAlreadyPresent) {
+                                            col.children.splice(elementIndex, 0, draggedElement);
+                                        }
+                                        return updatedData;
+                                    }
+                                }
+                            }
+                        
+                            console.warn("Target position not found.");
+                            return updatedData;
+                        });
                     setCurrentHoverEle("none");
                 } else if (currentHoverEle.startsWith("last-ele")) {
                     // If we are dragging an element and hovering over the last element, we need to add it to the last column of the last row
                     console.log("Moving element", dragging, "to the end of the last ele");
+                    const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
                     setData(prev => {
                         const updatedData = [...prev];
                 
@@ -696,7 +756,13 @@ export default function VBPrototype() {
                             for (const col of row.children) {
                                 const eleIndex = col.children.findIndex((ele: any) => ele.id === dragging);
                                 if (eleIndex !== -1) {
-                                    elementA = col.children.splice(eleIndex, 1)[0];
+                                    if (cloning) {
+                                        // Clone reference but do NOT remove original
+                                        elementA = { ...col.children[eleIndex] };
+                                    } else {
+                                        // Move: remove the element
+                                        elementA = col.children.splice(eleIndex, 1)[0];
+                                    }
                                     break outerLoop;
                                 }
                             }
@@ -705,6 +771,24 @@ export default function VBPrototype() {
                         if (!elementA) {
                             console.warn("Element A not found.");
                             return updatedData;
+                        }
+                
+                        if (cloning) {
+                            // Clone the actual element in theEles and assign it the new id
+                            const originalEle = theEles[dragging];
+                            if (!originalEle) {
+                                console.warn("Original element not found in theEles: ", dragging);
+                                return updatedData;
+                            }
+                
+                            const newElementClone = { ...originalEle, id: newid };
+                            setTheEles((prevEles: any) => ({
+                                ...prevEles,
+                                [newid]: newElementClone
+                            }));
+                
+                            // Update the reference used in Data
+                            elementA.id = newid;
                         }
                 
                         // Step 2: Find the target column
@@ -719,8 +803,11 @@ export default function VBPrototype() {
                             return updatedData;
                         }
                 
-                        // Step 3: Add elementA to the end of the target column
-                        targetCol.children.push(elementA);
+                        // Step 3: Add elementA to the end of the target column if not already present
+                        const isAlreadyPresent = targetCol.children.some((ele: any) => ele.id === elementA.id);
+                        if (!isAlreadyPresent) {
+                            targetCol.children.push(elementA);
+                        }
                 
                         return updatedData;
                     });
@@ -730,7 +817,6 @@ export default function VBPrototype() {
             }
             setDragging(null);
         };
-
         
         if (currentEle !== "none") {
             const firstInput = document.querySelector("input");
@@ -740,7 +826,23 @@ export default function VBPrototype() {
         }
 
         window.addEventListener("mouseup", handleMouseUp);
+      
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.key === "Alt" && event.location === 1) {
+                setCloning(false);
+            }
+        };
 
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setCurrentEle("none");
+                setCurrentHoverEle("none");
+            } else if (event.key === "Alt" && event.location === 1) {
+                setCloning(true);
+            }
+        };
+
+        window.addEventListener("keyup", handleKeyUp);
         window.addEventListener("keydown", handleKeyDown);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
@@ -801,37 +903,27 @@ export default function VBPrototype() {
                                                 bottom:     (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined
                                             }} className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none">
                                                 <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">{(() => {
-                            switch (theEles[element.id].type) {
+                            switch (theEles[element.id]?.type) {
                                 case "Heading":
-                                    return <svg width="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1 1.75C1 1.34375 1.3125 1 1.75 1H5.25C5.65625 1 6 1.34375 6 1.75C6 2.1875 5.65625 2.5 5.25 2.5H4.25V7H11.75V2.5H10.75C10.3125 2.5 10 2.1875 10 1.75C10 1.34375 10.3125 1 10.75 1H14.25C14.6562 1 15 1.34375 15 1.75C15 2.1875 14.6562 2.5 14.25 2.5H13.25V13.5H14.25C14.6562 13.5 15 13.8438 15 14.25C15 14.6875 14.6562 15 14.25 15H10.75C10.3125 15 10 14.6875 10 14.25C10 13.8438 10.3125 13.5 10.75 13.5H11.75V8.5H4.25V13.5H5.25C5.65625 13.5 6 13.8438 6 14.25C6 14.6875 5.65625 15 5.25 15H1.75C1.3125 15 1 14.6875 1 14.25C1 13.8438 1.3125 13.5 1.75 13.5H2.75V2.5H1.75C1.3125 2.5 1 2.1875 1 1.75Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconHeading size={12} />
                                     ;
                                 case "Text":
-                                    return <svg width="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M2.5 2.5V4C2.5 4.4375 2.15625 4.75 1.75 4.75C1.3125 4.75 1 4.4375 1 4V2.25C1 1.5625 1.53125 1 2.25 1H13.75C14.4375 1 15 1.5625 15 2.25V4C15 4.4375 14.6562 4.75 14.25 4.75C13.8125 4.75 13.5 4.4375 13.5 4V2.5H8.75V13.5H10.25C10.6562 13.5 11 13.8438 11 14.25C11 14.6875 10.6562 15 10.25 15H5.75C5.3125 15 5 14.6875 5 14.25C5 13.8438 5.3125 13.5 5.75 13.5H7.25V2.5H2.5Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconPilcrow size={12} />
                                     ;
                                 case "Input":
-                                    return <svg className="-translate-x-[2px] -translate-y-[1px]" width="12" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17.7812 1.87505C17.4688 1.56255 17 1.56255 16.7188 1.87505L16.0625 2.5313L17.5 3.9688L18.1562 3.2813C18.4375 3.00005 18.4375 2.5313 18.1562 2.2188L17.7812 1.87505ZM11.2188 7.4063C11.125 7.5313 11.0625 7.6563 11.0312 7.7813L10.7188 9.3438L12.25 9.0313C12.4062 9.00005 12.5312 8.9063 12.625 8.81255L16.4375 5.00005L15 3.5938L11.2188 7.4063ZM15.6562 0.812551C16.5312 -0.0624486 17.9375 -0.0936986 18.8438 0.812551L19.2188 1.18755C20.0938 2.06255 20.0938 3.4688 19.2188 4.3438L13.6875 9.87505C13.375 10.1876 13 10.4063 12.5625 10.5001L9.875 11.0313C9.65625 11.0938 9.375 11.0313 9.21875 10.8438C9.03125 10.6563 8.9375 10.4063 9 10.1563L9.5625 7.4688C9.65625 7.06255 9.875 6.6563 10.1562 6.37505L15.6562 0.812551ZM2.25 4.00005H8.25C8.65625 4.00005 9 4.3438 9 4.75005C9 5.18755 8.65625 5.50005 8.25 5.50005H2.25C1.8125 5.50005 1.5 5.8438 1.5 6.25005V13.7501C1.5 14.1876 1.8125 14.5001 2.25 14.5001H15.75C16.1562 14.5001 16.5 14.1876 16.5 13.7501V9.75005C16.5 9.3438 16.8125 9.00005 17.25 9.00005C17.6562 9.00005 18 9.3438 18 9.75005V13.7501C18 15.0001 16.9688 16.0001 15.75 16.0001H2.25C1 16.0001 0 15.0001 0 13.7501V6.25005C0 5.0313 1 4.00005 2.25 4.00005ZM4 11.0001C3.4375 11.0001 3 10.5626 3 10.0001C3 9.4688 3.4375 9.00005 4 9.00005C4.53125 9.00005 5 9.4688 5 10.0001C5 10.5626 4.53125 11.0001 4 11.0001ZM8 10.0001C8 10.5626 7.53125 11.0001 7 11.0001C6.4375 11.0001 6 10.5626 6 10.0001C6 9.4688 6.4375 9.00005 7 9.00005C7.53125 9.00005 8 9.4688 8 10.0001Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconForms size={12} />
                                     ;
                                 case "Button":
-                                    return <svg width="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M14 3.5H2C1.71875 3.5 1.5 3.75 1.5 4V12C1.5 12.2812 1.71875 12.5 2 12.5H14C14.25 12.5 14.5 12.2812 14.5 12V4C14.5 3.75 14.25 3.5 14 3.5ZM2 2H14C15.0938 2 16 2.90625 16 4V12C16 13.125 15.0938 14 14 14H2C0.875 14 0 13.125 0 12V4C0 2.90625 0.875 2 2 2Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconRectangle size={12} />
                                     ;
                                 default:
-                                    return <svg width="12" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5.75 1H7.25C7.65625 1 8 1.34375 8 1.75C8 2.1875 7.65625 2.5 7.25 2.5H5.75C5.03125 2.5 4.5 3.0625 4.5 3.75V5.1875C4.5 5.90625 4.1875 6.625 3.6875 7.125L2.78125 8L3.6875 8.90625C4.1875 9.40625 4.5 10.125 4.5 10.8438V12.25C4.5 12.9688 5.03125 13.5 5.75 13.5H7.25C7.65625 13.5 8 13.8438 8 14.25C8 14.6875 7.65625 15 7.25 15H5.75C4.21875 15 3 13.7812 3 12.25V10.8438C3 10.5 2.84375 10.1875 2.625 9.96875L1.21875 8.53125C0.90625 8.25 0.90625 7.78125 1.21875 7.46875L2.625 6.0625C2.84375 5.84375 3 5.53125 3 5.1875V3.75C3 2.25 4.21875 1 5.75 1ZM14.25 1C15.75 1 17 2.25 17 3.75V5.1875C17 5.53125 17.125 5.84375 17.3438 6.0625L18.7812 7.5C19.0625 7.78125 19.0625 8.25 18.7812 8.53125L17.3438 9.96875C17.125 10.1875 17 10.5 17 10.8438V12.25C17 13.7812 15.75 15 14.25 15H12.75C12.3125 15 12 14.6875 12 14.25C12 13.8438 12.3125 13.5 12.75 13.5H14.25C14.9375 13.5 15.5 12.9688 15.5 12.25V10.8438C15.5 10.125 15.7812 9.40625 16.2812 8.90625L17.1875 8L16.2812 7.125C15.7812 6.625 15.5 5.90625 15.5 5.1875V3.75C15.5 3.0625 14.9375 2.5 14.25 2.5H12.75C12.3125 2.5 12 2.1875 12 1.75C12 1.34375 12.3125 1 12.75 1H14.25Z" fill="currentColor"/>
-                                    </svg>
+                                    return <IconBrackets size={12} />
                                     ;
                             }
-                        })()}{theEles[element.id].type}</div>
+                        })()}{theEles[element.id]?.type}</div>
                                             </div>
                                             {(() => {
-                            switch (theEles[element.id].type) {
+                            switch (theEles[element.id]?.type) {
                                 case "Heading":
                                     return <h1 className="text-3xl mb-5 font-bold">{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}</h1>
                                     ;
