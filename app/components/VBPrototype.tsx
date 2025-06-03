@@ -17,6 +17,7 @@ import { useState } from "react";import {
     IconBrackets,
    } from "@tabler/icons-react";
 import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
+import OpenAI from 'openai';
 
 
 const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop, onChange, propIndex }) => {
@@ -354,14 +355,70 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
         }
     }
 
+    const [AI, setAI] = useState(false);
+
+    async function sendMessage(message: string) {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userMessage: message })
+        });
+
+        const data = await res.json();
+        const parsed = JSON.parse(data.response);
+        console.log("Parsed response:", parsed);
+        setData(parsed.data || []);
+        setTheEles(parsed.theEles || {});
+    }
+
     return (
-        <div className="">
+        <div>
             <div className="flex w-[200%] transition duration-300" style={{ transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)" }}>
                 <div className="min-w-[50%] w-[50%]" >
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4" mt="32">
                         <Text fontSize="lg" fontWeight="600">Outline</Text>
                         <Box display="flex" alignItems="center" gap="2">
+                            <Button onClick={() => setAI(!AI)} appearance="subtle" size="sm" aria-label="add row" icon={<IconSparkles />} />
                             <Button onClick={() => setData(prev => [...prev, {label: "Row", id: "row-" + Date.now(), children: []}])} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
+                        <div className="absolute right-[220px] top-[62px] opacity-0 invisible z-10 shadow-lg bg-white p-1 rounded-md" style={{
+                            visibility: AI ? "visible" : undefined,
+                            opacity: AI ? 1 : 0,
+                            transform: AI ? "scale(1)" : "scale(0.9)",
+                            transformOrigin: "top center",
+                            transition: "0.3s"
+                        }}> 
+                            <form
+                                onSubmit={async (e) => {
+                                e.preventDefault();
+                                sendMessage(e.currentTarget.prompt.value);
+                                e.currentTarget.reset();
+                            }}
+                        >
+                            <Field>
+                                <textarea
+                                    name="prompt"
+                                    rows={3}
+                                    className="w-full border rounded p-2 focus:outline-none focus:ring-2"
+                                    placeholder="What do you want to build today?"
+                                    ref={el => {
+                                        if (AI && el) {
+                                            el.focus();
+                                        }
+                                    }}
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault();
+                                            const form = (e.target as HTMLTextAreaElement).form;
+                                            if (form) {
+                                                form.requestSubmit();
+                                            }
+                                            setAI(false);
+                                        }
+                                    }}
+                                />
+                            </Field>
+                            </form>
+                        </div>
                         </Box>
                     </Box>
                     <Box fontSize="sm" className="text-[#66708C]">
@@ -544,7 +601,7 @@ export default function VBPrototype() {
                 // If we are dragging and hovering over a different element, we need to update the data
                 console.log(dragging, currentHoverEle);
 
-                if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-")) {
+                if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-") && !currentHoverEle.startsWith("row-last")) {
                     setData(prev => {
                         return prev.reduce((acc, row, idx) => {
                             if (row.id === dragging) {
@@ -621,6 +678,7 @@ export default function VBPrototype() {
                         const [rowA] = updatedData.splice(rowAIndex, 1);
                 
                         // Push it to the end
+                        console.log(rowA);
                         updatedData.push(rowA);
                 
                         return updatedData;
