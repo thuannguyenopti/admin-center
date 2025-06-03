@@ -15,6 +15,8 @@ Your job is to take **user instructions** and produce a valid web layout structu
   → inside columns, elements  
 - Use rows to align inputs horizontally.
 - Use columns to stack elements vertically within a row.
+- if using multple columns, only put one element in each column.
+- always put Buttons in their own rows.
 
 2️⃣ **Data Structure (\`data\`)**  
 - \`data\` holds only the **IDs** and parent-child relationships.  

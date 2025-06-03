@@ -19,6 +19,24 @@ import { useState } from "react";import {
 import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
 import OpenAI from 'openai';
 
+// Simple AnimatedText component for cycling through texts
+import { useRef } from "react";
+const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({ texts, interval = 2000 }) => {
+    const [index, setIndex] = useState(0);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        timeoutRef.current = setTimeout(() => {
+            setIndex((prev) => (prev + 1) % texts.length);
+        }, interval);
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
+    }, [index, texts.length, interval]);
+
+    return <span>{texts[index]}</span>;
+};
+
 
 const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop, onChange, propIndex }) => {
     return <div className="p-6 pr-0 py-2">
@@ -356,15 +374,18 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
     }
 
     const [AI, setAI] = useState(false);
+    const [loadingAI, setLoadingAI] = useState(false);
 
     async function sendMessage(message: string) {
+        setLoadingAI(true);
         const res = await fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userMessage: message })
         });
-
+        
         const data = await res.json();
+        setLoadingAI(false);
         const parsed = JSON.parse(data.response);
         console.log("Parsed response:", parsed);
         setData(parsed.data || []);
@@ -374,13 +395,13 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
     return (
         <div>
             <div className="flex w-[200%] transition duration-300" style={{ transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)" }}>
-                <div className="min-w-[50%] w-[50%]" >
+                <div className="min-w-[50%] w-[50%] relative min-h-[300px]">
                     <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4" mt="32">
                         <Text fontSize="lg" fontWeight="600">Outline</Text>
                         <Box display="flex" alignItems="center" gap="2">
                             <Button onClick={() => setAI(!AI)} appearance="subtle" size="sm" aria-label="add row" icon={<IconSparkles />} />
                             <Button onClick={() => setData(prev => [...prev, {label: "Row", id: "row-" + Date.now(), children: []}])} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
-                        <div className="absolute right-[220px] top-[62px] opacity-0 invisible z-10 shadow-lg bg-white p-1 rounded-md" style={{
+                        <div className="absolute -right-[10px] top-[62px] opacity-0 invisible z-10 shadow-lg bg-white p-1 rounded-md" style={{
                             visibility: AI ? "visible" : undefined,
                             opacity: AI ? 1 : 0,
                             transform: AI ? "scale(1)" : "scale(0.9)",
@@ -421,6 +442,20 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                         </div>
                         </Box>
                     </Box>
+                    {loadingAI && <div className="absolute left-0 top-0 right-0 bottom-0 flex items-center justify-center flex-col text-center bg-[#fff9] z-50">
+                        <div className="w-8 h-8 border-4 border-[#6846FF] border-t-transparent rounded-full animate-spin" />
+                        <div className="h-10 mt-4 animate-fade-in-out text-[#6846FF] font-semibold text-sm w-20 text-center">
+                            <AnimatedText
+                                texts={[
+                                    "Building a form with magic",
+                                    "Summoning fields",
+                                    "Assembling your layout",
+                                    "Almost there"
+                                ]}
+                                interval={1800}
+                            />
+                        </div>
+                    </div>}
                     <Box fontSize="sm" className="text-[#66708C]">
                         {data.map((row: any, index: number) => (
                             <div key={index}>
