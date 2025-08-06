@@ -5,9 +5,6 @@ import { ReactNode, useEffect, Fragment, Children } from "react";
 import { useState } from "react";import { 
     IconPlus,
     IconDots,
-    IconUpload,
-    IconBooks,
-    IconLink,
     IconSparkles,
     IconTrash,
     IconPilcrow,
@@ -15,9 +12,11 @@ import { useState } from "react";import {
     IconRectangle,
     IconHeading,
     IconBrackets,
+    IconSection,
+    IconSquare,
+    IconPencil,
    } from "@tabler/icons-react";
 import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
-import OpenAI from 'openai';
 
 // Simple AnimatedText component for cycling through texts
 import { useRef } from "react";
@@ -49,18 +48,55 @@ const Input: React.FC<{ prop: any, onChange: any, propIndex: number }> = ({ prop
         </Field>
     </div>
 }
-        
-const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragStart: any}> = ({ children, addCol, removeRow, onDragStart }) => {
-    const [isOpen, setIsOpen] = useState(true);
+
+const Section: React.FC<{ 
+    setOpen: any, section: any, children: ReactNode, addRow: any, removeSection: any, onDragStart: any}> = ({setOpen, section, children, addRow, removeSection, onDragStart }) => {
     const [menuOpen, setMenuOpen] = useState(false);
+
+    if (section.label) {
+        return (
+            <div className="p-0.5 pl-1 -mr-[22px]">
+                <div >
+                    <div
+                    className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+                    onDragStart={onDragStart} draggable
+                    >
+                        <div className="flex gap-1 items-center w-full group-hover:w-[calc(100%-24px)]">
+                            <div className="">
+                                <IconSquare size={12} />
+                            </div>
+                            <span className="truncate overflow-hidden text-ellipsis">{section.label}</span>
+                        </div>
+                        
+                    <div className="group-hover:visible invisible flex gap-0.5" style={{
+                        visibility: menuOpen ? "visible" : undefined,
+                    }}>
+                        <Menu onOpenChange={() => setMenuOpen(!menuOpen)} open={menuOpen} options={[
+                            {
+                                addon: <IconTrash size={16} />,
+                                label: "Remove Block",
+                                intent: "danger",
+                                execute: () => {removeSection(); setMenuOpen(false);},
+                            }
+                            ]}>
+                            <MenuTrigger icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                            <MenuContent />
+                        </Menu>
+                        <Button appearance="subtle" size="sm" aria-label="add row" icon={<IconPencil />} />
+                    </div>
+                </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-1 py-0 -mr-[24px]">
             <div
-                className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5"
+                className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
                 onDragStart={onDragStart} draggable
             >
-                <div className="flex gap-1 items-center" onClick={() => setIsOpen(!isOpen)} >
+                <div className="flex gap-1 items-center" onClick={() => setOpen(section.id, !section.open)} >
                     <svg
                         width="12"
                         height="12"
@@ -68,8 +104,56 @@ const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragSt
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                         style={{
-                            transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)",
-                            transition: "transform 0.2s",
+                            transform: section.open ? "rotate(0deg)" : "rotate(-90deg)",
+                        }}
+                    >
+                        <path
+                            d="M6.39844 8.64844C6.16406 8.88281 5.8125 8.88281 5.60156 8.64844L1.85156 4.89844C1.61719 4.6875 1.61719 4.33594 1.85156 4.125C2.0625 3.89062 2.41406 3.89062 2.625 4.125L5.97656 7.47656L9.35156 4.10156C9.5625 3.89062 9.91406 3.89062 10.125 4.10156C10.3594 4.33594 10.3594 4.6875 10.125 4.89844L6.39844 8.64844Z"
+                            fill="#66708C"
+                        />
+                    </svg>
+                    <Text>Section</Text>
+                </div>
+                <div className="group-hover:visible invisible gap-0.5 flex" style={{
+                    visibility: menuOpen ? "visible" : undefined,
+                }}>
+                    <Menu onOpenChange={() => setMenuOpen(!menuOpen)} open={menuOpen} options={[
+                        {
+                            addon: <IconTrash size={16} />,
+                            label: "Remove Section",
+                            intent: "danger",
+                            execute: () => {removeSection(); setMenuOpen(false);},
+                        }
+                        ]}>
+                        <MenuTrigger icon={<IconDots />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                        <MenuContent />
+                    </Menu>
+                    <Button onClick={addRow} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
+                </div>
+            </div>
+            <div style={{ display: section.open ? "block" : "none" }}>{children}</div>
+        </div>
+    );
+}
+
+const Row: React.FC<{ setOpen: any, row: any, children: ReactNode, addCol: any, removeRow: any, onDragStart: any}> = ({ setOpen, row, children, addCol, removeRow, onDragStart }) => {
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    return (
+        <div className="py-0">
+            <div
+                className="newsection group pl-5 p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+                onDragStart={onDragStart} draggable
+            >
+                <div className="flex gap-1 items-center" onClick={() => setOpen(row.id, !row.open)} >
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                            transform: row.open ? "rotate(0deg)" : "rotate(-90deg)",
                         }}
                     >
                         <path
@@ -79,7 +163,7 @@ const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragSt
                     </svg>
                     <Text>Row</Text>
                 </div>
-                <div className="group-hover:visible invisible" style={{
+                <div className="group-hover:visible invisible gap-0.5 flex" style={{
                     visibility: menuOpen ? "visible" : undefined,
                 }}>
                 <Menu onOpenChange={() => setMenuOpen(!menuOpen)} open={menuOpen} options={[
@@ -97,26 +181,25 @@ const Row: React.FC<{ children: ReactNode, addCol: any, removeRow: any, onDragSt
 
                 </div>
             </div>
-            <div style={{ display: isOpen ? "block" : "none" }}>{children}</div>
+            <div style={{ display: row.open ? "block" : "none" }}>{children}</div>
         </div>
     );
 }
 
-const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDragStart: any }> = ({ children, addElement, removeCol, onDragStart }) => {
-    const [isOpen, setIsOpen] = useState(true);
+const Col: React.FC<{ setOpen: any, col: any, children: ReactNode, addElement: any, removeCol: any, onDragStart: any }> = ({ setOpen, col, children, addElement, removeCol, onDragStart }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     const [addOpen, setAddOpen] = useState(false);
 
     return (
         <Box>
             <div
-                className="group p-1 pl-3 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5"
+                className="newsection group p-1 pl-9 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
                 draggable
                 onDragStart={onDragStart}
             >
                 <div 
                     className="flex gap-1 items-center" 
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => setOpen(col.id, !col.open)}
                 >
                     <svg
                         width="12"
@@ -125,8 +208,7 @@ const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDr
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                         style={{
-                            transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)",
-                            transition: "transform 0.2s",
+                            transform: col.open ? "rotate(0deg)" : "rotate(-90deg)",
                         }}
                     >
                         <path
@@ -136,7 +218,7 @@ const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDr
                     </svg>
                     <Text>Column</Text>
                 </div>
-                <div className="group-hover:visible invisible" style={{
+                <div className="group-hover:visible invisible gap-0.5 flex" style={{
                     visibility: (menuOpen || addOpen) ? "visible" : undefined,
                 }}>
                     <Menu onOpenChange={() => setMenuOpen(!menuOpen)} open={menuOpen} options={[
@@ -178,7 +260,7 @@ const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDr
                     </Menu>
                 </div>
             </div>
-            <div style={{ display: isOpen ? "block" : "none" }}>{children}</div>
+            <div style={{ display: col.open ? "block" : "none" }}>{children}</div>
         </Box>
     );
 }
@@ -186,14 +268,14 @@ const Col: React.FC<{ children: ReactNode, addElement: any, removeCol: any, onDr
 const Ele: React.FC<{ element: any, removeEle: any, setCurrentEle: any, type: any, setCurrentHoverEle: any, label: string, onDragStart: any }> = ({ element, removeEle, setCurrentEle, type, setCurrentHoverEle, label, onDragStart }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     return (
-        <Box pl="32" py="2" pr="20">
+        <Box pl="40" py="2" pr="20">
             <div
             onMouseEnter={() => setCurrentHoverEle(element.id)}
             onMouseLeave={() => setCurrentHoverEle("none")}
             draggable
             onDragStart={onDragStart}
             onClick={() => {if (!menuOpen) setCurrentEle(element.id)}}
-                className="group p-2 py-0 text-sm h-[40px] pl-3 cursor-pointer border border-[#CACFDC] hover:border-[#838DA4] rounded-[4px] hover:bg-[#091E4208] gap-1 items-center w-full bg-white flex justify-between"
+                className="active:bg-[#0037FF10] group p-2 py-0 text-sm h-[40px] pl-3 cursor-pointer border border-[#CACFDC] hover:border-[#838DA4] rounded-[4px] hover:bg-[#091E4208] gap-1 items-center w-full bg-white flex justify-between"
             >
                 <div className="flex gap-1 items-center w-full group-hover:w-[calc(100%-24px)]" style={{ color: label ? "#2E3442" : "#66708C" }}>
                         <div className="min-w-5">{(() => {
@@ -239,6 +321,7 @@ const Ele: React.FC<{ element: any, removeEle: any, setCurrentEle: any, type: an
 }
 
 interface OutlineProps {
+    cloning?: boolean;
     currentEle: string;
     currentHoverEle: string;
     dragging: string;
@@ -252,110 +335,177 @@ interface OutlineProps {
     data: any;
 }
 
-const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onInputChange, setCurrentEle, currentHoverEle, setCurrentHoverEle, data, setData, setTheEles, dragging }) => {
+const Outline: React.FC<OutlineProps> = ({ cloning, setDragging, currentEle, theEles, onInputChange, setCurrentEle, currentHoverEle, setCurrentHoverEle, data, setData, setTheEles, dragging }) => {
 
-    const addCol = (e: any, row: number) => {
-        e.stopPropagation();
-    
-        setData(prev => [
-            ...prev.slice(0, row),
-            {
-                ...prev[row],
-                children: [
-                    ...prev[row].children,
-                    { label: "Column", children: [], id: "col-" + Date.now()}
-                ]
-            },
-            ...prev.slice(row + 1)
-        ]);
+    // Set open state for section, row, or col by id
+    const setOpen = (id: string, open: boolean) => {
+        setData(prev =>
+            prev.map(section => {
+                if (section.id === id) {
+                    return { ...section, open };
+                }
+                return {
+                    ...section,
+                    children: section.children.map((row: any) => {
+                        if (row.id === id) {
+                            return { ...row, open };
+                        }
+                        return {
+                            ...row,
+                            children: row.children.map((col: any) => {
+                                if (col.id === id) {
+                                    return { ...col, open };
+                                }
+                                return col;
+                            })
+                        };
+                    })
+                };
+            })
+        );
     };
 
-    const addElement = (type: string, colIndex: number, rowIndex: number) => {
-        const uKey = `${type}-${Date.now()}`;
-        setTheEles(prev => ({
-            ...prev,
-            [uKey]: {
-            type: type,
-            props: (() => {
-                switch (type) {
-                case "Heading":
-                    return [{ type: "text", label: "Text" }];
-                case "Text":
-                    return [{ type: "text", label: "Text" }];
-                case "Input":
-                    return [
-                    { type: "text", label: "Label" },
-                    { type: "text", label: "Placeholder" },
-                    { type: "text", label: "Tooltip" },
-                    { type: "checkbox", label: "Required", value: false }
-                    ];
-                case "Button":
-                    return [{ type: "text", label: "Label" }];
-                default:
-                    return [];
-                }
-            })()
-            }
-        }));
+    const addCol = (e: any, section: number, row: number) => {
+        e.stopPropagation();
+
         setData(prev => {
-            const updatedRow = {
-                ...prev[rowIndex],
-                children: prev[rowIndex].children.map((col: any, index: number) => {
-                    if (index === colIndex) {
+            // Find the correct section
+            const updatedSection = {
+                ...prev[section],
+                children: prev[section].children.map((r: any, idx: number) => {
+                    if (idx === row) {
                         return {
-                            ...col,
+                            ...r,
+                            open: true,
                             children: [
-                                ...col.children,
-                                { id: uKey }
+                                ...r.children,
+                                { label: "Column", children: [], isNew: true, open: true, id: "col-" + Date.now() }
                             ]
                         };
                     }
-                    return col;
+                    return r;
                 })
             };
 
             return [
-                ...prev.slice(0, rowIndex),
-                updatedRow,
-                ...prev.slice(rowIndex + 1)
+                ...prev.slice(0, section),
+                updatedSection,
+                ...prev.slice(section + 1)
             ];
         });
     };
 
-    const removeCol = (e: any, colIndex: number, rowIndex: number) => {
-        setData(prev => {
-            const updatedRow = {
-                ...prev[rowIndex],
-                children: prev[rowIndex].children.filter((_: any, index: number) => index !== colIndex)
-            };
+    const addRow = (e: any, section: number) => {
+        e.stopPropagation();
+    
+        setData(prev => [
+            ...prev.slice(0, section),
+            {
+            ...prev[section],
+            open: true,
+            children: [
+                ...prev[section].children,
+                { label: "Row", open: true, isNew: true, children: [{
+                label: "Column", children: [], open: true, isNew: true, id: "col-" + Date.now()
+                }], id: "row-" + Date.now()}
+            ]
+            },
+            ...prev.slice(section + 1)
+        ]);
+    };
 
-            return [
-                ...prev.slice(0, rowIndex),
-                updatedRow,
-                ...prev.slice(rowIndex + 1)
-            ];
-        })
-    ;}
-
-    const removeEle = (id: string) => {
+    const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
+        const uKey = `${type}-${Date.now()}`;
+        setTheEles(prev => ({
+            ...prev,
+            [uKey]: {
+                type: type,
+                props: (() => {
+                    switch (type) {
+                        case "Heading":
+                            return [{ type: "text", label: "Text" }];
+                        case "Text":
+                            return [{ type: "text", label: "Text" }];
+                        case "Input":
+                            return [
+                                { type: "text", label: "Label" },
+                                { type: "text", label: "Placeholder" },
+                                { type: "text", label: "Tooltip" },
+                                { type: "checkbox", label: "Required", value: false }
+                            ];
+                        case "Button":
+                            return [{ type: "text", label: "Label" }];
+                        default:
+                            return [];
+                    }
+                })()
+            }
+        }));
         setData(prev => {
-            return prev.map(row => {
+            return prev.map((section, sIdx) => {
+                if (sIdx !== sectionIndex) return section;
                 return {
-                    ...row,
-                    children: row.children.map((col: any) => {
+                    ...section,
+                    children: section.children.map((row: any, rIdx: number) => {
+                        if (rIdx !== rowIndex) return row;
                         return {
-                            ...col,
-                            children: col.children.filter((ele: any) => ele.id !== id)
+                            ...row,
+                            children: row.children.map((col: any, cIdx: number) => {
+                                if (cIdx !== colIndex) return col;
+                                return {
+                                    ...col,
+                                    children: [
+                                        ...col.children,
+                                        { id: uKey }
+                                    ]
+                                };
+                            })
                         };
                     })
                 };
             });
-        })
+        });
     };
 
-    const removeRow = (rowIndex: number) => {
-        setData(prev => prev.filter((_, index: number) => index !== rowIndex));
+    const removeSection = (sectionIndex: number) => {
+        setData(prev => prev.filter((_, index: number) => index !== sectionIndex));
     }
+
+    const removeRow = (id: string) => {
+        setData(prev => {
+            return prev.map(section => ({
+                ...section,
+                children: section.children.filter((row: any) => row.id !== id)
+            }));
+        });
+    }
+
+    const removeCol = (id: string) => {
+        setData(prev => {
+            return prev.map(section => ({
+                ...section,
+                children: section.children.map((row: any) => ({
+                    ...row,
+                    children: row.children.filter((ele: any) => ele.id !== id)
+                }))
+            }));
+        });
+    ;}
+
+    const removeEle = (id: string) => {
+        setData(prev => {
+            return prev.map(section => ({
+                ...section,
+                children: section.children.map((row: any) => ({
+                    ...row,
+                    children: row.children.map((col: any) => ({
+                        ...col,
+                        children: col.children.filter((ele: any) => ele.id !== id)
+                    }))
+                }))
+            }));
+        });
+    };
 
     const onDragStart = (e: any, id: string) => {
         e.stopPropagation();
@@ -375,6 +525,7 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
 
     const [AI, setAI] = useState(false);
     const [loadingAI, setLoadingAI] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);
 
     async function sendMessage(message: string) {
         setLoadingAI(true);
@@ -400,7 +551,67 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                         <Text fontSize="lg" fontWeight="600">Outline</Text>
                         <Box display="flex" alignItems="center" gap="2">
                             <Button onClick={() => setAI(!AI)} appearance="subtle" size="sm" aria-label="add row" icon={<IconSparkles />} />
-                            <Button onClick={() => setData(prev => [...prev, {label: "Row", id: "row-" + Date.now(), children: []}])} appearance="subtle" size="sm" aria-label="add row" icon={<IconPlus />} />
+                            <Menu
+                                onOpenChange={() => setAddOpen(!addOpen)}
+                                open={addOpen}
+                                options={[
+                                    {
+                                        addon: <IconSection size={16} />,
+                                        label: "Section",
+                                        execute: () =>
+                                            setData(prev => [
+                                                ...prev,
+                                                {
+                                                    label: "", 
+                                                    id: "section-" + Date.now(), 
+                                                    open: true,
+                                                    children: [
+                                                        {
+                                                            label: "", 
+                                                            id: "row-" + Date.now(), 
+                                                            open: true,
+                                                            children: [
+                                                                { 
+                                                                    label: "", 
+                                                                    id: "col-" + Date.now(), 
+                                                                    open: true,
+                                                                    children: [] 
+                                                                }
+                                                            ] 
+                                                        }
+                                                    ] 
+                                                }
+                                            ]
+                                        )
+                                    },
+                                    {
+                                        addon: <IconSquare size={16} />,
+                                        label: "Random Block",
+                                        execute: () => {
+                                            const blockNames = [
+                                                "My Block",
+                                                "CTA Block",
+                                                "Form Block",
+                                                "Hero Block",
+                                                "Info Block",
+                                                "Feature Block",
+                                                "Footer Block",
+                                                "Header Block",
+                                                "Pricing Block",
+                                                "Contact Block"
+                                            ];
+                                            const randomName = blockNames[Math.floor(Math.random() * blockNames.length)];
+                                            setData(prev => [
+                                                ...prev,
+                                                { label: randomName, isBlock: true, id: "section-" + Date.now(), children: [] }
+                                            ]);
+                                        },
+                                    }
+                                ]}
+                            >
+                                <MenuTrigger icon={<IconPlus />} aria-label="add ele" appearance="subtle" size="sm" iconPosition="start" />
+                                <MenuContent />
+                            </Menu>
                         <div className="absolute -right-[10px] top-[62px] opacity-0 invisible z-10 shadow-lg bg-white p-1 rounded-md" style={{
                             visibility: AI ? "visible" : undefined,
                             opacity: AI ? 1 : 0,
@@ -457,61 +668,85 @@ const Outline: React.FC<OutlineProps> = ({ setDragging, currentEle, theEles, onI
                         </div>
                     </div>}
                     <Box fontSize="sm" className="text-[#66708C]">
-                        {data.map((row: any, index: number) => (
-                            <div key={index}>
-                                {dragging?.startsWith("row-") && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]" onMouseEnter={(e) => onDragHover(e, row.id)} >
-                                    <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
-                                </div>}
-                                <Row 
-                                    onDragStart={(e: any) => onDragStart(e, row.id)} 
-                                    removeRow={(e:any) => removeRow(index)} 
-                                    addCol={(e: any) => addCol(e, index)} 
-                                >
-                                    {row.children && row.children.map((col: any, i: number) => 
-                                    <div key={i}>
-                                        {dragging?.startsWith("col-") && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-3 mr-0" onMouseEnter={(e) => onDragHover(e, col.id)} >
-                                            <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
-                                        </div>}
-                                        <Col 
-                                            onDragStart={(e: any) => onDragStart(e, col.id)} 
-                                            removeCol={(e: any) => removeCol(e, i, index)} 
-                                            addElement={(e: any, ) => addElement(e, i, index)} 
-                                            key={"col" + i}
-                                        >
-                                            {col.children.map((element: any, j: number) => 
-                                            <div
-                                            key={"ele" + j} >
-                                                {dragging && (!dragging.startsWith("col-") && !dragging.startsWith("row-")) && 
-                                                    <div className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-8 mr-0" onMouseEnter={(e) => onDragHover(e, element.id)} >
-                                                        <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
-                                                    </div>
-                                                }
-                                                <Ele 
-                                                    removeEle={(e: any) => removeEle(element.id)} 
-                                                    onDragStart={(e: any) => onDragStart(e, element.id)} 
-                                                    type={theEles[element.id].type} 
-                                                    element={element} 
-                                                    label={theEles[element.id]?.props[0]?.value || undefined} 
-                                                    setCurrentEle={setCurrentEle} 
-                                                    setCurrentHoverEle={setCurrentHoverEle}
-                                                />
-                                            </div>)}
-                                            {dragging && (!dragging.startsWith("col-") && !dragging.startsWith("row-")) && 
-                                                <div className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-8 mr-0" onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)} >
-                                                    <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
-                                                </div>}
-                                        </Col>
-                                    </div>)}
-                                    {dragging?.startsWith("col-") && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-3" onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)} >
-                                        <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
-                                    </div>}
-                                </Row>
-                                
-                            </div>
-                        ))}   
                         
-                        {dragging?.startsWith("row-") && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]" onMouseEnter={(e) => onDragHover(e, "row-last")} >
-                            <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-0" />
+                        {data.map((section: any, sindex: number) => (
+                            <div key={sindex}>
+                                {dragging?.startsWith("section-") && section.id !== dragging && data[sindex-1]?.id !== dragging && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]" onMouseEnter={(e) => onDragHover(e, section.id)} >
+                                        <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                </div>}
+                                <Section
+                                    setOpen={setOpen}
+                                    section={section}
+                                    onDragStart={(e: any) => onDragStart(e, section.id)}
+                                    removeSection={(e:any) => removeSection(sindex)} 
+                                    addRow={(e: any) => addRow(e, sindex)} 
+                                >
+                                    
+                                {section.children.map((row: any, index: number) => (
+                                    <div key={index}>
+                                        {dragging?.startsWith("row-") && (row.id !== dragging && section.children[index-1]?.id !== dragging || cloning) && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5" onMouseEnter={(e) => onDragHover(e, row.id)} >
+                                            <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                        </div>}
+                                        <Row 
+                                            row={row}
+                                            setOpen={setOpen}
+                                            onDragStart={(e: any) => onDragStart(e, row.id)} 
+                                            removeRow={(e:any) => removeRow(row.id)} 
+                                            addCol={(e: any) => addCol(e, sindex, index)} 
+                                        >
+                                            {row.children && row.children.map((col: any, i: number) => 
+                                            <div key={i}>
+                                                {dragging?.startsWith("col-") && col.id !== dragging && row.children[i-1]?.id !== dragging && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0" onMouseEnter={(e) => onDragHover(e, col.id)} >
+                                                    <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                                </div>}
+                                                <Col 
+                                                    col={col}
+                                                    setOpen={setOpen}
+                                                    onDragStart={(e: any) => onDragStart(e, col.id)} 
+                                                    removeCol={(e: any) => removeCol(col.id)} 
+                                                    addElement={(e: any, ) => addElement(e, i, index, sindex)} 
+                                                    key={"col" + i}
+                                                >
+                                                    {col.children.map((element: any, j: number) => 
+                                                    <div
+                                                    key={"ele" + j} >
+                                                        {dragging && element.id !== dragging && col.children[j-1]?.id !== dragging && (!dragging.startsWith("section-") && !dragging.startsWith("col-") && !dragging.startsWith("row-")) && 
+                                                            <div className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0" onMouseEnter={(e) => onDragHover(e, element.id)} >
+                                                                <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                                            </div>
+                                                        }
+                                                        <Ele 
+                                                            removeEle={(e: any) => removeEle(element.id)} 
+                                                            onDragStart={(e: any) => onDragStart(e, element.id)} 
+                                                            type={theEles[element.id].type} 
+                                                            element={element} 
+                                                            label={theEles[element.id]?.props[0]?.value || undefined} 
+                                                            setCurrentEle={setCurrentEle} 
+                                                            setCurrentHoverEle={setCurrentHoverEle}
+                                                        />
+                                                    </div>)}
+                                                    {dragging && dragging !== col.children[col.children.length - 1]?.id && (!dragging.startsWith("section-") && !dragging.startsWith("row-") && !dragging.startsWith("col-")) && 
+                                                        <div className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0" onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)} >
+                                                            <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                                        </div>}
+                                                </Col>
+                                            </div>)}
+                                            {dragging?.startsWith("col-") && dragging !== row.children[row.children.length - 1]?.id && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9" onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)} >
+                                                <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                            </div>}
+                                        </Row>
+                                        
+                                    </div>
+                                ))}   
+                                 {dragging?.startsWith("row-") && (dragging !== section.children[section.children.length - 1]?.id || cloning) && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5" onMouseEnter={(e) => onDragHover(e, "row-last-" + section.id)} >
+                                                <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
+                                            </div>}
+                                </Section>
+                            </div>
+                        ))}
+                        
+                        {dragging?.startsWith("section-") && dragging !== data[data.length - 1]?.id && <div className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]" onMouseEnter={(e) => onDragHover(e, "section-last")} >
+                            <Box bg="bg.accent" rounded="full" className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10" />
                         </div>}
                     </Box>
                 </div>
@@ -630,286 +865,429 @@ export default function VBPrototype() {
     // Add escape key event listener
     useEffect(() => {
 
-        const handleMouseUp = (e: MouseEvent) => {
-            console.log("Mouse up, resetting dragging state");
-            if (currentHoverEle !== "none" && dragging !== null && currentHoverEle !== dragging) {
-                // If we are dragging and hovering over a different element, we need to update the data
-                console.log(dragging, currentHoverEle);
-
-                if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-") && !currentHoverEle.startsWith("row-last")) {
-                    setData(prev => {
-                        return prev.reduce((acc, row, idx) => {
-                            if (row.id === dragging) {
-                                return acc; // Skip the dragging row
-                            }
-                            if (row.id === currentHoverEle) {
-                                return [...acc, prev.find(r => r.id === dragging)!, row]; // Insert dragging row above currentHoverEle
-                            }
-                            return [...acc, row];
-                        }, []);
+const handleMouseUp = (e: MouseEvent) => {
+    console.log("Mouse up, resetting dragging state");
+    if (currentHoverEle !== "none" && dragging !== null && (currentHoverEle !== dragging || cloning)) {
+        // SECTION DRAGGING
+        if (dragging.startsWith("section-") && currentHoverEle.startsWith("section-") && !currentHoverEle.startsWith("section-last")) {
+            setData(prev => {
+                const draggingIdx = prev.findIndex(sec => sec.id === dragging);
+                const hoverIdx = prev.findIndex(sec => sec.id === currentHoverEle);
+                if (draggingIdx === -1 || hoverIdx === -1) return prev;
+                const newArr = [...prev];
+                const [draggedSection] = newArr.splice(draggingIdx, 1);
+                // If dragging down, insert after hoverIdx
+                const insertIdx = draggingIdx < hoverIdx ? hoverIdx-1 : hoverIdx;
+                newArr.splice(insertIdx, 0, draggedSection);
+                return newArr;
+            });
+            setCurrentHoverEle("none");
+        } else if (dragging.startsWith("section-") && currentHoverEle.startsWith("section-last")) {
+            setData(prev => {
+                const draggingIdx = prev.findIndex(sec => sec.id === dragging);
+                if (draggingIdx === -1) return prev;
+                const newArr = [...prev];
+                const [draggedSection] = newArr.splice(draggingIdx, 1);
+                newArr.push(draggedSection);
+                return newArr;
+            });
+            setCurrentHoverEle("none");
+        // ROW DRAGGING (within a section or across sections)
+        } else if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-") && !currentHoverEle.startsWith("row-last")) {
+            setData(prev => {
+            let draggedRow: any = null;
+            let fromSectionIdx = -1;
+            let draggingIdx = -1;
+            // Find and remove the dragged row from its section
+            const newArr = prev.map((section, sIdx) => {
+                const idx = section.children.findIndex((row: any) => row.id === dragging);
+                if (idx !== -1) {
+                draggedRow = section.children[idx];
+                fromSectionIdx = sIdx;
+                draggingIdx = idx;
+                const newChildren = [...section.children];
+                // If cloning, don't remove the original
+                if (!cloning) {
+                    newChildren.splice(idx, 1);
+                }
+                return { ...section, children: newChildren };
+                }
+                return section;
+            });
+            if (!draggedRow) return newArr;
+            // If cloning, create a new id for the cloned row and its children
+            let rowToInsert = draggedRow;
+            if (cloning) {
+                console.log("Cloning row", dragging);
+                const newRowId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                rowToInsert = {
+                ...draggedRow,
+                id: newRowId,
+                children: draggedRow.children.map((col: any) => {
+                    const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    return {
+                    ...col,
+                    id: newColId,
+                    children: col.children.map((ele: any) => {
+                        const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                        // Clone theEles entry
+                        if (theEles[ele.id]) {
+                        setTheEles((prevEles: any) => ({
+                            ...prevEles,
+                            [newEleId]: { ...prevEles[ele.id] }
+                        }));
+                        }
+                        return { ...ele, id: newEleId };
                     })
-                    setCurrentHoverEle("none");
-                } else if (dragging.startsWith("col-") && (currentHoverEle.startsWith("col-") && !currentHoverEle.startsWith("col-last"))) {
-                    // Moving a column before another column in the same row
-                    setData(prev => {
-                        const updatedData = [...prev];
-                
-                        let sourceRow = null;
-                        let targetRow = null;
-                        let colA = null;
-                
-                        // Find the source row (where colA is)
-                        for (const row of updatedData) {
-                            const colIndex = row.children.findIndex((col:any) => col.id === dragging);
-                            if (colIndex !== -1) {
-                                sourceRow = row;
-                                colA = row.children.splice(colIndex, 1)[0]; // remove colA
-                                break;
-                            }
+                    };
+                })
+                };
+            }
+            // Find the section and index to insert into
+            let toSectionIdx = -1;
+            let hoverIdx = -1;
+            prev.forEach((section, sIdx) => {
+                const idx = section.children.findIndex((row: any) => row.id === currentHoverEle);
+                if (idx !== -1) {
+                toSectionIdx = sIdx;
+                hoverIdx = idx;
+                }
+            });
+            if (toSectionIdx === -1 || hoverIdx === -1) return newArr;
+            // Insert the dragged row into the target section at the correct position
+            const toSection = newArr[toSectionIdx];
+            const newChildren = [...toSection.children];
+            // If dragging down, insert after hoverIdx
+            const insertIdx = (fromSectionIdx === toSectionIdx && draggingIdx < hoverIdx && !cloning) ? hoverIdx - 1 : hoverIdx;
+            newChildren.splice(insertIdx, 0, rowToInsert);
+            newArr[toSectionIdx] = { ...toSection, children: newChildren };
+            return newArr;
+            });
+            setCurrentHoverEle("none");
+        } else if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-last")) {
+            setData(prev => {
+            let draggedRow: any = null;
+            let fromSectionIdx = -1;
+            let draggingIdx = -1;
+            // Remove the dragged row from its section
+            const newArr = prev.map((section, sIdx) => {
+                const idx = section.children.findIndex((row: any) => row.id === dragging);
+                if (idx !== -1) {
+                draggedRow = section.children[idx];
+                fromSectionIdx = sIdx;
+                draggingIdx = idx;
+                const newChildren = [...section.children];
+                // If cloning, don't remove the original
+                if (!cloning) {
+                    newChildren.splice(idx, 1);
+                }
+                return { ...section, children: newChildren };
+                }
+                return section;
+            });
+            if (!draggedRow) return newArr;
+            // If cloning, create a new id for the cloned row and its children
+            let rowToInsert = draggedRow;
+            if (cloning) {
+                const newRowId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                rowToInsert = {
+                ...draggedRow,
+                id: newRowId,
+                children: draggedRow.children.map((col: any) => {
+                    const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    return {
+                    ...col,
+                    id: newColId,
+                    children: col.children.map((ele: any) => {
+                        const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                        // Clone theEles entry
+                        if (theEles[ele.id]) {
+                        setTheEles((prevEles: any) => ({
+                            ...prevEles,
+                            [newEleId]: { ...prevEles[ele.id] }
+                        }));
                         }
-                
-                        if (!colA) {
-                            console.warn("Column A not found.");
-                            return updatedData;
+                        return { ...ele, id: newEleId };
+                    })
+                    };
+                })
+                };
+            }
+            // Find the section to append to
+            let toSectionIdx = -1;
+            prev.forEach((section, sIdx) => {
+                if (`row-last-${section.id}` === currentHoverEle) {
+                toSectionIdx = sIdx;
+                }
+            });
+            if (toSectionIdx === -1) return newArr;
+            // Append the dragged row to the target section
+            const toSection = newArr[toSectionIdx];
+            const newChildren = [...toSection.children, rowToInsert];
+            newArr[toSectionIdx] = { ...toSection, children: newChildren };
+            return newArr;
+            });
+            setCurrentHoverEle("none");
+        }
+        // COLUMN DRAGGING (within a row and across rows)
+        else if (dragging.startsWith("col-") && currentHoverEle.startsWith("col-") && !currentHoverEle.startsWith("col-last")) {
+            setData(prev => {
+            let draggedCol: any = null;
+            let fromRowIdx = -1;
+            let fromSectionIdx = -1;
+            let draggingIdx = -1;
+            // Remove the dragged col from its row
+            const newArr = prev.map((section, sIdx) => {
+                const rowIdx = section.children.findIndex((row: any) => {
+                const idx = row.children.findIndex((col: any) => col.id === dragging);
+                if (idx !== -1) {
+                    draggingIdx = idx;
+                    return true;
+                }
+                return false;
+                });
+                if (rowIdx !== -1) {
+                fromRowIdx = rowIdx;
+                fromSectionIdx = sIdx;
+                const row = section.children[rowIdx];
+                draggedCol = row.children[draggingIdx];
+                const newCols = [...row.children];
+                newCols.splice(draggingIdx, 1);
+                const newRow = { ...row, children: newCols };
+                const newChildren = [...section.children];
+                newChildren[rowIdx] = newRow;
+                return { ...section, children: newChildren };
+                }
+                return section;
+            });
+
+            if (!draggedCol) return newArr;
+
+            // Find the row and index to insert into
+            let toSectionIdx = -1;
+            let toRowIdx = -1;
+            let hoverIdx = -1;
+            prev.forEach((section, sIdx) => {
+                section.children.forEach((row: any, rIdx: number) => {
+                const idx = row.children.findIndex((col: any) => col.id === currentHoverEle);
+                if (idx !== -1) {
+                    toSectionIdx = sIdx;
+                    toRowIdx = rIdx;
+                    hoverIdx = idx;
+                }
+                });
+            });
+            if (toSectionIdx === -1 || toRowIdx === -1 || hoverIdx === -1) return newArr;
+
+            // Insert the dragged col into the target row at the correct position
+            const toSection = newArr[toSectionIdx];
+            const toRow = toSection.children[toRowIdx];
+            const newCols = [...toRow.children];
+            // If dragging down in same row, insert after hoverIdx
+            const insertIdx = (fromSectionIdx === toSectionIdx && fromRowIdx === toRowIdx && draggingIdx < hoverIdx) ? hoverIdx - 1 : hoverIdx;
+            newCols.splice(insertIdx, 0, draggedCol);
+            const newRow = { ...toRow, children: newCols };
+            const newChildren = [...toSection.children];
+            newChildren[toRowIdx] = newRow;
+            newArr[toSectionIdx] = { ...toSection, children: newChildren };
+            return newArr;
+            });
+            setCurrentHoverEle("none");
+        } else if (dragging.startsWith("col-") && currentHoverEle.startsWith("col-last")) {
+            setData(prev => {
+                let draggedCol: any = null;
+                let fromRowIdx = -1;
+                let fromSectionIdx = -1;
+                let draggingIdx = -1;
+                // Remove the dragged col from its row
+                const newArr = prev.map((section, sIdx) => {
+                    const rowIdx = section.children.findIndex((row: any) => {
+                        const idx = row.children.findIndex((col: any) => col.id === dragging);
+                        if (idx !== -1) {
+                            draggingIdx = idx;
+                            return true;
                         }
-                
-                        // Find the target row (where colB is)
-                        for (const row of updatedData) {
-                            const colBIndex = row.children.findIndex((col:any) => col.id === currentHoverEle);
-                            if (colBIndex !== -1) {
-                                targetRow = row;
-                
-                                // If sourceRow and targetRow are the same, adjust index for removed A
-                                const insertIndex = (sourceRow === targetRow && colBIndex > 0)
-                                    ? colBIndex
-                                    : colBIndex;
-                
-                                row.children.splice(insertIndex, 0, colA);
-                                break;
-                            }
-                        }
-                
-                        if (!targetRow) {
-                            console.warn("Column B not found.");
-                            return updatedData;
-                        }
-                
-                        return updatedData;
+                        return false;
                     });
-                    setCurrentHoverEle("none");
-                } else if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-last")) {
-                    // If we are dragging an element and hovering over the last row, we need to add it to the last row
-                    console.log("Moving element", dragging, "to the end of the last row");
-                    setData(prev => {
-                        const updatedData = [...prev];
-                
-                        const rowAIndex = updatedData.findIndex(row => row.id === dragging);
-                        if (rowAIndex === -1) {
-                            console.warn("Row A not found.");
-                            return updatedData;
+                    if (rowIdx !== -1) {
+                        fromRowIdx = rowIdx;
+                        fromSectionIdx = sIdx;
+                        const row = section.children[rowIdx];
+                        draggedCol = row.children[draggingIdx];
+                        const newCols = [...row.children];
+                        newCols.splice(draggingIdx, 1);
+                        const newRow = { ...row, children: newCols };
+                        const newChildren = [...section.children];
+                        newChildren[rowIdx] = newRow;
+                        return { ...section, children: newChildren };
+                    }
+                    return section;
+                });
+
+                if (!draggedCol) return newArr;
+
+                // Find the row to append to
+                let toSectionIdx = -1;
+                let toRowIdx = -1;
+                prev.forEach((section, sIdx) => {
+                    section.children.forEach((row: any, rIdx: number) => {
+                        if (`col-last-${row.id}` === currentHoverEle) {
+                            toSectionIdx = sIdx;
+                            toRowIdx = rIdx;
                         }
-                
-                        // Remove row A from its current position
-                        const [rowA] = updatedData.splice(rowAIndex, 1);
-                
-                        // Push it to the end
-                        console.log(rowA);
-                        updatedData.push(rowA);
-                
-                        return updatedData;
                     });
-                    setCurrentHoverEle("none");
-                } else if (dragging.startsWith("col-") && currentHoverEle.startsWith("col-last")) {
-                    // If we are dragging an element and hovering over the last row, we need to add it to the last row
-                    console.log("Moving element", dragging, "to the end of the last col");
-                    setData(prev => {
-                        const updatedData = [...prev];
-                
-                        // Extract row ID from target string (assuming "col-last-row-456" → "row-456")
-                        const targetRowId = currentHoverEle.replace(/^col-last-/, '');
-                
-                        let colA = null;
-                
-                        // Step 1: Remove colA from its current row
-                        for (const row of updatedData) {
-                            const colIndex = row.children.findIndex((col: any) => col.id === dragging);
-                            if (colIndex !== -1) {
-                                colA = row.children.splice(colIndex, 1)[0];
-                                break;
-                            }
-                        }
-                
-                        if (!colA) {
-                            console.warn("Column A not found.");
-                            return updatedData;
-                        }
-                
-                        // Step 2: Find the target row
-                        const targetRow = updatedData.find(row => row.id === targetRowId);
-                        if (!targetRow) {
-                            console.warn("Target row not found.");
-                            return updatedData;
-                        }
-                
-                        // Step 3: Add colA to the end of the target row
-                        targetRow.children.push(colA);
-                
-                        return updatedData;
-                    });
-                    setCurrentHoverEle("none");
-                } else if (
-                    !dragging.startsWith("col-") &&
-                    !dragging.startsWith("row-") && 
-                    !currentHoverEle.startsWith("col-") && 
-                    !currentHoverEle.startsWith("row-") &&
-                    !currentHoverEle.startsWith("last-ele")) {
-                        const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                        setData(prev => {
-                            const updatedData = [...prev];
-                        
+                });
+                if (toSectionIdx === -1 || toRowIdx === -1) return newArr;
+
+                // Append the dragged col to the target row
+                const toSection = newArr[toSectionIdx];
+                const toRow = toSection.children[toRowIdx];
+                const newCols = [...toRow.children, draggedCol];
+                const newRow = { ...toRow, children: newCols };
+                const newChildren = [...toSection.children];
+                newChildren[toRowIdx] = newRow;
+                newArr[toSectionIdx] = { ...toSection, children: newChildren };
+                return newArr;
+            });
+            setCurrentHoverEle("none");
+        }
+        // ELEMENT DRAGGING (within and across a column)
+        else if (
+            !dragging.startsWith("col-") &&
+            !dragging.startsWith("row-") &&
+            !dragging.startsWith("section-") &&
+            !currentHoverEle.startsWith("col-") &&
+            !currentHoverEle.startsWith("row-") &&
+            !currentHoverEle.startsWith("section-") &&
+            !currentHoverEle.startsWith("last-ele")
+        ) {
+            const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            setData(prev => {
+                const updatedData = prev.map(section => ({
+                    ...section,
+                    children: section.children.map((row: any) => ({
+                        ...row,
+                        children: row.children.map((col: any) => {
                             let draggedElement = null;
-                        
-                            // Find and remove (or find without removing if cloning) the dragged element
-                            outerLoop:
-                            for (const row of updatedData) {
-                                for (const col of row.children) {
-                                    const elementIndex = col.children.findIndex((ele: any) => ele.id === dragging);
-                                    if (elementIndex !== -1) {
-                                        if (cloning) {
-                                            // Clone reference but do NOT remove original
-                                            draggedElement = { ...col.children[elementIndex] };
-                                        } else {
-                                            // Move: remove the element
-                                            draggedElement = col.children.splice(elementIndex, 1)[0];
-                                        }
-                                        break outerLoop;
-                                    }
+                            // Remove or clone the dragged element
+                            const newChildren = col.children.filter((ele: any) => {
+                                if (ele.id === dragging) {
+                                    draggedElement = cloning ? { ...ele } : ele;
+                                    return cloning; // keep if cloning, remove if moving
                                 }
-                            }
-                        
-                            if (!draggedElement) {
-                                console.warn("Dragged element not found: ", dragging);
-                                return updatedData;
-                            }
-                        
-                            if (cloning) {
-                        
-                                // Clone the actual element in theEles and assign it the new id
-                                const originalEle = theEles[dragging];
-                                if (!originalEle) {
-                                    console.warn("Original element not found in theEles: ", dragging);
-                                    return updatedData;
+                                return true;
+                            });
+                            return { ...col, children: newChildren };
+                        })
+                    }))
+                }));
+
+                let draggedElement: any = null;
+                // Find the dragged element (for cloning)
+                prev.forEach(section => {
+                    section.children.forEach((row: any) => {
+                        row.children.forEach((col: any) => {
+                            col.children.forEach((ele: any) => {
+                                if (ele.id === dragging) {
+                                    draggedElement = cloning ? { ...ele } : ele;
                                 }
-                        
-                                const newElementClone = { ...originalEle, id: newid };
-                                setTheEles((prevEles: any) => ({
-                                    ...prevEles,
-                                    [newid]: newElementClone
-                                }));
-                        
-                                // Update the reference used in Data
-                                draggedElement.id = newid;
-                            }
-                        
-                            // Find the target column and insert the (moved or cloned) element
-                            outerInsertLoop:
-                            for (const row of updatedData) {
-                                for (const col of row.children) {
-                                    const elementIndex = col.children.findIndex((ele: any) => ele.id === currentHoverEle);
-                                    if (elementIndex !== -1) {
-                                        // Check if the element is already present in the column
-                                        const isAlreadyPresent = col.children.some((ele: any) => ele.id === draggedElement.id);
-                                        if (!isAlreadyPresent) {
-                                            col.children.splice(elementIndex, 0, draggedElement);
-                                        }
-                                        return updatedData;
-                                    }
-                                }
-                            }
-                        
-                            console.warn("Target position not found.");
-                            return updatedData;
+                            });
                         });
-                    setCurrentHoverEle("none");
-                } else if (currentHoverEle.startsWith("last-ele")) {
-                    // If we are dragging an element and hovering over the last element, we need to add it to the last column of the last row
-                    console.log("Moving element", dragging, "to the end of the last ele");
-                    const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-                    setData(prev => {
-                        const updatedData = [...prev];
-                
-                        // Extract column ID from target string (assuming "last-ele-col-456" → "col-456")
-                        const targetColId = currentHoverEle.replace(/^last-ele-/, '');
-                
-                        let elementA = null;
-                
-                        // Step 1: Remove elementA from its current column
-                        outerLoop:
-                        for (const row of updatedData) {
-                            for (const col of row.children) {
-                                const eleIndex = col.children.findIndex((ele: any) => ele.id === dragging);
-                                if (eleIndex !== -1) {
-                                    if (cloning) {
-                                        // Clone reference but do NOT remove original
-                                        elementA = { ...col.children[eleIndex] };
-                                    } else {
-                                        // Move: remove the element
-                                        elementA = col.children.splice(eleIndex, 1)[0];
-                                    }
-                                    break outerLoop;
-                                }
-                            }
-                        }
-                
-                        if (!elementA) {
-                            console.warn("Element A not found.");
-                            return updatedData;
-                        }
-                
-                        if (cloning) {
-                            // Clone the actual element in theEles and assign it the new id
-                            const originalEle = theEles[dragging];
-                            if (!originalEle) {
-                                console.warn("Original element not found in theEles: ", dragging);
-                                return updatedData;
-                            }
-                
-                            const newElementClone = { ...originalEle, id: newid };
-                            setTheEles((prevEles: any) => ({
-                                ...prevEles,
-                                [newid]: newElementClone
-                            }));
-                
-                            // Update the reference used in Data
-                            elementA.id = newid;
-                        }
-                
-                        // Step 2: Find the target column
-                        let targetCol = null;
-                        for (const row of updatedData) {
-                            targetCol = row.children.find((col: any) => col.id === targetColId);
-                            if (targetCol) break;
-                        }
-                
-                        if (!targetCol) {
-                            console.warn("Target column not found.");
-                            return updatedData;
-                        }
-                
-                        // Step 3: Add elementA to the end of the target column if not already present
-                        const isAlreadyPresent = targetCol.children.some((ele: any) => ele.id === elementA.id);
-                        if (!isAlreadyPresent) {
-                            targetCol.children.push(elementA);
-                        }
-                
-                        return updatedData;
                     });
-                    setCurrentHoverEle("none");
+                });
+
+                if (!draggedElement) return updatedData;
+
+                if (cloning) {
+                    const originalEle = theEles[dragging];
+                    if (!originalEle) return updatedData;
+                    const newElementClone = { ...originalEle, id: newid };
+                    setTheEles((prevEles: any) => ({
+                        ...prevEles,
+                        [newid]: newElementClone
+                    }));
+                    draggedElement.id = newid;
                 }
 
-            }
-            setDragging(null);
-        };
+                // Insert into the target position
+                return updatedData.map(section => ({
+                    ...section,
+                    children: section.children.map((row: any) => ({
+                        ...row,
+                        children: row.children.map((col: any) => {
+                            const idx = col.children.findIndex((ele: any) => ele.id === currentHoverEle);
+                            if (idx !== -1) {
+                                const isAlreadyPresent = col.children.some((ele: any) => ele.id === draggedElement.id);
+                                if (!isAlreadyPresent) {
+                                    const newChildren = [...col.children];
+                                    newChildren.splice(idx, 0, draggedElement);
+                                    return { ...col, children: newChildren };
+                                }
+                            }
+                            return col;
+                        })
+                    }))
+                }));
+            });
+            setCurrentHoverEle("none");
+        } else if (currentHoverEle.startsWith("last-ele")) {
+            // Move to end of column
+            const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            setData(prev => {
+                let draggedElement: any = null;
+                const updatedData = prev.map(section => ({
+                    ...section,
+                    children: section.children.map((row: any) => ({
+                        ...row,
+                        children: row.children.map((col: any) => {
+                            const newChildren = col.children.filter((ele: any) => {
+                                if (ele.id === dragging) {
+                                    draggedElement = cloning ? { ...ele } : ele;
+                                    return cloning; // keep if cloning, remove if moving
+                                }
+                                return true;
+                            });
+                            return { ...col, children: newChildren };
+                        })
+                    }))
+                }));
+
+                if (!draggedElement) return updatedData;
+
+                if (cloning) {
+                    const originalEle = theEles[dragging];
+                    if (!originalEle) return updatedData;
+                    const newElementClone = { ...originalEle, id: newid };
+                    setTheEles((prevEles: any) => ({
+                        ...prevEles,
+                        [newid]: newElementClone
+                    }));
+                    draggedElement.id = newid;
+                }
+
+                // Find the target column
+                const targetColId = currentHoverEle.replace(/^last-ele-/, '');
+                return updatedData.map(section => ({
+                    ...section,
+                    children: section.children.map((row: any) => ({
+                        ...row,
+                        children: row.children.map((col: any) => {
+                            if (col.id === targetColId) {
+                                const isAlreadyPresent = col.children.some((ele: any) => ele.id === draggedElement.id);
+                                if (!isAlreadyPresent) {
+                                    return { ...col, children: [...col.children, draggedElement] };
+                                }
+                            }
+                            return col;
+                        })
+                    }))
+                }));
+            });
+            setCurrentHoverEle("none");
+        }
+    }
+    setDragging(null);
+};
         
         if (currentEle !== "none") {
             const firstInput = document.querySelector("input");
@@ -964,6 +1342,7 @@ export default function VBPrototype() {
             </Box>
             <Box w="224" >
                 <Outline
+                    cloning={cloning}
                     dragging={dragging}
                     setDragging={setDragging} 
                     currentHoverEle={currentHoverEle} 
@@ -981,77 +1360,84 @@ export default function VBPrototype() {
                     background: "radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)"
                 }}>
                     <div className="w-[500px] m-auto p-4 min-h-[80vh] pt-24">   
-                    {data.map((row, index) => 
-                        <section className="grid grid-flow-col auto-cols-fr gap-4 text-white" key={index}>
-                            {row.children.map((col: any, colIndex: any) => 
-                                <div key={"col" + colIndex}>
-                                    {col.children.map((element: any, eleIndex: any) => 
-                                        <div key={"ele" + eleIndex} className="relative group">
-                                            <div onClick={(e) => { e.stopPropagation(); setCurrentEle(element.id); setCurrentHoverEle("none") }} style={{
-                                                visibility: (currentEle === element.id || currentHoverEle === element.id) ?     "visible" : undefined,
-                                                opacity:    (currentEle === element.id || currentHoverEle === element.id) ?     (currentEle === element.id ? 1 : .5) : undefined,
-                                                top:        (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined,
-                                                left:       (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined,
-                                                right:      (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined,
-                                                bottom:     (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined
-                                            }} className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none">
-                                                <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">{(() => {
-                            switch (theEles[element.id]?.type) {
-                                case "Heading":
-                                    return <IconHeading size={12} />
-                                    ;
-                                case "Text":
-                                    return <IconPilcrow size={12} />
-                                    ;
-                                case "Input":
-                                    return <IconForms size={12} />
-                                    ;
-                                case "Button":
-                                    return <IconRectangle size={12} />
-                                    ;
-                                default:
-                                    return <IconBrackets size={12} />
-                                    ;
-                            }
-                        })()}{theEles[element.id]?.type}</div>
-                                            </div>
-                                            {(() => {
-                            switch (theEles[element.id]?.type) {
-                                case "Heading":
-                                    return <h1 className="text-3xl mb-5 font-bold">{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}</h1>
-                                    ;
-                                case "Text":
-                                    return <p className="mb-2">{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}</p>
-                                    ;
-                                case "Input":
-                                    return <div className="group relative mt-4">
-                                        {theEles[element.id]?.props.find((prop: any) => prop.label === "Tooltip")?.value && 
-                                        
-                                            <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-                                                {theEles[element.id]?.props.find((prop: any) => prop.label === "Tooltip")?.value}
-                                            </div>
-                                        }
-                                            <label>
-                                                {theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}
-                                                {theEles[element.id]?.props.find((prop: any) => prop.label === "Required")?.value === "true" && <span className="text-[#ff5500]"> *</span>}
-                                            </label>
-                                            <input type="text" placeholder={theEles[element.id]?.props.find((prop: any) => prop.label === "Placeholder")?.value || null} className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]" />
+                    {data.map((section, sindex) => 
+                        <section className="" key={sindex}>
+                            {section.children.map((row: any, index: any) => 
+                                <section className="grid grid-flow-col auto-cols-fr gap-4 text-white" key={index}>
+                                    {row.children.map((col: any, colIndex: any) => 
+                                        <div key={"col" + colIndex}>
+                                            {col.children.map((element: any, eleIndex: any) => 
+                                                <div key={"ele" + eleIndex} className="relative group">
+                                                    <div onClick={(e) => { e.stopPropagation(); setCurrentEle(element.id); setCurrentHoverEle("none") }} style={{
+                                                        visibility: (currentEle === element.id || currentHoverEle === element.id) ?     "visible" : undefined,
+                                                        opacity:    (currentEle === element.id || currentHoverEle === element.id) ?     (currentEle === element.id ? 1 : .5) : undefined,
+                                                        top:        (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined,
+                                                        left:       (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined,
+                                                        right:      (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined,
+                                                        bottom:     (currentEle === element.id || currentHoverEle === element.id) ?     "-8px" : undefined
+                                                    }} className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none">
+                                                        <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">{(() => {
+                                    switch (theEles[element.id]?.type) {
+                                        case "Heading":
+                                            return <IconHeading size={12} />
+                                            ;
+                                        case "Text":
+                                            return <IconPilcrow size={12} />
+                                            ;
+                                        case "Input":
+                                            return <IconForms size={12} />
+                                            ;
+                                        case "Button":
+                                            return <IconRectangle size={12} />
+                                            ;
+                                        default:
+                                            return <IconBrackets size={12} />
+                                            ;
+                                    }
+                                })()}{theEles[element.id]?.type}</div>
+                                                    </div>
+                                                    {(() => {
+                                                        switch (theEles[element.id]?.type) {
+                                                            case "Heading":
+                                                                return <h1 className="text-3xl mb-5 font-bold">{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}</h1>
+                                                                ;
+                                                            case "Text":
+                                                                return <p className="mb-2">{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}</p>
+                                                                ;
+                                                            case "Input":
+                                                                return <div className="group relative mt-4">
+                                                                    {theEles[element.id]?.props.find((prop: any) => prop.label === "Tooltip")?.value && 
+                                                                    
+                                                                        <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
+                                                                            {theEles[element.id]?.props.find((prop: any) => prop.label === "Tooltip")?.value}
+                                                                        </div>
+                                                                    }
+                                                                        <label>
+                                                                            {theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}
+                                                                            {theEles[element.id]?.props.find((prop: any) => prop.label === "Required")?.value === "true" && <span className="text-[#ff5500]"> *</span>}
+                                                                        </label>
+                                                                        <input type="text" placeholder={theEles[element.id]?.props.find((prop: any) => prop.label === "Placeholder")?.value || null} className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]" />
+                                                                    </div>
+                                                                ;
+                                                            case "Button":
+                                                                return <div className="text-right mt-4">
+                                                                    <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">{theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}</div>
+                                                                </div>
+                                                                ;
+                                                            default:
+                                                                return <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                    <path d="M5.75 1H7.25C7.65625 1 8 1.34375 8 1.75C8 2.1875 7.65625 2.5 7.25 2.5H5.75C5.03125 2.5 4.5 3.0625 4.5 3.75V5.1875C4.5 5.90625 4.1875 6.625 3.6875 7.125L2.78125 8L3.6875 8.90625C4.1875 9.40625 4.5 10.125 4.5 10.8438V12.25C4.5 12.9688 5.03125 13.5 5.75 13.5H7.25C7.65625 13.5 8 13.8438 8 14.25C8 14.6875 7.65625 15 7.25 15H5.75C4.21875 15 3 13.7812 3 12.25V10.8438C3 10.5 2.84375 10.1875 2.625 9.96875L1.21875 8.53125C0.90625 8.25 0.90625 7.78125 1.21875 7.46875L2.625 6.0625C2.84375 5.84375 3 5.53125 3 5.1875V3.75C3 2.25 4.21875 1 5.75 1ZM14.25 1C15.75 1 17 2.25 17 3.75V5.1875C17 5.53125 17.125 5.84375 17.3438 6.0625L18.7812 7.5C19.0625 7.78125 19.0625 8.25 18.7812 8.53125L17.3438 9.96875C17.125 10.1875 17 10.5 17 10.8438V12.25C17 13.7812 15.75 15 14.25 15H12.75C12.3125 15 12 14.6875 12 14.25C12 13.8438 12.3125 13.5 12.75 13.5H14.25C14.9375 13.5 15.5 12.9688 15.5 12.25V10.8438C15.5 10.125 15.7812 9.40625 16.2812 8.90625L17.1875 8L16.2812 7.125C15.7812 6.625 15.5 5.90625 15.5 5.1875V3.75C15.5 3.0625 14.9375 2.5 14.25 2.5H12.75C12.3125 2.5 12 2.1875 12 1.75C12 1.34375 12.3125 1 12.75 1H14.25Z" fill="currentColor"/>
+                                                                </svg>
+                                                                ;
+                                                        }
+                                                    })()}
+                                                </div>
+                                            )}
                                         </div>
-                                    ;
-                                case "Button":
-                                    return <div className="text-right mt-4">
-                                        <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">{theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}</div>
-                                    </div>
-                                    ;
-                                default:
-                                    return <svg width="19" height="16" viewBox="0 0 19 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M5.75 1H7.25C7.65625 1 8 1.34375 8 1.75C8 2.1875 7.65625 2.5 7.25 2.5H5.75C5.03125 2.5 4.5 3.0625 4.5 3.75V5.1875C4.5 5.90625 4.1875 6.625 3.6875 7.125L2.78125 8L3.6875 8.90625C4.1875 9.40625 4.5 10.125 4.5 10.8438V12.25C4.5 12.9688 5.03125 13.5 5.75 13.5H7.25C7.65625 13.5 8 13.8438 8 14.25C8 14.6875 7.65625 15 7.25 15H5.75C4.21875 15 3 13.7812 3 12.25V10.8438C3 10.5 2.84375 10.1875 2.625 9.96875L1.21875 8.53125C0.90625 8.25 0.90625 7.78125 1.21875 7.46875L2.625 6.0625C2.84375 5.84375 3 5.53125 3 5.1875V3.75C3 2.25 4.21875 1 5.75 1ZM14.25 1C15.75 1 17 2.25 17 3.75V5.1875C17 5.53125 17.125 5.84375 17.3438 6.0625L18.7812 7.5C19.0625 7.78125 19.0625 8.25 18.7812 8.53125L17.3438 9.96875C17.125 10.1875 17 10.5 17 10.8438V12.25C17 13.7812 15.75 15 14.25 15H12.75C12.3125 15 12 14.6875 12 14.25C12 13.8438 12.3125 13.5 12.75 13.5H14.25C14.9375 13.5 15.5 12.9688 15.5 12.25V10.8438C15.5 10.125 15.7812 9.40625 16.2812 8.90625L17.1875 8L16.2812 7.125C15.7812 6.625 15.5 5.90625 15.5 5.1875V3.75C15.5 3.0625 14.9375 2.5 14.25 2.5H12.75C12.3125 2.5 12 2.1875 12 1.75C12 1.34375 12.3125 1 12.75 1H14.25Z" fill="currentColor"/>
-                                    </svg>
-                                    ;
-                            }
-                        })()}
-                                        </div>)}
-                                </div>)}
+                                    )}
+                                </section>
+                            )}
+
                         </section>
                     )}
                     </div>
