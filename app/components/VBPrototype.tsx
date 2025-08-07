@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Button, Field, Heading, Text, Input as Input2, Checkbox } from "@optiaxiom/react";
+import { Box, Button, Field, Heading, Text, Input as Input2, Checkbox, Menu, MenuContent, MenuTrigger } from "@optiaxiom/react";
 import { ReactNode, useEffect, Fragment, Children } from "react";
 import { useState } from "react";import { 
     IconPlus,
@@ -16,7 +16,6 @@ import { useState } from "react";import {
     IconSquare,
     IconPencil,
    } from "@tabler/icons-react";
-import { Menu, MenuContent, MenuTrigger } from "@optiaxiom/react/unstable";
 
 // Simple AnimatedText component for cycling through texts
 import { useRef } from "react";
