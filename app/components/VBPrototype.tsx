@@ -3,7 +3,7 @@
 import {Box, Button, Field, Heading, Text, Input as Input2, Checkbox, Menu, MenuContent, MenuTrigger} from "@optiaxiom/react";
 import {ReactNode, useEffect, Fragment, Children} from "react";
 import {useState} from "react";
-import {IconPlus, IconDots, IconSparkles, IconTrash, IconPilcrow, IconForms, IconRectangle, IconHeading, IconBrackets, IconSection, IconSquare, IconPencil, IconRowInsertBottom, IconRowInsertTop, IconFilter, IconLogout, IconUser} from "@tabler/icons-react";
+import {IconPlus, IconDots, IconSparkles, IconTrash, IconPilcrow, IconForms, IconRectangle, IconHeading, IconBrackets, IconSection, IconSquare, IconPencil, IconRowInsertBottom, IconRowInsertTop, IconFilter, IconLogout, IconUser, IconArrowBarBoth} from "@tabler/icons-react";
 
 // Simple AnimatedText component for cycling through texts
 import {useRef} from "react";
@@ -47,26 +47,37 @@ const Section: React.FC<{
 	removeSection: any;
 	onDragStart: any;
 }> = ({addSection, setOpen, section, children, addRow, removeSection, onDragStart}) => {
-	const [menuOpen, setMenuOpen] = useState(false);
-
 	if (section.label) {
 		return (
-			<div className="p-0.5 pl-1 -mr-[22px]">
+			<div className="p-0.5 pl-6 -mr-0.5">
 				<div>
 					<div
-						className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+						className="group hover:border-[#838DA4] h-10 border-[#CACFDC] border bg-white cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-2 pl-3 active:bg-[#0037FF10]"
 						onDragStart={onDragStart}
 						draggable>
-						<div className="flex gap-1 items-center w-full group-hover:w-[calc(100%-24px)]">
-							<div className="">
-								<IconSquare size={12} />
-							</div>
-							<span className="truncate overflow-hidden text-ellipsis">{section.label}</span>
+						<div className="flex gap-2 items-center w-full group-hover:w-[calc(100%-24px)]">
+							<Box
+								color="fg.default"
+								className="">
+								<IconSquare size={16} />
+							</Box>
+							<Box
+								color="fg.default"
+								className="truncate overflow-hidden text-ellipsis text-[14px]">
+								{section.label}
+							</Box>
 						</div>
 
 						<div className="group-hover:visible invisible flex gap-0.5">
 							<Menu
 								options={[
+									{
+										addon: <IconPencil size={16} />,
+										label: "Edit",
+										execute: () => {
+											removeSection();
+										},
+									},
 									{
 										addon: <IconTrash size={16} />,
 										label: "Remove Block",
@@ -85,12 +96,6 @@ const Section: React.FC<{
 								/>
 								<MenuContent />
 							</Menu>
-							<Button
-								appearance="subtle"
-								size="sm"
-								aria-label="add row"
-								icon={<IconPencil />}
-							/>
 						</div>
 					</div>
 				</div>
@@ -106,12 +111,13 @@ const Section: React.FC<{
 	return (
 		<div className="p-1 py-0 -mr-[24px]">
 			<div
-				className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+				className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
 				onDragStart={onDragStart}
 				onClick={() => setOpen(section.id, !section.open)}
 				draggable>
 				<div className="flex gap-1 items-center">
 					<svg
+						className="chevron"
 						width="12"
 						height="12"
 						viewBox="0 0 12 12"
@@ -205,6 +211,7 @@ const Row: React.FC<{
 				draggable>
 				<div className="flex gap-1 items-center">
 					<svg
+						className="chevron"
 						width="12"
 						height="12"
 						viewBox="0 0 12 12"
@@ -296,6 +303,7 @@ const Col: React.FC<{
 				onDragStart={onDragStart}>
 				<div className="flex gap-1 items-center">
 					<svg
+						className="chevron"
 						width="12"
 						height="12"
 						viewBox="0 0 12 12"
@@ -398,7 +406,7 @@ const Ele: React.FC<{
 	const [menuOpen, setMenuOpen] = useState(false);
 	return (
 		<Box
-			pl="40"
+			pl="64"
 			py="2"
 			pr="20">
 			<div
@@ -411,9 +419,9 @@ const Ele: React.FC<{
 				}}
 				className="active:bg-[#0037FF10] group p-2 py-0 text-sm h-[40px] pl-3 cursor-pointer border border-[#CACFDC] hover:border-[#838DA4] rounded-[4px] hover:bg-[#091E4208] gap-1 items-center w-full bg-white flex justify-between">
 				<div
-					className="flex gap-1 items-center w-full group-hover:w-[calc(100%-24px)]"
+					className="flex gap-2 items-center w-full group-hover:w-[calc(100%-24px)]"
 					style={{color: label ? "#2E3442" : "#66708C"}}>
-					<div className="min-w-5">
+					<div className="min-w-4">
 						{(() => {
 							switch (type) {
 								case "Heading":
@@ -770,7 +778,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 	}
 
 	return (
-		<div>
+		<div className="">
 			<div
 				className="flex w-[200%] transition duration-300"
 				style={{
@@ -1947,7 +1955,41 @@ export default function VBPrototype() {
 						</Button>
 					</Box>
 				</Box>
-				<Box w="224">
+				<Box
+					w="auto"
+					className="vb-outline"
+					style={{width: undefined, minWidth: 180, maxWidth: 600, position: "relative"}}>
+					{/* Resizable handle */}
+					<div
+						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
+						onMouseDown={(e) => {
+							e.preventDefault();
+							const startX = e.clientX;
+							const outlineBox = e.currentTarget.parentElement as HTMLElement;
+							const startWidth = outlineBox.offsetWidth;
+
+							const onMouseMove = (moveEvent: MouseEvent) => {
+								const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
+								outlineBox.style.width = newWidth + "px";
+							};
+
+							const onMouseUp = () => {
+								window.removeEventListener("mousemove", onMouseMove);
+								window.removeEventListener("mouseup", onMouseUp);
+							};
+
+							window.addEventListener("mousemove", onMouseMove);
+							window.addEventListener("mouseup", onMouseUp);
+						}}>
+						<div className="bg-[#0000000d] w-1 h-full left-1.5 grow-1 " />
+						<div>
+							<IconArrowBarBoth
+								size="16"
+								color="#00000066"
+							/>
+						</div>
+						<div className="bg-[#0000000d] w-1 h-full left-1.5 grow-1 " />
+					</div>
 					<Outline
 						cloning={cloning}
 						dragging={dragging}

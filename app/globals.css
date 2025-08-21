@@ -1,7 +1,7 @@
 @layer optiaxiom.base {
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
+	@tailwind base;
+	@tailwind components;
+	@tailwind utilities;
 }
 
 /* @media (prefers-color-scheme: dark) {
@@ -12,76 +12,81 @@
 } */
 
 body {
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 0;
+	background: var(--background);
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
 }
 
 .parent {
-  display: grid;
-  grid-template-columns: 0fr 1fr;
-  grid-template-rows: 0fr 1fr;
-  grid-column-gap: 0px;
-  grid-row-gap: 0px;
+	display: grid;
+	grid-template-columns: 0fr 1fr;
+	grid-template-rows: 0fr 1fr;
+	grid-column-gap: 0px;
+	grid-row-gap: 0px;
 }
-  
-.div1 { grid-area: 1 / 1 / 2 / 6; }
-.div2 { grid-area: 2 / 1 / 6 / 2; }
-.div3 { grid-area: 2 / 2 / 6 / 6; }
 
+.div1 {
+	grid-area: 1 / 1 / 2 / 6;
+}
+.div2 {
+	grid-area: 2 / 1 / 6 / 2;
+}
+.div3 {
+	grid-area: 2 / 2 / 6 / 6;
+}
 
 .vt {
-  overflow: hidden;
+	overflow: hidden;
 }
 
 .noSlide {
-  transform: translateX(0px);
-  transition: transform .7s cubic-bezier(0, 1, 0, 1);
+	transform: translateX(0px);
+	transition: transform 0.7s cubic-bezier(0, 1, 0, 1);
 }
 
-.slidex{
-  animation: slide .7s both cubic-bezier(0, 1, 0, 1);
+.slidex {
+	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
 }
 
 @keyframes slide {
-  0% {
-    transform: translateX(0px);
-  }
-  100% {
-    transform: translateX(224px);
-  }
+	0% {
+		transform: translateX(0px);
+	}
+	100% {
+		transform: translateX(224px);
+	}
 }
 
 .appear {
-  animation: appear .3s;
+	animation: appear 0.3s;
 }
 
 @keyframes appear {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
 }
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+	width: 8px;
+	height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+	background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+	background: #888;
+	border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+	background: #555;
 }
 /* 
 .newsection {
@@ -109,3 +114,11 @@ body {
     opacity: 0;
   }
 } */
+
+.chevron {
+	visibility: hidden;
+}
+
+.vb-outline:hover .chevron {
+	visibility: visible;
+}
