@@ -3,10 +3,11 @@
 import {Box, Button, Field, Heading, Text, Input as Input2, Checkbox, Menu, MenuContent, MenuTrigger} from "@optiaxiom/react";
 import {ReactNode, useEffect, Fragment, Children} from "react";
 import {useState} from "react";
-import {IconPlus, IconDots, IconSparkles, IconTrash, IconPilcrow, IconForms, IconRectangle, IconHeading, IconBrackets, IconSection, IconSquare, IconPencil} from "@tabler/icons-react";
+import {IconPlus, IconDots, IconSparkles, IconTrash, IconPilcrow, IconForms, IconRectangle, IconHeading, IconBrackets, IconSection, IconSquare, IconPencil, IconRowInsertBottom, IconRowInsertTop, IconFilter, IconLogout, IconUser} from "@tabler/icons-react";
 
 // Simple AnimatedText component for cycling through texts
 import {useRef} from "react";
+import {sep} from "path";
 const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,13 +39,14 @@ const Input: React.FC<{prop: any; onChange: any; propIndex: number}> = ({prop, o
 };
 
 const Section: React.FC<{
+	addSection: any;
 	setOpen: any;
 	section: any;
 	children: ReactNode;
 	addRow: any;
 	removeSection: any;
 	onDragStart: any;
-}> = ({setOpen, section, children, addRow, removeSection, onDragStart}) => {
+}> = ({addSection, setOpen, section, children, addRow, removeSection, onDragStart}) => {
 	const [menuOpen, setMenuOpen] = useState(false);
 
 	if (section.label) {
@@ -62,14 +64,8 @@ const Section: React.FC<{
 							<span className="truncate overflow-hidden text-ellipsis">{section.label}</span>
 						</div>
 
-						<div
-							className="group-hover:visible invisible flex gap-0.5"
-							style={{
-								visibility: menuOpen ? "visible" : undefined,
-							}}>
+						<div className="group-hover:visible invisible flex gap-0.5">
 							<Menu
-								onOpenChange={() => setMenuOpen(!menuOpen)}
-								open={menuOpen}
 								options={[
 									{
 										addon: <IconTrash size={16} />,
@@ -77,7 +73,6 @@ const Section: React.FC<{
 										intent: "danger",
 										execute: () => {
 											removeSection();
-											setMenuOpen(false);
 										},
 									},
 								]}>
@@ -102,6 +97,11 @@ const Section: React.FC<{
 			</div>
 		);
 	}
+
+	const group = {
+		label: "Add",
+		separator: true,
+	};
 
 	return (
 		<div className="p-1 py-0 -mr-[24px]">
@@ -129,20 +129,40 @@ const Section: React.FC<{
 				</div>
 				<div
 					className="group-hover:visible invisible gap-0.5 flex"
-					style={{
-						visibility: menuOpen ? "visible" : undefined,
-					}}>
+					onClick={(e) => e.stopPropagation()}>
 					<Menu
-						onOpenChange={() => setMenuOpen(!menuOpen)}
-						open={menuOpen}
 						options={[
+							{
+								addon: <IconPlus size={16} />,
+								group: group,
+								label: "Add Row Inside",
+								execute: () => {
+									addRow();
+								},
+								selected: false,
+							},
+							{
+								addon: <IconRowInsertTop size={16} />,
+								group: group,
+								label: "Add Section Before",
+								execute: () => {
+									addSection();
+								},
+							},
+							{
+								addon: <IconRowInsertBottom size={16} />,
+								group: group,
+								label: "Add Section After",
+								execute: () => {
+									addSection();
+								},
+							},
 							{
 								addon: <IconTrash size={16} />,
 								label: "Remove Section",
 								intent: "danger",
 								execute: () => {
 									removeSection();
-									setMenuOpen(false);
 								},
 							},
 						]}>
@@ -158,13 +178,6 @@ const Section: React.FC<{
 						/>
 						<MenuContent />
 					</Menu>
-					<Button
-						onClick={addRow}
-						appearance="subtle"
-						size="sm"
-						aria-label="add row"
-						icon={<IconPlus />}
-					/>
 				</div>
 			</div>
 			<div style={{display: section.open ? "block" : "none"}}>{children}</div>
@@ -177,11 +190,12 @@ const Row: React.FC<{
 	row: any;
 	children: ReactNode;
 	addCol: any;
+	addRow: any;
+	addRowBelow: any;
 	removeRow: any;
 	onDragStart: any;
-}> = ({setOpen, row, children, addCol, removeRow, onDragStart}) => {
-	const [menuOpen, setMenuOpen] = useState(false);
-
+}> = ({addRowBelow, addRow, setOpen, row, children, addCol, removeRow, onDragStart}) => {
+	const group = {label: "Add", separator: true};
 	return (
 		<div className="py-0">
 			<div
@@ -206,22 +220,39 @@ const Row: React.FC<{
 					</svg>
 					<Text>Row</Text>
 				</div>
-				<div
-					className="group-hover:visible invisible gap-0.5 flex"
-					style={{
-						visibility: menuOpen ? "visible" : undefined,
-					}}>
+				<div className="group-hover:visible invisible gap-0.5 flex">
 					<Menu
-						onOpenChange={() => setMenuOpen(!menuOpen)}
-						open={menuOpen}
 						options={[
+							{
+								group: group,
+								addon: <IconPlus size={16} />,
+								label: "Add column inside",
+								execute: (e) => {
+									addCol();
+								},
+							},
+							{
+								group: group,
+								addon: <IconRowInsertTop size={16} />,
+								label: "Add row above",
+								execute: (e) => {
+									addRow();
+								},
+							},
+							{
+								group: group,
+								addon: <IconRowInsertTop size={16} />,
+								label: "Add row below",
+								execute: (e) => {
+									addRowBelow();
+								},
+							},
 							{
 								addon: <IconTrash size={16} />,
 								label: "Remove Row",
 								intent: "danger",
-								execute: () => {
-									removeRow();
-									setMenuOpen(false);
+								execute: (e) => {
+									removeRow(row.id);
 								},
 							},
 						]}>
@@ -235,15 +266,12 @@ const Row: React.FC<{
 								e.stopPropagation();
 							}}
 						/>
-						<MenuContent />
+						<MenuContent
+							onClick={(e) => {
+								e.stopPropagation();
+							}}
+						/>
 					</Menu>
-					<Button
-						onClick={addCol}
-						appearance="subtle"
-						size="sm"
-						aria-label="add row"
-						icon={<IconPlus />}
-					/>
 				</div>
 			</div>
 			<div style={{display: row.open ? "block" : "none"}}>{children}</div>
@@ -259,9 +287,6 @@ const Col: React.FC<{
 	removeCol: any;
 	onDragStart: any;
 }> = ({setOpen, col, children, addElement, removeCol, onDragStart}) => {
-	const [menuOpen, setMenuOpen] = useState(false);
-	const [addOpen, setAddOpen] = useState(false);
-
 	return (
 		<Box>
 			<div
@@ -286,14 +311,8 @@ const Col: React.FC<{
 					</svg>
 					<Text>Column</Text>
 				</div>
-				<div
-					className="group-hover:visible invisible gap-0.5 flex"
-					style={{
-						visibility: menuOpen || addOpen ? "visible" : undefined,
-					}}>
+				<div className="group-hover:visible invisible gap-0.5 flex">
 					<Menu
-						onOpenChange={() => setMenuOpen(!menuOpen)}
-						open={menuOpen}
 						options={[
 							{
 								addon: <IconTrash size={16} />,
@@ -301,7 +320,6 @@ const Col: React.FC<{
 								intent: "danger",
 								execute: () => {
 									removeCol();
-									setMenuOpen(false);
 								},
 							},
 						]}>
@@ -318,8 +336,6 @@ const Col: React.FC<{
 						<MenuContent />
 					</Menu>
 					<Menu
-						onOpenChange={() => setAddOpen(!addOpen)}
-						open={addOpen}
 						options={[
 							{
 								group: {label: "Add Element"},
@@ -503,6 +519,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 			const idx = prev.findIndex((section) => section.id === id);
 			if (idx === -1) {
 				// If not found, just append at end
+				console.log("Adding section last");
 				return [
 					...prev,
 					{
@@ -525,6 +542,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 				];
 			}
 			// Insert above the found index
+			console.log("Adding section above", id);
 			return [
 				...prev.slice(0, idx),
 				{
@@ -549,7 +567,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 		});
 	};
 	const addCol = (e: any, section: number, row: number, at: any) => {
-		e.stopPropagation();
+		e?.stopPropagation();
 
 		setData((prev) => {
 			// Find the correct section
@@ -585,7 +603,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 	};
 
 	const addRow = (e: any, section: number, at: any) => {
-		e.stopPropagation();
+		e?.stopPropagation();
 
 		setData((prev) => {
 			const newRow = {
@@ -721,14 +739,12 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 	const onDragStart = (e: any, id: string) => {
 		e.stopPropagation();
 		e.preventDefault();
-		console.log("Drag started", id);
 		setDragging(id);
 	};
 
 	const onDragHover = (e: any, id: string) => {
 		e.stopPropagation();
 		e.preventDefault();
-		console.log("Drag hover: " + id);
 		if (dragging) {
 			setCurrentHoverEle("" + id);
 		}
@@ -736,7 +752,6 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 
 	const [AI, setAI] = useState(false);
 	const [loadingAI, setLoadingAI] = useState(false);
-	const [addOpen, setAddOpen] = useState(false);
 
 	async function sendMessage(message: string) {
 		setLoadingAI(true);
@@ -788,8 +803,6 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 								icon={<IconSparkles />}
 							/>
 							<Menu
-								onOpenChange={() => setAddOpen(!addOpen)}
-								open={addOpen}
 								options={[
 									{
 										addon: <IconSection size={16} />,
@@ -942,6 +955,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 									section={section}
 									onDragStart={(e: any) => onDragStart(e, section.id)}
 									removeSection={(e: any) => removeSection(sindex)}
+									addSection={() => addSection(section.id)}
 									addRow={(e: any) => addRow(e, sindex, null)}>
 									{section.children.map((row: any, index: number) => (
 										<div key={index}>
@@ -980,6 +994,8 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 											)}
 											<Row
 												row={row}
+												addRow={(e: any) => addRow(e, sindex, index)}
+												addRowBelow={(e: any) => addRow(e, sindex, index + 1)}
 												setOpen={setOpen}
 												onDragStart={(e: any) => onDragStart(e, row.id)}
 												removeRow={(e: any) => removeRow(row.id)}
@@ -992,7 +1008,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 																<div
 																	className="ind group h-2 relative z-10 -my-1"
 																	onMouseEnter={(e) => onDragHover(e, section.id)}>
-																	<Box className="transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
+																	<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
 																		<Box className="bg-black/5 h-1 w-full" />
 																		<Button
 																			aria-label="Add Section"
@@ -1067,7 +1083,7 @@ const Outline: React.FC<OutlineProps> = ({cloning, setDragging, currentEle, theE
 													<div
 														className="ind group h-2 relative z-10 -my-1"
 														onMouseEnter={(e) => onDragHover(e, section.id)}>
-														<Box className="transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
+														<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
 															<Box className="bg-black/5 h-1 w-full" />
 															<Button
 																aria-label="Add Section"
@@ -1860,7 +1876,7 @@ export default function VBPrototype() {
 	}, [currentEle, dragging, currentHoverEle]);
 
 	return (
-		<div className="-mt-[72px] -ml-[24px] w-[calc(100vw-57px)] select-none">
+		<div className="-mt-[72px] -ml-[24px] w-[calc(100vw-58px)] select-none">
 			<Box
 				bg="bg.page"
 				w="full"
