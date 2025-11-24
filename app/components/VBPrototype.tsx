@@ -24,6 +24,8 @@ const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, in
 	return <span>{texts[index]}</span>;
 };
 
+const indentDistance = 8; // Distance in pixels for each indent level
+
 const Input: React.FC<{prop: any; onChange: any; propIndex: number}> = ({prop, onChange, propIndex}) => {
 	return (
 		<div className="p-6 pr-0 py-2">
@@ -151,6 +153,7 @@ const Section: React.FC<{
 								addon: <IconRowInsertTop size={16} />,
 								group: group,
 								label: "Add Section Before",
+								description: "lorem ipsum dolor sit amet. lorem ipsum dolor sit amet. lorem ipsum dolor sit amet. ",
 								execute: () => {
 									addSection();
 								},
@@ -205,7 +208,8 @@ const Row: React.FC<{
 	return (
 		<div className="py-0">
 			<div
-				className="newsection group pl-5 p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+				className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+				style={{paddingLeft: `${4 + indentDistance}px`}}
 				onDragStart={onDragStart}
 				onClick={() => setOpen(row.id, !row.open)}
 				draggable>
@@ -297,8 +301,9 @@ const Col: React.FC<{
 	return (
 		<Box>
 			<div
-				className="newsection group p-1 pl-9 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+				className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
 				draggable
+				style={{paddingLeft: `${4 + indentDistance * 2}px`}}
 				onClick={() => setOpen(col.id, !col.open)}
 				onDragStart={onDragStart}>
 				<div className="flex gap-1 items-center">
@@ -406,7 +411,9 @@ const Ele: React.FC<{
 	const [menuOpen, setMenuOpen] = useState(false);
 	return (
 		<Box
-			pl="64"
+			style={{
+				paddingLeft: `${4 + 16 + indentDistance * 3}px`,
+			}}
 			py="2"
 			pr="20">
 			<div
