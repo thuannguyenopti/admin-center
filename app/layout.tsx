@@ -150,7 +150,8 @@ export default function RootLayout({
 						url: "/graph/search/search-analytics",
 					},
 					{
-						label: "Optimize Search",
+						label: "Search Algorithms",
+						description: "Manage search algorithms",
 						url: "/graph/search/optimize-search",
 					},
 				],

@@ -8,11 +8,9 @@ import GlobalBar from "./GlobalBar";
 
 export default function Template({
 	children,
-	description,
 	structure,
 }: Readonly<{
 	children: React.ReactNode;
-	description?: string;
 	structure: any;
 }>) {
 	const router = useRouter();
@@ -36,6 +34,7 @@ export default function Template({
 	);
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
+	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
 	const showVT =
 		highlight1?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
@@ -132,12 +131,12 @@ export default function Template({
 				overflow="auto"
 			>
 				<Heading level="3">{heading || highlight1?.label}</Heading>
-				{description && (
+				{desc && (
 					<Text
 						color="fg.secondary"
-						mt="16"
+						mt="4"
 					>
-						{description}
+						{desc}
 					</Text>
 				)}
 				<Box
