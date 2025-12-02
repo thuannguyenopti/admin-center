@@ -1,8 +1,18 @@
-import {Text, Box, NavBody, NavList, NavItem} from "@optiaxiom/react";
+import {
+	Text,
+	Box,
+	NavBody,
+	NavList,
+	NavItem,
+	NavGroup,
+	NavGroupTrigger,
+	NavSeparator,
+} from "@optiaxiom/react";
 import {Url} from "next/dist/shared/lib/router/router";
 import Link from "next/link";
 
 import {useRouter, usePathname} from "next/navigation";
+import {Fragment} from "react";
 
 export default function VT({
 	items,
@@ -45,7 +55,7 @@ export default function VT({
 						</Text>
 					</Box>
 				)}
-				{items?.map((menuItem) =>
+				{items?.map((menuItem, i) =>
 					menuItem.url ? (
 						<NavItem
 							onClick={() => menuClick(menuItem.url || "")}
@@ -56,17 +66,10 @@ export default function VT({
 							{menuItem.label}
 						</NavItem>
 					) : (
-						<Text
-							key={menuItem.label}
-							fontSize="xs"
-							px="8"
-							mx="4"
-							pb="4"
-							pt="12"
-							color="fg.tertiary"
-						>
-							{menuItem.label}
-						</Text>
+						<Fragment key={menuItem.label}>
+							{i !== 0 && <NavSeparator />}
+							<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
+						</Fragment>
 					)
 				)}
 			</NavList>

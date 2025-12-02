@@ -9,15 +9,13 @@ import {
 	MenuContent,
 	LabelMenuButton,
 	Card,
-	DataTable,
-	DataTableBody,
 	Input,
 	Separator,
 } from "@optiaxiom/react";
-import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import MetricCard from "../../../components/MetricCard";
 import Link from "next/link";
+import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 type QueryData = {
 	query: string;
@@ -25,15 +23,6 @@ type QueryData = {
 	zeroResult: string;
 	avgLatency: string;
 };
-
-const columnHelper = createColumnHelper<QueryData>();
-
-const columns = [
-	columnHelper.accessor("query", {header: "Query"}),
-	columnHelper.accessor("ctr", {header: "CTR ↓"}),
-	columnHelper.accessor("zeroResult", {header: "Zero-Result"}),
-	columnHelper.accessor("avgLatency", {header: "Avg Latency"}),
-];
 
 const data: QueryData[] = [
 	{query: "ProductDetailsPage", ctr: "1.3%", zeroResult: "50%", avgLatency: "123ms"},
@@ -146,11 +135,6 @@ export default function SearchAnalytics() {
 	const prevZeroResult = zeroResultVal * 1.1;
 	const prevReformulation = reformulationVal * 1.05;
 
-	const table = useReactTable({
-		columns,
-		data,
-		getCoreRowModel: getCoreRowModel(),
-	});
 	return (
 		<Box>
 			{/* Filters */}
@@ -241,9 +225,26 @@ export default function SearchAnalytics() {
 			>
 				Problematic Queries
 			</Heading>
-			<DataTable table={table}>
-				<DataTableBody />
-			</DataTable>
+			<Table>
+				<thead>
+					<Tr>
+						<Th>Query</Th>
+						<Th>CTR ↓</Th>
+						<Th>Zero-Result</Th>
+						<Th>Avg Latency</Th>
+					</Tr>
+				</thead>
+				<tbody>
+					{data.map((row) => (
+						<Tr key={row.query}>
+							<Td>{row.query}</Td>
+							<Td>{row.ctr}</Td>
+							<Td>{row.zeroResult}</Td>
+							<Td>{row.avgLatency}</Td>
+						</Tr>
+					))}
+				</tbody>
+			</Table>
 		</Box>
 	);
 }
