@@ -25,6 +25,9 @@ import {
 } from "@tabler/icons-react";
 import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
+import {useRouter} from "next/navigation";
+import {initialAlgorithms, BestBet, initialBestBets} from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
 
 type ZeroResultQuery = {
 	query: string;
@@ -34,77 +37,6 @@ type ZeroResultQuery = {
 };
 
 const columnHelper = createColumnHelper<ZeroResultQuery>();
-
-const columns = [
-	columnHelper.accessor("query", {
-		header: "Query",
-		cell: (info) => (
-			<Flex
-				gap="8"
-				alignItems="center"
-			>
-				<Text>{info.getValue()}</Text>
-			</Flex>
-		),
-	}),
-	columnHelper.accessor("frequency", {
-		header: "Frequency",
-		cell: (info) => `${info.getValue()} times`,
-	}),
-	columnHelper.accessor("lastSeen", {header: "Last Seen"}),
-	columnHelper.accessor("algorithm", {
-		header: "Algorithm Reference",
-		cell: (info) => (
-			<Item
-				icon={<IconReportSearch size={16} />}
-				title={info.getValue()}
-			/>
-		),
-	}),
-	columnHelper.display({
-		id: "actions",
-		header: "",
-		size: 24,
-		maxSize: 24,
-		cell: (info) => (
-			<Menu
-				options={[
-					{
-						group: {label: "Manage Algorithm", separator: false},
-						addon: <IconAnalyze size={16} />,
-						label: "Suggest Optimization",
-						execute: () => {
-							// Edit action
-						},
-					},
-					{
-						addon: <IconRocket size={16} />,
-						label: "Add Best Bet",
-						execute: () => {
-							// Edit action
-						},
-					},
-					{
-						addon: <IconBook size={16} />,
-						label: "Add Synonym",
-						execute: () => {
-							// Edit action
-						},
-					},
-				]}
-			>
-				<MenuTrigger
-					icon={<IconDots />}
-					aria-label="add ele"
-					appearance="subtle"
-					size="sm"
-					iconPosition="start"
-				/>
-				<MenuContent />
-			</Menu>
-		),
-	}),
-];
 
 const allData: ZeroResultQuery[] = [
 	{
@@ -172,8 +104,129 @@ const allData: ZeroResultQuery[] = [
 type TimeRange = "24h" | "7d" | "30d" | "90d";
 
 export default function ZeroResultPage() {
+	const router = useRouter();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+	const [bestBets, setBestBets] = usePersistentState("bestBets", initialBestBets) as [
+		BestBet[],
+		(val: BestBet[]) => void
+	];
+
+	const columns = useMemo(
+		() => [
+			columnHelper.accessor("query", {
+				header: "Query",
+				cell: (info) => (
+					<Flex
+						gap="8"
+						alignItems="center"
+					>
+						<Text>{info.getValue()}</Text>
+					</Flex>
+				),
+			}),
+			columnHelper.accessor("frequency", {
+				header: "Frequency",
+				cell: (info) => `${info.getValue()} times`,
+			}),
+			columnHelper.accessor("lastSeen", {header: "Last Seen"}),
+			columnHelper.accessor("algorithm", {
+				header: "Algorithm Reference",
+				cell: (info) => (
+					<Item
+						icon={<IconReportSearch size={16} />}
+						title={info.getValue()}
+					/>
+				),
+			}),
+			columnHelper.display({
+				id: "actions",
+				header: "",
+				size: 24,
+				maxSize: 24,
+				cell: (info) => (
+					<Menu
+						options={[
+							// {
+							// 	group: {label: "Manage Algorithm", separator: false},
+							// 	addon: <IconAnalyze size={16} />,
+							// 	label: "Suggest Optimization",
+							// 	execute: () => {
+							// 		// Edit action
+							// 	},
+							// },
+							{
+								addon: <IconRocket size={16} />,
+								label: "Add Best Bet",
+								execute: () => {
+									const algoName = info.row.original.algorithm;
+									const query = info.row.original.query;
+									const algo = initialAlgorithms.find((a) => a.name === algoName);
+
+									if (algo) {
+										// 1. Create/Find Best Bet in Global List
+										let currentBestBets = [...bestBets];
+										let targetBet = currentBestBets.find(
+											(b) => b.query === query
+										);
+
+										if (!targetBet) {
+											targetBet = {
+												query: query,
+												destination: `/${query.replace(/\s+/g, "-")}`,
+												status: "Active",
+												owner: "Alice Johnson",
+											};
+											currentBestBets.push(targetBet);
+											// Manually update localStorage to ensure next page sees it immediately
+											localStorage.setItem(
+												"bestBets",
+												JSON.stringify(currentBestBets)
+											);
+											setBestBets(currentBestBets);
+										}
+
+										// 2. Add to Algorithm Specific List
+										const algoKey = `algorithm_best_bets_${algo.id}`;
+										const storedAlgoBets = localStorage.getItem(algoKey);
+										let algoBets: BestBet[] = storedAlgoBets
+											? JSON.parse(storedAlgoBets)
+											: [];
+
+										if (!algoBets.some((b) => b.query === targetBet!.query)) {
+											algoBets.push(targetBet!);
+											localStorage.setItem(algoKey, JSON.stringify(algoBets));
+										}
+
+										router.push(
+											`/graph/search/optimize-search/${algo.id}/optimizations`
+										);
+									}
+								},
+							},
+							// {
+							// 	addon: <IconBook size={16} />,
+							// 	label: "Add Synonym",
+							// 	execute: () => {
+							// 		// Edit action
+							// 	},
+							// },
+						]}
+					>
+						<MenuTrigger
+							icon={<IconDots />}
+							aria-label="add ele"
+							appearance="subtle"
+							size="sm"
+							iconPosition="start"
+						/>
+						<MenuContent />
+					</Menu>
+				),
+			}),
+		],
+		[router, bestBets, setBestBets]
+	);
 
 	const timeRangeLabels = {
 		"24h": "Last 24 hours",
