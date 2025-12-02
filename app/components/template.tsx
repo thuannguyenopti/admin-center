@@ -23,15 +23,15 @@ export default function Template({
 	const menuItems = structure;
 
 	const highlight1 = menuItems.find((item: any) => path.includes(item.highlight));
-	const lvl2 = highlight1?.children?.find((item: any) =>
-		item.url ? path.includes(item.url) : false
-	);
-	const lvl3 = lvl2?.children?.children.find((item: any) =>
-		item.url ? path.includes(item.url) : false
-	);
-	const lvl4 = lvl3?.children?.children.find((item: any) =>
-		item.url ? path.includes(item.url) : false
-	);
+	const lvl2 = highlight1?.children
+		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
+		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
+	const lvl3 = lvl2?.children?.children
+		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
+		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
+	const lvl4 = lvl3?.children?.children
+		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
+		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
 	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
@@ -119,32 +119,34 @@ export default function Template({
 					)}
 				</Box>
 			</Box>
-			<Box
-				style={{
-					marginLeft: "224px",
-					width: !showVT ? "100%" : "calc(100% - 224px)",
-					transform: showVT ? "translatex(0px)" : "translatex(-224px)",
-					transition: ".7s cubic-bezier(0, 1, 0, 1)",
-				}}
-				p="24"
-				color="fg.default"
-				overflow="auto"
-			>
-				<Heading level="3">{heading || highlight1?.label}</Heading>
-				{desc && (
-					<Text
-						color="fg.secondary"
-						mt="4"
-					>
-						{desc}
-					</Text>
-				)}
+			<Box overflowX="hidden">
 				<Box
-					mt="16"
-					z="10"
-					className="relative"
+					style={{
+						marginLeft: "224px",
+						width: !showVT ? "100%" : "calc(100% - 224px)",
+						transform: showVT ? "translatex(0px)" : "translatex(-224px)",
+						transition: ".7s cubic-bezier(0, 1, 0, 1)",
+					}}
+					p="24"
+					color="fg.default"
+					overflow="auto"
 				>
-					{children}
+					<Heading level="3">{heading || highlight1?.label}</Heading>
+					{desc && (
+						<Text
+							color="fg.secondary"
+							mt="4"
+						>
+							{desc}
+						</Text>
+					)}
+					<Box
+						mt="16"
+						z="10"
+						className="relative"
+					>
+						{children}
+					</Box>
 				</Box>
 			</Box>
 		</Box>

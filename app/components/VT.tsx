@@ -30,7 +30,7 @@ export default function VT({
 					>
 						<Link href={backLink.url as Url}>
 							<Text
-								color="fg.accent"
+								color="fg.secondary"
 								fontSize="sm"
 							>
 								← {backLink.label}

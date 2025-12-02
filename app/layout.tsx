@@ -4,6 +4,8 @@ import "./globals.css";
 import {AxiomProvider} from "@optiaxiom/react";
 import {usePathname} from "next/navigation";
 import {useState} from "react";
+import usePersistentState from "@/app/usePersistentState";
+import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -22,6 +24,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const path = usePathname();
+	const algorithmMatch = path.match(/\/graph\/search\/optimize-search\/([^/]+)/);
+	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
+
+	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
+
 	const structure = {
 		cms: [
 			{
@@ -145,14 +153,60 @@ export default function RootLayout({
 				highlight: "/graph/search",
 				icon: <IconSearch />,
 				children: [
+					{label: "Search Health & Monitoring"},
 					{
-						label: "Search Analytics",
+						label: "Overview",
 						url: "/graph/search/search-analytics",
+						children: {
+							title: "Analytics Details",
+							children: [
+								{
+									label: "Zero-Result Analysis",
+									description: "Analyze queries with no results",
+									url: "/graph/search/search-analytics/zero-result",
+								},
+								{
+									label: "Click-Through Rate",
+									url: "/graph/search/search-analytics/click-through-rate",
+								},
+							],
+						},
 					},
+					{label: "Optimize Search"},
 					{
-						label: "Search Algorithms",
+						label: "Algorithms",
 						description: "Manage search algorithms",
 						url: "/graph/search/optimize-search",
+						children: {
+							title: currentAlgorithm ? currentAlgorithm.name : "Algorithm details",
+							children: algorithmId
+								? [
+										{
+											label: "Settings",
+											url: `/graph/search/optimize-search/${algorithmId}`,
+										},
+										{
+											label: "Optimizations",
+											url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
+										},
+								  ]
+								: [
+										{
+											label: "Zero-Result Analysis",
+											description: "Analyze queries with no results",
+											url: "/graph/search/search-analytics/zero-result",
+										},
+										{
+											label: "Click-Through Rate",
+											url: "/graph/search/search-analytics/click-through-rate",
+										},
+								  ],
+						},
+					},
+					{
+						label: "Best Bets",
+						description: "Manage best bets",
+						url: "/graph/search/best-bets",
 					},
 				],
 			},

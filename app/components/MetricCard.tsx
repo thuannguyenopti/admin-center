@@ -1,20 +1,57 @@
-import {Box, Card, Text} from "@optiaxiom/react";
+import {Box, Card, Text, Tooltip} from "@optiaxiom/react";
+import Link from "next/link";
+import {useMemo} from "react";
 
 type MetricCardProps = {
 	label: string;
 	unit?: string;
 	data: number[];
 	smooth?: boolean;
+	desiredDirection?: "up" | "down";
+	interval?: "hour" | "day" | "week" | "month";
+	aggregation?: "sum" | "average" | "last";
+	previousValue?: number;
 };
 
-export default function MetricCard({label, unit = "", data, smooth = false}: MetricCardProps) {
-	// Get current and previous values from data array
-	const value = data[data.length - 1];
-	const previousValue = data.length > 1 ? data[data.length - 2] : undefined;
+export default function MetricCard({
+	label,
+	unit = "",
+	data,
+	smooth = false,
+	desiredDirection = "up",
+	interval,
+	aggregation = "last",
+	previousValue: explicitPreviousValue,
+}: MetricCardProps) {
+	// Get current value based on aggregation type
+	const value = (() => {
+		if (data.length === 0) return 0;
+		switch (aggregation) {
+			case "sum":
+				return data.reduce((a, b) => a + b, 0);
+			case "average":
+				return data.reduce((a, b) => a + b, 0) / data.length;
+			case "last":
+			default:
+				return data[data.length - 1];
+		}
+	})();
+
+	const previousValue =
+		explicitPreviousValue !== undefined
+			? explicitPreviousValue
+			: data.length > 1
+			? data[data.length - 2]
+			: undefined;
 
 	// Format value with unit
 	const formatValue = (val: number) => {
-		return (val + unit).toString();
+		return (
+			val.toLocaleString(undefined, {
+				maximumFractionDigits: 1,
+				minimumFractionDigits: 0,
+			}) + unit
+		);
 	};
 
 	// Calculate change percentage and determine if trend is positive
@@ -27,22 +64,37 @@ export default function MetricCard({label, unit = "", data, smooth = false}: Met
 		const isIncreasing = percentChange >= 0;
 
 		// Determine overall trend by comparing first and last values
-		const trendUp = value > data[0];
+		const trendUp = value > (explicitPreviousValue ?? data[0]);
 
 		return {
 			value: Math.abs(percentChange).toFixed(1) + "%",
 			isPositive: percentChange >= 0,
-			isGood: trendUp, // Green if overall trend is up, red if down
+			isGood: desiredDirection === "up" ? trendUp : !trendUp, // Green if overall trend is up, red if down
 		};
 	};
 
 	const changeData = calculateChange();
 
+	// Downsample data for chart
+	const maxPoints = 12;
+	const chartData = useMemo(() => {
+		if (data.length <= maxPoints) {
+			return data.map((v, i) => ({value: v, originalIndex: i}));
+		}
+		const sampled = [];
+		for (let i = 0; i < maxPoints; i++) {
+			const index = Math.round((i * (data.length - 1)) / (maxPoints - 1));
+			sampled.push({value: data[index], originalIndex: index});
+		}
+		return sampled;
+	}, [data]);
+
 	// Normalize data to 0-1 range
-	const max = Math.max(...data);
-	const min = Math.min(...data);
+	const values = chartData.map((d) => d.value);
+	const max = Math.max(...values);
+	const min = Math.min(...values);
 	const range = max - min;
-	const normalized = data.map((d) => (d - min) / range);
+	const normalized = values.map((d) => (range === 0 ? 0.5 : (d - min) / range));
 
 	// Create SVG path using viewBox for scaling
 	const viewBoxWidth = 100;
@@ -52,7 +104,7 @@ export default function MetricCard({label, unit = "", data, smooth = false}: Met
 	const usableHeight = viewBoxHeight - padding * 2;
 
 	const points = normalized.map((value, index) => {
-		const x = padding + (index / (data.length - 1)) * usableWidth;
+		const x = padding + (index / (chartData.length - 1)) * usableWidth;
 		const y = padding + usableHeight - value * usableHeight;
 		return {x, y};
 	});
@@ -82,8 +134,38 @@ export default function MetricCard({label, unit = "", data, smooth = false}: Met
 
 	const pathData = smooth ? createSmoothPath(points) : createLinePath(points);
 
+	const getDateLabel = (index: number) => {
+		if (!interval) return null;
+		const diff = data.length - 1 - index;
+		const date = new Date();
+
+		switch (interval) {
+			case "hour":
+				date.setHours(date.getHours() - diff);
+				return date.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+			case "day":
+				date.setDate(date.getDate() - diff);
+				return date.toLocaleDateString([], {month: "short", day: "numeric"});
+			case "week":
+				date.setDate(date.getDate() - diff * 7);
+				return `Week of ${date.toLocaleDateString([], {
+					month: "short",
+					day: "numeric",
+				})}`;
+			case "month":
+				date.setMonth(date.getMonth() - diff);
+				return date.toLocaleDateString([], {month: "short", year: "numeric"});
+			default:
+				return "";
+		}
+	};
+
 	return (
-		<Card p="20">
+		<Card
+			p="20"
+			color="fg.disabled"
+			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
+		>
 			<Text
 				fontSize="md"
 				fontWeight="600"
@@ -121,26 +203,48 @@ export default function MetricCard({label, unit = "", data, smooth = false}: Met
 						/>
 					</svg>
 					{points.map((point, index) => (
-						<Box
+						<Tooltip
+							content={
+								<Box>
+									<Text fontWeight="600">
+										{formatValue(chartData[index].value)}
+									</Text>
+									<Text
+										fontSize="sm"
+										color="fg.spinner.inverse"
+										suppressHydrationWarning
+									>
+										{getDateLabel(chartData[index].originalIndex)}
+									</Text>
+								</Box>
+							}
 							key={index}
-							color={index === points.length - 1 ? "fg.information" : "fg.disabled"}
-							style={{
-								position: "absolute",
-								left: `${(point.x / viewBoxWidth) * 100}%`,
-								top: `${(point.y / viewBoxHeight) * 100}%`,
-								borderRadius: "50%",
-								width: index === points.length - 1 ? "8px" : "4px",
-								height: index === points.length - 1 ? "8px" : "4px",
-								backgroundColor: "currentcolor",
-								transform: "translate(-50%, -50%)",
-							}}
-						/>
+							delayDuration={0}
+						>
+							<Box
+								color={
+									index === points.length - 1 ? "fg.information" : "fg.disabled"
+								}
+								className="after:content-[''] after:absolute after:-inset-1 after:-inset-y-8"
+								style={{
+									position: "absolute",
+									left: `${(point.x / viewBoxWidth) * 100}%`,
+									top: `${(point.y / viewBoxHeight) * 100}%`,
+									borderRadius: "50%",
+									width: index === points.length - 1 ? "8px" : "4px",
+									height: index === points.length - 1 ? "8px" : "4px",
+									backgroundColor: "currentcolor",
+									transform: "translate(-50%, -50%)",
+									cursor: "pointer",
+								}}
+							/>
+						</Tooltip>
 					))}
 				</Box>
 				<Text
 					fontSize="3xl"
 					fontWeight="600"
-					color="fg.default"
+					color="fg.accent.strong"
 					style={{lineHeight: 1}}
 				>
 					{formatValue(value)}
