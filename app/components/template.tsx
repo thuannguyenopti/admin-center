@@ -1,18 +1,21 @@
-import {Box, Sidebar, NavBody, NavItem, Text, Nav, Heading, SubNav} from "@optiaxiom/react";
+import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav} from "@optiaxiom/react";
+import {Text} from "./Text";
 import Link from "next/link";
 import {useEffect, useState} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
+import {LayoutProvider, useLayout} from "../context/LayoutContext";
 
-export default function Template({
+function TemplateContent({
 	children,
 	structure,
 }: Readonly<{
 	children: React.ReactNode;
 	structure: any;
 }>) {
+	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
 
@@ -46,7 +49,10 @@ export default function Template({
 			bg="bg.page"
 		>
 			<GlobalBar />
-			<Box display="flex">
+			<Box
+				display="flex"
+				z="10"
+			>
 				<Sidebar
 					className="h-full z-10 relative"
 					expanded={!showVT}
@@ -122,36 +128,68 @@ export default function Template({
 					)}
 				</Box>
 			</Box>
-			<Box overflowX="hidden">
+			<Box
+				overflowX="hidden"
+				display="flex"
+				flexDirection="row"
+			>
 				<Box
-					style={{
-						marginLeft: "224px",
-						width: !showVT ? "100%" : "calc(100% - 224px)",
-						transform: showVT ? "translatex(0px)" : "translatex(-224px)",
-						transition: ".7s cubic-bezier(0, 1, 0, 1)",
-					}}
-					p="24"
-					color="fg.default"
+					flex="1"
+					className="min-w-0 relative"
 					overflow="auto"
 				>
-					<Heading level="3">{heading || highlight1?.label}</Heading>
-					{desc && (
-						<Text
-							color="fg.secondary"
-							mt="4"
-						>
-							{desc}
-						</Text>
-					)}
 					<Box
-						mt="16"
-						z="10"
-						className="relative"
+						style={{
+							marginLeft: "224px",
+							marginRight: "-224px",
+							width: !showVT ? "100%" : "calc(100% - 224px)",
+							transform: showVT ? "translatex(0px)" : "translatex(-224px)",
+							transition: ".7s cubic-bezier(0, 1, 0, 1)",
+						}}
+						p="24"
+						color="fg.default"
+						overflow="auto"
 					>
-						{children}
+						<Heading level="3">{heading || highlight1?.label}</Heading>
+						{desc && (
+							<Text
+								color="fg.secondary"
+								mt="4"
+								style={{maxWidth: "800px"}}
+							>
+								{desc}
+							</Text>
+						)}
+						<Box
+							mt="16"
+							z="10"
+							className="relative"
+						>
+							{children}
+						</Box>
 					</Box>
 				</Box>
+				{asideContent && (
+					<Box
+						className="w-[420px]"
+						borderL="1"
+						borderColor="border.tertiary"
+						bg="bg.default"
+						h="full"
+						overflow="auto"
+					>
+						{asideContent}
+					</Box>
+				)}
 			</Box>
 		</Box>
+	);
+}
+
+export default function Template(props: any) {
+	return (
+		<LayoutProvider>
+			<TemplateContent {...props} />
+		</LayoutProvider>
 	);
 }

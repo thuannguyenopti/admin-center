@@ -1,13 +1,14 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Text} from "@optiaxiom/react";
+import {Box, Heading, Menu, MenuContent, MenuTrigger} from "@optiaxiom/react";
+import {Text} from "./Text";
 import {ReactNode} from "react";
 import {useRouter, usePathname} from "next/navigation";
 
 export default function GlobalBar() {
 	const router = useRouter();
 	const pathname = usePathname();
-	
+
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/graph")) return "Graph";
@@ -65,7 +66,7 @@ export default function GlobalBar() {
 					fontWeight="500"
 					color="fg.default"
 				>
-					Prototype
+					Stride
 				</Text>
 				<svg
 					width="14"

@@ -1,42 +1,67 @@
 [
 	{
-		"title": "Nike Air Max 270",
-		"description": "Legendary comfort and style. The Nike Air Max 270 delivers visible air with every step.",
-		"url": "https://example.com/products/nike-air-max-270"
+		"title": "Stride Runner Elite",
+		"description": "Our flagship running shoe featuring responsive cushioning and breathable mesh.",
+		"url": "https://stride.com/products/runner-elite"
 	},
 	{
-		"title": "Nike Air Force 1 '07",
-		"description": "The radiance lives on in the Nike Air Force 1 '07, the b-ball icon that puts a fresh spin on what you know best.",
-		"url": "https://example.com/products/nike-air-force-1-07"
+		"title": "Stride Cycling Jersey",
+		"description": "Aerodynamic fit jersey with moisture-wicking fabric for long rides.",
+		"url": "https://stride.com/products/cycling-jersey"
 	},
 	{
-		"title": "Nike Pegasus 40",
-		"description": "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
-		"url": "https://example.com/products/nike-pegasus-40"
+		"title": "Stride Smart Watch Pro",
+		"description": "Track your runs, rides, and swims with advanced GPS and heart rate monitoring.",
+		"url": "https://stride.com/products/smart-watch-pro"
 	},
 	{
-		"title": "Nike Dunk Low Retro",
-		"description": "Created for the hardwood but taken to the streets, the '80s b-ball icon returns with perfectly sheened overlays.",
-		"url": "https://example.com/products/nike-dunk-low-retro"
+		"title": "Stride Compression Socks",
+		"description": "Improve circulation and recovery with our medical-grade compression socks.",
+		"url": "https://stride.com/products/compression-socks"
 	},
 	{
-		"title": "Adidas Ultraboost Light",
-		"description": "Experience epic energy with the new Ultraboost Light, our lightest Ultraboost ever.",
-		"url": "https://example.com/products/adidas-ultraboost-light"
+		"title": "Stride Water Bottle",
+		"description": "Insulated stainless steel water bottle to keep you hydrated on the go.",
+		"url": "https://stride.com/products/water-bottle"
 	},
 	{
-		"title": "Puma Suede Classic",
-		"description": "The Suede has been changing the game ever since it hit the scene in 1968.",
-		"url": "https://example.com/products/puma-suede-classic"
+		"title": "Stride Yoga Mat",
+		"description": "Non-slip, eco-friendly yoga mat for all your stretching and floor exercises.",
+		"url": "https://stride.com/products/yoga-mat"
 	},
 	{
-		"title": "Return Policy Page",
-		"description": "Learn about our 30-day return policy and how to initiate a return.",
-		"url": "https://example.com/help/returns"
+		"title": "Stride Performance Shorts",
+		"description": "Lightweight shorts with built-in liner for maximum comfort and mobility.",
+		"url": "https://stride.com/products/performance-shorts"
+	},
+	{
+		"title": "Stride Windbreaker Jacket",
+		"description": "Water-resistant and windproof jacket for training in any weather.",
+		"url": "https://stride.com/products/windbreaker-jacket"
+	},
+	{
+		"title": "Stride Cycling Bibs",
+		"description": "Premium chamois pad and ergonomic fit for all-day comfort in the saddle.",
+		"url": "https://stride.com/products/cycling-bibs"
+	},
+	{
+		"title": "Stride Heart Rate Monitor",
+		"description": "Chest strap monitor for the most accurate heart rate data during workouts.",
+		"url": "https://stride.com/products/heart-rate-monitor"
+	},
+	{
+		"title": "Return Policy",
+		"description": "Learn about our 30-day return policy for all Stride products.",
+		"url": "https://stride.com/help/returns"
 	},
 	{
 		"title": "Shipping Information",
 		"description": "Details on shipping rates, delivery times, and international shipping.",
-		"url": "https://example.com/help/shipping"
+		"url": "https://stride.com/help/shipping"
+	},
+	{
+		"title": "Black History Week",
+		"description": "Celebrating the achievements and contributions of Black athletes and leaders in sports.",
+		"url": "https://stride.com/events/black-history-week"
 	}
 ]

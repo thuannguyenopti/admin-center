@@ -3,17 +3,17 @@
 import Item from "@/app/components/Item";
 import {
 	Box,
-	Button,
 	DataTable,
 	DataTableBody,
-	Flex,
-	Input,
 	Menu,
 	MenuContent,
 	MenuTrigger,
-	Text,
 	LabelMenuButton,
 } from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {Input} from "@/app/components/Input";
+import {Flex} from "@/app/components/Flex";
 import {
 	IconSearch,
 	IconAlertCircle,
@@ -26,80 +26,13 @@ import {
 import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import {useRouter} from "next/navigation";
-import {initialAlgorithms, BestBet, initialBestBets} from "@/app/db/initialData";
+import {initialAlgorithms, BestBet, initialBestBets, AlgorithmBestBet} from "@/app/db/initialData";
+import {zeroResultQueries, ZeroResultQuery, scaleValue} from "@/app/db/analyticsData";
 import usePersistentState from "@/app/usePersistentState";
-
-type ZeroResultQuery = {
-	query: string;
-	frequency: number;
-	lastSeen: string;
-	algorithm: string;
-};
 
 const columnHelper = createColumnHelper<ZeroResultQuery>();
 
-const allData: ZeroResultQuery[] = [
-	{
-		query: "vintage leather wallet",
-		frequency: 127,
-		lastSeen: "2024-11-27 14:32",
-		algorithm: "Semantic Search v2",
-	},
-	{
-		query: "waterproof hiking boots size 12",
-		frequency: 98,
-		lastSeen: "2024-11-27 13:45",
-		algorithm: "Product Boost Algorithm",
-	},
-	{
-		query: "organic cotton t-shirt blue",
-		frequency: 84,
-		lastSeen: "2024-11-27 12:18",
-		algorithm: "Category Relevance",
-	},
-	{
-		query: "wireless earbuds noise cancelling",
-		frequency: 76,
-		lastSeen: "2024-11-27 11:02",
-		algorithm: "Semantic Search v2",
-	},
-	{
-		query: "bamboo cutting board large",
-		frequency: 62,
-		lastSeen: "2024-11-27 09:54",
-		algorithm: "Personalized Ranking",
-	},
-	{
-		query: "stainless steel water bottle 32oz",
-		frequency: 58,
-		lastSeen: "2024-11-27 08:21",
-		algorithm: "Trending Items Boost",
-	},
-	{
-		query: "memory foam pillow king size",
-		frequency: 51,
-		lastSeen: "2024-11-26 22:15",
-		algorithm: "Category Relevance",
-	},
-	{
-		query: "yoga mat extra thick purple",
-		frequency: 47,
-		lastSeen: "2024-11-26 19:33",
-		algorithm: "Semantic Search v2",
-	},
-	{
-		query: "ceramic coffee mug set of 4",
-		frequency: 43,
-		lastSeen: "2024-11-26 16:47",
-		algorithm: "Product Boost Algorithm",
-	},
-	{
-		query: "electric standing desk adjustable",
-		frequency: 39,
-		lastSeen: "2024-11-26 14:28",
-		algorithm: "Personalized Ranking",
-	},
-];
+const allData: ZeroResultQuery[] = zeroResultQueries;
 
 type TimeRange = "24h" | "7d" | "30d" | "90d";
 
@@ -174,7 +107,6 @@ export default function ZeroResultPage() {
 											targetBet = {
 												query: query,
 												destination: "",
-												status: "Inactive",
 												owner: "Alice Johnson",
 											};
 											currentBestBets.push(targetBet);
@@ -189,12 +121,12 @@ export default function ZeroResultPage() {
 										// 2. Add to Algorithm Specific List
 										const algoKey = `algorithm_best_bets_${algo.id}`;
 										const storedAlgoBets = localStorage.getItem(algoKey);
-										let algoBets: BestBet[] = storedAlgoBets
+										let algoBets: AlgorithmBestBet[] = storedAlgoBets
 											? JSON.parse(storedAlgoBets)
 											: [];
 
 										if (!algoBets.some((b) => b.query === targetBet!.query)) {
-											algoBets.push(targetBet!);
+											algoBets.push({...targetBet!, status: "Inactive"});
 											localStorage.setItem(algoKey, JSON.stringify(algoBets));
 										}
 
@@ -236,15 +168,43 @@ export default function ZeroResultPage() {
 	};
 
 	const filteredData = useMemo(() => {
-		if (!searchQuery) return allData;
+		let data = allData;
+
+		// Filter by Time Range
+		const now = new Date();
+		data = data
+			.filter((item) => {
+				const itemDate = new Date(item.lastSeen);
+				const diffTime = Math.abs(now.getTime() - itemDate.getTime());
+				const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+				switch (timeRange) {
+					case "24h":
+						return diffDays <= 1; // Approximation
+					case "7d":
+						return diffDays <= 7;
+					case "30d":
+						return diffDays <= 30;
+					case "90d":
+						return diffDays <= 90;
+					default:
+						return true;
+				}
+			})
+			.map((item) => ({
+				...item,
+				frequency: scaleValue(item.frequency, timeRange),
+			}));
+
+		if (!searchQuery) return data;
 
 		const query = searchQuery.toLowerCase();
-		return allData.filter(
+		return data.filter(
 			(item) =>
 				item.query.toLowerCase().includes(query) ||
 				item.algorithm.toLowerCase().includes(query)
 		);
-	}, [searchQuery]);
+	}, [searchQuery, timeRange]);
 
 	const table = useReactTable({
 		columns,

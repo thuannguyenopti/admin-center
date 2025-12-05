@@ -1,120 +1,105 @@
 "use client";
 
-import {Box, Button, DataTable, DataTableBody, Flex, Input, Text} from "@optiaxiom/react";
+import {
+	Box,
+	DataTable,
+	DataTableBody,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	LabelMenuButton,
+} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {Input} from "@/app/components/Input";
+import {Flex} from "@/app/components/Flex";
 import {IconSearch, IconAlertCircle} from "@tabler/icons-react";
 import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
+import {ctrQueries, CTRQuery, scaleValue} from "@/app/db/analyticsData";
 
-type ZeroResultQuery = {
-	query: string;
-	frequency: number;
-	lastSeen: string;
-	algorithm: string;
-};
-
-const columnHelper = createColumnHelper<ZeroResultQuery>();
+const columnHelper = createColumnHelper<CTRQuery>();
 
 const columns = [
 	columnHelper.accessor("query", {
 		header: "Query",
 		cell: (info) => (
-			<Flex gap="8" alignItems="center">
-				<IconAlertCircle size={16} style={{color: "var(--color-fg-error)"}} />
+			<Flex
+				gap="8"
+				alignItems="center"
+			>
 				<Text>{info.getValue()}</Text>
 			</Flex>
 		),
 	}),
-	columnHelper.accessor("frequency", {
-		header: "Frequency",
-		cell: (info) => `${info.getValue()} times`,
+	columnHelper.accessor("impressions", {
+		header: "Impressions",
+		cell: (info) => info.getValue().toLocaleString(),
 	}),
-	columnHelper.accessor("lastSeen", {header: "Last Seen"}),
-	columnHelper.accessor("algorithm", {
-		header: "Algorithm Reference",
-		cell: (info) => (
-			<Text fontFamily="mono" fontSize="sm" color="fg.secondary">
-				{info.getValue()}
-			</Text>
-		),
+	columnHelper.accessor("clicks", {
+		header: "Clicks",
+		cell: (info) => info.getValue().toLocaleString(),
+	}),
+	columnHelper.accessor("ctr", {
+		header: "CTR",
+		cell: (info) => `${info.getValue()}%`,
+	}),
+	columnHelper.accessor("position", {
+		header: "Avg. Position",
+		cell: (info) => info.getValue().toFixed(1),
 	}),
 ];
 
-const allData: ZeroResultQuery[] = [
-	{
-		query: "vintage leather wallet",
-		frequency: 127,
-		lastSeen: "2024-11-27 14:32",
-		algorithm: "Semantic Search v2",
-	},
-	{
-		query: "waterproof hiking boots size 12",
-		frequency: 98,
-		lastSeen: "2024-11-27 13:45",
-		algorithm: "Product Boost Algorithm",
-	},
-	{
-		query: "organic cotton t-shirt blue",
-		frequency: 84,
-		lastSeen: "2024-11-27 12:18",
-		algorithm: "Category Relevance",
-	},
-	{
-		query: "wireless earbuds noise cancelling",
-		frequency: 76,
-		lastSeen: "2024-11-27 11:02",
-		algorithm: "Semantic Search v2",
-	},
-	{
-		query: "bamboo cutting board large",
-		frequency: 62,
-		lastSeen: "2024-11-27 09:54",
-		algorithm: "Personalized Ranking",
-	},
-	{
-		query: "stainless steel water bottle 32oz",
-		frequency: 58,
-		lastSeen: "2024-11-27 08:21",
-		algorithm: "Trending Items Boost",
-	},
-	{
-		query: "memory foam pillow king size",
-		frequency: 51,
-		lastSeen: "2024-11-26 22:15",
-		algorithm: "Category Relevance",
-	},
-	{
-		query: "yoga mat extra thick purple",
-		frequency: 47,
-		lastSeen: "2024-11-26 19:33",
-		algorithm: "Semantic Search v2",
-	},
-	{
-		query: "ceramic coffee mug set of 4",
-		frequency: 43,
-		lastSeen: "2024-11-26 16:47",
-		algorithm: "Product Boost Algorithm",
-	},
-	{
-		query: "electric standing desk adjustable",
-		frequency: 39,
-		lastSeen: "2024-11-26 14:28",
-		algorithm: "Personalized Ranking",
-	},
-];
+const allData: CTRQuery[] = ctrQueries;
 
-export default function ZeroResultPage() {
+type TimeRange = "24h" | "7d" | "30d" | "90d";
+
+export default function ClickThroughRatePage() {
 	const [searchQuery, setSearchQuery] = useState("");
+	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+
+	const timeRangeLabels = {
+		"24h": "Last 24 hours",
+		"7d": "Last 7 days",
+		"30d": "Last 30 days",
+		"90d": "Last 90 days",
+	};
 
 	const filteredData = useMemo(() => {
-		if (!searchQuery) return allData;
+		let data = allData;
+
+		// Filter by Time Range
+		const now = new Date();
+		data = data
+			.filter((item) => {
+				const itemDate = new Date(item.lastSeen);
+				const diffTime = Math.abs(now.getTime() - itemDate.getTime());
+				const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+				switch (timeRange) {
+					case "24h":
+						return diffDays <= 1;
+					case "7d":
+						return diffDays <= 7;
+					case "30d":
+						return diffDays <= 30;
+					case "90d":
+						return diffDays <= 90;
+					default:
+						return true;
+				}
+			})
+			.map((item) => ({
+				...item,
+				impressions: scaleValue(item.impressions, timeRange),
+				clicks: scaleValue(item.clicks, timeRange),
+			}));
+
+		if (!searchQuery) return data;
 
 		const query = searchQuery.toLowerCase();
-		return allData.filter(
-			(item) =>
-				item.query.toLowerCase().includes(query) ||
-				item.algorithm.toLowerCase().includes(query)
-		);
-	}, [searchQuery]);
+		return data.filter((item) => item.query.toLowerCase().includes(query));
+	}, [searchQuery, timeRange]);
 
 	const table = useReactTable({
 		columns,
@@ -124,15 +109,41 @@ export default function ZeroResultPage() {
 
 	return (
 		<Box>
-			<Flex flexDirection="row" justifyContent="space-between" alignItems="center" gap="16" mb="24">
-				<Input
-					size="lg"
-					addonBefore={<IconSearch size={16} />}
-					placeholder="Search queries..."
-					style={{width: "320px"}}
-					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
-				/>
+			<Flex
+				flexDirection="row"
+				justifyContent="space-between"
+				alignItems="center"
+				gap="16"
+				mb="24"
+			>
+				<Flex
+					gap="8"
+					flexDirection="row"
+				>
+					<Input
+						size="lg"
+						addonBefore={<IconSearch size={16} />}
+						placeholder="Search queries..."
+						style={{width: "320px"}}
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					<Menu
+						options={[
+							{label: "Last 24 hours", execute: () => setTimeRange("24h")},
+							{label: "Last 7 days", execute: () => setTimeRange("7d")},
+							{label: "Last 30 days", execute: () => setTimeRange("30d")},
+							{label: "Last 90 days", execute: () => setTimeRange("90d")},
+						]}
+					>
+						<MenuTrigger asChild>
+							<LabelMenuButton label="Time Range">
+								{timeRangeLabels[timeRange]}
+							</LabelMenuButton>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				</Flex>
 			</Flex>
 
 			<DataTable table={table}>

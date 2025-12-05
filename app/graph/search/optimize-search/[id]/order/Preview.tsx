@@ -1,39 +1,63 @@
 import {
 	Box,
-	Flex,
 	Heading,
-	Text,
-	Input,
 	Switch,
 	Tabs,
 	TabsList,
 	TabsTrigger,
 	Badge,
 	Separator,
+	Menu,
+	MenuTrigger,
+	MenuContent,
 } from "@optiaxiom/react";
-import {IconSearch, IconActivity} from "@tabler/icons-react";
-import {useState, useMemo} from "react";
+import {Flex} from "@/app/components/Flex";
+import {Text} from "@/app/components/Text";
+import {Input} from "@/app/components/Input";
+import {Button} from "@/app/components/Button";
+import {
+	IconSearch,
+	IconActivity,
+	IconSettings,
+	IconRocket,
+	IconCongruentTo,
+	IconPlus,
+} from "@tabler/icons-react";
+import {useState, useMemo, useEffect} from "react";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {BestBet} from "@/app/db/initialData";
+import {AlgorithmBestBet} from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
 
 export default function Preview({
 	algorithmBestBets,
 	similarQueries = [],
+	onCreateBestBet,
 }: {
-	algorithmBestBets?: BestBet[];
+	algorithmBestBets?: AlgorithmBestBet[];
 	similarQueries?: {query: string; synonyms: string[]}[];
+	onCreateBestBet?: (query: string) => void;
 }) {
 	const params = useParams();
 	const id = params.id as string;
 	const [query, setQuery] = useState("");
+	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [showBestBets, setShowBestBets] = useState(true);
 	const [showSimilarQueries, setShowSimilarQueries] = useState(true);
 
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setDebouncedQuery(query);
+		}, 1000);
+
+		return () => {
+			clearTimeout(handler);
+		};
+	}, [query]);
+
 	// Use local state if props are not provided (fallback)
 	const [localAlgorithmBestBets] = usePersistentState(`algorithm_best_bets_${id}`, []) as [
-		BestBet[],
+		AlgorithmBestBet[],
 		any
 	];
 
@@ -82,17 +106,15 @@ export default function Preview({
 				(bb) =>
 					bb.status === "Active" &&
 					query &&
-					bb.query.toLowerCase().includes(query.toLowerCase())
+					bb.query
+						.split(";")
+						.some((phrase) => phrase.trim().toLowerCase().includes(query.toLowerCase()))
 		  )
 		: [];
 
 	return (
 		<Box
-			bg="bg.default"
-			borderL="1"
-			borderColor="border.tertiary"
 			h="full"
-			style={{width: "400px"}}
 			display="flex"
 			flexDirection="column"
 		>
@@ -107,51 +129,49 @@ export default function Preview({
 					Preview
 				</Heading>
 				<Tabs defaultValue="demo">
-					<TabsList>
+					{/* <TabsList>
 						<TabsTrigger value="detailed">Detailed</TabsTrigger>
 						<TabsTrigger value="top10">Top 10 Queries</TabsTrigger>
 						<TabsTrigger value="demo">Demo</TabsTrigger>
-					</TabsList>
-					<Box mt="16">
-						<Input
-							placeholder="Products"
-							addonBefore={<IconSearch size={16} />}
-							value={query}
-							onChange={(e) => setQuery(e.target.value)}
-						/>
-					</Box>
+					</TabsList> */}
 					<Flex
-						gap="16"
-						mt="16"
-						alignItems="center"
+						gap="8"
+						flexDirection="row"
 					>
-						<Flex
-							gap="32"
-							alignItems="center"
-							flexDirection="row"
-							justifyContent="space-around"
+						<Box flex="1">
+							<Input
+								placeholder="Products"
+								addonBefore={<IconSearch size={16} />}
+								value={query}
+								size="lg"
+								onChange={(e) => setQuery(e.target.value)}
+							/>
+						</Box>
+						<Menu
+							options={[
+								{
+									addon: <IconRocket size={16} />,
+									label: "Best bets",
+									execute: () => setShowBestBets(!showBestBets),
+									selected: showBestBets,
+									switch: true,
+								},
+								{
+									addon: <IconCongruentTo size={16} />,
+									label: "Similar Queries",
+									execute: () => setShowSimilarQueries(!showSimilarQueries),
+									selected: showSimilarQueries,
+									switch: true,
+								},
+							]}
 						>
-							<Flex
-								flexDirection="row"
-								gap="8"
-							>
-								<Switch
-									checked={showSimilarQueries}
-									onCheckedChange={setShowSimilarQueries}
-								/>
-								<Text fontSize="sm">Similar Queries</Text>
-							</Flex>
-							<Flex
-								flexDirection="row"
-								gap="8"
-							>
-								<Switch
-									checked={showBestBets}
-									onCheckedChange={setShowBestBets}
-								/>
-								<Text fontSize="sm">Best bets</Text>
-							</Flex>
-						</Flex>
+							<MenuTrigger
+								icon={<IconSettings size={16} />}
+								aria-label="Settings"
+								size="lg"
+							/>
+							<MenuContent />
+						</Menu>
 					</Flex>
 					{activeSynonyms.length > 0 && (
 						<Box mt="16">
@@ -174,25 +194,27 @@ export default function Preview({
 					)}
 				</Tabs>
 			</Box>
-			<Separator my="16" />
 			<Box
 				flex="1"
-				overflow="auto"
-				px="24"
+				px="16"
+				mt="24"
 			>
 				<Flex
 					flexDirection="column"
-					gap="16"
+					gap="4"
 				>
-					{activeBestBets.map((bb, i) => (
-						<ResultItem
-							key={`bb-${i}`}
-							isBestBet
-							title={bb.query} // Using query as title for now, or we could look up a matching result
-							description={`Best Bet for "${bb.query}"`}
-							url={bb.destination}
-						/>
-					))}
+					{activeBestBets.map((bb, i) => {
+						const result = searchResults.find((r) => r.url === bb.destination);
+						return (
+							<ResultItem
+								key={`bb-${i}`}
+								isBestBet
+								title={result?.title || bb.query}
+								description={`Best Bet for "${bb.query}"`}
+								url={bb.destination}
+							/>
+						);
+					})}
 					{filteredResults.map((result, i) => (
 						<ResultItem
 							key={i}
@@ -202,7 +224,29 @@ export default function Preview({
 						/>
 					))}
 					{filteredResults.length === 0 && activeBestBets.length === 0 && (
-						<Text color="fg.secondary">No results found.</Text>
+						<Flex
+							flexDirection="column"
+							alignItems="center"
+							gap="8"
+							py="24"
+						>
+							<Text color="fg.secondary">No results found.</Text>
+							{onCreateBestBet && debouncedQuery.trim() && (
+								<Button
+									size="lg"
+									icon={<IconPlus />}
+									onClick={() => onCreateBestBet(debouncedQuery)}
+									style={{
+										animation:
+											"appearDown 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+										animationDelay: "1s",
+										animationFillMode: "both",
+									}}
+								>
+									Create Best Bet for "{debouncedQuery}"
+								</Button>
+							)}
+						</Flex>
 					)}
 				</Flex>
 			</Box>
@@ -228,21 +272,26 @@ function ResultItem({
 			rounded="sm"
 		>
 			<Flex
-				justifyContent="flex-end"
-				alignItems="start"
 				flexDirection="row"
-				mb="4"
+				justifyContent="space-between"
 			>
-				{isBestBet && <Badge intent="information">Best bet</Badge>}
-				<Badge>Page</Badge>
+				<Text
+					color="fg.default"
+					fontWeight="600"
+					fontSize="md"
+					mb="4"
+				>
+					{title}
+				</Text>
+				<Flex
+					justifyContent="end"
+					alignItems="start"
+					flexDirection="row"
+					mb="4"
+				>
+					{isBestBet && <Badge intent="information">Best bet</Badge>}
+				</Flex>
 			</Flex>
-			<Text
-				fontWeight="600"
-				fontSize="md"
-				mb="4"
-			>
-				{title}
-			</Text>
 			<Text
 				fontSize="sm"
 				color="fg.secondary"
@@ -250,20 +299,13 @@ function ResultItem({
 			>
 				{description}
 			</Text>
-			<Flex
-				justifyContent="space-between"
-				alignItems="end"
-			>
+			<Flex>
 				<Text
 					fontSize="xs"
 					color="fg.tertiary"
 				>
 					{url}
 				</Text>
-				<IconActivity
-					size={16}
-					color="var(--fg-accent)"
-				/>
 			</Flex>
 		</Box>
 	);

@@ -9,44 +9,47 @@ export type Algorithm = {
 export type BestBet = {
 	query: string;
 	destination: string;
-	status: "Active" | "Inactive";
 	owner: string;
+};
+
+export type AlgorithmBestBet = BestBet & {
+	status: "Active" | "Inactive";
 };
 
 export const initialAlgorithms: Algorithm[] = [
 	{
 		id: "1",
-		name: "Semantic Search v2",
+		name: "Summer Sale Boost",
 		publishState: "Published",
-		creationDate: "2024-11-15",
+		creationDate: "2023-10-25",
 		owner: "Alice Johnson",
 	},
 	{
 		id: "2",
-		name: "Product Boost Algorithm",
+		name: "Cycling Gear Optimization",
 		publishState: "Draft",
-		creationDate: "2024-11-20",
+		creationDate: "2023-11-02",
 		owner: "Bob Smith",
 	},
 	{
 		id: "3",
-		name: "Category Relevance",
-		publishState: "Published",
-		creationDate: "2024-10-28",
+		name: "Wearables Launch",
+		publishState: "Testing",
+		creationDate: "2023-11-15",
 		owner: "Carol Williams",
 	},
 	{
 		id: "4",
-		name: "Personalized Ranking",
-		publishState: "Testing",
-		creationDate: "2024-11-22",
+		name: "Holiday Gift Guide",
+		publishState: "Published",
+		creationDate: "2023-09-10",
 		owner: "David Brown",
 	},
 	{
 		id: "5",
-		name: "Trending Items Boost",
-		publishState: "Published",
-		creationDate: "2024-09-14",
+		name: "Clearance Logic",
+		publishState: "Archived",
+		creationDate: "2023-01-20",
 		owner: "Alice Johnson",
 	},
 ];
@@ -54,20 +57,17 @@ export const initialAlgorithms: Algorithm[] = [
 export const initialBestBets: BestBet[] = [
 	{
 		query: "return policy",
-		destination: "https://example.com/help/returns",
-		status: "Active",
+		destination: "https://stride.com/help/returns",
 		owner: "Support Team",
 	},
 	{
 		query: "shipping rates",
-		destination: "https://example.com/help/shipping",
-		status: "Active",
+		destination: "https://stride.com/help/shipping",
 		owner: "Logistics",
 	},
 	{
-		query: "nike air",
-		destination: "https://example.com/products/nike-air-max-270",
-		status: "Active",
+		query: "running shoes",
+		destination: "https://stride.com/products/runner-elite",
 		owner: "Marketing",
 	},
 ];

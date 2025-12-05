@@ -2,16 +2,16 @@
 
 import {
 	Box,
-	Button,
-	Flex,
 	Heading,
-	Input,
 	Field,
 	Select,
 	SelectTrigger,
 	SelectContent,
 	Separator,
 } from "@optiaxiom/react";
+import {Button} from "@/app/components/Button";
+import {Flex} from "@/app/components/Flex";
+import {Input} from "@/app/components/Input";
 import {useParams, useRouter} from "next/navigation";
 import {useEffect, useState} from "react";
 import usePersistentState from "@/app/usePersistentState";

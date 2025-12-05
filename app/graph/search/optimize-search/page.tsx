@@ -2,17 +2,10 @@
 
 import Item from "@/app/components/Item";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {
-	Box,
-	Button,
-	Flex,
-	Input,
-	Avatar,
-	Field,
-	Menu,
-	MenuTrigger,
-	MenuContent,
-} from "@optiaxiom/react";
+import {Box, Avatar, Field, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
+import {Button} from "@/app/components/Button";
+import {Flex} from "@/app/components/Flex";
+import {Input} from "@/app/components/Input";
 import {
 	IconPlus,
 	IconReportSearch,

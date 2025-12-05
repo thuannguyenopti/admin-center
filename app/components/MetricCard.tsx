@@ -1,4 +1,5 @@
-import {Box, Card, Text, Tooltip} from "@optiaxiom/react";
+import {Box, Card, Tooltip} from "@optiaxiom/react";
+import {Text} from "./Text";
 import Link from "next/link";
 import {useMemo} from "react";
 

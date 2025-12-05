@@ -1,30 +1,24 @@
 "use client";
 
-import {
-	Box,
-	Button,
-	Flex,
-	Heading,
-	Select,
-	SelectContent,
-	SelectTrigger,
-	Text,
-	Input,
-	Field,
-	Switch,
-	Alert,
-	Link,
-} from "@optiaxiom/react";
+import {Box, Heading, Field, Alert, Link} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {Input} from "@/app/components/Input";
+import {Flex} from "@/app/components/Flex";
 import {useParams} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {BestBet, initialBestBets} from "@/app/db/initialData";
-import {IconPlus, IconTrash} from "@tabler/icons-react";
+import {BestBet, initialBestBets, AlgorithmBestBet} from "@/app/db/initialData";
+import {IconCongruentTo, IconPlus, IconTrash, IconEdit, IconDots} from "@tabler/icons-react";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import searchResults from "@/app/db/searchResults.json";
 import Preview from "../order/Preview";
 import BestBetsTable from "../../../components/BestBetsTable";
+import BestBetDialog from "../../../components/BestBetDialog";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
+import {Aside} from "@/app/context/LayoutContext";
+import Item from "@/app/components/Item";
+import {Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
 
 type SimilarQuery = {
 	query: string;
@@ -45,7 +39,7 @@ export default function OptimizationsPage() {
 	const [algorithmBestBets, setAlgorithmBestBets] = usePersistentState(
 		`algorithm_best_bets_${id}`,
 		[]
-	) as [BestBet[], (val: BestBet[]) => void];
+	) as [AlgorithmBestBet[], (val: AlgorithmBestBet[]) => void];
 
 	const [similarQueries, setSimilarQueries] = usePersistentState(
 		`algorithm_similar_queries_${id}`,
@@ -55,47 +49,54 @@ export default function OptimizationsPage() {
 	const [selectedBestBetQuery, setSelectedBestBetQuery] = useState("");
 
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-	const [newQuery, setNewQuery] = useState("");
-	const [newDestination, setNewDestination] = useState("");
-	const [newStatus, setNewStatus] = useState("Active");
-
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [editingBestBet, setEditingBestBet] = useState<BestBet | null>(null);
-	const [editQuery, setEditQuery] = useState("");
-	const [editDestination, setEditDestination] = useState("");
-	const [editStatus, setEditStatus] = useState("Active");
+	const [editingBestBet, setEditingBestBet] = useState<AlgorithmBestBet | null>(null);
+	const [createBestBetInitialData, setCreateBestBetInitialData] = useState<
+		{query: string; destination: string} | undefined
+	>(undefined);
+
+	const handleCreateBestBetFromPreview = (query: string) => {
+		setCreateBestBetInitialData({query, destination: ""});
+		setIsCreateDialogOpen(true);
+	};
 
 	const [isCreateSQDialogOpen, setIsCreateSQDialogOpen] = useState(false);
 	const [newSimilarQuery, setNewSimilarQuery] = useState("");
 	const [newSynonyms, setNewSynonyms] = useState("");
 
+	const [isEditSQDialogOpen, setIsEditSQDialogOpen] = useState(false);
+	const [editingSQ, setEditingSQ] = useState<SimilarQuery | null>(null);
+	const [editSQQuery, setEditSQQuery] = useState("");
+	const [editSQSynonyms, setEditSQSynonyms] = useState("");
+
 	const handleAddBestBet = () => {
 		if (!selectedBestBetQuery) return;
 		const betToAdd = allBestBets.find((b) => b.query === selectedBestBetQuery);
 		if (betToAdd && !algorithmBestBets.some((b) => b.query === betToAdd.query)) {
-			setAlgorithmBestBets([...algorithmBestBets, betToAdd]);
+			setAlgorithmBestBets([...algorithmBestBets, {...betToAdd, status: "Active"}]);
 		}
 		setSelectedBestBetQuery("");
 	};
 
-	const handleCreateBestBet = () => {
-		if (!newQuery || !newDestination) return;
-
+	const handleCreateBestBet = (data: {
+		query: string;
+		destination: string;
+		status?: "Active" | "Inactive";
+	}) => {
 		const newBestBet: BestBet = {
-			query: newQuery,
-			destination: newDestination,
-			status: newStatus as "Active" | "Inactive",
+			query: data.query,
+			destination: data.destination,
 			owner: "Alice Johnson",
 		};
 
 		// Add to global list
 		setAllBestBets([...allBestBets, newBestBet]);
 		// Add to local algorithm list
-		setAlgorithmBestBets([...algorithmBestBets, newBestBet]);
+		setAlgorithmBestBets([
+			...algorithmBestBets,
+			{...newBestBet, status: data.status || "Active"},
+		]);
 
-		setNewQuery("");
-		setNewDestination("");
-		setNewStatus("Active");
 		setIsCreateDialogOpen(false);
 	};
 
@@ -103,27 +104,35 @@ export default function OptimizationsPage() {
 		setAlgorithmBestBets(algorithmBestBets.filter((b) => b.query !== query));
 	};
 
-	const handleEditClick = (bet: BestBet) => {
-		setEditingBestBet(bet);
-		setEditQuery(bet.query);
-		setEditDestination(bet.destination);
-		setEditStatus(bet.status);
+	const handleEditClick = (bet: BestBet | AlgorithmBestBet) => {
+		const algoBet = bet as AlgorithmBestBet;
+		setEditingBestBet(algoBet);
 		setIsEditDialogOpen(true);
 	};
 
-	const handleUpdateBestBet = () => {
-		if (!editingBestBet || !editQuery || !editDestination) return;
+	const handleUpdateBestBet = (data: {
+		query: string;
+		destination: string;
+		status?: "Active" | "Inactive";
+	}) => {
+		if (!editingBestBet) return;
 
 		const updatedBet = {
 			...editingBestBet,
-			query: editQuery,
-			destination: editDestination,
-			status: editStatus as "Active" | "Inactive",
+			query: data.query,
+			destination: data.destination,
+			status: data.status || "Active",
 		};
 
 		// Update global list
 		const updatedAllBestBets = allBestBets.map((b) =>
-			b.query === editingBestBet.query ? updatedBet : b
+			b.query === editingBestBet.query
+				? {
+						...b,
+						query: data.query,
+						destination: data.destination,
+				  }
+				: b
 		);
 		setAllBestBets(updatedAllBestBets);
 
@@ -139,10 +148,6 @@ export default function OptimizationsPage() {
 
 	const handleToggleStatus = (bet: BestBet, newStatus: "Active" | "Inactive") => {
 		const updatedBet = {...bet, status: newStatus};
-
-		// Update global list
-		const updatedAllBestBets = allBestBets.map((b) => (b.query === bet.query ? updatedBet : b));
-		setAllBestBets(updatedAllBestBets);
 
 		// Update local algorithm list
 		const updatedAlgorithmBestBets = algorithmBestBets.map((b) =>
@@ -172,6 +177,29 @@ export default function OptimizationsPage() {
 		setIsCreateSQDialogOpen(false);
 	};
 
+	const handleEditSQClick = (sq: SimilarQuery) => {
+		setEditingSQ(sq);
+		setEditSQQuery(sq.query);
+		setEditSQSynonyms(sq.synonyms.join(", "));
+		setIsEditSQDialogOpen(true);
+	};
+
+	const handleUpdateSimilarQuery = () => {
+		if (!editingSQ) return;
+		const updatedSynonyms = editSQSynonyms
+			.split(",")
+			.map((s) => s.trim())
+			.filter((s) => s);
+
+		const updatedList = similarQueries.map((item) =>
+			item.query === editingSQ.query ? {query: editSQQuery, synonyms: updatedSynonyms} : item
+		);
+
+		setSimilarQueries(updatedList);
+		setIsEditSQDialogOpen(false);
+		setEditingSQ(null);
+	};
+
 	const handleRemoveSimilarQuery = (query: string) => {
 		setSimilarQueries(similarQueries.filter((q) => q.query !== query));
 	};
@@ -182,12 +210,7 @@ export default function OptimizationsPage() {
 	);
 
 	return (
-		<Flex
-			flexDirection="row"
-			h="full"
-			alignItems="stretch"
-			gap="32"
-		>
+		<>
 			<Box flex="1">
 				<Heading
 					level="4"
@@ -208,20 +231,52 @@ export default function OptimizationsPage() {
 						onEdit={handleEditClick}
 						onRemove={handleRemoveBestBet}
 						availableBestBets={availableOptions}
-						onAdd={(bet) => setAlgorithmBestBets([...algorithmBestBets, bet])}
-						onCreate={() => setIsCreateDialogOpen(true)}
+						onAdd={(bet) =>
+							setAlgorithmBestBets([...algorithmBestBets, {...bet, status: "Active"}])
+						}
+						onCreate={() => {
+							setCreateBestBetInitialData(undefined);
+							setIsCreateDialogOpen(true);
+						}}
 						onToggleStatus={handleToggleStatus}
 					/>
 				) : (
 					<Alert intent="information">
 						<Text>
-							No similar Best Bets defined yet. <Link></Link>
-							<Link
-								onClick={() => setIsCreateSQDialogOpen(true)}
-								cursor="pointer"
+							No similar Best Bets defined yet.{" "}
+							<Menu
+								options={[
+									{
+										group: {label: "", hidden: true, separator: true},
+										label: "Create New Best Bet",
+										addon: <IconPlus size={16} />,
+										execute: () => {
+											setCreateBestBetInitialData(undefined);
+											setIsCreateDialogOpen(true);
+										},
+									},
+									...(availableOptions.length > 0
+										? availableOptions.map((bet) => ({
+												label:
+													searchResults.find(
+														(r) => r.url === bet.destination
+													)?.title || bet.destination,
+												value: bet.query,
+												description: bet.query,
+												execute: () =>
+													setAlgorithmBestBets([
+														...algorithmBestBets,
+														{...bet, status: "Active" as const},
+													]),
+										  }))
+										: []),
+								]}
 							>
-								Create one...
-							</Link>
+								<MenuTrigger asChild>
+									<Link cursor="pointer">Add one...</Link>
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
 						</Text>
 					</Alert>
 				)}
@@ -248,23 +303,51 @@ export default function OptimizationsPage() {
 									<Tr>
 										<Th>Primary Query</Th>
 										<Th>Synonyms</Th>
-										<Th></Th>
+										<Th align="right">Actions</Th>
 									</Tr>
 								</thead>
 								<tbody>
 									{similarQueries.map((item) => (
-										<Tr key={item.query}>
-											<Td>{item.query}</Td>
+										<Tr
+											key={item.query}
+											onClick={() => handleEditSQClick(item)}
+										>
+											<Td type="header">
+												<Item
+													icon={<IconCongruentTo size={16} />}
+													title={item.query}
+												/>
+											</Td>
 											<Td>{item.synonyms.join(", ")}</Td>
 											<Td type="button">
-												<Button
-													icon={<IconTrash size={16} />}
-													appearance="subtle"
-													onClick={() =>
-														handleRemoveSimilarQuery(item.query)
-													}
-													aria-label="Remove"
-												/>
+												<div onClick={(e) => e.stopPropagation()}>
+													<Menu
+														options={[
+															{
+																label: "Edit",
+																addon: <IconEdit size={16} />,
+																execute: () =>
+																	handleEditSQClick(item),
+															},
+															{
+																label: "Remove",
+																addon: <IconTrash size={16} />,
+																execute: () =>
+																	handleRemoveSimilarQuery(
+																		item.query
+																	),
+																intent: "danger",
+															},
+														]}
+													>
+														<MenuTrigger
+															appearance="subtle"
+															aria-label="Edit"
+															icon={<IconDots size={16} />}
+														/>
+														<MenuContent align="end" />
+													</Menu>
+												</div>
 											</Td>
 										</Tr>
 									))}
@@ -272,7 +355,8 @@ export default function OptimizationsPage() {
 							</Table>
 
 							<Button
-								appearance="subtle"
+								mt="16"
+								size="lg"
 								icon={<IconPlus size={16} />}
 								onClick={() => setIsCreateSQDialogOpen(true)}
 							>
@@ -294,120 +378,23 @@ export default function OptimizationsPage() {
 					)}
 				</Box>
 
-				<AbstractDialog
-					title="Create Best Bet"
-					description="Add a new best bet to direct users to specific destinations."
+				<BestBetDialog
 					open={isCreateDialogOpen}
 					setOpen={setIsCreateDialogOpen}
-					footerPrimaryText="Create"
-					footerPrimaryAction={handleCreateBestBet}
-					footerAppearance="primary"
-				>
-					<Flex
-						flexDirection="column"
-						gap="16"
-					>
-						<Field
-							label="Query"
-							required
-						>
-							<Input
-								size="lg"
-								placeholder="e.g. return policy"
-								value={newQuery}
-								onChange={(e) => setNewQuery(e.target.value)}
-							/>
-						</Field>
-						<Field
-							label="Destination"
-							required
-						>
-							<Select
-								value={newDestination}
-								onValueChange={setNewDestination}
-								options={searchResults.map((r) => ({label: r.title, value: r.url}))}
-							>
-								<SelectTrigger size="lg">
-									{newDestination
-										? searchResults.find((r) => r.url === newDestination)
-												?.title || newDestination
-										: "Select Destination"}
-								</SelectTrigger>
-								<SelectContent />
-							</Select>
-						</Field>
-						<Field
-							label="Status"
-							required
-						>
-							<Switch
-								checked={newStatus === "Active"}
-								onCheckedChange={(checked) =>
-									setNewStatus(checked ? "Active" : "Inactive")
-								}
-							>
-								{newStatus}
-							</Switch>
-						</Field>
-					</Flex>
-				</AbstractDialog>
+					mode="create"
+					initialData={createBestBetInitialData}
+					onSave={handleCreateBestBet}
+					showStatus={true}
+				/>
 
-				<AbstractDialog
-					title="Edit Best Bet"
-					description="Update the details of this best bet."
+				<BestBetDialog
 					open={isEditDialogOpen}
 					setOpen={setIsEditDialogOpen}
-					footerPrimaryText="Save Changes"
-					footerPrimaryAction={handleUpdateBestBet}
-					footerAppearance="primary"
-				>
-					<Flex
-						flexDirection="column"
-						gap="16"
-					>
-						<Field
-							label="Query"
-							required
-						>
-							<Input
-								size="lg"
-								value={editQuery}
-								onChange={(e) => setEditQuery(e.target.value)}
-							/>
-						</Field>
-						<Field
-							label="Destination"
-							required
-						>
-							<Select
-								value={editDestination}
-								onValueChange={setEditDestination}
-								options={searchResults.map((r) => ({label: r.title, value: r.url}))}
-							>
-								<SelectTrigger size="lg">
-									{editDestination
-										? searchResults.find((r) => r.url === editDestination)
-												?.title || editDestination
-										: "Select Destination"}
-								</SelectTrigger>
-								<SelectContent />
-							</Select>
-						</Field>
-						<Field
-							label="Status"
-							required
-						>
-							<Switch
-								checked={editStatus === "Active"}
-								onCheckedChange={(checked) =>
-									setEditStatus(checked ? "Active" : "Inactive")
-								}
-							>
-								{editStatus}
-							</Switch>
-						</Field>
-					</Flex>
-				</AbstractDialog>
+					mode="edit"
+					initialData={editingBestBet || undefined}
+					onSave={handleUpdateBestBet}
+					showStatus={true}
+				/>
 
 				<AbstractDialog
 					title="Create Similar Query Group"
@@ -445,15 +432,50 @@ export default function OptimizationsPage() {
 					</Flex>
 				</AbstractDialog>
 			</Box>
-			<Box
-				alignSelf="start"
-				style={{marginTop: "-100px", marginRight: "-24px"}}
+
+			<AbstractDialog
+				title="Edit Synonym Group"
+				description="Update the primary query and its synonyms."
+				open={isEditSQDialogOpen}
+				setOpen={setIsEditSQDialogOpen}
+				footerPrimaryText="Save Changes"
+				footerPrimaryAction={handleUpdateSimilarQuery}
+				footerAppearance="primary"
 			>
+				<Flex
+					flexDirection="column"
+					gap="16"
+				>
+					<Field
+						label="Primary Query"
+						required
+					>
+						<Input
+							placeholder="e.g. sneakers"
+							value={editSQQuery}
+							onChange={(e) => setEditSQQuery(e.target.value)}
+						/>
+					</Field>
+					<Field
+						label="Synonyms (comma separated)"
+						required
+					>
+						<Input
+							placeholder="e.g. trainers, running shoes, kicks"
+							value={editSQSynonyms}
+							onChange={(e) => setEditSQSynonyms(e.target.value)}
+						/>
+					</Field>
+				</Flex>
+			</AbstractDialog>
+
+			<Aside>
 				<Preview
 					algorithmBestBets={algorithmBestBets}
 					similarQueries={similarQueries}
+					onCreateBestBet={handleCreateBestBetFromPreview}
 				/>
-			</Box>
-		</Flex>
+			</Aside>
+		</>
 	);
 }

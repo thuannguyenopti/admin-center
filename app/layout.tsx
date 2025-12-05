@@ -161,13 +161,21 @@ export default function RootLayout({
 							title: "Analytics Details",
 							children: [
 								{
+									label: "Total Queries",
+									url: "/graph/search/search-analytics/total-queries",
+								},
+								{
+									label: "Click-Through Rate",
+									url: "/graph/search/search-analytics/click-through-rate",
+								},
+								{
 									label: "Zero-Result Analysis",
 									description: "Analyze queries with no results",
 									url: "/graph/search/search-analytics/zero-result",
 								},
 								{
-									label: "Click-Through Rate",
-									url: "/graph/search/search-analytics/click-through-rate",
+									label: "Reformulation Rate",
+									url: "/graph/search/search-analytics/reformulation-rate",
 								},
 							],
 						},
@@ -213,7 +221,8 @@ export default function RootLayout({
 					},
 					{
 						label: "Best Bets",
-						description: "Manage best bets",
+						description:
+							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
 						url: "/graph/search/best-bets",
 					},
 				],

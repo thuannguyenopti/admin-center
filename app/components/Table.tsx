@@ -1,5 +1,7 @@
 import {ReactNode} from "react";
-import {Badge, Button, Text, Box, Avatar, Tooltip} from "@optiaxiom/react";
+import {Badge, Box, Avatar, Tooltip} from "@optiaxiom/react";
+import {Text} from "./Text";
+import {Button} from "./Button";
 import {IconDots as IconMenu} from "@tabler/icons-react";
 
 export const Table = ({children}: {children: ReactNode}) => {
@@ -11,15 +13,26 @@ export const Table = ({children}: {children: ReactNode}) => {
 };
 
 import {useRouter} from "next/navigation";
-export const Tr = ({children, url}: {children: ReactNode; url?: string}) => {
+export const Tr = ({
+	children,
+	url,
+	onClick,
+}: {
+	children: ReactNode;
+	url?: string;
+	onClick?: () => void;
+}) => {
 	const router = useRouter();
 	const rowClick = (href: string) => {
 		router.push(`${href}`);
 	};
 	return (
 		<tr
-			onClick={url ? () => rowClick(url) : undefined}
-			className={"relative color-[#ccc] " + (url && "cursor-pointer hover:bg-[#fafafa] ")}
+			onClick={url ? () => rowClick(url) : onClick ? onClick : undefined}
+			className={
+				"relative color-[#ccc] " +
+				(url || onClick ? "cursor-pointer hover:bg-[#fafafa] " : "")
+			}
 		>
 			{children}
 		</tr>
@@ -70,10 +83,11 @@ export const Td = ({
 			{type === "header" && (
 				<>
 					<Text
+						asChild
 						color="fg.default"
 						fontWeight="500"
 					>
-						{children}
+						<span>{children}</span>
 					</Text>
 					{description && (
 						<Text

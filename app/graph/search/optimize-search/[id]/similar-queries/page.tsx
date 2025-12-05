@@ -1,12 +1,18 @@
 "use client";
 
-import {Box, Button, Flex, Heading, Text, Input, Field} from "@optiaxiom/react";
+import {Box, Heading, Field} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {Input} from "@/app/components/Input";
+import {Flex} from "@/app/components/Flex";
 import {useParams} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {IconPlus, IconTrash} from "@tabler/icons-react";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Preview from "../order/Preview";
+import {Aside} from "@/app/context/LayoutContext";
+import {AlgorithmBestBet} from "@/app/db/initialData";
 
 type SimilarQuery = {
 	query: string;
@@ -16,6 +22,11 @@ type SimilarQuery = {
 export default function SimilarQueriesPage() {
 	const params = useParams();
 	const id = params.id as string;
+
+	const [algorithmBestBets] = usePersistentState(`algorithm_best_bets_${id}`, []) as [
+		AlgorithmBestBet[],
+		any
+	];
 
 	const [similarQueries, setSimilarQueries] = usePersistentState(
 		`algorithm_similar_queries_${id}`,
@@ -134,12 +145,12 @@ export default function SimilarQueriesPage() {
 					</Button>
 				</Flex>
 			</Box>
-			<Box
-				alignSelf="start"
-				style={{marginTop: "-100px", marginRight: "-24px"}}
-			>
-				<Preview similarQueries={similarQueries} />
-			</Box>
+			<Aside>
+				<Preview
+					algorithmBestBets={algorithmBestBets}
+					similarQueries={similarQueries}
+				/>
+			</Aside>
 		</Flex>
 	);
 }

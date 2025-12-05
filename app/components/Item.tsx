@@ -1,21 +1,41 @@
-import {Box, Text} from "@optiaxiom/react";
+import {Box} from "@optiaxiom/react";
+import {Text} from "./Text";
 import {ReactNode} from "react";
 
 type ItemProps = {
 	icon: ReactNode;
 	title: string;
+	description?: string;
 };
 
-export default function Item({icon, title}: ItemProps) {
+export default function Item({icon, title, description}: ItemProps) {
 	return (
 		<Box
 			display="flex"
 			flexDirection="row"
-			alignItems="center"
+			alignItems="start"
 			gap="8"
 		>
-			{icon}
-			<Text fontSize="md">{title}</Text>
+			<Box
+				w="16"
+				pt="2"
+			>
+				{icon}
+			</Box>
+			<Box
+				display="flex"
+				flexDirection="column"
+			>
+				<Text fontSize="md">{title}</Text>
+				{description && (
+					<Text
+						fontSize="sm"
+						color="fg.secondary"
+					>
+						{description}
+					</Text>
+				)}
+			</Box>
 		</Box>
 	);
 }

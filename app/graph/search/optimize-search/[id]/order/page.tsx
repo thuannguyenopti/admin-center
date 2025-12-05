@@ -2,10 +2,7 @@
 
 import {
 	Box,
-	Button,
-	Flex,
 	Heading,
-	Text,
 	RadioGroup,
 	Radio,
 	Separator,
@@ -15,18 +12,22 @@ import {
 	Field,
 	Alert,
 } from "@optiaxiom/react";
+import {Button} from "@/app/components/Button";
+import {Flex} from "@/app/components/Flex";
+import {Text} from "@/app/components/Text";
 import {IconDots, IconGripVertical, IconPlus} from "@tabler/icons-react";
 import {useState} from "react";
 import Preview from "./Preview";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {BestBet} from "@/app/db/initialData";
+import {AlgorithmBestBet} from "@/app/db/initialData";
+import {Aside} from "@/app/context/LayoutContext";
 
 export default function OrderPage() {
 	const params = useParams();
 	const id = params.id as string;
 	const [algorithmBestBets] = usePersistentState(`algorithm_best_bets_${id}`, []) as [
-		BestBet[],
+		AlgorithmBestBet[],
 		any
 	];
 
@@ -61,11 +62,7 @@ export default function OrderPage() {
 	];
 
 	return (
-		<Flex
-			flexDirection="row"
-			alignItems="stretch"
-			gap="32"
-		>
+		<>
 			<Box flex="1">
 				<Heading
 					level="4"
@@ -181,9 +178,9 @@ export default function OrderPage() {
 					</>
 				)}
 			</Box>
-			<Box>
+			<Aside>
 				<Preview algorithmBestBets={algorithmBestBets} />
-			</Box>
-		</Flex>
+			</Aside>
+		</>
 	);
 }

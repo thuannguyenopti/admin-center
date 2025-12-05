@@ -1,5 +1,4 @@
 import {
-	Text,
 	Box,
 	NavBody,
 	NavList,
@@ -8,6 +7,7 @@ import {
 	NavGroupTrigger,
 	NavSeparator,
 } from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
 import {Url} from "next/dist/shared/lib/router/router";
 import Link from "next/link";
 

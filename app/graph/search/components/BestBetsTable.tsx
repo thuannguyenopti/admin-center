@@ -20,18 +20,19 @@ import {
 	Separator,
 	Switch,
 } from "@optiaxiom/react";
-import {BestBet} from "@/app/db/initialData";
+import {BestBet, AlgorithmBestBet} from "@/app/db/initialData";
+import searchResults from "@/app/db/searchResults.json";
 
 interface BestBetsTableProps {
-	bestBets: BestBet[];
-	onEdit: (bet: BestBet) => void;
+	bestBets: (BestBet | AlgorithmBestBet)[];
+	onEdit: (bet: BestBet | AlgorithmBestBet) => void;
 	onRemove: (query: string) => void;
 	showStatus?: boolean;
 	showOwner?: boolean;
 	availableBestBets?: BestBet[];
 	onAdd?: (bet: BestBet) => void;
 	onCreate?: () => void;
-	onToggleStatus?: (bet: BestBet, newStatus: "Active" | "Inactive") => void;
+	onToggleStatus?: (bet: AlgorithmBestBet, newStatus: "Active" | "Inactive") => void;
 }
 
 export default function BestBetsTable({
@@ -65,7 +66,11 @@ export default function BestBetsTable({
 					},
 			  ]
 			: []),
-		...(availableBestBets?.map((b) => ({label: b.query, value: b.query})) || []),
+		...(availableBestBets?.map((b) => ({
+			label: searchResults.find((r) => r.url === b.destination)?.title || b.destination,
+			value: b.query,
+			description: b.query,
+		})) || []),
 	];
 
 	return (
@@ -73,8 +78,8 @@ export default function BestBetsTable({
 			<Table>
 				<thead>
 					<Tr>
-						<Th>Query</Th>
-						<Th>Destination</Th>
+						<Th>Best Bet</Th>
+						<Th>Phrases</Th>
 						{showStatus && <Th>Status</Th>}
 						{showOwner && <Th>Owner</Th>}
 						<Th></Th>
@@ -82,15 +87,22 @@ export default function BestBetsTable({
 				</thead>
 				<tbody>
 					{bestBets.map((bet) => (
-						<Tr key={bet.query}>
-							<Td type="raw">
+						<Tr
+							key={bet.query}
+							onClick={() => onEdit(bet)}
+						>
+							<Td type="header">
 								<Item
 									icon={<IconRocket size={16} />}
-									title={bet.query}
+									title={
+										searchResults.find((r) => r.url === bet.destination)
+											?.title || bet.destination
+									}
+									description={bet.destination}
 								/>
 							</Td>
-							<Td>{bet.destination}</Td>
-							{showStatus && (
+							<Td>{bet.query}</Td>
+							{showStatus && "status" in bet && (
 								<Td
 									type="badge"
 									data={bet.status === "Active" ? "success" : "neutral"}
@@ -103,19 +115,23 @@ export default function BestBetsTable({
 								<div onClick={(e) => e.stopPropagation()}>
 									<Menu
 										options={[
-											{
-												label: "Active",
-												addon: <IconPower size={16} />,
-												execute: () =>
-													onToggleStatus?.(
-														bet,
-														bet.status === "Active"
-															? "Inactive"
-															: "Active"
-													),
-												selected: bet.status === "Active",
-												switch: true,
-											},
+											...(showStatus && "status" in bet
+												? [
+														{
+															label: "Active",
+															addon: <IconPower size={16} />,
+															execute: () =>
+																onToggleStatus?.(
+																	bet as AlgorithmBestBet,
+																	bet.status === "Active"
+																		? "Inactive"
+																		: "Active"
+																),
+															selected: bet.status === "Active",
+															switch: true,
+														},
+												  ]
+												: []),
 											{
 												label: "Edit",
 												addon: <IconPencil size={16} />,

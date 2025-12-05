@@ -1,10 +1,8 @@
-'use client';
+"use client";
 
 import VBPrototype from "@/app/components/VBPrototype";
-import { Text } from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
 
 export default function Home() {
-  return (
-    <VBPrototype />
-  );
+	return <VBPrototype />;
 }

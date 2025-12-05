@@ -1,10 +1,7 @@
-'use client';
+"use client";
 
-import { Text } from "@optiaxiom/react";
-
+import {Text} from "@/app/components/Text";
 
 export default function Home() {
-  return (
-      <Text>okok</Text>
-  );
+	return <Text>okok</Text>;
 }
