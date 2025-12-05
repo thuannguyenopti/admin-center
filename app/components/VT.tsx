@@ -33,26 +33,30 @@ export default function VT({
 	return (
 		<NavBody style={{maxWidth: "224px"}}>
 			<NavList className="appear">
-				{backLink && (
+				{(backLink || title) && (
 					<Box
 						px="12"
 						py="16"
 					>
-						<Link href={backLink.url as Url}>
+						{backLink && (
+							<Link href={backLink.url as Url}>
+								<Text
+									color="fg.secondary"
+									fontSize="sm"
+								>
+									← {backLink.label}
+								</Text>
+							</Link>
+						)}
+						{title && (
 							<Text
-								color="fg.secondary"
-								fontSize="sm"
+								fontSize="lg"
+								fontWeight="600"
+								color="fg.default"
 							>
-								← {backLink.label}
+								{title}
 							</Text>
-						</Link>
-						<Text
-							fontSize="lg"
-							fontWeight="600"
-							color="fg.default"
-						>
-							{title}
-						</Text>
+						)}
 					</Box>
 				)}
 				{items?.map((menuItem, i) =>

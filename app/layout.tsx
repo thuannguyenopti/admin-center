@@ -105,55 +105,55 @@ export default function RootLayout({
 				highlight: "/graph/api-playground",
 				icon: <IconPlayerPlay />,
 			},
+			// {
+			// 	label: "Content Sources",
+			// 	url: "/graph/content-sources/sources",
+			// 	highlight: "/graph/content-sources",
+			// 	icon: <IconHierarchy3 />,
+			// 	children: [
+			// 		{
+			// 			label: "Content Sources",
+			// 			url: "/graph/content-sources/sources",
+			// 			children: {
+			// 				title: "ODP (Integration)",
+			// 				children: [
+			// 					{
+			// 						label: "Details",
+			// 						url: "/graph/content-sources/sources/odp/details",
+			// 					},
+			// 					{
+			// 						label: "Content",
+			// 						url: "/graph/content-sources/sources/odp/content",
+			// 					},
+			// 					{label: "Schema", url: "/graph/content-sources/sources/odp/schema"},
+			// 					{
+			// 						label: "Settings",
+			// 						url: "/graph/content-sources/sources/odp/settings",
+			// 					},
+			// 				],
+			// 			},
+			// 		},
+			// 	],
+			// },
+			// {
+			// 	label: "Sync Log",
+			// 	url: "/graph/sync-log",
+			// 	highlight: "/graph/sync-log",
+			// 	icon: <IconLogs />,
+			// },
+			// {
+			// 	label: "Settings",
+			// 	url: "/graph/settings",
+			// 	highlight: "/graph/settings",
+			// 	icon: <IconSettings />,
+			// },
 			{
-				label: "Content Sources",
-				url: "/graph/content-sources/sources",
-				highlight: "/graph/content-sources",
-				icon: <IconHierarchy3 />,
-				children: [
-					{
-						label: "Content Sources",
-						url: "/graph/content-sources/sources",
-						children: {
-							title: "ODP (Integration)",
-							children: [
-								{
-									label: "Details",
-									url: "/graph/content-sources/sources/odp/details",
-								},
-								{
-									label: "Content",
-									url: "/graph/content-sources/sources/odp/content",
-								},
-								{label: "Schema", url: "/graph/content-sources/sources/odp/schema"},
-								{
-									label: "Settings",
-									url: "/graph/content-sources/sources/odp/settings",
-								},
-							],
-						},
-					},
-				],
-			},
-			{
-				label: "Sync Log",
-				url: "/graph/sync-log",
-				highlight: "/graph/sync-log",
-				icon: <IconLogs />,
-			},
-			{
-				label: "Settings",
-				url: "/graph/settings",
-				highlight: "/graph/settings",
-				icon: <IconSettings />,
-			},
-			{
-				label: "Search",
+				label: "Search Management",
 				url: "/graph/search/search-analytics",
 				highlight: "/graph/search",
 				icon: <IconSearch />,
 				children: [
-					{label: "Search Health & Monitoring"},
+					{label: "Health & Monitoring"},
 					{
 						label: "Overview",
 						url: "/graph/search/search-analytics",
@@ -172,7 +172,7 @@ export default function RootLayout({
 							],
 						},
 					},
-					{label: "Optimize Search"},
+					{label: "Optimizations"},
 					{
 						label: "Algorithms",
 						description: "Manage search algorithms",
@@ -184,6 +184,14 @@ export default function RootLayout({
 										{
 											label: "Settings",
 											url: `/graph/search/optimize-search/${algorithmId}`,
+										},
+										{
+											label: "Filter",
+											url: `/graph/search/optimize-search/${algorithmId}/filter`,
+										},
+										{
+											label: "Order",
+											url: `/graph/search/optimize-search/${algorithmId}/order`,
 										},
 										{
 											label: "Optimizations",

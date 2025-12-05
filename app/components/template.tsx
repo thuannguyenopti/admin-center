@@ -47,7 +47,10 @@ export default function Template({
 		>
 			<GlobalBar />
 			<Box display="flex">
-				<Sidebar className="h-full z-10 relative">
+				<Sidebar
+					className="h-full z-10 relative"
+					expanded={!showVT}
+				>
 					<Nav>
 						<NavBody>
 							{menuItems.map((menuItem: any) => (
@@ -95,7 +98,7 @@ export default function Template({
 									{showVT && lvl2 && (
 										<VT
 											backLink={undefined}
-											title={highlight1?.children?.title || undefined}
+											title={highlight1?.children?.title || highlight1?.label}
 											items={highlight1?.children}
 										/>
 									)}

@@ -1,0 +1,42 @@
+[
+	{
+		"title": "Nike Air Max 270",
+		"description": "Legendary comfort and style. The Nike Air Max 270 delivers visible air with every step.",
+		"url": "https://example.com/products/nike-air-max-270"
+	},
+	{
+		"title": "Nike Air Force 1 '07",
+		"description": "The radiance lives on in the Nike Air Force 1 '07, the b-ball icon that puts a fresh spin on what you know best.",
+		"url": "https://example.com/products/nike-air-force-1-07"
+	},
+	{
+		"title": "Nike Pegasus 40",
+		"description": "A springy ride for every run, the Peg's familiar, just-for-you feel returns to help you accomplish your goals.",
+		"url": "https://example.com/products/nike-pegasus-40"
+	},
+	{
+		"title": "Nike Dunk Low Retro",
+		"description": "Created for the hardwood but taken to the streets, the '80s b-ball icon returns with perfectly sheened overlays.",
+		"url": "https://example.com/products/nike-dunk-low-retro"
+	},
+	{
+		"title": "Adidas Ultraboost Light",
+		"description": "Experience epic energy with the new Ultraboost Light, our lightest Ultraboost ever.",
+		"url": "https://example.com/products/adidas-ultraboost-light"
+	},
+	{
+		"title": "Puma Suede Classic",
+		"description": "The Suede has been changing the game ever since it hit the scene in 1968.",
+		"url": "https://example.com/products/puma-suede-classic"
+	},
+	{
+		"title": "Return Policy Page",
+		"description": "Learn about our 30-day return policy and how to initiate a return.",
+		"url": "https://example.com/help/returns"
+	},
+	{
+		"title": "Shipping Information",
+		"description": "Details on shipping rates, delivery times, and international shipping.",
+		"url": "https://example.com/help/shipping"
+	}
+]

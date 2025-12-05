@@ -54,20 +54,20 @@ export const initialAlgorithms: Algorithm[] = [
 export const initialBestBets: BestBet[] = [
 	{
 		query: "return policy",
-		destination: "/help/returns",
+		destination: "https://example.com/help/returns",
 		status: "Active",
 		owner: "Support Team",
 	},
 	{
 		query: "shipping rates",
-		destination: "/help/shipping",
+		destination: "https://example.com/help/shipping",
 		status: "Active",
 		owner: "Logistics",
 	},
 	{
-		query: "gift cards",
-		destination: "/shop/gift-cards",
-		status: "Inactive",
+		query: "nike air",
+		destination: "https://example.com/products/nike-air-max-270",
+		status: "Active",
 		owner: "Marketing",
 	},
 ];

@@ -173,8 +173,8 @@ export default function ZeroResultPage() {
 										if (!targetBet) {
 											targetBet = {
 												query: query,
-												destination: `/${query.replace(/\s+/g, "-")}`,
-												status: "Active",
+												destination: "",
+												status: "Inactive",
 												owner: "Alice Johnson",
 											};
 											currentBestBets.push(targetBet);

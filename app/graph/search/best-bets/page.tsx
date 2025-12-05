@@ -1,6 +1,5 @@
 "use client";
 
-import Item from "@/app/components/Item";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {
 	Box,
@@ -11,22 +10,14 @@ import {
 	Select,
 	SelectTrigger,
 	SelectContent,
-	Menu,
-	MenuTrigger,
-	MenuContent,
+	Switch,
 } from "@optiaxiom/react";
-import {
-	IconPlus,
-	IconRocket,
-	IconSearch,
-	IconDots,
-	IconPencil,
-	IconTrash,
-} from "@tabler/icons-react";
+import {IconPlus, IconSearch} from "@tabler/icons-react";
 import {useState, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {BestBet, initialBestBets} from "@/app/db/initialData";
-import {Table, Tr, Td, Th} from "@/app/components/Table";
+import searchResults from "@/app/db/searchResults.json";
+import BestBetsTable from "../components/BestBetsTable";
 
 export default function BestBetsPage() {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -94,6 +85,13 @@ export default function BestBetsPage() {
 		setEditingBestBet(null);
 	};
 
+	const handleToggleStatus = (bet: BestBet, newStatus: "Active" | "Inactive") => {
+		const updatedBestBets = bestBets.map((b) =>
+			b.query === bet.query ? {...b, status: newStatus} : b
+		);
+		setBestBets(updatedBestBets);
+	};
+
 	const filteredData = useMemo(() => {
 		if (!searchQuery) return bestBets;
 
@@ -134,63 +132,12 @@ export default function BestBetsPage() {
 				</Button>
 			</Flex>
 
-			<Table>
-				<thead>
-					<Tr>
-						<Th>Query</Th>
-						<Th>Destination</Th>
-						<Th>Status</Th>
-						<Th>Owner</Th>
-						<Th></Th>
-					</Tr>
-				</thead>
-				<tbody>
-					{filteredData.map((bet) => (
-						<Tr key={bet.query}>
-							<Td type="raw">
-								<Item
-									icon={<IconRocket size={16} />}
-									title={bet.query}
-								/>
-							</Td>
-							<Td>{bet.destination}</Td>
-							<Td
-								type="badge"
-								data={bet.status === "Active" ? "success" : "neutral"}
-							>
-								{bet.status}
-							</Td>
-							<Td type="avatar">{bet.owner}</Td>
-							<Td type="button">
-								<div onClick={(e) => e.stopPropagation()}>
-									<Menu
-										options={[
-											{
-												label: "Edit",
-												addon: <IconPencil size={16} />,
-												execute: () => handleEditClick(bet),
-											},
-											{
-												label: "Remove",
-												addon: <IconTrash size={16} />,
-												intent: "danger",
-												execute: () => handleRemoveBestBet(bet.query),
-											},
-										]}
-									>
-										<MenuTrigger
-											aria-label="Actions"
-											icon={<IconDots size={16} />}
-											appearance="subtle"
-										/>
-										<MenuContent />
-									</Menu>
-								</div>
-							</Td>
-						</Tr>
-					))}
-				</tbody>
-			</Table>
+			<BestBetsTable
+				bestBets={filteredData}
+				onEdit={handleEditClick}
+				onRemove={handleRemoveBestBet}
+				onToggleStatus={handleToggleStatus}
+			/>
 
 			<AbstractDialog
 				title="Create Best Bet"
@@ -220,28 +167,32 @@ export default function BestBetsPage() {
 						label="Destination"
 						required
 					>
-						<Input
-							size="lg"
-							placeholder="e.g. /help/returns"
+						<Select
 							value={newDestination}
-							onChange={(e) => setNewDestination(e.target.value)}
-						/>
+							onValueChange={setNewDestination}
+							options={searchResults.map((r) => ({label: r.title, value: r.url}))}
+						>
+							<SelectTrigger size="lg">
+								{newDestination
+									? searchResults.find((r) => r.url === newDestination)?.title ||
+									  newDestination
+									: "Select Destination"}
+							</SelectTrigger>
+							<SelectContent />
+						</Select>
 					</Field>
 					<Field
 						label="Status"
 						required
 					>
-						<Select
-							value={newStatus}
-							onValueChange={setNewStatus}
-							options={[
-								{label: "Active", value: "Active"},
-								{label: "Inactive", value: "Inactive"},
-							]}
+						<Switch
+							checked={newStatus === "Active"}
+							onCheckedChange={(checked) =>
+								setNewStatus(checked ? "Active" : "Inactive")
+							}
 						>
-							<SelectTrigger size="lg">{newStatus}</SelectTrigger>
-							<SelectContent />
-						</Select>
+							{newStatus}
+						</Switch>
 					</Field>
 				</Flex>
 			</AbstractDialog>
@@ -273,27 +224,32 @@ export default function BestBetsPage() {
 						label="Destination"
 						required
 					>
-						<Input
-							size="lg"
+						<Select
 							value={editDestination}
-							onChange={(e) => setEditDestination(e.target.value)}
-						/>
+							onValueChange={setEditDestination}
+							options={searchResults.map((r) => ({label: r.title, value: r.url}))}
+						>
+							<SelectTrigger size="lg">
+								{editDestination
+									? searchResults.find((r) => r.url === editDestination)?.title ||
+									  editDestination
+									: "Select Destination"}
+							</SelectTrigger>
+							<SelectContent />
+						</Select>
 					</Field>
 					<Field
 						label="Status"
 						required
 					>
-						<Select
-							value={editStatus}
-							onValueChange={setEditStatus}
-							options={[
-								{label: "Active", value: "Active"},
-								{label: "Inactive", value: "Inactive"},
-							]}
+						<Switch
+							checked={editStatus === "Active"}
+							onCheckedChange={(checked) =>
+								setEditStatus(checked ? "Active" : "Inactive")
+							}
 						>
-							<SelectTrigger size="lg">{editStatus}</SelectTrigger>
-							<SelectContent />
-						</Select>
+							{editStatus}
+						</Switch>
 					</Field>
 				</Flex>
 			</AbstractDialog>
