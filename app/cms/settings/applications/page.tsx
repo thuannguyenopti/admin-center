@@ -26,12 +26,7 @@ export default function Home() {
 				pb="16"
 			>
 				<SearchInput />
-				<Button
-					size="lg"
-					appearance="primary"
-				>
-					Create Application...
-				</Button>
+				<Button appearance="primary">Create Application...</Button>
 			</Box>
 			<Table>
 				<thead>
