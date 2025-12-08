@@ -17,6 +17,9 @@ import MetricCard from "../../../components/MetricCard";
 import Link from "next/link";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import {metricsData, topQueries} from "@/app/db/analyticsData";
+import {Flex} from "@/app/components/Flex";
+import {Button} from "@/app/components/Button";
+import {IconSparkles} from "@tabler/icons-react";
 
 type TimeRange = "24h" | "7d" | "30d" | "90d";
 
@@ -60,40 +63,46 @@ export default function SearchAnalytics() {
 		<Box>
 			{/* Filters */}
 
-			<Box
-				display="flex"
-				gap="12"
+			<Flex
 				mb="24"
+				justifyContent="space-between"
 			>
-				<Menu
-					options={[
-						{label: "Last 24 hours", execute: () => setTimeRange("24h")},
-						{label: "Last 7 days", execute: () => setTimeRange("7d")},
-						{label: "Last 30 days", execute: () => setTimeRange("30d")},
-						{label: "Last 90 days", execute: () => setTimeRange("90d")},
-					]}
+				<Flex gap="8">
+					<Menu
+						options={[
+							{label: "Last 24 hours", execute: () => setTimeRange("24h")},
+							{label: "Last 7 days", execute: () => setTimeRange("7d")},
+							{label: "Last 30 days", execute: () => setTimeRange("30d")},
+							{label: "Last 90 days", execute: () => setTimeRange("90d")},
+						]}
+					>
+						<MenuTrigger asChild>
+							<LabelMenuButton label="Time Range">
+								{timeRangeLabels[timeRange]}
+							</LabelMenuButton>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+					<Menu
+						options={[
+							{label: "Production", execute: () => {}},
+							{label: "Staging", execute: () => {}},
+							{label: "Development", execute: () => {}},
+						]}
+					>
+						<MenuTrigger asChild>
+							<LabelMenuButton label="Environment">Production</LabelMenuButton>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				</Flex>
+				<Button
+					icon={<IconSparkles />}
+					appearance="primary-opal"
 				>
-					<MenuTrigger asChild>
-						<LabelMenuButton label="Time Range">
-							{timeRangeLabels[timeRange]}
-						</LabelMenuButton>
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
-
-				<Menu
-					options={[
-						{label: "Production", execute: () => {}},
-						{label: "Staging", execute: () => {}},
-						{label: "Development", execute: () => {}},
-					]}
-				>
-					<MenuTrigger asChild>
-						<LabelMenuButton label="Environment">Production</LabelMenuButton>
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
-			</Box>
+					Suggest Optimization
+				</Button>
+			</Flex>
 
 			{/* Metric Cards */}
 			<Box
