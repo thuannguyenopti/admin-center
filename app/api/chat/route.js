@@ -1,8 +1,10 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
-});
+  })
+  : null;
 
 const systemPrompt = `
 You are a layout-generating assistant.  
@@ -104,25 +106,29 @@ Available elements:
 
 
 export async function POST(request) {
-    try {
-        const body = await request.json();
-        const userMessage = body.userMessage;
-
-        if (typeof userMessage !== 'string' || userMessage.trim() === '') {
-            return Response.json({ error: 'Invalid userMessage' }, { status: 400 });
-        }
-
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-4o',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userMessage }
-            ]
-        });
-
-        return Response.json({ response: completion.choices[0].message.content });
-    } catch (error) {
-        console.error(error);
-        return Response.json({ error: 'Error communicating with OpenAI' }, { status: 500 });
+  try {
+    if (!openai) {
+      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
+
+    const body = await request.json();
+    const userMessage = body.userMessage;
+
+    if (typeof userMessage !== 'string' || userMessage.trim() === '') {
+      return Response.json({ error: 'Invalid userMessage' }, { status: 400 });
+    }
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage }
+      ]
+    });
+
+    return Response.json({ response: completion.choices[0].message.content });
+  } catch (error) {
+    console.error(error);
+    return Response.json({ error: 'Error communicating with OpenAI' }, { status: 500 });
+  }
 }
