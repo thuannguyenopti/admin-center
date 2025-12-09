@@ -45,7 +45,6 @@ export default function RootLayout({
 				label: "Edit",
 				url: "/cms/edit",
 				highlight: "cms/edit",
-				collapseMainNav: true,
 				icon: <IconPencil />,
 			},
 			{
