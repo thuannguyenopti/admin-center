@@ -1,4 +1,4 @@
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav} from "@optiaxiom/react";
+import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
 import Link from "next/link";
 import {useEffect, useState} from "react";
@@ -7,6 +7,7 @@ import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 
 function TemplateContent({
 	children,
@@ -18,6 +19,7 @@ function TemplateContent({
 	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
+	const [isExpanded, setIsExpanded] = useState(true);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -43,8 +45,6 @@ function TemplateContent({
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
 
-	const collapseMainNav = highlight1?.collapseMainNav;
-
 	return (
 		<Box
 			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
@@ -57,7 +57,7 @@ function TemplateContent({
 			>
 				<Sidebar
 					className="h-full z-10 relative"
-					expanded={!showVT && !collapseMainNav}
+					expanded={isExpanded}
 				>
 					<Nav>
 						<NavBody>
@@ -74,6 +74,20 @@ function TemplateContent({
 							))}
 						</NavBody>
 					</Nav>
+					<Box
+						className="absolute bottom-0 left-0 right-0"
+						p="8"
+						borderT="1"
+						borderColor="border.tertiary"
+					>
+						<Button
+							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
+							icon={!isExpanded ? <IconChevronRight /> : <IconChevronLeft />}
+							onClick={() => setIsExpanded(!isExpanded)}
+							size="md"
+							appearance="subtle"
+						/>
+					</Box>
 				</Sidebar>
 				<Box
 					style={{
