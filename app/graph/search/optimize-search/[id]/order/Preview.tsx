@@ -115,8 +115,10 @@ export default function Preview({
 	return (
 		<Box
 			h="full"
+			className="w-[420px]"
 			display="flex"
 			flexDirection="column"
+			overflowY="auto"
 		>
 			<Box
 				p="24"
