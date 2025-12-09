@@ -16,6 +16,9 @@ import {
 	IconSettings,
 	IconSearch,
 	IconList,
+	IconFile,
+	IconUsers,
+	IconPuzzle,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -39,16 +42,22 @@ export default function RootLayout({
 				icon: <IconDashboard />,
 			},
 			{
-				label: "Edit",
-				url: "/cms/edit",
-				highlight: "cms/edit",
-				icon: <IconPencil />,
+				label: "Content",
+				url: "/cms/content",
+				highlight: "cms/content",
+				icon: <IconFile />,
 			},
 			{
-				label: "Reporting",
-				highlight: "cms/reporting",
-				url: "/cms/reporting",
+				label: "Reports",
+				highlight: "cms/reports",
+				url: "/cms/reports",
 				icon: <IconChartBar />,
+			},
+			{
+				label: "Audiences",
+				highlight: "cms/audiences",
+				url: "/cms/audiences",
+				icon: <IconUsers />,
 			},
 			{
 				label: "Settings",
@@ -90,6 +99,12 @@ export default function RootLayout({
 					{label: "Add-ons"},
 					{label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn"},
 				],
+			},
+			{
+				label: "Add-ons",
+				highlight: "cms/add-ons",
+				url: "/cms/add-ons",
+				icon: <IconPuzzle />,
 			},
 		],
 		graph: [

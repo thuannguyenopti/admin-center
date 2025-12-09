@@ -1,4 +1,4 @@
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav} from "@optiaxiom/react";
+import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
 import Link from "next/link";
 import {useEffect, useState} from "react";
@@ -7,6 +7,7 @@ import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 
 function TemplateContent({
 	children,
@@ -18,6 +19,7 @@ function TemplateContent({
 	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
+	const [isCollapsed, setIsCollapsed] = useState(false);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -55,7 +57,7 @@ function TemplateContent({
 			>
 				<Sidebar
 					className="h-full z-10 relative"
-					expanded={!showVT}
+					expanded={!showVT && !isCollapsed}
 				>
 					<Nav>
 						<NavBody>
@@ -72,6 +74,20 @@ function TemplateContent({
 							))}
 						</NavBody>
 					</Nav>
+					<Box
+						className="absolute bottom-0 left-0 right-0"
+						p="8"
+						borderT="1"
+						borderColor="border.tertiary"
+					>
+						<Button
+							aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+							icon={isCollapsed ? <IconChevronRight /> : <IconChevronLeft />}
+							onClick={() => setIsCollapsed(!isCollapsed)}
+							size="md"
+							appearance="subtle"
+						/>
+					</Box>
 				</Sidebar>
 				<Box
 					style={{
