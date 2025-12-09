@@ -8,6 +8,7 @@ import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
+import usePersistentState from "@/app/usePersistentState";
 
 function TemplateContent({
 	children,
@@ -19,7 +20,7 @@ function TemplateContent({
 	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
-	const [isExpanded, setIsExpanded] = useState(true);
+	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", true);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -84,7 +85,7 @@ function TemplateContent({
 							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
 							icon={!isExpanded ? <IconChevronRight /> : <IconChevronLeft />}
 							onClick={() => setIsExpanded(!isExpanded)}
-							size="md"
+							size="lg"
 							appearance="subtle"
 						/>
 					</Box>
