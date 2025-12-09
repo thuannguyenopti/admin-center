@@ -46,6 +46,8 @@ function TemplateContent({
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
 
+	const customLayout = highlight1?.customLayout;
+
 	return (
 		<Box
 			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
@@ -78,8 +80,6 @@ function TemplateContent({
 					<Box
 						className="absolute bottom-0 left-0 right-0"
 						p="8"
-						borderT="1"
-						borderColor="border.tertiary"
 					>
 						<Button
 							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
@@ -157,28 +157,34 @@ function TemplateContent({
 					className="min-w-0 relative"
 					overflow="auto"
 				>
-					<Box
-						style={{
-							marginLeft: "224px",
-							marginRight: "-224px",
-							width: !showVT ? "100%" : "calc(100% - 224px)",
-							transform: showVT ? "translatex(0px)" : "translatex(-224px)",
-							transition: ".7s cubic-bezier(0, 1, 0, 1)",
-						}}
-						p="24"
-						color="fg.default"
-						overflow="auto"
-					>
-						<Heading level="3">{heading || highlight1?.label}</Heading>
-						{desc && <Text mt="4">{desc}</Text>}
+					{customLayout ? (
+						children
+					) : (
 						<Box
-							mt="16"
-							z="10"
-							className="relative"
+							style={{
+								marginLeft: "224px",
+								marginRight: "-224px",
+								width: !showVT ? "100%" : "calc(100% - 224px)",
+								transform: showVT ? "translatex(0px)" : "translatex(-224px)",
+								transition: ".7s cubic-bezier(0, 1, 0, 1)",
+							}}
+							color="fg.default"
+							overflow="auto"
+							p="24"
 						>
-							{children}
+							<>
+								<Heading level="3">{heading || highlight1?.label}</Heading>
+								{desc && <Text mt="4">{desc}</Text>}
+								<Box
+									mt="16"
+									z="10"
+									className="relative"
+								>
+									{children}
+								</Box>
+							</>
 						</Box>
-					</Box>
+					)}
 				</Box>
 				{asideContent && (
 					<Box
