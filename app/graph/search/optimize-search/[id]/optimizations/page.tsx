@@ -1,29 +1,28 @@
 "use client";
 
-import {Box, Heading, Field, Alert, Link} from "@optiaxiom/react";
+import {Box, Heading, Alert, Link} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
-import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {useParams} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {BestBet, initialBestBets, AlgorithmBestBet} from "@/app/db/initialData";
-import {IconCongruentTo, IconPlus, IconTrash, IconEdit, IconDots} from "@tabler/icons-react";
-import AbstractDialog from "@/app/components/AbstractDialog";
-import searchResults from "@/app/db/searchResults.json";
+import {
+	BestBet,
+	initialBestBets,
+	AlgorithmBestBet,
+	RelatedQuery,
+	initialRelatedQueries,
+} from "@/app/db/initialData";
+import {IconPlus} from "@tabler/icons-react";
 import Preview from "../order/Preview";
 import BestBetsTable from "../../../components/BestBetsTable";
 import BestBetDialog from "../../../components/BestBetDialog";
-import {Table, Tr, Td, Th} from "@/app/components/Table";
+import RelatedQueriesTable from "../../../components/RelatedQueriesTable";
+import RelatedQueryDialog from "../../../components/RelatedQueryDialog";
 import {Aside} from "@/app/context/LayoutContext";
-import Item from "@/app/components/Item";
+import searchResults from "@/app/db/searchResults.json";
 import {Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
-
-type SimilarQuery = {
-	query: string;
-	synonyms: string[];
-};
 
 export default function OptimizationsPage() {
 	const params = useParams();
@@ -41,10 +40,15 @@ export default function OptimizationsPage() {
 		[]
 	) as [AlgorithmBestBet[], (val: AlgorithmBestBet[]) => void];
 
-	const [similarQueries, setSimilarQueries] = usePersistentState(
-		`algorithm_similar_queries_${id}`,
+	const [allRelatedQueries, setAllRelatedQueries] = usePersistentState(
+		"relatedQueries",
+		initialRelatedQueries
+	) as [RelatedQuery[], (val: RelatedQuery[]) => void];
+
+	const [relatedQueries, setRelatedQueries] = usePersistentState(
+		`algorithm_related_queries_${id}`,
 		[]
-	) as [SimilarQuery[], (val: SimilarQuery[]) => void];
+	) as [RelatedQuery[], (val: RelatedQuery[]) => void];
 
 	const [selectedBestBetQuery, setSelectedBestBetQuery] = useState("");
 
@@ -55,27 +59,13 @@ export default function OptimizationsPage() {
 		{query: string; destination: string} | undefined
 	>(undefined);
 
+	const [isCreateRQDialogOpen, setIsCreateRQDialogOpen] = useState(false);
+	const [isEditRQDialogOpen, setIsEditRQDialogOpen] = useState(false);
+	const [editingRQ, setEditingRQ] = useState<RelatedQuery | null>(null);
+
 	const handleCreateBestBetFromPreview = (query: string) => {
 		setCreateBestBetInitialData({query, destination: ""});
 		setIsCreateDialogOpen(true);
-	};
-
-	const [isCreateSQDialogOpen, setIsCreateSQDialogOpen] = useState(false);
-	const [newSimilarQuery, setNewSimilarQuery] = useState("");
-	const [newSynonyms, setNewSynonyms] = useState("");
-
-	const [isEditSQDialogOpen, setIsEditSQDialogOpen] = useState(false);
-	const [editingSQ, setEditingSQ] = useState<SimilarQuery | null>(null);
-	const [editSQQuery, setEditSQQuery] = useState("");
-	const [editSQSynonyms, setEditSQSynonyms] = useState("");
-
-	const handleAddBestBet = () => {
-		if (!selectedBestBetQuery) return;
-		const betToAdd = allBestBets.find((b) => b.query === selectedBestBetQuery);
-		if (betToAdd && !algorithmBestBets.some((b) => b.query === betToAdd.query)) {
-			setAlgorithmBestBets([...algorithmBestBets, {...betToAdd, status: "Active"}]);
-		}
-		setSelectedBestBetQuery("");
 	};
 
 	const handleCreateBestBet = (data: {
@@ -89,15 +79,20 @@ export default function OptimizationsPage() {
 			owner: "Alice Johnson",
 		};
 
-		// Add to global list
-		setAllBestBets([...allBestBets, newBestBet]);
+		// Add to global list if not exists
+		if (!allBestBets.some((b) => b.query === newBestBet.query)) {
+			setAllBestBets([...allBestBets, newBestBet]);
+		}
+
 		// Add to local algorithm list
-		setAlgorithmBestBets([
-			...algorithmBestBets,
-			{...newBestBet, status: data.status || "Active"},
-		]);
+		const newAlgorithmBestBet: AlgorithmBestBet = {
+			...newBestBet,
+			status: data.status || "Active",
+		};
+		setAlgorithmBestBets([...algorithmBestBets, newAlgorithmBestBet]);
 
 		setIsCreateDialogOpen(false);
+		setCreateBestBetInitialData(undefined);
 	};
 
 	const handleRemoveBestBet = (query: string) => {
@@ -146,7 +141,7 @@ export default function OptimizationsPage() {
 		setEditingBestBet(null);
 	};
 
-	const handleToggleStatus = (bet: BestBet, newStatus: "Active" | "Inactive") => {
+	const handleToggleStatus = (bet: AlgorithmBestBet, newStatus: "Active" | "Inactive") => {
 		const updatedBet = {...bet, status: newStatus};
 
 		// Update local algorithm list
@@ -156,57 +151,55 @@ export default function OptimizationsPage() {
 		setAlgorithmBestBets(updatedAlgorithmBestBets);
 	};
 
-	const handleAddSimilarQuery = () => {
-		if (!newSimilarQuery || !newSynonyms) return;
+	const handleAddRelatedQuery = (data: {query: string; synonyms: string[]}) => {
+		const newRQ = {
+			query: data.query,
+			synonyms: data.synonyms,
+			owner: "Alice Johnson",
+		};
 
-		const synonymsList = newSynonyms
-			.split(",")
-			.map((s) => s.trim())
-			.filter(Boolean);
+		if (!allRelatedQueries.some((rq) => rq.query === newRQ.query)) {
+			setAllRelatedQueries([...allRelatedQueries, newRQ]);
+		}
 
-		setSimilarQueries([
-			...similarQueries,
-			{
-				query: newSimilarQuery,
-				synonyms: synonymsList,
-			},
-		]);
-
-		setNewSimilarQuery("");
-		setNewSynonyms("");
-		setIsCreateSQDialogOpen(false);
+		setRelatedQueries([...relatedQueries, newRQ]);
+		setIsCreateRQDialogOpen(false);
 	};
 
-	const handleEditSQClick = (sq: SimilarQuery) => {
-		setEditingSQ(sq);
-		setEditSQQuery(sq.query);
-		setEditSQSynonyms(sq.synonyms.join(", "));
-		setIsEditSQDialogOpen(true);
+	const handleEditRQClick = (rq: RelatedQuery) => {
+		setEditingRQ(rq);
+		setIsEditRQDialogOpen(true);
 	};
 
-	const handleUpdateSimilarQuery = () => {
-		if (!editingSQ) return;
-		const updatedSynonyms = editSQSynonyms
-			.split(",")
-			.map((s) => s.trim())
-			.filter((s) => s);
+	const handleUpdateRelatedQuery = (data: {query: string; synonyms: string[]}) => {
+		if (!editingRQ) return;
 
-		const updatedList = similarQueries.map((item) =>
-			item.query === editingSQ.query ? {query: editSQQuery, synonyms: updatedSynonyms} : item
+		const updatedList = relatedQueries.map((item) =>
+			item.query === editingRQ.query
+				? {
+						...item,
+						query: data.query,
+						synonyms: data.synonyms,
+				  }
+				: item
 		);
 
-		setSimilarQueries(updatedList);
-		setIsEditSQDialogOpen(false);
-		setEditingSQ(null);
+		setRelatedQueries(updatedList);
+		setIsEditRQDialogOpen(false);
+		setEditingRQ(null);
 	};
 
-	const handleRemoveSimilarQuery = (query: string) => {
-		setSimilarQueries(similarQueries.filter((q) => q.query !== query));
+	const handleRemoveRelatedQuery = (query: string) => {
+		setRelatedQueries(relatedQueries.filter((rq) => rq.query !== query));
 	};
 
 	// Filter out already added bets from the dropdown
 	const availableOptions = allBestBets.filter(
 		(b) => !algorithmBestBets.some((added) => added.query === b.query)
+	);
+
+	const availableRelatedQueries = allRelatedQueries.filter(
+		(rq) => !relatedQueries.some((added) => added.query === rq.query)
 	);
 
 	return (
@@ -286,7 +279,7 @@ export default function OptimizationsPage() {
 						level="4"
 						mb="16"
 					>
-						Similar Queries
+						Related Queries
 					</Heading>
 					<Text
 						mb="16"
@@ -296,83 +289,72 @@ export default function OptimizationsPage() {
 						search recall.
 					</Text>
 
-					{similarQueries.length > 0 ? (
+					{relatedQueries.length > 0 ? (
 						<>
-							<Table>
-								<thead>
-									<Tr>
-										<Th>Primary Query</Th>
-										<Th>Synonyms</Th>
-										<Th align="right">Actions</Th>
-									</Tr>
-								</thead>
-								<tbody>
-									{similarQueries.map((item) => (
-										<Tr
-											key={item.query}
-											onClick={() => handleEditSQClick(item)}
-										>
-											<Td type="header">
-												<Item
-													icon={<IconCongruentTo size={16} />}
-													title={item.query}
-												/>
-											</Td>
-											<Td>{item.synonyms.join(", ")}</Td>
-											<Td type="button">
-												<div onClick={(e) => e.stopPropagation()}>
-													<Menu
-														options={[
-															{
-																label: "Edit",
-																addon: <IconEdit size={16} />,
-																execute: () =>
-																	handleEditSQClick(item),
-															},
-															{
-																label: "Remove",
-																addon: <IconTrash size={16} />,
-																execute: () =>
-																	handleRemoveSimilarQuery(
-																		item.query
-																	),
-																intent: "danger",
-															},
-														]}
-													>
-														<MenuTrigger
-															appearance="subtle"
-															aria-label="Edit"
-															icon={<IconDots size={16} />}
-														/>
-														<MenuContent align="end" />
-													</Menu>
-												</div>
-											</Td>
-										</Tr>
-									))}
-								</tbody>
-							</Table>
+							<RelatedQueriesTable
+								relatedQueries={relatedQueries}
+								onEdit={handleEditRQClick}
+								onRemove={handleRemoveRelatedQuery}
+								showOwner={false}
+							/>
 
-							<Button
-								mt="16"
-								size="lg"
-								icon={<IconPlus size={16} />}
-								onClick={() => setIsCreateSQDialogOpen(true)}
+							<Menu
+								options={[
+									{
+										group: {label: "", hidden: true, separator: true},
+										label: "Create New Related Query",
+										addon: <IconPlus size={16} />,
+										execute: () => setIsCreateRQDialogOpen(true),
+									},
+									...(availableRelatedQueries.length > 0
+										? availableRelatedQueries.map((rq) => ({
+												label: rq.query,
+												value: rq.query,
+												description: rq.synonyms.join(", "),
+												execute: () =>
+													setRelatedQueries([...relatedQueries, rq]),
+										  }))
+										: []),
+								]}
 							>
-								Create New
-							</Button>
+								<MenuTrigger
+									size="lg"
+									mt="16"
+									addonBefore={<IconPlus size={16} />}
+								>
+									Add Related Query...
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
 						</>
 					) : (
 						<Alert intent="information">
 							<Text>
-								No Similar Queries defined yet. <Link></Link>
-								<Link
-									onClick={() => setIsCreateSQDialogOpen(true)}
-									cursor="pointer"
+								No Related Queries defined yet.{" "}
+								<Menu
+									options={[
+										{
+											group: {label: "", hidden: true, separator: true},
+											label: "Create New Related Query",
+											addon: <IconPlus size={16} />,
+											execute: () => setIsCreateRQDialogOpen(true),
+										},
+										...(availableRelatedQueries.length > 0
+											? availableRelatedQueries.map((rq) => ({
+													label: rq.query,
+													value: rq.query,
+													description: rq.synonyms.join(", "),
+													execute: () =>
+														setRelatedQueries([...relatedQueries, rq]),
+											  }))
+											: []),
+									]}
 								>
-									Create one...
-								</Link>
+									<MenuTrigger asChild>
+										<Link cursor="pointer">Add one...</Link>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
 							</Text>
 						</Alert>
 					)}
@@ -396,83 +378,26 @@ export default function OptimizationsPage() {
 					showStatus={true}
 				/>
 
-				<AbstractDialog
-					title="Create Similar Query Group"
-					description="Define a group of queries that should be treated as synonyms."
-					open={isCreateSQDialogOpen}
-					setOpen={setIsCreateSQDialogOpen}
-					footerPrimaryText="Create"
-					footerPrimaryAction={handleAddSimilarQuery}
-					footerAppearance="primary"
-				>
-					<Flex
-						flexDirection="column"
-						gap="16"
-					>
-						<Field
-							label="Primary Query"
-							required
-						>
-							<Input
-								placeholder="e.g. sneakers"
-								value={newSimilarQuery}
-								onChange={(e) => setNewSimilarQuery(e.target.value)}
-							/>
-						</Field>
-						<Field
-							label="Synonyms (comma separated)"
-							required
-						>
-							<Input
-								placeholder="e.g. trainers, running shoes, kicks"
-								value={newSynonyms}
-								onChange={(e) => setNewSynonyms(e.target.value)}
-							/>
-						</Field>
-					</Flex>
-				</AbstractDialog>
-			</Box>
+				<RelatedQueryDialog
+					open={isCreateRQDialogOpen}
+					setOpen={setIsCreateRQDialogOpen}
+					mode="create"
+					onSave={handleAddRelatedQuery}
+				/>
 
-			<AbstractDialog
-				title="Edit Synonym Group"
-				description="Update the primary query and its synonyms."
-				open={isEditSQDialogOpen}
-				setOpen={setIsEditSQDialogOpen}
-				footerPrimaryText="Save Changes"
-				footerPrimaryAction={handleUpdateSimilarQuery}
-				footerAppearance="primary"
-			>
-				<Flex
-					flexDirection="column"
-					gap="16"
-				>
-					<Field
-						label="Primary Query"
-						required
-					>
-						<Input
-							placeholder="e.g. sneakers"
-							value={editSQQuery}
-							onChange={(e) => setEditSQQuery(e.target.value)}
-						/>
-					</Field>
-					<Field
-						label="Synonyms (comma separated)"
-						required
-					>
-						<Input
-							placeholder="e.g. trainers, running shoes, kicks"
-							value={editSQSynonyms}
-							onChange={(e) => setEditSQSynonyms(e.target.value)}
-						/>
-					</Field>
-				</Flex>
-			</AbstractDialog>
+				<RelatedQueryDialog
+					open={isEditRQDialogOpen}
+					setOpen={setIsEditRQDialogOpen}
+					mode="edit"
+					initialData={editingRQ || undefined}
+					onSave={handleUpdateRelatedQuery}
+				/>
+			</Box>
 
 			<Aside>
 				<Preview
 					algorithmBestBets={algorithmBestBets}
-					similarQueries={similarQueries}
+					relatedQueries={relatedQueries}
 					onCreateBestBet={handleCreateBestBetFromPreview}
 				/>
 			</Aside>

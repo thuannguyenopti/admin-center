@@ -6,8 +6,9 @@ import Preview from "../order/Preview";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {AlgorithmBestBet} from "@/app/db/initialData";
+import {Text} from "@/app/components/Text";
 
-type SimilarQuery = {
+type RelatedQuery = {
 	query: string;
 	synonyms: string[];
 };
@@ -21,8 +22,8 @@ export default function FilterPage() {
 		any
 	];
 
-	const [similarQueries] = usePersistentState(`algorithm_similar_queries_${id}`, []) as [
-		SimilarQuery[],
+	const [relatedQueries] = usePersistentState(`algorithm_related_queries_${id}`, []) as [
+		RelatedQuery[],
 		any
 	];
 
@@ -35,12 +36,12 @@ export default function FilterPage() {
 				>
 					Filter
 				</Heading>
-				<Box>Filter settings content goes here.</Box>
+				<Text>Filter settings content goes here.</Text>
 			</Box>
 			<Aside>
 				<Preview
 					algorithmBestBets={algorithmBestBets}
-					similarQueries={similarQueries}
+					relatedQueries={relatedQueries}
 				/>
 			</Aside>
 		</>

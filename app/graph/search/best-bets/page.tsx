@@ -82,7 +82,6 @@ export default function BestBetsPage() {
 				mb="24"
 			>
 				<Input
-					size="lg"
 					addonBefore={<IconSearch size={16} />}
 					placeholder="Search best bets..."
 					style={{width: "320px"}}

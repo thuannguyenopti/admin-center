@@ -14,28 +14,19 @@ export default function Home() {
 				label="Application Name"
 				required
 			>
-				<Input
-					defaultValue="Mosey Bank"
-					size="lg"
-				/>
+				<Input defaultValue="Mosey Bank" />
 			</Field>
 			<Field
 				label="APP ID"
 				required
 			>
-				<Input
-					defaultValue="moseybank"
-					size="lg"
-				/>
+				<Input defaultValue="moseybank" />
 			</Field>
 			<Field
 				label="Start Page"
 				required
 			>
-				<Input
-					placeholder="Enter text..."
-					size="lg"
-				/>
+				<Input placeholder="Enter text..." />
 			</Field>
 		</Box>
 	);

@@ -42,6 +42,7 @@ export default function RootLayout({
 				label: "Edit",
 				url: "/cms/edit",
 				highlight: "cms/edit",
+				collapseMainNav: true,
 				icon: <IconPencil />,
 			},
 			{
@@ -190,8 +191,12 @@ export default function RootLayout({
 							children: algorithmId
 								? [
 										{
+											label: "Optimizations",
+											url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
+										},
+										{
 											label: "Settings",
-											url: `/graph/search/optimize-search/${algorithmId}`,
+											url: `/graph/search/optimize-search/${algorithmId}/settings`,
 										},
 										{
 											label: "Filter",
@@ -200,10 +205,6 @@ export default function RootLayout({
 										{
 											label: "Order",
 											url: `/graph/search/optimize-search/${algorithmId}/order`,
-										},
-										{
-											label: "Optimizations",
-											url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
 										},
 								  ]
 								: [
@@ -224,6 +225,12 @@ export default function RootLayout({
 						description:
 							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
 						url: "/graph/search/best-bets",
+					},
+					{
+						label: "Related Queries",
+						description:
+							"Manage synonyms and related queries to improve search recall.",
+						url: "/graph/search/related-queries",
 					},
 				],
 			},

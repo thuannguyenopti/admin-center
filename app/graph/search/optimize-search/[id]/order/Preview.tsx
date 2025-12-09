@@ -31,11 +31,11 @@ import searchResults from "@/app/db/searchResults.json";
 
 export default function Preview({
 	algorithmBestBets,
-	similarQueries = [],
+	relatedQueries = [],
 	onCreateBestBet,
 }: {
 	algorithmBestBets?: AlgorithmBestBet[];
-	similarQueries?: {query: string; synonyms: string[]}[];
+	relatedQueries?: {query: string; synonyms: string[]}[];
 	onCreateBestBet?: (query: string) => void;
 }) {
 	const params = useParams();
@@ -43,7 +43,7 @@ export default function Preview({
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [showBestBets, setShowBestBets] = useState(true);
-	const [showSimilarQueries, setShowSimilarQueries] = useState(true);
+	const [showRelatedQueries, setShowRelatedQueries] = useState(true);
 
 	useEffect(() => {
 		const handler = setTimeout(() => {
@@ -65,11 +65,11 @@ export default function Preview({
 		algorithmBestBets !== undefined ? algorithmBestBets : localAlgorithmBestBets;
 
 	const activeSynonyms = useMemo(() => {
-		if (!query || !showSimilarQueries) return [];
+		if (!query || !showRelatedQueries) return [];
 		const lowerQuery = query.toLowerCase();
 		const synonyms: string[] = [];
 
-		similarQueries.forEach((group) => {
+		relatedQueries.forEach((group) => {
 			const groupTerms = [group.query, ...group.synonyms].map((s) => s.toLowerCase());
 			if (groupTerms.includes(lowerQuery)) {
 				const otherTerms = [group.query, ...group.synonyms].filter(
@@ -80,7 +80,7 @@ export default function Preview({
 		});
 
 		return Array.from(new Set(synonyms));
-	}, [query, similarQueries, showSimilarQueries]);
+	}, [query, relatedQueries, showRelatedQueries]);
 
 	// Filter results based on query
 	const filteredResults = searchResults.filter((result) => {
@@ -89,7 +89,7 @@ export default function Preview({
 		const lowerQuery = query.toLowerCase();
 		const queriesToCheck = [lowerQuery];
 
-		if (showSimilarQueries) {
+		if (showRelatedQueries) {
 			queriesToCheck.push(...activeSynonyms.map((s) => s.toLowerCase()));
 		}
 
@@ -143,7 +143,6 @@ export default function Preview({
 								placeholder="Products"
 								addonBefore={<IconSearch size={16} />}
 								value={query}
-								size="lg"
 								onChange={(e) => setQuery(e.target.value)}
 							/>
 						</Box>
@@ -158,9 +157,9 @@ export default function Preview({
 								},
 								{
 									addon: <IconCongruentTo size={16} />,
-									label: "Similar Queries",
-									execute: () => setShowSimilarQueries(!showSimilarQueries),
-									selected: showSimilarQueries,
+									label: "Related Queries",
+									execute: () => setShowRelatedQueries(!showRelatedQueries),
+									selected: showRelatedQueries,
 									switch: true,
 								},
 							]}
@@ -180,7 +179,7 @@ export default function Preview({
 								fontWeight="600"
 								mb="4"
 							>
-								Similar Queries Applied
+								Related Queries Applied
 							</Text>
 							<Flex
 								gap="8"

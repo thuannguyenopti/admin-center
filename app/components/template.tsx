@@ -43,6 +43,8 @@ function TemplateContent({
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
 
+	const collapseMainNav = highlight1?.collapseMainNav;
+
 	return (
 		<Box
 			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
@@ -55,7 +57,7 @@ function TemplateContent({
 			>
 				<Sidebar
 					className="h-full z-10 relative"
-					expanded={!showVT}
+					expanded={!showVT && !collapseMainNav}
 				>
 					<Nav>
 						<NavBody>
@@ -132,6 +134,8 @@ function TemplateContent({
 				overflowX="hidden"
 				display="flex"
 				flexDirection="row"
+				fontSize="md"
+				color="fg.default"
 			>
 				<Box
 					flex="1"
@@ -151,15 +155,7 @@ function TemplateContent({
 						overflow="auto"
 					>
 						<Heading level="3">{heading || highlight1?.label}</Heading>
-						{desc && (
-							<Text
-								color="fg.secondary"
-								mt="4"
-								style={{maxWidth: "800px"}}
-							>
-								{desc}
-							</Text>
-						)}
+						{desc && <Text mt="4">{desc}</Text>}
 						<Box
 							mt="16"
 							z="10"

@@ -212,7 +212,7 @@ export default function MetricCard({
 									</Text>
 									<Text
 										fontSize="sm"
-										color="fg.spinner.inverse"
+										color="fg.default.inverse"
 										suppressHydrationWarning
 									>
 										{getDateLabel(chartData[index].originalIndex)}

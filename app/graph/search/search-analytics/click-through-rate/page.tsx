@@ -121,7 +121,6 @@ export default function ClickThroughRatePage() {
 					flexDirection="row"
 				>
 					<Input
-						size="lg"
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
 						style={{width: "320px"}}

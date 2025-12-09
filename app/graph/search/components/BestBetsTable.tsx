@@ -63,6 +63,7 @@ export default function BestBetsTable({
 						value: "__create__",
 						addon: <IconPlus size={16} />,
 						group: {label: "", hidden: true, separator: true},
+						execute: () => handleValueChange("__create__"),
 					},
 			  ]
 			: []),
@@ -70,6 +71,7 @@ export default function BestBetsTable({
 			label: searchResults.find((r) => r.url === b.destination)?.title || b.destination,
 			value: b.query,
 			description: b.query,
+			execute: () => handleValueChange(b.query),
 		})) || []),
 	];
 
@@ -160,20 +162,16 @@ export default function BestBetsTable({
 				</tbody>
 			</Table>
 			{availableBestBets && onAdd && (
-				<Select
-					onValueChange={handleValueChange}
-					options={selectOptions}
-					value=""
-				>
-					<SelectTrigger
+				<Menu options={selectOptions}>
+					<MenuTrigger
 						size="lg"
 						mt="16"
 						addonBefore={<IconPlus size={16} />}
 					>
 						Add Best Bet...
-					</SelectTrigger>
-					<SelectContent />
-				</Select>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 			)}
 		</>
 	);

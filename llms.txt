@@ -1,0 +1,51 @@
+# Project Context for LLMs
+
+## Overview
+This is a Next.js application using the App Router architecture. It utilizes the `@optiaxiom/react` library for UI components.
+
+## Tech Stack
+- **Framework**: Next.js (App Router)
+- **Language**: TypeScript
+- **UI Library**: @optiaxiom/react
+- **Styling**: Tailwind CSS (via Optiaxiom props and utility classes)
+- **Icons**: @tabler/icons-react
+
+## Key Architectural Patterns
+
+### 1. Component Wrappers (CRITICAL)
+We have established a pattern of wrapping core UI components to allow for global default prop overrides.
+**Do NOT import the following components directly from `@optiaxiom/react`.**
+Instead, import them from their local wrapper files:
+
+- **Text**: `import { Text } from "@/app/components/Text"`
+- **Button**: `import { Button } from "@/app/components/Button"`
+- **Input**: `import { Input } from "@/app/components/Input"`
+- **Flex**: `import { Flex } from "@/app/components/Flex"`
+
+**Correct Usage:**
+```tsx
+import { Box } from "@optiaxiom/react"; // Other components are fine
+import { Button } from "@/app/components/Button"; // Wrapper
+import { Flex } from "@/app/components/Flex"; // Wrapper
+```
+
+**Incorrect Usage:**
+```tsx
+import { Box, Button, Flex } from "@optiaxiom/react"; // WRONG for Button and Flex
+```
+
+### 2. State Management
+- Use `usePersistentState` (located in `app/usePersistentState.js`) for state that should be reflected in the URL query parameters.
+
+### 3. Directory Structure
+- `app/`: Contains the application routes and pages.
+- `app/components/`: Contains shared components and the **wrappers** mentioned above.
+- `app/db/`: Contains mock data and initial state configurations.
+- `app/graph/`: Contains routes related to the graph/search functionality.
+- `app/cms/`: Contains routes related to the CMS functionality.
+
+## Coding Standards
+- Prefer using Optiaxiom components (`Box`, `Flex`, `Grid`) for layout over raw HTML `div`s with classNames.
+- Use `Box` with `className` if you need specific Tailwind classes that aren't exposed as props.
+- Ensure all new pages are responsive and follow the existing design language.
+- Buttons with no children must have an aria-label defined.

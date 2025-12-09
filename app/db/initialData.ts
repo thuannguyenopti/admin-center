@@ -12,6 +12,12 @@ export type BestBet = {
 	owner: string;
 };
 
+export type RelatedQuery = {
+	query: string;
+	synonyms: string[];
+	owner: string;
+};
+
 export type AlgorithmBestBet = BestBet & {
 	status: "Active" | "Inactive";
 };
@@ -69,6 +75,19 @@ export const initialBestBets: BestBet[] = [
 		query: "running shoes",
 		destination: "https://stride.com/products/runner-elite",
 		owner: "Marketing",
+	},
+];
+
+export const initialRelatedQueries: RelatedQuery[] = [
+	{
+		query: "sneakers",
+		synonyms: ["shoes", "trainers", "kicks"],
+		owner: "Merchandising",
+	},
+	{
+		query: "jacket",
+		synonyms: ["coat", "parka", "windbreaker"],
+		owner: "Merchandising",
 	},
 ];
 

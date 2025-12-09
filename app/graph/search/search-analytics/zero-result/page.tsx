@@ -26,9 +26,16 @@ import {
 import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import {useRouter} from "next/navigation";
-import {initialAlgorithms, BestBet, initialBestBets, AlgorithmBestBet} from "@/app/db/initialData";
+import {
+	initialAlgorithms,
+	BestBet,
+	initialBestBets,
+	AlgorithmBestBet,
+	Algorithm,
+} from "@/app/db/initialData";
 import {zeroResultQueries, ZeroResultQuery, scaleValue} from "@/app/db/analyticsData";
 import usePersistentState from "@/app/usePersistentState";
+import BestBetDialog from "../../components/BestBetDialog";
 
 const columnHelper = createColumnHelper<ZeroResultQuery>();
 
@@ -44,6 +51,55 @@ export default function ZeroResultPage() {
 		BestBet[],
 		(val: BestBet[]) => void
 	];
+
+	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+	const [createBestBetInitialData, setCreateBestBetInitialData] = useState<
+		{query: string; destination: string} | undefined
+	>(undefined);
+	const [targetAlgorithm, setTargetAlgorithm] = useState<Algorithm | null>(null);
+
+	const handleCreateBestBet = (data: {
+		query: string;
+		destination: string;
+		status?: "Active" | "Inactive";
+	}) => {
+		if (!targetAlgorithm) return;
+
+		// 1. Create/Find Best Bet in Global List
+		let currentBestBets = [...bestBets];
+		let targetBet = currentBestBets.find((b) => b.query === data.query);
+
+		if (!targetBet) {
+			targetBet = {
+				query: data.query,
+				destination: data.destination,
+				owner: "Alice Johnson",
+			};
+			currentBestBets.push(targetBet);
+			// Manually update localStorage to ensure next page sees it immediately
+			localStorage.setItem("bestBets", JSON.stringify(currentBestBets));
+			setBestBets(currentBestBets);
+		} else {
+			if (targetBet.destination !== data.destination) {
+				targetBet.destination = data.destination;
+				localStorage.setItem("bestBets", JSON.stringify(currentBestBets));
+				setBestBets(currentBestBets);
+			}
+		}
+
+		// 2. Add to Algorithm Specific List
+		const algoKey = `algorithm_best_bets_${targetAlgorithm.id}`;
+		const storedAlgoBets = localStorage.getItem(algoKey);
+		let algoBets: AlgorithmBestBet[] = storedAlgoBets ? JSON.parse(storedAlgoBets) : [];
+
+		if (!algoBets.some((b) => b.query === data.query)) {
+			algoBets.push({...targetBet!, status: data.status || "Active"});
+			localStorage.setItem(algoKey, JSON.stringify(algoBets));
+		}
+
+		setIsCreateDialogOpen(false);
+		router.push(`/graph/search/optimize-search/${targetAlgorithm.id}/optimizations`);
+	};
 
 	const columns = useMemo(
 		() => [
@@ -97,42 +153,9 @@ export default function ZeroResultPage() {
 									const algo = initialAlgorithms.find((a) => a.name === algoName);
 
 									if (algo) {
-										// 1. Create/Find Best Bet in Global List
-										let currentBestBets = [...bestBets];
-										let targetBet = currentBestBets.find(
-											(b) => b.query === query
-										);
-
-										if (!targetBet) {
-											targetBet = {
-												query: query,
-												destination: "",
-												owner: "Alice Johnson",
-											};
-											currentBestBets.push(targetBet);
-											// Manually update localStorage to ensure next page sees it immediately
-											localStorage.setItem(
-												"bestBets",
-												JSON.stringify(currentBestBets)
-											);
-											setBestBets(currentBestBets);
-										}
-
-										// 2. Add to Algorithm Specific List
-										const algoKey = `algorithm_best_bets_${algo.id}`;
-										const storedAlgoBets = localStorage.getItem(algoKey);
-										let algoBets: AlgorithmBestBet[] = storedAlgoBets
-											? JSON.parse(storedAlgoBets)
-											: [];
-
-										if (!algoBets.some((b) => b.query === targetBet!.query)) {
-											algoBets.push({...targetBet!, status: "Inactive"});
-											localStorage.setItem(algoKey, JSON.stringify(algoBets));
-										}
-
-										router.push(
-											`/graph/search/optimize-search/${algo.id}/optimizations`
-										);
+										setTargetAlgorithm(algo);
+										setCreateBestBetInitialData({query, destination: ""});
+										setIsCreateDialogOpen(true);
 									}
 								},
 							},
@@ -226,7 +249,6 @@ export default function ZeroResultPage() {
 					flexDirection="row"
 				>
 					<Input
-						size="lg"
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
 						style={{width: "320px"}}
@@ -260,6 +282,15 @@ export default function ZeroResultPage() {
 			<DataTable table={table}>
 				<DataTableBody />
 			</DataTable>
+
+			<BestBetDialog
+				open={isCreateDialogOpen}
+				setOpen={setIsCreateDialogOpen}
+				mode="create"
+				initialData={createBestBetInitialData}
+				onSave={handleCreateBestBet}
+				showStatus={true}
+			/>
 		</Box>
 	);
 }

@@ -72,7 +72,6 @@ export default function EditAlgorithmPage() {
 					required
 				>
 					<Input
-						size="lg"
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 					/>

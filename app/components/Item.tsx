@@ -26,7 +26,7 @@ export default function Item({icon, title, description}: ItemProps) {
 				display="flex"
 				flexDirection="column"
 			>
-				<Text fontSize="md">{title}</Text>
+				<Text>{title}</Text>
 				{description && (
 					<Text
 						fontSize="sm"

@@ -41,12 +41,7 @@ export default function Home() {
 				pb="16"
 			>
 				<SearchInput />
-				<Button
-					size="lg"
-					appearance="primary"
-				>
-					Create Hostname...
-				</Button>
+				<Button appearance="primary">Create Hostname...</Button>
 			</Box>
 			<Table>
 				<tbody>

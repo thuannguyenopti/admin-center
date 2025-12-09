@@ -92,7 +92,6 @@ export default function OptimizeSearchPage() {
 				mb="24"
 			>
 				<Input
-					size="lg"
 					addonBefore={<IconSearch size={16} />}
 					placeholder="Search algorithms..."
 					style={{width: "320px"}}
@@ -124,7 +123,7 @@ export default function OptimizeSearchPage() {
 					{filteredData.map((algorithm) => (
 						<Tr
 							key={algorithm.id}
-							url={`/graph/search/optimize-search/${algorithm.id}`}
+							url={`/graph/search/optimize-search/${algorithm.id}/optimizations`}
 						>
 							<Td type="raw">
 								<Item
@@ -144,7 +143,7 @@ export default function OptimizeSearchPage() {
 												addon: <IconPencil size={16} />,
 												execute: () =>
 													router.push(
-														`/graph/search/optimize-search/${algorithm.id}`
+														`/graph/search/optimize-search/${algorithm.id}/optimizations`
 													),
 											},
 											{
@@ -188,7 +187,6 @@ export default function OptimizeSearchPage() {
 						required
 					>
 						<Input
-							size="lg"
 							placeholder="e.g. Seasonal Boost"
 							value={newAlgorithmName}
 							onChange={(e) => setNewAlgorithmName(e.target.value)}
