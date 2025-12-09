@@ -181,7 +181,6 @@ function TemplateContent({
 				</Box>
 				{asideContent && (
 					<Box
-						className="w-[420px]"
 						borderL="1"
 						borderColor="border.tertiary"
 						bg="bg.default"
