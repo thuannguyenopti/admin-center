@@ -42,6 +42,12 @@ export default function RootLayout({
 				icon: <IconDashboard />,
 			},
 			{
+				label: "Content",
+				url: "/cms/content",
+				highlight: "cms/content",
+				icon: <IconFile />,
+			},
+			{
 				label: "Edit",
 				url: "/cms/edit",
 				highlight: "cms/edit",
