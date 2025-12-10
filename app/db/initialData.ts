@@ -4,6 +4,7 @@ export type Algorithm = {
 	publishState: string;
 	creationDate: string;
 	owner: string;
+	type?: "Search" | "Custom";
 };
 
 export type BestBet = {
@@ -25,7 +26,7 @@ export type AlgorithmBestBet = BestBet & {
 export const initialAlgorithms: Algorithm[] = [
 	{
 		id: "1",
-		name: "Summer Sale Boost",
+		name: "Main Site Search",
 		publishState: "Published",
 		creationDate: "2023-10-25",
 		owner: "Alice Johnson",
@@ -36,27 +37,7 @@ export const initialAlgorithms: Algorithm[] = [
 		publishState: "Draft",
 		creationDate: "2023-11-02",
 		owner: "Bob Smith",
-	},
-	{
-		id: "3",
-		name: "Wearables Launch",
-		publishState: "Testing",
-		creationDate: "2023-11-15",
-		owner: "Carol Williams",
-	},
-	{
-		id: "4",
-		name: "Holiday Gift Guide",
-		publishState: "Published",
-		creationDate: "2023-09-10",
-		owner: "David Brown",
-	},
-	{
-		id: "5",
-		name: "Clearance Logic",
-		publishState: "Archived",
-		creationDate: "2023-01-20",
-		owner: "Alice Johnson",
+		type: "Custom",
 	},
 ];
 
