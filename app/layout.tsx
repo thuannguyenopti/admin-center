@@ -211,14 +211,14 @@ export default function RootLayout({
 							title: currentAlgorithm ? currentAlgorithm.name : "Algorithm details",
 							children: algorithmId
 								? [
-										{
-											label: "Optimizations",
-											url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
-										},
-										{
-											label: "Settings",
-											url: `/graph/search/optimize-search/${algorithmId}/settings`,
-										},
+										...(currentAlgorithm?.type !== "Custom"
+											? [
+													{
+														label: "Optimizations",
+														url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
+													},
+											  ]
+											: []),
 										{
 											label: "Filter",
 											url: `/graph/search/optimize-search/${algorithmId}/filter`,
@@ -227,18 +227,12 @@ export default function RootLayout({
 											label: "Order",
 											url: `/graph/search/optimize-search/${algorithmId}/order`,
 										},
+										{
+											label: "Settings",
+											url: `/graph/search/optimize-search/${algorithmId}/settings`,
+										},
 								  ]
-								: [
-										{
-											label: "Zero-Result Analysis",
-											description: "Analyze queries with no results",
-											url: "/graph/search/search-analytics/zero-result",
-										},
-										{
-											label: "Click-Through Rate",
-											url: "/graph/search/search-analytics/click-through-rate",
-										},
-								  ],
+								: [],
 						},
 					},
 					{
