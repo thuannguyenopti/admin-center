@@ -1,51 +1,13 @@
 "use client";
 
-import {
-	Box,
-	DataTable,
-	DataTableBody,
-	Menu,
-	MenuTrigger,
-	MenuContent,
-	LabelMenuButton,
-} from "@optiaxiom/react";
+import {Box, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {IconSearch, IconTrendingUp, IconTrendingDown} from "@tabler/icons-react";
-import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import {volumeQueries, VolumeQuery, scaleValue} from "@/app/db/analyticsData";
-
-const columnHelper = createColumnHelper<VolumeQuery>();
-
-const columns = [
-	columnHelper.accessor("query", {
-		header: "Query",
-		cell: (info) => <Text fontWeight="500">{info.getValue()}</Text>,
-	}),
-	columnHelper.accessor("count", {
-		header: "Total Searches",
-		cell: (info) => info.getValue().toLocaleString(),
-	}),
-	columnHelper.accessor("trend", {
-		header: "Trend (7d)",
-		cell: (info) => {
-			const val = info.getValue();
-			return (
-				<Flex
-					alignItems="center"
-					gap="4"
-					flexDirection="row"
-					color={val >= 0 ? "fg.success" : "fg.error"}
-				>
-					{val >= 0 ? <IconTrendingUp size={16} /> : <IconTrendingDown size={16} />}
-					<Text>{Math.abs(val)}%</Text>
-				</Flex>
-			);
-		},
-	}),
-];
+import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 const allData: VolumeQuery[] = volumeQueries;
 
@@ -97,12 +59,6 @@ export default function TotalQueriesPage() {
 		return data.filter((item) => item.query.toLowerCase().includes(query));
 	}, [searchQuery, timeRange]);
 
-	const table = useReactTable({
-		columns,
-		data: filteredData,
-		getCoreRowModel: getCoreRowModel(),
-	});
-
 	return (
 		<Box>
 			<Flex
@@ -141,9 +97,38 @@ export default function TotalQueriesPage() {
 				</Flex>
 			</Flex>
 
-			<DataTable table={table}>
-				<DataTableBody />
-			</DataTable>
+			<Table>
+				<thead>
+					<Tr>
+						<Th>Query</Th>
+						<Th>Total Searches</Th>
+						<Th>Trend (7d)</Th>
+					</Tr>
+				</thead>
+				<tbody>
+					{filteredData.map((row, i) => (
+						<Tr key={i}>
+							<Td type="header">{row.query}</Td>
+							<Td>{row.count.toLocaleString()}</Td>
+							<Td>
+								<Flex
+									alignItems="center"
+									gap="4"
+									flexDirection="row"
+									color={row.trend >= 0 ? "fg.success" : "fg.error"}
+								>
+									{row.trend >= 0 ? (
+										<IconTrendingUp size={16} />
+									) : (
+										<IconTrendingDown size={16} />
+									)}
+									<Text>{Math.abs(row.trend)}%</Text>
+								</Flex>
+							</Td>
+						</Tr>
+					))}
+				</tbody>
+			</Table>
 		</Box>
 	);
 }

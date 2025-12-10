@@ -5,6 +5,7 @@ import {
 	Tabs,
 	TabsList,
 	TabsTrigger,
+	TabsContent,
 	Badge,
 	Separator,
 	Menu,
@@ -33,10 +34,12 @@ export default function Preview({
 	algorithmBestBets,
 	relatedQueries = [],
 	onCreateBestBet,
+	searchBar = true,
 }: {
 	algorithmBestBets?: AlgorithmBestBet[];
 	relatedQueries?: {query: string; synonyms: string[]}[];
 	onCreateBestBet?: (query: string) => void;
+	searchBar?: boolean;
 }) {
 	const params = useParams();
 	const id = params.id as string;
@@ -130,50 +133,54 @@ export default function Preview({
 				>
 					Preview
 				</Heading>
-				<Tabs defaultValue="demo">
-					{/* <TabsList>
+				<Tabs defaultValue="detailed">
+					<TabsList>
+						<TabsTrigger value="demo">Search demo</TabsTrigger>
 						<TabsTrigger value="detailed">Detailed</TabsTrigger>
-						<TabsTrigger value="top10">Top 10 Queries</TabsTrigger>
-						<TabsTrigger value="demo">Demo</TabsTrigger>
-					</TabsList> */}
-					<Flex
-						gap="8"
-						flexDirection="row"
-					>
-						<Box flex="1">
-							<Input
-								placeholder="Products"
-								addonBefore={<IconSearch size={16} />}
-								value={query}
-								onChange={(e) => setQuery(e.target.value)}
-							/>
-						</Box>
-						<Menu
-							options={[
-								{
-									addon: <IconRocket size={16} />,
-									label: "Best bets",
-									execute: () => setShowBestBets(!showBestBets),
-									selected: showBestBets,
-									switch: true,
-								},
-								{
-									addon: <IconCongruentTo size={16} />,
-									label: "Related Queries",
-									execute: () => setShowRelatedQueries(!showRelatedQueries),
-									selected: showRelatedQueries,
-									switch: true,
-								},
-							]}
-						>
-							<MenuTrigger
-								icon={<IconSettings size={16} />}
-								aria-label="Settings"
-								size="lg"
-							/>
-							<MenuContent />
-						</Menu>
-					</Flex>
+					</TabsList>
+					<Box mt="16">
+						{searchBar && (
+							<Flex
+								gap="8"
+								flexDirection="row"
+							>
+								<Box flex="1">
+									<Input
+										placeholder="Products"
+										addonBefore={<IconSearch size={16} />}
+										value={query}
+										onChange={(e) => setQuery(e.target.value)}
+									/>
+								</Box>
+								<Menu
+									options={[
+										{
+											addon: <IconRocket size={16} />,
+											label: "Best bets",
+											execute: () => setShowBestBets(!showBestBets),
+											selected: showBestBets,
+											switch: true,
+										},
+										{
+											addon: <IconCongruentTo size={16} />,
+											label: "Related Queries",
+											execute: () =>
+												setShowRelatedQueries(!showRelatedQueries),
+											selected: showRelatedQueries,
+											switch: true,
+										},
+									]}
+								>
+									<MenuTrigger
+										icon={<IconSettings size={16} />}
+										aria-label="Settings"
+										size="lg"
+									/>
+									<MenuContent />
+								</Menu>
+							</Flex>
+						)}
+					</Box>
 					{activeSynonyms.length > 0 && (
 						<Box mt="16">
 							<Text
@@ -193,65 +200,288 @@ export default function Preview({
 							</Flex>
 						</Box>
 					)}
+
+					<TabsContent value="demo">
+						<Box
+							flex="1"
+							px="16"
+							mt="24"
+						>
+							<Flex
+								flexDirection="column"
+								gap="4"
+							>
+								{activeBestBets.map((bb, i) => {
+									const result = searchResults.find(
+										(r) => r.url === bb.destination
+									);
+									return (
+										<ResultItem
+											key={`bb-${i}`}
+											isBestBet
+											title={result?.title || bb.query}
+											description={`Best Bet for "${bb.query}"`}
+											url={bb.destination}
+										/>
+									);
+								})}
+								{filteredResults.map((result, i) => (
+									<ResultItem
+										key={i}
+										title={result.title}
+										description={result.description}
+										url={result.url}
+									/>
+								))}
+								{filteredResults.length === 0 && activeBestBets.length === 0 && (
+									<Flex
+										flexDirection="column"
+										alignItems="center"
+										gap="8"
+										py="24"
+									>
+										<Text color="fg.secondary">No results found.</Text>
+										{onCreateBestBet && debouncedQuery.trim() && (
+											<Button
+												size="lg"
+												icon={<IconPlus />}
+												onClick={() => onCreateBestBet(debouncedQuery)}
+												style={{
+													animation:
+														"appearDown 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+													animationDelay: "1s",
+													animationFillMode: "both",
+												}}
+											>
+												Create Best Bet for "{debouncedQuery}"
+											</Button>
+										)}
+									</Flex>
+								)}
+							</Flex>
+						</Box>
+					</TabsContent>
+
+					<TabsContent value="detailed">
+						<Box
+							flex="1"
+							px="16"
+							mt="24"
+						>
+							<Flex
+								flexDirection="column"
+								gap="0"
+							>
+								{activeBestBets.map((bb, i) => {
+									const result = searchResults.find(
+										(r) => r.url === bb.destination
+									);
+									return (
+										<DetailedResultItem
+											key={`bb-${i}`}
+											isBestBet
+											score={0.0}
+											id="some-content-id"
+											data={{
+												title: result?.title || bb.query,
+												description: `Best Bet for "${bb.query}"`,
+												author: "Steven King",
+												array: '["lorem dolor", "dolor"]',
+												_fulltext:
+													"Lorem ipsum dolor sit amet. Products ipsum dolor",
+											}}
+											query={query}
+										/>
+									);
+								})}
+								{filteredResults.map((result, i) => (
+									<DetailedResultItem
+										key={i}
+										score={3.125}
+										id="some-content-id"
+										data={{
+											title: result.title,
+											description: result.description,
+											author: "Steven King",
+											array: '["lorem dolor", "dolor"]',
+											_fulltext:
+												"Lorem ipsum dolor sit amet. Products ipsum dolor",
+										}}
+										query={query}
+									/>
+								))}
+							</Flex>
+						</Box>
+					</TabsContent>
 				</Tabs>
 			</Box>
-			<Box
-				flex="1"
-				px="16"
-				mt="24"
+		</Box>
+	);
+}
+
+function DetailedResultItem({
+	isBestBet,
+	score,
+	id,
+	data,
+	query,
+}: {
+	isBestBet?: boolean;
+	score: number;
+	id: string;
+	data: {
+		title: string;
+		description: string;
+		author: string;
+		array: string;
+		_fulltext: string;
+	};
+	query: string;
+}) {
+	const highlight = (text: string) => {
+		if (!query) return text;
+		const parts = text.split(new RegExp(`(${query})`, "gi"));
+		return parts.map((part, i) =>
+			part.toLowerCase() === query.toLowerCase() ? (
+				<span
+					key={i}
+					style={{color: "#0066CC", fontWeight: "bold"}}
+				>
+					{part}
+				</span>
+			) : (
+				part
+			)
+		);
+	};
+
+	return (
+		<Box
+			bg="bg.default"
+			p="16"
+			style={{borderBottom: "1px solid #e2e8f0"}}
+		>
+			<Flex
+				flexDirection="row"
+				justifyContent="space-between"
+				alignItems="start"
+				mb="8"
 			>
 				<Flex
 					flexDirection="column"
 					gap="4"
 				>
-					{activeBestBets.map((bb, i) => {
-						const result = searchResults.find((r) => r.url === bb.destination);
-						return (
-							<ResultItem
-								key={`bb-${i}`}
-								isBestBet
-								title={result?.title || bb.query}
-								description={`Best Bet for "${bb.query}"`}
-								url={bb.destination}
-							/>
-						);
-					})}
-					{filteredResults.map((result, i) => (
-						<ResultItem
-							key={i}
-							title={result.title}
-							description={result.description}
-							url={result.url}
-						/>
-					))}
-					{filteredResults.length === 0 && activeBestBets.length === 0 && (
-						<Flex
-							flexDirection="column"
-							alignItems="center"
-							gap="8"
-							py="24"
+					{isBestBet && (
+						<Text
+							color="fg.accent"
+							fontWeight="600"
+							fontSize="sm"
 						>
-							<Text color="fg.secondary">No results found.</Text>
-							{onCreateBestBet && debouncedQuery.trim() && (
-								<Button
-									size="lg"
-									icon={<IconPlus />}
-									onClick={() => onCreateBestBet(debouncedQuery)}
-									style={{
-										animation:
-											"appearDown 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
-										animationDelay: "1s",
-										animationFillMode: "both",
-									}}
-								>
-									Create Best Bet for "{debouncedQuery}"
-								</Button>
-							)}
-						</Flex>
+							Best bet
+						</Text>
 					)}
+					<Flex
+						flexDirection="row"
+						gap="8"
+						alignItems="center"
+					>
+						<Text
+							color="fg.secondary"
+							fontSize="sm"
+							style={{textTransform: "uppercase"}}
+						>
+							SCORE:
+						</Text>
+						<Text
+							fontWeight="700"
+							fontSize="md"
+						>
+							{score.toFixed(1)}
+						</Text>
+					</Flex>
 				</Flex>
+				<Text
+					color="fg.tertiary"
+					fontSize="sm"
+				>
+					ID: {id}
+				</Text>
+			</Flex>
+
+			<Box pl="24">
+				<GridRow
+					label="title"
+					value={highlight(data.title)}
+					multiplier={3}
+				/>
+				<GridRow
+					label="description"
+					value={highlight(data.description)}
+				/>
+				<GridRow
+					label="author"
+					value={highlight(data.author)}
+					multiplier={5}
+				/>
+				<GridRow
+					label="array"
+					value={highlight(data.array)}
+				/>
+				<GridRow
+					label="_fulltext"
+					value={highlight(data._fulltext)}
+				/>
 			</Box>
 		</Box>
+	);
+}
+
+function GridRow({
+	label,
+	value,
+	multiplier,
+}: {
+	label: string;
+	value: React.ReactNode;
+	multiplier?: number;
+}) {
+	return (
+		<Flex
+			flexDirection="row"
+			gap="8"
+			mb="4"
+		>
+			<Flex
+				style={{width: "100px"}}
+				justifyContent="flex-end"
+				alignItems="center"
+				gap="4"
+			>
+				{multiplier && (
+					<Badge
+						intent="information"
+						size="sm"
+						variant="subtle"
+					>
+						x{multiplier}
+					</Badge>
+				)}
+				<Text
+					color="fg.secondary"
+					fontSize="sm"
+					textAlign="end"
+				>
+					{label}:
+				</Text>
+			</Flex>
+			<Text
+				color="fg.default"
+				fontSize="sm"
+				fontWeight={label === "title" ? "600" : "400"}
+			>
+				{value}
+			</Text>
+		</Flex>
 	);
 }
 

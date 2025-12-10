@@ -1,15 +1,7 @@
 "use client";
 
 import Item from "@/app/components/Item";
-import {
-	Box,
-	DataTable,
-	DataTableBody,
-	Menu,
-	MenuContent,
-	MenuTrigger,
-	LabelMenuButton,
-} from "@optiaxiom/react";
+import {Box, Menu, MenuContent, MenuTrigger, LabelMenuButton} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
@@ -23,7 +15,6 @@ import {
 	IconBook,
 	IconReportSearch,
 } from "@tabler/icons-react";
-import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import {useRouter} from "next/navigation";
 import {
@@ -36,8 +27,7 @@ import {
 import {zeroResultQueries, ZeroResultQuery, scaleValue} from "@/app/db/analyticsData";
 import usePersistentState from "@/app/usePersistentState";
 import BestBetDialog from "../../components/BestBetDialog";
-
-const columnHelper = createColumnHelper<ZeroResultQuery>();
+import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 const allData: ZeroResultQuery[] = zeroResultQueries;
 
@@ -101,88 +91,6 @@ export default function ZeroResultPage() {
 		router.push(`/graph/search/optimize-search/${targetAlgorithm.id}/optimizations`);
 	};
 
-	const columns = useMemo(
-		() => [
-			columnHelper.accessor("query", {
-				header: "Query",
-				cell: (info) => (
-					<Flex
-						gap="8"
-						alignItems="center"
-					>
-						<Text>{info.getValue()}</Text>
-					</Flex>
-				),
-			}),
-			columnHelper.accessor("frequency", {
-				header: "Frequency",
-				cell: (info) => `${info.getValue()} times`,
-			}),
-			columnHelper.accessor("lastSeen", {header: "Last Seen"}),
-			columnHelper.accessor("algorithm", {
-				header: "Algorithm Reference",
-				cell: (info) => (
-					<Item
-						icon={<IconReportSearch size={16} />}
-						title={info.getValue()}
-					/>
-				),
-			}),
-			columnHelper.display({
-				id: "actions",
-				header: "",
-				size: 24,
-				maxSize: 24,
-				cell: (info) => (
-					<Menu
-						options={[
-							// {
-							// 	group: {label: "Manage Algorithm", separator: false},
-							// 	addon: <IconAnalyze size={16} />,
-							// 	label: "Suggest Optimization",
-							// 	execute: () => {
-							// 		// Edit action
-							// 	},
-							// },
-							{
-								addon: <IconRocket size={16} />,
-								label: "Add Best Bet",
-								execute: () => {
-									const algoName = info.row.original.algorithm;
-									const query = info.row.original.query;
-									const algo = initialAlgorithms.find((a) => a.name === algoName);
-
-									if (algo) {
-										setTargetAlgorithm(algo);
-										setCreateBestBetInitialData({query, destination: ""});
-										setIsCreateDialogOpen(true);
-									}
-								},
-							},
-							// {
-							// 	addon: <IconBook size={16} />,
-							// 	label: "Add Synonym",
-							// 	execute: () => {
-							// 		// Edit action
-							// 	},
-							// },
-						]}
-					>
-						<MenuTrigger
-							icon={<IconDots />}
-							aria-label="add ele"
-							appearance="subtle"
-							size="sm"
-							iconPosition="start"
-						/>
-						<MenuContent />
-					</Menu>
-				),
-			}),
-		],
-		[router, bestBets, setBestBets]
-	);
-
 	const timeRangeLabels = {
 		"24h": "Last 24 hours",
 		"7d": "Last 7 days",
@@ -229,12 +137,6 @@ export default function ZeroResultPage() {
 		);
 	}, [searchQuery, timeRange]);
 
-	const table = useReactTable({
-		columns,
-		data: filteredData,
-		getCoreRowModel: getCoreRowModel(),
-	});
-
 	return (
 		<Box>
 			<Flex
@@ -279,9 +181,67 @@ export default function ZeroResultPage() {
 				</Button>
 			</Flex>
 
-			<DataTable table={table}>
-				<DataTableBody />
-			</DataTable>
+			<Table>
+				<thead>
+					<Tr>
+						<Th>Query</Th>
+						<Th>Frequency</Th>
+						<Th>Last Seen</Th>
+						<Th>Algorithm Reference</Th>
+						<Th></Th>
+					</Tr>
+				</thead>
+				<tbody>
+					{filteredData.map((row, i) => (
+						<Tr key={i}>
+							<Td type="header">{row.query}</Td>
+							<Td>{row.frequency} times</Td>
+							<Td>{row.lastSeen}</Td>
+							<Td type="raw">
+								<Item
+									icon={<IconReportSearch size={16} />}
+									title={row.algorithm}
+								/>
+							</Td>
+							<Td type="button">
+								<Menu
+									options={[
+										{
+											addon: <IconRocket size={16} />,
+											label: "Add Best Bet",
+											execute: () => {
+												const algoName = row.algorithm;
+												const query = row.query;
+												const algo = initialAlgorithms.find(
+													(a) => a.name === algoName
+												);
+
+												if (algo) {
+													setTargetAlgorithm(algo);
+													setCreateBestBetInitialData({
+														query,
+														destination: "",
+													});
+													setIsCreateDialogOpen(true);
+												}
+											},
+										},
+									]}
+								>
+									<MenuTrigger
+										icon={<IconDots />}
+										aria-label="add ele"
+										appearance="subtle"
+										size="sm"
+										iconPosition="start"
+									/>
+									<MenuContent />
+								</Menu>
+							</Td>
+						</Tr>
+					))}
+				</tbody>
+			</Table>
 
 			<BestBetDialog
 				open={isCreateDialogOpen}

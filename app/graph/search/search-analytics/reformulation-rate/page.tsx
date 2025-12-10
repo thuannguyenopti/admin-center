@@ -1,56 +1,13 @@
 "use client";
 
-import {
-	Box,
-	DataTable,
-	DataTableBody,
-	Badge,
-	Menu,
-	MenuTrigger,
-	LabelMenuButton,
-	MenuContent,
-} from "@optiaxiom/react";
+import {Box, Badge, Menu, MenuTrigger, LabelMenuButton, MenuContent} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {IconSearch, IconArrowRight} from "@tabler/icons-react";
-import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import {reformulationQueries, ReformulationQuery, scaleValue} from "@/app/db/analyticsData";
-
-const columnHelper = createColumnHelper<ReformulationQuery>();
-
-const columns = [
-	columnHelper.accessor("originalQuery", {
-		header: "Original Query",
-		cell: (info) => <Text color="fg.secondary">{info.getValue()}</Text>,
-	}),
-	columnHelper.display({
-		id: "arrow",
-		cell: () => (
-			<IconArrowRight
-				size={16}
-				color="var(--color-fg-secondary)"
-			/>
-		),
-	}),
-	columnHelper.accessor("reformulatedQuery", {
-		header: "Reformulated To",
-		cell: (info) => <Text fontWeight="500">{info.getValue()}</Text>,
-	}),
-	columnHelper.accessor("count", {
-		header: "Occurrences",
-		cell: (info) => info.getValue().toLocaleString(),
-	}),
-	columnHelper.accessor("confidence", {
-		header: "Confidence",
-		cell: (info) => (
-			<Badge intent={info.getValue() > 0.9 ? "success" : "warning"}>
-				{(info.getValue() * 100).toFixed(0)}%
-			</Badge>
-		),
-	}),
-];
+import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 const allData: ReformulationQuery[] = reformulationQueries;
 
@@ -104,12 +61,6 @@ export default function ReformulationRatePage() {
 		);
 	}, [searchQuery, timeRange]);
 
-	const table = useReactTable({
-		columns,
-		data: filteredData,
-		getCoreRowModel: getCoreRowModel(),
-	});
-
 	return (
 		<Box>
 			<Flex
@@ -148,9 +99,36 @@ export default function ReformulationRatePage() {
 				</Flex>
 			</Flex>
 
-			<DataTable table={table}>
-				<DataTableBody />
-			</DataTable>
+			<Table>
+				<thead>
+					<Tr>
+						<Th>Original Query</Th>
+						<Th></Th>
+						<Th>Reformulated To</Th>
+						<Th align="right">Occurrences</Th>
+						<Th>Confidence</Th>
+					</Tr>
+				</thead>
+				<tbody>
+					{filteredData.map((row, i) => (
+						<Tr key={i}>
+							<Td>
+								<Text color="fg.secondary">{row.originalQuery}</Text>
+							</Td>
+							<Td>
+								<IconArrowRight size={16} />
+							</Td>
+							<Td>{row.reformulatedQuery}</Td>
+							<Td type="numeric">{row.count.toLocaleString()}</Td>
+							<Td width={100}>
+								<Badge intent={row.confidence > 0.9 ? "success" : "warning"}>
+									{(row.confidence * 100).toFixed(0)}%
+								</Badge>
+							</Td>
+						</Tr>
+					))}
+				</tbody>
+			</Table>
 		</Box>
 	);
 }

@@ -1,54 +1,14 @@
 "use client";
 
-import {
-	Box,
-	DataTable,
-	DataTableBody,
-	Menu,
-	MenuTrigger,
-	MenuContent,
-	LabelMenuButton,
-} from "@optiaxiom/react";
+import {Box, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {IconSearch, IconAlertCircle} from "@tabler/icons-react";
-import {useReactTable, getCoreRowModel, createColumnHelper} from "@tanstack/react-table";
 import {useState, useMemo} from "react";
 import {ctrQueries, CTRQuery, scaleValue} from "@/app/db/analyticsData";
-
-const columnHelper = createColumnHelper<CTRQuery>();
-
-const columns = [
-	columnHelper.accessor("query", {
-		header: "Query",
-		cell: (info) => (
-			<Flex
-				gap="8"
-				alignItems="center"
-			>
-				<Text>{info.getValue()}</Text>
-			</Flex>
-		),
-	}),
-	columnHelper.accessor("impressions", {
-		header: "Impressions",
-		cell: (info) => info.getValue().toLocaleString(),
-	}),
-	columnHelper.accessor("clicks", {
-		header: "Clicks",
-		cell: (info) => info.getValue().toLocaleString(),
-	}),
-	columnHelper.accessor("ctr", {
-		header: "CTR",
-		cell: (info) => `${info.getValue()}%`,
-	}),
-	columnHelper.accessor("position", {
-		header: "Avg. Position",
-		cell: (info) => info.getValue().toFixed(1),
-	}),
-];
+import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 const allData: CTRQuery[] = ctrQueries;
 
@@ -101,12 +61,6 @@ export default function ClickThroughRatePage() {
 		return data.filter((item) => item.query.toLowerCase().includes(query));
 	}, [searchQuery, timeRange]);
 
-	const table = useReactTable({
-		columns,
-		data: filteredData,
-		getCoreRowModel: getCoreRowModel(),
-	});
-
 	return (
 		<Box>
 			<Flex
@@ -145,9 +99,28 @@ export default function ClickThroughRatePage() {
 				</Flex>
 			</Flex>
 
-			<DataTable table={table}>
-				<DataTableBody />
-			</DataTable>
+			<Table>
+				<thead>
+					<Tr>
+						<Th>Query</Th>
+						<Th>Impressions</Th>
+						<Th>Clicks</Th>
+						<Th>CTR</Th>
+						<Th>Avg. Position</Th>
+					</Tr>
+				</thead>
+				<tbody>
+					{filteredData.map((row, i) => (
+						<Tr key={i}>
+							<Td type="header">{row.query}</Td>
+							<Td>{row.impressions.toLocaleString()}</Td>
+							<Td>{row.clicks.toLocaleString()}</Td>
+							<Td>{row.ctr}%</Td>
+							<Td>{row.position.toFixed(1)}</Td>
+						</Tr>
+					))}
+				</tbody>
+			</Table>
 		</Box>
 	);
 }

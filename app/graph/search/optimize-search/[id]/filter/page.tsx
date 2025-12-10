@@ -5,7 +5,7 @@ import {Aside} from "@/app/context/LayoutContext";
 import Preview from "../order/Preview";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {AlgorithmBestBet} from "@/app/db/initialData";
+import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {Text} from "@/app/components/Text";
 
 type RelatedQuery = {
@@ -21,6 +21,10 @@ export default function FilterPage() {
 		AlgorithmBestBet[],
 		any
 	];
+
+	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const currentAlgorithm = algorithms.find((a) => a.id === id);
+	const isCustomAlgorithm = currentAlgorithm?.type === "Custom";
 
 	const [relatedQueries] = usePersistentState(`algorithm_related_queries_${id}`, []) as [
 		RelatedQuery[],
@@ -42,6 +46,7 @@ export default function FilterPage() {
 				<Preview
 					algorithmBestBets={algorithmBestBets}
 					relatedQueries={relatedQueries}
+					searchBar={isCustomAlgorithm}
 				/>
 			</Aside>
 		</>

@@ -2,7 +2,18 @@
 
 import Item from "@/app/components/Item";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {Box, Avatar, Field, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
+import {
+	Box,
+	Avatar,
+	Field,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	Badge,
+	Select,
+	SelectTrigger,
+	SelectContent,
+} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
 import {Input} from "@/app/components/Input";
@@ -13,6 +24,9 @@ import {
 	IconDots,
 	IconPencil,
 	IconTrash,
+	IconReport,
+	IconList,
+	IconListDetails,
 } from "@tabler/icons-react";
 import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
@@ -29,6 +43,7 @@ export default function OptimizeSearchPage() {
 	];
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [newAlgorithmName, setNewAlgorithmName] = useState("");
+	const [newAlgorithmType, setNewAlgorithmType] = useState<"Search" | "Custom">("Search");
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [algorithmToDelete, setAlgorithmToDelete] = useState<string | null>(null);
 
@@ -50,10 +65,12 @@ export default function OptimizeSearchPage() {
 			publishState: "Draft",
 			creationDate: new Date().toISOString().split("T")[0],
 			owner: "Alice Johnson",
+			type: newAlgorithmType,
 		};
 
 		setAlgorithms([...algorithms, newAlgorithm]);
 		setNewAlgorithmName("");
+		setNewAlgorithmType("Search");
 		setIsCreateDialogOpen(false);
 	};
 
@@ -113,6 +130,7 @@ export default function OptimizeSearchPage() {
 				<thead>
 					<Tr>
 						<Th>Name</Th>
+						<Th>Type</Th>
 						<Th>Publish State</Th>
 						<Th>Creation Date</Th>
 						<Th>Owner</Th>
@@ -123,15 +141,34 @@ export default function OptimizeSearchPage() {
 					{filteredData.map((algorithm) => (
 						<Tr
 							key={algorithm.id}
-							url={`/graph/search/optimize-search/${algorithm.id}/optimizations`}
+							url={
+								algorithm.type === "Custom"
+									? `/graph/search/optimize-search/${algorithm.id}/filter`
+									: `/graph/search/optimize-search/${algorithm.id}/optimizations`
+							}
 						>
 							<Td type="raw">
 								<Item
-									icon={<IconReportSearch size={16} />}
+									icon={
+										algorithm.type === "Custom" ? (
+											<IconListDetails size={16} />
+										) : (
+											<IconSearch size={16} />
+										)
+									}
 									title={algorithm.name}
 								/>
 							</Td>
-							<Td>{algorithm.publishState}</Td>
+							<Td>{algorithm.type || "Search"}</Td>
+							<Td>
+								<Badge
+									intent={
+										algorithm.publishState === "Draft" ? "warning" : "success"
+									}
+								>
+									{algorithm.publishState}
+								</Badge>
+							</Td>
 							<Td>{algorithm.creationDate}</Td>
 							<Td type="avatar">{algorithm.owner}</Td>
 							<Td type="button">
@@ -143,7 +180,9 @@ export default function OptimizeSearchPage() {
 												addon: <IconPencil size={16} />,
 												execute: () =>
 													router.push(
-														`/graph/search/optimize-search/${algorithm.id}/optimizations`
+														algorithm.type === "Custom"
+															? `/graph/search/optimize-search/${algorithm.id}/filter`
+															: `/graph/search/optimize-search/${algorithm.id}/optimizations`
 													),
 											},
 											{
@@ -191,6 +230,22 @@ export default function OptimizeSearchPage() {
 							value={newAlgorithmName}
 							onChange={(e) => setNewAlgorithmName(e.target.value)}
 						/>
+					</Field>
+					<Field
+						label="Type"
+						required
+					>
+						<Select
+							value={newAlgorithmType}
+							onValueChange={(val) => setNewAlgorithmType(val as "Search" | "Custom")}
+							options={[
+								{label: "Search", value: "Search"},
+								{label: "Custom", value: "Custom"},
+							]}
+						>
+							<SelectTrigger>{newAlgorithmType}</SelectTrigger>
+							<SelectContent />
+						</Select>
 					</Field>
 				</Flex>
 			</AbstractDialog>

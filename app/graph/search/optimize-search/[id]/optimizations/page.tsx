@@ -4,8 +4,8 @@ import {Box, Heading, Alert, Link} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
-import {useParams} from "next/navigation";
-import {useState} from "react";
+import {useParams, useRouter} from "next/navigation";
+import {useState, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {
 	BestBet,
@@ -13,6 +13,8 @@ import {
 	AlgorithmBestBet,
 	RelatedQuery,
 	initialRelatedQueries,
+	Algorithm,
+	initialAlgorithms,
 } from "@/app/db/initialData";
 import {IconPlus} from "@tabler/icons-react";
 import Preview from "../order/Preview";
@@ -23,10 +25,22 @@ import RelatedQueryDialog from "../../../components/RelatedQueryDialog";
 import {Aside} from "@/app/context/LayoutContext";
 import searchResults from "@/app/db/searchResults.json";
 import {Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
+import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 export default function OptimizationsPage() {
 	const params = useParams();
+	const router = useRouter();
 	const id = params.id as string;
+
+	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const currentAlgorithm = algorithms.find((a) => a.id === id);
+	const isCustom = currentAlgorithm?.type === "Custom";
+
+	useEffect(() => {
+		if (isCustom) {
+			router.replace(`/graph/search/optimize-search/${id}/filter`);
+		}
+	}, [isCustom, id, router]);
 
 	// Global list of best bets
 	const [allBestBets, setAllBestBets] = usePersistentState("bestBets", initialBestBets) as [
@@ -201,6 +215,49 @@ export default function OptimizationsPage() {
 	const availableRelatedQueries = allRelatedQueries.filter(
 		(rq) => !relatedQueries.some((added) => added.query === rq.query)
 	);
+
+	if (isCustom) {
+		const customObjects = [
+			{id: "1", name: "Object A", status: "Active", lastModified: "2023-10-25"},
+			{id: "2", name: "Object B", status: "Inactive", lastModified: "2023-10-26"},
+			{id: "3", name: "Object C", status: "Active", lastModified: "2023-10-27"},
+		];
+
+		return (
+			<Box flex="1">
+				<Heading
+					level="4"
+					mb="16"
+				>
+					Objects
+				</Heading>
+				<Text
+					mb="16"
+					color="fg.secondary"
+				>
+					Manage the objects associated with this custom algorithm.
+				</Text>
+				<Table>
+					<thead>
+						<Tr>
+							<Th>Name</Th>
+							<Th>Status</Th>
+							<Th>Last Modified</Th>
+						</Tr>
+					</thead>
+					<tbody>
+						{customObjects.map((obj) => (
+							<Tr key={obj.id}>
+								<Td>{obj.name}</Td>
+								<Td>{obj.status}</Td>
+								<Td>{obj.lastModified}</Td>
+							</Tr>
+						))}
+					</tbody>
+				</Table>
+			</Box>
+		);
+	}
 
 	return (
 		<>
