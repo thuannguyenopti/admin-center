@@ -54,14 +54,19 @@ export const Td = ({
 	type,
 	description,
 	data,
+	width,
 }: {
 	children: ReactNode;
-	type?: string;
+	type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
 	description?: string;
 	data?: any;
+	width?: string | number;
 }) => {
 	return (
-		<td className={`p-4 border-t color-[#ccc] align-top`}>
+		<td
+			className={`p-4 border-t color-[#ccc] align-top`}
+			style={{width: type === "button" ? "56px" : width}}
+		>
 			{type === undefined && (
 				<>
 					<Text
