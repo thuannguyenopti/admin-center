@@ -1,51 +1,69 @@
 "use client";
 
-import {Box, SearchInput, Badge} from "@optiaxiom/react";
-import {Text} from "@/app/components/Text";
-import {Button} from "@/app/components/Button";
-import {Table, Th, Tr, Td} from "../../../../../components/Table";
+import { Box, SearchInput, Badge } from "@optiaxiom/react";
+import { Text } from "@/app/components/Text";
+import { Button } from "@/app/components/Button";
+import { Table, Th, Tr, Td } from "../../../../../components/Table";
 
-const columns = [
-	{label: "Name"},
-	{label: "ID"},
-	{label: "Updated"},
-	{label: "Content Items", type: "numeric"},
+type CellType = "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
+
+interface Column {
+	label: string;
+	type?: CellType;
+}
+
+interface Cell {
+	label: string;
+	type?: CellType;
+	description?: string;
+}
+
+interface Row {
+	url: string;
+	children: Cell[];
+}
+
+const columns: Column[] = [
+	{ label: "Name" },
+	{ label: "ID" },
+	{ label: "Updated" },
+	{ label: "Content Items", type: "numeric" },
 ];
-const rows = [
+const rows: Row[] = [
 	{
 		url: "/graph/content-sources/opd/details",
 		children: [
-			{label: "Article", type: "header"},
-			{label: "1234"},
-			{label: "Jan 11, 2024", description: "15:50:45"},
-			{label: "5678", type: "numeric"},
+			{ label: "Article", type: "header" },
+			{ label: "1234" },
+			{ label: "Jan 11, 2024", description: "15:50:45" },
+			{ label: "5678", type: "numeric" },
 		],
 	},
 	{
 		url: "/graph/content-sources/opd/details",
 		children: [
-			{label: "Article", type: "header"},
-			{label: "1234"},
-			{label: "Jan 11, 2024", description: "15:50:45"},
-			{label: "5678", type: "numeric"},
+			{ label: "Article", type: "header" },
+			{ label: "1234" },
+			{ label: "Jan 11, 2024", description: "15:50:45" },
+			{ label: "5678", type: "numeric" },
 		],
 	},
 	{
 		url: "/graph/content-sources/opd/details",
 		children: [
-			{label: "Article", type: "header"},
-			{label: "1234"},
-			{label: "Jan 11, 2024", description: "15:50:45"},
-			{label: "5678", type: "numeric"},
+			{ label: "Article", type: "header" },
+			{ label: "1234" },
+			{ label: "Jan 11, 2024", description: "15:50:45" },
+			{ label: "5678", type: "numeric" },
 		],
 	},
 	{
 		url: "/graph/content-sources/opd/details",
 		children: [
-			{label: "Article", type: "header"},
-			{label: "1234"},
-			{label: "Jan 11, 2024", description: "15:50:45"},
-			{label: "5678", type: "numeric"},
+			{ label: "Article", type: "header" },
+			{ label: "1234" },
+			{ label: "Jan 11, 2024", description: "15:50:45" },
+			{ label: "5678", type: "numeric" },
 		],
 	},
 ];

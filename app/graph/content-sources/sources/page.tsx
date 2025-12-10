@@ -1,26 +1,45 @@
 "use client";
 
-import {Box, SearchInput, Badge} from "@optiaxiom/react";
-import {Text} from "@/app/components/Text";
-import {Button} from "@/app/components/Button";
-import {Table, Th, Tr, Td} from "../../../components/Table";
+import { Box, SearchInput, Badge } from "@optiaxiom/react";
+import { Text } from "@/app/components/Text";
+import { Button } from "@/app/components/Button";
+import { Table, Th, Tr, Td } from "../../../components/Table";
 
-const columns = [
-	{label: "Source"},
-	{label: "ID"},
-	{label: "Status"},
-	{label: "Last Result"},
-	{label: "Last Synced"},
+type CellType = "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
+
+interface Column {
+	label: string;
+	type?: CellType;
+}
+
+interface Cell {
+	label: string;
+	type?: CellType;
+	description?: string;
+	data?: any;
+}
+
+interface Row {
+	url: string;
+	children: Cell[];
+}
+
+const columns: Column[] = [
+	{ label: "Source" },
+	{ label: "ID" },
+	{ label: "Status" },
+	{ label: "Last Result" },
+	{ label: "Last Synced" },
 ];
-const rows = [
+const rows: Row[] = [
 	{
 		url: "/graph/content-sources/sources/odp/details",
 		children: [
-			{label: "ODP (Integration)", description: "Some note text", type: "header"},
-			{label: "1234"},
-			{label: "Fail", type: "badge", data: "danger"},
-			{label: "Last Result"},
-			{label: "Jan 11, 2024", description: "15:50:45"},
+			{ label: "ODP (Integration)", description: "Some note text", type: "header" },
+			{ label: "1234" },
+			{ label: "Fail", type: "badge", data: "danger" },
+			{ label: "Last Result" },
+			{ label: "Jan 11, 2024", description: "15:50:45" },
 		],
 	},
 ];

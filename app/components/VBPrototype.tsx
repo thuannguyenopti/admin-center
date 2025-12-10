@@ -11,6 +11,14 @@ import {
 	Menu,
 	MenuContent,
 	MenuTrigger,
+	Tabs,
+	TabsList,
+	TabsTrigger,
+	TabsContent,
+	Select,
+	SelectTrigger,
+	SelectContent,
+	Textarea,
 } from "@optiaxiom/react";
 import {ReactNode, useEffect, Fragment, Children, useRef, SetStateAction} from "react";
 import {useState} from "react";
@@ -846,6 +854,7 @@ const Outline: React.FC<OutlineProps> = ({
 
 	const [AI, setAI] = useState(false);
 	const [loadingAI, setLoadingAI] = useState(false);
+	const [activeTab, setActiveTab] = useState("main");
 
 	async function sendMessage(message: string) {
 		setLoadingAI(true);
@@ -879,14 +888,14 @@ const Outline: React.FC<OutlineProps> = ({
 						gap="8"
 						px="24"
 						pr="0"
-						py="4"
+						py="16"
 						mt="32"
 					>
 						<Text
 							fontSize="lg"
 							fontWeight="600"
 						>
-							Outline
+							Page
 						</Text>
 						<Box
 							display="flex"
@@ -1017,6 +1026,21 @@ const Outline: React.FC<OutlineProps> = ({
 							</div>
 						</Box>
 					</Box>
+					<Tabs
+						value={activeTab}
+						onValueChange={setActiveTab}
+					>
+						<Box
+							borderB="1"
+							borderColor="border.tertiary"
+							px="20"
+						>
+							<TabsList>
+								<TabsTrigger value="main">Main</TabsTrigger>
+								<TabsTrigger value="properties">Properties</TabsTrigger>
+							</TabsList>
+						</Box>
+						<TabsContent value="main">
 					{loadingAI && (
 						<div className="absolute left-0 top-0 right-0 bottom-0 flex items-center justify-center flex-col text-center bg-[#fff9] z-50">
 							<div className="w-8 h-8 border-4 border-[#6846FF] border-t-transparent rounded-full animate-spin" />
@@ -1471,6 +1495,88 @@ const Outline: React.FC<OutlineProps> = ({
 								</div>
 							)}
 					</Box>
+						</TabsContent>
+						<TabsContent value="properties">
+							<Box
+								px="24"
+								py="16"
+								fontSize="sm"
+							>
+								<Box mb="16">
+									<Text
+										fontSize="sm"
+										fontWeight="600"
+										mb="8"
+									>
+										SEO
+									</Text>
+									<Box
+										display="flex"
+										flexDirection="column"
+										gap="8"
+									>
+										<Field label="Title">
+											<Input2 placeholder="Enter page title" />
+										</Field>
+										<Field label="Keywords">
+											<Input2 placeholder="Enter keywords" />
+										</Field>
+										<Field label="Description">
+											<Textarea
+												placeholder="Enter description"
+												rows={3}
+											/>
+										</Field>
+										<Field label="Meta">
+											<Textarea
+												placeholder="Enter meta information"
+												rows={3}
+											/>
+										</Field>
+									</Box>
+								</Box>
+								<Box>
+									<Text
+										fontSize="sm"
+										fontWeight="600"
+										mb="8"
+									>
+										Settings
+									</Text>
+									<Box
+										display="flex"
+										flexDirection="column"
+										gap="8"
+									>
+										<Field label="Campaign Mode">
+											<Select
+												defaultValue="no"
+												options={[
+													{label: "No", value: "no"},
+													{label: "Yes", value: "yes"},
+												]}
+											>
+												<SelectTrigger>No</SelectTrigger>
+												<SelectContent />
+											</Select>
+										</Field>
+										<Field label="Some other setting">
+											<Select
+												defaultValue="setting1"
+												options={[
+													{label: "A setting", value: "setting1"},
+													{label: "Another setting", value: "setting2"},
+												]}
+											>
+												<SelectTrigger>A setting</SelectTrigger>
+												<SelectContent />
+											</Select>
+										</Field>
+									</Box>
+								</Box>
+							</Box>
+						</TabsContent>
+					</Tabs>
 				</div>
 				<div className="min-w-[50%] w-[50%]">
 					<Text

@@ -1,21 +1,21 @@
 "use client";
 
-import {Box, Heading, SearchInput} from "@optiaxiom/react";
-import {Text} from "@/app/components/Text";
+import { Box, Heading, SearchInput } from "@optiaxiom/react";
+import { Text } from "@/app/components/Text";
 import Link from "next/link";
-import {Button} from "@/app/components/Button";
-import {IconFilter, IconWand, IconChevronRight, IconChevronDown} from "@tabler/icons-react";
-import {Aside} from "@/app/context/LayoutContext";
+import { Button } from "@/app/components/Button";
+import { IconFilter, IconWand, IconChevronRight, IconChevronDown } from "@tabler/icons-react";
+import { Aside } from "@/app/context/LayoutContext";
 import RightToolbar from "@/app/components/RightToolbar";
-import {Table, Tr, Th, Td} from "@/app/components/Table";
+import { Table, Tr, Th, Td } from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {IconFile} from "@tabler/icons-react";
-import {Flex} from "@/app/components/Flex";
+import { IconFile } from "@tabler/icons-react";
+import { Flex } from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData";
-import {useState} from "react";
+import { initialPages, Page } from "@/app/db/initialData";
+import { useState } from "react";
 
-type PageNode = Page & {children: PageNode[]};
+type PageNode = Page & { children: PageNode[] };
 
 const buildTree = (pages: Page[]) => {
 	const map = new Map<string, PageNode>();
@@ -23,7 +23,7 @@ const buildTree = (pages: Page[]) => {
 
 	// First pass: create nodes
 	pages.forEach((page) => {
-		map.set(page.id, {...page, children: []});
+		map.set(page.id, { ...page, children: [] });
 	});
 
 	// Second pass: link children
@@ -60,7 +60,7 @@ const getStatusIntent = (status: string) => {
 	}
 };
 
-const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
+const PageRow = ({ node, level = 0 }: { node: PageNode; level?: number }) => {
 	const [expanded, setExpanded] = useState(true);
 	const hasChildren = node.children.length > 0;
 
@@ -70,7 +70,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 				<Td type="header">
 					<Flex
 						gap="8"
-						style={{paddingLeft: level * 24}}
+						style={{ paddingLeft: level * 24 }}
 					>
 						{hasChildren ? (
 							<Box
@@ -91,6 +91,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 											size="sm"
 											appearance="subtle"
 											icon={<IconChevronDown size={16} />}
+											aria-label="Collapse section"
 										/>
 									</Box>
 								) : (
@@ -103,6 +104,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 											size="sm"
 											appearance="subtle"
 											icon={<IconChevronRight size={16} />}
+											aria-label="Expand section"
 										/>
 									</Box>
 								)}
