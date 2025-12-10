@@ -49,3 +49,4 @@ import { Box, Button, Flex } from "@optiaxiom/react"; // WRONG for Button and Fl
 - Use `Box` with `className` if you need specific Tailwind classes that aren't exposed as props.
 - Ensure all new pages are responsive and follow the existing design language.
 - Buttons with no children must have an aria-label defined.
+- The first TD of a Table typically should be of type "header"
