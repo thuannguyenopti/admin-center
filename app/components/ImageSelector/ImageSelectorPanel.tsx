@@ -1,8 +1,8 @@
 "use client";
 
 import { Box, Button, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
-import { IconDots } from "@tabler/icons-react";
-import { useState } from "react";
+import { IconDots, IconArrowsHorizontal } from "@tabler/icons-react";
+import { useState, useRef } from "react";
 import ImageCard from "./ImageCard";
 import { mockImages } from "./mockImageData";
 import PopOutIcon from "@/app/assets/pop-out-icon.svg";
@@ -19,21 +19,81 @@ interface ImageSelectorPanelProps {
 export default function ImageSelectorPanel({ onClose }: ImageSelectorPanelProps) {
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
   const [sourceFilter, setSourceFilter] = useState<string>("CMS");
+  const [panelWidth, setPanelWidth] = useState(300);
+  const [isResizing, setIsResizing] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = panelWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = startX - moveEvent.clientX; // Inverted because we're resizing from left
+      const newWidth = Math.max(300, Math.min(400, startWidth + delta));
+      setPanelWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
 
   return (
     <Box
+      ref={panelRef}
       bg="bg.page"
       borderL="1"
       borderColor="border.tertiary"
       style={{
-        width: "300px",
+        width: `${panelWidth}px`,
         height: "100%",
         maxHeight: "100%",
         display: "flex",
         flexDirection: "column",
         animation: "slideIn 0.3s ease-out",
+        position: "relative",
+        transition: isResizing ? "none" : "width 0.1s ease",
       }}
     >
+      {/* Resize Handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: "8px",
+          cursor: "col-resize",
+          zIndex: 10,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        className="group hover:bg-blue-500/10 transition-colors"
+      >
+        <div
+          style={{
+            width: "2px",
+            height: "40px",
+            background: "rgba(0, 0, 0, 0.1)",
+            borderRadius: "1px",
+            transition: "all 0.2s ease",
+          }}
+          className="group-hover:bg-blue-500 group-hover:h-12"
+        />
+      </div>
       {/* Header */}
       <Box
         display="flex"
