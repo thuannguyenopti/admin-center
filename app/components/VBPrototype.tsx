@@ -20,7 +20,7 @@ import {
 	SelectContent,
 	Textarea,
 } from "@optiaxiom/react";
-import {ReactNode, useEffect, Fragment, Children, useRef, SetStateAction} from "react";
+import React, {ReactNode, useEffect, Fragment, Children, useRef, SetStateAction} from "react";
 import {useState} from "react";
 import {
 	IconPlus,
@@ -42,12 +42,22 @@ import {
 	IconUser,
 	IconArrowBarBoth,
 	IconFile,
+	IconList,
+	IconLayoutGrid,
+	IconCloud,
+	IconMessage,
+	IconDevices,
+	IconChevronDown,
 } from "@tabler/icons-react";
 
 // Simple AnimatedText component for cycling through texts
 
 import {sep} from "path";
 import RightToolbar from "./RightToolbar";
+import CMSToolbar from "./CMSToolbar";
+import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
+import MediaCard from "./MediaCard";
+import {IconPhoto} from "@tabler/icons-react";
 const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -353,8 +363,51 @@ const Col: React.FC<{
 	removeCol: any;
 	onDragStart: any;
 }> = ({setOpen, col, children, addElement, removeCol, onDragStart}) => {
+	const [isDragOver, setIsDragOver] = React.useState(false);
+
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		const hasImageData = e.dataTransfer.types.includes("image/url");
+		if (hasImageData) {
+			setIsDragOver(true);
+		}
+	};
+
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragOver(false);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragOver(false);
+
+		const imageUrl = e.dataTransfer.getData("image/url");
+		const imageAlt = e.dataTransfer.getData("image/alt");
+		
+		if (imageUrl) {
+			// Call addElement with type, then pass image data via a special marker
+			// The actual addElement function will be called with (type, colIndex, rowIndex, sectionIndex)
+			// We'll store the image data temporarily and use it in the addElement function
+			(window as any).__pendingImageData = { url: imageUrl, alt: imageAlt };
+			addElement("Image");
+			delete (window as any).__pendingImageData;
+		}
+	};
+
 	return (
-		<Box>
+		<Box
+			onDragOver={handleDragOver}
+			onDragLeave={handleDragLeave}
+			onDrop={handleDrop}
+			style={{
+				backgroundColor: isDragOver ? "#0037FF10" : "transparent",
+				transition: "background-color 0.2s",
+			}}
+		>
 			<div
 				className="newsection group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
 				draggable
@@ -433,6 +486,11 @@ const Col: React.FC<{
 								label: "Button",
 								execute: () => addElement("Button"),
 							},
+							{
+								addon: <IconPhoto size={16} />,
+								label: "Image",
+								execute: () => addElement("Image"),
+							},
 						]}
 					>
 						<MenuTrigger
@@ -501,6 +559,8 @@ const Ele: React.FC<{
 									return <IconForms size={16} />;
 								case "Button":
 									return <IconRectangle size={16} />;
+								case "Image":
+									return <IconPhoto size={16} />;
 								default:
 									return <IconBrackets size={16} />;
 							}
@@ -746,6 +806,12 @@ const Outline: React.FC<OutlineProps> = ({
 
 	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
 		const uKey = `${type}-${Date.now()}`;
+		
+		// Check for pending image data from drag-and-drop
+		const pendingImageData = (window as any).__pendingImageData;
+		const imageUrl = pendingImageData?.url || "";
+		const imageAlt = pendingImageData?.alt || "";
+		
 		setTheEles((prev) => ({
 			...prev,
 			[uKey]: {
@@ -769,6 +835,12 @@ const Outline: React.FC<OutlineProps> = ({
 							];
 						case "Button":
 							return [{type: "text", label: "Label"}];
+						case "Image":
+							return [
+								{type: "text", label: "Image URL", value: imageUrl},
+								{type: "text", label: "Title", value: imageAlt || "Untitled Image"},
+								{type: "text", label: "Alt Text", value: imageAlt},
+							];
 						default:
 							return [];
 					}
@@ -885,15 +957,15 @@ const Outline: React.FC<OutlineProps> = ({
 						display="flex"
 						alignItems="center"
 						justifyContent="space-between"
-						gap="8"
+						gap="4"
 						px="24"
 						pr="0"
-						py="16"
-						mt="32"
+						py="8"
 					>
 						<Text
-							fontSize="lg"
-							fontWeight="600"
+							fontSize="2xl"
+							fontWeight="500"
+							color="fg.default"
 						>
 							Page
 						</Text>
@@ -1030,15 +1102,32 @@ const Outline: React.FC<OutlineProps> = ({
 						value={activeTab}
 						onValueChange={setActiveTab}
 					>
-						<Box
-							borderB="1"
-							borderColor="border.tertiary"
-							px="20"
-						>
-							<TabsList>
-								<TabsTrigger value="main">Main</TabsTrigger>
-								<TabsTrigger value="properties">Properties</TabsTrigger>
-							</TabsList>
+						<Box display="flex">
+							<Box w="20" />
+							<Box
+								flex="1"
+								borderB="1"
+								borderColor="border.tertiary"
+							>
+								<TabsList gap="24">
+									<TabsTrigger
+										value="main"
+										fontSize="md"
+										fontWeight="500"
+										color={activeTab === "main" ? "fg.default" : "fg.secondary"}
+									>
+										Main
+									</TabsTrigger>
+									<TabsTrigger
+										value="properties"
+										fontSize="md"
+										fontWeight="500"
+										color={activeTab === "properties" ? "fg.default" : "fg.secondary"}
+									>
+										Properties
+									</TabsTrigger>
+								</TabsList>
+							</Box>
 						</Box>
 						<TabsContent value="main">
 					{loadingAI && (
@@ -1717,24 +1806,6 @@ export default function VBPrototype({
 	pageName?: string;
 	pageStatus?: string;
 }) {
-	const onInputChange = (value: any, propIndex: number) => {
-		if (currentEle !== "none" && currentEle in theEles) {
-			setTheEles((prev: any) => {
-				const oldProps = prev[currentEle as keyof typeof prev].props;
-				const newProps = [...oldProps];
-				newProps[propIndex] = {...oldProps[propIndex], value: value};
-
-				return {
-					...prev,
-					[currentEle]: {
-						...prev[currentEle as keyof typeof prev],
-						props: newProps,
-					},
-				};
-			});
-		}
-	};
-
 	const [dragging, setDragging] = useState<any>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
 
@@ -1762,8 +1833,29 @@ export default function VBPrototype({
 	};
 
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
+	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
 	const isFirstRender = useRef(true);
 	const onSaveRef = useRef(onSave);
+	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+	const [dropPosition, setDropPosition] = useState<{colId: string; position: number} | null>(null);
+
+	const onInputChange = (value: any, propIndex: number) => {
+		if (currentEle !== "none" && currentEle in theEles) {
+			setTheEles((prev: any) => {
+				const oldProps = prev[currentEle as keyof typeof prev].props;
+				const newProps = [...oldProps];
+				newProps[propIndex] = {...oldProps[propIndex], value: value};
+
+				return {
+					...prev,
+					[currentEle]: {
+						...prev[currentEle as keyof typeof prev],
+						props: newProps,
+					},
+				};
+			});
+		}
+	};
 
 	useEffect(() => {
 		onSaveRef.current = onSave;
@@ -2381,77 +2473,25 @@ export default function VBPrototype({
 	}, [currentEle, dragging, currentHoverEle]);
 
 	return (
-		<div className="select-none">
+		<div className="select-none" style={{ height: "100%" }}>
 			<Box
 				bg="bg.page"
 				w="full"
 				className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr]"
+				style={{ height: "100%", overflow: "hidden" }}
 			>
-				<Box
-					bg="bg.default"
-					borderB="1"
-					borderColor="border.tertiary"
-					gridColumn="2"
-					px="24"
-					py="12"
-					display="flex"
-					alignItems="center"
-					gap="4"
-					justifyContent="space-between"
-				>
-					<Box
-						gridColumn="2"
-						display="flex"
-						alignItems="center"
-						gap="8"
-					>
-						<IconFile size={16} />
-						<Text
-							fontSize="md"
-							fontWeight="600"
-						>
-							{pageName || "New Page"}
-						</Text>
-						<Button
-							aria-label="options"
-							size="sm"
-							appearance="subtle"
-							icon={<IconDots size={16} />}
-						/>
-
-						<Text
-							fontSize="sm"
-							fontWeight="500"
-							px="8"
-							py="2"
-							className={`rounded-full bg-[#D1F0E1] block text-[#24663E] transition-opacity duration-500 ${
-								lastSaved ? "opacity-100" : "opacity-0"
-							}`}
-						>
-							{lastSaved
-								? `Auto saved at ${lastSaved.toLocaleTimeString()}`
-								: "Saved"}
-						</Text>
-					</Box>
-					<Box
-						gridColumn="2"
-						display="flex"
-						alignItems="center"
-						gap="8"
-					>
-						<Button
-							appearance={pageStatus === "Published" ? "subtle" : "primary"}
-							size="lg"
-							onClick={onPublish}
-						>
-							{pageStatus === "Published" ? "Published" : "Publish"}
-						</Button>
-					</Box>
-				</Box>
+				<CMSToolbar
+					pageName={pageName || "New Page"}
+					lastSaved={lastSaved}
+					pageStatus={pageStatus}
+					onPublish={onPublish}
+					contentTypeIcon={<IconFile size={16} />}
+				/>
 				<Box
 					w="auto"
 					className="vb-outline"
-					style={{width: undefined, minWidth: 180, maxWidth: 600, position: "relative"}}
+					bg="bg.page"
+					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 				>
 					{/* Resizable handle */}
 					<div
@@ -2503,16 +2543,80 @@ export default function VBPrototype({
 						setCurrentHoverEle={setCurrentHoverEle}
 					/>
 				</Box>
-				<div className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10">
+				<div className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10" style={{ height: "100%", overflow: "hidden" }}>
 					<div
 						className="rounded-lg bg-white shadow-lg grow w-full mt-3"
 						onClick={() => setCurrentEle("none")}
+						onDragOver={(e) => {
+							e.preventDefault();
+							const hasImageData = e.dataTransfer.types.includes("image/url");
+							if (hasImageData) {
+								e.currentTarget.style.opacity = "0.8";
+							}
+						}}
+						onDragLeave={(e) => {
+							e.currentTarget.style.opacity = "1";
+							setDragOverColumn(null);
+							setDropPosition(null);
+						}}
+						onDrop={(e) => {
+							e.preventDefault();
+							e.currentTarget.style.opacity = "1";
+							const imageUrl = e.dataTransfer.getData("image/url");
+							const imageAlt = e.dataTransfer.getData("image/alt");
+							
+							setDragOverColumn(null);
+							setDropPosition(null);
+							
+							if (imageUrl && dropPosition) {
+								const uKey = `Image-${Date.now()}`;
+								
+								// Add to theEles
+								setTheEles((prev: any) => ({
+									...prev,
+									[uKey]: {
+										type: "Image",
+										props: [
+											{type: "text", label: "Image URL", value: imageUrl},
+											{type: "text", label: "Title", value: imageAlt || "Untitled Image"},
+											{type: "text", label: "Alt Text", value: imageAlt},
+											{type: "text", label: "Width", value: "auto"},
+											{type: "text", label: "Height", value: "auto"},
+										],
+									},
+								}));
+								
+								// Add to data structure at the drop position
+								setData((prev) => {
+									return prev.map((section) => ({
+										...section,
+										children: section.children.map((row: any) => ({
+											...row,
+											children: row.children.map((col: any) => {
+												if (col.id === dropPosition.colId) {
+													const newChildren = [...col.children];
+													newChildren.splice(dropPosition.position, 0, {id: uKey});
+													return {
+														...col,
+														children: newChildren,
+													};
+												}
+												return col;
+											}),
+										})),
+									}));
+								});
+							}
+						}}
 						style={{
 							background:
 								"radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)",
+							maxHeight: "100%",
+							overflowY: "auto",
+							transition: "opacity 0.2s",
 						}}
 					>
-						<div className="w-[500px] m-auto p-4 min-h-[80vh] pt-24">
+						<div className="w-[500px] m-auto p-4 pt-24" style={{ minHeight: "100%" }}>
 							{data.map((section, sindex) => (
 								<section
 									className=""
@@ -2524,12 +2628,85 @@ export default function VBPrototype({
 											key={index}
 										>
 											{row.children.map((col: any, colIndex: any) => (
-												<div key={"col" + colIndex}>
+												<div 
+													key={"col" + colIndex}
+													onDragOver={(e) => {
+														e.preventDefault();
+														e.stopPropagation();
+														const hasImageData = e.dataTransfer.types.includes("image/url");
+														if (hasImageData) {
+															setDragOverColumn(col.id);
+															// Calculate drop position based on mouse Y position
+															const rect = e.currentTarget.getBoundingClientRect();
+															const elements = col.children;
+															const mouseY = e.clientY;
+															
+															// Find insertion point
+															let insertPosition = elements.length;
+															const elementDivs = e.currentTarget.querySelectorAll('[data-element-id]');
+															
+															for (let i = 0; i < elementDivs.length; i++) {
+																const elemRect = elementDivs[i].getBoundingClientRect();
+																const elemMiddle = elemRect.top + elemRect.height / 2;
+																
+																if (mouseY < elemMiddle) {
+																	insertPosition = i;
+																	break;
+																}
+															}
+															
+															setDropPosition({
+																colId: col.id,
+																position: insertPosition
+															});
+														}
+													}}
+													onDragLeave={(e) => {
+														e.stopPropagation();
+														if (e.currentTarget === e.target) {
+															setDragOverColumn(null);
+															setDropPosition(null);
+														}
+													}}
+													className={dragOverColumn === col.id ? "relative" : ""}
+												>
+													{dragOverColumn === col.id && dropPosition && dropPosition.colId === col.id && (
+														<div
+															style={{
+																position: "absolute",
+																left: 0,
+																right: 0,
+																top: dropPosition.position === 0 ? 0 : undefined,
+																bottom: dropPosition.position === col.children.length ? 0 : undefined,
+																height: "2px",
+																backgroundColor: "#0037FF",
+																zIndex: 1000,
+																pointerEvents: "none",
+																transform: dropPosition.position === 0 ? "translateY(0)" : dropPosition.position === col.children.length ? "translateY(0)" : `translateY(${dropPosition.position * 60}px)`
+															}}
+														/>
+													)}
+													{col.children.length === 0 && dragOverColumn === col.id && (
+														<div
+															style={{
+																border: "2px dashed #0037FF",
+																borderRadius: "8px",
+																padding: "20px",
+																textAlign: "center",
+																color: "#0037FF",
+																fontSize: "14px",
+																backgroundColor: "rgba(0, 55, 255, 0.05)"
+															}}
+														>
+															Drop image here
+														</div>
+													)}
 													{col.children.map(
 														(element: any, eleIndex: any) => (
 															<div
 																key={"ele" + eleIndex}
 																className="relative group"
+																data-element-id={element.id}
 															>
 																<div
 																	onClick={(e) => {
@@ -2619,6 +2796,14 @@ export default function VBPrototype({
 																				case "Button":
 																					return (
 																						<IconRectangle
+																							size={
+																								12
+																							}
+																						/>
+																					);
+																				case "Image":
+																					return (
+																						<IconPhoto
 																							size={
 																								12
 																							}
@@ -2776,6 +2961,34 @@ export default function VBPrototype({
 																					</div>
 																				</div>
 																			);
+																		case "Image":
+																			const imageUrl = theEles[element.id]?.props.find(
+																				(prop: any) => prop.label === "Image URL"
+																			)?.value;
+																			const imageAlt = theEles[element.id]?.props.find(
+																				(prop: any) => prop.label === "Alt Text"
+																			)?.value;
+																			const imageWidth = theEles[element.id]?.props.find(
+																				(prop: any) => prop.label === "Width"
+																			)?.value;
+																			const imageHeight = theEles[element.id]?.props.find(
+																				(prop: any) => prop.label === "Height"
+																			)?.value;
+																			
+																			return (
+																				<div className="mb-4">
+																					<img
+																						src={imageUrl}
+																						alt={imageAlt || "Image"}
+																						style={{
+																							width: imageWidth === "auto" ? "100%" : imageWidth,
+																							height: imageHeight === "auto" ? "auto" : imageHeight,
+																							borderRadius: "8px",
+																							objectFit: "cover"
+																						}}
+																					/>
+																				</div>
+																			);
 																		default:
 																			return (
 																				<svg
@@ -2804,11 +3017,17 @@ export default function VBPrototype({
 							))}
 						</div>
 					</div>
+					{isImageSelectorOpen && (
+						<ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />
+					)}
 					<Box
 						borderL="1"
 						borderColor="border.tertiary"
 					>
-						<RightToolbar />
+						<RightToolbar
+							onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
+							isFolderActive={isImageSelectorOpen}
+						/>
 					</Box>
 				</div>
 			</Box>

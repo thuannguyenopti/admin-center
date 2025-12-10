@@ -6,12 +6,18 @@ import StrideLogo from "@/app/assets/stride-logo.svg";
 import TeamsLogo from "@/app/assets/teams-logo.svg";
 import GoogleLogo from "@/app/assets/google-logo.svg";
 
-export default function RightToolbar() {
+interface RightToolbarProps {
+	onFolderClick?: () => void;
+	isFolderActive?: boolean;
+}
+
+export default function RightToolbar({ onFolderClick, isFolderActive }: RightToolbarProps) {
 	const toolbarItems = [
 		{
 			label: "Folders",
 			icon: <IconFolders size={16} />,
-			action: () => console.log("Folders clicked"),
+			action: onFolderClick || (() => console.log("Folders clicked")),
+			isActive: isFolderActive,
 		},
 		{type: "separator"},
 		{
@@ -63,6 +69,7 @@ export default function RightToolbar() {
 								onClick={item.action}
 								aria-label={item.label}
 								icon={item.icon}
+								active={item.isActive}
 							>
 								{item.label}
 							</NavItem>

@@ -1,9 +1,11 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger} from "@optiaxiom/react";
+import {Box, Heading, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
 import {ReactNode} from "react";
 import {useRouter, usePathname} from "next/navigation";
+import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
+import Image from "next/image";
 
 export default function GlobalBar() {
 	const router = useRouter();
@@ -27,7 +29,12 @@ export default function GlobalBar() {
 			borderColor="border.tertiary"
 			display="flex"
 			alignItems="center"
+			justifyContent="space-between"
 		>
+			<Box
+				display="flex"
+				alignItems="center"
+			>
 			<svg
 				width="24"
 				viewBox="0 0 24 24"
@@ -128,6 +135,49 @@ export default function GlobalBar() {
 				</MenuTrigger>
 				<MenuContent />
 			</Menu>
+			</Box>
+			<Box
+				display="flex"
+				alignItems="center"
+				gap="8"
+			>
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconSearch size={20} />}
+					aria-label="Search"
+				/>
+				<Button
+					appearance="subtle"
+					size="md"
+					aria-label="Opal AI Assistant"
+				>
+					<Image
+						src="/opal-orb.png"
+						alt="Opal"
+						width={20}
+						height={20}
+					/>
+				</Button>
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconBell size={20} />}
+					aria-label="Notifications"
+				/>
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconHelp size={20} />}
+					aria-label="Help"
+				/>
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconUser size={20} />}
+					aria-label="User profile"
+				/>
+			</Box>
 		</Box>
 	);
 }
