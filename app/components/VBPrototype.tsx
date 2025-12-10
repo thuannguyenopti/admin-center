@@ -12,7 +12,7 @@ import {
 	MenuContent,
 	MenuTrigger,
 } from "@optiaxiom/react";
-import {ReactNode, useEffect, Fragment, Children} from "react";
+import {ReactNode, useEffect, Fragment, Children, useRef, SetStateAction} from "react";
 import {useState} from "react";
 import {
 	IconPlus,
@@ -33,11 +33,13 @@ import {
 	IconLogout,
 	IconUser,
 	IconArrowBarBoth,
+	IconFile,
 } from "@tabler/icons-react";
 
 // Simple AnimatedText component for cycling through texts
-import {useRef} from "react";
+
 import {sep} from "path";
+import RightToolbar from "./RightToolbar";
 const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -1260,7 +1262,7 @@ const Outline: React.FC<OutlineProps> = ({
 																				type={
 																					theEles[
 																						element.id
-																					].type
+																					]?.type
 																				}
 																				element={element}
 																				label={
@@ -1560,7 +1562,55 @@ const Outline: React.FC<OutlineProps> = ({
 	);
 };
 
-export default function VBPrototype() {
+const extractElements = (nodes: any[]) => {
+	let elements: Record<string, any> = {};
+	const traverse = (node: any) => {
+		if (node.children) {
+			node.children.forEach(traverse);
+		}
+		if (node.type && node.props) {
+			elements[node.id] = {type: node.type, props: node.props};
+		}
+	};
+	nodes.forEach(traverse);
+	return elements;
+};
+
+const mergeData = (structure: any[], elements: Record<string, any>) => {
+	return structure.map((node) => {
+		const newNode = {...node};
+		if (elements[node.id]) {
+			newNode.type = elements[node.id].type;
+			newNode.props = elements[node.id].props;
+		}
+		if (node.children) {
+			newNode.children = mergeData(node.children, elements);
+		}
+		return newNode;
+	});
+};
+
+const ensureOpen = (nodes: any[]): any[] => {
+	return nodes.map((node) => ({
+		...node,
+		open: node.open ?? true,
+		children: node.children ? ensureOpen(node.children) : undefined,
+	}));
+};
+
+export default function VBPrototype({
+	initialData,
+	onSave,
+	onPublish,
+	pageName,
+	pageStatus,
+}: {
+	initialData?: any[];
+	onSave?: (data: any[]) => void;
+	onPublish?: () => void;
+	pageName?: string;
+	pageStatus?: string;
+}) {
 	const onInputChange = (value: any, propIndex: number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev: any) => {
@@ -1584,57 +1634,49 @@ export default function VBPrototype() {
 
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
-	const [theEles, setTheEles] = useState<any>({
-		// "heading": {
-		//     type: "Heading",
-		//     props: [
-		//     {type: "text", label: "Text"},
-		// ]},
-		// "text": {"label": "Text", "type": "Text", props: [
-		//     {type: "text", label: "Text"},
-		// ]},
-		// "first name": {"type": "Input", props: [
-		//     {type: "text", label: "Label"},
-		//     {type: "text", label: "Placeholder"},
-		//     {type: "text", label: "Tooltip"},
-		//     {type: "checkbox", label: "Required", value: false},
-		// ]},
-		// "last name": {"type": "Input", props: [
-		//     {type: "text", label: "Label"},
-		//     {type: "text", label: "Placeholder"},
-		//     {type: "text", label: "Tooltip"},
-		//     {type: "checkbox", label: "Required", value: false},
-		// ]},
-		// "email": {"type": "Input", props: [
-		//     {type: "text", label: "Label"},
-		//     {type: "text", label: "Placeholder"},
-		//     {type: "text", label: "Tooltip"},
-		//     {type: "checkbox", label: "Required", value: false},
-		// ]},
-		// "company": {"type": "Input", props: [
-		//     {type: "text", label: "Label"},
-		//     {type: "text", label: "Placeholder"},
-		//     {type: "text", label: "Tooltip"},
-		//     {type: "checkbox", label: "Required", value: false},
-		// ]},
-		// "job title": {"type": "Input", props: [
-		//     {type: "text", label: "Label"},
-		//     {type: "text", label: "Placeholder"},
-		//     {type: "text", label: "Tooltip"},
-		//     {type: "checkbox", label: "Required", value: false},
-		// ]},
-		// "products": {"type": "Input", props: [
-		//     {type: "text", label: "Label"},
-		//     {type: "text", label: "Placeholder"},
-		//     {type: "text", label: "Tooltip"},
-		//     {type: "checkbox", label: "Required", value: false},
-		// ]},
-		// "button": {"type": "Button", props: [
-		//     {type: "text", label: "Label"},
-		// ]}
-	});
+	const hasChanged = useRef(false);
 
-	const [data, setData] = useState<any[]>([]);
+	const [theEles, _setTheEles] = useState<any>(() => {
+		if (initialData) {
+			return extractElements(initialData);
+		}
+		return {};
+	});
+	const setTheEles = (arg: SetStateAction<any>) => {
+		hasChanged.current = true;
+		_setTheEles(arg);
+	};
+
+	const [data, _setData] = useState<any[]>(() => {
+		return initialData ? ensureOpen(initialData) : [];
+	});
+	const setData = (arg: SetStateAction<any[]>) => {
+		hasChanged.current = true;
+		_setData(arg);
+	};
+
+	const [lastSaved, setLastSaved] = useState<Date | null>(null);
+	const isFirstRender = useRef(true);
+	const onSaveRef = useRef(onSave);
+
+	useEffect(() => {
+		onSaveRef.current = onSave;
+	}, [onSave]);
+
+	// Sync data changes to parent
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false;
+			return;
+		}
+		if (!hasChanged.current) return;
+
+		if (onSaveRef.current) {
+			const mergedData = mergeData(data, theEles);
+			onSaveRef.current(mergedData);
+			setLastSaved(new Date());
+		}
+	}, [data, theEles]);
 
 	// Add escape key event listener
 	useEffect(() => {
@@ -2233,7 +2275,7 @@ export default function VBPrototype() {
 	}, [currentEle, dragging, currentHoverEle]);
 
 	return (
-		<div className="-mt-[72px] -ml-[24px] w-[calc(100vw-58px)] select-none">
+		<div className="select-none">
 			<Box
 				bg="bg.page"
 				w="full"
@@ -2257,46 +2299,32 @@ export default function VBPrototype() {
 						alignItems="center"
 						gap="8"
 					>
-						<svg
-							className="-translate-y-[2px]"
-							width="21"
-							height="17"
-							viewBox="0 0 21 17"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path
-								d="M17.7812 2.875C17.4688 2.5625 17 2.5625 16.7188 2.875L16.0625 3.53125L17.5 4.96875L18.1562 4.28125C18.4375 4 18.4375 3.53125 18.1562 3.21875L17.7812 2.875ZM11.2188 8.40625C11.125 8.53125 11.0625 8.65625 11.0312 8.78125L10.7188 10.3438L12.25 10.0312C12.4062 10 12.5312 9.90625 12.625 9.8125L16.4375 6L15 4.59375L11.2188 8.40625ZM15.6562 1.8125C16.5312 0.9375 17.9375 0.90625 18.8438 1.8125L19.2188 2.1875C20.0938 3.0625 20.0938 4.46875 19.2188 5.34375L13.6875 10.875C13.375 11.1875 13 11.4062 12.5625 11.5L9.875 12.0312C9.65625 12.0938 9.375 12.0312 9.21875 11.8438C9.03125 11.6562 8.9375 11.4062 9 11.1562L9.5625 8.46875C9.65625 8.0625 9.875 7.65625 10.1562 7.375L15.6562 1.8125ZM2.25 5H8.25C8.65625 5 9 5.34375 9 5.75C9 6.1875 8.65625 6.5 8.25 6.5H2.25C1.8125 6.5 1.5 6.84375 1.5 7.25V14.75C1.5 15.1875 1.8125 15.5 2.25 15.5H15.75C16.1562 15.5 16.5 15.1875 16.5 14.75V10.75C16.5 10.3438 16.8125 10 17.25 10C17.6562 10 18 10.3438 18 10.75V14.75C18 16 16.9688 17 15.75 17H2.25C1 17 0 16 0 14.75V7.25C0 6.03125 1 5 2.25 5ZM4 12C3.4375 12 3 11.5625 3 11C3 10.4688 3.4375 10 4 10C4.53125 10 5 10.4688 5 11C5 11.5625 4.53125 12 4 12ZM8 11C8 11.5625 7.53125 12 7 12C6.4375 12 6 11.5625 6 11C6 10.4688 6.4375 10 7 10C7.53125 10 8 10.4688 8 11Z"
-								fill="#2E3442"
-							/>
-						</svg>
+						<IconFile size={16} />
 						<Text
 							fontSize="md"
 							fontWeight="600"
 						>
-							My Form
+							{pageName || "New Page"}
 						</Text>
-						<svg
-							width="17"
-							height="16"
-							viewBox="0 0 17 16"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path
-								d="M9 14.5C11.3125 14.5 13.4375 13.2812 14.625 11.25C15.7812 9.25 15.7812 6.78125 14.625 4.75C13.4375 2.75 11.3125 1.5 9 1.5C6.65625 1.5 4.53125 2.75 3.34375 4.75C2.1875 6.78125 2.1875 9.25 3.34375 11.25C4.53125 13.2812 6.65625 14.5 9 14.5ZM9 0C11.8438 0 14.4688 1.53125 15.9062 4C17.3438 6.5 17.3438 9.53125 15.9062 12C14.4688 14.5 11.8438 16 9 16C6.125 16 3.5 14.5 2.0625 12C0.625 9.53125 0.625 6.5 2.0625 4C3.5 1.53125 6.125 0 9 0ZM10 8C10 8.5625 9.53125 9 9 9C8.4375 9 8 8.5625 8 8C8 7.46875 8.4375 7 9 7C9.53125 7 10 7.46875 10 8ZM12 7C12.5312 7 13 7.46875 13 8C13 8.5625 12.5312 9 12 9C11.4375 9 11 8.5625 11 8C11 7.46875 11.4375 7 12 7ZM7 8C7 8.5625 6.53125 9 6 9C5.4375 9 5 8.5625 5 8C5 7.46875 5.4375 7 6 7C6.53125 7 7 7.46875 7 8Z"
-								fill="#2E3442"
-							/>
-						</svg>
+						<Button
+							aria-label="options"
+							size="sm"
+							appearance="subtle"
+							icon={<IconDots size={16} />}
+						/>
 
 						<Text
 							fontSize="sm"
 							fontWeight="500"
 							px="8"
 							py="2"
-							className="rounded-full bg-[#D1F0E1] block text-[#24663E]"
+							className={`rounded-full bg-[#D1F0E1] block text-[#24663E] transition-opacity duration-500 ${
+								lastSaved ? "opacity-100" : "opacity-0"
+							}`}
 						>
-							Auto saved
+							{lastSaved
+								? `Auto saved at ${lastSaved.toLocaleTimeString()}`
+								: "Saved"}
 						</Text>
 					</Box>
 					<Box
@@ -2306,10 +2334,11 @@ export default function VBPrototype() {
 						gap="8"
 					>
 						<Button
-							appearance="primary"
+							appearance={pageStatus === "Published" ? "subtle" : "primary"}
 							size="lg"
+							onClick={onPublish}
 						>
-							Publish
+							{pageStatus === "Published" ? "Published" : "Publish"}
 						</Button>
 					</Box>
 				</Box>
@@ -2368,9 +2397,9 @@ export default function VBPrototype() {
 						setCurrentHoverEle={setCurrentHoverEle}
 					/>
 				</Box>
-				<div className="p-6 pt-3 flex items-stretch z-10">
+				<div className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10">
 					<div
-						className="rounded-lg bg-white shadow-lg grow w-full"
+						className="rounded-lg bg-white shadow-lg grow w-full mt-3"
 						onClick={() => setCurrentEle("none")}
 						style={{
 							background:
@@ -2449,7 +2478,7 @@ export default function VBPrototype() {
 																				? "-8px"
 																				: undefined,
 																	}}
-																	className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+																	className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
 																>
 																	<div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">
 																		{(() => {
@@ -2669,6 +2698,12 @@ export default function VBPrototype() {
 							))}
 						</div>
 					</div>
+					<Box
+						borderL="1"
+						borderColor="border.tertiary"
+					>
+						<RightToolbar />
+					</Box>
 				</div>
 			</Box>
 		</div>

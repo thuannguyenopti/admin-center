@@ -25,9 +25,6 @@ function usePersistentState(key, defaultValue) {
 				if (state === undefined || state === null) {
 					localStorage.removeItem(key); // Clean up invalid values
 				} else {
-					if (typeof state === "object" && state !== null) {
-						state.status = "ok";
-					}
 					localStorage.setItem(key, JSON.stringify(state));
 				}
 			} catch (error) {
@@ -36,7 +33,7 @@ function usePersistentState(key, defaultValue) {
 		}
 	}, [key, state, isHydrated]);
 
-	return [state, setState];
+	return [state, setState, isHydrated];
 }
 
 export default usePersistentState;
