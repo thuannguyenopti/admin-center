@@ -27,7 +27,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const path = usePathname();
-	const algorithmMatch = path.match(/\/graph\/search\/optimize-search\/([^/]+)/);
+	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
@@ -113,6 +113,86 @@ export default function RootLayout({
 				url: "/cms/add-ons",
 				icon: <IconPuzzle />,
 			},
+			{
+				label: "Search Management",
+				url: "/cms/search/search-analytics",
+				highlight: "/cms/search",
+				icon: <IconSearch />,
+				children: [
+					{label: "Health & Monitoring"},
+					{
+						label: "Overview",
+						url: "/cms/search/search-analytics",
+						children: {
+							title: "Analytics Details",
+							children: [
+								{
+									label: "Total Queries",
+									url: "/cms/search/search-analytics/total-queries",
+								},
+								{
+									label: "Click-Through Rate",
+									url: "/cms/search/search-analytics/click-through-rate",
+								},
+								{
+									label: "Zero-Result Analysis",
+									description: "Analyze queries with no results",
+									url: "/cms/search/search-analytics/zero-result",
+								},
+								{
+									label: "Reformulation Rate",
+									url: "/cms/search/search-analytics/reformulation-rate",
+								},
+							],
+						},
+					},
+					{label: "Optimizations"},
+					{
+						label: "Algorithms",
+						description: "Manage search algorithms",
+						url: "/cms/search/algorithms",
+						children: {
+							title: currentAlgorithm ? currentAlgorithm.name : "Algorithm details",
+							children: currentAlgorithm
+								? [
+										...(currentAlgorithm?.type !== "Custom"
+											? [
+													{
+														label: "Optimizations",
+														url: `/cms/search/algorithms/${algorithmId}/optimizations`,
+													},
+											  ]
+											: []),
+										{
+											label: "Filter",
+											url: `/cms/search/algorithms/${algorithmId}/filter`,
+										},
+										{
+											label: "Order",
+											url: `/cms/search/algorithms/${algorithmId}/order`,
+										},
+										{
+											label: "Settings",
+											url: `/cms/search/algorithms/${algorithmId}/settings`,
+										},
+								  ]
+								: [],
+						},
+					},
+					{
+						label: "Best Bets",
+						description:
+							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
+						url: "/cms/search/best-bets",
+					},
+					{
+						label: "Related Queries",
+						description:
+							"Manage synonyms and related queries to improve search recall.",
+						url: "/cms/search/related-queries",
+					},
+				],
+			},
 		],
 		graph: [
 			{
@@ -169,86 +249,6 @@ export default function RootLayout({
 			// 	highlight: "/graph/settings",
 			// 	icon: <IconSettings />,
 			// },
-			{
-				label: "Search Management",
-				url: "/graph/search/search-analytics",
-				highlight: "/graph/search",
-				icon: <IconSearch />,
-				children: [
-					{label: "Health & Monitoring"},
-					{
-						label: "Overview",
-						url: "/graph/search/search-analytics",
-						children: {
-							title: "Analytics Details",
-							children: [
-								{
-									label: "Total Queries",
-									url: "/graph/search/search-analytics/total-queries",
-								},
-								{
-									label: "Click-Through Rate",
-									url: "/graph/search/search-analytics/click-through-rate",
-								},
-								{
-									label: "Zero-Result Analysis",
-									description: "Analyze queries with no results",
-									url: "/graph/search/search-analytics/zero-result",
-								},
-								{
-									label: "Reformulation Rate",
-									url: "/graph/search/search-analytics/reformulation-rate",
-								},
-							],
-						},
-					},
-					{label: "Optimizations"},
-					{
-						label: "Algorithms",
-						description: "Manage search algorithms",
-						url: "/graph/search/optimize-search",
-						children: {
-							title: currentAlgorithm ? currentAlgorithm.name : "Algorithm details",
-							children: algorithmId
-								? [
-										...(currentAlgorithm?.type !== "Custom"
-											? [
-													{
-														label: "Optimizations",
-														url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
-													},
-											  ]
-											: []),
-										{
-											label: "Filter",
-											url: `/graph/search/optimize-search/${algorithmId}/filter`,
-										},
-										{
-											label: "Order",
-											url: `/graph/search/optimize-search/${algorithmId}/order`,
-										},
-										{
-											label: "Settings",
-											url: `/graph/search/optimize-search/${algorithmId}/settings`,
-										},
-								  ]
-								: [],
-						},
-					},
-					{
-						label: "Best Bets",
-						description:
-							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
-						url: "/graph/search/best-bets",
-					},
-					{
-						label: "Related Queries",
-						description:
-							"Manage synonyms and related queries to improve search recall.",
-						url: "/graph/search/related-queries",
-					},
-				],
-			},
 		],
 		"fe-hosting": [
 			{

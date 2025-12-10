@@ -111,7 +111,7 @@ export default function SearchAnalytics() {
 				gap="16"
 				mb="32"
 			>
-				<Link href="/graph/search/search-analytics/total-queries">
+				<Link href="/cms/search/search-analytics/total-queries">
 					<MetricCard
 						label="Total Queries"
 						unit=""
@@ -121,7 +121,7 @@ export default function SearchAnalytics() {
 						previousValue={prevTotalQueries}
 					/>
 				</Link>
-				<Link href="/graph/search/search-analytics/click-through-rate">
+				<Link href="/cms/search/search-analytics/click-through-rate">
 					<MetricCard
 						label="Click-Through Rate"
 						unit="%"
@@ -131,7 +131,7 @@ export default function SearchAnalytics() {
 						previousValue={prevCtr}
 					/>
 				</Link>
-				<Link href="/graph/search/search-analytics/zero-result">
+				<Link href="/cms/search/search-analytics/zero-result">
 					<MetricCard
 						label="Zero-Result Rate"
 						unit="%"
@@ -142,7 +142,7 @@ export default function SearchAnalytics() {
 						previousValue={prevZeroResult}
 					/>
 				</Link>
-				<Link href="/graph/search/search-analytics/reformulation-rate">
+				<Link href="/cms/search/search-analytics/reformulation-rate">
 					<MetricCard
 						label="Reformulation Rate"
 						unit="%"
