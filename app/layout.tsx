@@ -19,6 +19,7 @@ import {
 	IconFile,
 	IconUsers,
 	IconPuzzle,
+	IconFolders,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -45,7 +46,7 @@ export default function RootLayout({
 				label: "Content Manager",
 				url: "/cms/content",
 				highlight: "cms/content",
-				icon: <IconFile />,
+				icon: <IconFolders />,
 			},
 			{
 				label: "Edit",
