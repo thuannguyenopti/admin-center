@@ -24,7 +24,15 @@ export default function Home() {
 		{label: "Date"},
 		{label: "User"},
 	];
-	const rows = [
+	const rows: Array<{
+		children: Array<{
+			label: string;
+			description?: string;
+			type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
+			data?: any;
+			badge?: string;
+		}>;
+	}> = [
 		{
 			children: [
 				{

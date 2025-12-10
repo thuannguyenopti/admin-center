@@ -68,7 +68,10 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 		<>
 			<Tr url={`/cms/edit/${node.id}`}>
 				<Td type="header">
-					<Flex style={{paddingLeft: level * 24}}>
+					<Flex
+						gap="8"
+						style={{paddingLeft: level * 24}}
+					>
 						{hasChildren ? (
 							<Box
 								onClick={(e) => {
@@ -79,13 +82,33 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 								p="4"
 							>
 								{expanded ? (
-									<IconChevronDown size={16} />
+									<Box
+										h="16"
+										alignItems="center"
+										display="flex"
+									>
+										<Button
+											size="sm"
+											appearance="subtle"
+											icon={<IconChevronDown size={16} />}
+										/>
+									</Box>
 								) : (
-									<IconChevronRight size={16} />
+									<Box
+										h="16"
+										alignItems="center"
+										display="flex"
+									>
+										<Button
+											size="sm"
+											appearance="subtle"
+											icon={<IconChevronRight size={16} />}
+										/>
+									</Box>
 								)}
 							</Box>
 						) : (
-							<Box w="24" />
+							<Box w="32" />
 						)}
 						<Item
 							icon={<IconFile size={16} />}
@@ -156,7 +179,9 @@ export default function EditPage() {
 			<Table>
 				<thead>
 					<Tr>
-						<Th>Name</Th>
+						<Th>
+							<Box ml="40">Name</Box>
+						</Th>
 						<Th>Type</Th>
 						<Th>Last Modified</Th>
 						<Th>Status</Th>

@@ -5,7 +5,12 @@ import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Table, Th, Tr, Td} from "../../../../../components/Table";
 
-const rows = [
+const rows: Array<{
+	children: Array<{
+		label: string;
+		type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
+	}>;
+}> = [
 	{
 		children: [
 			{label: "host-en"},

@@ -5,7 +5,13 @@ import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Table, Th, Tr, Td} from "../../../components/Table";
 
-const rows = [
+const rows: Array<{
+	url: string;
+	children: Array<{
+		label: string;
+		type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
+	}>;
+}> = [
 	{
 		url: "/cms/settings/applications/mosey-bank/settings",
 		children: [
