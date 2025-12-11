@@ -11,31 +11,39 @@ type ItemProps = {
 export default function Item({icon, title, description}: ItemProps) {
 	return (
 		<Box
+			asChild
 			display="flex"
 			flexDirection="row"
 			alignItems="start"
 			gap="8"
 		>
-			<Box
-				w="16"
-				pt="2"
-			>
-				{icon}
-			</Box>
-			<Box
-				display="flex"
-				flexDirection="column"
-			>
-				<Text>{title}</Text>
-				{description && (
-					<Text
-						fontSize="sm"
-						color="fg.secondary"
-					>
-						{description}
-					</Text>
-				)}
-			</Box>
+			<span>
+				<Box
+					w="16"
+					pt="2"
+					asChild
+				>
+					<span>{icon}</span>
+				</Box>
+				<Box
+					asChild
+					display="flex"
+					flexDirection="column"
+				>
+					<span>
+						<span>{title}</span>
+						{description && (
+							<Text
+								asChild
+								fontSize="sm"
+								color="fg.secondary"
+							>
+								<span>{description}</span>
+							</Text>
+						)}
+					</span>
+				</Box>
+			</span>
 		</Box>
 	);
 }

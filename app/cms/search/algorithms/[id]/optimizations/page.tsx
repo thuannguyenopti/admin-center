@@ -11,7 +11,9 @@ import {
 	BestBet,
 	initialBestBets,
 	AlgorithmBestBet,
+	AlgorithmBestBetReference,
 	RelatedQuery,
+	AlgorithmRelatedQueryReference,
 	initialRelatedQueries,
 	Algorithm,
 	initialAlgorithms,
@@ -38,7 +40,7 @@ export default function OptimizationsPage() {
 
 	useEffect(() => {
 		if (isCustom) {
-			router.replace(`/graph/search/optimize-search/${id}/filter`);
+			router.replace(`/cms/search/algorithms/${id}/filter`);
 		}
 	}, [isCustom, id, router]);
 
@@ -52,7 +54,15 @@ export default function OptimizationsPage() {
 	const [algorithmBestBets, setAlgorithmBestBets] = usePersistentState(
 		`algorithm_best_bets_${id}`,
 		[]
-	) as [AlgorithmBestBet[], (val: AlgorithmBestBet[]) => void];
+	) as [AlgorithmBestBetReference[], (val: AlgorithmBestBetReference[]) => void];
+
+	const hydratedBestBets = algorithmBestBets
+		.map((ref) => {
+			const bb = allBestBets.find((g) => g.id === ref.bestBetId);
+			if (!bb) return null;
+			return {...bb, status: ref.status};
+		})
+		.filter((item): item is BestBet & {status: "Active" | "Inactive"} => item !== null);
 
 	const [allRelatedQueries, setAllRelatedQueries] = usePersistentState(
 		"relatedQueries",
@@ -62,13 +72,19 @@ export default function OptimizationsPage() {
 	const [relatedQueries, setRelatedQueries] = usePersistentState(
 		`algorithm_related_queries_${id}`,
 		[]
-	) as [RelatedQuery[], (val: RelatedQuery[]) => void];
+	) as [AlgorithmRelatedQueryReference[], (val: AlgorithmRelatedQueryReference[]) => void];
+
+	const hydratedRelatedQueries = relatedQueries
+		.map((ref) => allRelatedQueries.find((rq) => rq.id === ref.relatedQueryId))
+		.filter((item): item is RelatedQuery => item !== undefined);
 
 	const [selectedBestBetQuery, setSelectedBestBetQuery] = useState("");
 
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [editingBestBet, setEditingBestBet] = useState<AlgorithmBestBet | null>(null);
+	const [editingBestBet, setEditingBestBet] = useState<
+		(BestBet & {status: "Active" | "Inactive"}) | null
+	>(null);
 	const [createBestBetInitialData, setCreateBestBetInitialData] = useState<
 		{query: string; destination: string} | undefined
 	>(undefined);
@@ -87,7 +103,9 @@ export default function OptimizationsPage() {
 		destination: string;
 		status?: "Active" | "Inactive";
 	}) => {
+		const newId = Date.now().toString();
 		const newBestBet: BestBet = {
+			id: newId,
 			query: data.query,
 			destination: data.destination,
 			owner: "Alice Johnson",
@@ -99,8 +117,8 @@ export default function OptimizationsPage() {
 		}
 
 		// Add to local algorithm list
-		const newAlgorithmBestBet: AlgorithmBestBet = {
-			...newBestBet,
+		const newAlgorithmBestBet: AlgorithmBestBetReference = {
+			bestBetId: newId,
 			status: data.status || "Active",
 		};
 		setAlgorithmBestBets([...algorithmBestBets, newAlgorithmBestBet]);
@@ -110,11 +128,15 @@ export default function OptimizationsPage() {
 	};
 
 	const handleRemoveBestBet = (query: string) => {
-		setAlgorithmBestBets(algorithmBestBets.filter((b) => b.query !== query));
+		// Find the ID for this query
+		const bet = hydratedBestBets.find((b) => b.query === query);
+		if (bet) {
+			setAlgorithmBestBets(algorithmBestBets.filter((b) => b.bestBetId !== bet.id));
+		}
 	};
 
-	const handleEditClick = (bet: BestBet | AlgorithmBestBet) => {
-		const algoBet = bet as AlgorithmBestBet;
+	const handleEditClick = (bet: BestBet | (BestBet & {status: "Active" | "Inactive"})) => {
+		const algoBet = bet as BestBet & {status: "Active" | "Inactive"};
 		setEditingBestBet(algoBet);
 		setIsEditDialogOpen(true);
 	};
@@ -126,16 +148,9 @@ export default function OptimizationsPage() {
 	}) => {
 		if (!editingBestBet) return;
 
-		const updatedBet = {
-			...editingBestBet,
-			query: data.query,
-			destination: data.destination,
-			status: data.status || "Active",
-		};
-
 		// Update global list
 		const updatedAllBestBets = allBestBets.map((b) =>
-			b.query === editingBestBet.query
+			b.id === editingBestBet.id
 				? {
 						...b,
 						query: data.query,
@@ -145,9 +160,9 @@ export default function OptimizationsPage() {
 		);
 		setAllBestBets(updatedAllBestBets);
 
-		// Update local algorithm list
+		// Update local algorithm list status
 		const updatedAlgorithmBestBets = algorithmBestBets.map((b) =>
-			b.query === editingBestBet.query ? updatedBet : b
+			b.bestBetId === editingBestBet.id ? {...b, status: data.status || "Active"} : b
 		);
 		setAlgorithmBestBets(updatedAlgorithmBestBets);
 
@@ -155,18 +170,21 @@ export default function OptimizationsPage() {
 		setEditingBestBet(null);
 	};
 
-	const handleToggleStatus = (bet: AlgorithmBestBet, newStatus: "Active" | "Inactive") => {
-		const updatedBet = {...bet, status: newStatus};
-
+	const handleToggleStatus = (
+		bet: BestBet & {status: "Active" | "Inactive"},
+		newStatus: "Active" | "Inactive"
+	) => {
 		// Update local algorithm list
 		const updatedAlgorithmBestBets = algorithmBestBets.map((b) =>
-			b.query === bet.query ? updatedBet : b
+			b.bestBetId === bet.id ? {...b, status: newStatus} : b
 		);
 		setAlgorithmBestBets(updatedAlgorithmBestBets);
 	};
 
 	const handleAddRelatedQuery = (data: {query: string; synonyms: string[]}) => {
-		const newRQ = {
+		const newId = Date.now().toString();
+		const newRQ: RelatedQuery = {
+			id: newId,
 			query: data.query,
 			synonyms: data.synonyms,
 			owner: "Alice Johnson",
@@ -176,7 +194,7 @@ export default function OptimizationsPage() {
 			setAllRelatedQueries([...allRelatedQueries, newRQ]);
 		}
 
-		setRelatedQueries([...relatedQueries, newRQ]);
+		setRelatedQueries([...relatedQueries, {relatedQueryId: newId}]);
 		setIsCreateRQDialogOpen(false);
 	};
 
@@ -188,8 +206,8 @@ export default function OptimizationsPage() {
 	const handleUpdateRelatedQuery = (data: {query: string; synonyms: string[]}) => {
 		if (!editingRQ) return;
 
-		const updatedList = relatedQueries.map((item) =>
-			item.query === editingRQ.query
+		const updatedList = allRelatedQueries.map((item) =>
+			item.id === editingRQ.id
 				? {
 						...item,
 						query: data.query,
@@ -198,22 +216,25 @@ export default function OptimizationsPage() {
 				: item
 		);
 
-		setRelatedQueries(updatedList);
+		setAllRelatedQueries(updatedList);
 		setIsEditRQDialogOpen(false);
 		setEditingRQ(null);
 	};
 
 	const handleRemoveRelatedQuery = (query: string) => {
-		setRelatedQueries(relatedQueries.filter((rq) => rq.query !== query));
+		const rq = hydratedRelatedQueries.find((r) => r.query === query);
+		if (rq) {
+			setRelatedQueries(relatedQueries.filter((ref) => ref.relatedQueryId !== rq.id));
+		}
 	};
 
 	// Filter out already added bets from the dropdown
 	const availableOptions = allBestBets.filter(
-		(b) => !algorithmBestBets.some((added) => added.query === b.query)
+		(b) => !algorithmBestBets.some((added) => added.bestBetId === b.id)
 	);
 
 	const availableRelatedQueries = allRelatedQueries.filter(
-		(rq) => !relatedQueries.some((added) => added.query === rq.query)
+		(rq) => !relatedQueries.some((added) => added.relatedQueryId === rq.id)
 	);
 
 	if (isCustom) {
@@ -275,14 +296,17 @@ export default function OptimizationsPage() {
 					Associate specific best bets with this algorithm to override default behavior.
 				</Text>
 
-				{algorithmBestBets.length > 0 ? (
+				{hydratedBestBets.length > 0 ? (
 					<BestBetsTable
-						bestBets={algorithmBestBets}
+						bestBets={hydratedBestBets}
 						onEdit={handleEditClick}
 						onRemove={handleRemoveBestBet}
 						availableBestBets={availableOptions}
 						onAdd={(bet) =>
-							setAlgorithmBestBets([...algorithmBestBets, {...bet, status: "Active"}])
+							setAlgorithmBestBets([
+								...algorithmBestBets,
+								{bestBetId: bet.id, status: "Active"},
+							])
 						}
 						onCreate={() => {
 							setCreateBestBetInitialData(undefined);
@@ -316,7 +340,10 @@ export default function OptimizationsPage() {
 												execute: () =>
 													setAlgorithmBestBets([
 														...algorithmBestBets,
-														{...bet, status: "Active" as const},
+														{
+															bestBetId: bet.id,
+															status: "Active" as const,
+														},
 													]),
 										  }))
 										: []),
@@ -346,10 +373,10 @@ export default function OptimizationsPage() {
 						search recall.
 					</Text>
 
-					{relatedQueries.length > 0 ? (
+					{hydratedRelatedQueries.length > 0 ? (
 						<>
 							<RelatedQueriesTable
-								relatedQueries={relatedQueries}
+								relatedQueries={hydratedRelatedQueries}
 								onEdit={handleEditRQClick}
 								onRemove={handleRemoveRelatedQuery}
 								showOwner={false}
@@ -369,7 +396,10 @@ export default function OptimizationsPage() {
 												value: rq.query,
 												description: rq.synonyms.join(", "),
 												execute: () =>
-													setRelatedQueries([...relatedQueries, rq]),
+													setRelatedQueries([
+														...relatedQueries,
+														{relatedQueryId: rq.id},
+													]),
 										  }))
 										: []),
 								]}
@@ -402,7 +432,10 @@ export default function OptimizationsPage() {
 													value: rq.query,
 													description: rq.synonyms.join(", "),
 													execute: () =>
-														setRelatedQueries([...relatedQueries, rq]),
+														setRelatedQueries([
+															...relatedQueries,
+															{relatedQueryId: rq.id},
+														]),
 											  }))
 											: []),
 									]}
@@ -454,8 +487,9 @@ export default function OptimizationsPage() {
 			<Aside>
 				<Preview
 					algorithmBestBets={algorithmBestBets}
-					relatedQueries={relatedQueries}
-					onCreateBestBet={handleCreateBestBetFromPreview}
+					onAlgorithmBestBetsChange={setAlgorithmBestBets}
+					globalBestBets={allBestBets}
+					onGlobalBestBetsChange={setAllBestBets}
 				/>
 			</Aside>
 		</>
