@@ -26,6 +26,7 @@ import {
 } from "@tabler/icons-react";
 import {useState, useMemo, useEffect} from "react";
 import {useParams} from "next/navigation";
+import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {
 	Algorithm,
@@ -53,7 +54,8 @@ export default function Preview({
 	onGlobalBestBetsChange?: (val: BestBet[]) => void;
 } = {}) {
 	const params = useParams();
-	const id = params.id as string;
+	const resolvedParams = params instanceof Promise ? use(params) : params;
+	const id = (resolvedParams?.id ?? "") as string;
 	const [activeTab, setActiveTab] = usePersistentState(`preview_tab_${id}`, "search demo");
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
