@@ -7,7 +7,7 @@ import {Flex} from "@/app/components/Flex";
 import {IconPlus, IconSearch} from "@tabler/icons-react";
 import {useState, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {BestBet, initialBestBets} from "@/app/db/initialData";
+import {BestBet, initialBestBets} from "@/app/db/initialData.clean";
 import BestBetsTable from "../components/BestBetsTable";
 import BestBetDialog from "../components/BestBetDialog";
 

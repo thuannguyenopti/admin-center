@@ -38,7 +38,7 @@ import {
 	RelatedQuery,
 	AlgorithmRelatedQueryReference,
 	initialRelatedQueries,
-} from "@/app/db/initialData";
+} from "@/app/db/initialData.clean";
 import searchResults from "@/app/db/searchResults.json";
 import BestBetDialog from "../../../components/BestBetDialog";
 

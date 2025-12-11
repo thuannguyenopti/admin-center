@@ -5,7 +5,7 @@ import {AxiomProvider} from "@optiaxiom/react";
 import {usePathname} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {Algorithm, initialAlgorithms} from "@/app/db/initialData.clean";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";

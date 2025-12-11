@@ -22,7 +22,7 @@ import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Aside} from "@/app/context/LayoutContext";
-import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData.clean";
 
 export default function OrderPage() {
 	const params = useParams();
