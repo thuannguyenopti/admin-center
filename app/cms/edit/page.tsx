@@ -88,7 +88,6 @@ const PageRow = ({ node, level = 0 }: { node: PageNode; level?: number }) => {
 										display="flex"
 									>
 										<Button
-											aria-label="collapse"
 											size="sm"
 											appearance="subtle"
 											icon={<IconChevronDown size={16} />}
@@ -103,7 +102,6 @@ const PageRow = ({ node, level = 0 }: { node: PageNode; level?: number }) => {
 									>
 										<Button
 											size="sm"
-											aria-label="expand"
 											appearance="subtle"
 											icon={<IconChevronRight size={16} />}
 											aria-label="Expand section"
