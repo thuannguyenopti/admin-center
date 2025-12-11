@@ -31,7 +31,7 @@ import {
 import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {Algorithm, initialAlgorithms} from "@/app/db/initialData.clean";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 
 export default function OptimizeSearchPage() {
