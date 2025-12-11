@@ -10,6 +10,8 @@ import {
 	IconActivity,
 	IconPower,
 	IconFile,
+	IconPinnedOff,
+	IconPinned,
 } from "@tabler/icons-react";
 import {
 	Menu,
@@ -96,7 +98,7 @@ export default function PinnedResultsTable({
 						>
 							<Td type="header">
 								<Item
-									icon={<IconRocket size={16} />}
+									icon={<IconPinned size={16} />}
 									title={bet.query.split(",")[0].trim()}
 									description={
 										bet.query.split(",").slice(1).join(",").trim() || undefined

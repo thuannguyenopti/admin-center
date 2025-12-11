@@ -1,13 +1,11 @@
 import {
 	Box,
 	Heading,
-	Switch,
 	Tabs,
 	TabsList,
 	TabsTrigger,
 	TabsContent,
 	Badge,
-	Separator,
 	Menu,
 	MenuTrigger,
 	MenuContent,
@@ -18,18 +16,17 @@ import {Input} from "@/app/components/Input";
 import {Button} from "@/app/components/Button";
 import {
 	IconSearch,
-	IconActivity,
 	IconSettings,
-	IconRocket,
 	IconCongruentTo,
 	IconPlus,
+	IconArrowsExchange,
+	IconPinned,
 } from "@tabler/icons-react";
-import {useState, useMemo, useEffect} from "react";
+import {useState, useMemo, useEffect, useRef} from "react";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {
 	Algorithm,
-	AlgorithmPinnedResult,
 	AlgorithmPinnedResultReference,
 	initialAlgorithms,
 	PinnedResult,
@@ -37,6 +34,12 @@ import {
 	RelatedQuery,
 	AlgorithmRelatedQueryReference,
 	initialRelatedQueries,
+	AutocompletePhrase,
+	AlgorithmAutocompletePhraseReference,
+	initialAutocompletePhrases,
+	Synonym,
+	AlgorithmSynonymReference,
+	initialSynonyms,
 } from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
 import PinnedResultDialog from "../../../components/PinnedResultDialog";
@@ -46,11 +49,29 @@ export default function Preview({
 	onAlgorithmPinnedResultsChange: setExternalAlgorithmPinnedResults,
 	globalPinnedResults: externalGlobalPinnedResults,
 	onGlobalPinnedResultsChange: setExternalGlobalPinnedResults,
+
+	algorithmRelatedQueries: externalAlgorithmRelatedQueries,
+	globalRelatedQueries: externalGlobalRelatedQueries,
+
+	algorithmSynonyms: externalAlgorithmSynonyms,
+	globalSynonyms: externalGlobalSynonyms,
+
+	algorithmAutocompletePhrases: externalAlgorithmAutocompletePhrases,
+	globalAutocompletePhrases: externalGlobalAutocompletePhrases,
 }: {
 	algorithmPinnedResults?: AlgorithmPinnedResultReference[];
 	onAlgorithmPinnedResultsChange?: (val: AlgorithmPinnedResultReference[]) => void;
 	globalPinnedResults?: PinnedResult[];
 	onGlobalPinnedResultsChange?: (val: PinnedResult[]) => void;
+
+	algorithmRelatedQueries?: AlgorithmRelatedQueryReference[];
+	globalRelatedQueries?: RelatedQuery[];
+
+	algorithmSynonyms?: AlgorithmSynonymReference[];
+	globalSynonyms?: Synonym[];
+
+	algorithmAutocompletePhrases?: AlgorithmAutocompletePhraseReference[];
+	globalAutocompletePhrases?: AutocompletePhrase[];
 } = {}) {
 	const params = useParams();
 	const id = params.id as string;
@@ -59,6 +80,7 @@ export default function Preview({
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [showPinnedResults, setShowPinnedResults] = useState(true);
 	const [showRelatedQueries, setShowRelatedQueries] = useState(true);
+	const [showSynonyms, setShowSynonyms] = useState(true);
 
 	const [isPinnedResultDialogOpen, setIsPinnedResultDialogOpen] = useState(false);
 	const [pinnedResultQuery, setPinnedResultQuery] = useState("");
@@ -94,6 +116,32 @@ export default function Preview({
 
 	const globalPinnedResults = externalGlobalPinnedResults ?? localGlobalPinnedResults;
 	const setGlobalPinnedResults = setExternalGlobalPinnedResults ?? setLocalGlobalPinnedResults;
+
+	const [localGlobalAutocompletePhrases] = usePersistentState(
+		"autocompletePhrases",
+		initialAutocompletePhrases
+	) as [AutocompletePhrase[], any];
+	const globalAutocompletePhrases =
+		externalGlobalAutocompletePhrases ?? localGlobalAutocompletePhrases;
+
+	const [localAlgorithmAutocompletePhrases] = usePersistentState(
+		`algorithm_autocomplete_phrases_${id}`,
+		[]
+	) as [AlgorithmAutocompletePhraseReference[], any];
+	const algorithmAutocompletePhrases =
+		externalAlgorithmAutocompletePhrases ?? localAlgorithmAutocompletePhrases;
+
+	const [localGlobalSynonyms] = usePersistentState("synonyms", initialSynonyms) as [
+		Synonym[],
+		any
+	];
+	const globalSynonyms = externalGlobalSynonyms ?? localGlobalSynonyms;
+
+	const [localAlgorithmSynonyms] = usePersistentState(`algorithm_synonyms_${id}`, []) as [
+		AlgorithmSynonymReference[],
+		any
+	];
+	const algorithmSynonyms = externalAlgorithmSynonyms ?? localAlgorithmSynonyms;
 
 	const [optimisticPinnedResults, setOptimisticPinnedResults] = useState<
 		(PinnedResult & {status: "Active" | "Inactive"})[]
@@ -132,22 +180,24 @@ export default function Preview({
 		setIsPinnedResultDialogOpen(false);
 	};
 
-	const [relatedQueries] = usePersistentState(`algorithm_related_queries_${id}`, []) as [
-		AlgorithmRelatedQueryReference[],
-		any
-	];
+	const [localAlgorithmRelatedQueries] = usePersistentState(
+		`algorithm_related_queries_${id}`,
+		[]
+	) as [AlgorithmRelatedQueryReference[], any];
+	const algorithmRelatedQueries = externalAlgorithmRelatedQueries ?? localAlgorithmRelatedQueries;
 
-	const [globalRelatedQueries] = usePersistentState("relatedQueries", initialRelatedQueries) as [
-		RelatedQuery[],
-		any
-	];
+	const [localGlobalRelatedQueries] = usePersistentState(
+		"relatedQueries",
+		initialRelatedQueries
+	) as [RelatedQuery[], any];
+	const globalRelatedQueries = externalGlobalRelatedQueries ?? localGlobalRelatedQueries;
 
 	const hydratedRelatedQueries = useMemo(() => {
-		if (!relatedQueries) return [];
-		return relatedQueries
+		if (!algorithmRelatedQueries) return [];
+		return algorithmRelatedQueries
 			.map((ref) => globalRelatedQueries.find((rq) => rq.id === ref.relatedQueryId))
 			.filter((item): item is RelatedQuery => item !== undefined);
-	}, [relatedQueries, globalRelatedQueries]);
+	}, [algorithmRelatedQueries, globalRelatedQueries]);
 
 	const hydratedPinnedResults = useMemo(() => {
 		if (!algorithmPinnedResults) return [];
@@ -177,7 +227,7 @@ export default function Preview({
 		}
 	}, [hydratedPinnedResults, optimisticPinnedResults]);
 
-	const activeSynonyms = useMemo(() => {
+	const activeRelatedQueryTerms = useMemo(() => {
 		if (!query || !showRelatedQueries) return [];
 		const lowerQuery = query.toLowerCase();
 		const synonyms: string[] = [];
@@ -195,6 +245,74 @@ export default function Preview({
 		return Array.from(new Set(synonyms));
 	}, [query, hydratedRelatedQueries, showRelatedQueries]);
 
+	const hydratedSynonyms = useMemo(() => {
+		return globalSynonyms.filter((syn) =>
+			algorithmSynonyms.some((ref) => ref.synonymId === syn.id)
+		);
+	}, [globalSynonyms, algorithmSynonyms]);
+
+	const activeSynonyms = useMemo(() => {
+		if (!query || !showSynonyms) return [];
+		const lowerQuery = query.toLowerCase();
+		const expanded: string[] = [];
+
+		hydratedSynonyms.forEach((syn) => {
+			const term = syn.term.toLowerCase();
+			const synonyms = syn.synonyms.map((s) => s.toLowerCase());
+
+			if (syn.type === "Two-way") {
+				const allTerms = [term, ...synonyms];
+				if (allTerms.includes(lowerQuery)) {
+					expanded.push(...allTerms.filter((t) => t !== lowerQuery));
+				}
+			} else {
+				// One-way: term -> synonyms
+				if (term === lowerQuery) {
+					expanded.push(...synonyms);
+				}
+			}
+		});
+
+		return Array.from(new Set(expanded));
+	}, [query, hydratedSynonyms, showSynonyms]);
+
+	const activeAutocompletePhrases = useMemo(() => {
+		return globalAutocompletePhrases.filter((phrase) =>
+			algorithmAutocompletePhrases.some((ref) => ref.autocompletePhraseId === phrase.id)
+		);
+	}, [globalAutocompletePhrases, algorithmAutocompletePhrases]);
+
+	const autocompleteSuggestions = useMemo(() => {
+		if (!query) return [];
+		return activeAutocompletePhrases.filter((phrase) =>
+			phrase.phrase.toLowerCase().startsWith(query.toLowerCase())
+		);
+	}, [query, activeAutocompletePhrases]);
+
+	const [highlightedIndex, setHighlightedIndex] = useState(-1);
+	const [isInputFocused, setIsInputFocused] = useState(false);
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (autocompleteSuggestions.length === 0) return;
+
+		if (e.key === "ArrowDown") {
+			e.preventDefault();
+			setHighlightedIndex((prev) =>
+				prev < autocompleteSuggestions.length - 1 ? prev + 1 : prev
+			);
+		} else if (e.key === "ArrowUp") {
+			e.preventDefault();
+			setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+		} else if (e.key === "Enter") {
+			if (highlightedIndex >= 0) {
+				e.preventDefault();
+				setQuery(autocompleteSuggestions[highlightedIndex].phrase);
+				setHighlightedIndex(-1);
+				setIsInputFocused(false);
+			}
+		}
+	};
+
 	// Filter results based on query
 	const filteredResults = searchResults.filter((result) => {
 		if (!query) return true;
@@ -203,8 +321,14 @@ export default function Preview({
 		const queriesToCheck = [lowerQuery];
 
 		if (showRelatedQueries) {
+			queriesToCheck.push(...activeRelatedQueryTerms.map((s) => s.toLowerCase()));
+		}
+
+		if (showSynonyms) {
 			queriesToCheck.push(...activeSynonyms.map((s) => s.toLowerCase()));
 		}
+
+		console.log("queriesToCheck:", queriesToCheck, "active Synonyms:", activeSynonyms);
 
 		return queriesToCheck.some(
 			(q) =>
@@ -259,18 +383,70 @@ export default function Preview({
 									gap="8"
 									flexDirection="row"
 								>
-									<Box flex="1">
+									<Box
+										flex="1"
+										position="relative"
+									>
 										<Input
-											placeholder="Products"
+											placeholder="Search Preview"
 											addonBefore={<IconSearch size={16} />}
 											value={query}
-											onChange={(e) => setQuery(e.target.value)}
+											onChange={(e) => {
+												setQuery(e.target.value);
+												setHighlightedIndex(-1);
+											}}
+											onFocus={() => setIsInputFocused(true)}
+											onBlur={() => {
+												setTimeout(() => setIsInputFocused(false), 200);
+											}}
+											onKeyDown={handleKeyDown}
 										/>
+										{isInputFocused && autocompleteSuggestions.length > 0 && (
+											<Box
+												position="absolute"
+												top="100%"
+												left="0"
+												right="0"
+												bg="bg.default"
+												shadow="md"
+												z="10"
+												mt="4"
+												rounded="md"
+												borderColor="border.secondary"
+												className="max-h-[200px] overflow-y-auto"
+												p="4"
+												border="1"
+											>
+												{autocompleteSuggestions.map((s, index) => (
+													<Box
+														key={s.id}
+														p="8"
+														rounded="sm"
+														bg={
+															index === highlightedIndex
+																? "bg.default.hovered"
+																: undefined
+														}
+														cursor="pointer"
+														onClick={() => {
+															setQuery(s.phrase);
+															setHighlightedIndex(-1);
+															setIsInputFocused(false);
+														}}
+														onMouseEnter={() =>
+															setHighlightedIndex(index)
+														}
+													>
+														<Text>{s.phrase}</Text>
+													</Box>
+												))}
+											</Box>
+										)}
 									</Box>
 									<Menu
 										options={[
 											{
-												addon: <IconRocket size={16} />,
+												addon: <IconPinned size={16} />,
 												label: "Pinned Results",
 												execute: () =>
 													setShowPinnedResults(!showPinnedResults),
@@ -285,6 +461,13 @@ export default function Preview({
 												selected: showRelatedQueries,
 												switch: true,
 											},
+											{
+												addon: <IconArrowsExchange size={16} />,
+												label: "Synonyms",
+												execute: () => setShowSynonyms(!showSynonyms),
+												selected: showSynonyms,
+												switch: true,
+											},
 										]}
 									>
 										<MenuTrigger
@@ -297,8 +480,13 @@ export default function Preview({
 								</Flex>
 							)}
 						</Box>
-						{activeSynonyms.length > 0 && (
-							<Box mt="16">
+						{activeRelatedQueryTerms.length > 0 && (
+							<Box
+								mt="16"
+								bg="bg.accent.subtle"
+								p="8"
+								rounded="sm"
+							>
 								<Text
 									fontSize="md"
 									fontWeight="600"
@@ -312,7 +500,31 @@ export default function Preview({
 									color="fg.secondary"
 									fontSize="sm"
 								>
-									{activeSynonyms.map((term) => activeSynonyms.join(", "))}
+									{activeRelatedQueryTerms.join(", ")}
+								</Flex>
+							</Box>
+						)}
+						{activeSynonyms.length > 0 && (
+							<Box
+								mt="16"
+								bg="bg.accent.subtle"
+								p="8"
+								rounded="sm"
+							>
+								<Text
+									fontSize="md"
+									fontWeight="600"
+									mb="4"
+								>
+									Synonyms Applied
+								</Text>
+								<Flex
+									gap="8"
+									flexWrap="wrap"
+									color="fg.secondary"
+									fontSize="sm"
+								>
+									{activeSynonyms.join(", ")}
 								</Flex>
 							</Box>
 						)}
