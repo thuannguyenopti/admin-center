@@ -8,22 +8,32 @@ import {useParams, useRouter} from "next/navigation";
 import {useState, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {
-	BestBet,
-	initialBestBets,
-	AlgorithmBestBet,
-	AlgorithmBestBetReference,
+	PinnedResult,
+	initialPinnedResults,
+	AlgorithmPinnedResult,
+	AlgorithmPinnedResultReference,
 	RelatedQuery,
 	AlgorithmRelatedQueryReference,
 	initialRelatedQueries,
+	Synonym,
+	AlgorithmSynonymReference,
+	initialSynonyms,
+	AutocompletePhrase,
+	AlgorithmAutocompletePhraseReference,
+	initialAutocompletePhrases,
 	Algorithm,
 	initialAlgorithms,
 } from "@/app/db/initialData";
 import {IconPlus} from "@tabler/icons-react";
 import Preview from "../order/Preview";
-import BestBetsTable from "../../../components/BestBetsTable";
-import BestBetDialog from "../../../components/BestBetDialog";
+import PinnedResultsTable from "../../../components/PinnedResultsTable";
+import PinnedResultDialog from "../../../components/PinnedResultDialog";
 import RelatedQueriesTable from "../../../components/RelatedQueriesTable";
 import RelatedQueryDialog from "../../../components/RelatedQueryDialog";
+import SynonymsTable from "../../../components/SynonymsTable";
+import SynonymDialog from "../../../components/SynonymDialog";
+import AutocompletePhrasesTable from "../../../components/AutocompletePhrasesTable";
+import AutocompletePhraseDialog from "../../../components/AutocompletePhraseDialog";
 import {Aside} from "@/app/context/LayoutContext";
 import searchResults from "@/app/db/searchResults.json";
 import {Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
@@ -44,25 +54,25 @@ export default function OptimizationsPage() {
 		}
 	}, [isCustom, id, router]);
 
-	// Global list of best bets
-	const [allBestBets, setAllBestBets] = usePersistentState("bestBets", initialBestBets) as [
-		BestBet[],
-		(val: BestBet[]) => void
-	];
+	// Global list of pinned results
+	const [allPinnedResults, setAllPinnedResults] = usePersistentState(
+		"pinnedResults",
+		initialPinnedResults
+	) as [PinnedResult[], (val: PinnedResult[]) => void];
 
-	// Best bets associated with this algorithm
-	const [algorithmBestBets, setAlgorithmBestBets] = usePersistentState(
-		`algorithm_best_bets_${id}`,
+	// Pinned results associated with this algorithm
+	const [algorithmPinnedResults, setAlgorithmPinnedResults] = usePersistentState(
+		`algorithm_pinned_results_${id}`,
 		[]
-	) as [AlgorithmBestBetReference[], (val: AlgorithmBestBetReference[]) => void];
+	) as [AlgorithmPinnedResultReference[], (val: AlgorithmPinnedResultReference[]) => void];
 
-	const hydratedBestBets = algorithmBestBets
+	const hydratedPinnedResults = algorithmPinnedResults
 		.map((ref) => {
-			const bb = allBestBets.find((g) => g.id === ref.bestBetId);
+			const bb = allPinnedResults.find((g) => g.id === ref.pinnedResultId);
 			if (!bb) return null;
 			return {...bb, status: ref.status};
 		})
-		.filter((item): item is BestBet & {status: "Active" | "Inactive"} => item !== null);
+		.filter((item): item is PinnedResult & {status: "Active" | "Inactive"} => item !== null);
 
 	const [allRelatedQueries, setAllRelatedQueries] = usePersistentState(
 		"relatedQueries",
@@ -78,14 +88,45 @@ export default function OptimizationsPage() {
 		.map((ref) => allRelatedQueries.find((rq) => rq.id === ref.relatedQueryId))
 		.filter((item): item is RelatedQuery => item !== undefined);
 
-	const [selectedBestBetQuery, setSelectedBestBetQuery] = useState("");
+	const [allSynonyms, setAllSynonyms] = usePersistentState("synonyms", initialSynonyms) as [
+		Synonym[],
+		(val: Synonym[]) => void
+	];
+
+	const [synonyms, setSynonyms] = usePersistentState(`algorithm_synonyms_${id}`, []) as [
+		AlgorithmSynonymReference[],
+		(val: AlgorithmSynonymReference[]) => void
+	];
+
+	const hydratedSynonyms = synonyms
+		.map((ref) => allSynonyms.find((s) => s.id === ref.synonymId))
+		.filter((item): item is Synonym => item !== undefined);
+
+	const [allAutocompletePhrases, setAllAutocompletePhrases] = usePersistentState(
+		"autocompletePhrases",
+		initialAutocompletePhrases
+	) as [AutocompletePhrase[], (val: AutocompletePhrase[]) => void];
+
+	const [autocompletePhrases, setAutocompletePhrases] = usePersistentState(
+		`algorithm_autocomplete_phrases_${id}`,
+		[]
+	) as [
+		AlgorithmAutocompletePhraseReference[],
+		(val: AlgorithmAutocompletePhraseReference[]) => void
+	];
+
+	const hydratedAutocompletePhrases = autocompletePhrases
+		.map((ref) => allAutocompletePhrases.find((p) => p.id === ref.autocompletePhraseId))
+		.filter((item): item is AutocompletePhrase => item !== undefined);
+
+	const [selectedPinnedResultQuery, setSelectedPinnedResultQuery] = useState("");
 
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [editingBestBet, setEditingBestBet] = useState<
-		(BestBet & {status: "Active" | "Inactive"}) | null
+	const [editingPinnedResult, setEditingPinnedResult] = useState<
+		(PinnedResult & {status: "Active" | "Inactive"}) | null
 	>(null);
-	const [createBestBetInitialData, setCreateBestBetInitialData] = useState<
+	const [createPinnedResultInitialData, setCreatePinnedResultInitialData] = useState<
 		{query: string; destination: string} | undefined
 	>(undefined);
 
@@ -93,18 +134,26 @@ export default function OptimizationsPage() {
 	const [isEditRQDialogOpen, setIsEditRQDialogOpen] = useState(false);
 	const [editingRQ, setEditingRQ] = useState<RelatedQuery | null>(null);
 
-	const handleCreateBestBetFromPreview = (query: string) => {
-		setCreateBestBetInitialData({query, destination: ""});
+	const [isCreateSynonymDialogOpen, setIsCreateSynonymDialogOpen] = useState(false);
+	const [isEditSynonymDialogOpen, setIsEditSynonymDialogOpen] = useState(false);
+	const [editingSynonym, setEditingSynonym] = useState<Synonym | null>(null);
+
+	const [isCreateAPDialogOpen, setIsCreateAPDialogOpen] = useState(false);
+	const [isEditAPDialogOpen, setIsEditAPDialogOpen] = useState(false);
+	const [editingAP, setEditingAP] = useState<AutocompletePhrase | null>(null);
+
+	const handleCreatePinnedResultFromPreview = (query: string) => {
+		setCreatePinnedResultInitialData({query, destination: ""});
 		setIsCreateDialogOpen(true);
 	};
 
-	const handleCreateBestBet = (data: {
+	const handleCreatePinnedResult = (data: {
 		query: string;
 		destination: string;
 		status?: "Active" | "Inactive";
 	}) => {
 		const newId = Date.now().toString();
-		const newBestBet: BestBet = {
+		const newPinnedResult: PinnedResult = {
 			id: newId,
 			query: data.query,
 			destination: data.destination,
@@ -112,45 +161,49 @@ export default function OptimizationsPage() {
 		};
 
 		// Add to global list if not exists
-		if (!allBestBets.some((b) => b.query === newBestBet.query)) {
-			setAllBestBets([...allBestBets, newBestBet]);
+		if (!allPinnedResults.some((b) => b.query === newPinnedResult.query)) {
+			setAllPinnedResults([...allPinnedResults, newPinnedResult]);
 		}
 
 		// Add to local algorithm list
-		const newAlgorithmBestBet: AlgorithmBestBetReference = {
-			bestBetId: newId,
+		const newAlgorithmPinnedResult: AlgorithmPinnedResultReference = {
+			pinnedResultId: newId,
 			status: data.status || "Active",
 		};
-		setAlgorithmBestBets([...algorithmBestBets, newAlgorithmBestBet]);
+		setAlgorithmPinnedResults([...algorithmPinnedResults, newAlgorithmPinnedResult]);
 
 		setIsCreateDialogOpen(false);
-		setCreateBestBetInitialData(undefined);
+		setCreatePinnedResultInitialData(undefined);
 	};
 
-	const handleRemoveBestBet = (query: string) => {
+	const handleRemovePinnedResult = (query: string) => {
 		// Find the ID for this query
-		const bet = hydratedBestBets.find((b) => b.query === query);
+		const bet = hydratedPinnedResults.find((b) => b.query === query);
 		if (bet) {
-			setAlgorithmBestBets(algorithmBestBets.filter((b) => b.bestBetId !== bet.id));
+			setAlgorithmPinnedResults(
+				algorithmPinnedResults.filter((b) => b.pinnedResultId !== bet.id)
+			);
 		}
 	};
 
-	const handleEditClick = (bet: BestBet | (BestBet & {status: "Active" | "Inactive"})) => {
-		const algoBet = bet as BestBet & {status: "Active" | "Inactive"};
-		setEditingBestBet(algoBet);
+	const handleEditClick = (
+		bet: PinnedResult | (PinnedResult & {status: "Active" | "Inactive"})
+	) => {
+		const algoBet = bet as PinnedResult & {status: "Active" | "Inactive"};
+		setEditingPinnedResult(algoBet);
 		setIsEditDialogOpen(true);
 	};
 
-	const handleUpdateBestBet = (data: {
+	const handleUpdatePinnedResult = (data: {
 		query: string;
 		destination: string;
 		status?: "Active" | "Inactive";
 	}) => {
-		if (!editingBestBet) return;
+		if (!editingPinnedResult) return;
 
 		// Update global list
-		const updatedAllBestBets = allBestBets.map((b) =>
-			b.id === editingBestBet.id
+		const updatedAllPinnedResults = allPinnedResults.map((b) =>
+			b.id === editingPinnedResult.id
 				? {
 						...b,
 						query: data.query,
@@ -158,27 +211,29 @@ export default function OptimizationsPage() {
 				  }
 				: b
 		);
-		setAllBestBets(updatedAllBestBets);
+		setAllPinnedResults(updatedAllPinnedResults);
 
 		// Update local algorithm list status
-		const updatedAlgorithmBestBets = algorithmBestBets.map((b) =>
-			b.bestBetId === editingBestBet.id ? {...b, status: data.status || "Active"} : b
+		const updatedAlgorithmPinnedResults = algorithmPinnedResults.map((b) =>
+			b.pinnedResultId === editingPinnedResult.id
+				? {...b, status: data.status || "Active"}
+				: b
 		);
-		setAlgorithmBestBets(updatedAlgorithmBestBets);
+		setAlgorithmPinnedResults(updatedAlgorithmPinnedResults);
 
 		setIsEditDialogOpen(false);
-		setEditingBestBet(null);
+		setEditingPinnedResult(null);
 	};
 
 	const handleToggleStatus = (
-		bet: BestBet & {status: "Active" | "Inactive"},
+		bet: PinnedResult & {status: "Active" | "Inactive"},
 		newStatus: "Active" | "Inactive"
 	) => {
 		// Update local algorithm list
-		const updatedAlgorithmBestBets = algorithmBestBets.map((b) =>
-			b.bestBetId === bet.id ? {...b, status: newStatus} : b
+		const updatedAlgorithmPinnedResults = algorithmPinnedResults.map((b) =>
+			b.pinnedResultId === bet.id ? {...b, status: newStatus} : b
 		);
-		setAlgorithmBestBets(updatedAlgorithmBestBets);
+		setAlgorithmPinnedResults(updatedAlgorithmPinnedResults);
 	};
 
 	const handleAddRelatedQuery = (data: {query: string; synonyms: string[]}) => {
@@ -228,13 +283,119 @@ export default function OptimizationsPage() {
 		}
 	};
 
+	const handleAddSynonym = (data: {
+		term: string;
+		synonyms: string[];
+		type: "One-way" | "Two-way";
+	}) => {
+		const newId = Date.now().toString();
+		const newSynonym: Synonym = {
+			id: newId,
+			term: data.term,
+			synonyms: data.synonyms,
+			type: data.type,
+			owner: "Alice Johnson",
+		};
+
+		if (!allSynonyms.some((s) => s.term === newSynonym.term)) {
+			setAllSynonyms([...allSynonyms, newSynonym]);
+		}
+
+		setSynonyms([...synonyms, {synonymId: newId}]);
+		setIsCreateSynonymDialogOpen(false);
+	};
+
+	const handleEditSynonymClick = (s: Synonym) => {
+		setEditingSynonym(s);
+		setIsEditSynonymDialogOpen(true);
+	};
+
+	const handleUpdateSynonym = (data: {
+		term: string;
+		synonyms: string[];
+		type: "One-way" | "Two-way";
+	}) => {
+		if (!editingSynonym) return;
+
+		const updatedList = allSynonyms.map((item) =>
+			item.id === editingSynonym.id
+				? {
+						...item,
+						term: data.term,
+						synonyms: data.synonyms,
+						type: data.type,
+				  }
+				: item
+		);
+
+		setAllSynonyms(updatedList);
+		setIsEditSynonymDialogOpen(false);
+		setEditingSynonym(null);
+	};
+
+	const handleRemoveSynonym = (id: string) => {
+		setSynonyms(synonyms.filter((ref) => ref.synonymId !== id));
+	};
+
+	const handleAddAutocompletePhrase = (data: {phrase: string}) => {
+		const newId = Date.now().toString();
+		const newPhrase: AutocompletePhrase = {
+			id: newId,
+			phrase: data.phrase,
+			owner: "Alice Johnson",
+		};
+
+		if (!allAutocompletePhrases.some((p) => p.phrase === newPhrase.phrase)) {
+			setAllAutocompletePhrases([...allAutocompletePhrases, newPhrase]);
+		}
+
+		setAutocompletePhrases([...autocompletePhrases, {autocompletePhraseId: newId}]);
+		setIsCreateAPDialogOpen(false);
+	};
+
+	const handleEditAPClick = (p: AutocompletePhrase) => {
+		setEditingAP(p);
+		setIsEditAPDialogOpen(true);
+	};
+
+	const handleUpdateAutocompletePhrase = (data: {phrase: string}) => {
+		if (!editingAP) return;
+
+		const updatedList = allAutocompletePhrases.map((item) =>
+			item.id === editingAP.id
+				? {
+						...item,
+						phrase: data.phrase,
+				  }
+				: item
+		);
+
+		setAllAutocompletePhrases(updatedList);
+		setIsEditAPDialogOpen(false);
+		setEditingAP(null);
+	};
+
+	const handleRemoveAutocompletePhrase = (id: string) => {
+		setAutocompletePhrases(
+			autocompletePhrases.filter((ref) => ref.autocompletePhraseId !== id)
+		);
+	};
+
 	// Filter out already added bets from the dropdown
-	const availableOptions = allBestBets.filter(
-		(b) => !algorithmBestBets.some((added) => added.bestBetId === b.id)
+	const availableOptions = allPinnedResults.filter(
+		(b) => !algorithmPinnedResults.some((added) => added.pinnedResultId === b.id)
 	);
 
 	const availableRelatedQueries = allRelatedQueries.filter(
 		(rq) => !relatedQueries.some((added) => added.relatedQueryId === rq.id)
+	);
+
+	const availableSynonyms = allSynonyms.filter(
+		(s) => !synonyms.some((added) => added.synonymId === s.id)
+	);
+
+	const availableAutocompletePhrases = allAutocompletePhrases.filter(
+		(p) => !autocompletePhrases.some((added) => added.autocompletePhraseId === p.id)
 	);
 
 	if (isCustom) {
@@ -287,29 +448,30 @@ export default function OptimizationsPage() {
 					level="4"
 					mb="16"
 				>
-					Best Bets
+					Pinned Results
 				</Heading>
 				<Text
 					mb="16"
 					color="fg.secondary"
 				>
-					Associate specific best bets with this algorithm to override default behavior.
+					Associate specific pinned results with this algorithm to override default
+					behavior.
 				</Text>
 
-				{hydratedBestBets.length > 0 ? (
-					<BestBetsTable
-						bestBets={hydratedBestBets}
+				{hydratedPinnedResults.length > 0 ? (
+					<PinnedResultsTable
+						pinnedResults={hydratedPinnedResults}
 						onEdit={handleEditClick}
-						onRemove={handleRemoveBestBet}
-						availableBestBets={availableOptions}
+						onRemove={handleRemovePinnedResult}
+						availablePinnedResults={availableOptions}
 						onAdd={(bet) =>
-							setAlgorithmBestBets([
-								...algorithmBestBets,
-								{bestBetId: bet.id, status: "Active"},
+							setAlgorithmPinnedResults([
+								...algorithmPinnedResults,
+								{pinnedResultId: bet.id, status: "Active"},
 							])
 						}
 						onCreate={() => {
-							setCreateBestBetInitialData(undefined);
+							setCreatePinnedResultInitialData(undefined);
 							setIsCreateDialogOpen(true);
 						}}
 						onToggleStatus={handleToggleStatus}
@@ -317,15 +479,15 @@ export default function OptimizationsPage() {
 				) : (
 					<Alert intent="information">
 						<Text>
-							No similar Best Bets defined yet.{" "}
+							No similar Pinned Results defined yet.{" "}
 							<Menu
 								options={[
 									{
 										group: {label: "", hidden: true, separator: true},
-										label: "Create New Best Bet",
+										label: "Create New Pinned Result",
 										addon: <IconPlus size={16} />,
 										execute: () => {
-											setCreateBestBetInitialData(undefined);
+											setCreatePinnedResultInitialData(undefined);
 											setIsCreateDialogOpen(true);
 										},
 									},
@@ -338,10 +500,10 @@ export default function OptimizationsPage() {
 												value: bet.query,
 												description: bet.query,
 												execute: () =>
-													setAlgorithmBestBets([
-														...algorithmBestBets,
+													setAlgorithmPinnedResults([
+														...algorithmPinnedResults,
 														{
-															bestBetId: bet.id,
+															pinnedResultId: bet.id,
 															status: "Active" as const,
 														},
 													]),
@@ -450,21 +612,198 @@ export default function OptimizationsPage() {
 					)}
 				</Box>
 
-				<BestBetDialog
+				<Box mt="32">
+					<Heading
+						level="4"
+						mb="16"
+					>
+						Synonyms
+					</Heading>
+					<Text
+						mb="16"
+						color="fg.secondary"
+					>
+						Define equivalent terms to expand search results.
+					</Text>
+
+					{hydratedSynonyms.length > 0 ? (
+						<>
+							<SynonymsTable
+								synonyms={hydratedSynonyms}
+								onEdit={handleEditSynonymClick}
+								onRemove={handleRemoveSynonym}
+								showOwner={false}
+							/>
+
+							<Menu
+								options={[
+									{
+										group: {label: "", hidden: true, separator: true},
+										label: "Create New Synonym",
+										addon: <IconPlus size={16} />,
+										execute: () => setIsCreateSynonymDialogOpen(true),
+									},
+									...(availableSynonyms.length > 0
+										? availableSynonyms.map((s) => ({
+												label: s.term,
+												value: s.term,
+												description: s.synonyms.join(", "),
+												execute: () =>
+													setSynonyms([...synonyms, {synonymId: s.id}]),
+										  }))
+										: []),
+								]}
+							>
+								<MenuTrigger
+									size="lg"
+									mt="16"
+									addonBefore={<IconPlus size={16} />}
+								>
+									Add Synonym...
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
+						</>
+					) : (
+						<Alert intent="information">
+							<Text>
+								No Synonyms defined yet.{" "}
+								<Menu
+									options={[
+										{
+											group: {label: "", hidden: true, separator: true},
+											label: "Create New Synonym",
+											addon: <IconPlus size={16} />,
+											execute: () => setIsCreateSynonymDialogOpen(true),
+										},
+										...(availableSynonyms.length > 0
+											? availableSynonyms.map((s) => ({
+													label: s.term,
+													value: s.term,
+													description: s.synonyms.join(", "),
+													execute: () =>
+														setSynonyms([
+															...synonyms,
+															{synonymId: s.id},
+														]),
+											  }))
+											: []),
+									]}
+								>
+									<MenuTrigger asChild>
+										<Link cursor="pointer">Add one...</Link>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
+							</Text>
+						</Alert>
+					)}
+				</Box>
+
+				<Box mt="32">
+					<Heading
+						level="4"
+						mb="16"
+					>
+						Autocomplete Phrases
+					</Heading>
+					<Text
+						mb="16"
+						color="fg.secondary"
+					>
+						Define phrases to appear in autocomplete suggestions.
+					</Text>
+
+					{hydratedAutocompletePhrases.length > 0 ? (
+						<>
+							<AutocompletePhrasesTable
+								phrases={hydratedAutocompletePhrases}
+								onEdit={handleEditAPClick}
+								onRemove={handleRemoveAutocompletePhrase}
+								showOwner={false}
+							/>
+
+							<Menu
+								options={[
+									{
+										group: {label: "", hidden: true, separator: true},
+										label: "Create New Phrase",
+										addon: <IconPlus size={16} />,
+										execute: () => setIsCreateAPDialogOpen(true),
+									},
+									...(availableAutocompletePhrases.length > 0
+										? availableAutocompletePhrases.map((p) => ({
+												label: p.phrase,
+												value: p.phrase,
+												execute: () =>
+													setAutocompletePhrases([
+														...autocompletePhrases,
+														{autocompletePhraseId: p.id},
+													]),
+										  }))
+										: []),
+								]}
+							>
+								<MenuTrigger
+									size="lg"
+									mt="16"
+									addonBefore={<IconPlus size={16} />}
+								>
+									Add Phrase...
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
+						</>
+					) : (
+						<Alert intent="information">
+							<Text>
+								No Autocomplete Phrases defined yet.{" "}
+								<Menu
+									options={[
+										{
+											group: {label: "", hidden: true, separator: true},
+											label: "Create New Phrase",
+											addon: <IconPlus size={16} />,
+											execute: () => setIsCreateAPDialogOpen(true),
+										},
+										...(availableAutocompletePhrases.length > 0
+											? availableAutocompletePhrases.map((p) => ({
+													label: p.phrase,
+													value: p.phrase,
+													execute: () =>
+														setAutocompletePhrases([
+															...autocompletePhrases,
+															{autocompletePhraseId: p.id},
+														]),
+											  }))
+											: []),
+									]}
+								>
+									<MenuTrigger asChild>
+										<Link cursor="pointer">Add one...</Link>
+									</MenuTrigger>
+									<MenuContent />
+								</Menu>
+							</Text>
+						</Alert>
+					)}
+				</Box>
+
+				<PinnedResultDialog
 					open={isCreateDialogOpen}
 					setOpen={setIsCreateDialogOpen}
 					mode="create"
-					initialData={createBestBetInitialData}
-					onSave={handleCreateBestBet}
+					initialData={createPinnedResultInitialData}
+					onSave={handleCreatePinnedResult}
 					showStatus={true}
 				/>
 
-				<BestBetDialog
+				<PinnedResultDialog
 					open={isEditDialogOpen}
 					setOpen={setIsEditDialogOpen}
 					mode="edit"
-					initialData={editingBestBet || undefined}
-					onSave={handleUpdateBestBet}
+					initialData={editingPinnedResult || undefined}
+					onSave={handleUpdatePinnedResult}
 					showStatus={true}
 				/>
 
@@ -482,14 +821,44 @@ export default function OptimizationsPage() {
 					initialData={editingRQ || undefined}
 					onSave={handleUpdateRelatedQuery}
 				/>
+
+				<SynonymDialog
+					open={isCreateSynonymDialogOpen}
+					setOpen={setIsCreateSynonymDialogOpen}
+					mode="create"
+					onSave={handleAddSynonym}
+				/>
+
+				<SynonymDialog
+					open={isEditSynonymDialogOpen}
+					setOpen={setIsEditSynonymDialogOpen}
+					mode="edit"
+					initialData={editingSynonym || undefined}
+					onSave={handleUpdateSynonym}
+				/>
+
+				<AutocompletePhraseDialog
+					open={isCreateAPDialogOpen}
+					setOpen={setIsCreateAPDialogOpen}
+					mode="create"
+					onSave={handleAddAutocompletePhrase}
+				/>
+
+				<AutocompletePhraseDialog
+					open={isEditAPDialogOpen}
+					setOpen={setIsEditAPDialogOpen}
+					mode="edit"
+					initialData={editingAP || undefined}
+					onSave={handleUpdateAutocompletePhrase}
+				/>
 			</Box>
 
 			<Aside>
 				<Preview
-					algorithmBestBets={algorithmBestBets}
-					onAlgorithmBestBetsChange={setAlgorithmBestBets}
-					globalBestBets={allBestBets}
-					onGlobalBestBetsChange={setAllBestBets}
+					algorithmPinnedResults={algorithmPinnedResults}
+					onAlgorithmPinnedResultsChange={setAlgorithmPinnedResults}
+					globalPinnedResults={allPinnedResults}
+					onGlobalPinnedResultsChange={setAllPinnedResults}
 				/>
 			</Aside>
 		</>
