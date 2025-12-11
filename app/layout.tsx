@@ -6,6 +6,9 @@ import {usePathname} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {useSecretCode} from "@/app/hooks/useSecretCode";
+import {SnowEffect} from "@/app/components/effects/SnowEffect";
+import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -292,12 +295,15 @@ export default function RootLayout({
 	const menu = structure[key as keyof typeof structure];
 
 	const [feHostingState, setFeHostingState] = useState({});
+	const {activeEffect} = useSecretCode();
 
 	return (
 		<html lang="en">
 			<body>
 				<AxiomProvider>
 					{menu ? <Template structure={menu}>{children}</Template> : children}
+					{activeEffect === "snow" && <SnowEffect />}
+					{activeEffect === "newyear" && <NewYearEffect />}
 				</AxiomProvider>
 			</body>
 		</html>
