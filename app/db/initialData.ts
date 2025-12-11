@@ -123,22 +123,212 @@ export const initialUsers: User[] = [
 	},
 ];
 
-export type Page = {
+export type PageType = {
 	id: string;
 	name: string;
 	parentId: string | null;
 	status: "Published" | "Draft" | "Review" | "Changed";
 	lastModified: string;
+	contentTypeId: string;
+	slug?: string;
+	data: Record<string, any>;
 	content?: any;
 };
 
-export const initialPages2: Page[] = [
+export const initialPages: PageType[] = [
+	{
+		id: "page-blog-1",
+		name: "Welcome to Our Blog",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-20",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/welcome",
+		data: {
+			title: "Welcome to Our Blog",
+			subtitle: "Thoughts, news and updates",
+			body: "<p>This is the first blog post. Welcome!</p>",
+			author: "1",
+		},
+	},
+	{
+		id: "page-about-1",
+		name: "About Us",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-18",
+		contentTypeId: "ct-about-page",
+		slug: "about",
+		data: {
+			title: "About Stride",
+			about: "<p>Stride is a company focused on building delightful shopping experiences.</p>",
+			history: "Started in 2019 as a small team...",
+			orgAddress: "123 Stride Way, Portland, OR, 97201",
+		},
+	},
+
+	// Additional sample blog posts (sports related)
+	{
+		id: "page-blog-2",
+		name: "Marathon Training Basics",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-15",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/marathon-training-basics",
+		data: {
+			title: "Marathon Training Basics",
+			subtitle: "How to prepare for your first 26.2 miles",
+			body: "<p>Start with a solid base, progressively increase mileage, and prioritise recovery.</p>",
+			author: "2",
+		},
+	},
+	{
+		id: "page-blog-3",
+		name: "Mountain Biking the Grand Canyon",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-10",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/grand-canyon-mountain-bike",
+		data: {
+			title: "Mountain Biking the Grand Canyon",
+			subtitle: "A guide to routes, gear, and safety",
+			body: "<p>The Grand Canyon offers epic descents — bring technical skills, hydration, and respect for the environment.</p>",
+			author: "3",
+		},
+	},
+	{
+		id: "page-blog-4",
+		name: "High Jump Competition Tips",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-05",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/high-jump-competition-tips",
+		data: {
+			title: "High Jump Competition Tips",
+			subtitle: "Improve your approach and clearance",
+			body: "<p>Work on speed-to-bar rhythm, take-off mechanics, and consistent landing drills to boost clearance.</p>",
+			author: "1",
+		},
+	},
+	{
+		id: "page-blog-5",
+		name: "Essential Trail Running Skills",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-01",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/trail-running-skills",
+		data: {
+			title: "Essential Trail Running Skills",
+			subtitle: "Downhill technique, footing and pacing",
+			body: "<p>Focus on shorter, quicker steps downhill, look ahead for line choices, and build ankle strength.</p>",
+			author: "4",
+		},
+	},
+	{
+		id: "page-blog-6",
+		name: "Triathlon Training: Swim, Bike, Run",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-28",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/triathlon-swim-bike-run-plan",
+		data: {
+			title: "Triathlon Training: Swim, Bike, Run",
+			subtitle: "Balancing three disciplines without overtraining",
+			body: "<p>Use block sessions, prioritise weaker disciplines, and keep consistent brick workouts to adapt to race demands.</p>",
+			author: "2",
+		},
+	},
+	{
+		id: "page-blog-7",
+		name: "Preparing for a Rowing Regatta",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-25",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/rowing-regatta-prep",
+		data: {
+			title: "Preparing for a Rowing Regatta",
+			subtitle: "Race day routines and crew coordination",
+			body: "<p>Sync your cadence, practise race starts, and refine cox/crew calls during head-to-head pieces.</p>",
+			author: "3",
+		},
+	},
+	{
+		id: "page-blog-8",
+		name: "Soccer Tactics: Pressing and Possession",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-20",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/soccer-tactics-overview",
+		data: {
+			title: "Soccer Tactics: Pressing and Possession",
+			subtitle: "When to press high and when to control possession",
+			body: "<p>Pressing traps opponents but requires fitness; possession gains control — mix both depending on match context.</p>",
+			author: "1",
+		},
+	},
+	{
+		id: "page-blog-9",
+		name: "Rock Climbing for Beginners",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-15",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/rock-climbing-beginners",
+		data: {
+			title: "Rock Climbing for Beginners",
+			subtitle: "Technique, gear, and safety essentials",
+			body: "<p>Learn footwork, efficient movement, and proper belaying before pushing grades outdoors.</p>",
+			author: "4",
+		},
+	},
+	{
+		id: "page-blog-10",
+		name: "Open Water Swimming Tips",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-10",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/open-water-swimming-tips",
+		data: {
+			title: "Open Water Swimming Tips",
+			subtitle: "Sighting, drafting and race strategies",
+			body: "<p>Practice sighting, warm up properly, and draft when possible to save energy on long swims.</p>",
+			author: "2",
+		},
+	},
+	{
+		id: "page-blog-11",
+		name: "Cycling Nutrition for Endurance Rides",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-05",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/ultra-running-nutrition",
+		data: {
+			title: "Ultra Running Nutrition Essentials",
+			subtitle: "Fueling strategies for 50km+ events",
+			body: "<p>Test fueling plans in training, use a mix of solids and gels, and adapt to GI tolerance on long efforts.</p>",
+			author: "3",
+		},
+	},
+];
+
+
+export const initialPages2: PageType[] = [
 	{
 		id: "1",
 		name: "Homepage",
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-27",
+		data: {},
 		content: [
 			{
 				id: "section-1",
