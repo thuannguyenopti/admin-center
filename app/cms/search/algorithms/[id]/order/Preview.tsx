@@ -29,39 +29,39 @@ import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {
 	Algorithm,
-	AlgorithmBestBet,
-	AlgorithmBestBetReference,
+	AlgorithmPinnedResult,
+	AlgorithmPinnedResultReference,
 	initialAlgorithms,
-	BestBet,
-	initialBestBets,
+	PinnedResult,
+	initialPinnedResults,
 	RelatedQuery,
 	AlgorithmRelatedQueryReference,
 	initialRelatedQueries,
 } from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
-import BestBetDialog from "../../../components/BestBetDialog";
+import PinnedResultDialog from "../../../components/PinnedResultDialog";
 
 export default function Preview({
-	algorithmBestBets: externalAlgorithmBestBets,
-	onAlgorithmBestBetsChange: setExternalAlgorithmBestBets,
-	globalBestBets: externalGlobalBestBets,
-	onGlobalBestBetsChange: setExternalGlobalBestBets,
+	algorithmPinnedResults: externalAlgorithmPinnedResults,
+	onAlgorithmPinnedResultsChange: setExternalAlgorithmPinnedResults,
+	globalPinnedResults: externalGlobalPinnedResults,
+	onGlobalPinnedResultsChange: setExternalGlobalPinnedResults,
 }: {
-	algorithmBestBets?: AlgorithmBestBetReference[];
-	onAlgorithmBestBetsChange?: (val: AlgorithmBestBetReference[]) => void;
-	globalBestBets?: BestBet[];
-	onGlobalBestBetsChange?: (val: BestBet[]) => void;
+	algorithmPinnedResults?: AlgorithmPinnedResultReference[];
+	onAlgorithmPinnedResultsChange?: (val: AlgorithmPinnedResultReference[]) => void;
+	globalPinnedResults?: PinnedResult[];
+	onGlobalPinnedResultsChange?: (val: PinnedResult[]) => void;
 } = {}) {
 	const params = useParams();
 	const id = params.id as string;
 	const [activeTab, setActiveTab] = usePersistentState(`preview_tab_${id}`, "search demo");
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
-	const [showBestBets, setShowBestBets] = useState(true);
+	const [showPinnedResults, setShowPinnedResults] = useState(true);
 	const [showRelatedQueries, setShowRelatedQueries] = useState(true);
 
-	const [isBestBetDialogOpen, setIsBestBetDialogOpen] = useState(false);
-	const [bestBetQuery, setBestBetQuery] = useState("");
+	const [isPinnedResultDialogOpen, setIsPinnedResultDialogOpen] = useState(false);
+	const [pinnedResultQuery, setPinnedResultQuery] = useState("");
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
 	const currentAlgorithm = algorithms.find((a) => a.id === id);
@@ -78,57 +78,58 @@ export default function Preview({
 		};
 	}, [query]);
 
-	const [localAlgorithmBestBets, setLocalAlgorithmBestBets] = usePersistentState(
-		`algorithm_best_bets_${id}`,
+	const [localAlgorithmPinnedResults, setLocalAlgorithmPinnedResults] = usePersistentState(
+		`algorithm_pinned_results_${id}`,
 		[]
-	) as [AlgorithmBestBetReference[], (val: AlgorithmBestBetReference[]) => void];
+	) as [AlgorithmPinnedResultReference[], (val: AlgorithmPinnedResultReference[]) => void];
 
-	const algorithmBestBets = externalAlgorithmBestBets ?? localAlgorithmBestBets;
-	const setAlgorithmBestBets = setExternalAlgorithmBestBets ?? setLocalAlgorithmBestBets;
+	const algorithmPinnedResults = externalAlgorithmPinnedResults ?? localAlgorithmPinnedResults;
+	const setAlgorithmPinnedResults =
+		setExternalAlgorithmPinnedResults ?? setLocalAlgorithmPinnedResults;
 
-	const [localGlobalBestBets, setLocalGlobalBestBets] = usePersistentState(
-		"bestBets",
-		initialBestBets
-	) as [BestBet[], (val: BestBet[]) => void];
+	const [localGlobalPinnedResults, setLocalGlobalPinnedResults] = usePersistentState(
+		"pinnedResults",
+		initialPinnedResults
+	) as [PinnedResult[], (val: PinnedResult[]) => void];
 
-	const globalBestBets = externalGlobalBestBets ?? localGlobalBestBets;
-	const setGlobalBestBets = setExternalGlobalBestBets ?? setLocalGlobalBestBets;
+	const globalPinnedResults = externalGlobalPinnedResults ?? localGlobalPinnedResults;
+	const setGlobalPinnedResults = setExternalGlobalPinnedResults ?? setLocalGlobalPinnedResults;
 
-	const [optimisticBestBets, setOptimisticBestBets] = useState<
-		(BestBet & {status: "Active" | "Inactive"})[]
+	const [optimisticPinnedResults, setOptimisticPinnedResults] = useState<
+		(PinnedResult & {status: "Active" | "Inactive"})[]
 	>([]);
 
-	const onCreateBestBet = (query: string) => {
-		setBestBetQuery(query);
-		setIsBestBetDialogOpen(true);
+	const onCreatePinnedResult = (query: string) => {
+		setPinnedResultQuery(query);
+		setIsPinnedResultDialogOpen(true);
 	};
 
-	const handleSaveBestBet = (data: {
+	const handleSavePinnedResult = (data: {
 		query: string;
 		destination: string;
 		status?: "Active" | "Inactive";
 	}) => {
 		const newId = Date.now().toString();
-		const newGlobalBestBet: BestBet = {
+		const newGlobalPinnedResult: PinnedResult = {
 			id: newId,
 			query: data.query,
 			destination: data.destination,
 			owner: "Current User",
 		};
-		setGlobalBestBets([...globalBestBets, newGlobalBestBet]);
+		setGlobalPinnedResults([...globalPinnedResults, newGlobalPinnedResult]);
 
-		const newBestBet: AlgorithmBestBetReference = {
-			bestBetId: newId,
+		const newPinnedResult: AlgorithmPinnedResultReference = {
+			pinnedResultId: newId,
 			status: data.status || "Active",
 		};
-		setAlgorithmBestBets([...algorithmBestBets, newBestBet]);
+		setAlgorithmPinnedResults([...algorithmPinnedResults, newPinnedResult]);
 
-		setOptimisticBestBets((prev) => [
+		setOptimisticPinnedResults((prev) => [
 			...prev,
-			{...newGlobalBestBet, status: newBestBet.status},
+			{...newGlobalPinnedResult, status: newPinnedResult.status},
 		]);
 
-		setIsBestBetDialogOpen(false);
+		setIsPinnedResultDialogOpen(false);
 	};
 
 	const [relatedQueries] = usePersistentState(`algorithm_related_queries_${id}`, []) as [
@@ -148,31 +149,33 @@ export default function Preview({
 			.filter((item): item is RelatedQuery => item !== undefined);
 	}, [relatedQueries, globalRelatedQueries]);
 
-	const hydratedBestBets = useMemo(() => {
-		if (!algorithmBestBets) return [];
-		return algorithmBestBets
+	const hydratedPinnedResults = useMemo(() => {
+		if (!algorithmPinnedResults) return [];
+		return algorithmPinnedResults
 			.map((ref) => {
-				const bb = globalBestBets.find((g) => g.id === ref.bestBetId);
+				const bb = globalPinnedResults.find((g) => g.id === ref.pinnedResultId);
 				if (!bb) return null;
 				return {...bb, status: ref.status};
 			})
-			.filter((item): item is BestBet & {status: "Active" | "Inactive"} => item !== null);
-	}, [algorithmBestBets, globalBestBets]);
+			.filter(
+				(item): item is PinnedResult & {status: "Active" | "Inactive"} => item !== null
+			);
+	}, [algorithmPinnedResults, globalPinnedResults]);
 
-	const effectiveBestBets = useMemo(() => {
-		const hydratedIds = new Set(hydratedBestBets.map((b) => b.id));
-		const uniqueOptimistic = optimisticBestBets.filter((b) => !hydratedIds.has(b.id));
-		return [...hydratedBestBets, ...uniqueOptimistic];
-	}, [hydratedBestBets, optimisticBestBets]);
+	const effectivePinnedResults = useMemo(() => {
+		const hydratedIds = new Set(hydratedPinnedResults.map((b) => b.id));
+		const uniqueOptimistic = optimisticPinnedResults.filter((b) => !hydratedIds.has(b.id));
+		return [...hydratedPinnedResults, ...uniqueOptimistic];
+	}, [hydratedPinnedResults, optimisticPinnedResults]);
 
 	useEffect(() => {
-		if (optimisticBestBets.length === 0) return;
-		const hydratedIds = new Set(hydratedBestBets.map((b) => b.id));
-		const remainingOptimistic = optimisticBestBets.filter((b) => !hydratedIds.has(b.id));
-		if (remainingOptimistic.length !== optimisticBestBets.length) {
-			setOptimisticBestBets(remainingOptimistic);
+		if (optimisticPinnedResults.length === 0) return;
+		const hydratedIds = new Set(hydratedPinnedResults.map((b) => b.id));
+		const remainingOptimistic = optimisticPinnedResults.filter((b) => !hydratedIds.has(b.id));
+		if (remainingOptimistic.length !== optimisticPinnedResults.length) {
+			setOptimisticPinnedResults(remainingOptimistic);
 		}
-	}, [hydratedBestBets, optimisticBestBets]);
+	}, [hydratedPinnedResults, optimisticPinnedResults]);
 
 	const activeSynonyms = useMemo(() => {
 		if (!query || !showRelatedQueries) return [];
@@ -210,9 +213,9 @@ export default function Preview({
 		);
 	});
 
-	// Check for active best bets matching the query
-	const activeBestBets = showBestBets
-		? effectiveBestBets.filter(
+	// Check for active pinned results matching the query
+	const activePinnedResults = showPinnedResults
+		? effectivePinnedResults.filter(
 				(bb) =>
 					bb.status === "Active" &&
 					query &&
@@ -268,9 +271,10 @@ export default function Preview({
 										options={[
 											{
 												addon: <IconRocket size={16} />,
-												label: "Best bets",
-												execute: () => setShowBestBets(!showBestBets),
-												selected: showBestBets,
+												label: "Pinned Results",
+												execute: () =>
+													setShowPinnedResults(!showPinnedResults),
+												selected: showPinnedResults,
 												switch: true,
 											},
 											{
@@ -324,16 +328,16 @@ export default function Preview({
 								flexDirection="column"
 								gap="4"
 							>
-								{activeBestBets.map((bb, i) => {
+								{activePinnedResults.map((bb, i) => {
 									const result = searchResults.find(
 										(r) => r.url === bb.destination
 									);
 									return (
 										<ResultItem
 											key={`bb-${i}`}
-											isBestBet
+											isPinnedResult
 											title={result?.title || bb.query}
-											description={`Best Bet for "${bb.query}"`}
+											description={`Pinned Result for "${bb.query}"`}
 											url={bb.destination}
 										/>
 									);
@@ -346,31 +350,34 @@ export default function Preview({
 										url={result.url}
 									/>
 								))}
-								{filteredResults.length === 0 && activeBestBets.length === 0 && (
-									<Flex
-										flexDirection="column"
-										alignItems="center"
-										gap="8"
-										py="24"
-									>
-										<Text color="fg.secondary">No results found.</Text>
-										{onCreateBestBet && debouncedQuery.trim() && (
-											<Button
-												size="lg"
-												icon={<IconPlus />}
-												onClick={() => onCreateBestBet(debouncedQuery)}
-												style={{
-													animation:
-														"appearDown 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
-													animationDelay: "1s",
-													animationFillMode: "both",
-												}}
-											>
-												Create Best Bet for "{debouncedQuery}"
-											</Button>
-										)}
-									</Flex>
-								)}
+								{filteredResults.length === 0 &&
+									activePinnedResults.length === 0 && (
+										<Flex
+											flexDirection="column"
+											alignItems="center"
+											gap="8"
+											py="24"
+										>
+											<Text color="fg.secondary">No results found.</Text>
+											{onCreatePinnedResult && debouncedQuery.trim() && (
+												<Button
+													size="lg"
+													icon={<IconPlus />}
+													onClick={() =>
+														onCreatePinnedResult(debouncedQuery)
+													}
+													style={{
+														animation:
+															"appearDown 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+														animationDelay: "1s",
+														animationFillMode: "both",
+													}}
+												>
+													Create Pinned Result for "{debouncedQuery}"
+												</Button>
+											)}
+										</Flex>
+									)}
 							</Flex>
 						</Box>
 					</TabsContent>
@@ -384,19 +391,19 @@ export default function Preview({
 								flexDirection="column"
 								gap="0"
 							>
-								{activeBestBets.map((bb, i) => {
+								{activePinnedResults.map((bb, i) => {
 									const result = searchResults.find(
 										(r) => r.url === bb.destination
 									);
 									return (
 										<DetailedResultItem
 											key={`bb-${i}`}
-											isBestBet
+											isPinnedResult
 											score={0.0}
 											id="some-content-id"
 											data={{
 												title: result?.title || bb.query,
-												description: `Best Bet for "${bb.query}"`,
+												description: `Pinned Result for "${bb.query}"`,
 												author: "Steven King",
 												array: '["lorem dolor", "dolor"]',
 												_fulltext:
@@ -427,12 +434,12 @@ export default function Preview({
 					</TabsContent>
 				</Tabs>
 			</Box>
-			<BestBetDialog
-				open={isBestBetDialogOpen}
-				setOpen={setIsBestBetDialogOpen}
+			<PinnedResultDialog
+				open={isPinnedResultDialogOpen}
+				setOpen={setIsPinnedResultDialogOpen}
 				mode="create"
-				initialData={{query: bestBetQuery, destination: ""}}
-				onSave={handleSaveBestBet}
+				initialData={{query: pinnedResultQuery, destination: ""}}
+				onSave={handleSavePinnedResult}
 				showStatus={true}
 			/>
 		</Box>
@@ -440,13 +447,13 @@ export default function Preview({
 }
 
 function DetailedResultItem({
-	isBestBet,
+	isPinnedResult,
 	score,
 	id,
 	data,
 	query,
 }: {
-	isBestBet?: boolean;
+	isPinnedResult?: boolean;
 	score: number;
 	id: string;
 	data: {
@@ -490,13 +497,13 @@ function DetailedResultItem({
 					flexDirection="column"
 					gap="4"
 				>
-					{isBestBet && (
+					{isPinnedResult && (
 						<Text
 							color="fg.accent"
 							fontWeight="600"
 							fontSize="sm"
 						>
-							Best bet
+							Pinned Result
 						</Text>
 					)}
 					<Flex
@@ -605,19 +612,19 @@ function GridRow({
 }
 
 function ResultItem({
-	isBestBet,
+	isPinnedResult,
 	title,
 	description,
 	url,
 }: {
-	isBestBet?: boolean;
+	isPinnedResult?: boolean;
 	title: string;
 	description: string;
 	url: string;
 }) {
 	return (
 		<Box
-			bg={isBestBet ? "bg.accent.subtle" : "bg.default"}
+			bg={isPinnedResult ? "bg.accent.subtle" : "bg.default"}
 			p="8"
 			rounded="sm"
 		>
@@ -639,7 +646,7 @@ function ResultItem({
 					flexDirection="row"
 					mb="4"
 				>
-					{isBestBet && <Badge intent="information">Best bet</Badge>}
+					{isPinnedResult && <Badge intent="information">Pinned Result</Badge>}
 				</Flex>
 			</Flex>
 			<Text

@@ -21,37 +21,37 @@ import {
 	Separator,
 	Switch,
 } from "@optiaxiom/react";
-import {BestBet, AlgorithmBestBet} from "@/app/db/initialData";
+import {PinnedResult, AlgorithmPinnedResult} from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
 
-interface BestBetsTableProps {
-	bestBets: (BestBet | AlgorithmBestBet)[];
-	onEdit: (bet: BestBet | AlgorithmBestBet) => void;
+interface PinnedResultsTableProps {
+	pinnedResults: (PinnedResult | AlgorithmPinnedResult)[];
+	onEdit: (bet: PinnedResult | AlgorithmPinnedResult) => void;
 	onRemove: (query: string) => void;
 	showStatus?: boolean;
 	showOwner?: boolean;
-	availableBestBets?: BestBet[];
-	onAdd?: (bet: BestBet) => void;
+	availablePinnedResults?: PinnedResult[];
+	onAdd?: (bet: PinnedResult) => void;
 	onCreate?: () => void;
-	onToggleStatus?: (bet: AlgorithmBestBet, newStatus: "Active" | "Inactive") => void;
+	onToggleStatus?: (bet: AlgorithmPinnedResult, newStatus: "Active" | "Inactive") => void;
 }
 
-export default function BestBetsTable({
-	bestBets,
+export default function PinnedResultsTable({
+	pinnedResults,
 	onEdit,
 	onRemove,
 	showStatus = true,
 	showOwner = true,
-	availableBestBets,
+	availablePinnedResults,
 	onAdd,
 	onCreate,
 	onToggleStatus,
-}: BestBetsTableProps) {
+}: PinnedResultsTableProps) {
 	const handleValueChange = (value: string) => {
 		if (value === "__create__") {
 			onCreate?.();
 		} else {
-			const bet = availableBestBets?.find((b) => b.query === value);
+			const bet = availablePinnedResults?.find((b) => b.query === value);
 			if (bet) onAdd?.(bet);
 		}
 	};
@@ -68,7 +68,7 @@ export default function BestBetsTable({
 					},
 			  ]
 			: []),
-		...(availableBestBets?.map((b) => ({
+		...(availablePinnedResults?.map((b) => ({
 			label: searchResults.find((r) => r.url === b.destination)?.title || b.destination,
 			value: b.query,
 			description: b.query,
@@ -81,7 +81,7 @@ export default function BestBetsTable({
 			<Table>
 				<thead>
 					<Tr>
-						<Th>Best Bet</Th>
+						<Th>Pinned Result</Th>
 						<Th>Destination</Th>
 						{showStatus && <Th>Status</Th>}
 						{showOwner && <Th>Owner</Th>}
@@ -89,7 +89,7 @@ export default function BestBetsTable({
 					</Tr>
 				</thead>
 				<tbody>
-					{bestBets.map((bet) => (
+					{pinnedResults.map((bet) => (
 						<Tr
 							key={bet.query}
 							onClick={() => onEdit(bet)}
@@ -133,7 +133,7 @@ export default function BestBetsTable({
 															addon: <IconPower size={16} />,
 															execute: () =>
 																onToggleStatus?.(
-																	bet as AlgorithmBestBet,
+																	bet as AlgorithmPinnedResult,
 																	bet.status === "Active"
 																		? "Inactive"
 																		: "Active"
@@ -170,14 +170,14 @@ export default function BestBetsTable({
 					))}
 				</tbody>
 			</Table>
-			{availableBestBets && onAdd && (
+			{availablePinnedResults && onAdd && (
 				<Menu options={selectOptions}>
 					<MenuTrigger
 						size="lg"
 						mt="16"
 						addonBefore={<IconPlus size={16} />}
 					>
-						Add Best Bet...
+						Add Pinned Result...
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>

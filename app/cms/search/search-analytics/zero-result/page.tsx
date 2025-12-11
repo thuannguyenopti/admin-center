@@ -19,15 +19,15 @@ import {useState, useMemo} from "react";
 import {useRouter} from "next/navigation";
 import {
 	initialAlgorithms,
-	BestBet,
-	initialBestBets,
-	AlgorithmBestBet,
-	AlgorithmBestBetReference,
+	PinnedResult,
+	initialPinnedResults,
+	AlgorithmPinnedResult,
+	AlgorithmPinnedResultReference,
 	Algorithm,
 } from "@/app/db/initialData";
 import {zeroResultQueries, ZeroResultQuery, scaleValue} from "@/app/db/analyticsData";
 import usePersistentState from "@/app/usePersistentState";
-import BestBetDialog from "../../components/BestBetDialog";
+import PinnedResultDialog from "../../components/PinnedResultDialog";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Link from "next/link";
 
@@ -40,57 +40,57 @@ export default function ZeroResultPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
-	const [bestBets, setBestBets] = usePersistentState("bestBets", initialBestBets) as [
-		BestBet[],
-		(val: BestBet[]) => void
-	];
+	const [pinnedResults, setPinnedResults] = usePersistentState(
+		"pinnedResults",
+		initialPinnedResults
+	) as [PinnedResult[], (val: PinnedResult[]) => void];
 
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-	const [createBestBetInitialData, setCreateBestBetInitialData] = useState<
+	const [createPinnedResultInitialData, setCreatePinnedResultInitialData] = useState<
 		{query: string; destination: string} | undefined
 	>(undefined);
 	const [targetAlgorithm, setTargetAlgorithm] = useState<Algorithm | null>(null);
 
-	const handleCreateBestBet = (data: {
+	const handleCreatePinnedResult = (data: {
 		query: string;
 		destination: string;
 		status?: "Active" | "Inactive";
 	}) => {
 		if (!targetAlgorithm) return;
 
-		// 1. Create/Find Best Bet in Global List
-		let currentBestBets = [...bestBets];
-		let targetBet = currentBestBets.find((b) => b.query === data.query);
+		// 1. Create/Find Pinned Result in Global List
+		let currentPinnedResults = [...pinnedResults];
+		let targetResult = currentPinnedResults.find((b) => b.query === data.query);
 
-		if (!targetBet) {
-			targetBet = {
+		if (!targetResult) {
+			targetResult = {
 				id: Date.now().toString(),
 				query: data.query,
 				destination: data.destination,
 				owner: "Alice Johnson",
 			};
-			currentBestBets.push(targetBet);
+			currentPinnedResults.push(targetResult);
 			// Manually update localStorage to ensure next page sees it immediately
-			localStorage.setItem("bestBets", JSON.stringify(currentBestBets));
-			setBestBets(currentBestBets);
+			localStorage.setItem("pinnedResults", JSON.stringify(currentPinnedResults));
+			setPinnedResults(currentPinnedResults);
 		} else {
-			if (targetBet.destination !== data.destination) {
-				targetBet.destination = data.destination;
-				localStorage.setItem("bestBets", JSON.stringify(currentBestBets));
-				setBestBets(currentBestBets);
+			if (targetResult.destination !== data.destination) {
+				targetResult.destination = data.destination;
+				localStorage.setItem("pinnedResults", JSON.stringify(currentPinnedResults));
+				setPinnedResults(currentPinnedResults);
 			}
 		}
 
 		// 2. Add to Algorithm Specific List
-		const algoKey = `algorithm_best_bets_${targetAlgorithm.id}`;
-		const storedAlgoBets = localStorage.getItem(algoKey);
-		let algoBets: AlgorithmBestBetReference[] = storedAlgoBets
-			? JSON.parse(storedAlgoBets)
+		const algoKey = `algorithm_pinned_results_${targetAlgorithm.id}`;
+		const storedAlgoResults = localStorage.getItem(algoKey);
+		let algoResults: AlgorithmPinnedResultReference[] = storedAlgoResults
+			? JSON.parse(storedAlgoResults)
 			: [];
 
-		if (!algoBets.some((b) => b.bestBetId === targetBet!.id)) {
-			algoBets.push({bestBetId: targetBet!.id, status: data.status || "Active"});
-			localStorage.setItem(algoKey, JSON.stringify(algoBets));
+		if (!algoResults.some((b) => b.pinnedResultId === targetResult!.id)) {
+			algoResults.push({pinnedResultId: targetResult!.id, status: data.status || "Active"});
+			localStorage.setItem(algoKey, JSON.stringify(algoResults));
 		}
 
 		setIsCreateDialogOpen(false);
@@ -220,7 +220,7 @@ export default function ZeroResultPage() {
 									options={[
 										{
 											addon: <IconRocket size={16} />,
-											label: "Add Best Bet",
+											label: "Add Pinned Result",
 											execute: () => {
 												const algoName = row.algorithm;
 												const query = row.query;
@@ -230,7 +230,7 @@ export default function ZeroResultPage() {
 
 												if (algo) {
 													setTargetAlgorithm(algo);
-													setCreateBestBetInitialData({
+													setCreatePinnedResultInitialData({
 														query,
 														destination: "",
 													});
@@ -255,12 +255,12 @@ export default function ZeroResultPage() {
 				</tbody>
 			</Table>
 
-			<BestBetDialog
+			<PinnedResultDialog
 				open={isCreateDialogOpen}
 				setOpen={setIsCreateDialogOpen}
 				mode="create"
-				initialData={createBestBetInitialData}
-				onSave={handleCreateBestBet}
+				initialData={createPinnedResultInitialData}
+				onSave={handleCreatePinnedResult}
 				showStatus={true}
 			/>
 		</Box>
