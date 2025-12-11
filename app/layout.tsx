@@ -20,6 +20,7 @@ import {
 	IconUsers,
 	IconPuzzle,
 	IconFolders,
+	IconBuildingStore,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
