@@ -1,23 +1,24 @@
 "use client";
 
-import {Box, Heading, SearchInput} from "@optiaxiom/react";
-import {Text} from "@/app/components/Text";
+import { Box, Heading, SearchInput } from "@optiaxiom/react";
+import { Text } from "@/app/components/Text";
 import Link from "next/link";
-import {Button} from "@/app/components/Button";
-import {IconFilter, IconWand} from "@tabler/icons-react";
-import {Aside} from "@/app/context/LayoutContext";
+import { Button } from "@/app/components/Button";
+import { IconFilter, IconWand } from "@tabler/icons-react";
+import { Aside } from "@/app/context/LayoutContext";
 import RightToolbar from "@/app/components/RightToolbar";
-import {Table, Tr, Th, Td} from "@/app/components/Table";
+import { Table, Tr, Th, Td } from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {IconFile} from "@tabler/icons-react";
-import {Flex} from "@/app/components/Flex";
+import { IconFile } from "@tabler/icons-react";
+import { Flex } from "@/app/components/Flex";
+
 
 const files = [
-	{name: "Homepage", type: "Page", lastModified: "2023-10-27", status: "Published"},
-	{name: "About Us", type: "Page", lastModified: "2023-10-26", status: "Draft"},
-	{name: "Contact", type: "Page", lastModified: "2023-10-25", status: "Published"},
-	{name: "Blog Post 1", type: "Article", lastModified: "2023-10-24", status: "Published"},
-	{name: "Product A", type: "Product", lastModified: "2023-10-23", status: "Review"},
+	{ name: "Homepage", type: "Page", lastModified: "2023-10-27", status: "Published" },
+	{ name: "About Us", type: "Page", lastModified: "2023-10-26", status: "Draft" },
+	{ name: "Contact", type: "Page", lastModified: "2023-10-25", status: "Published" },
+	{ name: "Blog Post 1", type: "Article", lastModified: "2023-10-24", status: "Published" },
+	{ name: "Product A", type: "Product", lastModified: "2023-10-23", status: "Review" },
 ];
 
 export default function ContentPage() {
