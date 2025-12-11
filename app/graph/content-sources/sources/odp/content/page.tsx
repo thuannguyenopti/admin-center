@@ -87,7 +87,16 @@ export default function Home() {
 						>
 							{row.children.map((col) => (
 								<Td
-									type={col.type}
+									type={
+										col.type as
+											| "button"
+											| "header"
+											| "numeric"
+											| "badge"
+											| "avatar"
+											| "raw"
+											| undefined
+									}
 									key={col.label}
 									description={col.description}
 								>
