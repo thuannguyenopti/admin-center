@@ -24,6 +24,7 @@ export default function RelatedQueriesPage() {
 
 	const handleCreateRelatedQuery = (data: {query: string; synonyms: string[]}) => {
 		const newRelatedQuery: RelatedQuery = {
+			id: Date.now().toString(),
 			query: data.query,
 			synonyms: data.synonyms,
 			owner: "Alice Johnson",
@@ -46,7 +47,7 @@ export default function RelatedQueriesPage() {
 		if (!editingRelatedQuery) return;
 
 		const updatedRelatedQueries = relatedQueries.map((sq) =>
-			sq.query === editingRelatedQuery.query
+			sq.id === editingRelatedQuery.id
 				? {
 						...sq,
 						query: data.query,

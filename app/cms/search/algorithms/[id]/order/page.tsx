@@ -20,8 +20,8 @@ import {useState} from "react";
 import Preview from "./Preview";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {AlgorithmBestBet} from "@/app/db/initialData";
 import {Aside} from "@/app/context/LayoutContext";
+import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData";
 
 export default function OrderPage() {
 	const params = useParams();
@@ -32,6 +32,9 @@ export default function OrderPage() {
 	];
 
 	const [method, setMethod] = useState("relevance");
+
+	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const currentAlgorithm = algorithms.find((a) => a.id === id);
 
 	const rules = [
 		{
@@ -179,7 +182,7 @@ export default function OrderPage() {
 				)}
 			</Box>
 			<Aside>
-				<Preview algorithmBestBets={algorithmBestBets} />
+				<Preview />
 			</Aside>
 		</>
 	);
