@@ -13,6 +13,7 @@ export default function GlobalBar() {
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
+		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
 		return "Prototype";
 	};
 
@@ -97,7 +98,7 @@ export default function GlobalBar() {
 					},
 					{
 						label: "Connect Platform",
-						disabledReason: "TBD",
+						execute: () => router.push("/connect-platform/marketplace"),
 					},
 					{
 						label: "Data Platform",

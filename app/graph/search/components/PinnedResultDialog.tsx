@@ -1,12 +1,10 @@
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {Field, Select, SelectTrigger, SelectContent, Switch, Textarea, Box} from "@optiaxiom/react";
+import {Field, Select, SelectTrigger, SelectContent, Switch, Textarea} from "@optiaxiom/react";
 import {Flex} from "@/app/components/Flex";
 import {useState, useEffect} from "react";
 import searchResults from "@/app/db/searchResults.json";
-import {Button} from "@/app/components/Button";
-import {IconSparkles} from "@tabler/icons-react";
 
-interface BestBetDialogProps {
+interface PinnedResultDialogProps {
 	open: boolean;
 	setOpen: (open: boolean) => void;
 	mode: "create" | "edit";
@@ -19,18 +17,17 @@ interface BestBetDialogProps {
 	showStatus?: boolean;
 }
 
-export default function BestBetDialog({
+export default function PinnedResultDialog({
 	open,
 	setOpen,
 	mode,
 	initialData,
 	onSave,
 	showStatus = false,
-}: BestBetDialogProps) {
+}: PinnedResultDialogProps) {
 	const [query, setQuery] = useState("");
 	const [destination, setDestination] = useState("");
 	const [status, setStatus] = useState<"Active" | "Inactive">("Active");
-	const [isGenerating, setIsGenerating] = useState(false);
 
 	useEffect(() => {
 		if (open) {
@@ -46,48 +43,6 @@ export default function BestBetDialog({
 		}
 	}, [open, initialData, mode]);
 
-	const handleGeneratePhrases = async () => {
-		const selectedDestination = searchResults.find((r) => r.url === destination);
-		const seedText = query || selectedDestination?.title;
-
-		if (!seedText) return;
-
-		setIsGenerating(true);
-		try {
-			const response = await fetch("/api/llm", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					messages: [
-						{
-							role: "user",
-							content: `Generate 5 comma-separated search phrases that should trigger a best bet for: "${seedText}". Return only the comma-separated list, no other text.`,
-						},
-					],
-				}),
-			});
-
-			const data = await response.json();
-			if (data.content) {
-				const newPhrases = data.content.replace(/\.$/, ""); // Remove trailing dot if any
-				setQuery((prev) => {
-					const current = prev ? prev.split(",").map((s) => s.trim()) : [];
-					const incoming = newPhrases.split(",").map((s: string) => s.trim());
-					const combined = Array.from(new Set([...current, ...incoming]))
-						.filter(Boolean)
-						.join(", ");
-					return combined;
-				});
-			}
-		} catch (error) {
-			console.error("Failed to generate phrases:", error);
-		} finally {
-			setIsGenerating(false);
-		}
-	};
-
 	const handleSave = () => {
 		onSave({
 			query,
@@ -99,11 +54,11 @@ export default function BestBetDialog({
 
 	return (
 		<AbstractDialog
-			title={mode === "create" ? "Create Best Bet" : "Edit Best Bet"}
+			title={mode === "create" ? "Create Pinned Result" : "Edit Pinned Result"}
 			description={
 				mode === "create"
-					? "Add a new best bet to direct users to specific destinations."
-					: "Update the details of this best bet."
+					? "Add a new pinned result to direct users to specific destinations."
+					: "Update the details of this pinned result."
 			}
 			open={open}
 			setOpen={setOpen}
@@ -136,28 +91,18 @@ export default function BestBetDialog({
 				<Field
 					label="Phrases"
 					required
+					description="Separate multiple phrases with commas"
 				>
 					<Textarea
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 						placeholder="e.g. return policy, returns"
 					/>
-					<Box>
-						<Button
-							size="md"
-							icon={<IconSparkles />}
-							onClick={handleGeneratePhrases}
-							loading={isGenerating}
-							disabled={!query && !destination}
-						>
-							Generate phrases
-						</Button>
-					</Box>
 				</Field>
 				{showStatus && (
 					<Field
 						label="Status"
-						required
+						description="Inactive pinned results will not be shown in search results."
 					>
 						<Switch
 							checked={status === "Active"}

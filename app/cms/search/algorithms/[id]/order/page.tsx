@@ -21,13 +21,13 @@ import Preview from "./Preview";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Aside} from "@/app/context/LayoutContext";
-import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {AlgorithmPinnedResult, Algorithm, initialAlgorithms} from "@/app/db/initialData";
 
 export default function OrderPage() {
 	const params = useParams();
 	const id = params.id as string;
-	const [algorithmBestBets] = usePersistentState(`algorithm_best_bets_${id}`, []) as [
-		AlgorithmBestBet[],
+	const [algorithmPinnedResults] = usePersistentState(`algorithm_pinned_results_${id}`, []) as [
+		AlgorithmPinnedResult[],
 		any
 	];
 

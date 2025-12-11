@@ -19,6 +19,7 @@ import {
 	IconFile,
 	IconUsers,
 	IconPuzzle,
+	IconBuildingStore,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -146,7 +147,8 @@ export default function RootLayout({
 							],
 						},
 					},
-					{label: "Optimizations"},
+					{label: "Manage"},
+
 					{
 						label: "Algorithms",
 						description: "Manage search algorithms",
@@ -179,17 +181,28 @@ export default function RootLayout({
 								: [],
 						},
 					},
+					{label: "Search Tools"},
 					{
-						label: "Best Bets",
+						label: "Pinned Results",
 						description:
 							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
-						url: "/cms/search/best-bets",
+						url: "/cms/search/pinned-results",
 					},
 					{
 						label: "Related Queries",
 						description:
 							"Manage synonyms and related queries to improve search recall.",
 						url: "/cms/search/related-queries",
+					},
+					{
+						label: "Synonyms",
+						description: "Manage synonyms to expand search results.",
+						url: "/cms/search/synonyms",
+					},
+					{
+						label: "Autocomplete Phrases",
+						description: "Manage phrases for autocomplete suggestions.",
+						url: "/cms/search/autocomplete-phrases",
 					},
 				],
 			},
@@ -250,6 +263,38 @@ export default function RootLayout({
 		// 	// 	icon: <IconSettings />,
 		// 	// },
 		// ],
+		"connect-platform": [
+			{
+				label: "Marketplace",
+				url: "/connect-platform/marketplace",
+				highlight: "/connect-platform/marketplace",
+				icon: <IconBuildingStore />,
+			},
+			{
+				label: "Graph",
+				url: "/connect-platform/graph/dashboard",
+				highlight: "/connect-platform/graph",
+				icon: <IconHierarchy3 />,
+				children: [
+					{
+						label: "Dashboard",
+						url: "/connect-platform/graph/dashboard",
+					},
+					{
+						label: "Browse",
+						url: "/connect-platform/graph/browse",
+					},
+					{
+						label: "Sync Log",
+						url: "/connect-platform/graph/sync-log",
+					},
+					{
+						label: "Settings",
+						url: "/connect-platform/graph/settings",
+					},
+				],
+			},
+		],
 		"fe-hosting": [
 			{
 				label: "Applications",
