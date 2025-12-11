@@ -17,6 +17,8 @@ import {useEffect, useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, initialUsers} from "@/app/db/initialData";
 import {IconArrowLeft} from "@tabler/icons-react";
+import {Aside} from "@/app/context/LayoutContext";
+import Preview from "../order/Preview";
 
 export default function EditAlgorithmPage() {
 	const params = useParams();
@@ -50,7 +52,7 @@ export default function EditAlgorithmPage() {
 			a.id === id ? {...a, name, publishState, owner} : a
 		);
 		setAlgorithms(updatedAlgorithms);
-		router.push("/graph/search/optimize-search");
+		router.push("/cms/search/algorithms");
 	};
 
 	if (!algorithm && algorithms.length > 0) {
@@ -62,79 +64,84 @@ export default function EditAlgorithmPage() {
 	}
 
 	return (
-		<Box maxW="lg">
-			<Flex
-				flexDirection="column"
-				gap="16"
-			>
-				<Field
-					label="Name"
-					required
-				>
-					<Input
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-					/>
-				</Field>
-
-				<Field
-					label="Publish State"
-					required
-				>
-					<Select
-						value={publishState}
-						onValueChange={(val) => setPublishState(val)}
-						options={[
-							{label: "Draft", value: "Draft"},
-							{label: "Testing", value: "Testing"},
-							{label: "Published", value: "Published"},
-							{label: "Archived", value: "Archived"},
-						]}
-					>
-						<SelectTrigger size="lg">
-							{publishState || "Select Publish State"}
-						</SelectTrigger>
-						<SelectContent />
-					</Select>
-				</Field>
-
-				<Field
-					label="Owner"
-					required
-				>
-					<Select
-						value={owner}
-						onValueChange={(val) => setOwner(val)}
-						options={initialUsers.map((u) => ({label: u.name, value: u.name}))}
-					>
-						<SelectTrigger size="lg">{owner || "Select Owner"}</SelectTrigger>
-						<SelectContent />
-					</Select>
-				</Field>
-
-				<Separator my="8" />
-
+		<>
+			<Box maxW="lg">
 				<Flex
-					flexDirection="row"
-					justifyContent="flex-end"
-					gap="8"
+					flexDirection="column"
+					gap="16"
 				>
-					<Button
-						appearance="subtle"
-						size="lg"
-						onClick={() => router.push("/graph/search/optimize-search")}
+					<Field
+						label="Name"
+						required
 					>
-						Cancel
-					</Button>
-					<Button
-						appearance="primary"
-						size="lg"
-						onClick={handleSave}
+						<Input
+							value={name}
+							onChange={(e) => setName(e.target.value)}
+						/>
+					</Field>
+
+					<Field
+						label="Publish State"
+						required
 					>
-						Save Changes
-					</Button>
+						<Select
+							value={publishState}
+							onValueChange={(val) => setPublishState(val)}
+							options={[
+								{label: "Draft", value: "Draft"},
+								{label: "Testing", value: "Testing"},
+								{label: "Published", value: "Published"},
+								{label: "Archived", value: "Archived"},
+							]}
+						>
+							<SelectTrigger size="lg">
+								{publishState || "Select Publish State"}
+							</SelectTrigger>
+							<SelectContent />
+						</Select>
+					</Field>
+
+					<Field
+						label="Owner"
+						required
+					>
+						<Select
+							value={owner}
+							onValueChange={(val) => setOwner(val)}
+							options={initialUsers.map((u) => ({label: u.name, value: u.name}))}
+						>
+							<SelectTrigger size="lg">{owner || "Select Owner"}</SelectTrigger>
+							<SelectContent />
+						</Select>
+					</Field>
+
+					<Separator my="8" />
+
+					<Flex
+						flexDirection="row"
+						justifyContent="flex-end"
+						gap="8"
+					>
+						<Button
+							appearance="subtle"
+							size="lg"
+							onClick={() => router.push("/cms/search/algorithms")}
+						>
+							Cancel
+						</Button>
+						<Button
+							appearance="primary"
+							size="lg"
+							onClick={handleSave}
+						>
+							Save Changes
+						</Button>
+					</Flex>
 				</Flex>
-			</Flex>
-		</Box>
+			</Box>
+			<Aside>
+				<Preview />
+			</Aside>
+		</>
 	);
 }

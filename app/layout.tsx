@@ -28,7 +28,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const path = usePathname();
-	const algorithmMatch = path.match(/\/graph\/search\/optimize-search\/([^/]+)/);
+	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
@@ -114,91 +114,35 @@ export default function RootLayout({
 				url: "/cms/add-ons",
 				icon: <IconPuzzle />,
 			},
-		],
-		graph: [
-			{
-				label: "Dashboard",
-				url: "/graph/dashboard",
-				highlight: "/graph/dashboard",
-				icon: <IconDashboard />,
-			},
-			{
-				label: "API Playground",
-				url: "/graph/api-playground",
-				highlight: "/graph/api-playground",
-				icon: <IconPlayerPlay />,
-			},
-			// {
-			// 	label: "Content Sources",
-			// 	url: "/graph/content-sources/sources",
-			// 	highlight: "/graph/content-sources",
-			// 	icon: <IconHierarchy3 />,
-			// 	children: [
-			// 		{
-			// 			label: "Content Sources",
-			// 			url: "/graph/content-sources/sources",
-			// 			children: {
-			// 				title: "ODP (Integration)",
-			// 				children: [
-			// 					{
-			// 						label: "Details",
-			// 						url: "/graph/content-sources/sources/odp/details",
-			// 					},
-			// 					{
-			// 						label: "Content",
-			// 						url: "/graph/content-sources/sources/odp/content",
-			// 					},
-			// 					{label: "Schema", url: "/graph/content-sources/sources/odp/schema"},
-			// 					{
-			// 						label: "Settings",
-			// 						url: "/graph/content-sources/sources/odp/settings",
-			// 					},
-			// 				],
-			// 			},
-			// 		},
-			// 	],
-			// },
-			// {
-			// 	label: "Sync Log",
-			// 	url: "/graph/sync-log",
-			// 	highlight: "/graph/sync-log",
-			// 	icon: <IconLogs />,
-			// },
-			// {
-			// 	label: "Settings",
-			// 	url: "/graph/settings",
-			// 	highlight: "/graph/settings",
-			// 	icon: <IconSettings />,
-			// },
 			{
 				label: "Search Management",
-				url: "/graph/search/search-analytics",
-				highlight: "/graph/search",
+				url: "/cms/search/search-analytics",
+				highlight: "/cms/search",
 				icon: <IconSearch />,
 				children: [
 					{label: "Health & Monitoring"},
 					{
 						label: "Overview",
-						url: "/graph/search/search-analytics",
+						url: "/cms/search/search-analytics",
 						children: {
 							title: "Analytics Details",
 							children: [
 								{
 									label: "Total Queries",
-									url: "/graph/search/search-analytics/total-queries",
+									url: "/cms/search/search-analytics/total-queries",
 								},
 								{
 									label: "Click-Through Rate",
-									url: "/graph/search/search-analytics/click-through-rate",
+									url: "/cms/search/search-analytics/click-through-rate",
 								},
 								{
 									label: "Zero-Result Analysis",
 									description: "Analyze queries with no results",
-									url: "/graph/search/search-analytics/zero-result",
+									url: "/cms/search/search-analytics/zero-result",
 								},
 								{
 									label: "Reformulation Rate",
-									url: "/graph/search/search-analytics/reformulation-rate",
+									url: "/cms/search/search-analytics/reformulation-rate",
 								},
 							],
 						},
@@ -207,30 +151,30 @@ export default function RootLayout({
 					{
 						label: "Algorithms",
 						description: "Manage search algorithms",
-						url: "/graph/search/optimize-search",
+						url: "/cms/search/algorithms",
 						children: {
 							title: currentAlgorithm ? currentAlgorithm.name : "Algorithm details",
-							children: algorithmId
+							children: currentAlgorithm
 								? [
 										...(currentAlgorithm?.type !== "Custom"
 											? [
 													{
 														label: "Optimizations",
-														url: `/graph/search/optimize-search/${algorithmId}/optimizations`,
+														url: `/cms/search/algorithms/${algorithmId}/optimizations`,
 													},
 											  ]
 											: []),
 										{
 											label: "Filter",
-											url: `/graph/search/optimize-search/${algorithmId}/filter`,
+											url: `/cms/search/algorithms/${algorithmId}/filter`,
 										},
 										{
 											label: "Order",
-											url: `/graph/search/optimize-search/${algorithmId}/order`,
+											url: `/cms/search/algorithms/${algorithmId}/order`,
 										},
 										{
 											label: "Settings",
-											url: `/graph/search/optimize-search/${algorithmId}/settings`,
+											url: `/cms/search/algorithms/${algorithmId}/settings`,
 										},
 								  ]
 								: [],
@@ -240,17 +184,73 @@ export default function RootLayout({
 						label: "Best Bets",
 						description:
 							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
-						url: "/graph/search/best-bets",
+						url: "/cms/search/best-bets",
 					},
 					{
 						label: "Related Queries",
 						description:
 							"Manage synonyms and related queries to improve search recall.",
-						url: "/graph/search/related-queries",
+						url: "/cms/search/related-queries",
 					},
 				],
 			},
 		],
+		// graph: [
+		// 	{
+		// 		label: "Dashboard",
+		// 		url: "/graph/dashboard",
+		// 		highlight: "/graph/dashboard",
+		// 		icon: <IconDashboard />,
+		// 	},
+		// 	{
+		// 		label: "API Playground",
+		// 		url: "/graph/api-playground",
+		// 		highlight: "/graph/api-playground",
+		// 		icon: <IconPlayerPlay />,
+		// 	},
+		// 	// {
+		// 	// 	label: "Content Sources",
+		// 	// 	url: "/graph/content-sources/sources",
+		// 	// 	highlight: "/graph/content-sources",
+		// 	// 	icon: <IconHierarchy3 />,
+		// 	// 	children: [
+		// 	// 		{
+		// 	// 			label: "Content Sources",
+		// 	// 			url: "/graph/content-sources/sources",
+		// 	// 			children: {
+		// 	// 				title: "ODP (Integration)",
+		// 	// 				children: [
+		// 	// 					{
+		// 	// 						label: "Details",
+		// 	// 						url: "/graph/content-sources/sources/odp/details",
+		// 	// 					},
+		// 	// 					{
+		// 	// 						label: "Content",
+		// 	// 						url: "/graph/content-sources/sources/odp/content",
+		// 	// 					},
+		// 	// 					{label: "Schema", url: "/graph/content-sources/sources/odp/schema"},
+		// 	// 					{
+		// 	// 						label: "Settings",
+		// 	// 						url: "/graph/content-sources/sources/odp/settings",
+		// 	// 					},
+		// 	// 				],
+		// 	// 			},
+		// 	// 		},
+		// 	// 	],
+		// 	// },
+		// 	// {
+		// 	// 	label: "Sync Log",
+		// 	// 	url: "/graph/sync-log",
+		// 	// 	highlight: "/graph/sync-log",
+		// 	// 	icon: <IconLogs />,
+		// 	// },
+		// 	// {
+		// 	// 	label: "Settings",
+		// 	// 	url: "/graph/settings",
+		// 	// 	highlight: "/graph/settings",
+		// 	// 	icon: <IconSettings />,
+		// 	// },
+		// ],
 		"fe-hosting": [
 			{
 				label: "Applications",

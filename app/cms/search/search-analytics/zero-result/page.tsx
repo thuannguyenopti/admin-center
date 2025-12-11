@@ -22,12 +22,14 @@ import {
 	BestBet,
 	initialBestBets,
 	AlgorithmBestBet,
+	AlgorithmBestBetReference,
 	Algorithm,
 } from "@/app/db/initialData";
 import {zeroResultQueries, ZeroResultQuery, scaleValue} from "@/app/db/analyticsData";
 import usePersistentState from "@/app/usePersistentState";
 import BestBetDialog from "../../components/BestBetDialog";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
+import Link from "next/link";
 
 const allData: ZeroResultQuery[] = zeroResultQueries;
 
@@ -37,6 +39,7 @@ export default function ZeroResultPage() {
 	const router = useRouter();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
 	const [bestBets, setBestBets] = usePersistentState("bestBets", initialBestBets) as [
 		BestBet[],
 		(val: BestBet[]) => void
@@ -61,6 +64,7 @@ export default function ZeroResultPage() {
 
 		if (!targetBet) {
 			targetBet = {
+				id: Date.now().toString(),
 				query: data.query,
 				destination: data.destination,
 				owner: "Alice Johnson",
@@ -80,15 +84,17 @@ export default function ZeroResultPage() {
 		// 2. Add to Algorithm Specific List
 		const algoKey = `algorithm_best_bets_${targetAlgorithm.id}`;
 		const storedAlgoBets = localStorage.getItem(algoKey);
-		let algoBets: AlgorithmBestBet[] = storedAlgoBets ? JSON.parse(storedAlgoBets) : [];
+		let algoBets: AlgorithmBestBetReference[] = storedAlgoBets
+			? JSON.parse(storedAlgoBets)
+			: [];
 
-		if (!algoBets.some((b) => b.query === data.query)) {
-			algoBets.push({...targetBet!, status: data.status || "Active"});
+		if (!algoBets.some((b) => b.bestBetId === targetBet!.id)) {
+			algoBets.push({bestBetId: targetBet!.id, status: data.status || "Active"});
 			localStorage.setItem(algoKey, JSON.stringify(algoBets));
 		}
 
 		setIsCreateDialogOpen(false);
-		router.push(`/graph/search/optimize-search/${targetAlgorithm.id}/optimizations`);
+		router.push(`/cms/search/algorithms/${targetAlgorithm.id}/optimizations`);
 	};
 
 	const timeRangeLabels = {
@@ -187,7 +193,7 @@ export default function ZeroResultPage() {
 						<Th>Query</Th>
 						<Th>Frequency</Th>
 						<Th>Last Seen</Th>
-						<Th>Algorithm Reference</Th>
+						<Th>Algorithm</Th>
 						<Th></Th>
 					</Tr>
 				</thead>
@@ -198,10 +204,16 @@ export default function ZeroResultPage() {
 							<Td>{row.frequency} times</Td>
 							<Td>{row.lastSeen}</Td>
 							<Td type="raw">
-								<Item
-									icon={<IconReportSearch size={16} />}
-									title={row.algorithm}
-								/>
+								<Link
+									href={`/cms/search/algorithms/${
+										algorithms.find((a) => a.name === row.algorithm)?.id
+									}/optimizations`}
+								>
+									<Item
+										icon={<IconReportSearch size={16} />}
+										title={row.algorithm}
+									/>
+								</Link>
 							</Td>
 							<Td type="button">
 								<Menu
@@ -212,7 +224,7 @@ export default function ZeroResultPage() {
 											execute: () => {
 												const algoName = row.algorithm;
 												const query = row.query;
-												const algo = initialAlgorithms.find(
+												const algo = algorithms.find(
 													(a) => a.name === algoName
 												);
 

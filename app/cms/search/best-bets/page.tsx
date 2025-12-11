@@ -24,6 +24,7 @@ export default function BestBetsPage() {
 
 	const handleCreateBestBet = (data: {query: string; destination: string}) => {
 		const newBestBet: BestBet = {
+			id: Date.now().toString(),
 			query: data.query,
 			destination: data.destination,
 			owner: "Alice Johnson",

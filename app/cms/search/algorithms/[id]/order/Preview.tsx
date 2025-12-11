@@ -27,26 +27,46 @@ import {
 import {useState, useMemo, useEffect} from "react";
 import {useParams} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {AlgorithmBestBet} from "@/app/db/initialData";
+import {
+	Algorithm,
+	AlgorithmBestBet,
+	AlgorithmBestBetReference,
+	initialAlgorithms,
+	BestBet,
+	initialBestBets,
+	RelatedQuery,
+	AlgorithmRelatedQueryReference,
+	initialRelatedQueries,
+} from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
+import BestBetDialog from "../../../components/BestBetDialog";
 
 export default function Preview({
-	algorithmBestBets,
-	relatedQueries = [],
-	onCreateBestBet,
-	searchBar = true,
+	algorithmBestBets: externalAlgorithmBestBets,
+	onAlgorithmBestBetsChange: setExternalAlgorithmBestBets,
+	globalBestBets: externalGlobalBestBets,
+	onGlobalBestBetsChange: setExternalGlobalBestBets,
 }: {
-	algorithmBestBets?: AlgorithmBestBet[];
-	relatedQueries?: {query: string; synonyms: string[]}[];
-	onCreateBestBet?: (query: string) => void;
-	searchBar?: boolean;
-}) {
+	algorithmBestBets?: AlgorithmBestBetReference[];
+	onAlgorithmBestBetsChange?: (val: AlgorithmBestBetReference[]) => void;
+	globalBestBets?: BestBet[];
+	onGlobalBestBetsChange?: (val: BestBet[]) => void;
+} = {}) {
 	const params = useParams();
 	const id = params.id as string;
+	const [activeTab, setActiveTab] = usePersistentState(`preview_tab_${id}`, "search demo");
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [showBestBets, setShowBestBets] = useState(true);
 	const [showRelatedQueries, setShowRelatedQueries] = useState(true);
+
+	const [isBestBetDialogOpen, setIsBestBetDialogOpen] = useState(false);
+	const [bestBetQuery, setBestBetQuery] = useState("");
+
+	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const currentAlgorithm = algorithms.find((a) => a.id === id);
+	const isCustom = currentAlgorithm?.type === "Custom";
+	const searchBar = !isCustom;
 
 	useEffect(() => {
 		const handler = setTimeout(() => {
@@ -58,21 +78,108 @@ export default function Preview({
 		};
 	}, [query]);
 
-	// Use local state if props are not provided (fallback)
-	const [localAlgorithmBestBets] = usePersistentState(`algorithm_best_bets_${id}`, []) as [
-		AlgorithmBestBet[],
+	const [localAlgorithmBestBets, setLocalAlgorithmBestBets] = usePersistentState(
+		`algorithm_best_bets_${id}`,
+		[]
+	) as [AlgorithmBestBetReference[], (val: AlgorithmBestBetReference[]) => void];
+
+	const algorithmBestBets = externalAlgorithmBestBets ?? localAlgorithmBestBets;
+	const setAlgorithmBestBets = setExternalAlgorithmBestBets ?? setLocalAlgorithmBestBets;
+
+	const [localGlobalBestBets, setLocalGlobalBestBets] = usePersistentState(
+		"bestBets",
+		initialBestBets
+	) as [BestBet[], (val: BestBet[]) => void];
+
+	const globalBestBets = externalGlobalBestBets ?? localGlobalBestBets;
+	const setGlobalBestBets = setExternalGlobalBestBets ?? setLocalGlobalBestBets;
+
+	const [optimisticBestBets, setOptimisticBestBets] = useState<
+		(BestBet & {status: "Active" | "Inactive"})[]
+	>([]);
+
+	const onCreateBestBet = (query: string) => {
+		setBestBetQuery(query);
+		setIsBestBetDialogOpen(true);
+	};
+
+	const handleSaveBestBet = (data: {
+		query: string;
+		destination: string;
+		status?: "Active" | "Inactive";
+	}) => {
+		const newId = Date.now().toString();
+		const newGlobalBestBet: BestBet = {
+			id: newId,
+			query: data.query,
+			destination: data.destination,
+			owner: "Current User",
+		};
+		setGlobalBestBets([...globalBestBets, newGlobalBestBet]);
+
+		const newBestBet: AlgorithmBestBetReference = {
+			bestBetId: newId,
+			status: data.status || "Active",
+		};
+		setAlgorithmBestBets([...algorithmBestBets, newBestBet]);
+
+		setOptimisticBestBets((prev) => [
+			...prev,
+			{...newGlobalBestBet, status: newBestBet.status},
+		]);
+
+		setIsBestBetDialogOpen(false);
+	};
+
+	const [relatedQueries] = usePersistentState(`algorithm_related_queries_${id}`, []) as [
+		AlgorithmRelatedQueryReference[],
 		any
 	];
 
-	const effectiveBestBets =
-		algorithmBestBets !== undefined ? algorithmBestBets : localAlgorithmBestBets;
+	const [globalRelatedQueries] = usePersistentState("relatedQueries", initialRelatedQueries) as [
+		RelatedQuery[],
+		any
+	];
+
+	const hydratedRelatedQueries = useMemo(() => {
+		if (!relatedQueries) return [];
+		return relatedQueries
+			.map((ref) => globalRelatedQueries.find((rq) => rq.id === ref.relatedQueryId))
+			.filter((item): item is RelatedQuery => item !== undefined);
+	}, [relatedQueries, globalRelatedQueries]);
+
+	const hydratedBestBets = useMemo(() => {
+		if (!algorithmBestBets) return [];
+		return algorithmBestBets
+			.map((ref) => {
+				const bb = globalBestBets.find((g) => g.id === ref.bestBetId);
+				if (!bb) return null;
+				return {...bb, status: ref.status};
+			})
+			.filter((item): item is BestBet & {status: "Active" | "Inactive"} => item !== null);
+	}, [algorithmBestBets, globalBestBets]);
+
+	const effectiveBestBets = useMemo(() => {
+		const hydratedIds = new Set(hydratedBestBets.map((b) => b.id));
+		const uniqueOptimistic = optimisticBestBets.filter((b) => !hydratedIds.has(b.id));
+		return [...hydratedBestBets, ...uniqueOptimistic];
+	}, [hydratedBestBets, optimisticBestBets]);
+
+	useEffect(() => {
+		if (optimisticBestBets.length === 0) return;
+		const hydratedIds = new Set(hydratedBestBets.map((b) => b.id));
+		const remainingOptimistic = optimisticBestBets.filter((b) => !hydratedIds.has(b.id));
+		if (remainingOptimistic.length !== optimisticBestBets.length) {
+			setOptimisticBestBets(remainingOptimistic);
+		}
+	}, [hydratedBestBets, optimisticBestBets]);
 
 	const activeSynonyms = useMemo(() => {
 		if (!query || !showRelatedQueries) return [];
 		const lowerQuery = query.toLowerCase();
 		const synonyms: string[] = [];
 
-		relatedQueries.forEach((group) => {
+		hydratedRelatedQueries.forEach((group) => {
 			const groupTerms = [group.query, ...group.synonyms].map((s) => s.toLowerCase());
 			if (groupTerms.includes(lowerQuery)) {
 				const otherTerms = [group.query, ...group.synonyms].filter(
@@ -83,7 +190,7 @@ export default function Preview({
 		});
 
 		return Array.from(new Set(synonyms));
-	}, [query, relatedQueries, showRelatedQueries]);
+	}, [query, hydratedRelatedQueries, showRelatedQueries]);
 
 	// Filter results based on query
 	const filteredResults = searchResults.filter((result) => {
@@ -123,89 +230,95 @@ export default function Preview({
 			flexDirection="column"
 			overflowY="auto"
 		>
-			<Box
-				p="24"
-				pb="0"
-			>
+			<Box pb="0">
 				<Heading
 					level="4"
 					mb="16"
+					p="24"
+					pb="0"
 				>
 					Preview
 				</Heading>
-				<Tabs defaultValue="detailed">
-					<TabsList>
-						<TabsTrigger value="demo">Search demo</TabsTrigger>
-						<TabsTrigger value="detailed">Detailed</TabsTrigger>
-					</TabsList>
-					<Box mt="16">
+				<Tabs
+					value={activeTab as string}
+					onValueChange={setActiveTab}
+				>
+					<Box px="24">
 						{searchBar && (
-							<Flex
-								gap="8"
-								flexDirection="row"
-							>
-								<Box flex="1">
-									<Input
-										placeholder="Products"
-										addonBefore={<IconSearch size={16} />}
-										value={query}
-										onChange={(e) => setQuery(e.target.value)}
-									/>
-								</Box>
-								<Menu
-									options={[
-										{
-											addon: <IconRocket size={16} />,
-											label: "Best bets",
-											execute: () => setShowBestBets(!showBestBets),
-											selected: showBestBets,
-											switch: true,
-										},
-										{
-											addon: <IconCongruentTo size={16} />,
-											label: "Related Queries",
-											execute: () =>
-												setShowRelatedQueries(!showRelatedQueries),
-											selected: showRelatedQueries,
-											switch: true,
-										},
-									]}
+							<TabsList>
+								<TabsTrigger value="search demo">Search demo</TabsTrigger>
+								<TabsTrigger value="detailed">Detailed</TabsTrigger>
+							</TabsList>
+						)}
+						<Box mt="16">
+							{searchBar && (
+								<Flex
+									gap="8"
+									flexDirection="row"
 								>
-									<MenuTrigger
-										icon={<IconSettings size={16} />}
-										aria-label="Settings"
-										size="lg"
-									/>
-									<MenuContent />
-								</Menu>
-							</Flex>
+									<Box flex="1">
+										<Input
+											placeholder="Products"
+											addonBefore={<IconSearch size={16} />}
+											value={query}
+											onChange={(e) => setQuery(e.target.value)}
+										/>
+									</Box>
+									<Menu
+										options={[
+											{
+												addon: <IconRocket size={16} />,
+												label: "Best bets",
+												execute: () => setShowBestBets(!showBestBets),
+												selected: showBestBets,
+												switch: true,
+											},
+											{
+												addon: <IconCongruentTo size={16} />,
+												label: "Related Queries",
+												execute: () =>
+													setShowRelatedQueries(!showRelatedQueries),
+												selected: showRelatedQueries,
+												switch: true,
+											},
+										]}
+									>
+										<MenuTrigger
+											icon={<IconSettings size={16} />}
+											aria-label="Settings"
+											size="lg"
+										/>
+										<MenuContent />
+									</Menu>
+								</Flex>
+							)}
+						</Box>
+						{activeSynonyms.length > 0 && (
+							<Box mt="16">
+								<Text
+									fontSize="md"
+									fontWeight="600"
+									mb="4"
+								>
+									Related Queries Applied
+								</Text>
+								<Flex
+									gap="8"
+									flexWrap="wrap"
+									color="fg.secondary"
+									fontSize="sm"
+								>
+									{activeSynonyms.map((term) => activeSynonyms.join(", "))}
+								</Flex>
+							</Box>
 						)}
 					</Box>
-					{activeSynonyms.length > 0 && (
-						<Box mt="16">
-							<Text
-								fontSize="md"
-								fontWeight="600"
-								mb="4"
-							>
-								Related Queries Applied
-							</Text>
-							<Flex
-								gap="8"
-								flexWrap="wrap"
-								color="fg.secondary"
-								fontSize="sm"
-							>
-								{activeSynonyms.map((term) => activeSynonyms.join(", "))}
-							</Flex>
-						</Box>
-					)}
 
-					<TabsContent value="demo">
+					<TabsContent value="search demo">
 						<Box
 							flex="1"
 							px="16"
-							mt="24"
+							py="24"
 						>
 							<Flex
 								flexDirection="column"
@@ -265,7 +378,6 @@ export default function Preview({
 					<TabsContent value="detailed">
 						<Box
 							flex="1"
-							px="16"
 							mt="24"
 						>
 							<Flex
@@ -315,6 +427,14 @@ export default function Preview({
 					</TabsContent>
 				</Tabs>
 			</Box>
+			<BestBetDialog
+				open={isBestBetDialogOpen}
+				setOpen={setIsBestBetDialogOpen}
+				mode="create"
+				initialData={{query: bestBetQuery, destination: ""}}
+				onSave={handleSaveBestBet}
+				showStatus={true}
+			/>
 		</Box>
 	);
 }
@@ -358,7 +478,6 @@ function DetailedResultItem({
 	return (
 		<Box
 			bg="bg.default"
-			p="16"
 			style={{borderBottom: "1px solid #e2e8f0"}}
 		>
 			<Flex

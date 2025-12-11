@@ -9,6 +9,7 @@ import {
 	IconSwitch,
 	IconActivity,
 	IconPower,
+	IconFile,
 } from "@tabler/icons-react";
 import {
 	Menu,
@@ -81,7 +82,7 @@ export default function BestBetsTable({
 				<thead>
 					<Tr>
 						<Th>Best Bet</Th>
-						<Th>Phrases</Th>
+						<Th>Destination</Th>
 						{showStatus && <Th>Status</Th>}
 						{showOwner && <Th>Owner</Th>}
 						<Th></Th>
@@ -96,6 +97,15 @@ export default function BestBetsTable({
 							<Td type="header">
 								<Item
 									icon={<IconRocket size={16} />}
+									title={bet.query.split(",")[0].trim()}
+									description={
+										bet.query.split(",").slice(1).join(",").trim() || undefined
+									}
+								/>
+							</Td>
+							<Td>
+								<Item
+									icon={<IconFile size={16} />}
 									title={
 										searchResults.find((r) => r.url === bet.destination)
 											?.title || bet.destination
@@ -103,7 +113,6 @@ export default function BestBetsTable({
 									description={bet.destination}
 								/>
 							</Td>
-							<Td>{bet.query}</Td>
 							{showStatus && "status" in bet && (
 								<Td
 									type="badge"

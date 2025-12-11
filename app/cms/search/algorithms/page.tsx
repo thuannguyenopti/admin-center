@@ -143,8 +143,8 @@ export default function OptimizeSearchPage() {
 							key={algorithm.id}
 							url={
 								algorithm.type === "Custom"
-									? `/graph/search/optimize-search/${algorithm.id}/filter`
-									: `/graph/search/optimize-search/${algorithm.id}/optimizations`
+									? `/cms/search/algorithms/${algorithm.id}/filter`
+									: `/cms/search/algorithms/${algorithm.id}/optimizations`
 							}
 						>
 							<Td type="raw">
@@ -181,8 +181,8 @@ export default function OptimizeSearchPage() {
 												execute: () =>
 													router.push(
 														algorithm.type === "Custom"
-															? `/graph/search/optimize-search/${algorithm.id}/filter`
-															: `/graph/search/optimize-search/${algorithm.id}/optimizations`
+															? `/cms/search/algorithms/${algorithm.id}/filter`
+															: `/cms/search/algorithms/${algorithm.id}/optimizations`
 													),
 											},
 											{

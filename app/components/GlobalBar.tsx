@@ -91,16 +91,32 @@ export default function GlobalBar() {
 			<Menu
 				options={[
 					{
-						label: "CMS",
+						label: "Opal",
+						disabledReason: "TBD",
+					},
+					{
+						label: "Content Management System",
 						execute: () => router.push("/cms/dashboard"),
 					},
 					{
-						label: "Graph",
-						execute: () => router.push("/graph/dashboard"),
+						label: "Content Marketing Platform",
+						disabledReason: "TBD",
+					},
+					{
+						label: "Connect Platform",
+						disabledReason: "TBD",
+					},
+					{
+						label: "Data Platform",
+						disabledReason: "TBD",
+					},
+					{
+						label: "Analytics",
+						disabledReason: "TBD",
 					},
 					{
 						label: "Frontend Hosting",
-						execute: () => router.push("/fe-hosting/applications/apps"),
+						disabledReason: "TBD",
 					},
 				]}
 			>

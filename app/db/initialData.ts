@@ -8,15 +8,26 @@ export type Algorithm = {
 };
 
 export type BestBet = {
+	id: string;
 	query: string;
 	destination: string;
 	owner: string;
 };
 
 export type RelatedQuery = {
+	id: string;
 	query: string;
 	synonyms: string[];
 	owner: string;
+};
+
+export type AlgorithmRelatedQueryReference = {
+	relatedQueryId: string;
+};
+
+export type AlgorithmBestBetReference = {
+	bestBetId: string;
+	status: "Active" | "Inactive";
 };
 
 export type AlgorithmBestBet = BestBet & {
@@ -43,16 +54,19 @@ export const initialAlgorithms: Algorithm[] = [
 
 export const initialBestBets: BestBet[] = [
 	{
+		id: "1",
 		query: "return policy",
 		destination: "https://stride.com/help/returns",
 		owner: "Support Team",
 	},
 	{
+		id: "2",
 		query: "shipping rates",
 		destination: "https://stride.com/help/shipping",
 		owner: "Logistics",
 	},
 	{
+		id: "3",
 		query: "running shoes",
 		destination: "https://stride.com/products/runner-elite",
 		owner: "Marketing",
@@ -61,11 +75,13 @@ export const initialBestBets: BestBet[] = [
 
 export const initialRelatedQueries: RelatedQuery[] = [
 	{
+		id: "1",
 		query: "sneakers",
 		synonyms: ["shoes", "trainers", "kicks"],
 		owner: "Merchandising",
 	},
 	{
+		id: "2",
 		query: "jacket",
 		synonyms: ["coat", "parka", "windbreaker"],
 		owner: "Merchandising",
