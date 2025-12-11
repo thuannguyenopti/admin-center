@@ -219,14 +219,7 @@ export default function ReportsPage() {
       </Box>
 
       {/* Reports Table */}
-      <Box
-        style={{
-          borderRadius: "6px",
-          border: "1px solid #E9EDF5",
-          overflow: "hidden",
-        }}
-      >
-        <Table>
+      <Table>
           <TableHeader>
             <TableRow>
               <TableHeaderCell>
@@ -279,17 +272,10 @@ export default function ReportsPage() {
             {reportItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <Link
-                    href={`/cms/edit/${item.id}`}
-                    style={{
-                      color: "#0037FF",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      letterSpacing: "-0.10px",
-                      textDecoration: "none",
-                    }}
-                  >
-                    {item.pageName}
+                  <Link href={`/cms/edit/${item.id}`}>
+                    <Text fontSize="md" fontWeight="500" color="fg.default">
+                      {item.pageName}
+                    </Text>
                   </Link>
                 </TableCell>
                 <TableCell>
@@ -324,7 +310,6 @@ export default function ReportsPage() {
             ))}
           </TableBody>
         </Table>
-      </Box>
     </>
   );
 }
