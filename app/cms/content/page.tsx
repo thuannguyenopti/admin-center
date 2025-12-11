@@ -12,7 +12,6 @@ import Item from "@/app/components/Item";
 import { IconFile } from "@tabler/icons-react";
 import { Flex } from "@/app/components/Flex";
 
-
 const files = [
 	{ name: "Homepage", type: "Page", lastModified: "2023-10-27", status: "Published" },
 	{ name: "About Us", type: "Page", lastModified: "2023-10-26", status: "Draft" },
