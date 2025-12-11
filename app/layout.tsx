@@ -208,62 +208,6 @@ export default function RootLayout({
 				],
 			},
 		],
-		// graph: [
-		// 	{
-		// 		label: "Dashboard",
-		// 		url: "/graph/dashboard",
-		// 		highlight: "/graph/dashboard",
-		// 		icon: <IconDashboard />,
-		// 	},
-		// 	{
-		// 		label: "API Playground",
-		// 		url: "/graph/api-playground",
-		// 		highlight: "/graph/api-playground",
-		// 		icon: <IconPlayerPlay />,
-		// 	},
-		// 	// {
-		// 	// 	label: "Content Sources",
-		// 	// 	url: "/graph/content-sources/sources",
-		// 	// 	highlight: "/graph/content-sources",
-		// 	// 	icon: <IconHierarchy3 />,
-		// 	// 	children: [
-		// 	// 		{
-		// 	// 			label: "Content Sources",
-		// 	// 			url: "/graph/content-sources/sources",
-		// 	// 			children: {
-		// 	// 				title: "ODP (Integration)",
-		// 	// 				children: [
-		// 	// 					{
-		// 	// 						label: "Details",
-		// 	// 						url: "/graph/content-sources/sources/odp/details",
-		// 	// 					},
-		// 	// 					{
-		// 	// 						label: "Content",
-		// 	// 						url: "/graph/content-sources/sources/odp/content",
-		// 	// 					},
-		// 	// 					{label: "Schema", url: "/graph/content-sources/sources/odp/schema"},
-		// 	// 					{
-		// 	// 						label: "Settings",
-		// 	// 						url: "/graph/content-sources/sources/odp/settings",
-		// 	// 					},
-		// 	// 				],
-		// 	// 			},
-		// 	// 		},
-		// 	// 	],
-		// 	// },
-		// 	// {
-		// 	// 	label: "Sync Log",
-		// 	// 	url: "/graph/sync-log",
-		// 	// 	highlight: "/graph/sync-log",
-		// 	// 	icon: <IconLogs />,
-		// 	// },
-		// 	// {
-		// 	// 	label: "Settings",
-		// 	// 	url: "/graph/settings",
-		// 	// 	highlight: "/graph/settings",
-		// 	// 	icon: <IconSettings />,
-		// 	// },
-		// ],
 		"connect-platform": [
 			{
 				label: "Marketplace",

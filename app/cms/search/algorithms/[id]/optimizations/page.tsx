@@ -413,12 +413,7 @@ export default function OptimizationsPage() {
 				>
 					Objects
 				</Heading>
-				<Text
-					mb="16"
-					color="fg.secondary"
-				>
-					Manage the objects associated with this custom algorithm.
-				</Text>
+				<Text mb="16">Manage the objects associated with this custom algorithm.</Text>
 				<Table>
 					<thead>
 						<Tr>
@@ -450,10 +445,7 @@ export default function OptimizationsPage() {
 				>
 					Pinned Results
 				</Heading>
-				<Text
-					mb="16"
-					color="fg.secondary"
-				>
+				<Text mb="16">
 					Associate specific pinned results with this algorithm to override default
 					behavior.
 				</Text>
@@ -527,10 +519,7 @@ export default function OptimizationsPage() {
 					>
 						Related Queries
 					</Heading>
-					<Text
-						mb="16"
-						color="fg.secondary"
-					>
+					<Text mb="16">
 						Define groups of queries that should be treated as synonyms to improve
 						search recall.
 					</Text>
@@ -619,12 +608,7 @@ export default function OptimizationsPage() {
 					>
 						Synonyms
 					</Heading>
-					<Text
-						mb="16"
-						color="fg.secondary"
-					>
-						Define equivalent terms to expand search results.
-					</Text>
+					<Text mb="16">Define equivalent terms to expand search results.</Text>
 
 					{hydratedSynonyms.length > 0 ? (
 						<>
@@ -707,12 +691,7 @@ export default function OptimizationsPage() {
 					>
 						Autocomplete Phrases
 					</Heading>
-					<Text
-						mb="16"
-						color="fg.secondary"
-					>
-						Define phrases to appear in autocomplete suggestions.
-					</Text>
+					<Text mb="16">Define phrases to appear in autocomplete suggestions.</Text>
 
 					{hydratedAutocompletePhrases.length > 0 ? (
 						<>
@@ -859,6 +838,12 @@ export default function OptimizationsPage() {
 					onAlgorithmPinnedResultsChange={setAlgorithmPinnedResults}
 					globalPinnedResults={allPinnedResults}
 					onGlobalPinnedResultsChange={setAllPinnedResults}
+					algorithmRelatedQueries={relatedQueries}
+					globalRelatedQueries={allRelatedQueries}
+					algorithmSynonyms={synonyms}
+					globalSynonyms={allSynonyms}
+					algorithmAutocompletePhrases={autocompletePhrases}
+					globalAutocompletePhrases={allAutocompletePhrases}
 				/>
 			</Aside>
 		</>
