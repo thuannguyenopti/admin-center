@@ -19,13 +19,15 @@ import {IconDots, IconGripVertical, IconPlus} from "@tabler/icons-react";
 import {useState} from "react";
 import Preview from "./Preview";
 import {useParams} from "next/navigation";
+import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Aside} from "@/app/context/LayoutContext";
 import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData";
 
 export default function OrderPage() {
 	const params = useParams();
-	const id = params.id as string;
+	const resolvedParams = params instanceof Promise ? use(params) : params;
+	const id = (resolvedParams?.id ?? "") as string;
 	const [algorithmBestBets] = usePersistentState(`algorithm_best_bets_${id}`, []) as [
 		AlgorithmBestBet[],
 		any
