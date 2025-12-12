@@ -23,6 +23,7 @@ import {
 	IconUsers,
 	IconPuzzle,
 	IconFolders,
+	IconBuildingStore,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -150,7 +151,8 @@ export default function RootLayout({
 							],
 						},
 					},
-					{label: "Optimizations"},
+					{label: "Manage"},
+
 					{
 						label: "Algorithms",
 						description: "Manage search algorithms",
@@ -183,11 +185,12 @@ export default function RootLayout({
 								: [],
 						},
 					},
+					{label: "Search Tools"},
 					{
-						label: "Best Bets",
+						label: "Pinned Results",
 						description:
 							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
-						url: "/cms/search/best-bets",
+						url: "/cms/search/pinned-results",
 					},
 					{
 						label: "Related Queries",
@@ -195,65 +198,51 @@ export default function RootLayout({
 							"Manage synonyms and related queries to improve search recall.",
 						url: "/cms/search/related-queries",
 					},
+					{
+						label: "Synonyms",
+						description: "Manage synonyms to expand search results.",
+						url: "/cms/search/synonyms",
+					},
+					{
+						label: "Autocomplete Phrases",
+						description: "Manage phrases for autocomplete suggestions.",
+						url: "/cms/search/autocomplete-phrases",
+					},
 				],
 			},
 		],
-		// graph: [
-		// 	{
-		// 		label: "Dashboard",
-		// 		url: "/graph/dashboard",
-		// 		highlight: "/graph/dashboard",
-		// 		icon: <IconDashboard />,
-		// 	},
-		// 	{
-		// 		label: "API Playground",
-		// 		url: "/graph/api-playground",
-		// 		highlight: "/graph/api-playground",
-		// 		icon: <IconPlayerPlay />,
-		// 	},
-		// 	// {
-		// 	// 	label: "Content Sources",
-		// 	// 	url: "/graph/content-sources/sources",
-		// 	// 	highlight: "/graph/content-sources",
-		// 	// 	icon: <IconHierarchy3 />,
-		// 	// 	children: [
-		// 	// 		{
-		// 	// 			label: "Content Sources",
-		// 	// 			url: "/graph/content-sources/sources",
-		// 	// 			children: {
-		// 	// 				title: "ODP (Integration)",
-		// 	// 				children: [
-		// 	// 					{
-		// 	// 						label: "Details",
-		// 	// 						url: "/graph/content-sources/sources/odp/details",
-		// 	// 					},
-		// 	// 					{
-		// 	// 						label: "Content",
-		// 	// 						url: "/graph/content-sources/sources/odp/content",
-		// 	// 					},
-		// 	// 					{label: "Schema", url: "/graph/content-sources/sources/odp/schema"},
-		// 	// 					{
-		// 	// 						label: "Settings",
-		// 	// 						url: "/graph/content-sources/sources/odp/settings",
-		// 	// 					},
-		// 	// 				],
-		// 	// 			},
-		// 	// 		},
-		// 	// 	],
-		// 	// },
-		// 	// {
-		// 	// 	label: "Sync Log",
-		// 	// 	url: "/graph/sync-log",
-		// 	// 	highlight: "/graph/sync-log",
-		// 	// 	icon: <IconLogs />,
-		// 	// },
-		// 	// {
-		// 	// 	label: "Settings",
-		// 	// 	url: "/graph/settings",
-		// 	// 	highlight: "/graph/settings",
-		// 	// 	icon: <IconSettings />,
-		// 	// },
-		// ],
+		"connect-platform": [
+			{
+				label: "Marketplace",
+				url: "/connect-platform/marketplace",
+				highlight: "/connect-platform/marketplace",
+				icon: <IconBuildingStore />,
+			},
+			{
+				label: "Graph",
+				url: "/connect-platform/graph/dashboard",
+				highlight: "/connect-platform/graph",
+				icon: <IconHierarchy3 />,
+				children: [
+					{
+						label: "Dashboard",
+						url: "/connect-platform/graph/dashboard",
+					},
+					{
+						label: "Browse",
+						url: "/connect-platform/graph/browse",
+					},
+					{
+						label: "Sync Log",
+						url: "/connect-platform/graph/sync-log",
+					},
+					{
+						label: "Settings",
+						url: "/connect-platform/graph/settings",
+					},
+				],
+			},
+		],
 		"fe-hosting": [
 			{
 				label: "Applications",

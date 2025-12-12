@@ -7,47 +7,47 @@ import {Flex} from "@/app/components/Flex";
 import {IconPlus, IconSearch} from "@tabler/icons-react";
 import {useState, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {BestBet, initialBestBets} from "@/app/db/initialData";
-import BestBetsTable from "../components/BestBetsTable";
-import BestBetDialog from "../components/BestBetDialog";
+import {PinnedResult, initialPinnedResults} from "@/app/db/initialData";
+import PinnedResultsTable from "../components/PinnedResultsTable";
+import PinnedResultDialog from "../components/PinnedResultDialog";
 
-export default function BestBetsPage() {
+export default function PinnedResultsPage() {
 	const [searchQuery, setSearchQuery] = useState("");
-	const [bestBets, setBestBets] = usePersistentState("bestBets", initialBestBets) as [
-		BestBet[],
-		(val: BestBet[]) => void
-	];
+	const [pinnedResults, setPinnedResults] = usePersistentState(
+		"pinnedResults",
+		initialPinnedResults
+	) as [PinnedResult[], (val: PinnedResult[]) => void];
 
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-	const [editingBestBet, setEditingBestBet] = useState<BestBet | null>(null);
+	const [editingPinnedResult, setEditingPinnedResult] = useState<PinnedResult | null>(null);
 
-	const handleCreateBestBet = (data: {query: string; destination: string}) => {
-		const newBestBet: BestBet = {
+	const handleCreatePinnedResult = (data: {query: string; destination: string}) => {
+		const newPinnedResult: PinnedResult = {
 			id: Date.now().toString(),
 			query: data.query,
 			destination: data.destination,
 			owner: "Alice Johnson",
 		};
 
-		setBestBets([...bestBets, newBestBet]);
+		setPinnedResults([...pinnedResults, newPinnedResult]);
 		setIsCreateDialogOpen(false);
 	};
 
-	const handleRemoveBestBet = (query: string) => {
-		setBestBets(bestBets.filter((b) => b.query !== query));
+	const handleRemovePinnedResult = (query: string) => {
+		setPinnedResults(pinnedResults.filter((b) => b.query !== query));
 	};
 
-	const handleEditClick = (bet: BestBet) => {
-		setEditingBestBet(bet);
+	const handleEditClick = (bet: PinnedResult) => {
+		setEditingPinnedResult(bet);
 		setIsEditDialogOpen(true);
 	};
 
-	const handleUpdateBestBet = (data: {query: string; destination: string}) => {
-		if (!editingBestBet) return;
+	const handleUpdatePinnedResult = (data: {query: string; destination: string}) => {
+		if (!editingPinnedResult) return;
 
-		const updatedBestBets = bestBets.map((b) =>
-			b.query === editingBestBet.query
+		const updatedPinnedResults = pinnedResults.map((b) =>
+			b.query === editingPinnedResult.query
 				? {
 						...b,
 						query: data.query,
@@ -56,22 +56,22 @@ export default function BestBetsPage() {
 				: b
 		);
 
-		setBestBets(updatedBestBets);
+		setPinnedResults(updatedPinnedResults);
 		setIsEditDialogOpen(false);
-		setEditingBestBet(null);
+		setEditingPinnedResult(null);
 	};
 
 	const filteredData = useMemo(() => {
-		if (!searchQuery) return bestBets;
+		if (!searchQuery) return pinnedResults;
 
 		const query = searchQuery.toLowerCase();
-		return bestBets.filter(
+		return pinnedResults.filter(
 			(bet) =>
 				bet.query.toLowerCase().includes(query) ||
 				bet.destination.toLowerCase().includes(query) ||
 				bet.owner.toLowerCase().includes(query)
 		);
-	}, [searchQuery, bestBets]);
+	}, [searchQuery, pinnedResults]);
 
 	return (
 		<Box>
@@ -84,7 +84,7 @@ export default function BestBetsPage() {
 			>
 				<Input
 					addonBefore={<IconSearch size={16} />}
-					placeholder="Search best bets..."
+					placeholder="Search pinned results..."
 					style={{width: "320px"}}
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
@@ -93,33 +93,33 @@ export default function BestBetsPage() {
 					size="lg"
 					icon={<IconPlus size={16} />}
 					appearance="primary"
-					aria-label="Create Best Bet"
+					aria-label="Create Pinned Result"
 					onClick={() => setIsCreateDialogOpen(true)}
 				>
-					Create Best Bet
+					Create Pinned Result
 				</Button>
 			</Flex>
 
-			<BestBetsTable
-				bestBets={filteredData}
+			<PinnedResultsTable
+				pinnedResults={filteredData}
 				onEdit={handleEditClick}
-				onRemove={handleRemoveBestBet}
+				onRemove={handleRemovePinnedResult}
 				showStatus={false}
 			/>
 
-			<BestBetDialog
+			<PinnedResultDialog
 				open={isCreateDialogOpen}
 				setOpen={setIsCreateDialogOpen}
 				mode="create"
-				onSave={handleCreateBestBet}
+				onSave={handleCreatePinnedResult}
 			/>
 
-			<BestBetDialog
+			<PinnedResultDialog
 				open={isEditDialogOpen}
 				setOpen={setIsEditDialogOpen}
 				mode="edit"
-				initialData={editingBestBet || undefined}
-				onSave={handleUpdateBestBet}
+				initialData={editingPinnedResult || undefined}
+				onSave={handleUpdatePinnedResult}
 			/>
 		</Box>
 	);

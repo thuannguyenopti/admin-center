@@ -6,7 +6,7 @@ import searchResults from "@/app/db/searchResults.json";
 import {Button} from "@/app/components/Button";
 import {IconSparkles} from "@tabler/icons-react";
 
-interface BestBetDialogProps {
+interface PinnedResultDialogProps {
 	open: boolean;
 	setOpen: (open: boolean) => void;
 	mode: "create" | "edit";
@@ -19,14 +19,14 @@ interface BestBetDialogProps {
 	showStatus?: boolean;
 }
 
-export default function BestBetDialog({
+export default function PinnedResultDialog({
 	open,
 	setOpen,
 	mode,
 	initialData,
 	onSave,
 	showStatus = false,
-}: BestBetDialogProps) {
+}: PinnedResultDialogProps) {
 	const [query, setQuery] = useState("");
 	const [destination, setDestination] = useState("");
 	const [status, setStatus] = useState<"Active" | "Inactive">("Active");
@@ -63,7 +63,7 @@ export default function BestBetDialog({
 					messages: [
 						{
 							role: "user",
-							content: `Generate 5 comma-separated search phrases that should trigger a best bet for: "${seedText}". Return only the comma-separated list, no other text.`,
+							content: `Generate 5 comma-separated search phrases that should trigger a pinned result for: "${seedText}". Return only the comma-separated list, no other text.`,
 						},
 					],
 				}),
@@ -99,11 +99,11 @@ export default function BestBetDialog({
 
 	return (
 		<AbstractDialog
-			title={mode === "create" ? "Create Best Bet" : "Edit Best Bet"}
+			title={mode === "create" ? "Create Pinned Result" : "Edit Pinned Result"}
 			description={
 				mode === "create"
-					? "Add a new best bet to direct users to specific destinations."
-					: "Update the details of this best bet."
+					? "Add a new pinned result to direct users to specific destinations."
+					: "Update the details of this pinned result."
 			}
 			open={open}
 			setOpen={setOpen}

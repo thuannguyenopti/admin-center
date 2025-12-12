@@ -7,7 +7,7 @@ export type Algorithm = {
 	type?: "Search" | "Custom";
 };
 
-export type BestBet = {
+export type PinnedResult = {
 	id: string;
 	query: string;
 	destination: string;
@@ -25,12 +25,34 @@ export type AlgorithmRelatedQueryReference = {
 	relatedQueryId: string;
 };
 
-export type AlgorithmBestBetReference = {
-	bestBetId: string;
+export type Synonym = {
+	id: string;
+	term: string;
+	synonyms: string[];
+	type: "One-way" | "Two-way";
+	owner: string;
+};
+
+export type AlgorithmSynonymReference = {
+	synonymId: string;
+};
+
+export type AutocompletePhrase = {
+	id: string;
+	phrase: string;
+	owner: string;
+};
+
+export type AlgorithmAutocompletePhraseReference = {
+	autocompletePhraseId: string;
+};
+
+export type AlgorithmPinnedResultReference = {
+	pinnedResultId: string;
 	status: "Active" | "Inactive";
 };
 
-export type AlgorithmBestBet = BestBet & {
+export type AlgorithmPinnedResult = PinnedResult & {
 	status: "Active" | "Inactive";
 };
 
@@ -52,7 +74,7 @@ export const initialAlgorithms: Algorithm[] = [
 	},
 ];
 
-export const initialBestBets: BestBet[] = [
+export const initialPinnedResults: PinnedResult[] = [
 	{
 		id: "1",
 		query: "return policy",
@@ -84,6 +106,36 @@ export const initialRelatedQueries: RelatedQuery[] = [
 		id: "2",
 		query: "jacket",
 		synonyms: ["coat", "parka", "windbreaker"],
+		owner: "Merchandising",
+	},
+];
+
+export const initialSynonyms: Synonym[] = [
+	{
+		id: "1",
+		term: "trousers",
+		synonyms: ["pants", "slacks", "chinos"],
+		type: "Two-way",
+		owner: "Merchandising",
+	},
+	{
+		id: "2",
+		term: "mobile",
+		synonyms: ["phone", "cellphone", "smartphone"],
+		type: "One-way",
+		owner: "IT",
+	},
+];
+
+export const initialAutocompletePhrases: AutocompletePhrase[] = [
+	{
+		id: "1",
+		phrase: "running shoes for men",
+		owner: "Marketing",
+	},
+	{
+		id: "2",
+		phrase: "winter jackets sale",
 		owner: "Merchandising",
 	},
 ];

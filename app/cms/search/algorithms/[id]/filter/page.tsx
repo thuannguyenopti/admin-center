@@ -6,7 +6,7 @@ import Preview from "../order/Preview";
 import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {AlgorithmBestBet, Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {AlgorithmPinnedResult, Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {Text} from "@/app/components/Text";
 
 type RelatedQuery = {
