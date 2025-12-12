@@ -21,7 +21,7 @@ import {
 	Separator,
 	Switch,
 } from "@optiaxiom/react";
-import {BestBet, AlgorithmBestBet} from "@/app/db/initialData.clean";
+import {BestBet, AlgorithmBestBet} from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
 
 interface BestBetsTableProps {
