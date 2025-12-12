@@ -21,6 +21,7 @@ Instead, import them from their local wrapper files:
 - **Button**: `import { Button } from "@/app/components/Button"`
 - **Input**: `import { Input } from "@/app/components/Input"`
 - **Flex**: `import { Flex } from "@/app/components/Flex"`
+- **Table**: `import { Flex } from "@/app/components/Flex"`
 
 **Correct Usage:**
 ```tsx
