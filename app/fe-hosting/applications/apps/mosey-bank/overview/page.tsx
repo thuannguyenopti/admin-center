@@ -9,12 +9,11 @@ import {
 	Text,
 	TabsContent,
 	Badge,
-	Table,
 	Link,
 } from "@optiaxiom/react";
 
 import {useState} from "react";
-import {Tr, Th, Td} from "@/app/components/Table";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 
 export default function Home() {
 	const columns = [
