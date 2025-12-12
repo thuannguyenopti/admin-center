@@ -7,6 +7,7 @@ import {
 	Menu,
 	MenuTrigger,
 	MenuContent,
+	LabelMenuButton,
 } from "@optiaxiom/react";
 import {
 	IconListTree,
@@ -61,12 +62,12 @@ export default function CMSToolbar({
 			w="full"
 			gridColumn="2"
 			px="24"
-			py="4"
+			py="12"
 			display="flex"
 			alignItems="center"
 			gap="8"
 			justifyContent="space-between"
-			style={{minHeight: "56px"}}
+			style={{minHeight: "64px"}}
 			bg="bg.default"
 			borderB="1"
 			borderColor="border.tertiary"
@@ -75,15 +76,15 @@ export default function CMSToolbar({
 			<Box
 				display="flex"
 				alignItems="center"
-				gap="8"
+				gap="16"
 			>
-				<button
-					className="border border-[#CACFDC] rounded-md p-2 flex items-center justify-center cursor-pointer bg-transparent"
-					style={{width: "40px", height: "40px"}}
+				<Button
+					appearance="default"
+					icon={<IconListTree size={16} />}
 					aria-label="Toggle tree view"
-				>
-					<IconListTree size={16} />
-				</button>
+					h="40"
+					w="40"
+				/>
 				<Box
 					display="flex"
 					alignItems="center"
@@ -103,16 +104,21 @@ export default function CMSToolbar({
 					fontWeight="500"
 					px="8"
 					py="2"
-					className={`rounded-full bg-[#D1F0E1] block text-[#24663E] transition-opacity duration-500 ${
+					rounded="full"
+					bg="bg.success.subtle"
+					color="fg.success.strong"
+					className={`transition-opacity duration-500 ${
 						lastSaved ? "opacity-100" : "opacity-0"
 					}`}
 				>
 					{lastSaved ? "Auto-saved" : "Saved"}
 				</Text>
-				<IconCloud
-					size={16}
+				<Box
+					color="fg.default"
 					className={`transition-opacity duration-500 ${lastSaved ? "opacity-100" : "opacity-0"}`}
-				/>
+				>
+					<IconCloud size={16} />
+				</Box>
 			</Box>
 
 			{/* Right Section */}
@@ -129,35 +135,9 @@ export default function CMSToolbar({
 					}))}
 				>
 					<MenuTrigger asChild>
-						<button
-							className="border border-[#CACFDC] rounded-md px-3 py-2 flex items-center gap-3 cursor-pointer bg-transparent"
-							style={{height: "40px"}}
-						>
-							<Box
-								display="flex"
-								flexDirection="column"
-								gap="2"
-								alignItems="start"
-							>
-								<Text
-									fontSize="xs"
-									color="fg.secondary"
-									style={{lineHeight: "14px"}}
-								>
-									Language
-								</Text>
-								<Text 
-									fontSize="sm"
-									style={{lineHeight: "16px"}}
-								>
-									{currentLanguage?.label}
-								</Text>
-							</Box>
-							<IconChevronDown 
-								size={12} 
-								style={{color: "#2E3442"}}
-							/>
-						</button>
+						<LabelMenuButton label="Language" h="40">
+							{currentLanguage?.label}
+						</LabelMenuButton>
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
@@ -170,56 +150,30 @@ export default function CMSToolbar({
 					}))}
 				>
 					<MenuTrigger asChild>
-						<button
-							className="border border-[#CACFDC] rounded-md px-3 py-2 flex items-center gap-3 cursor-pointer bg-transparent"
-							style={{height: "40px"}}
-						>
-							<Box
-								display="flex"
-								flexDirection="column"
-								gap="2"
-								alignItems="start"
-							>
-								<Text
-									fontSize="xs"
-									color="fg.secondary"
-									style={{lineHeight: "14px"}}
-								>
-									Variation
-								</Text>
-								<Text 
-									fontSize="sm"
-									style={{lineHeight: "16px"}}
-								>
-									{currentVariation?.label}
-								</Text>
-							</Box>
-							<IconChevronDown 
-								size={12}
-								style={{color: "#2E3442"}}
-							/>
-						</button>
+						<LabelMenuButton label="Variation" h="40">
+							{currentVariation?.label}
+						</LabelMenuButton>
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
 
 				{/* Comment Button */}
-				<button
-					className="border border-[#CACFDC] rounded-md p-2 flex items-center justify-center cursor-pointer bg-transparent"
-					style={{width: "40px", height: "40px"}}
+				<Button
+					appearance="default"
+					icon={<IconMessage size={16} />}
 					aria-label="Comments"
-				>
-					<IconMessage size={16} />
-				</button>
+					h="40"
+					w="40"
+				/>
 
 				{/* Preview Button */}
-				<button
-					className="border border-[#CACFDC] rounded-md p-2 flex items-center justify-center cursor-pointer bg-transparent"
-					style={{width: "40px", height: "40px"}}
+				<Button
+					appearance="default"
+					icon={<IconDevices size={16} />}
 					aria-label="Preview on devices"
-				>
-					<IconDevices size={16} />
-				</button>
+					h="40"
+					w="40"
+				/>
 
 				{/* Publish Button with Menu */}
 				<Menu
@@ -239,31 +193,26 @@ export default function CMSToolbar({
 					]}
 				>
 					<MenuTrigger asChild>
-						<button
-							className={`border rounded-md px-4 py-2 flex items-center gap-1 cursor-pointer ${
-								pageStatus === "Published"
-									? "border-[#CACFDC] bg-transparent text-[#2E3442]"
-									: "border-transparent bg-[#0037FF] text-white"
-							}`}
-							style={{height: "40px"}}
+						<Button 
+							appearance={pageStatus === "Published" ? "default" : "primary"}
+							icon={<IconChevronDown size={12} />}
+							iconPosition="end"
+							h="40"
 						>
-							<Text fontSize="sm">
-								{pageStatus === "Published" ? "Published" : "Publish"}
-							</Text>
-							<IconChevronDown size={12} />
-						</button>
+							{pageStatus === "Published" ? "Published" : "Publish"}
+						</Button>
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
 
 				{/* More Options Button */}
-				<button
-					className="border border-[#CACFDC] rounded-md p-2 flex items-center justify-center cursor-pointer bg-transparent"
-					style={{width: "40px", height: "40px"}}
+				<Button
+					appearance="default"
+					icon={<IconDots size={16} />}
 					aria-label="More options"
-				>
-					<IconDots size={16} />
-				</button>
+					h="40"
+					w="40"
+				/>
 			</Box>
 		</Box>
 	);
