@@ -4,13 +4,14 @@ import {Text} from "./Text";
 import {Button} from "./Button";
 import {IconDots as IconMenu} from "@tabler/icons-react";
 
-export const Table = ({children}: {children: ReactNode}) => {
+export const Table = ({children, style, className}: {children: ReactNode; style?: React.CSSProperties; className?: string}) => {
 	return (
 		<div 
-			className="rounded-[6px] border" 
+			className={`rounded-[6px] border ${className || ''}`}
 			style={{
-				borderColor: 'var(--ax-colors-border-default)',
-				background: 'var(--ax-colors-bg-default)'
+				borderColor: 'var(--table-border)',
+				background: 'var(--table-bg)',
+				...style
 			}}
 		>
 			<table className="border-collapse w-full">{children}</table>
@@ -23,15 +24,18 @@ export const Tr = ({
 	children,
 	url,
 	onClick,
+	hoverable = true,
 }: {
 	children: ReactNode;
 	url?: string;
 	onClick?: () => void;
+	hoverable?: boolean;
 }) => {
 	const router = useRouter();
 	const rowClick = (href: string) => {
 		router.push(`${href}`);
 	};
+	
 	return (
 		<tr
 			onClick={url ? () => rowClick(url) : onClick ? onClick : undefined}
@@ -40,20 +44,8 @@ export const Tr = ({
 				(url || onClick ? "cursor-pointer " : "")
 			}
 			style={{
-				borderColor: 'var(--ax-colors-border-default)',
-				...(url || onClick ? {
-					'--hover-bg': 'var(--ax-colors-bg-default-hovered)'
-				} as React.CSSProperties : {})
-			}}
-			onMouseEnter={(e) => {
-				if (url || onClick) {
-					e.currentTarget.style.background = 'var(--ax-colors-bg-default-hovered)';
-				}
-			}}
-			onMouseLeave={(e) => {
-				if (url || onClick) {
-					e.currentTarget.style.background = '';
-				}
+				borderColor: 'var(--table-border)',
+				...(hoverable === false ? { pointerEvents: 'none' } : {})
 			}}
 		>
 			{children}
@@ -66,7 +58,7 @@ export const Th = ({children, align}: {children?: ReactNode; align?: any}) => {
 			className="text-left p-4 text-xs font-normal py-3 align-top"
 			style={{
 				textAlign: align,
-				color: 'var(--ax-colors-fg-secondary)'
+				color: 'var(--table-header-text)'
 			}}
 		>
 			{children}
@@ -92,7 +84,7 @@ export const Td = ({
 			className="p-4 border-t align-top"
 			style={{
 				width: type === "button" ? "56px" : width,
-				borderColor: 'var(--ax-colors-border-default)'
+				borderColor: 'var(--table-border)'
 			}}
 		>
 			{type === undefined && (

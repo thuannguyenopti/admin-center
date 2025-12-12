@@ -4,6 +4,28 @@
 	@tailwind utilities;
 }
 
+/* Table color variables */
+:root {
+  --table-bg: #FFFFFF;
+  --table-border: #E9EDF5;
+  --table-hover: #F5F6FA;
+  --table-header-text: #66708C;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --table-bg: #111827;
+    --table-border: #374151;
+    --table-hover: #F9FAFC1F;
+    --table-header-text: #9CA3AF;
+  }
+}
+
+/* Table hover effects - only apply to tbody rows, not thead */
+table tbody tr:hover {
+  background: var(--table-hover) !important;
+}
+
 /* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
