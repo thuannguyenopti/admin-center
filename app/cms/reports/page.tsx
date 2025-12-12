@@ -7,17 +7,12 @@ import {
   Select,
   SelectTrigger,
   SelectContent,
-  Table,
-  TableBody,
-  TableHeader,
-  TableRow,
-  TableCell,
-  TableHeaderCell,
   Link as AxiomLink,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import Link from "next/link";
-import { IconFolder, IconChevronDown, IconCaretDownFilled } from "@tabler/icons-react";
+import { IconFolder, IconChevronDown } from "@tabler/icons-react";
+import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { reportItems } from "./mockData";
 import { DateTimeCell } from "./components/DateTimeCell";
 import type { ReportType, PublishStatus, DateFilter, ChangedByFilter, LanguageFilter } from "./types";
@@ -220,96 +215,59 @@ export default function ReportsPage() {
 
       {/* Reports Table */}
       <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHeaderCell>
-                <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                  Page Name
+        <thead>
+          <Tr>
+            <Th>Page Name</Th>
+            <Th>Published</Th>
+            <Th>Unpublished</Th>
+            <Th>Last Changed</Th>
+            <Th>Changed By</Th>
+            <Th>Language</Th>
+            <Th>Page Type</Th>
+          </Tr>
+        </thead>
+        <tbody>
+          {reportItems.map((item) => (
+            <Tr key={item.id}>
+              <Td type="header">
+                <Link href={`/cms/edit/${item.id}`}>
+                  <Text fontSize="md" fontWeight="500" color="fg.default">
+                    {item.pageName}
+                  </Text>
+                </Link>
+              </Td>
+              <Td>
+                {item.published && (
+                  <DateTimeCell date={item.published.date} time={item.published.time} />
+                )}
+              </Td>
+              <Td>
+                {item.unpublished && (
+                  <DateTimeCell date={item.unpublished.date} time={item.unpublished.time} />
+                )}
+              </Td>
+              <Td>
+                <DateTimeCell date={item.lastChanged.date} time={item.lastChanged.time} />
+              </Td>
+              <Td>
+                <Text fontSize="md" color="fg.default" style={{ lineHeight: "20px" }}>
+                  {item.changedBy}
                 </Text>
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <Box display="flex" alignItems="center" gap="4">
-                  <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                    Published
-                  </Text>
-                  <IconCaretDownFilled size={7} color="#66708C" />
-                </Box>
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <Box display="flex" alignItems="center" gap="4">
-                  <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                    Unpublished
-                  </Text>
-                  <IconCaretDownFilled size={7} color="#66708C" />
-                </Box>
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <Box display="flex" alignItems="center" gap="4">
-                  <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                    Last Changed
-                  </Text>
-                  <IconCaretDownFilled size={7} color="#66708C" />
-                </Box>
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                  Changed By
+              </Td>
+              <Td>
+                <Text fontSize="md" color="fg.default">
+                  {item.language}
                 </Text>
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                  Language
+              </Td>
+              <Td>
+                <Text fontSize="md" color="fg.default">
+                  {item.pageType}
                 </Text>
-              </TableHeaderCell>
-              <TableHeaderCell>
-                <Text fontSize="sm" color="fg.tertiary" style={{ letterSpacing: "0.01px" }}>
-                  Page Type
-                </Text>
-              </TableHeaderCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reportItems.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <Link href={`/cms/edit/${item.id}`}>
-                    <Text fontSize="md" fontWeight="500" color="fg.default">
-                      {item.pageName}
-                    </Text>
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {item.published && (
-                    <DateTimeCell date={item.published.date} time={item.published.time} />
-                  )}
-                </TableCell>
-                <TableCell>
-                  {item.unpublished && (
-                    <DateTimeCell date={item.unpublished.date} time={item.unpublished.time} />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <DateTimeCell date={item.lastChanged.date} time={item.lastChanged.time} />
-                </TableCell>
-                <TableCell>
-                  <Text fontSize="md" color="fg.default" style={{ lineHeight: "20px" }}>
-                    {item.changedBy}
-                  </Text>
-                </TableCell>
-                <TableCell>
-                  <Text fontSize="md" color="fg.default">
-                    {item.language}
-                  </Text>
-                </TableCell>
-                <TableCell>
-                  <Text fontSize="md" color="fg.default">
-                    {item.pageType}
-                  </Text>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+              </Td>
+            </Tr>
+          ))}
+        </tbody>
+      </Table>
     </>
   );
 }

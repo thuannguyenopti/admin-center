@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Badge, Link, Table, TableHeader, TableHeaderCell, TableBody, TableRow, TableCell } from "@optiaxiom/react";
+import { Box, Badge, Link } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
+import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { IconDots } from "@tabler/icons-react";
 import { BrokenLink } from "../types";
 import PageIcon from "@/app/assets/page-icon.svg";
@@ -40,18 +41,16 @@ export function BrokenLinksWidget({ items, lastUpdated = "Jan 13, 2024" }: Broke
 
       {/* Table */}
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHeaderCell>
-              <Text fontSize="sm" color="fg.tertiary">Name</Text>
-            </TableHeaderCell>
-            <TableHeaderCell />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+        <thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th />
+          </Tr>
+        </thead>
+        <tbody>
           {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>
+            <Tr key={item.id}>
+              <Td type="header">
                 <Box display="flex" gap="8" alignItems="center">
                   {item.type === "page" ? (
                     <PageIcon width={12} height={16} />
@@ -62,20 +61,18 @@ export function BrokenLinksWidget({ items, lastUpdated = "Jan 13, 2024" }: Broke
                     {item.name}
                   </Text>
                 </Box>
-              </TableCell>
-              <TableCell>
-                <Box display="flex" justifyContent="end">
-                  <Button
-                    aria-label="Actions"
-                    size="md"
-                    icon={<IconDots />}
-                    appearance="subtle"
-                  />
-                </Box>
-              </TableCell>
-            </TableRow>
+              </Td>
+              <Td type="button">
+                <Button
+                  aria-label="Actions"
+                  size="md"
+                  icon={<IconDots />}
+                  appearance="subtle"
+                />
+              </Td>
+            </Tr>
           ))}
-        </TableBody>
+        </tbody>
       </Table>
 
       {/* View Full Report Link */}

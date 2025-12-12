@@ -8,12 +8,6 @@ import {
   TabsTrigger,
   TabsContent,
   Badge,
-  Table,
-  TableHeader,
-  TableHeaderCell,
-  TableBody,
-  TableRow,
-  TableCell,
   Avatar,
   Menu,
   MenuTrigger,
@@ -23,10 +17,10 @@ import {
 import { Text } from "@/app/components/Text";
 import { Input } from "@/app/components/Input";
 import { Button } from "@/app/components/Button";
+import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
   IconSearch,
   IconChevronDown,
-  IconCaretDownFilled,
   IconDots,
 } from "@tabler/icons-react";
 import { workflowItems, brokenLinks } from "./mockData";
@@ -173,27 +167,18 @@ export default function DashboardPage() {
           {/* Table */}
           <TabsContent value={activeTab}>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHeaderCell>
-                    <Text fontSize="sm" color="fg.tertiary">Name</Text>
-                  </TableHeaderCell>
-                  <TableHeaderCell>
-                    <Box display="flex" gap="4" alignItems="center">
-                      <Text fontSize="sm" color="fg.tertiary">Last Modified</Text>
-                      <IconCaretDownFilled size={7} color="#66708C" />
-                    </Box>
-                  </TableHeaderCell>
-                  <TableHeaderCell>
-                    <Text fontSize="sm" color="fg.tertiary">Modified by</Text>
-                  </TableHeaderCell>
-                  <TableHeaderCell />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              <thead>
+                <Tr>
+                  <Th>Name</Th>
+                  <Th>Last Modified</Th>
+                  <Th>Modified by</Th>
+                  <Th />
+                </Tr>
+              </thead>
+              <tbody>
                 {filteredData.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
+                  <Tr key={item.id}>
+                    <Td type="header">
                       <Box display="flex" gap="8" alignItems="center">
                         {item.type === "page" ? (
                           <PageIcon width={12} height={16} />
@@ -204,8 +189,8 @@ export default function DashboardPage() {
                           {item.name}
                         </Text>
                       </Box>
-                    </TableCell>
-                    <TableCell>
+                    </Td>
+                    <Td>
                       <Box display="flex" flexDirection="column" gap="2">
                         <Text fontSize="md" color="fg.default">
                           {formatDate(item.lastModified)}
@@ -214,8 +199,8 @@ export default function DashboardPage() {
                           {formatTime(item.lastModified)}
                         </Text>
                       </Box>
-                    </TableCell>
-                    <TableCell>
+                    </Td>
+                    <Td>
                       <Box display="flex" gap="8" alignItems="center">
                         <Avatar
                           src={item.modifiedBy.avatar}
@@ -226,20 +211,18 @@ export default function DashboardPage() {
                           {item.modifiedBy.name}
                         </Text>
                       </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Box display="flex" justifyContent="end">
-                        <Button
-                          aria-label="Actions"
-                          size="md"
-                          icon={<IconDots />}
-                          appearance="subtle"
-                        />
-                      </Box>
-                    </TableCell>
-                  </TableRow>
+                    </Td>
+                    <Td type="button">
+                      <Button
+                        aria-label="Actions"
+                        size="md"
+                        icon={<IconDots />}
+                        appearance="subtle"
+                      />
+                    </Td>
+                  </Tr>
                 ))}
-              </TableBody>
+              </tbody>
             </Table>
           </TabsContent>
         </Tabs>
