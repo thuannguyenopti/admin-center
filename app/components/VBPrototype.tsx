@@ -48,10 +48,12 @@ import {
 	IconMessage,
 	IconDevices,
 	IconChevronDown,
+	IconPhoto,
 } from "@tabler/icons-react";
 
-// Simple AnimatedText component for cycling through texts
-
+import Section from "./vb/Section";
+import Row from "./vb/Row";
+import Col from "./vb/Col";
 import { sep } from "path";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
