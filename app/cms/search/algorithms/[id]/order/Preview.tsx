@@ -24,7 +24,6 @@ import {
 } from "@tabler/icons-react";
 import {useState, useMemo, useEffect, useRef} from "react";
 import {useParams} from "next/navigation";
-import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {
 	Algorithm,
@@ -75,8 +74,7 @@ export default function Preview({
 	globalAutocompletePhrases?: AutocompletePhrase[];
 } = {}) {
 	const params = useParams();
-	const resolvedParams = params instanceof Promise ? use(params) : params;
-	const id = (resolvedParams?.id ?? "") as string;
+	const id = params.id as string;
 	const [activeTab, setActiveTab] = usePersistentState(`preview_tab_${id}`, "search demo");
 	const [query, setQuery] = useState("");
 	const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -387,63 +385,79 @@ export default function Preview({
 								>
 									<Box
 										flex="1"
-										position="relative"
+										asChild
 									>
-										<Input
-											placeholder="Search Preview"
-											addonBefore={<IconSearch size={16} />}
-											value={query}
-											onChange={(e) => {
-												setQuery(e.target.value);
-												setHighlightedIndex(-1);
-											}}
-											onFocus={() => setIsInputFocused(true)}
-											onBlur={() => {
-												setTimeout(() => setIsInputFocused(false), 200);
-											}}
-											onKeyDown={handleKeyDown}
-										/>
-										{isInputFocused && autocompleteSuggestions.length > 0 && (
-											<Box
-												position="absolute"
-												top="100%"
-												left="0"
-												right="0"
-												bg="bg.default"
-												shadow="md"
-												z="10"
-												mt="4"
-												rounded="md"
-												borderColor="border.secondary"
-												className="max-h-[200px] overflow-y-auto"
-												p="4"
-												border="1"
-											>
-												{autocompleteSuggestions.map((s, index) => (
+										<div style={{position: "relative"}}>
+											<Input
+												placeholder="Search Preview"
+												addonBefore={<IconSearch size={16} />}
+												value={query}
+												onChange={(e) => {
+													setQuery(e.target.value);
+													setHighlightedIndex(-1);
+												}}
+												onFocus={() => setIsInputFocused(true)}
+												onBlur={() => {
+													setTimeout(() => setIsInputFocused(false), 200);
+												}}
+												onKeyDown={handleKeyDown}
+											/>
+											{isInputFocused &&
+												autocompleteSuggestions.length > 0 && (
 													<Box
-														key={s.id}
-														p="8"
-														rounded="sm"
-														bg={
-															index === highlightedIndex
-																? "bg.default.hovered"
-																: undefined
-														}
-														cursor="pointer"
-														onClick={() => {
-															setQuery(s.phrase);
-															setHighlightedIndex(-1);
-															setIsInputFocused(false);
-														}}
-														onMouseEnter={() =>
-															setHighlightedIndex(index)
-														}
+														bg="bg.default"
+														shadow="md"
+														z="10"
+														mt="4"
+														rounded="md"
+														borderColor="border.secondary"
+														className="max-h-[200px] overflow-y-auto"
+														p="4"
+														border="1"
+														asChild
 													>
-														<Text>{s.phrase}</Text>
+														<div
+															style={{
+																position: "absolute",
+																top: "100%",
+																left: 0,
+																right: 0,
+															}}
+														>
+															{autocompleteSuggestions.map(
+																(s, index) => (
+																	<Box
+																		key={s.id}
+																		p="8"
+																		rounded="sm"
+																		bg={
+																			index ===
+																			highlightedIndex
+																				? "bg.default.hovered"
+																				: undefined
+																		}
+																		cursor="pointer"
+																		onClick={() => {
+																			setQuery(s.phrase);
+																			setHighlightedIndex(-1);
+																			setIsInputFocused(
+																				false
+																			);
+																		}}
+																		onMouseEnter={() =>
+																			setHighlightedIndex(
+																				index
+																			)
+																		}
+																	>
+																		<Text>{s.phrase}</Text>
+																	</Box>
+																)
+															)}
+														</div>
 													</Box>
-												))}
-											</Box>
-										)}
+												)}
+										</div>
 									</Box>
 									<Menu
 										options={[
