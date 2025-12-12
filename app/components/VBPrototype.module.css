@@ -1,0 +1,45 @@
+/* VBPrototype styles using Optiaxiom color tokens */
+
+.sectionWithBorder {
+  background: var(--ax-colors-bg-default);
+  border-color: var(--ax-colors-border-default);
+}
+
+.sectionWithBorder:hover {
+  background: var(--ax-colors-bg-default-hovered);
+  border-color: var(--ax-colors-border-control-hovered);
+}
+
+.sectionWithBorder:active {
+  background: var(--ax-colors-bg-default-pressed);
+}
+
+.sectionNoBorder {
+  background: transparent;
+}
+
+.sectionNoBorder:hover {
+  background: var(--ax-colors-bg-default-hovered);
+}
+
+.sectionNoBorder:active {
+  background: var(--ax-colors-bg-default-pressed);
+}
+
+.divider {
+  background: var(--ax-colors-border-secondary);
+}
+
+.canvas {
+  background: var(--ax-colors-bg-default);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.popupMenu {
+  background: var(--ax-colors-bg-default);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.aiOverlay {
+  background: color-mix(in srgb, var(--ax-colors-bg-default) 90%, transparent);
+}

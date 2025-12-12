@@ -13,7 +13,7 @@ import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
 import {Input} from "@/app/components/Input";
 import {useParams, useRouter} from "next/navigation";
-import {useEffect, useState} from "react";
+import {useEffect, useState, use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, initialUsers} from "@/app/db/initialData";
 import {IconArrowLeft} from "@tabler/icons-react";
@@ -23,7 +23,8 @@ import Preview from "../order/Preview";
 export default function EditAlgorithmPage() {
 	const params = useParams();
 	const router = useRouter();
-	const id = params.id as string;
+	const resolvedParams = params instanceof Promise ? use(params) : params;
+	const id = (resolvedParams?.id ?? "") as string;
 	const [algorithms, setAlgorithms] = usePersistentState("algorithms", initialAlgorithms) as [
 		Algorithm[],
 		(val: Algorithm[]) => void
