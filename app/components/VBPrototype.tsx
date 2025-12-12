@@ -1,54 +1,28 @@
 "use client";
 
-
 import {
 	Box,
 	Button,
 	Field,
-	Heading,
 	Text,
 	Input as Input2,
-	Checkbox,
-	Menu,
-	MenuContent,
-	MenuTrigger,
 	Tabs,
-	TabsList,
-	TabsTrigger,
 	TabsContent,
 	Select,
 	SelectTrigger,
 	SelectContent,
 	Textarea,
 } from "@optiaxiom/react";
-import React, { ReactNode, useEffect, Fragment, Children, useRef, SetStateAction } from "react";
-import { useState } from "react";
+import React, { useEffect, useRef, SetStateAction, useState } from "react";
 import {
 	IconPlus,
-	IconDots,
-	IconSparkles,
-	IconTrash,
 	IconPilcrow,
 	IconForms,
 	IconRectangle,
 	IconHeading,
 	IconBrackets,
-	IconSection,
-	IconSquare,
-	IconPencil,
-	IconRowInsertBottom,
-	IconRowInsertTop,
-	IconFilter,
-	IconLogout,
-	IconUser,
 	IconArrowBarBoth,
 	IconFile,
-	IconList,
-	IconLayoutGrid,
-	IconCloud,
-	IconMessage,
-	IconDevices,
-	IconChevronDown,
 	IconPhoto,
 } from "@tabler/icons-react";
 
@@ -61,9 +35,107 @@ import OutlineHeader from "./vb/OutlineHeader";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
-import MediaCard from "./MediaCard";
 import styles from "./VBPrototype.module.css";
-const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({ texts, interval = 2000 }) => {
+
+/** -----------------------------
+ * Types + helpers (normalize / prune)
+ * ------------------------------*/
+
+type EleMap = Record<string, { type: string; props: any[] }>;
+type NormalizeResult = { data: any[]; theEles: EleMap };
+type SplitPayload = { data: any[]; theEles: EleMap };
+
+const isEleNode = (n: any) =>
+	n &&
+	typeof n === "object" &&
+	typeof n.id === "string" &&
+	typeof n.type === "string" &&
+	Array.isArray(n.props);
+
+const ensureOpen = (nodes: any[]): any[] => {
+	return nodes.map((node) => ({
+		...node,
+		open: node.open ?? true,
+		children: Array.isArray(node.children) ? ensureOpen(node.children) : node.children,
+	}));
+};
+
+// only strips truly transient flags (keep `open` so you can persist collapse state if you want)
+const stripTransientFlags = (nodes: any[]): any[] => {
+	return nodes.map((n) => {
+		const { isNew, ...rest } = n;
+		return {
+			...rest,
+			children: Array.isArray(n.children) ? stripTransientFlags(n.children) : n.children,
+		};
+	});
+};
+
+const normalizePage = (input: any): NormalizeResult => {
+	// Case A: already split
+	if (
+		input &&
+		typeof input === "object" &&
+		Array.isArray((input as SplitPayload).data) &&
+		(input as SplitPayload).theEles
+	) {
+		return {
+			data: ensureOpen(stripTransientFlags((input as SplitPayload).data)),
+			theEles: (input as SplitPayload).theEles || {},
+		};
+	}
+
+	// Case B: merged tree array
+	if (!Array.isArray(input)) return { data: [], theEles: {} };
+
+	const theEles: EleMap = {};
+
+	const strip = (node: any): any => {
+		if (isEleNode(node)) {
+			theEles[node.id] = { type: node.type, props: node.props };
+			return { id: node.id };
+		}
+
+		const out: any = { ...node };
+		if (Array.isArray(node.children)) out.children = node.children.map(strip);
+		return out;
+	};
+
+	return {
+		data: ensureOpen(stripTransientFlags(input.map(strip))),
+		theEles,
+	};
+};
+
+const collectElementIds = (data: any[]): Set<string> => {
+	const ids = new Set<string>();
+	for (const section of data) {
+		for (const row of section.children || []) {
+			for (const col of row.children || []) {
+				for (const ref of col.children || []) {
+					if (ref?.id) ids.add(ref.id);
+				}
+			}
+		}
+	}
+	return ids;
+};
+
+const pruneEles = (data: any[], theEles: EleMap): EleMap => {
+	const used = collectElementIds(data);
+	const out: EleMap = {};
+	for (const id of used) if (theEles[id]) out[id] = theEles[id];
+	return out;
+};
+
+/** -----------------------------
+ * AnimatedText
+ * ------------------------------*/
+
+const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
+	texts,
+	interval = 2000,
+}) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -79,21 +151,23 @@ const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({ texts,
 	return <span>{texts[index]}</span>;
 };
 
-
+/** -----------------------------
+ * Outline
+ * ------------------------------*/
 
 interface OutlineProps {
 	cloning?: boolean;
 	currentEle: string;
 	currentHoverEle: string;
 	dragging: string;
-	theEles: Record<string, any>;
+	theEles: EleMap;
 	onInputChange: (value: string, propIndex: number) => void;
 	setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
 	setDragging: React.Dispatch<React.SetStateAction<string>>;
 	setData: React.Dispatch<React.SetStateAction<any[]>>;
 	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
-	setTheEles: React.Dispatch<React.SetStateAction<Record<string, any>>>;
-	data: any;
+	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
+	data: any[];
 }
 
 const Outline: React.FC<OutlineProps> = ({
@@ -141,60 +215,36 @@ const Outline: React.FC<OutlineProps> = ({
 	const addSection = (id: string) => {
 		setData((prev) => {
 			const idx = prev.findIndex((section) => section.id === id);
-			if (idx === -1) {
-				// If not found, just append at end
-				console.log("Adding section last");
-				return [
-					...prev,
-					{
-						id: "section-" + Date.now(),
-						open: true,
-						children: [
-							{
-								id: "row-" + Date.now(),
-								open: true,
-								children: [
-									{
-										id: "col-" + Date.now(),
-										open: true,
-										children: [],
-									},
-								],
-							},
-						],
-					},
-				];
-			}
-			// Insert above the found index
-			console.log("Adding section above", id);
-			return [
-				...prev.slice(0, idx),
-				{
-					id: "section-" + Date.now(),
+			const mk = () => {
+				const t = Date.now();
+				return {
+					id: "section-" + t,
 					open: true,
 					children: [
 						{
-							id: "row-" + Date.now(),
+							id: "row-" + t,
 							open: true,
 							children: [
 								{
-									id: "col-" + Date.now(),
+									id: "col-" + t,
 									open: true,
 									children: [],
 								},
 							],
 						},
 					],
-				},
-				...prev.slice(idx),
-			];
+				};
+			};
+
+			if (idx === -1) return [...prev, mk()];
+			return [...prev.slice(0, idx), mk(), ...prev.slice(idx)];
 		});
 	};
+
 	const addCol = (e: any, section: number, row: number, at: any) => {
 		e?.stopPropagation();
 
 		setData((prev) => {
-			// Find the correct section
 			const updatedSection = {
 				...prev[section],
 				children: prev[section].children.map((r: any, idx: number) => {
@@ -206,26 +256,15 @@ const Outline: React.FC<OutlineProps> = ({
 							open: true,
 							id: "col-" + Date.now(),
 						};
-						let newChildren;
-						if (at === null || at === undefined) {
-							newChildren = [...r.children, newCol];
-						} else {
-							newChildren = [
-								...r.children.slice(0, at),
-								newCol,
-								...r.children.slice(at),
-							];
-						}
-						return {
-							...r,
-							open: true,
-							children: newChildren,
-						};
+						const newChildren =
+							at === null || at === undefined
+								? [...r.children, newCol]
+								: [...r.children.slice(0, at), newCol, ...r.children.slice(at)];
+						return { ...r, open: true, children: newChildren };
 					}
 					return r;
 				}),
 			};
-
 			return [...prev.slice(0, section), updatedSection, ...prev.slice(section + 1)];
 		});
 	};
@@ -251,24 +290,14 @@ const Outline: React.FC<OutlineProps> = ({
 			};
 
 			const sectionObj = prev[section];
-			let newChildren;
-			if (at === null || at === undefined) {
-				newChildren = [...sectionObj.children, newRow];
-			} else {
-				newChildren = [
-					...sectionObj.children.slice(0, at),
-					newRow,
-					...sectionObj.children.slice(at),
-				];
-			}
+			const newChildren =
+				at === null || at === undefined
+					? [...sectionObj.children, newRow]
+					: [...sectionObj.children.slice(0, at), newRow, ...sectionObj.children.slice(at)];
 
 			return [
 				...prev.slice(0, section),
-				{
-					...sectionObj,
-					open: true,
-					children: newChildren,
-				},
+				{ ...sectionObj, open: true, children: newChildren },
 				...prev.slice(section + 1),
 			];
 		});
@@ -277,7 +306,7 @@ const Outline: React.FC<OutlineProps> = ({
 	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
 		const uKey = `${type}-${Date.now()}`;
 
-		// Check for pending image data from drag-and-drop
+		// Pending image data from drag-and-drop (optional)
 		const pendingImageData = (window as any).__pendingImageData;
 		const imageUrl = pendingImageData?.url || "";
 		const imageAlt = pendingImageData?.alt || "";
@@ -285,7 +314,7 @@ const Outline: React.FC<OutlineProps> = ({
 		setTheEles((prev) => ({
 			...prev,
 			[uKey]: {
-				type: type,
+				type,
 				props: (() => {
 					switch (type) {
 						case "Heading":
@@ -297,11 +326,7 @@ const Outline: React.FC<OutlineProps> = ({
 								{ type: "text", label: "Label" },
 								{ type: "text", label: "Placeholder" },
 								{ type: "text", label: "Tooltip" },
-								{
-									type: "checkbox",
-									label: "Required",
-									value: false,
-								},
+								{ type: "checkbox", label: "Required", value: false },
 							];
 						case "Button":
 							return [{ type: "text", label: "Label" }];
@@ -310,6 +335,8 @@ const Outline: React.FC<OutlineProps> = ({
 								{ type: "text", label: "Image URL", value: imageUrl },
 								{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
 								{ type: "text", label: "Alt Text", value: imageAlt },
+								{ type: "text", label: "Width", value: "auto" },
+								{ type: "text", label: "Height", value: "auto" },
 							];
 						default:
 							return [];
@@ -317,8 +344,9 @@ const Outline: React.FC<OutlineProps> = ({
 				})(),
 			},
 		}));
-		setData((prev) => {
-			return prev.map((section, sIdx) => {
+
+		setData((prev) =>
+			prev.map((section, sIdx) => {
 				if (sIdx !== sectionIndex) return section;
 				return {
 					...section,
@@ -328,16 +356,13 @@ const Outline: React.FC<OutlineProps> = ({
 							...row,
 							children: row.children.map((col: any, cIdx: number) => {
 								if (cIdx !== colIndex) return col;
-								return {
-									...col,
-									children: [...col.children, { id: uKey }],
-								};
+								return { ...col, children: [...col.children, { id: uKey }] };
 							}),
 						};
 					}),
 				};
-			});
-		});
+			})
+		);
 	};
 
 	const removeSection = (sectionIndex: number) => {
@@ -345,29 +370,29 @@ const Outline: React.FC<OutlineProps> = ({
 	};
 
 	const removeRow = (id: string) => {
-		setData((prev) => {
-			return prev.map((section) => ({
+		setData((prev) =>
+			prev.map((section) => ({
 				...section,
 				children: section.children.filter((row: any) => row.id !== id),
-			}));
-		});
+			}))
+		);
 	};
 
 	const removeCol = (id: string) => {
-		setData((prev) => {
-			return prev.map((section) => ({
+		setData((prev) =>
+			prev.map((section) => ({
 				...section,
 				children: section.children.map((row: any) => ({
 					...row,
-					children: row.children.filter((ele: any) => ele.id !== id),
+					children: row.children.filter((col: any) => col.id !== id),
 				})),
-			}));
-		});
+			}))
+		);
 	};
 
 	const removeEle = (id: string) => {
-		setData((prev) => {
-			return prev.map((section) => ({
+		setData((prev) =>
+			prev.map((section) => ({
 				...section,
 				children: section.children.map((row: any) => ({
 					...row,
@@ -376,8 +401,8 @@ const Outline: React.FC<OutlineProps> = ({
 						children: col.children.filter((ele: any) => ele.id !== id),
 					})),
 				})),
-			}));
-		});
+			}))
+		);
 	};
 
 	const onDragStart = (e: any, id: string) => {
@@ -389,9 +414,7 @@ const Outline: React.FC<OutlineProps> = ({
 	const onDragHover = (e: any, id: string) => {
 		e.stopPropagation();
 		e.preventDefault();
-		if (dragging) {
-			setCurrentHoverEle("" + id);
-		}
+		if (dragging) setCurrentHoverEle("" + id);
 	};
 
 	const [AI, setAI] = useState(false);
@@ -400,25 +423,44 @@ const Outline: React.FC<OutlineProps> = ({
 
 	const onAddSection = () => addSection("section-last"); // append
 	const onAddRandomBlock = () => {
-		const blockNames = ["My Block", "CTA Block", "Form Block", "Hero Block", "Info Block", "Feature Block", "Footer Block", "Header Block", "Pricing Block", "Contact Block"];
+		const blockNames = [
+			"My Block",
+			"CTA Block",
+			"Form Block",
+			"Hero Block",
+			"Info Block",
+			"Feature Block",
+			"Footer Block",
+			"Header Block",
+			"Pricing Block",
+			"Contact Block",
+		];
 		const randomName = blockNames[Math.floor(Math.random() * blockNames.length)];
-		setData((prev) => [...prev, { label: randomName, isBlock: true, id: "section-" + Date.now(), children: [] }]);
+		setData((prev) => [
+			...prev,
+			{ label: randomName, isBlock: true, id: "section-" + Date.now(), children: [] },
+		]);
 	};
 
 	async function sendMessage(message: string) {
 		setLoadingAI(true);
+
 		const res = await fetch("/api/chat", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ userMessage: message }),
 		});
 
-		const data = await res.json();
+		const payload = await res.json();
 		setLoadingAI(false);
-		const parsed = JSON.parse(data.response);
-		console.log("Parsed response:", parsed);
-		setData(parsed.data || []);
-		setTheEles(parsed.theEles || {});
+
+		// payload.response is expected to be a JSON string
+		const parsed = JSON.parse(payload.response);
+
+		// Normalize regardless of whether AI returns split or merged
+		const norm = normalizePage(parsed);
+		setData(norm.data);
+		setTheEles(norm.theEles);
 	}
 
 	return (
@@ -430,11 +472,7 @@ const Outline: React.FC<OutlineProps> = ({
 				}}
 			>
 				<div className="min-w-[50%] w-[50%] relative min-h-[300px]">
-
-					<Tabs
-						value={activeTab}
-						onValueChange={setActiveTab}
-					>
+					<Tabs value={activeTab} onValueChange={setActiveTab}>
 						<OutlineHeader
 							AI={AI}
 							setAI={setAI}
@@ -444,6 +482,7 @@ const Outline: React.FC<OutlineProps> = ({
 							onAddRandomBlock={onAddRandomBlock}
 							onSendAIMessage={sendMessage}
 						/>
+
 						<TabsContent value="main">
 							{loadingAI && (
 								<div
@@ -463,10 +502,8 @@ const Outline: React.FC<OutlineProps> = ({
 									</div>
 								</div>
 							)}
-							<Box
-								fontSize="sm"
-								color="fg.secondary"
-							>
+
+							<Box fontSize="sm" color="fg.secondary">
 								{data.map((section: any, sindex: number) => (
 									<div key={sindex}>
 										{/* add section above */}
@@ -485,17 +522,17 @@ const Outline: React.FC<OutlineProps> = ({
 														size="sm"
 														appearance="subtle"
 														className="min-w-6"
-														onClick={(e) => addSection(section.id)}
+														onClick={() => addSection(section.id)}
 														icon={<IconPlus size={16} />}
 													/>
 													<Box className="bg-black/5 h-1 w-full" />
 												</Box>
 											</div>
 										)}
+
 										{/* dropping above section */}
 										{dragging?.startsWith("section-") &&
-											((section.id !== dragging &&
-												data[sindex - 1]?.id !== dragging) ||
+											((section.id !== dragging && data[sindex - 1]?.id !== dragging) ||
 												cloning) && (
 												<div
 													className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]"
@@ -508,57 +545,49 @@ const Outline: React.FC<OutlineProps> = ({
 													/>
 												</div>
 											)}
+
 										<Section
 											setOpen={setOpen}
 											section={section}
 											onDragStart={(e: any) => onDragStart(e, section.id)}
-											removeSection={(e: any) => removeSection(sindex)}
+											removeSection={() => removeSection(sindex)}
 											addSection={() => addSection(section.id)}
 											addRow={(e: any) => addRow(e, sindex, null)}
 										>
 											{section.children.map((row: any, index: number) => (
 												<div key={index}>
 													{/* add row above */}
-													{!dragging &&
-														!section.children[index - 1]?.open && (
-															<div
-																className="ind group h-2 relative z-10 -my-1"
-																onMouseEnter={(e) =>
-																	onDragHover(e, section.id)
-																}
+													{!dragging && !section.children[index - 1]?.open && (
+														<div
+															className="ind group h-2 relative z-10 -my-1"
+															onMouseEnter={(e) => onDragHover(e, section.id)}
+														>
+															<Box
+																rounded="full"
+																className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
 															>
-																<Box
-																	rounded="full"
-																	className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-																>
-																	<Box className="bg-black/5 h-1 w-full" />
-																	<Button
-																		aria-label="Add Section"
-																		size="sm"
-																		appearance="subtle"
-																		className="min-w-6"
-																		onClick={(e: any) =>
-																			addRow(e, sindex, index)
-																		}
-																		icon={
-																			<IconPlus size={16} />
-																		}
-																	/>
-																	<Box className="bg-black/5 h-1 w-full" />
-																</Box>
-															</div>
-														)}
+																<Box className="bg-black/5 h-1 w-full" />
+																<Button
+																	aria-label="Add Row"
+																	size="sm"
+																	appearance="subtle"
+																	className="min-w-6"
+																	onClick={(e: any) => addRow(e, sindex, index)}
+																	icon={<IconPlus size={16} />}
+																/>
+																<Box className="bg-black/5 h-1 w-full" />
+															</Box>
+														</div>
+													)}
+
 													{/* dropping above row */}
 													{dragging?.startsWith("row-") &&
 														((row.id !== dragging &&
-															section.children[index - 1]?.id !==
-															dragging) ||
+															section.children[index - 1]?.id !== dragging) ||
 															cloning) && (
 															<div
 																className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
-																onMouseEnter={(e) =>
-																	onDragHover(e, row.id)
-																}
+																onMouseEnter={(e) => onDragHover(e, row.id)}
 															>
 																<Box
 																	bg="bg.accent"
@@ -567,84 +596,106 @@ const Outline: React.FC<OutlineProps> = ({
 																/>
 															</div>
 														)}
+
 													<Row
 														row={row}
-														addRow={(e: any) =>
-															addRow(e, sindex, index)
-														}
-														addRowBelow={(e: any) =>
-															addRow(e, sindex, index + 1)
-														}
+														addRow={(e: any) => addRow(e, sindex, index)}
+														addRowBelow={(e: any) => addRow(e, sindex, index + 1)}
 														setOpen={setOpen}
-														onDragStart={(e: any) =>
-															onDragStart(e, row.id)
-														}
-														removeRow={(e: any) => removeRow(row.id)}
-														addCol={(e: any) =>
-															addCol(e, sindex, index, null)
-														}
+														onDragStart={(e: any) => onDragStart(e, row.id)}
+														removeRow={() => removeRow(row.id)}
+														addCol={(e: any) => addCol(e, sindex, index, null)}
 													>
 														{row.children &&
-															row.children.map(
-																(col: any, i: number) => (
-																	<div key={i}>
-																		{/* add col above */}
-																		{!dragging && (
+															row.children.map((col: any, i: number) => (
+																<div key={i}>
+																	{/* add col above */}
+																	{!dragging && (
+																		<div
+																			className="ind group h-2 relative z-10 -my-1"
+																			onMouseEnter={(e) => onDragHover(e, section.id)}
+																		>
+																			<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
+																				<Box className="bg-black/5 h-1 w-full" />
+																				<Button
+																					aria-label="Add Column"
+																					size="sm"
+																					appearance="subtle"
+																					className="min-w-6"
+																					onClick={(e: any) => addCol(e, sindex, index, i)}
+																					icon={<IconPlus size={16} />}
+																				/>
+																				<Box className="bg-black/5 h-1 w-full" />
+																			</Box>
+																		</div>
+																	)}
+
+																	{dragging?.startsWith("col-") &&
+																		col.id !== dragging &&
+																		row.children[i - 1]?.id !== dragging && (
 																			<div
-																				className="ind group h-2 relative z-10 -my-1"
-																				onMouseEnter={(e) =>
-																					onDragHover(
-																						e,
-																						section.id
-																					)
-																				}
+																				className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
+																				onMouseEnter={(e) => onDragHover(e, col.id)}
 																			>
-																				<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-																					<Box className="bg-black/5 h-1 w-full" />
-																					<Button
-																						aria-label="Add Section"
-																						size="sm"
-																						appearance="subtle"
-																						className="min-w-6"
-																						onClick={(
-																							e: any
-																						) =>
-																							addCol(
-																								e,
-																								sindex,
-																								index,
-																								i
-																							)
-																						}
-																						icon={
-																							<IconPlus
-																								size={
-																									16
-																								}
-																							/>
-																						}
-																					/>
-																					<Box className="bg-black/5 h-1 w-full" />
-																				</Box>
+																				<Box
+																					bg="bg.accent"
+																					rounded="full"
+																					className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+																				/>
 																			</div>
 																		)}
-																		{dragging?.startsWith(
-																			"col-"
-																		) &&
-																			col.id !== dragging &&
-																			row.children[i - 1]
-																				?.id !==
-																			dragging && (
+
+																	<Col
+																		col={col}
+																		setOpen={setOpen}
+																		onDragStart={(e: any) => onDragStart(e, col.id)}
+																		removeCol={() => removeCol(col.id)}
+																		// FIX: Col should pass a "type", not an event
+																		addElement={(type: string) =>
+																			addElement(type, i, index, sindex)
+																		}
+																		key={"col" + i}
+																	>
+																		{col.children.map((element: any, j: number) => (
+																			<div key={"ele" + j}>
+																				{dragging &&
+																					element.id !== dragging &&
+																					col.children[j - 1]?.id !== dragging &&
+																					!dragging.startsWith("section-") &&
+																					!dragging.startsWith("col-") &&
+																					!dragging.startsWith("row-") && (
+																						<div
+																							className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
+																							onMouseEnter={(e) => onDragHover(e, element.id)}
+																						>
+																							<Box
+																								bg="bg.accent"
+																								rounded="full"
+																								className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+																							/>
+																						</div>
+																					)}
+
+																				<Ele
+																					removeEle={() => removeEle(element.id)}
+																					onDragStart={(e: any) => onDragStart(e, element.id)}
+																					type={theEles[element.id]?.type}
+																					element={element}
+																					label={theEles[element.id]?.props?.[0]?.value || undefined}
+																					setCurrentEle={setCurrentEle}
+																					setCurrentHoverEle={setCurrentHoverEle}
+																				/>
+																			</div>
+																		))}
+
+																		{dragging &&
+																			dragging !== col.children[col.children.length - 1]?.id &&
+																			!dragging.startsWith("section-") &&
+																			!dragging.startsWith("row-") &&
+																			!dragging.startsWith("col-") && (
 																				<div
-																					className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
-																					onMouseEnter={(
-																						e
-																					) =>
-																						onDragHover(
-																							e,
-																							col.id
-																						)
-																					}
+																					className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
+																					onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
 																				>
 																					<Box
 																						bg="bg.accent"
@@ -653,204 +704,36 @@ const Outline: React.FC<OutlineProps> = ({
 																					/>
 																				</div>
 																			)}
-																		<Col
-																			col={col}
-																			setOpen={setOpen}
-																			onDragStart={(e: any) =>
-																				onDragStart(
-																					e,
-																					col.id
-																				)
-																			}
-																			removeCol={(e: any) =>
-																				removeCol(col.id)
-																			}
-																			addElement={(e: any) =>
-																				addElement(
-																					e,
-																					i,
-																					index,
-																					sindex
-																				)
-																			}
-																			key={"col" + i}
-																		>
-																			{col.children.map(
-																				(
-																					element: any,
-																					j: number
-																				) => (
-																					<div
-																						key={
-																							"ele" +
-																							j
-																						}
-																					>
-																						{dragging &&
-																							element.id !==
-																							dragging &&
-																							col
-																								.children[
-																								j -
-																								1
-																							]
-																								?.id !==
-																							dragging &&
-																							!dragging.startsWith(
-																								"section-"
-																							) &&
-																							!dragging.startsWith(
-																								"col-"
-																							) &&
-																							!dragging.startsWith(
-																								"row-"
-																							) && (
-																								<div
-																									className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																									onMouseEnter={(
-																										e
-																									) =>
-																										onDragHover(
-																											e,
-																											element.id
-																										)
-																									}
-																								>
-																									<Box
-																										bg="bg.accent"
-																										rounded="full"
-																										className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																									/>
-																								</div>
-																							)}
-																						<Ele
-																							removeEle={(
-																								e: any
-																							) =>
-																								removeEle(
-																									element.id
-																								)
-																							}
-																							onDragStart={(
-																								e: any
-																							) =>
-																								onDragStart(
-																									e,
-																									element.id
-																								)
-																							}
-																							type={
-																								theEles[
-																									element
-																										.id
-																								]
-																									?.type
-																							}
-																							element={
-																								element
-																							}
-																							label={
-																								theEles[
-																									element
-																										.id
-																								]
-																									?.props[0]
-																									?.value ||
-																								undefined
-																							}
-																							setCurrentEle={
-																								setCurrentEle
-																							}
-																							setCurrentHoverEle={
-																								setCurrentHoverEle
-																							}
-																						/>
-																					</div>
-																				)
-																			)}
-																			{dragging &&
-																				dragging !==
-																				col.children[
-																					col.children
-																						.length -
-																					1
-																				]?.id &&
-																				!dragging.startsWith(
-																					"section-"
-																				) &&
-																				!dragging.startsWith(
-																					"row-"
-																				) &&
-																				!dragging.startsWith(
-																					"col-"
-																				) && (
-																					<div
-																						className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																						onMouseEnter={(
-																							e
-																						) =>
-																							onDragHover(
-																								e,
-																								"last-ele-" +
-																								col.id
-																							)
-																						}
-																					>
-																						<Box
-																							bg="bg.accent"
-																							rounded="full"
-																							className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																						/>
-																					</div>
-																				)}
-																		</Col>
-																	</div>
-																)
-															)}
+																	</Col>
+																</div>
+															))}
+
 														{/* add column last */}
 														{!dragging && (
 															<div
 																className="ind group h-2 relative z-10 -my-1"
-																onMouseEnter={(e) =>
-																	onDragHover(e, section.id)
-																}
+																onMouseEnter={(e) => onDragHover(e, section.id)}
 															>
 																<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
 																	<Box className="bg-black/5 h-1 w-full" />
 																	<Button
-																		aria-label="Add Section"
+																		aria-label="Add Column"
 																		size="sm"
 																		appearance="subtle"
 																		className="min-w-6"
-																		onClick={(e: any) =>
-																			addCol(
-																				e,
-																				sindex,
-																				index,
-																				row.children.length
-																			)
-																		}
-																		icon={
-																			<IconPlus size={16} />
-																		}
+																		onClick={(e: any) => addCol(e, sindex, index, row.children.length)}
+																		icon={<IconPlus size={16} />}
 																	/>
 																	<Box className="bg-black/5 h-1 w-full" />
 																</Box>
 															</div>
 														)}
+
 														{dragging?.startsWith("col-") &&
-															dragging !==
-															row.children[
-																row.children.length - 1
-															]?.id && (
+															dragging !== row.children[row.children.length - 1]?.id && (
 																<div
 																	className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
-																	onMouseEnter={(e) =>
-																		onDragHover(
-																			e,
-																			"col-last-" + row.id
-																		)
-																	}
+																	onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
 																>
 																	<Box
 																		bg="bg.accent"
@@ -862,49 +745,37 @@ const Outline: React.FC<OutlineProps> = ({
 													</Row>
 												</div>
 											))}
+
 											{/* add row last */}
-											{!dragging &&
-												!section.children[section.children.length - 1]
-													?.open && (
-													<div
-														className="ind group h-2 relative z-10 -my-1"
-														onMouseEnter={(e) =>
-															onDragHover(e, section.id)
-														}
+											{!dragging && !section.children[section.children.length - 1]?.open && (
+												<div
+													className="ind group h-2 relative z-10 -my-1"
+													onMouseEnter={(e) => onDragHover(e, section.id)}
+												>
+													<Box
+														rounded="full"
+														className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
 													>
-														<Box
-															rounded="full"
-															className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-														>
-															<Box className="bg-black/5 h-1 w-full" />
-															<Button
-																aria-label="Add Section"
-																size="sm"
-																appearance="subtle"
-																className="min-w-6"
-																onClick={(e: any) =>
-																	addRow(
-																		e,
-																		sindex,
-																		section.children.length
-																	)
-																}
-																icon={<IconPlus size={16} />}
-															/>
-															<Box className="bg-black/5 h-1 w-full" />
-														</Box>
-													</div>
-												)}
+														<Box className="bg-black/5 h-1 w-full" />
+														<Button
+															aria-label="Add Row"
+															size="sm"
+															appearance="subtle"
+															className="min-w-6"
+															onClick={(e: any) => addRow(e, sindex, section.children.length)}
+															icon={<IconPlus size={16} />}
+														/>
+														<Box className="bg-black/5 h-1 w-full" />
+													</Box>
+												</div>
+											)}
+
 											{dragging?.startsWith("row-") &&
-												(dragging !==
-													section.children[section.children.length - 1]
-														?.id ||
+												(dragging !== section.children[section.children.length - 1]?.id ||
 													cloning) && (
 													<div
 														className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
-														onMouseEnter={(e) =>
-															onDragHover(e, "row-last-" + section.id)
-														}
+														onMouseEnter={(e) => onDragHover(e, "row-last-" + section.id)}
 													>
 														<Box
 															bg="bg.accent"
@@ -929,7 +800,7 @@ const Outline: React.FC<OutlineProps> = ({
 												size="sm"
 												appearance="subtle"
 												className="min-w-6"
-												onClick={(e) =>
+												onClick={() =>
 													setData((prev) => [
 														...prev,
 														{
@@ -960,6 +831,7 @@ const Outline: React.FC<OutlineProps> = ({
 										</Box>
 									</div>
 								)}
+
 								{dragging?.startsWith("section-") &&
 									(dragging !== data[data.length - 1]?.id || cloning) && (
 										<div
@@ -975,25 +847,14 @@ const Outline: React.FC<OutlineProps> = ({
 									)}
 							</Box>
 						</TabsContent>
+
 						<TabsContent value="properties">
-							<Box
-								px="24"
-								py="16"
-								fontSize="sm"
-							>
+							<Box px="24" py="16" fontSize="sm">
 								<Box mb="16">
-									<Text
-										fontSize="sm"
-										fontWeight="600"
-										mb="8"
-									>
+									<Text fontSize="sm" fontWeight="600" mb="8">
 										SEO
 									</Text>
-									<Box
-										display="flex"
-										flexDirection="column"
-										gap="8"
-									>
+									<Box display="flex" flexDirection="column" gap="8">
 										<Field label="Title">
 											<Input2 placeholder="Enter page title" />
 										</Field>
@@ -1001,32 +862,19 @@ const Outline: React.FC<OutlineProps> = ({
 											<Input2 placeholder="Enter keywords" />
 										</Field>
 										<Field label="Description">
-											<Textarea
-												placeholder="Enter description"
-												rows={3}
-											/>
+											<Textarea placeholder="Enter description" rows={3} />
 										</Field>
 										<Field label="Meta">
-											<Textarea
-												placeholder="Enter meta information"
-												rows={3}
-											/>
+											<Textarea placeholder="Enter meta information" rows={3} />
 										</Field>
 									</Box>
 								</Box>
+
 								<Box>
-									<Text
-										fontSize="sm"
-										fontWeight="600"
-										mb="8"
-									>
+									<Text fontSize="sm" fontWeight="600" mb="8">
 										Settings
 									</Text>
-									<Box
-										display="flex"
-										flexDirection="column"
-										gap="8"
-									>
+									<Box display="flex" flexDirection="column" gap="8">
 										<Field label="Campaign Mode">
 											<Select
 												defaultValue="no"
@@ -1039,6 +887,7 @@ const Outline: React.FC<OutlineProps> = ({
 												<SelectContent />
 											</Select>
 										</Field>
+
 										<Field label="Some other setting">
 											<Select
 												defaultValue="setting1"
@@ -1057,6 +906,7 @@ const Outline: React.FC<OutlineProps> = ({
 						</TabsContent>
 					</Tabs>
 				</div>
+
 				<ElementEditor
 					elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 					currentEle={currentEle}
@@ -1069,21 +919,11 @@ const Outline: React.FC<OutlineProps> = ({
 	);
 };
 
-const extractElements = (nodes: any[]) => {
-	let elements: Record<string, any> = {};
-	const traverse = (node: any) => {
-		if (node.children) {
-			node.children.forEach(traverse);
-		}
-		if (node.type && node.props) {
-			elements[node.id] = { type: node.type, props: node.props };
-		}
-	};
-	nodes.forEach(traverse);
-	return elements;
-};
+/** -----------------------------
+ * Existing mergeData (kept for onSave compatibility)
+ * ------------------------------*/
 
-const mergeData = (structure: any[], elements: Record<string, any>) => {
+const mergeData = (structure: any[], elements: EleMap) => {
 	return structure.map((node) => {
 		const newNode = { ...node };
 		if (elements[node.id]) {
@@ -1097,13 +937,9 @@ const mergeData = (structure: any[], elements: Record<string, any>) => {
 	});
 };
 
-const ensureOpen = (nodes: any[]): any[] => {
-	return nodes.map((node) => ({
-		...node,
-		open: node.open ?? true,
-		children: node.children ? ensureOpen(node.children) : undefined,
-	}));
-};
+/** -----------------------------
+ * VBPrototype
+ * ------------------------------*/
 
 export default function VBPrototype({
 	initialData,
@@ -1112,7 +948,8 @@ export default function VBPrototype({
 	pageName,
 	pageStatus,
 }: {
-	initialData?: any[];
+	// Accept both merged tree array and split payload (AI / storage / etc.)
+	initialData?: any[] | SplitPayload;
 	onSave?: (data: any[]) => void;
 	onPublish?: () => void;
 	pageName?: string;
@@ -1125,20 +962,16 @@ export default function VBPrototype({
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 	const hasChanged = useRef(false);
 
-	const [theEles, _setTheEles] = useState<any>(() => {
-		if (initialData) {
-			return extractElements(initialData);
-		}
-		return {};
-	});
-	const setTheEles = (arg: SetStateAction<any>) => {
+	const initialNorm = useRef<NormalizeResult | null>(null);
+	if (!initialNorm.current) initialNorm.current = normalizePage(initialData ?? []);
+
+	const [theEles, _setTheEles] = useState<EleMap>(() => initialNorm.current!.theEles);
+	const setTheEles = (arg: SetStateAction<EleMap>) => {
 		hasChanged.current = true;
 		_setTheEles(arg);
 	};
 
-	const [data, _setData] = useState<any[]>(() => {
-		return initialData ? ensureOpen(initialData) : [];
-	});
+	const [data, _setData] = useState<any[]>(() => initialNorm.current!.data);
 	const setData = (arg: SetStateAction<any[]>) => {
 		hasChanged.current = true;
 		_setData(arg);
@@ -1148,6 +981,7 @@ export default function VBPrototype({
 	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
 	const isFirstRender = useRef(true);
 	const onSaveRef = useRef(onSave);
+
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 	const [dropPosition, setDropPosition] = useState<{ colId: string; position: number } | null>(
 		null
@@ -1155,18 +989,11 @@ export default function VBPrototype({
 
 	const onInputChange = (value: any, propIndex: number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
-			setTheEles((prev: any) => {
-				const oldProps = prev[currentEle as keyof typeof prev].props;
+			setTheEles((prev) => {
+				const oldProps = prev[currentEle].props;
 				const newProps = [...oldProps];
-				newProps[propIndex] = { ...oldProps[propIndex], value: value };
-
-				return {
-					...prev,
-					[currentEle]: {
-						...prev[currentEle as keyof typeof prev],
-						props: newProps,
-					},
-				};
+				newProps[propIndex] = { ...oldProps[propIndex], value };
+				return { ...prev, [currentEle]: { ...prev[currentEle], props: newProps } };
 			});
 		}
 	};
@@ -1175,7 +1002,7 @@ export default function VBPrototype({
 		onSaveRef.current = onSave;
 	}, [onSave]);
 
-	// Sync data changes to parent
+	// Sync data changes to parent (keep API: onSave gets merged tree array)
 	useEffect(() => {
 		if (isFirstRender.current) {
 			isFirstRender.current = false;
@@ -1183,17 +1010,16 @@ export default function VBPrototype({
 		}
 		if (!hasChanged.current) return;
 
-		if (onSaveRef.current) {
-			const mergedData = mergeData(data, theEles);
-			onSaveRef.current(mergedData);
-			setLastSaved(new Date());
-		}
+		const pruned = pruneEles(data, theEles);
+		const mergedData = mergeData(stripTransientFlags(data), pruned);
+
+		onSaveRef.current?.(mergedData);
+		setLastSaved(new Date());
 	}, [data, theEles]);
 
-	// Add escape key event listener
+	// Drag/drop + key handlers
 	useEffect(() => {
-		const handleMouseUp = (e: MouseEvent) => {
-			console.log("Mouse up, resetting dragging state");
+		const handleMouseUp = () => {
 			if (
 				currentHoverEle !== "none" &&
 				dragging !== null &&
@@ -1209,49 +1035,34 @@ export default function VBPrototype({
 						const draggingIdx = prev.findIndex((sec) => sec.id === dragging);
 						const hoverIdx = prev.findIndex((sec) => sec.id === currentHoverEle);
 						if (draggingIdx === -1 || hoverIdx === -1) return prev;
+
 						const newArr = [...prev];
 						let [draggedSection] = newArr.splice(draggingIdx, 1);
 
-						// If cloning, create a new id for the cloned section and its children
 						if (cloning) {
-							const newSectionId = `${dragging}-${Date.now()}-${Math.floor(
-								Math.random() * 1000
-							)}`;
+							const newSectionId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 							draggedSection = {
 								...draggedSection,
 								id: newSectionId,
 								children: draggedSection.children.map((row: any) => {
-									const newRowId = `${row.id}-${Date.now()}-${Math.floor(
-										Math.random() * 1000
-									)}`;
+									const newRowId = `${row.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 									return {
 										...row,
 										id: newRowId,
 										children: row.children.map((col: any) => {
-											const newColId = `${col.id}-${Date.now()}-${Math.floor(
-												Math.random() * 1000
-											)}`;
+											const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 											return {
 												...col,
 												id: newColId,
 												children: col.children.map((ele: any) => {
-													const newEleId = `${ele.id
-														}-${Date.now()}-${Math.floor(
-															Math.random() * 1000
-														)}`;
-													// Clone theElements entry
+													const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 													if (theEles[ele.id]) {
-														setTheEles((prevElements: any) => ({
+														setTheEles((prevElements) => ({
 															...prevElements,
-															[newEleId]: {
-																...prevElements[ele.id],
-															},
+															[newEleId]: { ...prevElements[ele.id] },
 														}));
 													}
-													return {
-														...ele,
-														id: newEleId,
-													};
+													return { ...ele, id: newEleId };
 												}),
 											};
 										}),
@@ -1260,29 +1071,24 @@ export default function VBPrototype({
 							};
 						}
 
-						// If dragging down, insert after hoverIdx
-						const insertIdx =
-							draggingIdx < hoverIdx && !cloning ? hoverIdx - 1 : hoverIdx;
+						const insertIdx = draggingIdx < hoverIdx && !cloning ? hoverIdx - 1 : hoverIdx;
 						newArr.splice(insertIdx, 0, draggedSection);
 						return newArr;
 					});
 					setCurrentHoverEle("none");
-				} else if (
-					dragging.startsWith("section-") &&
-					currentHoverEle.startsWith("section-last")
-				) {
+				} else if (dragging.startsWith("section-") && currentHoverEle.startsWith("section-last")) {
 					setData((prev) => {
 						const draggingIdx = prev.findIndex((sec) => sec.id === dragging);
 						if (draggingIdx === -1) return prev;
 						const newArr = [...prev];
-						let [draggedSection] = newArr.splice(draggingIdx, 1);
-
+						const [draggedSection] = newArr.splice(draggingIdx, 1);
 						newArr.push(draggedSection);
 						return newArr;
 					});
 					setCurrentHoverEle("none");
-					// ROW DRAGGING (within a section or across sections)
-				} else if (
+				}
+				// ROW DRAGGING
+				else if (
 					dragging.startsWith("row-") &&
 					currentHoverEle.startsWith("row-") &&
 					!currentHoverEle.startsWith("row-last")
@@ -1291,90 +1097,66 @@ export default function VBPrototype({
 						let draggedRow: any = null;
 						let fromSectionIdx = -1;
 						let draggingIdx = -1;
-						// Find and remove the dragged row from its section
+
 						const newArr = prev.map((section, sIdx) => {
-							const idx = section.children.findIndex(
-								(row: any) => row.id === dragging
-							);
+							const idx = section.children.findIndex((row: any) => row.id === dragging);
 							if (idx !== -1) {
 								draggedRow = section.children[idx];
 								fromSectionIdx = sIdx;
 								draggingIdx = idx;
 								const newChildren = [...section.children];
-								// If cloning, don't remove the original
-								if (!cloning) {
-									newChildren.splice(idx, 1);
-								}
+								if (!cloning) newChildren.splice(idx, 1);
 								return { ...section, children: newChildren };
 							}
 							return section;
 						});
+
 						if (!draggedRow) return newArr;
-						// If cloning, create a new id for the cloned row and its children
+
 						let rowToInsert = draggedRow;
 						if (cloning) {
-							console.log("Cloning row", dragging);
-							const newRowId = `${dragging}-${Date.now()}-${Math.floor(
-								Math.random() * 1000
-							)}`;
+							const newRowId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 							rowToInsert = {
 								...draggedRow,
 								id: newRowId,
 								children: draggedRow.children.map((col: any) => {
-									const newColId = `${col.id}-${Date.now()}-${Math.floor(
-										Math.random() * 1000
-									)}`;
+									const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 									return {
 										...col,
 										id: newColId,
 										children: col.children.map((ele: any) => {
-											const newEleId = `${ele.id}-${Date.now()}-${Math.floor(
-												Math.random() * 1000
-											)}`;
-											// Clone theEles entry
+											const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 											if (theEles[ele.id]) {
-												setTheEles((prevEles: any) => ({
+												setTheEles((prevEles) => ({
 													...prevEles,
-													[newEleId]: {
-														...prevEles[ele.id],
-													},
+													[newEleId]: { ...prevEles[ele.id] },
 												}));
 											}
-											return {
-												...ele,
-												id: newEleId,
-											};
+											return { ...ele, id: newEleId };
 										}),
 									};
 								}),
 							};
 						}
-						// Find the section and index to insert into
+
 						let toSectionIdx = -1;
 						let hoverIdx = -1;
 						prev.forEach((section, sIdx) => {
-							const idx = section.children.findIndex(
-								(row: any) => row.id === currentHoverEle
-							);
+							const idx = section.children.findIndex((row: any) => row.id === currentHoverEle);
 							if (idx !== -1) {
 								toSectionIdx = sIdx;
 								hoverIdx = idx;
 							}
 						});
 						if (toSectionIdx === -1 || hoverIdx === -1) return newArr;
-						// Insert the dragged row into the target section at the correct position
+
 						const toSection = newArr[toSectionIdx];
 						const newChildren = [...toSection.children];
-						// If dragging down, insert after hoverIdx
 						const insertIdx =
-							fromSectionIdx === toSectionIdx && draggingIdx < hoverIdx && !cloning
-								? hoverIdx - 1
-								: hoverIdx;
+							fromSectionIdx === toSectionIdx && draggingIdx < hoverIdx && !cloning ? hoverIdx - 1 : hoverIdx;
+
 						newChildren.splice(insertIdx, 0, rowToInsert);
-						newArr[toSectionIdx] = {
-							...toSection,
-							children: newChildren,
-						};
+						newArr[toSectionIdx] = { ...toSection, children: newChildren };
 						return newArr;
 					});
 					setCurrentHoverEle("none");
@@ -1382,84 +1164,60 @@ export default function VBPrototype({
 					setData((prev) => {
 						let draggedRow: any = null;
 						let fromSectionIdx = -1;
-						let draggingIdx = -1;
-						// Remove the dragged row from its section
+
 						const newArr = prev.map((section, sIdx) => {
-							const idx = section.children.findIndex(
-								(row: any) => row.id === dragging
-							);
+							const idx = section.children.findIndex((row: any) => row.id === dragging);
 							if (idx !== -1) {
 								draggedRow = section.children[idx];
 								fromSectionIdx = sIdx;
-								draggingIdx = idx;
 								const newChildren = [...section.children];
-								// If cloning, don't remove the original
-								if (!cloning) {
-									newChildren.splice(idx, 1);
-								}
+								if (!cloning) newChildren.splice(idx, 1);
 								return { ...section, children: newChildren };
 							}
 							return section;
 						});
+
 						if (!draggedRow) return newArr;
-						// If cloning, create a new id for the cloned row and its children
+
 						let rowToInsert = draggedRow;
 						if (cloning) {
-							const newRowId = `${dragging}-${Date.now()}-${Math.floor(
-								Math.random() * 1000
-							)}`;
+							const newRowId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 							rowToInsert = {
 								...draggedRow,
 								id: newRowId,
 								children: draggedRow.children.map((col: any) => {
-									const newColId = `${col.id}-${Date.now()}-${Math.floor(
-										Math.random() * 1000
-									)}`;
+									const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 									return {
 										...col,
 										id: newColId,
 										children: col.children.map((ele: any) => {
-											const newEleId = `${ele.id}-${Date.now()}-${Math.floor(
-												Math.random() * 1000
-											)}`;
-											// Clone theEles entry
+											const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 											if (theEles[ele.id]) {
-												setTheEles((prevEles: any) => ({
+												setTheEles((prevEles) => ({
 													...prevEles,
-													[newEleId]: {
-														...prevEles[ele.id],
-													},
+													[newEleId]: { ...prevEles[ele.id] },
 												}));
 											}
-											return {
-												...ele,
-												id: newEleId,
-											};
+											return { ...ele, id: newEleId };
 										}),
 									};
 								}),
 							};
 						}
-						// Find the section to append to
+
 						let toSectionIdx = -1;
 						prev.forEach((section, sIdx) => {
-							if (`row-last-${section.id}` === currentHoverEle) {
-								toSectionIdx = sIdx;
-							}
+							if (`row-last-${section.id}` === currentHoverEle) toSectionIdx = sIdx;
 						});
 						if (toSectionIdx === -1) return newArr;
-						// Append the dragged row to the target section
+
 						const toSection = newArr[toSectionIdx];
-						const newChildren = [...toSection.children, rowToInsert];
-						newArr[toSectionIdx] = {
-							...toSection,
-							children: newChildren,
-						};
+						newArr[toSectionIdx] = { ...toSection, children: [...toSection.children, rowToInsert] };
 						return newArr;
 					});
 					setCurrentHoverEle("none");
 				}
-				// COLUMN DRAGGING (within a row and across rows)
+				// COL DRAGGING
 				else if (
 					dragging.startsWith("col-") &&
 					currentHoverEle.startsWith("col-") &&
@@ -1470,18 +1228,17 @@ export default function VBPrototype({
 						let fromRowIdx = -1;
 						let fromSectionIdx = -1;
 						let draggingIdx = -1;
-						// Remove the dragged col from its row
+
 						const newArr = prev.map((section, sIdx) => {
 							const rowIdx = section.children.findIndex((row: any) => {
-								const idx = row.children.findIndex(
-									(col: any) => col.id === dragging
-								);
+								const idx = row.children.findIndex((col: any) => col.id === dragging);
 								if (idx !== -1) {
 									draggingIdx = idx;
 									return true;
 								}
 								return false;
 							});
+
 							if (rowIdx !== -1) {
 								fromRowIdx = rowIdx;
 								fromSectionIdx = sIdx;
@@ -1494,20 +1251,19 @@ export default function VBPrototype({
 								newChildren[rowIdx] = newRow;
 								return { ...section, children: newChildren };
 							}
+
 							return section;
 						});
 
 						if (!draggedCol) return newArr;
 
-						// Find the row and index to insert into
 						let toSectionIdx = -1;
 						let toRowIdx = -1;
 						let hoverIdx = -1;
+
 						prev.forEach((section, sIdx) => {
 							section.children.forEach((row: any, rIdx: number) => {
-								const idx = row.children.findIndex(
-									(col: any) => col.id === currentHoverEle
-								);
+								const idx = row.children.findIndex((col: any) => col.id === currentHoverEle);
 								if (idx !== -1) {
 									toSectionIdx = sIdx;
 									toRowIdx = rIdx;
@@ -1515,52 +1271,42 @@ export default function VBPrototype({
 								}
 							});
 						});
-						if (toSectionIdx === -1 || toRowIdx === -1 || hoverIdx === -1)
-							return newArr;
 
-						// Insert the dragged col into the target row at the correct position
+						if (toSectionIdx === -1 || toRowIdx === -1 || hoverIdx === -1) return newArr;
+
 						const toSection = newArr[toSectionIdx];
 						const toRow = toSection.children[toRowIdx];
 						const newCols = [...toRow.children];
-						// If dragging down in same row, insert after hoverIdx
+
 						const insertIdx =
-							fromSectionIdx === toSectionIdx &&
-								fromRowIdx === toRowIdx &&
-								draggingIdx < hoverIdx
+							fromSectionIdx === toSectionIdx && fromRowIdx === toRowIdx && draggingIdx < hoverIdx
 								? hoverIdx - 1
 								: hoverIdx;
+
 						newCols.splice(insertIdx, 0, draggedCol);
 						const newRow = { ...toRow, children: newCols };
 						const newChildren = [...toSection.children];
 						newChildren[toRowIdx] = newRow;
-						newArr[toSectionIdx] = {
-							...toSection,
-							children: newChildren,
-						};
+						newArr[toSectionIdx] = { ...toSection, children: newChildren };
 						return newArr;
 					});
 					setCurrentHoverEle("none");
 				} else if (dragging.startsWith("col-") && currentHoverEle.startsWith("col-last")) {
 					setData((prev) => {
 						let draggedCol: any = null;
-						let fromRowIdx = -1;
-						let fromSectionIdx = -1;
 						let draggingIdx = -1;
-						// Remove the dragged col from its row
-						const newArr = prev.map((section, sIdx) => {
+
+						const newArr = prev.map((section) => {
 							const rowIdx = section.children.findIndex((row: any) => {
-								const idx = row.children.findIndex(
-									(col: any) => col.id === dragging
-								);
+								const idx = row.children.findIndex((col: any) => col.id === dragging);
 								if (idx !== -1) {
 									draggingIdx = idx;
 									return true;
 								}
 								return false;
 							});
+
 							if (rowIdx !== -1) {
-								fromRowIdx = rowIdx;
-								fromSectionIdx = sIdx;
 								const row = section.children[rowIdx];
 								draggedCol = row.children[draggingIdx];
 								const newCols = [...row.children];
@@ -1570,12 +1316,12 @@ export default function VBPrototype({
 								newChildren[rowIdx] = newRow;
 								return { ...section, children: newChildren };
 							}
+
 							return section;
 						});
 
 						if (!draggedCol) return newArr;
 
-						// Find the row to append to
 						let toSectionIdx = -1;
 						let toRowIdx = -1;
 						prev.forEach((section, sIdx) => {
@@ -1588,22 +1334,19 @@ export default function VBPrototype({
 						});
 						if (toSectionIdx === -1 || toRowIdx === -1) return newArr;
 
-						// Append the dragged col to the target row
 						const toSection = newArr[toSectionIdx];
 						const toRow = toSection.children[toRowIdx];
 						const newCols = [...toRow.children, draggedCol];
+
 						const newRow = { ...toRow, children: newCols };
 						const newChildren = [...toSection.children];
 						newChildren[toRowIdx] = newRow;
-						newArr[toSectionIdx] = {
-							...toSection,
-							children: newChildren,
-						};
+						newArr[toSectionIdx] = { ...toSection, children: newChildren };
 						return newArr;
 					});
 					setCurrentHoverEle("none");
 				}
-				// ELEMENT DRAGGING (within and across a column)
+				// ELEMENT DRAGGING
 				else if (
 					!dragging.startsWith("col-") &&
 					!dragging.startsWith("row-") &&
@@ -1614,19 +1357,15 @@ export default function VBPrototype({
 					!currentHoverEle.startsWith("last-ele")
 				) {
 					const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
 					setData((prev) => {
 						const updatedData = prev.map((section) => ({
 							...section,
 							children: section.children.map((row: any) => ({
 								...row,
 								children: row.children.map((col: any) => {
-									let draggedElement = null;
-									// Remove or clone the dragged element
 									const newChildren = col.children.filter((ele: any) => {
-										if (ele.id === dragging) {
-											draggedElement = cloning ? { ...ele } : ele;
-											return cloning; // keep if cloning, remove if moving
-										}
+										if (ele.id === dragging) return cloning; // keep if cloning
 										return true;
 									});
 									return { ...col, children: newChildren };
@@ -1635,52 +1374,36 @@ export default function VBPrototype({
 						}));
 
 						let draggedElement: any = null;
-						// Find the dragged element (for cloning)
 						prev.forEach((section) => {
 							section.children.forEach((row: any) => {
 								row.children.forEach((col: any) => {
 									col.children.forEach((ele: any) => {
-										if (ele.id === dragging) {
-											draggedElement = cloning ? { ...ele } : ele;
-										}
+										if (ele.id === dragging) draggedElement = cloning ? { ...ele } : ele;
 									});
 								});
 							});
 						});
-
 						if (!draggedElement) return updatedData;
 
 						if (cloning) {
 							const originalEle = theEles[dragging];
 							if (!originalEle) return updatedData;
-							const newElementClone = { ...originalEle, id: newid };
-							setTheEles((prevEles: any) => ({
-								...prevEles,
-								[newid]: newElementClone,
-							}));
+							setTheEles((prevEles) => ({ ...prevEles, [newid]: { ...originalEle } }));
 							draggedElement.id = newid;
 						}
 
-						// Insert into the target position
 						return updatedData.map((section) => ({
 							...section,
 							children: section.children.map((row: any) => ({
 								...row,
 								children: row.children.map((col: any) => {
-									const idx = col.children.findIndex(
-										(ele: any) => ele.id === currentHoverEle
-									);
+									const idx = col.children.findIndex((ele: any) => ele.id === currentHoverEle);
 									if (idx !== -1) {
-										const isAlreadyPresent = col.children.some(
-											(ele: any) => ele.id === draggedElement.id
-										);
-										if (!isAlreadyPresent) {
-											const newChildren = [...col.children];
-											newChildren.splice(idx, 0, draggedElement);
-											return {
-												...col,
-												children: newChildren,
-											};
+										const already = col.children.some((ele: any) => ele.id === draggedElement.id);
+										if (!already) {
+											const next = [...col.children];
+											next.splice(idx, 0, draggedElement);
+											return { ...col, children: next };
 										}
 									}
 									return col;
@@ -1688,12 +1411,14 @@ export default function VBPrototype({
 							})),
 						}));
 					});
+
 					setCurrentHoverEle("none");
 				} else if (currentHoverEle.startsWith("last-ele")) {
-					// Move to end of column
 					const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
 					setData((prev) => {
 						let draggedElement: any = null;
+
 						const updatedData = prev.map((section) => ({
 							...section,
 							children: section.children.map((row: any) => ({
@@ -1702,7 +1427,7 @@ export default function VBPrototype({
 									const newChildren = col.children.filter((ele: any) => {
 										if (ele.id === dragging) {
 											draggedElement = cloning ? { ...ele } : ele;
-											return cloning; // keep if cloning, remove if moving
+											return cloning;
 										}
 										return true;
 									});
@@ -1716,15 +1441,10 @@ export default function VBPrototype({
 						if (cloning) {
 							const originalEle = theEles[dragging];
 							if (!originalEle) return updatedData;
-							const newElementClone = { ...originalEle, id: newid };
-							setTheEles((prevEles: any) => ({
-								...prevEles,
-								[newid]: newElementClone,
-							}));
+							setTheEles((prevEles) => ({ ...prevEles, [newid]: { ...originalEle } }));
 							draggedElement.id = newid;
 						}
 
-						// Find the target column
 						const targetColId = currentHoverEle.replace(/^last-ele-/, "");
 						return updatedData.map((section) => ({
 							...section,
@@ -1732,40 +1452,31 @@ export default function VBPrototype({
 								...row,
 								children: row.children.map((col: any) => {
 									if (col.id === targetColId) {
-										const isAlreadyPresent = col.children.some(
-											(ele: any) => ele.id === draggedElement.id
-										);
-										if (!isAlreadyPresent) {
-											return {
-												...col,
-												children: [...col.children, draggedElement],
-											};
-										}
+										const already = col.children.some((ele: any) => ele.id === draggedElement.id);
+										if (!already) return { ...col, children: [...col.children, draggedElement] };
 									}
 									return col;
 								}),
 							})),
 						}));
 					});
+
 					setCurrentHoverEle("none");
 				}
 			}
+
 			setDragging(null);
 		};
 
 		if (currentEle !== "none") {
 			const firstInput = document.querySelector("input");
-			if (firstInput) {
-				firstInput.focus();
-			}
+			firstInput?.focus();
 		}
 
 		window.addEventListener("mouseup", handleMouseUp);
 
 		const handleKeyUp = (event: KeyboardEvent) => {
-			if (event.key === "Alt" && event.location === 1) {
-				setCloning(false);
-			}
+			if (event.key === "Alt" && event.location === 1) setCloning(false);
 		};
 
 		const handleKeyDown = (event: KeyboardEvent) => {
@@ -1779,6 +1490,7 @@ export default function VBPrototype({
 
 		window.addEventListener("keyup", handleKeyUp);
 		window.addEventListener("keydown", handleKeyDown);
+
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
 			window.removeEventListener("keyup", handleKeyUp);
@@ -1787,10 +1499,7 @@ export default function VBPrototype({
 	}, [currentEle, dragging, currentHoverEle, cloning, theEles]);
 
 	return (
-		<div
-			className="select-none"
-			style={{ height: "100%" }}
-		>
+		<div className="select-none" style={{ height: "100%" }}>
 			<Box
 				bg="bg.page"
 				w="full"
@@ -1804,6 +1513,7 @@ export default function VBPrototype({
 					onPublish={onPublish}
 					contentTypeIcon={<IconFile size={16} />}
 				/>
+
 				<Box
 					w="auto"
 					className="vb-outline"
@@ -1820,10 +1530,7 @@ export default function VBPrototype({
 							const startWidth = outlineBox.offsetWidth;
 
 							const onMouseMove = (moveEvent: MouseEvent) => {
-								const newWidth = Math.max(
-									180,
-									Math.min(600, startWidth + (moveEvent.clientX - startX))
-								);
+								const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
 								outlineBox.style.width = newWidth + "px";
 							};
 
@@ -1842,6 +1549,7 @@ export default function VBPrototype({
 						</Box>
 						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 					</div>
+
 					<Outline
 						cloning={cloning}
 						dragging={dragging}
@@ -1857,19 +1565,15 @@ export default function VBPrototype({
 						setCurrentHoverEle={setCurrentHoverEle}
 					/>
 				</Box>
-				<div
-					className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10"
-					style={{ height: "100%", overflow: "hidden" }}
-				>
+
+				<div className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10" style={{ height: "100%", overflow: "hidden" }}>
 					<div
 						className={`rounded-lg grow w-full mt-3 ${styles.canvas}`}
 						onClick={() => setCurrentEle("none")}
 						onDragOver={(e) => {
 							e.preventDefault();
 							const hasImageData = e.dataTransfer.types.includes("image/url");
-							if (hasImageData) {
-								e.currentTarget.style.opacity = "0.8";
-							}
+							if (hasImageData) e.currentTarget.style.opacity = "0.8";
 						}}
 						onDragLeave={(e) => {
 							e.currentTarget.style.opacity = "1";
@@ -1888,18 +1592,13 @@ export default function VBPrototype({
 							if (imageUrl && dropPosition) {
 								const uKey = `Image-${Date.now()}`;
 
-								// Add to theEles
-								setTheEles((prev: any) => ({
+								setTheEles((prev) => ({
 									...prev,
 									[uKey]: {
 										type: "Image",
 										props: [
 											{ type: "text", label: "Image URL", value: imageUrl },
-											{
-												type: "text",
-												label: "Title",
-												value: imageAlt || "Untitled Image",
-											},
+											{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
 											{ type: "text", label: "Alt Text", value: imageAlt },
 											{ type: "text", label: "Width", value: "auto" },
 											{ type: "text", label: "Height", value: "auto" },
@@ -1907,28 +1606,22 @@ export default function VBPrototype({
 									},
 								}));
 
-								// Add to data structure at the drop position
-								setData((prev) => {
-									return prev.map((section) => ({
+								setData((prev) =>
+									prev.map((section) => ({
 										...section,
 										children: section.children.map((row: any) => ({
 											...row,
 											children: row.children.map((col: any) => {
 												if (col.id === dropPosition.colId) {
-													const newChildren = [...col.children];
-													newChildren.splice(dropPosition.position, 0, {
-														id: uKey,
-													});
-													return {
-														...col,
-														children: newChildren,
-													};
+													const next = [...col.children];
+													next.splice(dropPosition.position, 0, { id: uKey });
+													return { ...col, children: next };
 												}
 												return col;
 											}),
 										})),
-									}));
-								});
+									}))
+								);
 							}
 						}}
 						style={{
@@ -1939,69 +1632,37 @@ export default function VBPrototype({
 							transition: "opacity 0.2s",
 						}}
 					>
-						<div
-							className="w-[500px] m-auto p-4 pt-24"
-							style={{ minHeight: "100%" }}
-						>
+						<div className="w-[500px] m-auto p-4 pt-24" style={{ minHeight: "100%" }}>
 							{data.map((section, sindex) => (
-								<section
-									className=""
-									key={sindex}
-								>
+								<section className="" key={sindex}>
 									{section.children.map((row: any, index: any) => (
-										<section
-											className="grid grid-flow-col auto-cols-fr gap-4 text-white"
-											key={index}
-										>
+										<section className="grid grid-flow-col auto-cols-fr gap-4 text-white" key={index}>
 											{row.children.map((col: any, colIndex: any) => (
 												<div
 													key={"col" + colIndex}
 													onDragOver={(e) => {
 														e.preventDefault();
 														e.stopPropagation();
-														const hasImageData =
-															e.dataTransfer.types.includes(
-																"image/url"
-															);
-														if (hasImageData) {
-															setDragOverColumn(col.id);
-															// Calculate drop position based on mouse Y position
-															const rect =
-																e.currentTarget.getBoundingClientRect();
-															const elements = col.children;
-															const mouseY = e.clientY;
 
-															// Find insertion point
-															let insertPosition = elements.length;
-															const elementDivs =
-																e.currentTarget.querySelectorAll(
-																	"[data-element-id]"
-																);
+														const hasImageData = e.dataTransfer.types.includes("image/url");
+														if (!hasImageData) return;
 
-															for (
-																let i = 0;
-																i < elementDivs.length;
-																i++
-															) {
-																const elemRect =
-																	elementDivs[
-																		i
-																	].getBoundingClientRect();
-																const elemMiddle =
-																	elemRect.top +
-																	elemRect.height / 2;
+														setDragOverColumn(col.id);
 
-																if (mouseY < elemMiddle) {
-																	insertPosition = i;
-																	break;
-																}
+														const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
+														const mouseY = e.clientY;
+
+														let insertPosition = col.children.length;
+														for (let i = 0; i < elementDivs.length; i++) {
+															const elemRect = elementDivs[i].getBoundingClientRect();
+															const elemMiddle = elemRect.top + elemRect.height / 2;
+															if (mouseY < elemMiddle) {
+																insertPosition = i;
+																break;
 															}
-
-															setDropPosition({
-																colId: col.id,
-																position: insertPosition,
-															});
 														}
+
+														setDropPosition({ colId: col.id, position: insertPosition });
 													}}
 													onDragLeave={(e) => {
 														e.stopPropagation();
@@ -2010,420 +1671,164 @@ export default function VBPrototype({
 															setDropPosition(null);
 														}
 													}}
-													className={
-														dragOverColumn === col.id ? "relative" : ""
-													}
+													className={dragOverColumn === col.id ? "relative" : ""}
 												>
-													{dragOverColumn === col.id &&
-														dropPosition &&
-														dropPosition.colId === col.id && (
-															<div
-																style={{
-																	position: "absolute",
-																	left: 0,
-																	right: 0,
-																	top:
-																		dropPosition.position === 0
-																			? 0
-																			: undefined,
-																	bottom:
-																		dropPosition.position ===
-																			col.children.length
-																			? 0
-																			: undefined,
-																	height: "2px",
-																	backgroundColor: "#0037FF",
-																	zIndex: 1000,
-																	pointerEvents: "none",
-																	transform:
-																		dropPosition.position === 0
-																			? "translateY(0)"
-																			: dropPosition.position ===
-																				col.children.length
-																				? "translateY(0)"
-																				: `translateY(${dropPosition.position *
-																				60
-																				}px)`,
-																}}
-															/>
-														)}
-													{col.children.length === 0 &&
-														dragOverColumn === col.id && (
-															<div
-																style={{
-																	border: "2px dashed #0037FF",
-																	borderRadius: "8px",
-																	padding: "20px",
-																	textAlign: "center",
-																	color: "#0037FF",
-																	fontSize: "14px",
-																	backgroundColor:
-																		"rgba(0, 55, 255, 0.05)",
-																}}
-															>
-																Drop image here
-															</div>
-														)}
-													{col.children.map(
-														(element: any, eleIndex: any) => (
-															<div
-																key={"ele" + eleIndex}
-																className="relative group"
-																data-element-id={element.id}
-															>
-																<div
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		setCurrentEle(element.id);
-																		setCurrentHoverEle("none");
-																	}}
-																	style={{
-																		visibility:
-																			currentEle ===
-																				element.id ||
-																				currentHoverEle ===
-																				element.id
-																				? "visible"
-																				: undefined,
-																		opacity:
-																			currentEle ===
-																				element.id ||
-																				currentHoverEle ===
-																				element.id
-																				? currentEle ===
-																					element.id
-																					? 1
-																					: 0.5
-																				: undefined,
-																		top:
-																			currentEle ===
-																				element.id ||
-																				currentHoverEle ===
-																				element.id
-																				? "-8px"
-																				: undefined,
-																		left:
-																			currentEle ===
-																				element.id ||
-																				currentHoverEle ===
-																				element.id
-																				? "-8px"
-																				: undefined,
-																		right:
-																			currentEle ===
-																				element.id ||
-																				currentHoverEle ===
-																				element.id
-																				? "-8px"
-																				: undefined,
-																		bottom:
-																			currentEle ===
-																				element.id ||
-																				currentHoverEle ===
-																				element.id
-																				? "-8px"
-																				: undefined,
-																	}}
-																	className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
-																>
-																	<div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">
-																		{(() => {
-																			switch (
-																			theEles[element.id]
-																				?.type
-																			) {
-																				case "Heading":
-																					return (
-																						<IconHeading
-																							size={
-																								12
-																							}
-																						/>
-																					);
-																				case "Text":
-																					return (
-																						<IconPilcrow
-																							size={
-																								12
-																							}
-																						/>
-																					);
-																				case "Input":
-																					return (
-																						<IconForms
-																							size={
-																								12
-																							}
-																						/>
-																					);
-																				case "Button":
-																					return (
-																						<IconRectangle
-																							size={
-																								12
-																							}
-																						/>
-																					);
-																				case "Image":
-																					return (
-																						<IconPhoto
-																							size={
-																								12
-																							}
-																						/>
-																					);
-																				default:
-																					return (
-																						<IconBrackets
-																							size={
-																								12
-																							}
-																						/>
-																					);
-																			}
-																		})()}
-																		{theEles[element.id]?.type}
-																	</div>
-																</div>
-																{(() => {
-																	switch (
-																	theEles[element.id]?.type
-																	) {
-																		case "Heading":
-																			return (
-																				<h1 className="text-3xl mb-5 font-bold">
-																					{theEles[
-																						element.id
-																					]?.props.find(
-																						(
-																							prop: any
-																						) =>
-																							prop.label ===
-																							"Text"
-																					)?.value || (
-																							<>&nbsp;</>
-																						)}
-																				</h1>
-																			);
-																		case "Text":
-																			return (
-																				<p className="mb-2">
-																					{theEles[
-																						element.id
-																					]?.props.find(
-																						(
-																							prop: any
-																						) =>
-																							prop.label ===
-																							"Text"
-																					)?.value || (
-																							<>&nbsp;</>
-																						)}
-																				</p>
-																			);
-																		case "Input":
-																			return (
-																				<div className="group relative mt-4">
-																					{theEles[
-																						element.id
-																					]?.props.find(
-																						(
-																							prop: any
-																						) =>
-																							prop.label ===
-																							"Tooltip"
-																					)?.value && (
-																							<div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-																								{
-																									theEles[
-																										element
-																											.id
-																									]?.props.find(
-																										(
-																											prop: any
-																										) =>
-																											prop.label ===
-																											"Tooltip"
-																									)
-																										?.value
-																								}
-																							</div>
-																						)}
-																					<label>
-																						{theEles[
-																							element
-																								.id
-																						]?.props.find(
-																							(
-																								prop: any
-																							) =>
-																								prop.label ===
-																								"Label"
-																						)
-																							?.value || (
-																								<>
-																									&nbsp;
-																								</>
-																							)}
-																						{theEles[
-																							element
-																								.id
-																						]?.props.find(
-																							(
-																								prop: any
-																							) =>
-																								prop.label ===
-																								"Required"
-																						)?.value ===
-																							"true" && (
-																								<Text
-																									asChild
-																									color="fg.error"
-																								>
-																									<span>
-																										{" "}
-																										*
-																									</span>
-																								</Text>
-																							)}
-																					</label>
-																					<input
-																						type="text"
-																						placeholder={
-																							theEles[
-																								element
-																									.id
-																							]?.props.find(
-																								(
-																									prop: any
-																								) =>
-																									prop.label ===
-																									"Placeholder"
-																							)
-																								?.value ||
-																							null
-																						}
-																						className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
-																					/>
-																				</div>
-																			);
-																		case "Button":
-																			return (
-																				<div className="text-right mt-4">
-																					<div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
-																						{theEles[
-																							element
-																								.id
-																						]?.props.find(
-																							(
-																								prop: any
-																							) =>
-																								prop.label ===
-																								"Label"
-																						)
-																							?.value || (
-																								<>
-																									&nbsp;
-																								</>
-																							)}
-																					</div>
-																				</div>
-																			);
-																		case "Image":
-																			const imageUrlRaw =
-																				theEles[
-																					element.id
-																				]?.props.find(
-																					(prop: any) =>
-																						prop.label ===
-																						"Image URL"
-																				)?.value;
-																			const imageUrl =
-																				typeof imageUrlRaw ===
-																					"string"
-																					? imageUrlRaw.trim()
-																					: imageUrlRaw;
-																			const imageAlt =
-																				theEles[
-																					element.id
-																				]?.props.find(
-																					(prop: any) =>
-																						prop.label ===
-																						"Alt Text"
-																				)?.value;
-																			const imageWidth =
-																				theEles[
-																					element.id
-																				]?.props.find(
-																					(prop: any) =>
-																						prop.label ===
-																						"Width"
-																				)?.value;
-																			const imageHeight =
-																				theEles[
-																					element.id
-																				]?.props.find(
-																					(prop: any) =>
-																						prop.label ===
-																						"Height"
-																				)?.value;
-
-																			return (
-																				<div className="mb-4">
-																					{imageUrl ? (
-																						<img
-																							src={
-																								imageUrl
-																							}
-																							alt={
-																								imageAlt ||
-																								"Image"
-																							}
-																							style={{
-																								width:
-																									imageWidth ===
-																										"auto"
-																										? "100%"
-																										: imageWidth,
-																								height:
-																									imageHeight ===
-																										"auto"
-																										? "auto"
-																										: imageHeight,
-																								borderRadius:
-																									"8px",
-																								objectFit:
-																									"cover",
-																							}}
-																						/>
-																					) : (
-																						<div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
-																							No image
-																							selected
-																						</div>
-																					)}
-																				</div>
-																			);
-																		default:
-																			return (
-																				<svg
-																					width="19"
-																					height="16"
-																					viewBox="0 0 19 16"
-																					fill="none"
-																					xmlns="http://www.w3.org/2000/svg"
-																				>
-																					<path
-																						d="M5.75 1H7.25C7.65625 1 8 1.34375 8 1.75C8 2.1875 7.65625 2.5 7.25 2.5H5.75C5.03125 2.5 4.5 3.0625 4.5 3.75V5.1875C4.5 5.90625 4.1875 6.625 3.6875 7.125L2.78125 8L3.6875 8.90625C4.1875 9.40625 4.5 10.125 4.5 10.8438V12.25C4.5 12.9688 5.03125 13.5 5.75 13.5H7.25C7.65625 13.5 8 13.8438 8 14.25C8 14.6875 7.65625 15 7.25 15H5.75C4.21875 15 3 13.7812 3 12.25V10.8438C3 10.5 2.84375 10.1875 2.625 9.96875L1.21875 8.53125C0.90625 8.25 0.90625 7.78125 1.21875 7.46875L2.625 6.0625C2.84375 5.84375 3 5.53125 3 5.1875V3.75C3 2.25 4.21875 1 5.75 1ZM14.25 1C15.75 1 17 2.25 17 3.75V5.1875C17 5.53125 17.125 5.84375 17.3438 6.0625L18.7812 7.5C19.0625 7.78125 19.0625 8.25 18.7812 8.53125L17.3438 9.96875C17.125 10.1875 17 10.5 17 10.8438V12.25C17 13.7812 15.75 15 14.25 15H12.75C12.3125 15 12 14.6875 12 14.25C12 13.8438 12.3125 13.5 12.75 13.5H14.25C14.9375 13.5 15.5 12.9688 15.5 12.25V10.8438C15.5 10.125 15.7812 9.40625 16.2812 8.90625L17.1875 8L16.2812 7.125C15.7812 6.625 15.5 5.90625 15.5 5.1875V3.75C15.5 3.0625 14.9375 2.5 14.25 2.5H12.75C12.3125 2.5 12 2.1875 12 1.75C12 1.34375 12.3125 1 12.75 1H14.25Z"
-																						fill="currentColor"
-																					/>
-																				</svg>
-																			);
-																	}
-																})()}
-															</div>
-														)
+													{dragOverColumn === col.id && dropPosition && dropPosition.colId === col.id && (
+														<div
+															style={{
+																position: "absolute",
+																left: 0,
+																right: 0,
+																top: dropPosition.position === 0 ? 0 : undefined,
+																bottom: dropPosition.position === col.children.length ? 0 : undefined,
+																height: "2px",
+																backgroundColor: "#0037FF",
+																zIndex: 1000,
+																pointerEvents: "none",
+															}}
+														/>
 													)}
+
+													{col.children.length === 0 && dragOverColumn === col.id && (
+														<div
+															style={{
+																border: "2px dashed #0037FF",
+																borderRadius: "8px",
+																padding: "20px",
+																textAlign: "center",
+																color: "#0037FF",
+																fontSize: "14px",
+																backgroundColor: "rgba(0, 55, 255, 0.05)",
+															}}
+														>
+															Drop image here
+														</div>
+													)}
+
+													{col.children.map((element: any, eleIndex: any) => (
+														<div key={"ele" + eleIndex} className="relative group" data-element-id={element.id}>
+															<div
+																onClick={(e) => {
+																	e.stopPropagation();
+																	setCurrentEle(element.id);
+																	setCurrentHoverEle("none");
+																}}
+																style={{
+																	visibility:
+																		currentEle === element.id || currentHoverEle === element.id ? "visible" : undefined,
+																	opacity:
+																		currentEle === element.id || currentHoverEle === element.id
+																			? currentEle === element.id
+																				? 1
+																				: 0.5
+																			: undefined,
+																	top: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+																	left: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+																	right: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+																	bottom: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+																}}
+																className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+															>
+																<div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">
+																	{(() => {
+																		switch (theEles[element.id]?.type) {
+																			case "Heading":
+																				return <IconHeading size={12} />;
+																			case "Text":
+																				return <IconPilcrow size={12} />;
+																			case "Input":
+																				return <IconForms size={12} />;
+																			case "Button":
+																				return <IconRectangle size={12} />;
+																			case "Image":
+																				return <IconPhoto size={12} />;
+																			default:
+																				return <IconBrackets size={12} />;
+																		}
+																	})()}
+																	{theEles[element.id]?.type}
+																</div>
+															</div>
+
+															{(() => {
+																switch (theEles[element.id]?.type) {
+																	case "Heading":
+																		return (
+																			<h1 className="text-3xl mb-5 font-bold">
+																				{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}
+																			</h1>
+																		);
+
+																	case "Text":
+																		return (
+																			<p className="mb-2">
+																				{theEles[element.id]?.props.find((prop: any) => prop.label === "Text")?.value || <>&nbsp;</>}
+																			</p>
+																		);
+
+																	case "Input":
+																		return (
+																			<div className="group relative mt-4">
+																				{theEles[element.id]?.props.find((prop: any) => prop.label === "Tooltip")?.value && (
+																					<div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
+																						{theEles[element.id]?.props.find((prop: any) => prop.label === "Tooltip")?.value}
+																					</div>
+																				)}
+																				<label>
+																					{theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}
+																				</label>
+																				<input
+																					type="text"
+																					placeholder={theEles[element.id]?.props.find((prop: any) => prop.label === "Placeholder")?.value || undefined}
+																					className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
+																				/>
+																			</div>
+																		);
+
+																	case "Button":
+																		return (
+																			<div className="text-right mt-4">
+																				<div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
+																					{theEles[element.id]?.props.find((prop: any) => prop.label === "Label")?.value || <>&nbsp;</>}
+																				</div>
+																			</div>
+																		);
+
+																	case "Image": {
+																		const imageUrlRaw = theEles[element.id]?.props.find((p: any) => p.label === "Image URL")?.value;
+																		const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
+																		const imageAlt = theEles[element.id]?.props.find((p: any) => p.label === "Alt Text")?.value;
+																		const imageWidth = theEles[element.id]?.props.find((p: any) => p.label === "Width")?.value;
+																		const imageHeight = theEles[element.id]?.props.find((p: any) => p.label === "Height")?.value;
+
+																		return (
+																			<div className="mb-4">
+																				{imageUrl ? (
+																					<img
+																						src={imageUrl}
+																						alt={imageAlt || "Image"}
+																						style={{
+																							width: imageWidth === "auto" ? "100%" : imageWidth,
+																							height: imageHeight === "auto" ? "auto" : imageHeight,
+																							borderRadius: "8px",
+																							objectFit: "cover",
+																						}}
+																					/>
+																				) : (
+																					<div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
+																						No image selected
+																					</div>
+																				)}
+																			</div>
+																		);
+																	}
+
+																	default:
+																		return null;
+																}
+															})()}
+														</div>
+													))}
 												</div>
 											))}
 										</section>
@@ -2432,13 +1837,10 @@ export default function VBPrototype({
 							))}
 						</div>
 					</div>
-					{isImageSelectorOpen && (
-						<ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />
-					)}
-					<Box
-						borderL="1"
-						borderColor="border.tertiary"
-					>
+
+					{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
+
+					<Box borderL="1" borderColor="border.tertiary">
 						<RightToolbar
 							onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
 							isFolderActive={isImageSelectorOpen}
