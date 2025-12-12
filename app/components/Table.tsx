@@ -6,7 +6,13 @@ import {IconDots as IconMenu} from "@tabler/icons-react";
 
 export const Table = ({children}: {children: ReactNode}) => {
 	return (
-		<div className="rounded-[6px] border border-[#E9EDF5] dark:border-gray-700 bg-white dark:bg-gray-900">
+		<div 
+			className="rounded-[6px] border" 
+			style={{
+				borderColor: 'var(--ax-colors-border-default)',
+				background: 'var(--ax-colors-bg-default)'
+			}}
+		>
 			<table className="border-collapse w-full">{children}</table>
 		</div>
 	);
@@ -30,9 +36,25 @@ export const Tr = ({
 		<tr
 			onClick={url ? () => rowClick(url) : onClick ? onClick : undefined}
 			className={
-				"relative border-[#E9EDF5] dark:border-gray-700 " +
-				(url || onClick ? "cursor-pointer hover:bg-[#fafafa] dark:hover:bg-gray-800 " : "")
+				"relative " +
+				(url || onClick ? "cursor-pointer " : "")
 			}
+			style={{
+				borderColor: 'var(--ax-colors-border-default)',
+				...(url || onClick ? {
+					'--hover-bg': 'var(--ax-colors-bg-default-hovered)'
+				} as React.CSSProperties : {})
+			}}
+			onMouseEnter={(e) => {
+				if (url || onClick) {
+					e.currentTarget.style.background = 'var(--ax-colors-bg-default-hovered)';
+				}
+			}}
+			onMouseLeave={(e) => {
+				if (url || onClick) {
+					e.currentTarget.style.background = '';
+				}
+			}}
 		>
 			{children}
 		</tr>
@@ -41,8 +63,11 @@ export const Tr = ({
 export const Th = ({children, align}: {children?: ReactNode; align?: any}) => {
 	return (
 		<th
-			className={"text-left p-4 text-xs font-normal text-[#66708C] dark:text-gray-400 py-3 align-top"}
-			style={{textAlign: align}}
+			className="text-left p-4 text-xs font-normal py-3 align-top"
+			style={{
+				textAlign: align,
+				color: 'var(--ax-colors-fg-secondary)'
+			}}
 		>
 			{children}
 		</th>
@@ -64,8 +89,11 @@ export const Td = ({
 }) => {
 	return (
 		<td
-			className={`p-4 border-t border-[#E9EDF5] dark:border-gray-700 align-top`}
-			style={{width: type === "button" ? "56px" : width}}
+			className="p-4 border-t align-top"
+			style={{
+				width: type === "button" ? "56px" : width,
+				borderColor: 'var(--ax-colors-border-default)'
+			}}
 		>
 			{type === undefined && (
 				<>

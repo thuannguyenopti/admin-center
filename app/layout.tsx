@@ -298,7 +298,7 @@ export default function RootLayout({
 	const {activeEffect} = useSecretCode();
 
 	return (
-		<html lang="en" className="dark">
+		<html lang="en">
 			<body>
 				<AxiomProvider>
 					{menu ? <Template structure={menu}>{children}</Template> : children}
