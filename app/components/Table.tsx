@@ -4,9 +4,24 @@ import {Text} from "./Text";
 import {Button} from "./Button";
 import {IconDots as IconMenu} from "@tabler/icons-react";
 
-export const Table = ({children}: {children: ReactNode}) => {
+export const Table = ({
+	children,
+	style,
+	className,
+}: {
+	children: ReactNode;
+	style?: React.CSSProperties;
+	className?: string;
+}) => {
 	return (
-		<div className="rounded-[6px] border color-[#ccc] bg-white">
+		<div
+			className={`rounded-[6px] border ${className || ""}`}
+			style={{
+				borderColor: "var(--ax-colors-border-tertiary)",
+				background: "var(--ax-colors-bg-default)",
+				...style,
+			}}
+		>
 			<table className="border-collapse w-full">{children}</table>
 		</div>
 	);
@@ -26,12 +41,15 @@ export const Tr = ({
 	const rowClick = (href: string) => {
 		router.push(`${href}`);
 	};
+
 	return (
 		<tr
 			onClick={url ? () => rowClick(url) : onClick ? onClick : undefined}
 			className={
-				"relative color-[#ccc] " +
-				(url || onClick ? "cursor-pointer hover:bg-[#fafafa] " : "")
+				"relative" +
+				(url || onClick
+					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
+					: "")
 			}
 		>
 			{children}
@@ -41,8 +59,10 @@ export const Tr = ({
 export const Th = ({children, align}: {children?: ReactNode; align?: any}) => {
 	return (
 		<th
-			className={"text-left p-4 text-xs font-normal text-[#66708C] py-3 align-top"}
-			style={{textAlign: align}}
+			className="text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)]"
+			style={{
+				textAlign: align,
+			}}
 		>
 			{children}
 		</th>
@@ -64,8 +84,11 @@ export const Td = ({
 }) => {
 	return (
 		<td
-			className={`p-4 border-t color-[#ccc] align-top`}
-			style={{width: type === "button" ? "56px" : width}}
+			className="p-4 border-t align-top"
+			style={{
+				width: type === "button" ? "56px" : width,
+				borderColor: "var(--ax-colors-border-tertiary)",
+			}}
 		>
 			{type === undefined && (
 				<>

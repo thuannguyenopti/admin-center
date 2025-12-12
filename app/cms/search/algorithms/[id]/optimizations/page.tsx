@@ -5,6 +5,7 @@ import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
 import {useParams, useRouter} from "next/navigation";
+import {use} from "react";
 import {useState, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {
@@ -42,7 +43,8 @@ import {Table, Tr, Td, Th} from "@/app/components/Table";
 export default function OptimizationsPage() {
 	const params = useParams();
 	const router = useRouter();
-	const id = params.id as string;
+	const resolvedParams = params instanceof Promise ? use(params) : params;
+	const id = (resolvedParams?.id ?? "") as string;
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
 	const currentAlgorithm = algorithms.find((a) => a.id === id);
