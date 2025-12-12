@@ -983,10 +983,6 @@ export default function VBPrototype({
 	const isFirstRender = useRef(true);
 	const onSaveRef = useRef(onSave);
 
-	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
-	const [dropPosition, setDropPosition] = useState<{ colId: string; position: number } | null>(
-		null
-	);
 
 	const onInputChange = (value: any, propIndex: number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
@@ -998,6 +994,403 @@ export default function VBPrototype({
 			});
 		}
 	};
+
+	type DragApplyResult = {
+		nextData: any[];
+		elesPatch?: EleMap; // new element defs created during cloning
+	};
+
+	const isSectionId = (id: string) => id.startsWith("section-");
+	const isRowId = (id: string) => id.startsWith("row-");
+	const isColId = (id: string) => id.startsWith("col-");
+	const isEleId = (id: string) => !isSectionId(id) && !isRowId(id) && !isColId(id);
+
+	const isSectionLast = (id: string) => id === "section-last" || id.startsWith("section-last");
+	const isRowLast = (id: string) => id.startsWith("row-last-");
+	const isColLast = (id: string) => id.startsWith("col-last-");
+	const isLastEle = (id: string) => id.startsWith("last-ele-");
+
+	const mkId = (base: string) => `${base}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+	function cloneSectionWithRemap(section: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
+		const elesPatch: EleMap = {};
+
+		const clonedSectionId = mkId(section.id);
+		const cloned = {
+			...section,
+			id: clonedSectionId,
+			children: (section.children || []).map((row: any) => {
+				const newRowId = mkId(row.id);
+				return {
+					...row,
+					id: newRowId,
+					children: (row.children || []).map((col: any) => {
+						const newColId = mkId(col.id);
+						return {
+							...col,
+							id: newColId,
+							children: (col.children || []).map((ref: any) => {
+								const oldEleId = ref?.id;
+								if (!oldEleId) return ref;
+
+								const newEleId = mkId(oldEleId);
+								if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
+								return { id: newEleId };
+							}),
+						};
+					}),
+				};
+			}),
+		};
+
+		return { cloned, elesPatch };
+	}
+
+	function cloneRowWithRemap(row: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
+		const elesPatch: EleMap = {};
+
+		const newRowId = mkId(row.id);
+		const cloned = {
+			...row,
+			id: newRowId,
+			children: (row.children || []).map((col: any) => {
+				const newColId = mkId(col.id);
+				return {
+					...col,
+					id: newColId,
+					children: (col.children || []).map((ref: any) => {
+						const oldEleId = ref?.id;
+						if (!oldEleId) return ref;
+
+						const newEleId = mkId(oldEleId);
+						if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
+						return { id: newEleId };
+					}),
+				};
+			}),
+		};
+
+		return { cloned, elesPatch };
+	}
+
+	function applySectionDrag(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean,
+		theEles: EleMap
+	): DragApplyResult | null {
+		const fromIdx = data.findIndex((s) => s.id === draggingId);
+		if (fromIdx === -1) return null;
+
+		const source = data[fromIdx];
+
+		// Build dragged payload
+		let dragged = source;
+		let elesPatch: EleMap | undefined;
+
+		if (cloning) {
+			const c = cloneSectionWithRemap(source, theEles);
+			dragged = c.cloned;
+			elesPatch = c.elesPatch;
+		}
+
+		let next = [...data];
+
+		// If moving (not cloning), remove original
+		if (!cloning) next.splice(fromIdx, 1);
+
+		if (isSectionLast(hoverId)) {
+			next.push(dragged);
+			return { nextData: next, elesPatch };
+		}
+
+		const hoverIdx = next.findIndex((s) => s.id === hoverId);
+		if (hoverIdx === -1) return null;
+
+		next.splice(hoverIdx, 0, dragged);
+		return { nextData: next, elesPatch };
+	}
+
+	function applyRowDrag(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean,
+		theEles: EleMap
+	): DragApplyResult | null {
+		let fromS = -1,
+			fromR = -1;
+		let sourceRow: any = null;
+
+		for (let s = 0; s < data.length; s++) {
+			const rIdx = (data[s].children || []).findIndex((r: any) => r.id === draggingId);
+			if (rIdx !== -1) {
+				fromS = s;
+				fromR = rIdx;
+				sourceRow = data[s].children[rIdx];
+				break;
+			}
+		}
+		if (!sourceRow) return null;
+
+		let rowToInsert = sourceRow;
+		let elesPatch: EleMap | undefined;
+
+		if (cloning) {
+			const c = cloneRowWithRemap(sourceRow, theEles);
+			rowToInsert = c.cloned;
+			elesPatch = c.elesPatch;
+		}
+
+		// Figure destination
+		let toS = -1,
+			hoverR = -1;
+
+		if (isRowLast(hoverId)) {
+			const sectionId = hoverId.replace("row-last-", "");
+			toS = data.findIndex((s) => s.id === sectionId);
+			if (toS === -1) return null;
+			hoverR = (data[toS].children || []).length; // append
+		} else {
+			for (let s = 0; s < data.length; s++) {
+				const rIdx = (data[s].children || []).findIndex((r: any) => r.id === hoverId);
+				if (rIdx !== -1) {
+					toS = s;
+					hoverR = rIdx;
+					break;
+				}
+			}
+			if (toS === -1) return null;
+		}
+
+		// Produce next
+		const next = data.map((sec: any, sIdx: number) => {
+			let children = [...(sec.children || [])];
+
+			// remove source row if moving
+			if (!cloning && sIdx === fromS) children.splice(fromR, 1);
+
+			// insert
+			if (sIdx === toS) {
+				let insertAt = hoverR;
+
+				// adjust if same section + moving downward
+				if (!cloning && fromS === toS && fromR < hoverR) insertAt = hoverR - 1;
+
+				children.splice(insertAt, 0, rowToInsert);
+			}
+
+			return { ...sec, children };
+		});
+
+		return { nextData: next, elesPatch };
+	}
+
+	function applyColDrag(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean
+	): DragApplyResult | null {
+		// NOTE: this is “move only” for now (your old code didn’t support col cloning)
+		// You can extend this later the same way as section/row.
+
+		let fromS = -1,
+			fromR = -1,
+			fromC = -1;
+		let draggedCol: any = null;
+
+		for (let s = 0; s < data.length; s++) {
+			const rows = data[s].children || [];
+			for (let r = 0; r < rows.length; r++) {
+				const cols = rows[r].children || [];
+				const cIdx = cols.findIndex((c: any) => c.id === draggingId);
+				if (cIdx !== -1) {
+					fromS = s;
+					fromR = r;
+					fromC = cIdx;
+					draggedCol = cols[cIdx];
+					break;
+				}
+			}
+			if (draggedCol) break;
+		}
+		if (!draggedCol) return null;
+
+		// destination
+		let toS = -1,
+			toR = -1,
+			hoverC = -1;
+
+		if (isColLast(hoverId)) {
+			const rowId = hoverId.replace("col-last-", "");
+			for (let s = 0; s < data.length; s++) {
+				const rows = data[s].children || [];
+				const rIdx = rows.findIndex((r: any) => r.id === rowId);
+				if (rIdx !== -1) {
+					toS = s;
+					toR = rIdx;
+					hoverC = (rows[rIdx].children || []).length;
+					break;
+				}
+			}
+		} else {
+			for (let s = 0; s < data.length; s++) {
+				const rows = data[s].children || [];
+				for (let r = 0; r < rows.length; r++) {
+					const cols = rows[r].children || [];
+					const cIdx = cols.findIndex((c: any) => c.id === hoverId);
+					if (cIdx !== -1) {
+						toS = s;
+						toR = r;
+						hoverC = cIdx;
+						break;
+					}
+				}
+				if (toS !== -1) break;
+			}
+		}
+
+		if (toS === -1) return null;
+
+		const next = data.map((sec: any, sIdx: number) => {
+			const rows = (sec.children || []).map((row: any, rIdx: number) => {
+				let cols = [...(row.children || [])];
+
+				// remove from source
+				if (sIdx === fromS && rIdx === fromR) cols.splice(fromC, 1);
+
+				// insert to dest
+				if (sIdx === toS && rIdx === toR) {
+					let insertAt = hoverC;
+					if (fromS === toS && fromR === toR && fromC < hoverC) insertAt = hoverC - 1;
+					cols.splice(insertAt, 0, draggedCol);
+				}
+
+				return { ...row, children: cols };
+			});
+
+			return { ...sec, children: rows };
+		});
+
+		return { nextData: next };
+	}
+
+	function applyElementDrag(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean,
+		theEles: EleMap
+	): DragApplyResult | null {
+		const newEleId = cloning ? mkId(draggingId) : draggingId;
+		const elesPatch = cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
+
+		// find source element + remove (if moving)
+		let draggedRef: any = null;
+		let fromColId: string | null = null;
+
+		const removed = data.map((sec: any) => ({
+			...sec,
+			children: (sec.children || []).map((row: any) => ({
+				...row,
+				children: (row.children || []).map((col: any) => {
+					const nextChildren = (col.children || []).filter((ref: any) => {
+						if (ref?.id === draggingId) {
+							draggedRef = cloning ? { id: newEleId } : ref;
+							fromColId = col.id;
+							return cloning; // keep original if cloning
+						}
+						return true;
+					});
+					return { ...col, children: nextChildren };
+				}),
+			})),
+		}));
+
+		if (!draggedRef) return null;
+
+		// insert to target
+		if (isLastEle(hoverId)) {
+			const targetColId = hoverId.replace("last-ele-", "");
+			const next = removed.map((sec: any) => ({
+				...sec,
+				children: (sec.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						if (col.id !== targetColId) return col;
+
+						// don’t double-insert
+						if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
+
+						return { ...col, children: [...(col.children || []), draggedRef] };
+					}),
+				})),
+			}));
+
+			return { nextData: next, elesPatch };
+		}
+
+		// hover is another element id: insert before it (within that col)
+		const next = removed.map((sec: any) => ({
+			...sec,
+			children: (sec.children || []).map((row: any) => ({
+				...row,
+				children: (row.children || []).map((col: any) => {
+					const idx = (col.children || []).findIndex((r: any) => r?.id === hoverId);
+					if (idx === -1) return col;
+
+					if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
+
+					const copy = [...(col.children || [])];
+					copy.splice(idx, 0, draggedRef);
+					return { ...col, children: copy };
+				}),
+			})),
+		}));
+
+		return { nextData: next, elesPatch };
+	}
+
+	function applyDragDrop(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean,
+		theEles: EleMap
+	): DragApplyResult | null {
+		if (!draggingId || !hoverId || hoverId === "none") return null;
+		if (hoverId === draggingId && !cloning) return null;
+
+		// Section
+		if (isSectionId(draggingId) && (isSectionId(hoverId) || isSectionLast(hoverId))) {
+			return applySectionDrag(data, draggingId, hoverId, cloning, theEles);
+		}
+
+		// Row
+		if (isRowId(draggingId) && (isRowId(hoverId) || isRowLast(hoverId))) {
+			return applyRowDrag(data, draggingId, hoverId, cloning, theEles);
+		}
+
+		// Col
+		if (isColId(draggingId) && (isColId(hoverId) || isColLast(hoverId))) {
+			return applyColDrag(data, draggingId, hoverId, cloning);
+		}
+
+		// Element
+		if (
+			isEleId(draggingId) &&
+			(isEleId(hoverId) || isLastEle(hoverId)) &&
+			!isSectionId(hoverId) &&
+			!isRowId(hoverId) &&
+			!isColId(hoverId)
+		) {
+			return applyElementDrag(data, draggingId, hoverId, cloning, theEles);
+		}
+
+		return null;
+	}
 
 	useEffect(() => {
 		onSaveRef.current = onSave;
@@ -1021,449 +1414,19 @@ export default function VBPrototype({
 	// Drag/drop + key handlers
 	useEffect(() => {
 		const handleMouseUp = () => {
-			if (
-				currentHoverEle !== "none" &&
-				dragging !== null &&
-				(currentHoverEle !== dragging || cloning)
-			) {
-				// SECTION DRAGGING
-				if (
-					dragging.startsWith("section-") &&
-					currentHoverEle.startsWith("section-") &&
-					!currentHoverEle.startsWith("section-last")
-				) {
-					setData((prev) => {
-						const draggingIdx = prev.findIndex((sec) => sec.id === dragging);
-						const hoverIdx = prev.findIndex((sec) => sec.id === currentHoverEle);
-						if (draggingIdx === -1 || hoverIdx === -1) return prev;
+			if (!dragging) {
+				setDragging(null);
+				return;
+			}
 
-						const newArr = [...prev];
-						let [draggedSection] = newArr.splice(draggingIdx, 1);
+			const res = applyDragDrop(data, dragging, currentHoverEle, cloning, theEles);
 
-						if (cloning) {
-							const newSectionId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-							draggedSection = {
-								...draggedSection,
-								id: newSectionId,
-								children: draggedSection.children.map((row: any) => {
-									const newRowId = `${row.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-									return {
-										...row,
-										id: newRowId,
-										children: row.children.map((col: any) => {
-											const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-											return {
-												...col,
-												id: newColId,
-												children: col.children.map((ele: any) => {
-													const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-													if (theEles[ele.id]) {
-														setTheEles((prevElements) => ({
-															...prevElements,
-															[newEleId]: { ...prevElements[ele.id] },
-														}));
-													}
-													return { ...ele, id: newEleId };
-												}),
-											};
-										}),
-									};
-								}),
-							};
-						}
-
-						const insertIdx = draggingIdx < hoverIdx && !cloning ? hoverIdx - 1 : hoverIdx;
-						newArr.splice(insertIdx, 0, draggedSection);
-						return newArr;
-					});
-					setCurrentHoverEle("none");
-				} else if (dragging.startsWith("section-") && currentHoverEle.startsWith("section-last")) {
-					setData((prev) => {
-						const draggingIdx = prev.findIndex((sec) => sec.id === dragging);
-						if (draggingIdx === -1) return prev;
-						const newArr = [...prev];
-						const [draggedSection] = newArr.splice(draggingIdx, 1);
-						newArr.push(draggedSection);
-						return newArr;
-					});
-					setCurrentHoverEle("none");
+			if (res) {
+				setData(res.nextData);
+				if (res.elesPatch) {
+					setTheEles((prev) => ({ ...prev, ...res.elesPatch! }));
 				}
-				// ROW DRAGGING
-				else if (
-					dragging.startsWith("row-") &&
-					currentHoverEle.startsWith("row-") &&
-					!currentHoverEle.startsWith("row-last")
-				) {
-					setData((prev) => {
-						let draggedRow: any = null;
-						let fromSectionIdx = -1;
-						let draggingIdx = -1;
-
-						const newArr = prev.map((section, sIdx) => {
-							const idx = section.children.findIndex((row: any) => row.id === dragging);
-							if (idx !== -1) {
-								draggedRow = section.children[idx];
-								fromSectionIdx = sIdx;
-								draggingIdx = idx;
-								const newChildren = [...section.children];
-								if (!cloning) newChildren.splice(idx, 1);
-								return { ...section, children: newChildren };
-							}
-							return section;
-						});
-
-						if (!draggedRow) return newArr;
-
-						let rowToInsert = draggedRow;
-						if (cloning) {
-							const newRowId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-							rowToInsert = {
-								...draggedRow,
-								id: newRowId,
-								children: draggedRow.children.map((col: any) => {
-									const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-									return {
-										...col,
-										id: newColId,
-										children: col.children.map((ele: any) => {
-											const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-											if (theEles[ele.id]) {
-												setTheEles((prevEles) => ({
-													...prevEles,
-													[newEleId]: { ...prevEles[ele.id] },
-												}));
-											}
-											return { ...ele, id: newEleId };
-										}),
-									};
-								}),
-							};
-						}
-
-						let toSectionIdx = -1;
-						let hoverIdx = -1;
-						prev.forEach((section, sIdx) => {
-							const idx = section.children.findIndex((row: any) => row.id === currentHoverEle);
-							if (idx !== -1) {
-								toSectionIdx = sIdx;
-								hoverIdx = idx;
-							}
-						});
-						if (toSectionIdx === -1 || hoverIdx === -1) return newArr;
-
-						const toSection = newArr[toSectionIdx];
-						const newChildren = [...toSection.children];
-						const insertIdx =
-							fromSectionIdx === toSectionIdx && draggingIdx < hoverIdx && !cloning ? hoverIdx - 1 : hoverIdx;
-
-						newChildren.splice(insertIdx, 0, rowToInsert);
-						newArr[toSectionIdx] = { ...toSection, children: newChildren };
-						return newArr;
-					});
-					setCurrentHoverEle("none");
-				} else if (dragging.startsWith("row-") && currentHoverEle.startsWith("row-last")) {
-					setData((prev) => {
-						let draggedRow: any = null;
-						let fromSectionIdx = -1;
-
-						const newArr = prev.map((section, sIdx) => {
-							const idx = section.children.findIndex((row: any) => row.id === dragging);
-							if (idx !== -1) {
-								draggedRow = section.children[idx];
-								fromSectionIdx = sIdx;
-								const newChildren = [...section.children];
-								if (!cloning) newChildren.splice(idx, 1);
-								return { ...section, children: newChildren };
-							}
-							return section;
-						});
-
-						if (!draggedRow) return newArr;
-
-						let rowToInsert = draggedRow;
-						if (cloning) {
-							const newRowId = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-							rowToInsert = {
-								...draggedRow,
-								id: newRowId,
-								children: draggedRow.children.map((col: any) => {
-									const newColId = `${col.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-									return {
-										...col,
-										id: newColId,
-										children: col.children.map((ele: any) => {
-											const newEleId = `${ele.id}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-											if (theEles[ele.id]) {
-												setTheEles((prevEles) => ({
-													...prevEles,
-													[newEleId]: { ...prevEles[ele.id] },
-												}));
-											}
-											return { ...ele, id: newEleId };
-										}),
-									};
-								}),
-							};
-						}
-
-						let toSectionIdx = -1;
-						prev.forEach((section, sIdx) => {
-							if (`row-last-${section.id}` === currentHoverEle) toSectionIdx = sIdx;
-						});
-						if (toSectionIdx === -1) return newArr;
-
-						const toSection = newArr[toSectionIdx];
-						newArr[toSectionIdx] = { ...toSection, children: [...toSection.children, rowToInsert] };
-						return newArr;
-					});
-					setCurrentHoverEle("none");
-				}
-				// COL DRAGGING
-				else if (
-					dragging.startsWith("col-") &&
-					currentHoverEle.startsWith("col-") &&
-					!currentHoverEle.startsWith("col-last")
-				) {
-					setData((prev) => {
-						let draggedCol: any = null;
-						let fromRowIdx = -1;
-						let fromSectionIdx = -1;
-						let draggingIdx = -1;
-
-						const newArr = prev.map((section, sIdx) => {
-							const rowIdx = section.children.findIndex((row: any) => {
-								const idx = row.children.findIndex((col: any) => col.id === dragging);
-								if (idx !== -1) {
-									draggingIdx = idx;
-									return true;
-								}
-								return false;
-							});
-
-							if (rowIdx !== -1) {
-								fromRowIdx = rowIdx;
-								fromSectionIdx = sIdx;
-								const row = section.children[rowIdx];
-								draggedCol = row.children[draggingIdx];
-								const newCols = [...row.children];
-								newCols.splice(draggingIdx, 1);
-								const newRow = { ...row, children: newCols };
-								const newChildren = [...section.children];
-								newChildren[rowIdx] = newRow;
-								return { ...section, children: newChildren };
-							}
-
-							return section;
-						});
-
-						if (!draggedCol) return newArr;
-
-						let toSectionIdx = -1;
-						let toRowIdx = -1;
-						let hoverIdx = -1;
-
-						prev.forEach((section, sIdx) => {
-							section.children.forEach((row: any, rIdx: number) => {
-								const idx = row.children.findIndex((col: any) => col.id === currentHoverEle);
-								if (idx !== -1) {
-									toSectionIdx = sIdx;
-									toRowIdx = rIdx;
-									hoverIdx = idx;
-								}
-							});
-						});
-
-						if (toSectionIdx === -1 || toRowIdx === -1 || hoverIdx === -1) return newArr;
-
-						const toSection = newArr[toSectionIdx];
-						const toRow = toSection.children[toRowIdx];
-						const newCols = [...toRow.children];
-
-						const insertIdx =
-							fromSectionIdx === toSectionIdx && fromRowIdx === toRowIdx && draggingIdx < hoverIdx
-								? hoverIdx - 1
-								: hoverIdx;
-
-						newCols.splice(insertIdx, 0, draggedCol);
-						const newRow = { ...toRow, children: newCols };
-						const newChildren = [...toSection.children];
-						newChildren[toRowIdx] = newRow;
-						newArr[toSectionIdx] = { ...toSection, children: newChildren };
-						return newArr;
-					});
-					setCurrentHoverEle("none");
-				} else if (dragging.startsWith("col-") && currentHoverEle.startsWith("col-last")) {
-					setData((prev) => {
-						let draggedCol: any = null;
-						let draggingIdx = -1;
-
-						const newArr = prev.map((section) => {
-							const rowIdx = section.children.findIndex((row: any) => {
-								const idx = row.children.findIndex((col: any) => col.id === dragging);
-								if (idx !== -1) {
-									draggingIdx = idx;
-									return true;
-								}
-								return false;
-							});
-
-							if (rowIdx !== -1) {
-								const row = section.children[rowIdx];
-								draggedCol = row.children[draggingIdx];
-								const newCols = [...row.children];
-								newCols.splice(draggingIdx, 1);
-								const newRow = { ...row, children: newCols };
-								const newChildren = [...section.children];
-								newChildren[rowIdx] = newRow;
-								return { ...section, children: newChildren };
-							}
-
-							return section;
-						});
-
-						if (!draggedCol) return newArr;
-
-						let toSectionIdx = -1;
-						let toRowIdx = -1;
-						prev.forEach((section, sIdx) => {
-							section.children.forEach((row: any, rIdx: number) => {
-								if (`col-last-${row.id}` === currentHoverEle) {
-									toSectionIdx = sIdx;
-									toRowIdx = rIdx;
-								}
-							});
-						});
-						if (toSectionIdx === -1 || toRowIdx === -1) return newArr;
-
-						const toSection = newArr[toSectionIdx];
-						const toRow = toSection.children[toRowIdx];
-						const newCols = [...toRow.children, draggedCol];
-
-						const newRow = { ...toRow, children: newCols };
-						const newChildren = [...toSection.children];
-						newChildren[toRowIdx] = newRow;
-						newArr[toSectionIdx] = { ...toSection, children: newChildren };
-						return newArr;
-					});
-					setCurrentHoverEle("none");
-				}
-				// ELEMENT DRAGGING
-				else if (
-					!dragging.startsWith("col-") &&
-					!dragging.startsWith("row-") &&
-					!dragging.startsWith("section-") &&
-					!currentHoverEle.startsWith("col-") &&
-					!currentHoverEle.startsWith("row-") &&
-					!currentHoverEle.startsWith("section-") &&
-					!currentHoverEle.startsWith("last-ele")
-				) {
-					const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-					setData((prev) => {
-						const updatedData = prev.map((section) => ({
-							...section,
-							children: section.children.map((row: any) => ({
-								...row,
-								children: row.children.map((col: any) => {
-									const newChildren = col.children.filter((ele: any) => {
-										if (ele.id === dragging) return cloning; // keep if cloning
-										return true;
-									});
-									return { ...col, children: newChildren };
-								}),
-							})),
-						}));
-
-						let draggedElement: any = null;
-						prev.forEach((section) => {
-							section.children.forEach((row: any) => {
-								row.children.forEach((col: any) => {
-									col.children.forEach((ele: any) => {
-										if (ele.id === dragging) draggedElement = cloning ? { ...ele } : ele;
-									});
-								});
-							});
-						});
-						if (!draggedElement) return updatedData;
-
-						if (cloning) {
-							const originalEle = theEles[dragging];
-							if (!originalEle) return updatedData;
-							setTheEles((prevEles) => ({ ...prevEles, [newid]: { ...originalEle } }));
-							draggedElement.id = newid;
-						}
-
-						return updatedData.map((section) => ({
-							...section,
-							children: section.children.map((row: any) => ({
-								...row,
-								children: row.children.map((col: any) => {
-									const idx = col.children.findIndex((ele: any) => ele.id === currentHoverEle);
-									if (idx !== -1) {
-										const already = col.children.some((ele: any) => ele.id === draggedElement.id);
-										if (!already) {
-											const next = [...col.children];
-											next.splice(idx, 0, draggedElement);
-											return { ...col, children: next };
-										}
-									}
-									return col;
-								}),
-							})),
-						}));
-					});
-
-					setCurrentHoverEle("none");
-				} else if (currentHoverEle.startsWith("last-ele")) {
-					const newid = `${dragging}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-					setData((prev) => {
-						let draggedElement: any = null;
-
-						const updatedData = prev.map((section) => ({
-							...section,
-							children: section.children.map((row: any) => ({
-								...row,
-								children: row.children.map((col: any) => {
-									const newChildren = col.children.filter((ele: any) => {
-										if (ele.id === dragging) {
-											draggedElement = cloning ? { ...ele } : ele;
-											return cloning;
-										}
-										return true;
-									});
-									return { ...col, children: newChildren };
-								}),
-							})),
-						}));
-
-						if (!draggedElement) return updatedData;
-
-						if (cloning) {
-							const originalEle = theEles[dragging];
-							if (!originalEle) return updatedData;
-							setTheEles((prevEles) => ({ ...prevEles, [newid]: { ...originalEle } }));
-							draggedElement.id = newid;
-						}
-
-						const targetColId = currentHoverEle.replace(/^last-ele-/, "");
-						return updatedData.map((section) => ({
-							...section,
-							children: section.children.map((row: any) => ({
-								...row,
-								children: row.children.map((col: any) => {
-									if (col.id === targetColId) {
-										const already = col.children.some((ele: any) => ele.id === draggedElement.id);
-										if (!already) return { ...col, children: [...col.children, draggedElement] };
-									}
-									return col;
-								}),
-							})),
-						}));
-					});
-
-					setCurrentHoverEle("none");
-				}
+				setCurrentHoverEle("none");
 			}
 
 			setDragging(null);
@@ -1497,7 +1460,7 @@ export default function VBPrototype({
 			window.removeEventListener("keyup", handleKeyUp);
 			window.removeEventListener("mouseup", handleMouseUp);
 		};
-	}, [currentEle, dragging, currentHoverEle, cloning, theEles]);
+	}, [currentEle, dragging, currentHoverEle, cloning, theEles, data]);
 
 	return (
 		<div className="select-none" style={{ height: "100%" }}>
