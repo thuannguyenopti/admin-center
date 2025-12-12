@@ -1,5 +1,6 @@
 "use client";
 
+
 import {
 	Box,
 	Button,
@@ -56,7 +57,7 @@ import Row from "./vb/Row";
 import Col from "./vb/Col";
 import Ele from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
-import { sep } from "path";
+import OutlineHeader from "./vb/OutlineHeader";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
@@ -397,6 +398,13 @@ const Outline: React.FC<OutlineProps> = ({
 	const [loadingAI, setLoadingAI] = useState(false);
 	const [activeTab, setActiveTab] = useState("main");
 
+	const onAddSection = () => addSection("section-last"); // append
+	const onAddRandomBlock = () => {
+		const blockNames = ["My Block", "CTA Block", "Form Block", "Hero Block", "Info Block", "Feature Block", "Footer Block", "Header Block", "Pricing Block", "Contact Block"];
+		const randomName = blockNames[Math.floor(Math.random() * blockNames.length)];
+		setData((prev) => [...prev, { label: randomName, isBlock: true, id: "section-" + Date.now(), children: [] }]);
+	};
+
 	async function sendMessage(message: string) {
 		setLoadingAI(true);
 		const res = await fetch("/api/chat", {
@@ -422,186 +430,20 @@ const Outline: React.FC<OutlineProps> = ({
 				}}
 			>
 				<div className="min-w-[50%] w-[50%] relative min-h-[300px]">
-					<Box
-						display="flex"
-						alignItems="center"
-						justifyContent="space-between"
-						gap="4"
-						px="24"
-						pr="0"
-						py="8"
-					>
-						<Text
-							fontSize="2xl"
-							fontWeight="500"
-							color="fg.default"
-						>
-							Page
-						</Text>
-						<Box
-							display="flex"
-							alignItems="center"
-							gap="2"
-						>
-							<Button
-								onClick={() => setAI(!AI)}
-								appearance="subtle"
-								size="sm"
-								aria-label="add row"
-								icon={<IconSparkles />}
-							/>
-							<Menu
-								options={[
-									{
-										addon: <IconSection size={16} />,
-										label: "Section",
-										execute: () =>
-											setData((prev) => [
-												...prev,
-												{
-													label: "",
-													id: "section-" + Date.now(),
-													open: true,
-													children: [
-														{
-															label: "",
-															id: "row-" + Date.now(),
-															open: true,
-															children: [
-																{
-																	label: "",
-																	id: "col-" + Date.now(),
-																	open: true,
-																	children: [],
-																},
-															],
-														},
-													],
-												},
-											]),
-									},
-									{
-										addon: <IconSquare size={16} />,
-										label: "Random Block",
-										execute: () => {
-											const blockNames = [
-												"My Block",
-												"CTA Block",
-												"Form Block",
-												"Hero Block",
-												"Info Block",
-												"Feature Block",
-												"Footer Block",
-												"Header Block",
-												"Pricing Block",
-												"Contact Block",
-											];
-											const randomName =
-												blockNames[
-												Math.floor(Math.random() * blockNames.length)
-												];
-											setData((prev) => [
-												...prev,
-												{
-													label: randomName,
-													isBlock: true,
-													id: "section-" + Date.now(),
-													children: [],
-												},
-											]);
-										},
-									},
-								]}
-							>
-								<MenuTrigger
-									icon={<IconPlus />}
-									aria-label="add ele"
-									appearance="subtle"
-									size="sm"
-									iconPosition="start"
-								/>
-								<MenuContent />
-							</Menu>
-							<div
-								className={`absolute -right-[10px] top-[62px] opacity-0 invisible z-10 p-1 rounded-md ${styles.popupMenu}`}
-								style={{
-									visibility: AI ? "visible" : undefined,
-									opacity: AI ? 1 : 0,
-									transform: AI ? "scale(1)" : "scale(0.9)",
-									transformOrigin: "top center",
-									transition: "0.3s",
-								}}
-							>
-								<form
-									onSubmit={async (e) => {
-										e.preventDefault();
-										sendMessage(e.currentTarget.prompt.value);
-										e.currentTarget.reset();
-									}}
-								>
-									<Field>
-										<textarea
-											name="prompt"
-											rows={3}
-											className="w-full border rounded p-2 focus:outline-none focus:ring-2"
-											placeholder="What do you want to build today?"
-											ref={(el) => {
-												if (AI && el) {
-													el.focus();
-												}
-											}}
-											onKeyDown={(e) => {
-												if (e.key === "Enter" && !e.shiftKey) {
-													e.preventDefault();
-													const form = (e.target as HTMLTextAreaElement)
-														.form;
-													if (form) {
-														form.requestSubmit();
-													}
-													setAI(false);
-												}
-											}}
-										/>
-									</Field>
-								</form>
-							</div>
-						</Box>
-					</Box>
+
 					<Tabs
 						value={activeTab}
 						onValueChange={setActiveTab}
 					>
-						<Box display="flex">
-							<Box w="20" />
-							<Box
-								flex="1"
-								borderB="1"
-								borderColor="border.tertiary"
-							>
-								<TabsList gap="24">
-									<TabsTrigger
-										value="main"
-										fontSize="md"
-										fontWeight="500"
-										color={activeTab === "main" ? "fg.default" : "fg.secondary"}
-									>
-										Main
-									</TabsTrigger>
-									<TabsTrigger
-										value="properties"
-										fontSize="md"
-										fontWeight="500"
-										color={
-											activeTab === "properties"
-												? "fg.default"
-												: "fg.secondary"
-										}
-									>
-										Properties
-									</TabsTrigger>
-								</TabsList>
-							</Box>
-						</Box>
+						<OutlineHeader
+							AI={AI}
+							setAI={setAI}
+							activeTab={activeTab}
+							setActiveTab={setActiveTab}
+							onAddSection={onAddSection}
+							onAddRandomBlock={onAddRandomBlock}
+							onSendAIMessage={sendMessage}
+						/>
 						<TabsContent value="main">
 							{loadingAI && (
 								<div
@@ -1939,9 +1781,10 @@ export default function VBPrototype({
 		window.addEventListener("keydown", handleKeyDown);
 		return () => {
 			window.removeEventListener("keydown", handleKeyDown);
+			window.removeEventListener("keyup", handleKeyUp);
 			window.removeEventListener("mouseup", handleMouseUp);
 		};
-	}, [currentEle, dragging, currentHoverEle]);
+	}, [currentEle, dragging, currentHoverEle, cloning, theEles]);
 
 	return (
 		<div
