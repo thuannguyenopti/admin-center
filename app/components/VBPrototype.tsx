@@ -20,8 +20,8 @@ import {
 	SelectContent,
 	Textarea,
 } from "@optiaxiom/react";
-import React, {ReactNode, useEffect, Fragment, Children, useRef, SetStateAction} from "react";
-import {useState} from "react";
+import React, { ReactNode, useEffect, Fragment, Children, useRef, SetStateAction } from "react";
+import { useState } from "react";
 import {
 	IconPlus,
 	IconDots,
@@ -54,13 +54,14 @@ import {
 import Section from "./vb/Section";
 import Row from "./vb/Row";
 import Col from "./vb/Col";
-import {sep} from "path";
+import Ele from "./vb/Ele";
+import { sep } from "path";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
 import MediaCard from "./MediaCard";
 import styles from "./VBPrototype.module.css";
-const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
+const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({ texts, interval = 2000 }) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -76,9 +77,7 @@ const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, in
 	return <span>{texts[index]}</span>;
 };
 
-const indentDistance = 8; // Distance in pixels for each indent level
-
-const Input: React.FC<{prop: any; onChange: any; propIndex: number}> = ({
+const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({
 	prop,
 	onChange,
 	propIndex,
@@ -93,107 +92,6 @@ const Input: React.FC<{prop: any; onChange: any; propIndex: number}> = ({
 				/>
 			</Field>
 		</div>
-	);
-};
-
-const Ele: React.FC<{
-	element: any;
-	removeEle: any;
-	setCurrentEle: any;
-	type: any;
-	setCurrentHoverEle: any;
-	label: string;
-	onDragStart: any;
-}> = ({element, removeEle, setCurrentEle, type, setCurrentHoverEle, label, onDragStart}) => {
-	const [menuOpen, setMenuOpen] = useState(false);
-	return (
-		<Box
-			style={{
-				paddingLeft: `${4 + 16 + indentDistance * 3}px`,
-			}}
-			py="2"
-			pr="20"
-		>
-			<div
-				onMouseEnter={() => setCurrentHoverEle(element.id)}
-				onMouseLeave={() => setCurrentHoverEle("none")}
-				draggable
-				onDragStart={onDragStart}
-				onClick={() => {
-					if (!menuOpen) setCurrentEle(element.id);
-				}}
-				className={`group p-2 py-0 text-sm h-[40px] pl-3 cursor-pointer border rounded-[4px] gap-1 items-center w-full flex justify-between ${styles.sectionWithBorder}`}
-			>
-				<Box
-					className="flex gap-2 items-center w-full group-hover:w-[calc(100%-24px)]"
-					color={label ? "fg.default" : "fg.secondary"}
-				>
-					<div className="min-w-4">
-						{(() => {
-							switch (type) {
-								case "Heading":
-									return <IconHeading size={16} />;
-								case "Text":
-									return <IconPilcrow size={16} />;
-								case "Input":
-									return <IconForms size={16} />;
-								case "Button":
-									return <IconRectangle size={16} />;
-								case "Image":
-									return <IconPhoto size={16} />;
-								default:
-									return <IconBrackets size={16} />;
-							}
-						})()}
-					</div>
-					<span className="truncate overflow-hidden text-ellipsis">
-						{label || (
-							<Text
-								asChild
-								color="fg.secondary"
-							>
-								<span className="italic">{`Empty ${type}`}</span>
-							</Text>
-						)}
-					</span>
-				</Box>
-				<div
-					className="min-w-[24px] invisible group-hover:visible"
-					style={{
-						visibility: menuOpen ? "visible" : undefined,
-					}}
-				>
-					<Menu
-						onOpenChange={(e) => setMenuOpen(!menuOpen)}
-						open={menuOpen}
-						options={[
-							{
-								addon: <IconTrash size={16} />,
-								label: "Remove Element",
-								intent: "danger",
-								execute: () => {
-									removeEle();
-									setMenuOpen(false);
-								},
-							},
-						]}
-					>
-						<MenuTrigger
-							onClick={(e) => {
-								e.stopPropagation();
-								setMenuOpen(true);
-							}}
-							icon={<IconDots />}
-							aria-label="add ele"
-							appearance="subtle"
-							size="sm"
-							iconPosition="start"
-						/>
-						<MenuContent />
-					</Menu>
-				</div>
-			</div>
-		</Box>
 	);
 };
 
@@ -231,19 +129,19 @@ const Outline: React.FC<OutlineProps> = ({
 		setData((prev) =>
 			prev.map((section) => {
 				if (section.id === id) {
-					return {...section, open};
+					return { ...section, open };
 				}
 				return {
 					...section,
 					children: section.children.map((row: any) => {
 						if (row.id === id) {
-							return {...row, open};
+							return { ...row, open };
 						}
 						return {
 							...row,
 							children: row.children.map((col: any) => {
 								if (col.id === id) {
-									return {...col, open};
+									return { ...col, open };
 								}
 								return col;
 							}),
@@ -405,14 +303,14 @@ const Outline: React.FC<OutlineProps> = ({
 				props: (() => {
 					switch (type) {
 						case "Heading":
-							return [{type: "text", label: "Text"}];
+							return [{ type: "text", label: "Text" }];
 						case "Text":
-							return [{type: "text", label: "Text"}];
+							return [{ type: "text", label: "Text" }];
 						case "Input":
 							return [
-								{type: "text", label: "Label"},
-								{type: "text", label: "Placeholder"},
-								{type: "text", label: "Tooltip"},
+								{ type: "text", label: "Label" },
+								{ type: "text", label: "Placeholder" },
+								{ type: "text", label: "Tooltip" },
 								{
 									type: "checkbox",
 									label: "Required",
@@ -420,12 +318,12 @@ const Outline: React.FC<OutlineProps> = ({
 								},
 							];
 						case "Button":
-							return [{type: "text", label: "Label"}];
+							return [{ type: "text", label: "Label" }];
 						case "Image":
 							return [
-								{type: "text", label: "Image URL", value: imageUrl},
-								{type: "text", label: "Title", value: imageAlt || "Untitled Image"},
-								{type: "text", label: "Alt Text", value: imageAlt},
+								{ type: "text", label: "Image URL", value: imageUrl },
+								{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
+								{ type: "text", label: "Alt Text", value: imageAlt },
 							];
 						default:
 							return [];
@@ -446,7 +344,7 @@ const Outline: React.FC<OutlineProps> = ({
 								if (cIdx !== colIndex) return col;
 								return {
 									...col,
-									children: [...col.children, {id: uKey}],
+									children: [...col.children, { id: uKey }],
 								};
 							}),
 						};
@@ -518,8 +416,8 @@ const Outline: React.FC<OutlineProps> = ({
 		setLoadingAI(true);
 		const res = await fetch("/api/chat", {
 			method: "POST",
-			headers: {"Content-Type": "application/json"},
-			body: JSON.stringify({userMessage: message}),
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ userMessage: message }),
 		});
 
 		const data = await res.json();
@@ -615,7 +513,7 @@ const Outline: React.FC<OutlineProps> = ({
 											];
 											const randomName =
 												blockNames[
-													Math.floor(Math.random() * blockNames.length)
+												Math.floor(Math.random() * blockNames.length)
 												];
 											setData((prev) => [
 												...prev,
@@ -827,7 +725,7 @@ const Outline: React.FC<OutlineProps> = ({
 													{dragging?.startsWith("row-") &&
 														((row.id !== dragging &&
 															section.children[index - 1]?.id !==
-																dragging) ||
+															dragging) ||
 															cloning) && (
 															<div
 																className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
@@ -909,7 +807,7 @@ const Outline: React.FC<OutlineProps> = ({
 																			col.id !== dragging &&
 																			row.children[i - 1]
 																				?.id !==
-																				dragging && (
+																			dragging && (
 																				<div
 																					className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
 																					onMouseEnter={(
@@ -963,14 +861,14 @@ const Outline: React.FC<OutlineProps> = ({
 																					>
 																						{dragging &&
 																							element.id !==
-																								dragging &&
+																							dragging &&
 																							col
 																								.children[
 																								j -
-																									1
+																								1
 																							]
 																								?.id !==
-																								dragging &&
+																							dragging &&
 																							!dragging.startsWith(
 																								"section-"
 																							) &&
@@ -1045,11 +943,11 @@ const Outline: React.FC<OutlineProps> = ({
 																			)}
 																			{dragging &&
 																				dragging !==
-																					col.children[
-																						col.children
-																							.length -
-																							1
-																					]?.id &&
+																				col.children[
+																					col.children
+																						.length -
+																					1
+																				]?.id &&
 																				!dragging.startsWith(
 																					"section-"
 																				) &&
@@ -1067,7 +965,7 @@ const Outline: React.FC<OutlineProps> = ({
 																							onDragHover(
 																								e,
 																								"last-ele-" +
-																									col.id
+																								col.id
 																							)
 																						}
 																					>
@@ -1115,9 +1013,9 @@ const Outline: React.FC<OutlineProps> = ({
 														)}
 														{dragging?.startsWith("col-") &&
 															dragging !==
-																row.children[
-																	row.children.length - 1
-																]?.id && (
+															row.children[
+																row.children.length - 1
+															]?.id && (
 																<div
 																	className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
 																	onMouseEnter={(e) =>
@@ -1306,8 +1204,8 @@ const Outline: React.FC<OutlineProps> = ({
 											<Select
 												defaultValue="no"
 												options={[
-													{label: "No", value: "no"},
-													{label: "Yes", value: "yes"},
+													{ label: "No", value: "no" },
+													{ label: "Yes", value: "yes" },
 												]}
 											>
 												<SelectTrigger>No</SelectTrigger>
@@ -1318,8 +1216,8 @@ const Outline: React.FC<OutlineProps> = ({
 											<Select
 												defaultValue="setting1"
 												options={[
-													{label: "A setting", value: "setting1"},
-													{label: "Another setting", value: "setting2"},
+													{ label: "A setting", value: "setting1" },
+													{ label: "Another setting", value: "setting2" },
 												]}
 											>
 												<SelectTrigger>A setting</SelectTrigger>
@@ -1433,7 +1331,7 @@ const extractElements = (nodes: any[]) => {
 			node.children.forEach(traverse);
 		}
 		if (node.type && node.props) {
-			elements[node.id] = {type: node.type, props: node.props};
+			elements[node.id] = { type: node.type, props: node.props };
 		}
 	};
 	nodes.forEach(traverse);
@@ -1442,7 +1340,7 @@ const extractElements = (nodes: any[]) => {
 
 const mergeData = (structure: any[], elements: Record<string, any>) => {
 	return structure.map((node) => {
-		const newNode = {...node};
+		const newNode = { ...node };
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
 			newNode.props = elements[node.id].props;
@@ -1506,7 +1404,7 @@ export default function VBPrototype({
 	const isFirstRender = useRef(true);
 	const onSaveRef = useRef(onSave);
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
-	const [dropPosition, setDropPosition] = useState<{colId: string; position: number} | null>(
+	const [dropPosition, setDropPosition] = useState<{ colId: string; position: number } | null>(
 		null
 	);
 
@@ -1515,7 +1413,7 @@ export default function VBPrototype({
 			setTheEles((prev: any) => {
 				const oldProps = prev[currentEle as keyof typeof prev].props;
 				const newProps = [...oldProps];
-				newProps[propIndex] = {...oldProps[propIndex], value: value};
+				newProps[propIndex] = { ...oldProps[propIndex], value: value };
 
 				return {
 					...prev,
@@ -1592,11 +1490,10 @@ export default function VBPrototype({
 												...col,
 												id: newColId,
 												children: col.children.map((ele: any) => {
-													const newEleId = `${
-														ele.id
-													}-${Date.now()}-${Math.floor(
-														Math.random() * 1000
-													)}`;
+													const newEleId = `${ele.id
+														}-${Date.now()}-${Math.floor(
+															Math.random() * 1000
+														)}`;
 													// Clone theElements entry
 													if (theEles[ele.id]) {
 														setTheEles((prevElements: any) => ({
@@ -1663,7 +1560,7 @@ export default function VBPrototype({
 								if (!cloning) {
 									newChildren.splice(idx, 1);
 								}
-								return {...section, children: newChildren};
+								return { ...section, children: newChildren };
 							}
 							return section;
 						});
@@ -1755,7 +1652,7 @@ export default function VBPrototype({
 								if (!cloning) {
 									newChildren.splice(idx, 1);
 								}
-								return {...section, children: newChildren};
+								return { ...section, children: newChildren };
 							}
 							return section;
 						});
@@ -1847,10 +1744,10 @@ export default function VBPrototype({
 								draggedCol = row.children[draggingIdx];
 								const newCols = [...row.children];
 								newCols.splice(draggingIdx, 1);
-								const newRow = {...row, children: newCols};
+								const newRow = { ...row, children: newCols };
 								const newChildren = [...section.children];
 								newChildren[rowIdx] = newRow;
-								return {...section, children: newChildren};
+								return { ...section, children: newChildren };
 							}
 							return section;
 						});
@@ -1883,12 +1780,12 @@ export default function VBPrototype({
 						// If dragging down in same row, insert after hoverIdx
 						const insertIdx =
 							fromSectionIdx === toSectionIdx &&
-							fromRowIdx === toRowIdx &&
-							draggingIdx < hoverIdx
+								fromRowIdx === toRowIdx &&
+								draggingIdx < hoverIdx
 								? hoverIdx - 1
 								: hoverIdx;
 						newCols.splice(insertIdx, 0, draggedCol);
-						const newRow = {...toRow, children: newCols};
+						const newRow = { ...toRow, children: newCols };
 						const newChildren = [...toSection.children];
 						newChildren[toRowIdx] = newRow;
 						newArr[toSectionIdx] = {
@@ -1923,10 +1820,10 @@ export default function VBPrototype({
 								draggedCol = row.children[draggingIdx];
 								const newCols = [...row.children];
 								newCols.splice(draggingIdx, 1);
-								const newRow = {...row, children: newCols};
+								const newRow = { ...row, children: newCols };
 								const newChildren = [...section.children];
 								newChildren[rowIdx] = newRow;
-								return {...section, children: newChildren};
+								return { ...section, children: newChildren };
 							}
 							return section;
 						});
@@ -1950,7 +1847,7 @@ export default function VBPrototype({
 						const toSection = newArr[toSectionIdx];
 						const toRow = toSection.children[toRowIdx];
 						const newCols = [...toRow.children, draggedCol];
-						const newRow = {...toRow, children: newCols};
+						const newRow = { ...toRow, children: newCols };
 						const newChildren = [...toSection.children];
 						newChildren[toRowIdx] = newRow;
 						newArr[toSectionIdx] = {
@@ -1982,12 +1879,12 @@ export default function VBPrototype({
 									// Remove or clone the dragged element
 									const newChildren = col.children.filter((ele: any) => {
 										if (ele.id === dragging) {
-											draggedElement = cloning ? {...ele} : ele;
+											draggedElement = cloning ? { ...ele } : ele;
 											return cloning; // keep if cloning, remove if moving
 										}
 										return true;
 									});
-									return {...col, children: newChildren};
+									return { ...col, children: newChildren };
 								}),
 							})),
 						}));
@@ -1999,7 +1896,7 @@ export default function VBPrototype({
 								row.children.forEach((col: any) => {
 									col.children.forEach((ele: any) => {
 										if (ele.id === dragging) {
-											draggedElement = cloning ? {...ele} : ele;
+											draggedElement = cloning ? { ...ele } : ele;
 										}
 									});
 								});
@@ -2011,7 +1908,7 @@ export default function VBPrototype({
 						if (cloning) {
 							const originalEle = theEles[dragging];
 							if (!originalEle) return updatedData;
-							const newElementClone = {...originalEle, id: newid};
+							const newElementClone = { ...originalEle, id: newid };
 							setTheEles((prevEles: any) => ({
 								...prevEles,
 								[newid]: newElementClone,
@@ -2059,12 +1956,12 @@ export default function VBPrototype({
 								children: row.children.map((col: any) => {
 									const newChildren = col.children.filter((ele: any) => {
 										if (ele.id === dragging) {
-											draggedElement = cloning ? {...ele} : ele;
+											draggedElement = cloning ? { ...ele } : ele;
 											return cloning; // keep if cloning, remove if moving
 										}
 										return true;
 									});
-									return {...col, children: newChildren};
+									return { ...col, children: newChildren };
 								}),
 							})),
 						}));
@@ -2074,7 +1971,7 @@ export default function VBPrototype({
 						if (cloning) {
 							const originalEle = theEles[dragging];
 							if (!originalEle) return updatedData;
-							const newElementClone = {...originalEle, id: newid};
+							const newElementClone = { ...originalEle, id: newid };
 							setTheEles((prevEles: any) => ({
 								...prevEles,
 								[newid]: newElementClone,
@@ -2146,13 +2043,13 @@ export default function VBPrototype({
 	return (
 		<div
 			className="select-none"
-			style={{height: "100%"}}
+			style={{ height: "100%" }}
 		>
 			<Box
 				bg="bg.page"
 				w="full"
 				className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr]"
-				style={{height: "100%", overflow: "hidden"}}
+				style={{ height: "100%", overflow: "hidden" }}
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
@@ -2165,7 +2062,7 @@ export default function VBPrototype({
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
-					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+					style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
 				>
 					{/* Resizable handle */}
 					<div
@@ -2216,7 +2113,7 @@ export default function VBPrototype({
 				</Box>
 				<div
 					className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10"
-					style={{height: "100%", overflow: "hidden"}}
+					style={{ height: "100%", overflow: "hidden" }}
 				>
 					<div
 						className={`rounded-lg grow w-full mt-3 ${styles.canvas}`}
@@ -2251,15 +2148,15 @@ export default function VBPrototype({
 									[uKey]: {
 										type: "Image",
 										props: [
-											{type: "text", label: "Image URL", value: imageUrl},
+											{ type: "text", label: "Image URL", value: imageUrl },
 											{
 												type: "text",
 												label: "Title",
 												value: imageAlt || "Untitled Image",
 											},
-											{type: "text", label: "Alt Text", value: imageAlt},
-											{type: "text", label: "Width", value: "auto"},
-											{type: "text", label: "Height", value: "auto"},
+											{ type: "text", label: "Alt Text", value: imageAlt },
+											{ type: "text", label: "Width", value: "auto" },
+											{ type: "text", label: "Height", value: "auto" },
 										],
 									},
 								}));
@@ -2298,7 +2195,7 @@ export default function VBPrototype({
 					>
 						<div
 							className="w-[500px] m-auto p-4 pt-24"
-							style={{minHeight: "100%"}}
+							style={{ minHeight: "100%" }}
 						>
 							{data.map((section, sindex) => (
 								<section
@@ -2385,7 +2282,7 @@ export default function VBPrototype({
 																			: undefined,
 																	bottom:
 																		dropPosition.position ===
-																		col.children.length
+																			col.children.length
 																			? 0
 																			: undefined,
 																	height: "2px",
@@ -2396,12 +2293,11 @@ export default function VBPrototype({
 																		dropPosition.position === 0
 																			? "translateY(0)"
 																			: dropPosition.position ===
-																			  col.children.length
-																			? "translateY(0)"
-																			: `translateY(${
-																					dropPosition.position *
-																					60
-																			  }px)`,
+																				col.children.length
+																				? "translateY(0)"
+																				: `translateY(${dropPosition.position *
+																				60
+																				}px)`,
 																}}
 															/>
 														)}
@@ -2439,45 +2335,45 @@ export default function VBPrototype({
 																		visibility:
 																			currentEle ===
 																				element.id ||
-																			currentHoverEle ===
+																				currentHoverEle ===
 																				element.id
 																				? "visible"
 																				: undefined,
 																		opacity:
 																			currentEle ===
 																				element.id ||
-																			currentHoverEle ===
+																				currentHoverEle ===
 																				element.id
 																				? currentEle ===
-																				  element.id
+																					element.id
 																					? 1
 																					: 0.5
 																				: undefined,
 																		top:
 																			currentEle ===
 																				element.id ||
-																			currentHoverEle ===
+																				currentHoverEle ===
 																				element.id
 																				? "-8px"
 																				: undefined,
 																		left:
 																			currentEle ===
 																				element.id ||
-																			currentHoverEle ===
+																				currentHoverEle ===
 																				element.id
 																				? "-8px"
 																				: undefined,
 																		right:
 																			currentEle ===
 																				element.id ||
-																			currentHoverEle ===
+																				currentHoverEle ===
 																				element.id
 																				? "-8px"
 																				: undefined,
 																		bottom:
 																			currentEle ===
 																				element.id ||
-																			currentHoverEle ===
+																				currentHoverEle ===
 																				element.id
 																				? "-8px"
 																				: undefined,
@@ -2487,8 +2383,8 @@ export default function VBPrototype({
 																	<div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">
 																		{(() => {
 																			switch (
-																				theEles[element.id]
-																					?.type
+																			theEles[element.id]
+																				?.type
 																			) {
 																				case "Heading":
 																					return (
@@ -2545,7 +2441,7 @@ export default function VBPrototype({
 																</div>
 																{(() => {
 																	switch (
-																		theEles[element.id]?.type
+																	theEles[element.id]?.type
 																	) {
 																		case "Heading":
 																			return (
@@ -2559,8 +2455,8 @@ export default function VBPrototype({
 																							prop.label ===
 																							"Text"
 																					)?.value || (
-																						<>&nbsp;</>
-																					)}
+																							<>&nbsp;</>
+																						)}
 																				</h1>
 																			);
 																		case "Text":
@@ -2575,8 +2471,8 @@ export default function VBPrototype({
 																							prop.label ===
 																							"Text"
 																					)?.value || (
-																						<>&nbsp;</>
-																					)}
+																							<>&nbsp;</>
+																						)}
 																				</p>
 																			);
 																		case "Input":
@@ -2591,22 +2487,22 @@ export default function VBPrototype({
 																							prop.label ===
 																							"Tooltip"
 																					)?.value && (
-																						<div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-																							{
-																								theEles[
-																									element
-																										.id
-																								]?.props.find(
-																									(
-																										prop: any
-																									) =>
-																										prop.label ===
-																										"Tooltip"
-																								)
-																									?.value
-																							}
-																						</div>
-																					)}
+																							<div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
+																								{
+																									theEles[
+																										element
+																											.id
+																									]?.props.find(
+																										(
+																											prop: any
+																										) =>
+																											prop.label ===
+																											"Tooltip"
+																									)
+																										?.value
+																								}
+																							</div>
+																						)}
 																					<label>
 																						{theEles[
 																							element
@@ -2619,10 +2515,10 @@ export default function VBPrototype({
 																								"Label"
 																						)
 																							?.value || (
-																							<>
-																								&nbsp;
-																							</>
-																						)}
+																								<>
+																									&nbsp;
+																								</>
+																							)}
 																						{theEles[
 																							element
 																								.id
@@ -2634,16 +2530,16 @@ export default function VBPrototype({
 																								"Required"
 																						)?.value ===
 																							"true" && (
-																							<Text
-																								asChild
-																								color="fg.error"
-																							>
-																								<span>
-																									{" "}
-																									*
-																								</span>
-																							</Text>
-																						)}
+																								<Text
+																									asChild
+																									color="fg.error"
+																								>
+																									<span>
+																										{" "}
+																										*
+																									</span>
+																								</Text>
+																							)}
 																					</label>
 																					<input
 																						type="text"
@@ -2680,10 +2576,10 @@ export default function VBPrototype({
 																								"Label"
 																						)
 																							?.value || (
-																							<>
-																								&nbsp;
-																							</>
-																						)}
+																								<>
+																									&nbsp;
+																								</>
+																							)}
 																					</div>
 																				</div>
 																			);
@@ -2698,7 +2594,7 @@ export default function VBPrototype({
 																				)?.value;
 																			const imageUrl =
 																				typeof imageUrlRaw ===
-																				"string"
+																					"string"
 																					? imageUrlRaw.trim()
 																					: imageUrlRaw;
 																			const imageAlt =
@@ -2740,12 +2636,12 @@ export default function VBPrototype({
 																							style={{
 																								width:
 																									imageWidth ===
-																									"auto"
+																										"auto"
 																										? "100%"
 																										: imageWidth,
 																								height:
 																									imageHeight ===
-																									"auto"
+																										"auto"
 																										? "auto"
 																										: imageHeight,
 																								borderRadius:
