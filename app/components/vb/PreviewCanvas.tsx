@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     IconPilcrow,
     IconForms,
@@ -38,8 +38,24 @@ export default function PreviewCanvas({
         null
     );
 
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+
+
+    useEffect(() => {
+        if (!currentEle || currentEle === "none") return;
+
+        const root = scrollRef.current;
+        if (!root) return;
+
+        const el = root.querySelector<HTMLElement>(`[data-element-id="${currentEle}"]`);
+        if (!el) return;
+
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, [currentEle]);
+
     return (
         <div
+            ref={scrollRef}
             className={`rounded-lg grow w-full mt-3 ${styles.canvas}`}
             onClick={() => setCurrentEle("none")}
             onDragOver={(e) => {
