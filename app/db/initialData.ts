@@ -132,7 +132,7 @@ export type Page = {
 	content?: any;
 };
 
-export const initialPages: Page[] = [
+export const initialPages2: Page[] = [
 	{
 		id: "1",
 		name: "Homepage",
@@ -177,7 +177,7 @@ export const initialPages: Page[] = [
 									{
 										id: "ele-101",
 										type: "Button",
-										props: [{type: "text", label: "Label", value: "Shop Now"}],
+										props: [{ type: "text", label: "Label", value: "Shop Now" }],
 									},
 								],
 							},
@@ -209,7 +209,7 @@ export const initialPages: Page[] = [
 									{
 										id: "ele-3",
 										type: "Heading",
-										props: [{type: "text", label: "Text", value: "Our Story"}],
+										props: [{ type: "text", label: "Text", value: "Our Story" }],
 									},
 									{
 										id: "ele-4",
@@ -253,7 +253,7 @@ export const initialPages: Page[] = [
 										id: "ele-5",
 										type: "Heading",
 										props: [
-											{type: "text", label: "Text", value: "Get in Touch"},
+											{ type: "text", label: "Text", value: "Get in Touch" },
 										],
 									},
 									{
@@ -271,7 +271,7 @@ export const initialPages: Page[] = [
 										id: "ele-7",
 										type: "Input",
 										props: [
-											{type: "text", label: "Label", value: "Name"},
+											{ type: "text", label: "Label", value: "Name" },
 											{
 												type: "text",
 												label: "Placeholder",
@@ -283,7 +283,7 @@ export const initialPages: Page[] = [
 										id: "ele-8",
 										type: "Input",
 										props: [
-											{type: "text", label: "Label", value: "Email"},
+											{ type: "text", label: "Label", value: "Email" },
 											{
 												type: "text",
 												label: "Placeholder",
@@ -295,7 +295,7 @@ export const initialPages: Page[] = [
 										id: "ele-9",
 										type: "Button",
 										props: [
-											{type: "text", label: "Label", value: "Send Message"},
+											{ type: "text", label: "Label", value: "Send Message" },
 										],
 									},
 								],
@@ -329,7 +329,7 @@ export const initialPages: Page[] = [
 										id: "ele-10",
 										type: "Heading",
 										props: [
-											{type: "text", label: "Text", value: "The Stride Blog"},
+											{ type: "text", label: "Text", value: "The Stride Blog" },
 										],
 									},
 									{
@@ -423,7 +423,7 @@ export const initialPages: Page[] = [
 										id: "ele-14",
 										type: "Heading",
 										props: [
-											{type: "text", label: "Text", value: "New Arrivals"},
+											{ type: "text", label: "Text", value: "New Arrivals" },
 										],
 									},
 									{
@@ -490,7 +490,7 @@ export const initialPages: Page[] = [
 										id: "ele-18",
 										type: "Button",
 										props: [
-											{type: "text", label: "Label", value: "Add to Cart"},
+											{ type: "text", label: "Label", value: "Add to Cart" },
 										],
 									},
 								],
