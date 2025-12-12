@@ -4,7 +4,7 @@ import VBPrototype from "@/app/components/VBPrototype";
 import { useParams } from "next/navigation";
 import { use } from "react";
 import usePersistentState from "@/app/usePersistentState";
-import { initialPages2, Page } from "@/app/db/initialData";
+import { initialPages, Page } from "@/app/db/initialData";
 import { useEffect, useState } from "react";
 import { Box, Heading } from "@optiaxiom/react";
 
@@ -12,7 +12,7 @@ export default function EditPageDetail() {
 	const params = useParams();
 	const resolvedParams = params instanceof Promise ? use(params) : params;
 	const id = (resolvedParams?.id ?? "") as string;
-	const [pages, setPages, isHydrated] = usePersistentState("pages", initialPages2) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages", initialPages) as [
 		Page[],
 		any,
 		boolean

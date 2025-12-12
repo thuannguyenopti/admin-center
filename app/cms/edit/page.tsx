@@ -12,7 +12,7 @@ import Item from "@/app/components/Item";
 import { IconFile } from "@tabler/icons-react";
 import { Flex } from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import { initialPages2, Page } from "@/app/db/initialData";
+import { initialPages, Page } from "@/app/db/initialData";
 import { useState } from "react";
 
 type PageNode = Page & { children: PageNode[] };
@@ -140,7 +140,7 @@ const PageRow = ({ node, level = 0 }: { node: PageNode; level?: number }) => {
 };
 
 export default function EditPage() {
-	const [pages, , isHydrated] = usePersistentState("pages", initialPages2) as [
+	const [pages, , isHydrated] = usePersistentState("pages", initialPages) as [
 		Page[],
 		any,
 		boolean
