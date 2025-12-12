@@ -1,15 +1,17 @@
 "use client";
 
 import VBPrototype from "@/app/components/VBPrototype";
-import {useParams} from "next/navigation";
+import { useParams } from "next/navigation";
+import { use } from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData";
-import {useEffect, useState} from "react";
-import {Box, Heading} from "@optiaxiom/react";
+import { initialPages, Page } from "@/app/db/initialData";
+import { useEffect, useState } from "react";
+import { Box, Heading } from "@optiaxiom/react";
 
 export default function EditPageDetail() {
 	const params = useParams();
-	const id = params.id as string;
+	const resolvedParams = params instanceof Promise ? use(params) : params;
+	const id = (resolvedParams?.id ?? "") as string;
 	const [pages, setPages, isHydrated] = usePersistentState("pages", initialPages) as [
 		Page[],
 		any,
@@ -28,7 +30,7 @@ export default function EditPageDetail() {
 		if (!page) return;
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
-				return {...p, content: newContent, status: "Changed"};
+				return { ...p, content: newContent, status: "Changed" };
 			}
 			return p;
 		});
@@ -39,7 +41,7 @@ export default function EditPageDetail() {
 		if (!page) return;
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
-				return {...p, status: "Published"};
+				return { ...p, status: "Published" };
 			}
 			return p;
 		});

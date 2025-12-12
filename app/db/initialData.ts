@@ -175,22 +175,259 @@ export const initialUsers: User[] = [
 	},
 ];
 
+
+export type Property = {
+	id: string;
+	name: string;
+	type: "text" | "textarea" | "richtext" | "reference" | "address" | "outline";
+	required?: boolean;
+	/** when type is reference this points to a collection like 'users' */
+	of?: string;
+};
+
+export type ContentType = {
+	id: string;
+	name: string;
+	description?: string;
+	properties: Property[];
+};
+
+export const initialContentTypes: ContentType[] = [
+	{
+		id: "ct-blog-post",
+		name: "Blog Post",
+		description: "A standard blog/article page",
+		properties: [
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "subtitle", name: "Subtitle", type: "text" },
+			{ id: "body", name: "Body", type: "richtext", required: true },
+			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
+		],
+	},
+	{
+		id: "ct-about-page",
+		name: "About Page",
+		description: "Company about page",
+		properties: [
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "about", name: "About (Stride)", type: "richtext" },
+			{ id: "history", name: "History", type: "textarea" },
+			{ id: "orgAddress", name: "Org address", type: "address" },
+		],
+	},
+	{
+		id: "exp-landing-page",
+		name: "Landing Page",
+		description: "Landing page experience with main and aside outlines",
+		properties: [
+			{ id: "mainOutline", name: "Main", type: "outline" },
+			{ id: "asideOutline", name: "Aside", type: "outline" },
+		],
+	},
+];
+
 export type Page = {
 	id: string;
 	name: string;
 	parentId: string | null;
 	status: "Published" | "Draft" | "Review" | "Changed";
 	lastModified: string;
+	contentTypeId: string;
+	slug?: string;
+	data?: Record<string, any>;
 	content?: any;
 };
 
 export const initialPages: Page[] = [
+	{
+		id: "page-blog-1",
+		name: "Welcome to Our Blog",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-20",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/welcome",
+		data: {
+			title: "Welcome to Our Blog",
+			subtitle: "Thoughts, news and updates",
+			body: "<p>This is the first blog post. Welcome!</p>",
+			author: "1",
+		},
+	},
+	{
+		id: "page-about-1",
+		name: "About Us",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-18",
+		contentTypeId: "ct-about-page",
+		slug: "about",
+		data: {
+			title: "About Stride",
+			about: "<p>Stride is a company focused on building delightful shopping experiences.</p>",
+			history: "Started in 2019 as a small team...",
+			orgAddress: "123 Stride Way, Portland, OR, 97201",
+		},
+	},
+
+	// Additional sample blog posts (sports related)
+	{
+		id: "page-blog-2",
+		name: "Marathon Training Basics",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-15",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/marathon-training-basics",
+		data: {
+			title: "Marathon Training Basics",
+			subtitle: "How to prepare for your first 26.2 miles",
+			body: "<p>Start with a solid base, progressively increase mileage, and prioritise recovery.</p>",
+			author: "2",
+		},
+	},
+	{
+		id: "page-blog-3",
+		name: "Mountain Biking the Grand Canyon",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-10",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/grand-canyon-mountain-bike",
+		data: {
+			title: "Mountain Biking the Grand Canyon",
+			subtitle: "A guide to routes, gear, and safety",
+			body: "<p>The Grand Canyon offers epic descents — bring technical skills, hydration, and respect for the environment.</p>",
+			author: "3",
+		},
+	},
+	{
+		id: "page-blog-4",
+		name: "High Jump Competition Tips",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-05",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/high-jump-competition-tips",
+		data: {
+			title: "High Jump Competition Tips",
+			subtitle: "Improve your approach and clearance",
+			body: "<p>Work on speed-to-bar rhythm, take-off mechanics, and consistent landing drills to boost clearance.</p>",
+			author: "1",
+		},
+	},
+	{
+		id: "page-blog-5",
+		name: "Essential Trail Running Skills",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-01",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/trail-running-skills",
+		data: {
+			title: "Essential Trail Running Skills",
+			subtitle: "Downhill technique, footing and pacing",
+			body: "<p>Focus on shorter, quicker steps downhill, look ahead for line choices, and build ankle strength.</p>",
+			author: "4",
+		},
+	},
+	{
+		id: "page-blog-6",
+		name: "Triathlon Training: Swim, Bike, Run",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-28",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/triathlon-swim-bike-run-plan",
+		data: {
+			title: "Triathlon Training: Swim, Bike, Run",
+			subtitle: "Balancing three disciplines without overtraining",
+			body: "<p>Use block sessions, prioritise weaker disciplines, and keep consistent brick workouts to adapt to race demands.</p>",
+			author: "2",
+		},
+	},
+	{
+		id: "page-blog-7",
+		name: "Preparing for a Rowing Regatta",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-25",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/rowing-regatta-prep",
+		data: {
+			title: "Preparing for a Rowing Regatta",
+			subtitle: "Race day routines and crew coordination",
+			body: "<p>Sync your cadence, practise race starts, and refine cox/crew calls during head-to-head pieces.</p>",
+			author: "3",
+		},
+	},
+	{
+		id: "page-blog-8",
+		name: "Soccer Tactics: Pressing and Possession",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-20",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/soccer-tactics-overview",
+		data: {
+			title: "Soccer Tactics: Pressing and Possession",
+			subtitle: "When to press high and when to control possession",
+			body: "<p>Pressing traps opponents but requires fitness; possession gains control — mix both depending on match context.</p>",
+			author: "1",
+		},
+	},
+	{
+		id: "page-blog-9",
+		name: "Rock Climbing for Beginners",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-15",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/rock-climbing-beginners",
+		data: {
+			title: "Rock Climbing for Beginners",
+			subtitle: "Technique, gear, and safety essentials",
+			body: "<p>Learn footwork, efficient movement, and proper belaying before pushing grades outdoors.</p>",
+			author: "4",
+		},
+	},
+	{
+		id: "page-blog-10",
+		name: "Open Water Swimming Tips",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-10",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/open-water-swimming-tips",
+		data: {
+			title: "Open Water Swimming Tips",
+			subtitle: "Sighting, drafting and race strategies",
+			body: "<p>Practice sighting, warm up properly, and draft when possible to save energy on long swims.</p>",
+			author: "2",
+		},
+	},
+	{
+		id: "page-blog-11",
+		name: "Cycling Nutrition for Endurance Rides",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-09-05",
+		contentTypeId: "ct-blog-post",
+		slug: "blog/ultra-running-nutrition",
+		data: {
+			title: "Ultra Running Nutrition Essentials",
+			subtitle: "Fueling strategies for 50km+ events",
+			body: "<p>Test fueling plans in training, use a mix of solids and gels, and adapt to GI tolerance on long efforts.</p>",
+			author: "3",
+		},
+	},
 	{
 		id: "1",
 		name: "Homepage",
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-27",
+		data: {},
 		content: [
 			{
 				id: "section-1",
@@ -229,7 +466,7 @@ export const initialPages: Page[] = [
 									{
 										id: "ele-101",
 										type: "Button",
-										props: [{type: "text", label: "Label", value: "Shop Now"}],
+										props: [{ type: "text", label: "Label", value: "Shop Now" }],
 									},
 								],
 							},
@@ -238,6 +475,7 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: ""
 	},
 	{
 		id: "2",
@@ -261,7 +499,7 @@ export const initialPages: Page[] = [
 									{
 										id: "ele-3",
 										type: "Heading",
-										props: [{type: "text", label: "Text", value: "Our Story"}],
+										props: [{ type: "text", label: "Text", value: "Our Story" }],
 									},
 									{
 										id: "ele-4",
@@ -281,6 +519,8 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: "",
+		data: undefined
 	},
 	{
 		id: "3",
@@ -305,7 +545,7 @@ export const initialPages: Page[] = [
 										id: "ele-5",
 										type: "Heading",
 										props: [
-											{type: "text", label: "Text", value: "Get in Touch"},
+											{ type: "text", label: "Text", value: "Get in Touch" },
 										],
 									},
 									{
@@ -323,7 +563,7 @@ export const initialPages: Page[] = [
 										id: "ele-7",
 										type: "Input",
 										props: [
-											{type: "text", label: "Label", value: "Name"},
+											{ type: "text", label: "Label", value: "Name" },
 											{
 												type: "text",
 												label: "Placeholder",
@@ -335,7 +575,7 @@ export const initialPages: Page[] = [
 										id: "ele-8",
 										type: "Input",
 										props: [
-											{type: "text", label: "Label", value: "Email"},
+											{ type: "text", label: "Label", value: "Email" },
 											{
 												type: "text",
 												label: "Placeholder",
@@ -347,7 +587,7 @@ export const initialPages: Page[] = [
 										id: "ele-9",
 										type: "Button",
 										props: [
-											{type: "text", label: "Label", value: "Send Message"},
+											{ type: "text", label: "Label", value: "Send Message" },
 										],
 									},
 								],
@@ -357,6 +597,8 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: "",
+		data: undefined
 	},
 	{
 		id: "4",
@@ -381,7 +623,7 @@ export const initialPages: Page[] = [
 										id: "ele-10",
 										type: "Heading",
 										props: [
-											{type: "text", label: "Text", value: "The Stride Blog"},
+											{ type: "text", label: "Text", value: "The Stride Blog" },
 										],
 									},
 									{
@@ -402,6 +644,8 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: "",
+		data: undefined
 	},
 	{
 		id: "5",
@@ -451,6 +695,7 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: ""
 	},
 	{
 		id: "6",
@@ -475,7 +720,7 @@ export const initialPages: Page[] = [
 										id: "ele-14",
 										type: "Heading",
 										props: [
-											{type: "text", label: "Text", value: "New Arrivals"},
+											{ type: "text", label: "Text", value: "New Arrivals" },
 										],
 									},
 									{
@@ -496,6 +741,7 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: ""
 	},
 	{
 		id: "7",
@@ -542,7 +788,7 @@ export const initialPages: Page[] = [
 										id: "ele-18",
 										type: "Button",
 										props: [
-											{type: "text", label: "Label", value: "Add to Cart"},
+											{ type: "text", label: "Label", value: "Add to Cart" },
 										],
 									},
 								],
@@ -552,5 +798,212 @@ export const initialPages: Page[] = [
 				],
 			},
 		],
+		contentTypeId: ""
+	},
+	{
+		id: "exp-landing-1",
+		contentTypeId: "exp-landing-page",
+		name: "Default Landing",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-27",
+		content: {
+			main: {
+				title: "Main",
+				content: [
+					{
+						id: "section-1",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-1",
+								open: true,
+								children: [
+									{
+										id: "col-1",
+										open: true,
+										children: [
+											{
+												id: "ele-hero-heading",
+												type: "Heading",
+												props: [
+													{ type: "text", label: "Text", value: "Welcome to Stride" },
+												],
+											},
+											{
+												id: "ele-hero-sub",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "Move faster with premium gear." },
+												],
+											},
+											{
+												id: "ele-hero-cta",
+												type: "Button",
+												props: [{ type: "text", label: "Label", value: "Shop Now" }],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-2",
+						name: "Activities",
+						open: true,
+						children: [
+							{
+								id: "row-2",
+								open: true,
+								children: [
+									{
+										id: "col-2",
+										open: true,
+										children: [
+											{
+												id: "ele-activities-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Activities" }],
+											},
+											{
+												id: "ele-activities-text",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "Explore training plans and community events." },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-3",
+						name: "Community",
+						open: true,
+						children: [
+							{
+								id: "row-3",
+								open: true,
+								children: [
+									{
+										id: "col-3",
+										open: true,
+										children: [
+											{
+												id: "ele-community-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Community" }],
+											},
+											{
+												id: "ele-community-text",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "Join runners in your area and share progress." },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-4",
+						name: "Partners",
+						open: true,
+						children: [
+							{
+								id: "row-4",
+								open: true,
+								children: [
+									{
+										id: "col-4",
+										open: true,
+										children: [
+											{
+												id: "ele-partners-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Partners" }],
+											},
+											{
+												id: "ele-partners-text",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "We collaborate with the best brands." },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+			aside: {
+				title: "Aside",
+				content: [
+					{
+						id: "section-5",
+						name: "Latest Blogposts",
+						open: true,
+						children: [
+							{
+								id: "row-5",
+								open: true,
+								children: [
+									{
+										id: "col-5",
+										open: true,
+										children: [
+											{
+												id: "ele-latest-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Latest Blogposts" }],
+											},
+											// Blog post references will be rendered by the UI using initialPages
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-6",
+						name: "Join Race",
+						open: true,
+						children: [
+							{
+								id: "row-6",
+								open: true,
+								children: [
+									{
+										id: "col-6",
+										open: true,
+										children: [
+											{
+												id: "ele-join-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Join Race" }],
+											},
+											{
+												id: "ele-join-cta",
+												type: "Button",
+												props: [{ type: "text", label: "Label", value: "Sign Up" }],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+		},
 	},
 ];
+

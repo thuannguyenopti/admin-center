@@ -5,12 +5,10 @@ import {
 	Heading,
 	RadioGroup,
 	Radio,
-	Separator,
 	Menu,
 	MenuTrigger,
 	MenuContent,
 	Field,
-	Alert,
 } from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
@@ -18,23 +16,10 @@ import {Text} from "@/app/components/Text";
 import {IconDots, IconGripVertical, IconPlus} from "@tabler/icons-react";
 import {useState} from "react";
 import Preview from "./Preview";
-import {useParams} from "next/navigation";
-import usePersistentState from "@/app/usePersistentState";
 import {Aside} from "@/app/context/LayoutContext";
-import {AlgorithmPinnedResult, Algorithm, initialAlgorithms} from "@/app/db/initialData";
 
 export default function OrderPage() {
-	const params = useParams();
-	const id = params.id as string;
-	const [algorithmPinnedResults] = usePersistentState(`algorithm_pinned_results_${id}`, []) as [
-		AlgorithmPinnedResult[],
-		any
-	];
-
 	const [method, setMethod] = useState("relevance");
-
-	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
-	const currentAlgorithm = algorithms.find((a) => a.id === id);
 
 	const rules = [
 		{
