@@ -24,7 +24,7 @@ import {
 	AlgorithmBestBet,
 	AlgorithmBestBetReference,
 	Algorithm,
-} from "@/app/db/initialData.clean";
+} from "@/app/db/initialData";
 import {zeroResultQueries, ZeroResultQuery, scaleValue} from "@/app/db/analyticsData";
 import usePersistentState from "@/app/usePersistentState";
 import BestBetDialog from "../../components/BestBetDialog";

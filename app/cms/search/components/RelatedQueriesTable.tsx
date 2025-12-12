@@ -2,7 +2,7 @@ import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {IconCongruentTo, IconTrash, IconPencil, IconDots} from "@tabler/icons-react";
 import {Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
-import {RelatedQuery} from "@/app/db/initialData.clean";
+import {RelatedQuery} from "@/app/db/initialData";
 
 interface RelatedQueriesTableProps {
 	relatedQueries: RelatedQuery[];

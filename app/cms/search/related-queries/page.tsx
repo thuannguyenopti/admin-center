@@ -7,7 +7,7 @@ import {Flex} from "@/app/components/Flex";
 import {IconPlus, IconSearch} from "@tabler/icons-react";
 import {useState, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {RelatedQuery, initialRelatedQueries} from "@/app/db/initialData.clean";
+import {RelatedQuery, initialRelatedQueries} from "@/app/db/initialData";
 import RelatedQueriesTable from "../components/RelatedQueriesTable";
 import RelatedQueryDialog from "../components/RelatedQueryDialog";
 

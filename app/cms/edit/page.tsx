@@ -12,7 +12,7 @@ import Item from "@/app/components/Item";
 import { IconFile } from "@tabler/icons-react";
 import { Flex } from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import { initialPages, Page } from "@/app/db/initialData.clean";
+import { initialPages, Page } from "@/app/db/initialData";
 import { useState } from "react";
 
 type PageNode = Page & { children: PageNode[] };

@@ -4,7 +4,7 @@ import VBPrototype from "@/app/components/VBPrototype";
 import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData.clean";
+import {initialPages, Page} from "@/app/db/initialData";
 import {useEffect, useState} from "react";
 import {Box, Heading} from "@optiaxiom/react";
 
