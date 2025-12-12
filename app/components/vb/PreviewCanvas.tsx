@@ -50,6 +50,13 @@ export default function PreviewCanvas({
         const el = root.querySelector<HTMLElement>(`[data-element-id="${currentEle}"]`);
         if (!el) return;
 
+        // optional: only scroll if it's not already mostly visible
+        const r = el.getBoundingClientRect();
+        const cr = root.getBoundingClientRect();
+        const visible =
+            r.top >= cr.top + 40 && r.bottom <= cr.bottom - 40; // padding threshold
+        if (visible) return;
+
         el.scrollIntoView({ behavior: "smooth", block: "center" });
     }, [currentEle]);
 
