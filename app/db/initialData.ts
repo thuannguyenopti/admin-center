@@ -123,7 +123,58 @@ export const initialUsers: User[] = [
 	},
 ];
 
-export type PageType = {
+
+export type Property = {
+	id: string;
+	name: string;
+	type: "text" | "textarea" | "richtext" | "reference" | "address" | "outline";
+	required?: boolean;
+	/** when type is reference this points to a collection like 'users' */
+	of?: string;
+};
+
+export type ContentType = {
+	id: string;
+	name: string;
+	description?: string;
+	properties: Property[];
+};
+
+export const initialContentTypes: ContentType[] = [
+	{
+		id: "ct-blog-post",
+		name: "Blog Post",
+		description: "A standard blog/article page",
+		properties: [
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "subtitle", name: "Subtitle", type: "text" },
+			{ id: "body", name: "Body", type: "richtext", required: true },
+			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
+		],
+	},
+	{
+		id: "ct-about-page",
+		name: "About Page",
+		description: "Company about page",
+		properties: [
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "about", name: "About (Stride)", type: "richtext" },
+			{ id: "history", name: "History", type: "textarea" },
+			{ id: "orgAddress", name: "Org address", type: "address" },
+		],
+	},
+	{
+		id: "exp-landing-page",
+		name: "Landing Page",
+		description: "Landing page experience with main and aside outlines",
+		properties: [
+			{ id: "mainOutline", name: "Main", type: "outline" },
+			{ id: "asideOutline", name: "Aside", type: "outline" },
+		],
+	},
+];
+
+export type Page = {
 	id: string;
 	name: string;
 	parentId: string | null;
@@ -131,11 +182,11 @@ export type PageType = {
 	lastModified: string;
 	contentTypeId: string;
 	slug?: string;
-	data: Record<string, any>;
+	data?: Record<string, any>;
 	content?: any;
 };
 
-export const initialPages: PageType[] = [
+export const initialPages: Page[] = [
 	{
 		id: "page-blog-1",
 		name: "Welcome to Our Blog",
@@ -318,10 +369,6 @@ export const initialPages: PageType[] = [
 			author: "3",
 		},
 	},
-];
-
-
-export const initialPages2: PageType[] = [
 	{
 		id: "1",
 		name: "Homepage",
@@ -376,6 +423,7 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: ""
 	},
 	{
 		id: "2",
@@ -419,6 +467,8 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: "",
+		data: undefined
 	},
 	{
 		id: "3",
@@ -495,6 +545,8 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: "",
+		data: undefined
 	},
 	{
 		id: "4",
@@ -540,6 +592,8 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: "",
+		data: undefined
 	},
 	{
 		id: "5",
@@ -589,6 +643,7 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: ""
 	},
 	{
 		id: "6",
@@ -634,6 +689,7 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: ""
 	},
 	{
 		id: "7",
@@ -690,5 +746,212 @@ export const initialPages2: PageType[] = [
 				],
 			},
 		],
+		contentTypeId: ""
+	},
+	{
+		id: "exp-landing-1",
+		contentTypeId: "exp-landing-page",
+		name: "Default Landing",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-10-27",
+		content: {
+			main: {
+				title: "Main",
+				content: [
+					{
+						id: "section-1",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-1",
+								open: true,
+								children: [
+									{
+										id: "col-1",
+										open: true,
+										children: [
+											{
+												id: "ele-hero-heading",
+												type: "Heading",
+												props: [
+													{ type: "text", label: "Text", value: "Welcome to Stride" },
+												],
+											},
+											{
+												id: "ele-hero-sub",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "Move faster with premium gear." },
+												],
+											},
+											{
+												id: "ele-hero-cta",
+												type: "Button",
+												props: [{ type: "text", label: "Label", value: "Shop Now" }],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-2",
+						name: "Activities",
+						open: true,
+						children: [
+							{
+								id: "row-2",
+								open: true,
+								children: [
+									{
+										id: "col-2",
+										open: true,
+										children: [
+											{
+												id: "ele-activities-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Activities" }],
+											},
+											{
+												id: "ele-activities-text",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "Explore training plans and community events." },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-3",
+						name: "Community",
+						open: true,
+						children: [
+							{
+								id: "row-3",
+								open: true,
+								children: [
+									{
+										id: "col-3",
+										open: true,
+										children: [
+											{
+												id: "ele-community-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Community" }],
+											},
+											{
+												id: "ele-community-text",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "Join runners in your area and share progress." },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-4",
+						name: "Partners",
+						open: true,
+						children: [
+							{
+								id: "row-4",
+								open: true,
+								children: [
+									{
+										id: "col-4",
+										open: true,
+										children: [
+											{
+												id: "ele-partners-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Partners" }],
+											},
+											{
+												id: "ele-partners-text",
+												type: "Text",
+												props: [
+													{ type: "text", label: "Text", value: "We collaborate with the best brands." },
+												],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+			aside: {
+				title: "Aside",
+				content: [
+					{
+						id: "section-5",
+						name: "Latest Blogposts",
+						open: true,
+						children: [
+							{
+								id: "row-5",
+								open: true,
+								children: [
+									{
+										id: "col-5",
+										open: true,
+										children: [
+											{
+												id: "ele-latest-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Latest Blogposts" }],
+											},
+											// Blog post references will be rendered by the UI using initialPages
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "section-6",
+						name: "Join Race",
+						open: true,
+						children: [
+							{
+								id: "row-6",
+								open: true,
+								children: [
+									{
+										id: "col-6",
+										open: true,
+										children: [
+											{
+												id: "ele-join-heading",
+												type: "Heading",
+												props: [{ type: "text", label: "Text", value: "Join Race" }],
+											},
+											{
+												id: "ele-join-cta",
+												type: "Button",
+												props: [{ type: "text", label: "Label", value: "Sign Up" }],
+											},
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+			},
+		},
 	},
 ];
+
