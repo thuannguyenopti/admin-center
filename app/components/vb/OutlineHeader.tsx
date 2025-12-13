@@ -8,6 +8,7 @@ import {
     Menu,
     MenuContent,
     MenuTrigger,
+    Tabs,
     TabsList,
     TabsTrigger,
     Text,
@@ -121,24 +122,26 @@ export default function OutlineHeader({
             <Box display="flex">
                 <Box w="20" />
                 <Box flex="1" borderB="1" borderColor="border.tertiary">
-                    <TabsList gap="24">
-                        <TabsTrigger
-                            value="main"
-                            fontSize="md"
-                            fontWeight="500"
-                            color={activeTab === "main" ? "fg.default" : "fg.secondary"}
-                        >
-                            Main
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="properties"
-                            fontSize="md"
-                            fontWeight="500"
-                            color={activeTab === "properties" ? "fg.default" : "fg.secondary"}
-                        >
-                            Properties
-                        </TabsTrigger>
-                    </TabsList>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        <TabsList gap="24">
+                            <TabsTrigger
+                                value="main"
+                                fontSize="md"
+                                fontWeight="500"
+                                color={activeTab === "main" ? "fg.default" : "fg.secondary"}
+                            >
+                                Main
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="properties"
+                                fontSize="md"
+                                fontWeight="500"
+                                color={activeTab === "properties" ? "fg.default" : "fg.secondary"}
+                            >
+                                Properties
+                            </TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 </Box>
             </Box>
         </>
