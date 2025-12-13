@@ -152,6 +152,130 @@ const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
 	return <span>{texts[index]}</span>;
 };
 
+
+type Outline = {
+	id: string;
+	title: string;
+	tree: any[];
+	elements: EleMap;
+};
+
+
+const isOutlineArray = (v: any): v is Outline[] => {
+	if (!Array.isArray(v)) return false;
+	if (v.length === 0) return true; // IMPORTANT: allow "0 outlines" pages
+	const o = v[0];
+	return (
+		o &&
+		typeof o === "object" &&
+		typeof o.id === "string" &&
+		typeof o.title === "string" &&
+		Array.isArray(o.tree) &&
+		typeof o.elements === "object"
+	);
+};
+
+type PageProperties = {
+	seoTitle?: string;
+	keywords?: string;
+	description?: string;
+	meta?: string;
+	campaignMode?: "no" | "yes";
+	someOtherSetting?: "setting1" | "setting2";
+};
+
+type PageInput = {
+	outlines?: Outline[] | any[] | SplitPayload; // allow legacy too
+	properties?: PageProperties;
+};
+
+
+function PropertiesPanel({
+	value,
+	onChange,
+}: {
+	value: PageProperties;
+	onChange: (patch: Partial<PageProperties>) => void;
+}) {
+	return (
+		<Box px="24" py="16" fontSize="sm">
+			<Box mb="16">
+				<Text fontSize="sm" fontWeight="600" mb="8">SEO</Text>
+
+				<Box display="flex" flexDirection="column" gap="8">
+					<Field label="Title">
+						<Input2
+							placeholder="Enter page title"
+							value={value.seoTitle ?? ""}
+							onChange={(e: any) => onChange({ seoTitle: e.target.value })}
+						/>
+					</Field>
+
+					<Field label="Keywords">
+						<Input2
+							placeholder="Enter keywords"
+							value={value.keywords ?? ""}
+							onChange={(e: any) => onChange({ keywords: e.target.value })}
+						/>
+					</Field>
+
+					<Field label="Description">
+						<Textarea
+							placeholder="Enter description"
+							rows={3}
+							value={value.description ?? ""}
+							onChange={(e: any) => onChange({ description: e.target.value })}
+						/>
+					</Field>
+
+					<Field label="Meta">
+						<Textarea
+							placeholder="Enter meta information"
+							rows={3}
+							value={value.meta ?? ""}
+							onChange={(e: any) => onChange({ meta: e.target.value })}
+						/>
+					</Field>
+				</Box>
+			</Box>
+
+			<Box>
+				<Text fontSize="sm" fontWeight="600" mb="8">Settings</Text>
+
+				<Box display="flex" flexDirection="column" gap="8">
+					<Field label="Campaign Mode">
+						<Select
+							value={value.campaignMode ?? "no"}
+							onValueChange={(v: any) => onChange({ campaignMode: v })}
+							options={[
+								{ label: "No", value: "no" },
+								{ label: "Yes", value: "yes" },
+							]}
+						>
+							<SelectTrigger>{value.campaignMode ?? "no"}</SelectTrigger>
+							<SelectContent />
+						</Select>
+					</Field>
+
+					<Field label="Some other setting">
+						<Select
+							value={value.someOtherSetting ?? "setting1"}
+							onValueChange={(v: any) => onChange({ someOtherSetting: v })}
+							options={[
+								{ label: "A setting", value: "setting1" },
+								{ label: "Another setting", value: "setting2" },
+							]}
+						>
+							<SelectTrigger>{value.someOtherSetting ?? "setting1"}</SelectTrigger>
+							<SelectContent />
+						</Select>
+					</Field>
+				</Box>
+			</Box>
+		</Box>
+	);
+}
+
 /** -----------------------------
  * Outline
  * ------------------------------*/
@@ -160,7 +284,7 @@ interface OutlineProps {
 	cloning?: boolean;
 	currentEle: string;
 	currentHoverEle: string;
-	dragging: string;
+	dragging: string | null;
 	theEles: EleMap;
 	onInputChange: (value: string, propIndex: number) => void;
 	setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
@@ -169,6 +293,8 @@ interface OutlineProps {
 	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 	data: any[];
+	properties: PageProperties;
+	setPropertiesPatch: (patch: Partial<PageProperties>) => void;
 }
 
 const Outline: React.FC<OutlineProps> = ({
@@ -184,6 +310,8 @@ const Outline: React.FC<OutlineProps> = ({
 	setData,
 	setTheEles,
 	dragging,
+	properties,
+	setPropertiesPatch
 }) => {
 	// Set open state for section, row, or col by id
 	const setOpen = (id: string, open: boolean) => {
@@ -555,7 +683,7 @@ const Outline: React.FC<OutlineProps> = ({
 											addSection={() => addSection(section.id)}
 											addRow={(e: any) => addRow(e, sindex, null)}
 										>
-											{section.children.map((row: any, index: number) => (
+											{(section.children ?? []).map((row: any, index: number) => (
 												<div key={index}>
 													{/* add row above */}
 													{!dragging && !section.children[index - 1]?.open && (
@@ -607,36 +735,95 @@ const Outline: React.FC<OutlineProps> = ({
 														removeRow={() => removeRow(row.id)}
 														addCol={(e: any) => addCol(e, sindex, index, null)}
 													>
-														{row.children &&
-															row.children.map((col: any, i: number) => (
-																<div key={i}>
-																	{/* add col above */}
-																	{!dragging && (
+														{(row.children ?? []).map((col: any, i: number) => (
+															<div key={i}>
+																{/* add col above */}
+																{!dragging && (
+																	<div
+																		className="ind group h-2 relative z-10 -my-1"
+																		onMouseEnter={(e) => onDragHover(e, section.id)}
+																	>
+																		<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
+																			<Box className="bg-black/5 h-1 w-full" />
+																			<Button
+																				aria-label="Add Column"
+																				size="sm"
+																				appearance="subtle"
+																				className="min-w-6"
+																				onClick={(e: any) => addCol(e, sindex, index, i)}
+																				icon={<IconPlus size={16} />}
+																			/>
+																			<Box className="bg-black/5 h-1 w-full" />
+																		</Box>
+																	</div>
+																)}
+
+																{dragging?.startsWith("col-") &&
+																	col.id !== dragging &&
+																	row.children[i - 1]?.id !== dragging && (
 																		<div
-																			className="ind group h-2 relative z-10 -my-1"
-																			onMouseEnter={(e) => onDragHover(e, section.id)}
+																			className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
+																			onMouseEnter={(e) => onDragHover(e, col.id)}
 																		>
-																			<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-																				<Box className="bg-black/5 h-1 w-full" />
-																				<Button
-																					aria-label="Add Column"
-																					size="sm"
-																					appearance="subtle"
-																					className="min-w-6"
-																					onClick={(e: any) => addCol(e, sindex, index, i)}
-																					icon={<IconPlus size={16} />}
-																				/>
-																				<Box className="bg-black/5 h-1 w-full" />
-																			</Box>
+																			<Box
+																				bg="bg.accent"
+																				rounded="full"
+																				className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+																			/>
 																		</div>
 																	)}
 
-																	{dragging?.startsWith("col-") &&
-																		col.id !== dragging &&
-																		row.children[i - 1]?.id !== dragging && (
+																<Col
+																	col={col}
+																	setOpen={setOpen}
+																	onDragStart={(e: any) => onDragStart(e, col.id)}
+																	removeCol={() => removeCol(col.id)}
+																	// FIX: Col should pass a "type", not an event
+																	addElement={(type: string) =>
+																		addElement(type, i, index, sindex)
+																	}
+																	key={"col" + i}
+																>
+																	{(col.children ?? []).map((element: any, j: number) => (
+																		<div key={"ele" + j}>
+																			{dragging &&
+																				element.id !== dragging &&
+																				col.children[j - 1]?.id !== dragging &&
+																				!dragging.startsWith("section-") &&
+																				!dragging.startsWith("col-") &&
+																				!dragging.startsWith("row-") && (
+																					<div
+																						className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
+																						onMouseEnter={(e) => onDragHover(e, element.id)}
+																					>
+																						<Box
+																							bg="bg.accent"
+																							rounded="full"
+																							className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+																						/>
+																					</div>
+																				)}
+
+																			<Ele
+																				removeEle={() => removeEle(element.id)}
+																				onDragStart={(e: any) => onDragStart(e, element.id)}
+																				type={theEles[element.id]?.type}
+																				element={element}
+																				label={theEles[element.id]?.props?.[0]?.value || undefined}
+																				setCurrentEle={setCurrentEle}
+																				setCurrentHoverEle={setCurrentHoverEle}
+																			/>
+																		</div>
+																	))}
+
+																	{dragging &&
+																		dragging !== col.children[col.children.length - 1]?.id &&
+																		!dragging.startsWith("section-") &&
+																		!dragging.startsWith("row-") &&
+																		!dragging.startsWith("col-") && (
 																			<div
-																				className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
-																				onMouseEnter={(e) => onDragHover(e, col.id)}
+																				className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
+																				onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
 																			>
 																				<Box
 																					bg="bg.accent"
@@ -645,69 +832,9 @@ const Outline: React.FC<OutlineProps> = ({
 																				/>
 																			</div>
 																		)}
-
-																	<Col
-																		col={col}
-																		setOpen={setOpen}
-																		onDragStart={(e: any) => onDragStart(e, col.id)}
-																		removeCol={() => removeCol(col.id)}
-																		// FIX: Col should pass a "type", not an event
-																		addElement={(type: string) =>
-																			addElement(type, i, index, sindex)
-																		}
-																		key={"col" + i}
-																	>
-																		{col.children.map((element: any, j: number) => (
-																			<div key={"ele" + j}>
-																				{dragging &&
-																					element.id !== dragging &&
-																					col.children[j - 1]?.id !== dragging &&
-																					!dragging.startsWith("section-") &&
-																					!dragging.startsWith("col-") &&
-																					!dragging.startsWith("row-") && (
-																						<div
-																							className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																							onMouseEnter={(e) => onDragHover(e, element.id)}
-																						>
-																							<Box
-																								bg="bg.accent"
-																								rounded="full"
-																								className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																							/>
-																						</div>
-																					)}
-
-																				<Ele
-																					removeEle={() => removeEle(element.id)}
-																					onDragStart={(e: any) => onDragStart(e, element.id)}
-																					type={theEles[element.id]?.type}
-																					element={element}
-																					label={theEles[element.id]?.props?.[0]?.value || undefined}
-																					setCurrentEle={setCurrentEle}
-																					setCurrentHoverEle={setCurrentHoverEle}
-																				/>
-																			</div>
-																		))}
-
-																		{dragging &&
-																			dragging !== col.children[col.children.length - 1]?.id &&
-																			!dragging.startsWith("section-") &&
-																			!dragging.startsWith("row-") &&
-																			!dragging.startsWith("col-") && (
-																				<div
-																					className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																					onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
-																				>
-																					<Box
-																						bg="bg.accent"
-																						rounded="full"
-																						className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																					/>
-																				</div>
-																			)}
-																	</Col>
-																</div>
-															))}
+																</Col>
+															</div>
+														))}
 
 														{/* add column last */}
 														{!dragging && (
@@ -848,62 +975,8 @@ const Outline: React.FC<OutlineProps> = ({
 									)}
 							</Box>
 						</TabsContent>
-
 						<TabsContent value="properties">
-							<Box px="24" py="16" fontSize="sm">
-								<Box mb="16">
-									<Text fontSize="sm" fontWeight="600" mb="8">
-										SEO
-									</Text>
-									<Box display="flex" flexDirection="column" gap="8">
-										<Field label="Title">
-											<Input2 placeholder="Enter page title" />
-										</Field>
-										<Field label="Keywords">
-											<Input2 placeholder="Enter keywords" />
-										</Field>
-										<Field label="Description">
-											<Textarea placeholder="Enter description" rows={3} />
-										</Field>
-										<Field label="Meta">
-											<Textarea placeholder="Enter meta information" rows={3} />
-										</Field>
-									</Box>
-								</Box>
-
-								<Box>
-									<Text fontSize="sm" fontWeight="600" mb="8">
-										Settings
-									</Text>
-									<Box display="flex" flexDirection="column" gap="8">
-										<Field label="Campaign Mode">
-											<Select
-												defaultValue="no"
-												options={[
-													{ label: "No", value: "no" },
-													{ label: "Yes", value: "yes" },
-												]}
-											>
-												<SelectTrigger>No</SelectTrigger>
-												<SelectContent />
-											</Select>
-										</Field>
-
-										<Field label="Some other setting">
-											<Select
-												defaultValue="setting1"
-												options={[
-													{ label: "A setting", value: "setting1" },
-													{ label: "Another setting", value: "setting2" },
-												]}
-											>
-												<SelectTrigger>A setting</SelectTrigger>
-												<SelectContent />
-											</Select>
-										</Field>
-									</Box>
-								</Box>
-							</Box>
+							<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
 						</TabsContent>
 					</Tabs>
 				</div>
@@ -949,9 +1022,8 @@ export default function VBPrototype({
 	pageName,
 	pageStatus,
 }: {
-	// Accept both merged tree array and split payload (AI / storage / etc.)
-	initialData?: any[] | SplitPayload;
-	onSave?: (data: any[]) => void;
+	initialData?: PageInput;           // ✅ page object now
+	onSave?: (page: PageInput) => void; // ✅ returns outlines + properties
 	onPublish?: () => void;
 	pageName?: string;
 	pageStatus?: string;
@@ -959,30 +1031,134 @@ export default function VBPrototype({
 	const [dragging, setDragging] = useState<any>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
 
+	type EleMap = Record<string, { type: string; props: any[] }>;
+	const defaultProps: PageProperties = {
+		seoTitle: "",
+		keywords: "",
+		description: "",
+		meta: "",
+		campaignMode: "no",
+		someOtherSetting: "setting1",
+	};
+
+	const [properties, setProperties] = useState<PageProperties>(() => {
+		return { ...defaultProps, ...(initialData?.properties ?? {}) };
+	});
+
+	const [outlines, _setOutlines] = useState<Outline[]>(() => {
+		const raw = initialData?.outlines;
+
+		// allow explicit "0 outlines"
+		if (isOutlineArray(raw)) {
+			return (raw ?? []).map((o) => ({
+				...o,
+				tree: ensureOpen(stripTransientFlags(o.tree ?? [])),
+				elements: o.elements ?? {},
+			}));
+		}
+
+		// if missing outlines entirely -> default outline (editable)
+		if (raw == null) {
+			return [
+				{ id: "outline-main", title: "Main", tree: [], elements: {} },
+			];
+		}
+
+		// legacy single-outline payload
+		const norm = normalizePage(raw);
+		return [
+			{ id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles },
+		];
+	});
+
+	const setOutlines = (arg: React.SetStateAction<Outline[]>) => {
+		hasChanged.current = true;
+		_setOutlines(arg);
+	};
+
+	const setPropertiesPatch = (patch: Partial<PageProperties>) => {
+		hasChanged.current = true;
+		setProperties((p) => ({ ...p, ...patch }));
+	};
+
+	const [activeOutlineId, setActiveOutlineId] = useState<string | null>(() => {
+		return outlines.length ? outlines[0].id : null;
+	});
+
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
+
+	useEffect(() => {
+		if (outlines.length === 0) {
+			setActiveOutlineId(null);
+			setCurrentEle("none");
+			setCurrentHoverEle("none");
+			return;
+		}
+		if (!activeOutlineId || !outlines.some((o) => o.id === activeOutlineId)) {
+			setActiveOutlineId(outlines[0].id);
+		}
+	}, [outlines, activeOutlineId]);
+
+	const activeOutline = activeOutlineId
+		? outlines.find((o) => o.id === activeOutlineId) ?? null
+		: null;
+
+	const data = activeOutline?.tree ?? [];
+	const theEles = activeOutline?.elements ?? {};
+
+	const setData = (arg: React.SetStateAction<any[]>) => {
+		hasChanged.current = true;
+		setOutlines((prev) =>
+			prev.map((o) =>
+				o.id === activeOutlineId
+					? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg }
+					: o
+			)
+		);
+	};
+
+	const setTheEles = (arg: React.SetStateAction<EleMap>) => {
+		hasChanged.current = true;
+		setOutlines((prev) =>
+			prev.map((o) =>
+				o.id === activeOutlineId
+					? {
+						...o,
+						elements: typeof arg === "function" ? (arg as any)(o.elements) : arg,
+					}
+					: o
+			)
+		);
+	};
+
+	const findOutlineIdForElement = (eleId: string) => {
+		for (const o of outlines) {
+			if (o.elements?.[eleId]) return o.id;
+		}
+		return null;
+	};
+
+	const setCurrentEleSmart = (value: React.SetStateAction<string>) => {
+		const eleId = typeof value === "function" ? value(currentEle) : value;
+
+		setCurrentEle(eleId);
+
+		if (!eleId || eleId === "none") return;
+
+		const owner = findOutlineIdForElement(eleId);
+		if (owner && owner !== activeOutlineId) setActiveOutlineId(owner);
+	};
+
 	const hasChanged = useRef(false);
 
 	const initialNorm = useRef<NormalizeResult | null>(null);
 	if (!initialNorm.current) initialNorm.current = normalizePage(initialData ?? []);
 
-	const [theEles, _setTheEles] = useState<EleMap>(() => initialNorm.current!.theEles);
-	const setTheEles = (arg: SetStateAction<EleMap>) => {
-		hasChanged.current = true;
-		_setTheEles(arg);
-	};
-
-	const [data, _setData] = useState<any[]>(() => initialNorm.current!.data);
-	const setData = (arg: SetStateAction<any[]>) => {
-		hasChanged.current = true;
-		_setData(arg);
-	};
-
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
 	const isFirstRender = useRef(true);
 	const onSaveRef = useRef(onSave);
-
 
 	const onInputChange = (value: any, propIndex: number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
@@ -1404,12 +1580,19 @@ export default function VBPrototype({
 		}
 		if (!hasChanged.current) return;
 
-		const pruned = pruneEles(data, theEles);
-		const mergedData = mergeData(stripTransientFlags(data), pruned);
+		const nextOutlines = outlines.map((o) => ({
+			...o,
+			elements: pruneEles(o.tree, o.elements),
+			tree: stripTransientFlags(o.tree),
+		}));
 
-		onSaveRef.current?.(mergedData);
+		onSaveRef.current?.({
+			outlines: nextOutlines,
+			properties,
+		});
+
 		setLastSaved(new Date());
-	}, [data, theEles]);
+	}, [outlines, properties]);
 
 	// Drag/drop + key handlers
 	useEffect(() => {
@@ -1462,7 +1645,32 @@ export default function VBPrototype({
 		};
 	}, [currentEle, dragging, currentHoverEle, cloning, theEles, data]);
 
+	if (outlines.length === 0) {
+		return (
+			<div className="select-none" style={{ height: "100%" }}>
+				<Box
+					bg="bg.page"
+					w="full"
+					className="grid grid-rows-[0fr_1fr]"
+					style={{ height: "100%", overflow: "hidden" }}
+				>
+					<CMSToolbar
+						pageName={pageName || "New Page"}
+						lastSaved={lastSaved}
+						pageStatus={pageStatus}
+						onPublish={onPublish}
+						contentTypeIcon={<IconFile size={16} />}
+					/>
+					<Box style={{ overflowY: "auto" }}>
+						<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+					</Box>
+				</Box>
+			</div>
+		);
+	}
+
 	return (
+
 		<div className="select-none" style={{ height: "100%" }}>
 			<Box
 				bg="bg.page"
@@ -1513,21 +1721,45 @@ export default function VBPrototype({
 						</Box>
 						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 					</div>
-
-					<Outline
-						cloning={cloning}
-						dragging={dragging}
-						setDragging={setDragging}
-						currentHoverEle={currentHoverEle}
-						setCurrentEle={setCurrentEle}
-						data={data}
-						setTheEles={setTheEles}
-						setData={setData}
-						currentEle={currentEle}
-						theEles={theEles}
-						onInputChange={onInputChange}
-						setCurrentHoverEle={setCurrentHoverEle}
-					/>
+					{outlines.length > 1 && (
+						<div className="px-4 pt-4">
+							<div className="text-xs text-black/50 mb-2">Outlines</div>
+							<div className="flex gap-2 flex-wrap">
+								{outlines.map((o) => (
+									<button
+										key={o.id}
+										className={`px-2 py-1 rounded text-xs ${o.id === activeOutlineId ? "bg-black text-white" : "bg-black/5"
+											}`}
+										onClick={() => setActiveOutlineId(o.id)}
+									>
+										{o.title}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
+					{outlines.length > 0 ? (
+						<Outline
+							cloning={cloning}
+							dragging={dragging}
+							setDragging={setDragging}
+							currentHoverEle={currentHoverEle}
+							setCurrentEle={setCurrentEle}
+							data={data}
+							setTheEles={setTheEles}
+							setData={setData}
+							currentEle={currentEle}
+							theEles={theEles}
+							onInputChange={onInputChange}
+							setCurrentHoverEle={setCurrentHoverEle}
+							setPropertiesPatch={setPropertiesPatch}
+							properties={properties}
+						/>
+					) : (
+						<Box p="24" color="fg.secondary">
+							No outlines available.
+						</Box>
+					)}
 				</Box>
 
 				<div
@@ -1535,14 +1767,13 @@ export default function VBPrototype({
 					style={{ height: "100%", overflow: "hidden" }}
 				>
 					<PreviewCanvas
-						data={data}
+						outlines={outlines}
 						theEles={theEles}
 						currentEle={currentEle}
 						currentHoverEle={currentHoverEle}
-						setCurrentEle={setCurrentEle}
+						setCurrentEle={setCurrentEleSmart}
 						setCurrentHoverEle={setCurrentHoverEle}
-						setData={setData}
-						setTheEles={setTheEles}
+						setOutlines={setOutlines}
 					/>
 
 					{isImageSelectorOpen && (
