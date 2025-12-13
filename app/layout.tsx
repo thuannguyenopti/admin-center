@@ -82,7 +82,7 @@ export default function RootLayout({
 						label: "Applications",
 						url: "/cms/settings/applications",
 						children: {
-							title: "Mosey Bank",
+							title: "Stride",
 							children: [
 								{
 									label: "Settings",
@@ -254,7 +254,7 @@ export default function RootLayout({
 						label: "Applications",
 						url: "/fe-hosting/applications/apps",
 						children: {
-							title: "Mosey Bank",
+							title: "Stride",
 							children: [
 								{
 									label: "Application Overview",
