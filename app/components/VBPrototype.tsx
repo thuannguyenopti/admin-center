@@ -1657,7 +1657,7 @@ export default function VBPrototype({
 						onPublish={onPublish}
 						contentTypeIcon={<IconFile size={16} />}
 					/>
-					<Box px="24" pt="16" style={{ overflowY: "auto" }}>
+					<Box px="24" pt="4" style={{ overflowY: "auto" }}>
 						<Heading level="4">Properties</Heading>
 						<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
 					</Box>
@@ -1688,7 +1688,7 @@ export default function VBPrototype({
 				{/* LEFT SIDEBAR */}
 				<Box
 					px="24"
-					pt="16"
+					pt="4"
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
