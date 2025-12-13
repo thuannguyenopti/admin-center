@@ -981,6 +981,11 @@ export default function VBPrototype({
 		? outlines.find((o) => o.id === activeOutlineId) ?? null
 		: null;
 
+	const isTreeViewActive =
+		(activeOutline &&
+			((isMulti && outlineView === "tree" && sidebarTab === "outlines") ||
+				(isSingle && sidebarTab === "outline"))) ?? false;
+
 	const data = activeOutline?.tree ?? [];
 	const theEles = activeOutline?.elements ?? {};
 
@@ -1032,27 +1037,33 @@ export default function VBPrototype({
 		}
 	};
 
-	const [lastSaved, setLastSaved] = useState<Date | null>(null);
-	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
+	const [AI, setAI] = useState(false);
+	const [loadingAI, setLoadingAI] = useState(false);
+	const [aiPrompt, setAiPrompt] = useState("");
 
-	const onInputChange = (value: any, propIndex: number) => {
-		if (currentEle !== "none" && currentEle in theEles) {
-			setTheEles((prev) => {
-				const oldProps = prev[currentEle].props;
-				const newProps = [...oldProps];
-				newProps[propIndex] = { ...oldProps[propIndex], value };
-				return { ...prev, [currentEle]: { ...prev[currentEle], props: newProps } };
-			});
-		}
-	};
+	const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
 
-	/** -----------------------------
-	 * Header actions for View 2 (Add Row)
-	 * ------------------------------*/
-	const addRowToEndOfActiveOutline = () => {
+	const addMenuRef = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		const onDown = (e: MouseEvent) => {
+			if (!isAddMenuOpen) return;
+			const t = e.target as Node;
+			if (addMenuRef.current && !addMenuRef.current.contains(t)) {
+				setIsAddMenuOpen(false);
+			}
+		};
+		window.addEventListener("mousedown", onDown);
+		return () => window.removeEventListener("mousedown", onDown);
+	}, [isAddMenuOpen]);
+
+	useEffect(() => {
+		setIsAddMenuOpen(false);
+	}, [outlineView, outlines.length]);
+
+	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
 			const t = Date.now();
-
 			const mkSection = () => ({
 				id: "section-" + t,
 				open: true,
@@ -1071,36 +1082,74 @@ export default function VBPrototype({
 				],
 			});
 
-			const mkRow = () => ({
-				label: "Row",
-				open: true,
-				isNew: true,
-				id: "row-" + t,
-				children: [
-					{
-						label: "Column",
-						open: true,
-						isNew: true,
-						id: "col-" + t,
-						children: [],
-					},
-				],
-			});
-
-			if (!prev || prev.length === 0) {
-				return [mkSection()];
-			}
-
-			const lastIdx = prev.length - 1;
-			const last = prev[lastIdx];
-			const children = Array.isArray(last.children) ? last.children : [];
-
-			return prev.map((s, idx) => {
-				if (idx !== lastIdx) return s;
-				return { ...s, open: true, children: [...children, mkRow()] };
-			});
+			return [...(prev ?? []), mkSection()];
 		});
 	};
+
+	const addRandomBlockToEndOfActiveOutline = () => {
+		const blockNames = [
+			"My Block",
+			"CTA Block",
+			"Form Block",
+			"Hero Block",
+			"Info Block",
+			"Feature Block",
+			"Footer Block",
+			"Header Block",
+			"Pricing Block",
+			"Contact Block",
+		];
+		const randomName = blockNames[Math.floor(Math.random() * blockNames.length)];
+
+		setData((prev) => [
+			...(prev ?? []),
+			{
+				label: randomName,
+				isBlock: true,
+				id: "section-" + Date.now(),
+				open: true,
+				children: [],
+			},
+		]);
+	};
+
+
+	const [lastSaved, setLastSaved] = useState<Date | null>(null);
+	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
+
+	const onInputChange = (value: any, propIndex: number) => {
+		if (currentEle !== "none" && currentEle in theEles) {
+			setTheEles((prev) => {
+				const oldProps = prev[currentEle].props;
+				const newProps = [...oldProps];
+				newProps[propIndex] = { ...oldProps[propIndex], value };
+				return { ...prev, [currentEle]: { ...prev[currentEle], props: newProps } };
+			});
+		}
+	};
+
+	async function sendMessage(message: string) {
+		setLoadingAI(true);
+		try {
+			const res = await fetch("/api/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userMessage: message }),
+			});
+
+			const payload = await res.json();
+
+			// payload.response is expected to be a JSON string
+			const parsed = JSON.parse(payload.response);
+
+			const norm = normalizePage(parsed);
+			setData(norm.data);
+			setTheEles(norm.theEles);
+		} finally {
+			setLoadingAI(false);
+		}
+	}
+
 
 	/** -----------------------------
 	 * Save sync
@@ -1654,21 +1703,93 @@ export default function VBPrototype({
 										>
 											← Back
 										</Text>
-
 										<div className="flex items-center gap-2">
-											<Heading level="4">{activeOutline.title}</Heading>
+											<Heading level="4">{activeOutline.title} </Heading>
 											<div className="flex-1" />
-											<Button
-												aria-label="Add Row"
-												size="sm"
-												appearance="subtle"
-												icon={<IconPlus size={16} />}
-												onClick={addRowToEndOfActiveOutline}
-											/>
+
+											<div ref={addMenuRef} className="relative">
+												<Button
+													aria-label="Add"
+													size="sm"
+													appearance="subtle"
+													icon={<IconPlus size={16} />}
+													onClick={() => setIsAddMenuOpen((v) => !v)}
+												/>
+
+												{isAddMenuOpen && (
+													<div className="absolute right-0 mt-2 z-50 rounded border border-black/10 bg-white shadow p-1 min-w-[220px]">
+														<Button
+															appearance="subtle"
+															className="w-full justify-start"
+															onClick={() => {
+																setIsAddMenuOpen(false);
+																addSectionToEndOfActiveOutline();
+															}}
+														>
+															Add section
+														</Button>
+
+														<Button
+															appearance="subtle"
+															className="w-full justify-start"
+															onClick={() => {
+																setIsAddMenuOpen(false);
+																addRandomBlockToEndOfActiveOutline();
+															}}
+														>
+															Add random block
+														</Button>
+													</div>
+												)}
+											</div>
 										</div>
 									</div>
 								) : (
-									<Heading level="4">Page</Heading>
+									<div className="flex items-center gap-2">
+										<Heading level="4">Page</Heading>
+										<div className="flex-1" />
+
+										{isTreeViewActive && (
+											<div ref={addMenuRef} className="relative">
+												<Button
+													aria-label="Add"
+													size="sm"
+													appearance="subtle"
+													icon={<IconPlus size={16} />}
+													onClick={() => setIsAddMenuOpen((v) => !v)}
+												/>
+
+												{isAddMenuOpen && (
+													<div
+														className="absolute right-0 mt-2 z-50 rounded border border-black/10 bg-white shadow p-1 min-w-[220px]"
+														onMouseDown={(e) => e.stopPropagation()}
+													>
+														<Button
+															appearance="subtle"
+															className="w-full justify-start"
+															onClick={() => {
+																setIsAddMenuOpen(false);
+																addSectionToEndOfActiveOutline();
+															}}
+														>
+															Add section
+														</Button>
+
+														<Button
+															appearance="subtle"
+															className="w-full justify-start"
+															onClick={() => {
+																setIsAddMenuOpen(false);
+																addRandomBlockToEndOfActiveOutline();
+															}}
+														>
+															Add random block
+														</Button>
+													</div>
+												)}
+											</div>
+										)}
+									</div>
 								)}
 							</div>
 						)}
@@ -1743,10 +1864,14 @@ export default function VBPrototype({
 								</div>
 							) : null}
 
-							{/* SINGLE: View 3 (unchanged) */}
+							{/* SINGLE: View 3 */}
 							{isSingle && activeOutline ? (
-								<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-									<div className=" pt-2 pb-2">
+								<Tabs
+									value={isEditingElement ? "outline" : sidebarTab}
+									onValueChange={setSidebarTab as any}
+								>
+									{/* Hide tabs header when ElementEditor is active (but keep Outline mounted) */}
+									<div className={isEditingElement ? "hidden" : "pt-2 pb-2"}>
 										<TabsList>
 											<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
 											<TabsTrigger value="properties">Properties</TabsTrigger>
@@ -1773,7 +1898,10 @@ export default function VBPrototype({
 									</TabsContent>
 
 									<TabsContent value="properties">
-										<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+										{/* Optional: prevent properties from showing while editing */}
+										{isEditingElement ? null : (
+											<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+										)}
 									</TabsContent>
 								</Tabs>
 							) : null}
