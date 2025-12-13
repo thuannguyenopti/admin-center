@@ -16,6 +16,9 @@ import {
 	Textarea,
 	NavBody,
 	Heading,
+	Menu,
+	MenuTrigger,
+	MenuContent,
 } from "@optiaxiom/react";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -28,6 +31,9 @@ import {
 	IconArrowBarBoth,
 	IconFile,
 	IconPhoto,
+	IconSparkles,
+	IconSquare,
+	IconSection,
 } from "@tabler/icons-react";
 
 import Section from "./vb/Section";
@@ -1039,27 +1045,6 @@ export default function VBPrototype({
 
 	const [AI, setAI] = useState(false);
 	const [loadingAI, setLoadingAI] = useState(false);
-	const [aiPrompt, setAiPrompt] = useState("");
-
-	const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
-
-	const addMenuRef = useRef<HTMLDivElement | null>(null);
-
-	useEffect(() => {
-		const onDown = (e: MouseEvent) => {
-			if (!isAddMenuOpen) return;
-			const t = e.target as Node;
-			if (addMenuRef.current && !addMenuRef.current.contains(t)) {
-				setIsAddMenuOpen(false);
-			}
-		};
-		window.addEventListener("mousedown", onDown);
-		return () => window.removeEventListener("mousedown", onDown);
-	}, [isAddMenuOpen]);
-
-	useEffect(() => {
-		setIsAddMenuOpen(false);
-	}, [outlineView, outlines.length]);
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
@@ -1113,7 +1098,6 @@ export default function VBPrototype({
 		]);
 	};
 
-
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
 
@@ -1150,6 +1134,64 @@ export default function VBPrototype({
 		}
 	}
 
+	// Header actions (AI + plus-menu)
+	const HeaderActions = (
+		<Box display="flex" alignItems="center" gap="2" className="relative">
+			<Button
+				onClick={() => setAI((v) => !v)}
+				appearance="subtle"
+				size="sm"
+				aria-label="AI"
+				icon={<IconSparkles size={16} />}
+				disabled={loadingAI}
+			/>
+
+			<Menu
+				options={[
+					{
+						addon: <IconSection size={16} />,
+						label: "Section",
+						execute: addSectionToEndOfActiveOutline,
+					},
+					{
+						addon: <IconSquare size={16} />,
+						label: "Random Block",
+						execute: addRandomBlockToEndOfActiveOutline,
+					},
+				]}
+			>
+				<MenuTrigger
+					icon={<IconPlus size={16} />}
+					aria-label="add"
+					appearance="subtle"
+					size="sm"
+					iconPosition="start"
+				/>
+				<MenuContent />
+			</Menu>
+
+			<div
+				className={`absolute -right-[10px] top-[32px] opacity-0 invisible z-10 p-2 rounded-md ${styles.popupMenu} w-[200px] max-w-[80vw] mr-12`}
+				style={{
+					visibility: AI ? "visible" : undefined,
+					opacity: AI ? 1 : 0,
+					transform: AI ? "scale(1)" : "scale(0.9)",
+					transformOrigin: "top center",
+					transition: "0.3s",
+				}}
+			>
+				<form /* ... */>
+					<Textarea
+						name="prompt"
+						rows={3}
+						className="w-full border rounded p-2 focus:outline-none focus:ring-2"
+						placeholder="What do you want to build today?"
+					/* ... */
+					/>
+				</form>
+			</div>
+		</Box>
+	);
 
 	/** -----------------------------
 	 * Save sync
@@ -1580,12 +1622,11 @@ export default function VBPrototype({
 			if (event.key === "Escape") {
 				setCurrentEle("none");
 				setCurrentHoverEle("none");
+				setAI(false);
 			} else if (event.key === "Alt" && event.location === 1) {
 				setCloning(true);
 			}
 		};
-
-
 
 		window.addEventListener("keyup", handleKeyUp);
 		window.addEventListener("keydown", handleKeyDown);
@@ -1617,9 +1658,7 @@ export default function VBPrototype({
 						contentTypeIcon={<IconFile size={16} />}
 					/>
 					<Box px="24" pt="16" style={{ overflowY: "auto" }}>
-
 						<Heading level="4">Properties</Heading>
-
 						<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
 					</Box>
 				</Box>
@@ -1648,7 +1687,8 @@ export default function VBPrototype({
 
 				{/* LEFT SIDEBAR */}
 				<Box
-					px="24" pt="16"
+					px="24"
+					pt="16"
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
@@ -1694,101 +1734,33 @@ export default function VBPrototype({
 								{/* View 2: drilled into an outline (multi only) */}
 								{isMulti && outlineView === "tree" && sidebarTab === "outlines" && activeOutline ? (
 									<div className="flex flex-col gap-1">
-										<Text fontSize="sm" fontWeight="400" color="fg.accent" className="cursor-pointer"
+										<Text
+											fontSize="sm"
+											fontWeight="400"
+											color="fg.accent"
+											className="cursor-pointer"
 											onClick={() => {
 												setOutlineView("list");
 												setCurrentEle("none");
 												setCurrentHoverEle("none");
+												setAI(false);
 											}}
 										>
 											← Back
 										</Text>
+
 										<div className="flex items-center gap-2">
-											<Heading level="4">{activeOutline.title} </Heading>
+											<Heading level="4">{activeOutline.title}</Heading>
 											<div className="flex-1" />
-
-											<div ref={addMenuRef} className="relative">
-												<Button
-													aria-label="Add"
-													size="sm"
-													appearance="subtle"
-													icon={<IconPlus size={16} />}
-													onClick={() => setIsAddMenuOpen((v) => !v)}
-												/>
-
-												{isAddMenuOpen && (
-													<div className="absolute right-0 mt-2 z-50 rounded border border-black/10 bg-white shadow p-1 min-w-[220px]">
-														<Button
-															appearance="subtle"
-															className="w-full justify-start"
-															onClick={() => {
-																setIsAddMenuOpen(false);
-																addSectionToEndOfActiveOutline();
-															}}
-														>
-															Add section
-														</Button>
-
-														<Button
-															appearance="subtle"
-															className="w-full justify-start"
-															onClick={() => {
-																setIsAddMenuOpen(false);
-																addRandomBlockToEndOfActiveOutline();
-															}}
-														>
-															Add random block
-														</Button>
-													</div>
-												)}
-											</div>
+											{HeaderActions}
 										</div>
 									</div>
 								) : (
 									<div className="flex items-center gap-2">
 										<Heading level="4">Page</Heading>
 										<div className="flex-1" />
-
-										{isTreeViewActive && (
-											<div ref={addMenuRef} className="relative">
-												<Button
-													aria-label="Add"
-													size="sm"
-													appearance="subtle"
-													icon={<IconPlus size={16} />}
-													onClick={() => setIsAddMenuOpen((v) => !v)}
-												/>
-
-												{isAddMenuOpen && (
-													<div
-														className="absolute right-0 mt-2 z-50 rounded border border-black/10 bg-white shadow p-1 min-w-[220px]"
-														onMouseDown={(e) => e.stopPropagation()}
-													>
-														<Button
-															appearance="subtle"
-															className="w-full justify-start"
-															onClick={() => {
-																setIsAddMenuOpen(false);
-																addSectionToEndOfActiveOutline();
-															}}
-														>
-															Add section
-														</Button>
-
-														<Button
-															appearance="subtle"
-															className="w-full justify-start"
-															onClick={() => {
-																setIsAddMenuOpen(false);
-																addRandomBlockToEndOfActiveOutline();
-															}}
-														>
-															Add random block
-														</Button>
-													</div>
-												)}
-											</div>
-										)}
+										{/* plus should appear in tree view (single outline included) */}
+										{isTreeViewActive ? HeaderActions : null}
 									</div>
 								)}
 							</div>
@@ -1827,6 +1799,7 @@ export default function VBPrototype({
 																	setSidebarTab("outlines");
 																	setCurrentEle("none");
 																	setCurrentHoverEle("none");
+																	setAI(false);
 																}}
 															>
 																{o.title}
@@ -1906,7 +1879,6 @@ export default function VBPrototype({
 								</Tabs>
 							) : null}
 						</div>
-
 					</div>
 				</Box>
 
@@ -1925,9 +1897,7 @@ export default function VBPrototype({
 						setOutlines={setOutlines}
 					/>
 
-					{isImageSelectorOpen && (
-						<ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />
-					)}
+					{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
 
 					<Box borderL="1" borderColor="border.tertiary">
 						<RightToolbar
