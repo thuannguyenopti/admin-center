@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Fragment } from "react";
-import { Box, Field, Text, Input as AxiomInput, Checkbox } from "@optiaxiom/react";
+import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading } from "@optiaxiom/react";
 
 type Props = {
   currentEle: string;
@@ -23,14 +23,14 @@ const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({ prop
 
 export default function ElementEditor({ currentEle, elementType, propsList, onBack, onInputChange }: Props) {
   return (
-    <div className="min-w-[50%] w-[50%]">
-      <Text fontSize="sm" px="24" pt="16" fontWeight="400" color="fg.accent" onClick={onBack} className="cursor-pointer">
+    <div className="min-w-[50%] w-[50%] pt-4">
+      <Text fontSize="sm" fontWeight="400" color="fg.accent" onClick={onBack} className="cursor-pointer">
         {"<-"} Outline
       </Text>
-      <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" px="24" pr="0" py="4">
-        <Text fontSize="lg" fontWeight="600">
+      <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" pr="0" py="4">
+        <Heading level="4">
           {elementType}
-        </Text>
+        </Heading>
         <Box display="flex" alignItems="center" gap="8">
           <Box color="fg.default">
             <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
