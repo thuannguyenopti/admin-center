@@ -9,6 +9,7 @@ import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
+import ContentSubNav from "../cms/content/components/ContentSubNav";
 
 function TemplateContent({
 	children,
@@ -41,10 +42,17 @@ function TemplateContent({
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
 	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
+	
+	// Check if we're on the Content Manager page
+	const isContentManager = path.includes('/cms/content');
+	
 	const showVT =
 		highlight1?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
+	
+	// Show secondary sidebar for Content Manager or hierarchical navigation
+	const showSecondarySidebar = isContentManager || showVT;
 
 	const customLayout = highlight1?.customLayout;
 
@@ -93,7 +101,7 @@ function TemplateContent({
 				<Box
 					style={{
 						marginLeft: "-224px",
-						transform: showVT ? "translatex(224px)" : "translatex(0px)",
+						transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
 						transition: ".7s cubic-bezier(0, 1, 0, 1)",
 					}}
 					borderR="1"
@@ -103,7 +111,9 @@ function TemplateContent({
 					overflow="hidden"
 					bg="bg.default"
 				>
-					{showVT && (
+					{isContentManager ? (
+						<ContentSubNav />
+					) : showVT ? (
 						<Sidebar
 							className="flex"
 							h="full"
@@ -142,7 +152,7 @@ function TemplateContent({
 								</div>
 							</SubNav>
 						</Sidebar>
-					)}
+					) : null}
 				</Box>
 			</Box>
 			<Box
@@ -164,8 +174,8 @@ function TemplateContent({
 							style={{
 								marginLeft: "224px",
 								marginRight: "-224px",
-								width: !showVT ? "100%" : "calc(100% - 224px)",
-								transform: showVT ? "translatex(0px)" : "translatex(-224px)",
+								width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
+								transform: showSecondarySidebar ? "translatex(0px)" : "translatex(-224px)",
 								transition: ".7s cubic-bezier(0, 1, 0, 1)",
 							}}
 							color="fg.default"
