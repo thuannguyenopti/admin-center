@@ -199,7 +199,7 @@ function PropertiesPanel({
 	onChange: (patch: Partial<PageProperties>) => void;
 }) {
 	return (
-		<Box px="24" py="16" fontSize="sm">
+		<Box py="16" fontSize="sm">
 			<Box mb="16">
 				<Text fontSize="sm" fontWeight="600" mb="8">
 					SEO
@@ -1567,10 +1567,10 @@ export default function VBPrototype({
 						onPublish={onPublish}
 						contentTypeIcon={<IconFile size={16} />}
 					/>
-					<Box style={{ overflowY: "auto" }}>
-						<div className="px-4 pt-4 pb-2">
-							<Heading level="4">Properties</Heading>
-						</div>
+					<Box px="24" pt="16" style={{ overflowY: "auto" }}>
+
+						<Heading level="4">Properties</Heading>
+
 						<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
 					</Box>
 				</Box>
@@ -1599,6 +1599,7 @@ export default function VBPrototype({
 
 				{/* LEFT SIDEBAR */}
 				<Box
+					px="24" pt="16"
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
@@ -1639,42 +1640,38 @@ export default function VBPrototype({
 
 					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
 						{/* HEADER AREA (changes by view) */}
-						<div className="px-4 pt-4 pb-2">
-							{isEditingElement ? null : (
-								<>
-									{/* View 2: drilled into an outline (multi only) */}
-									{isMulti && outlineView === "tree" && sidebarTab === "outlines" && activeOutline ? (
-										<div className="flex flex-col gap-1">
+						{isEditingElement ? null : (
+							<div className="pt-4 pb-2">
+								{/* View 2: drilled into an outline (multi only) */}
+								{isMulti && outlineView === "tree" && sidebarTab === "outlines" && activeOutline ? (
+									<div className="flex flex-col gap-1">
+										<Text fontSize="sm" fontWeight="400" color="fg.accent" className="cursor-pointer"
+											onClick={() => {
+												setOutlineView("list");
+												setCurrentEle("none");
+												setCurrentHoverEle("none");
+											}}
+										>
+											← Back
+										</Text>
+
+										<div className="flex items-center gap-2">
+											<Heading level="4">{activeOutline.title}</Heading>
+											<div className="flex-1" />
 											<Button
+												aria-label="Add Row"
 												size="sm"
 												appearance="subtle"
-												onClick={() => {
-													setOutlineView("list");
-													setCurrentEle("none");
-													setCurrentHoverEle("none");
-												}}
-											>
-												← Back
-											</Button>
-
-											<div className="flex items-center gap-2">
-												<Heading level="4">{activeOutline.title}</Heading>
-												<div className="flex-1" />
-												<Button
-													aria-label="Add Row"
-													size="sm"
-													appearance="subtle"
-													icon={<IconPlus size={16} />}
-													onClick={addRowToEndOfActiveOutline}
-												/>
-											</div>
+												icon={<IconPlus size={16} />}
+												onClick={addRowToEndOfActiveOutline}
+											/>
 										</div>
-									) : (
-										<Heading level="4">Page</Heading>
-									)}
-								</>
-							)}
-						</div>
+									</div>
+								) : (
+									<Heading level="4">Page</Heading>
+								)}
+							</div>
+						)}
 
 						{/* BODY AREA */}
 						<div className="flex-1" style={{ overflowY: "auto" }}>
@@ -1689,7 +1686,7 @@ export default function VBPrototype({
 									{/* LEFT PANE = View 1 (tabs) */}
 									<div className="min-w-[50%] w-[50%]">
 										<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-											<div className="px-4 pt-2 pb-2">
+											<div className="pt-2 pb-2">
 												<TabsList>
 													<TabsTrigger value="outlines">Outlines</TabsTrigger>
 													<TabsTrigger value="properties">Properties</TabsTrigger>
@@ -1697,7 +1694,7 @@ export default function VBPrototype({
 											</div>
 
 											<TabsContent value="outlines">
-												<div className="px-4 pb-4">
+												<div className="pb-4">
 													<div className="flex flex-col gap-2">
 														{outlines.map((o) => (
 															<Button
@@ -1749,7 +1746,7 @@ export default function VBPrototype({
 							{/* SINGLE: View 3 (unchanged) */}
 							{isSingle && activeOutline ? (
 								<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-									<div className="px-4 pt-2 pb-2">
+									<div className=" pt-2 pb-2">
 										<TabsList>
 											<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
 											<TabsTrigger value="properties">Properties</TabsTrigger>
