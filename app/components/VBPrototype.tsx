@@ -286,32 +286,29 @@ function PropertiesPanel({
 		</Box>
 	);
 }
-
 /** -----------------------------
  * Outline (TREE ONLY)
  * ------------------------------*/
 
 interface OutlineProps {
 	cloning?: boolean;
-	currentEle: string;
 	currentHoverEle: string;
 	dragging: string | null;
 	theEles: EleMap;
-	onInputChange: (value: string, propIndex: number) => void;
+
 	setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
 	setDragging: React.Dispatch<React.SetStateAction<string>>;
 	setData: React.Dispatch<React.SetStateAction<any[]>>;
 	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
+
 	data: any[];
 }
 
 const Outline: React.FC<OutlineProps> = ({
 	cloning,
 	setDragging,
-	currentEle,
 	theEles,
-	onInputChange,
 	setCurrentEle,
 	currentHoverEle,
 	setCurrentHoverEle,
@@ -554,254 +551,61 @@ const Outline: React.FC<OutlineProps> = ({
 	};
 
 	return (
-		<div className="">
-			<div
-				className="flex w-[200%] transition duration-300"
-				style={{
-					transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)",
-				}}
-			>
-				<div className="min-w-[50%] w-[50%] relative min-h-[300px]">
-					<Box fontSize="sm" color="fg.secondary">
-						{data.map((section: any, sindex: number) => (
-							<div key={sindex}>
-								{/* add section above */}
-								{!dragging && !data[sindex - 1]?.open && (
-									<div
-										className="ind group h-2 mx-1 relative z-10 -my-1 -mr-[20px]"
-										onMouseEnter={(e) => onDragHover(e, section.id)}
-									>
-										<Box
-											rounded="full"
-											className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-										>
-											<Box className="bg-black/5 h-1 w-full" />
-											<Button
-												aria-label="Add Section"
-												size="sm"
-												appearance="subtle"
-												className="min-w-6"
-												onClick={() => addSection(section.id)}
-												icon={<IconPlus size={16} />}
-											/>
-											<Box className="bg-black/5 h-1 w-full" />
-										</Box>
-									</div>
-								)}
-
-								{/* dropping above section */}
-								{dragging?.startsWith("section-") &&
-									((section.id !== dragging && data[sindex - 1]?.id !== dragging) || cloning) && (
-										<div
-											className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]"
-											onMouseEnter={(e) => onDragHover(e, section.id)}
-										>
-											<Box
-												bg="bg.accent"
-												rounded="full"
-												className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-											/>
-										</div>
-									)}
-
-								<Section
-									setOpen={setOpen}
-									section={section}
-									onDragStart={(e: any) => onDragStart(e, section.id)}
-									removeSection={() => removeSection(sindex)}
-									addSection={() => addSection(section.id)}
-									addRow={(e: any) => addRow(e, sindex, null)}
+		<div className="relative min-h-[300px]">
+			<Box fontSize="sm" color="fg.secondary">
+				{data.map((section: any, sindex: number) => (
+					<div key={sindex}>
+						{/* add section above */}
+						{!dragging && !data[sindex - 1]?.open && (
+							<div
+								className="ind group h-2 mx-1 relative z-10 -my-1 -mr-[20px]"
+								onMouseEnter={(e) => onDragHover(e, section.id)}
+							>
+								<Box
+									rounded="full"
+									className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
 								>
-									{(section.children ?? []).map((row: any, index: number) => (
-										<div key={index}>
-											{/* add row above */}
-											{!dragging && !section.children[index - 1]?.open && (
-												<div
-													className="ind group h-2 relative z-10 -my-1"
-													onMouseEnter={(e) => onDragHover(e, section.id)}
-												>
-													<Box
-														rounded="full"
-														className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-													>
-														<Box className="bg-black/5 h-1 w-full" />
-														<Button
-															aria-label="Add Row"
-															size="sm"
-															appearance="subtle"
-															className="min-w-6"
-															onClick={(e: any) => addRow(e, sindex, index)}
-															icon={<IconPlus size={16} />}
-														/>
-														<Box className="bg-black/5 h-1 w-full" />
-													</Box>
-												</div>
-											)}
+									<Box className="bg-black/5 h-1 w-full" />
+									<Button
+										aria-label="Add Section"
+										size="sm"
+										appearance="subtle"
+										className="min-w-6"
+										onClick={() => addSection(section.id)}
+										icon={<IconPlus size={16} />}
+									/>
+									<Box className="bg-black/5 h-1 w-full" />
+								</Box>
+							</div>
+						)}
 
-											{/* dropping above row */}
-											{dragging?.startsWith("row-") &&
-												((row.id !== dragging &&
-													section.children[index - 1]?.id !== dragging) ||
-													cloning) && (
-													<div
-														className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
-														onMouseEnter={(e) => onDragHover(e, row.id)}
-													>
-														<Box
-															bg="bg.accent"
-															rounded="full"
-															className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-														/>
-													</div>
-												)}
+						{/* dropping above section */}
+						{dragging?.startsWith("section-") &&
+							((section.id !== dragging && data[sindex - 1]?.id !== dragging) || cloning) && (
+								<div
+									className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]"
+									onMouseEnter={(e) => onDragHover(e, section.id)}
+								>
+									<Box
+										bg="bg.accent"
+										rounded="full"
+										className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+									/>
+								</div>
+							)}
 
-											<Row
-												row={row}
-												addRow={(e: any) => addRow(e, sindex, index)}
-												addRowBelow={(e: any) => addRow(e, sindex, index + 1)}
-												setOpen={setOpen}
-												onDragStart={(e: any) => onDragStart(e, row.id)}
-												removeRow={() => removeRow(row.id)}
-												addCol={(e: any) => addCol(e, sindex, index, null)}
-											>
-												{(row.children ?? []).map((col: any, i: number) => (
-													<div key={i}>
-														{/* add col above */}
-														{!dragging && (
-															<div
-																className="ind group h-2 relative z-10 -my-1"
-																onMouseEnter={(e) => onDragHover(e, section.id)}
-															>
-																<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-																	<Box className="bg-black/5 h-1 w-full" />
-																	<Button
-																		aria-label="Add Column"
-																		size="sm"
-																		appearance="subtle"
-																		className="min-w-6"
-																		onClick={(e: any) => addCol(e, sindex, index, i)}
-																		icon={<IconPlus size={16} />}
-																	/>
-																	<Box className="bg-black/5 h-1 w-full" />
-																</Box>
-															</div>
-														)}
-
-														{dragging?.startsWith("col-") &&
-															col.id !== dragging &&
-															row.children[i - 1]?.id !== dragging && (
-																<div
-																	className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
-																	onMouseEnter={(e) => onDragHover(e, col.id)}
-																>
-																	<Box
-																		bg="bg.accent"
-																		rounded="full"
-																		className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																	/>
-																</div>
-															)}
-
-														<Col
-															col={col}
-															setOpen={setOpen}
-															onDragStart={(e: any) => onDragStart(e, col.id)}
-															removeCol={() => removeCol(col.id)}
-															addElement={(type: string) => addElement(type, i, index, sindex)}
-															key={"col" + i}
-														>
-															{(col.children ?? []).map((element: any, j: number) => (
-																<div key={"ele" + j}>
-																	{dragging &&
-																		element.id !== dragging &&
-																		col.children[j - 1]?.id !== dragging &&
-																		!dragging.startsWith("section-") &&
-																		!dragging.startsWith("col-") &&
-																		!dragging.startsWith("row-") && (
-																			<div
-																				className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																				onMouseEnter={(e) => onDragHover(e, element.id)}
-																			>
-																				<Box
-																					bg="bg.accent"
-																					rounded="full"
-																					className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																				/>
-																			</div>
-																		)}
-
-																	<Ele
-																		removeEle={() => removeEle(element.id)}
-																		onDragStart={(e: any) => onDragStart(e, element.id)}
-																		type={theEles[element.id]?.type}
-																		element={element}
-																		label={theEles[element.id]?.props?.[0]?.value || undefined}
-																		setCurrentEle={setCurrentEle}
-																		setCurrentHoverEle={setCurrentHoverEle}
-																	/>
-																</div>
-															))}
-
-															{dragging &&
-																dragging !== col.children[col.children.length - 1]?.id &&
-																!dragging.startsWith("section-") &&
-																!dragging.startsWith("row-") &&
-																!dragging.startsWith("col-") && (
-																	<div
-																		className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																		onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
-																	>
-																		<Box
-																			bg="bg.accent"
-																			rounded="full"
-																			className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																		/>
-																	</div>
-																)}
-														</Col>
-													</div>
-												))}
-
-												{/* add column last */}
-												{!dragging && (
-													<div
-														className="ind group h-2 relative z-10 -my-1"
-														onMouseEnter={(e) => onDragHover(e, section.id)}
-													>
-														<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-															<Box className="bg-black/5 h-1 w-full" />
-															<Button
-																aria-label="Add Column"
-																size="sm"
-																appearance="subtle"
-																className="min-w-6"
-																onClick={(e: any) => addCol(e, sindex, index, row.children.length)}
-																icon={<IconPlus size={16} />}
-															/>
-															<Box className="bg-black/5 h-1 w-full" />
-														</Box>
-													</div>
-												)}
-
-												{dragging?.startsWith("col-") &&
-													dragging !== row.children[row.children.length - 1]?.id && (
-														<div
-															className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
-															onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
-														>
-															<Box
-																bg="bg.accent"
-																rounded="full"
-																className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-															/>
-														</div>
-													)}
-											</Row>
-										</div>
-									))}
-
-									{/* add row last */}
-									{!dragging && !section.children[section.children.length - 1]?.open && (
+						<Section
+							setOpen={setOpen}
+							section={section}
+							onDragStart={(e: any) => onDragStart(e, section.id)}
+							removeSection={() => removeSection(sindex)}
+							addSection={() => addSection(section.id)}
+							addRow={(e: any) => addRow(e, sindex, null)}
+						>
+							{(section.children ?? []).map((row: any, index: number) => (
+								<div key={index}>
+									{/* add row above */}
+									{!dragging && !section.children[index - 1]?.open && (
 										<div
 											className="ind group h-2 relative z-10 -my-1"
 											onMouseEnter={(e) => onDragHover(e, section.id)}
@@ -816,30 +620,206 @@ const Outline: React.FC<OutlineProps> = ({
 													size="sm"
 													appearance="subtle"
 													className="min-w-6"
-													onClick={(e: any) => addRow(e, sindex, section.children.length)}
+													onClick={(e: any) => addRow(e, sindex, index)}
 													icon={<IconPlus size={16} />}
 												/>
 												<Box className="bg-black/5 h-1 w-full" />
 											</Box>
 										</div>
 									)}
-								</Section>
-							</div>
-						))}
-					</Box>
-				</div>
 
-				<ElementEditor
-					elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
-					currentEle={currentEle}
-					propsList={theEles[currentEle]?.props}
-					onBack={() => setCurrentEle("none")}
-					onInputChange={onInputChange}
-				/>
-			</div>
+									{/* dropping above row */}
+									{dragging?.startsWith("row-") &&
+										((row.id !== dragging && section.children[index - 1]?.id !== dragging) ||
+											cloning) && (
+											<div
+												className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
+												onMouseEnter={(e) => onDragHover(e, row.id)}
+											>
+												<Box
+													bg="bg.accent"
+													rounded="full"
+													className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+												/>
+											</div>
+										)}
+
+									<Row
+										row={row}
+										addRow={(e: any) => addRow(e, sindex, index)}
+										addRowBelow={(e: any) => addRow(e, sindex, index + 1)}
+										setOpen={setOpen}
+										onDragStart={(e: any) => onDragStart(e, row.id)}
+										removeRow={() => removeRow(row.id)}
+										addCol={(e: any) => addCol(e, sindex, index, null)}
+									>
+										{(row.children ?? []).map((col: any, i: number) => (
+											<div key={i}>
+												{/* add col above */}
+												{!dragging && (
+													<div
+														className="ind group h-2 relative z-10 -my-1"
+														onMouseEnter={(e) => onDragHover(e, section.id)}
+													>
+														<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
+															<Box className="bg-black/5 h-1 w-full" />
+															<Button
+																aria-label="Add Column"
+																size="sm"
+																appearance="subtle"
+																className="min-w-6"
+																onClick={(e: any) => addCol(e, sindex, index, i)}
+																icon={<IconPlus size={16} />}
+															/>
+															<Box className="bg-black/5 h-1 w-full" />
+														</Box>
+													</div>
+												)}
+
+												{dragging?.startsWith("col-") &&
+													col.id !== dragging &&
+													row.children[i - 1]?.id !== dragging && (
+														<div
+															className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
+															onMouseEnter={(e) => onDragHover(e, col.id)}
+														>
+															<Box
+																bg="bg.accent"
+																rounded="full"
+																className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+															/>
+														</div>
+													)}
+
+												<Col
+													col={col}
+													setOpen={setOpen}
+													onDragStart={(e: any) => onDragStart(e, col.id)}
+													removeCol={() => removeCol(col.id)}
+													addElement={(type: string) => addElement(type, i, index, sindex)}
+													key={"col" + i}
+												>
+													{(col.children ?? []).map((element: any, j: number) => (
+														<div key={"ele" + j}>
+															{dragging &&
+																element.id !== dragging &&
+																col.children[j - 1]?.id !== dragging &&
+																!dragging.startsWith("section-") &&
+																!dragging.startsWith("col-") &&
+																!dragging.startsWith("row-") && (
+																	<div
+																		className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
+																		onMouseEnter={(e) => onDragHover(e, element.id)}
+																	>
+																		<Box
+																			bg="bg.accent"
+																			rounded="full"
+																			className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+																		/>
+																	</div>
+																)}
+
+															<Ele
+																removeEle={() => removeEle(element.id)}
+																onDragStart={(e: any) => onDragStart(e, element.id)}
+																type={theEles[element.id]?.type}
+																element={element}
+																label={theEles[element.id]?.props?.[0]?.value || undefined}
+																setCurrentEle={setCurrentEle}
+																setCurrentHoverEle={setCurrentHoverEle}
+															/>
+														</div>
+													))}
+
+													{dragging &&
+														dragging !== col.children[col.children.length - 1]?.id &&
+														!dragging.startsWith("section-") &&
+														!dragging.startsWith("row-") &&
+														!dragging.startsWith("col-") && (
+															<div
+																className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
+																onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
+															>
+																<Box
+																	bg="bg.accent"
+																	rounded="full"
+																	className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+																/>
+															</div>
+														)}
+												</Col>
+											</div>
+										))}
+
+										{/* add column last */}
+										{!dragging && (
+											<div
+												className="ind group h-2 relative z-10 -my-1"
+												onMouseEnter={(e) => onDragHover(e, section.id)}
+											>
+												<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
+													<Box className="bg-black/5 h-1 w-full" />
+													<Button
+														aria-label="Add Column"
+														size="sm"
+														appearance="subtle"
+														className="min-w-6"
+														onClick={(e: any) => addCol(e, sindex, index, row.children.length)}
+														icon={<IconPlus size={16} />}
+													/>
+													<Box className="bg-black/5 h-1 w-full" />
+												</Box>
+											</div>
+										)}
+
+										{dragging?.startsWith("col-") &&
+											dragging !== row.children[row.children.length - 1]?.id && (
+												<div
+													className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
+													onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
+												>
+													<Box
+														bg="bg.accent"
+														rounded="full"
+														className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+													/>
+												</div>
+											)}
+									</Row>
+								</div>
+							))}
+
+							{/* add row last */}
+							{!dragging && !section.children[section.children.length - 1]?.open && (
+								<div
+									className="ind group h-2 relative z-10 -my-1"
+									onMouseEnter={(e) => onDragHover(e, section.id)}
+								>
+									<Box
+										rounded="full"
+										className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
+									>
+										<Box className="bg-black/5 h-1 w-full" />
+										<Button
+											aria-label="Add Row"
+											size="sm"
+											appearance="subtle"
+											className="min-w-6"
+											onClick={(e: any) => addRow(e, sindex, section.children.length)}
+											icon={<IconPlus size={16} />}
+										/>
+										<Box className="bg-black/5 h-1 w-full" />
+									</Box>
+								</div>
+							)}
+						</Section>
+					</div>
+				))}
+			</Box>
 		</div>
 	);
 };
+
 
 /** -----------------------------
  * Existing mergeData (kept)
@@ -1728,158 +1708,244 @@ export default function VBPrototype({
 					</div>
 
 					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
-						{/* HEADER AREA (changes by view) */}
-						{isEditingElement ? null : (
-							<div className="pt-4 pb-2">
-								{/* View 2: drilled into an outline (multi only) */}
-								{isMulti && outlineView === "tree" && sidebarTab === "outlines" && activeOutline ? (
-									<div className="flex flex-col gap-1">
-										<Text
-											fontSize="sm"
-											fontWeight="400"
-											color="fg.accent"
-											className="cursor-pointer"
-											onClick={() => {
-												setOutlineView("list");
-												setCurrentEle("none");
-												setCurrentHoverEle("none");
-												setAI(false);
-											}}
-										>
-											← Back
-										</Text>
-
-										<div className="flex items-center gap-2">
-											<Heading level="4">{activeOutline.title}</Heading>
-											<div className="flex-1" />
-											{HeaderActions}
-										</div>
-									</div>
-								) : (
-									<div className="flex items-center gap-2">
-										<Heading level="4">Page</Heading>
-										<div className="flex-1" />
-										{/* plus should appear in tree view (single outline included) */}
-										{isTreeViewActive ? HeaderActions : null}
-									</div>
-								)}
-							</div>
-						)}
-
-						{/* BODY AREA */}
-						<div className="flex-1" style={{ overflowY: "auto" }}>
-							{/* MULTI: View1 <-> View2 slider */}
-							{isMulti ? (
+						{/* MULTI: View 1 <-> View 2 full-sidebar slide (header + tabs + content) */}
+						{isMulti ? (
+							<div className="h-full overflow-hidden">
 								<div
-									className="flex w-[200%] transition duration-300"
+									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
 										transform: outlineView === "tree" ? "translateX(-50%)" : "translateX(0%)",
 									}}
 								>
-									{/* LEFT PANE = View 1 (tabs) */}
-									<div className="min-w-[50%] w-[50%]">
-										<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-											<div className="pt-2 pb-2">
-												<TabsList>
-													<TabsTrigger value="outlines">Outlines</TabsTrigger>
-													<TabsTrigger value="properties">Properties</TabsTrigger>
-												</TabsList>
+									{/* PANE 1 = View 1 (Page header + Tabs) */}
+									<div
+										className={`min-w-[50%] w-[50%] h-full flex flex-col ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
+											}`}
+									>
+										{/* Header (slides with pane) */}
+										<div className="pt-4 pb-2">
+											<div className="flex items-center gap-2">
+												<Heading level="4">Page</Heading>
+												<div className="flex-1" />
 											</div>
+										</div>
 
-											<TabsContent value="outlines">
-												<div className="pb-4">
-													<div className="flex flex-col gap-2">
-														{outlines.map((o) => (
-															<Button
-																key={o.id}
-																appearance="subtle"
+										{/* Body */}
+										<div className="flex-1 overflow-y-auto">
+											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
+												<div className="pt-2 pb-2">
+													<TabsList>
+														<TabsTrigger value="outlines">Outlines</TabsTrigger>
+														<TabsTrigger value="properties">Properties</TabsTrigger>
+													</TabsList>
+												</div>
+
+												<TabsContent value="outlines">
+													<div className="pb-4">
+														<div className="flex flex-col gap-2">
+															{outlines.map((o) => (
+																<Button
+																	key={o.id}
+																	appearance="subtle"
+																	onClick={() => {
+																		setActiveOutlineId(o.id);
+																		setSidebarTab("outlines");
+																		setCurrentEle("none");
+																		setCurrentHoverEle("none");
+																		setAI(false);
+
+																		// Slide to View 2
+																		setOutlineView("tree");
+																	}}
+																>
+																	{o.title}
+																</Button>
+															))}
+														</div>
+													</div>
+												</TabsContent>
+
+												<TabsContent value="properties">
+													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+												</TabsContent>
+											</Tabs>
+										</div>
+									</div>
+
+									{/* PANE 2 = View 2 (tree) <-> ElementEditor (full pane slide) */}
+									<div
+										className={`min-w-[50%] w-[50%] h-full overflow-hidden ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
+											}`}
+									>
+										<div
+											className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+											style={{
+												transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+											}}
+										>
+											{/* VIEW 2 (Back + outline header + tree) */}
+											<div
+												className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
+													}`}
+											>
+												{/* Header (slides with tree) */}
+												<div className="pt-4 pb-2">
+													{activeOutline ? (
+														<div className="flex flex-col gap-1">
+															<Text
+																fontSize="sm"
+																fontWeight="400"
+																color="fg.accent"
+																className="cursor-pointer"
 																onClick={() => {
-																	setActiveOutlineId(o.id);
-																	setOutlineView("tree"); // slide to View 2
-																	setSidebarTab("outlines");
+																	setOutlineView("list");
 																	setCurrentEle("none");
 																	setCurrentHoverEle("none");
 																	setAI(false);
 																}}
 															>
-																{o.title}
-															</Button>
-														))}
-													</div>
+																← Back
+															</Text>
+
+															<div className="flex items-center gap-2">
+																<Heading level="4">{activeOutline.title}</Heading>
+																<div className="flex-1" />
+																{HeaderActions}
+															</div>
+														</div>
+													) : (
+														<div className="flex items-center gap-2">
+															<Heading level="4">Outline</Heading>
+															<div className="flex-1" />
+															{HeaderActions}
+														</div>
+													)}
 												</div>
-											</TabsContent>
 
-											<TabsContent value="properties">
-												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-											</TabsContent>
-										</Tabs>
-									</div>
+												{/* Body */}
+												<div className="flex-1 overflow-y-auto pb-4">
+													{activeOutline ? (
+														<Outline
+															cloning={cloning}
+															dragging={dragging}
+															setDragging={setDragging}
+															currentHoverEle={currentHoverEle}
+															setCurrentEle={setCurrentEle}
+															data={data}
+															setTheEles={setTheEles}
+															setData={setData}
+															theEles={theEles}
+															setCurrentHoverEle={setCurrentHoverEle}
+														/>
+													) : null}
+												</div>
+											</div>
 
-									{/* RIGHT PANE = View 2 (tree) */}
-									<div className="min-w-[50%] w-[50%] pb-4">
-										{activeOutline ? (
-											<Outline
-												cloning={cloning}
-												dragging={dragging}
-												setDragging={setDragging}
-												currentHoverEle={currentHoverEle}
-												setCurrentEle={setCurrentEle}
-												data={data}
-												setTheEles={setTheEles}
-												setData={setData}
-												currentEle={currentEle}
-												theEles={theEles}
-												onInputChange={onInputChange}
-												setCurrentHoverEle={setCurrentHoverEle}
-											/>
-										) : null}
+											{/* ELEMENT EDITOR (slides in from right) */}
+											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+												<div className="h-full overflow-y-auto">
+													<ElementEditor
+														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+														currentEle={currentEle}
+														propsList={theEles[currentEle]?.props}
+														onBack={() => {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+															setAI(false);
+														}}
+														onInputChange={onInputChange}
+													/>
+												</div>
+											</div>
+
+										</div>
 									</div>
 								</div>
-							) : null}
+							</div>
+						) : null}
 
-							{/* SINGLE: View 3 */}
-							{isSingle && activeOutline ? (
-								<Tabs
-									value={isEditingElement ? "outline" : sidebarTab}
-									onValueChange={setSidebarTab as any}
+						{/* SINGLE: tree/properties (left) <-> ElementEditor (right) slide */}
+						{isSingle && activeOutline ? (
+							<div className="h-full overflow-hidden">
+								<div
+									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									style={{
+										transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+									}}
 								>
-									{/* Hide tabs header when ElementEditor is active (but keep Outline mounted) */}
-									<div className={isEditingElement ? "hidden" : "pt-2 pb-2"}>
-										<TabsList>
-											<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
-											<TabsTrigger value="properties">Properties</TabsTrigger>
-										</TabsList>
+									{/* LEFT = Single sidebar (header + tabs + content) */}
+									<div
+										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
+											}`}
+									>
+										{/* Header */}
+										<div className="pt-4 pb-2">
+											<div className="flex items-center gap-2">
+												<Heading level="4">Page</Heading>
+												<div className="flex-1" />
+												{HeaderActions}
+											</div>
+										</div>
+
+										{/* Body */}
+										<div className="flex-1 overflow-y-auto">
+											<Tabs
+												value={isEditingElement ? "outline" : sidebarTab}
+												onValueChange={setSidebarTab as any}
+											>
+												<div className="pt-2 pb-2">
+													<TabsList>
+														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
+														<TabsTrigger value="properties">Properties</TabsTrigger>
+													</TabsList>
+												</div>
+
+												<TabsContent value="outline">
+													<div className="pb-4">
+														<Outline
+															cloning={cloning}
+															dragging={dragging}
+															setDragging={setDragging}
+															currentHoverEle={currentHoverEle}
+															setCurrentEle={setCurrentEle}
+															data={data}
+															setTheEles={setTheEles}
+															setData={setData}
+															theEles={theEles}
+															setCurrentHoverEle={setCurrentHoverEle}
+														/>
+													</div>
+												</TabsContent>
+
+												<TabsContent value="properties">
+													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+												</TabsContent>
+											</Tabs>
+										</div>
 									</div>
 
-									<TabsContent value="outline">
-										<div className="pb-4">
-											<Outline
-												cloning={cloning}
-												dragging={dragging}
-												setDragging={setDragging}
-												currentHoverEle={currentHoverEle}
-												setCurrentEle={setCurrentEle}
-												data={data}
-												setTheEles={setTheEles}
-												setData={setData}
+									{/* ELEMENT EDITOR (slides in from right) */}
+									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+										<div className="h-full overflow-y-auto">
+											<ElementEditor
+												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 												currentEle={currentEle}
-												theEles={theEles}
+												propsList={theEles[currentEle]?.props}
+												onBack={() => {
+													setCurrentEle("none");
+													setCurrentHoverEle("none");
+													setAI(false);
+												}}
 												onInputChange={onInputChange}
-												setCurrentHoverEle={setCurrentHoverEle}
 											/>
 										</div>
-									</TabsContent>
+									</div>
 
-									<TabsContent value="properties">
-										{/* Optional: prevent properties from showing while editing */}
-										{isEditingElement ? null : (
-											<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-										)}
-									</TabsContent>
-								</Tabs>
-							) : null}
-						</div>
+								</div>
+							</div>
+						) : null}
 					</div>
+
 				</Box>
 
 				{/* RIGHT / CANVAS */}
