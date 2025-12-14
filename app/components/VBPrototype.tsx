@@ -1719,7 +1719,7 @@ export default function VBPrototype({
 								>
 									{/* PANE 1 = View 1 (Page header + Tabs) */}
 									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
+										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
 										{/* Header (slides with pane) */}
@@ -1774,7 +1774,7 @@ export default function VBPrototype({
 
 									{/* PANE 2 = View 2 (tree) <-> ElementEditor (full pane slide) */}
 									<div
-										className={`min-w-[50%] w-[50%] h-full overflow-hidden ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
+										className={`min-w-[50%] w-[50%] h-full overflow-hidden min-h-0 ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
 											}`}
 									>
 										<div
@@ -1823,7 +1823,7 @@ export default function VBPrototype({
 												</div>
 
 												{/* Body */}
-												<div className="flex-1 overflow-y-auto pb-4">
+												<div className="flex-1 overflow-y-auto pb-4 min-h-0">
 													{activeOutline ? (
 														<Outline
 															cloning={cloning}
