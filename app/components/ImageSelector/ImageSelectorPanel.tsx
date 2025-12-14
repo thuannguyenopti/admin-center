@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import { Box, Button, Menu, MenuTrigger, MenuContent, LabelMenuButton } from "@optiaxiom/react";
 import { IconDots, IconArrowsHorizontal } from "@tabler/icons-react";
 import { useState, useRef } from "react";
 import ImageCard from "./ImageCard";
@@ -159,28 +159,9 @@ export default function ImageSelectorPanel({ onClose }: ImageSelectorPanelProps)
           ]}
         >
           <MenuTrigger asChild>
-            <button
-              className="border border-[#CACFDC] rounded-md px-3 py-2 flex items-center gap-2 cursor-pointer bg-white"
-              style={{ height: "40px", borderRadius: "6px" }}
-            >
-              <Box display="flex" flexDirection="column" gap="2" alignItems="start">
-                <Box
-                  fontSize="xs"
-                  color="fg.secondary"
-                  style={{ lineHeight: "14px", letterSpacing: "0.05px" }}
-                >
-                  Source
-                </Box>
-                <Box
-                  fontSize="sm"
-                  color="fg.default"
-                  style={{ lineHeight: "16px", letterSpacing: "0.01px" }}
-                >
-                  {sourceFilter}
-                </Box>
-              </Box>
-              <ChevronDownIcon width={11} height={5} />
-            </button>
+            <LabelMenuButton label="Source" h="40">
+              {sourceFilter}
+            </LabelMenuButton>
           </MenuTrigger>
           <MenuContent />
         </Menu>

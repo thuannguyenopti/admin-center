@@ -17,7 +17,7 @@ export default function AudiencesPage() {
           <SearchInput 
             size="lg"
             placeholder="Filter by name"
-            icon={<IconSearch size={16} />}
+            addonBefore={<IconSearch size={16} />}
             style={{ borderRadius: "6px" }}
           />
         </Box>
@@ -50,7 +50,7 @@ export default function AudiencesPage() {
                 <IconChevronDown size={8} color="#66708c" />
               </Flex>
             </Th>
-            <Th style={{ width: "56px" }}></Th> {/* For the action button */}
+            <Th style={{ width: "56px" }} /> {/* For the action button */}
           </Tr>
         </thead>
         <tbody>
@@ -62,9 +62,7 @@ export default function AudiencesPage() {
                 style={{ borderRight: "none" }}
               >
                 {audience.name}
-              </Td>
-              {/* Action menu button */}
-              <Td 
+              </Td><Td 
                 type="button" 
                 style={{ borderLeft: "none" }}
               />
