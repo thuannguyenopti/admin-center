@@ -25,6 +25,29 @@ export type Outline = {
 
 type DropPosition = { outlineId: string; colId: string; position: number } | null;
 
+const isImageDrag = (dt: DataTransfer) => {
+    const types = Array.from(dt?.types || []);
+    return (
+        types.includes("image/url") || // your custom type (if browser exposes it)
+        types.includes("text/uri-list") || // common for URL drags
+        types.includes("text/plain") || // common fallback
+        types.includes("Files") // if dragging files
+    );
+};
+
+const getDraggedImageUrl = (dt: DataTransfer) => {
+    const url =
+        dt.getData("image/url") ||
+        dt.getData("text/uri-list") ||
+        dt.getData("text/plain");
+    return typeof url === "string" ? url.trim() : "";
+};
+
+const getDraggedAlt = (dt: DataTransfer) => {
+    const alt = dt.getData("image/alt") || "";
+    return typeof alt === "string" ? alt : "";
+};
+
 export default function PreviewCanvas({
     outlines,
     theEles, // unused but kept for prop compatibility
@@ -50,7 +73,9 @@ export default function PreviewCanvas({
     // ✅ This MUST be the scroll container div inside PreviewWrapper
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
-    const MOBILE_BP = 480; // or 480 if you want “mobile only” stricter
+    // "mobile only" breakpoint (tweak as you like)
+    const MOBILE_BP = 480;
+
     const [viewportW, setViewportW] = useState<number>(() => {
         // fixed/scale should behave like that device width immediately
         return preview.mode === "responsive" ? 0 : preview.width;
@@ -78,6 +103,7 @@ export default function PreviewCanvas({
     const wrapperWidth = preview.width ?? 1100;
     const wrapperMaxWidth = preview.maxWidth ?? 1100;
 
+    // Scroll the selected element into view
     useEffect(() => {
         if (!currentEle || currentEle === "none") return;
 
@@ -98,7 +124,11 @@ export default function PreviewCanvas({
         root.scrollTo({ top: root.scrollTop + delta, behavior: "smooth" });
     }, [currentEle]);
 
-    const insertImageIntoOutline = (dp: NonNullable<DropPosition>, imageUrl: string, imageAlt: string) => {
+    const insertImageIntoOutline = (
+        dp: NonNullable<DropPosition>,
+        imageUrl: string,
+        imageAlt: string
+    ) => {
         const uKey = `img-${dp.outlineId}-${Date.now()}`;
 
         setOutlines((prev) =>
@@ -137,6 +167,7 @@ export default function PreviewCanvas({
         );
     };
 
+    // Outline-level aside detection
     const isAsideOutline = (o: any) => {
         if (!o || typeof o !== "object") return false;
         if (o.role === "aside") return true;
@@ -149,207 +180,267 @@ export default function PreviewCanvas({
         return outline.tree.map((section: any, sindex: number) => (
             <section key={section.id ?? sindex}>
                 {(section.children || []).map((row: any, rIndex: number) => (
-                    <section className="grid grid-flow-col auto-cols-fr gap-4 text-white" key={row.id ?? rIndex}>
-                        {(row.children || []).map((col: any, cIndex: number) => (
-                            <div
-                                key={col.id ?? cIndex}
-                                onDragOver={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
+                    <section
+                        className="grid grid-flow-col auto-cols-fr gap-4 text-white"
+                        key={row.id ?? rIndex}
+                    >
+                        {(row.children || []).map((col: any, cIndex: number) => {
+                            const colChildren = col.children || [];
+                            const isActiveDropCol =
+                                dragOverColumn === col.id &&
+                                dropPosition &&
+                                dropPosition.outlineId === outline.id &&
+                                dropPosition.colId === col.id;
 
-                                    const hasImageData = e.dataTransfer.types.includes("image/url");
-                                    if (!hasImageData) return;
+                            return (
+                                <div
+                                    key={col.id ?? cIndex}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
 
-                                    setDragOverColumn(col.id);
+                                        // ✅ IMPORTANT: do NOT rely on only "image/url"
+                                        if (!isImageDrag(e.dataTransfer)) return;
 
-                                    const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
-                                    const mouseY = e.clientY;
+                                        setDragOverColumn(col.id);
 
-                                    let insertPosition = (col.children || []).length;
-                                    for (let i = 0; i < elementDivs.length; i++) {
-                                        const rect = elementDivs[i].getBoundingClientRect();
-                                        const middle = rect.top + rect.height / 2;
-                                        if (mouseY < middle) {
-                                            insertPosition = i;
-                                            break;
+                                        const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
+                                        const mouseY = e.clientY;
+
+                                        let insertPosition = colChildren.length;
+
+                                        for (let i = 0; i < elementDivs.length; i++) {
+                                            const rect = (elementDivs[i] as HTMLElement).getBoundingClientRect();
+                                            const middle = rect.top + rect.height / 2;
+                                            if (mouseY < middle) {
+                                                insertPosition = i;
+                                                break;
+                                            }
                                         }
-                                    }
 
-                                    setDropPosition({ outlineId: outline.id, colId: col.id, position: insertPosition });
-                                }}
-                                onDragLeave={(e) => {
-                                    e.stopPropagation();
-                                    if (e.currentTarget === e.target) {
-                                        setDragOverColumn(null);
-                                        setDropPosition(null);
-                                    }
-                                }}
-                                className={dragOverColumn === col.id ? "relative" : ""}
-                            >
-                                {dragOverColumn === col.id &&
-                                    dropPosition &&
-                                    dropPosition.outlineId === outline.id &&
-                                    dropPosition.colId === col.id && (
+                                        setDropPosition({
+                                            outlineId: outline.id,
+                                            colId: col.id,
+                                            position: insertPosition,
+                                        });
+                                    }}
+                                    onDragLeave={(e) => {
+                                        e.stopPropagation();
+                                        if (e.currentTarget === e.target) {
+                                            setDragOverColumn(null);
+                                            setDropPosition(null);
+                                        }
+                                    }}
+                                    className={dragOverColumn === col.id ? "relative" : ""}
+                                >
+                                    {/* empty drop */}
+                                    {colChildren.length === 0 && dragOverColumn === col.id && (
                                         <div
                                             style={{
-                                                position: "absolute",
-                                                left: 0,
-                                                right: 0,
-                                                top: dropPosition.position === 0 ? 0 : undefined,
-                                                bottom: dropPosition.position === (col.children || []).length ? 0 : undefined,
+                                                border: "2px dashed #0037FF",
+                                                borderRadius: "8px",
+                                                padding: "20px",
+                                                textAlign: "center",
+                                                color: "#0037FF",
+                                                fontSize: "14px",
+                                                backgroundColor: "rgba(0, 55, 255, 0.05)",
+                                            }}
+                                        >
+                                            Drop image here
+                                        </div>
+                                    )}
+
+                                    {/* list */}
+                                    {colChildren.map((element: any, eleIndex: number) => {
+                                        const ele = outline.elements[element.id];
+                                        const type = ele?.type;
+
+                                        return (
+                                            <React.Fragment key={element.id ?? eleIndex}>
+                                                {/* ✅ insert line BEFORE the element (middle positions now visible/usable) */}
+                                                {isActiveDropCol && dropPosition!.position === eleIndex && (
+                                                    <div
+                                                        style={{
+                                                            height: "2px",
+                                                            backgroundColor: "#0037FF",
+                                                            borderRadius: "2px",
+                                                            margin: "6px 0",
+                                                            pointerEvents: "none",
+                                                        }}
+                                                    />
+                                                )}
+
+                                                <div className="relative group" data-element-id={element.id}>
+                                                    {/* selection outline */}
+                                                    <div
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setCurrentEle(element.id);
+                                                            setCurrentHoverEle("none");
+                                                        }}
+                                                        style={{
+                                                            visibility:
+                                                                currentEle === element.id || currentHoverEle === element.id
+                                                                    ? "visible"
+                                                                    : undefined,
+                                                            opacity:
+                                                                currentEle === element.id || currentHoverEle === element.id
+                                                                    ? currentEle === element.id
+                                                                        ? 1
+                                                                        : 0.5
+                                                                    : undefined,
+                                                            top:
+                                                                currentEle === element.id || currentHoverEle === element.id
+                                                                    ? "-8px"
+                                                                    : undefined,
+                                                            left:
+                                                                currentEle === element.id || currentHoverEle === element.id
+                                                                    ? "-8px"
+                                                                    : undefined,
+                                                            right:
+                                                                currentEle === element.id || currentHoverEle === element.id
+                                                                    ? "-8px"
+                                                                    : undefined,
+                                                            bottom:
+                                                                currentEle === element.id || currentHoverEle === element.id
+                                                                    ? "-8px"
+                                                                    : undefined,
+                                                        }}
+                                                        className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+                                                    >
+                                                        <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">
+                                                            {(() => {
+                                                                switch (type) {
+                                                                    case "Heading":
+                                                                        return <IconHeading size={12} />;
+                                                                    case "Text":
+                                                                        return <IconPilcrow size={12} />;
+                                                                    case "Input":
+                                                                        return <IconForms size={12} />;
+                                                                    case "Button":
+                                                                        return <IconRectangle size={12} />;
+                                                                    case "Image":
+                                                                        return <IconPhoto size={12} />;
+                                                                    default:
+                                                                        return <IconBrackets size={12} />;
+                                                                }
+                                                            })()}
+                                                            {type || "Unknown"}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* element render */}
+                                                    {(() => {
+                                                        switch (type) {
+                                                            case "Heading":
+                                                                return (
+                                                                    <h1 className="text-3xl mb-5 font-bold">
+                                                                        {ele?.props.find((p: any) => p.label === "Text")?.value || (
+                                                                            <>&nbsp;</>
+                                                                        )}
+                                                                    </h1>
+                                                                );
+
+                                                            case "Text":
+                                                                return (
+                                                                    <p className="mb-2">
+                                                                        {ele?.props.find((p: any) => p.label === "Text")?.value || (
+                                                                            <>&nbsp;</>
+                                                                        )}
+                                                                    </p>
+                                                                );
+
+                                                            case "Input":
+                                                                return (
+                                                                    <div className="group relative mt-4">
+                                                                        {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
+                                                                            <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
+                                                                                {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
+                                                                            </div>
+                                                                        )}
+                                                                        <label>
+                                                                            {ele?.props.find((p: any) => p.label === "Label")?.value || (
+                                                                                <>&nbsp;</>
+                                                                            )}
+                                                                        </label>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder={
+                                                                                ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
+                                                                                undefined
+                                                                            }
+                                                                            className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
+                                                                        />
+                                                                    </div>
+                                                                );
+
+                                                            case "Button":
+                                                                return (
+                                                                    <div className="text-right mt-4">
+                                                                        <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
+                                                                            {ele?.props.find((p: any) => p.label === "Label")?.value || (
+                                                                                <>&nbsp;</>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+
+                                                            case "Image": {
+                                                                const imageUrlRaw =
+                                                                    ele?.props.find((p: any) => p.label === "Image URL")?.value;
+                                                                const imageUrl =
+                                                                    typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
+
+                                                                const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
+                                                                const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
+                                                                const imageHeight = ele?.props.find((p: any) => p.label === "Height")?.value;
+
+                                                                return (
+                                                                    <div className="mb-4">
+                                                                        {imageUrl ? (
+                                                                            <img
+                                                                                src={imageUrl}
+                                                                                alt={imageAlt || "Image"}
+                                                                                style={{
+                                                                                    width: imageWidth === "auto" ? "100%" : imageWidth,
+                                                                                    height: imageHeight === "auto" ? "auto" : imageHeight,
+                                                                                    borderRadius: "8px",
+                                                                                    objectFit: "cover",
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
+                                                                                No image selected
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            }
+
+                                                            default:
+                                                                return null;
+                                                        }
+                                                    })()}
+                                                </div>
+                                            </React.Fragment>
+                                        );
+                                    })}
+
+                                    {/* ✅ insert line at END of column */}
+                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
+                                        <div
+                                            style={{
                                                 height: "2px",
                                                 backgroundColor: "#0037FF",
-                                                zIndex: 1000,
+                                                borderRadius: "2px",
+                                                margin: "6px 0",
                                                 pointerEvents: "none",
                                             }}
                                         />
                                     )}
-
-                                {(col.children || []).length === 0 && dragOverColumn === col.id && (
-                                    <div
-                                        style={{
-                                            border: "2px dashed #0037FF",
-                                            borderRadius: "8px",
-                                            padding: "20px",
-                                            textAlign: "center",
-                                            color: "#0037FF",
-                                            fontSize: "14px",
-                                            backgroundColor: "rgba(0, 55, 255, 0.05)",
-                                        }}
-                                    >
-                                        Drop image here
-                                    </div>
-                                )}
-
-                                {(col.children || []).map((element: any, eleIndex: number) => {
-                                    const ele = outline.elements[element.id];
-                                    const type = ele?.type;
-
-                                    return (
-                                        <div key={element.id ?? eleIndex} className="relative group" data-element-id={element.id}>
-                                            <div
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setCurrentEle(element.id);
-                                                    setCurrentHoverEle("none");
-                                                }}
-                                                style={{
-                                                    visibility: currentEle === element.id || currentHoverEle === element.id ? "visible" : undefined,
-                                                    opacity:
-                                                        currentEle === element.id || currentHoverEle === element.id
-                                                            ? currentEle === element.id
-                                                                ? 1
-                                                                : 0.5
-                                                            : undefined,
-                                                    top: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
-                                                    left: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
-                                                    right: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
-                                                    bottom: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
-                                                }}
-                                                className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
-                                            >
-                                                <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-5 -left-[2px] rounded-b-none">
-                                                    {(() => {
-                                                        switch (type) {
-                                                            case "Heading":
-                                                                return <IconHeading size={12} />;
-                                                            case "Text":
-                                                                return <IconPilcrow size={12} />;
-                                                            case "Input":
-                                                                return <IconForms size={12} />;
-                                                            case "Button":
-                                                                return <IconRectangle size={12} />;
-                                                            case "Image":
-                                                                return <IconPhoto size={12} />;
-                                                            default:
-                                                                return <IconBrackets size={12} />;
-                                                        }
-                                                    })()}
-                                                    {type || "Unknown"}
-                                                </div>
-                                            </div>
-
-                                            {(() => {
-                                                switch (type) {
-                                                    case "Heading":
-                                                        return (
-                                                            <h1 className="text-3xl mb-5 font-bold">
-                                                                {ele?.props.find((p: any) => p.label === "Text")?.value || <>&nbsp;</>}
-                                                            </h1>
-                                                        );
-
-                                                    case "Text":
-                                                        return (
-                                                            <p className="mb-2">
-                                                                {ele?.props.find((p: any) => p.label === "Text")?.value || <>&nbsp;</>}
-                                                            </p>
-                                                        );
-
-                                                    case "Input":
-                                                        return (
-                                                            <div className="group relative mt-4">
-                                                                {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
-                                                                    <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-                                                                        {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
-                                                                    </div>
-                                                                )}
-                                                                <label>{ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}</label>
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder={ele?.props.find((p: any) => p.label === "Placeholder")?.value || undefined}
-                                                                    className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
-                                                                />
-                                                            </div>
-                                                        );
-
-                                                    case "Button":
-                                                        return (
-                                                            <div className="text-right mt-4">
-                                                                <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
-                                                                    {ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}
-                                                                </div>
-                                                            </div>
-                                                        );
-
-                                                    case "Image": {
-                                                        const imageUrlRaw = ele?.props.find((p: any) => p.label === "Image URL")?.value;
-                                                        const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-
-                                                        const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
-                                                        const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
-                                                        const imageHeight = ele?.props.find((p: any) => p.label === "Height")?.value;
-
-                                                        return (
-                                                            <div className="mb-4">
-                                                                {imageUrl ? (
-                                                                    <img
-                                                                        src={imageUrl}
-                                                                        alt={imageAlt || "Image"}
-                                                                        style={{
-                                                                            width: imageWidth === "auto" ? "100%" : imageWidth,
-                                                                            height: imageHeight === "auto" ? "auto" : imageHeight,
-                                                                            borderRadius: "8px",
-                                                                            objectFit: "cover",
-                                                                        }}
-                                                                    />
-                                                                ) : (
-                                                                    <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
-                                                                        No image selected
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    default:
-                                                        return null;
-                                                }
-                                            })()}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ))}
+                                </div>
+                            );
+                        })}
                     </section>
                 ))}
             </section>
@@ -359,6 +450,8 @@ export default function PreviewCanvas({
     const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
     const asideOutlines = outlines.filter((o) => isAsideOutline(o));
     const hasAside = asideOutlines.length > 0 && mainOutlines.length > 0;
+
+    // ✅ only break into 1 column on "mobile" preview widths
     const useTwoCol = hasAside && !isMobileViewport;
 
     return (
@@ -375,15 +468,14 @@ export default function PreviewCanvas({
             <PreviewWrapper
                 contentRef={scrollRef}
                 mode={preview.mode}
-                width={wrapperWidth}      // ✅ default is responsive
-                maxWidth={wrapperMaxWidth} // ✅ for responsive mode clamp
-                height="fill"            // ✅ THIS is what makes it overflow/scroll
+                width={wrapperWidth}
+                maxWidth={wrapperMaxWidth}
+                height="fill"
                 className="h-full min-h-0"
                 onClick={() => setCurrentEle("none")}
                 onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
                     e.preventDefault();
-                    const hasImageData = e.dataTransfer.types.includes("image/url");
-                    if (hasImageData) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
+                    if (isImageDrag(e.dataTransfer)) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
                 }}
                 onDragLeave={(e: React.DragEvent<HTMLDivElement>) => {
                     (e.currentTarget as HTMLDivElement).style.opacity = "1";
@@ -394,8 +486,8 @@ export default function PreviewCanvas({
                     e.preventDefault();
                     (e.currentTarget as HTMLDivElement).style.opacity = "1";
 
-                    const imageUrl = e.dataTransfer.getData("image/url");
-                    const imageAlt = e.dataTransfer.getData("image/alt");
+                    const imageUrl = getDraggedImageUrl(e.dataTransfer);
+                    const imageAlt = getDraggedAlt(e.dataTransfer);
 
                     const dp = dropPosition;
                     setDragOverColumn(null);
@@ -404,7 +496,7 @@ export default function PreviewCanvas({
                     if (imageUrl && dp) insertImageIntoOutline(dp, imageUrl, imageAlt);
                 }}
                 style={{ transition: "opacity 0.2s" }}
-            >   {/* IMPORTANT: remove the extra max-w wrapper inside OR keep it but don’t double-cap */}
+            >
                 <div className="w-full p-4 pt-24" style={{ minHeight: "100%" }}>
                     {useTwoCol ? (
                         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
@@ -427,7 +519,6 @@ export default function PreviewCanvas({
                             </aside>
                         </div>
                     ) : (
-                        // ✅ narrow preview: stack main + aside vertically (no 2-col layout)
                         <div className="space-y-10">
                             {[...mainOutlines, ...asideOutlines].map((outline) => (
                                 <div key={outline.id}>
