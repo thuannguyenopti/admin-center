@@ -32,10 +32,14 @@ export const Tr = ({
 	children,
 	url,
 	onClick,
+	style,
+	className,
 }: {
 	children: ReactNode;
 	url?: string;
 	onClick?: () => void;
+	style?: React.CSSProperties;
+	className?: string;
 }) => {
 	const router = useRouter();
 	const rowClick = (href: string) => {
@@ -50,7 +54,9 @@ export const Tr = ({
 				(url || onClick
 					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
 					: "")
+				+ (className ? ` ${className}` : "")
 			}
+			style={style}
 		>
 			{children}
 		</tr>

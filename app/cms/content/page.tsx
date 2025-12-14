@@ -7,9 +7,11 @@ import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto } from "@table
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import { Flex } from "@/app/components/Flex";
+import { Aside } from "@/app/context/LayoutContext";
+import DetailsPane from "./DetailsPane";
 import { useState } from "react";
 
-type ContentItem = {
+export type ContentItem = {
 	id: string;
 	name: string;
 	type: "Page" | "Product" | "Block" | "Image";
@@ -19,57 +21,64 @@ type ContentItem = {
 	lastModified: string;
 };
 
+const reportNames = ["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown", "Maria Garcia", "Sarah Chen", "Marcus Johnson", "Alex Rivera", "Emily Brown", "James Wilson", "Lisa Anderson", "David Kim", "Michelle Taylor", "Robert Garcia", "Jessica Moore", "Chris Lee", "Patricia White", "Kevin Davis", "Jennifer Martin", "Thomas Brown", "Steven Clark", "Nancy Rodriguez", "Daniel Lewis"];
+
+const getRandomName = (id: string) => {
+	const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	return reportNames[hash % reportNames.length];
+};
+
 const contentItems: ContentItem[] = [
-	{ id: "1", name: "Features", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "2", name: "Training Plans", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "3", name: "Heart Rate Monitor", type: "Product", status: "Published", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "4", name: "Getting Started", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "5", name: "Pricing", type: "Block", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "6", name: "Stride Premium", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "7", name: "Community Stories", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "8", name: "My Dashboard", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "9", name: "Cycling Hero", type: "Image", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "10", name: "Help Center", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "11", name: "Beginner's Guide to Cycling", type: "Page", status: "Published", modifiedBy: "Sarah Chen", language: "en", lastModified: "Jan 10, 2025" },
-	{ id: "12", name: "Advanced Training Techniques", type: "Page", status: "Published", modifiedBy: "Marcus Johnson", language: "en", lastModified: "Jan 9, 2025" },
-	{ id: "13", name: "Route Planning 101", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 8, 2025" },
-	{ id: "14", name: "Performance Metrics Explained", type: "Page", status: "Published", modifiedBy: "Alex Rivera", language: "en", lastModified: "Jan 7, 2025" },
-	{ id: "15", name: "Nutrition for Cyclists", type: "Page", status: "Draft", modifiedBy: "Emily Brown", language: "en", lastModified: "Jan 6, 2025" },
-	{ id: "16", name: "Bike Maintenance Tips", type: "Page", status: "Published", modifiedBy: "James Wilson", language: "en", lastModified: "Jan 5, 2025" },
-	{ id: "17", name: "Indoor Training Guide", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Jan 4, 2025" },
-	{ id: "18", name: "Weather & Safety", type: "Page", status: "Published", modifiedBy: "Lisa Anderson", language: "en", lastModified: "Jan 3, 2025" },
-	{ id: "19", name: "Race Preparation", type: "Page", status: "Draft", modifiedBy: "David Kim", language: "en", lastModified: "Jan 2, 2025" },
-	{ id: "20", name: "Recovery Strategies", type: "Page", status: "Published", modifiedBy: "Michelle Taylor", language: "en", lastModified: "Jan 1, 2025" },
-	{ id: "21", name: "Climbing Techniques", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 31, 2024" },
-	{ id: "22", name: "Sprint Training", type: "Page", status: "Draft", modifiedBy: "Robert Garcia", language: "en", lastModified: "Dec 30, 2024" },
-	{ id: "23", name: "Cadence Optimization", type: "Page", status: "Published", modifiedBy: "Jessica Moore", language: "en", lastModified: "Dec 29, 2024" },
-	{ id: "24", name: "Gear Ratios Guide", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 28, 2024" },
-	{ id: "25", name: "Community Rides", type: "Page", status: "Published", modifiedBy: "Chris Lee", language: "en", lastModified: "Dec 27, 2024" },
-	{ id: "26", name: "Leaderboards", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 26, 2024" },
-	{ id: "27", name: "Achievement Badges", type: "Page", status: "Published", modifiedBy: "Patricia White", language: "en", lastModified: "Dec 25, 2024" },
-	{ id: "28", name: "Social Features", type: "Page", status: "Draft", modifiedBy: "Kevin Davis", language: "en", lastModified: "Dec 24, 2024" },
-	{ id: "29", name: "Premium Benefits", type: "Page", status: "Published", modifiedBy: "Jennifer Martin", language: "en", lastModified: "Dec 23, 2024" },
-	{ id: "30", name: "Subscription FAQ", type: "Page", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 22, 2024" },
-	{ id: "31", name: "Cycle Computer Pro", type: "Product", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 21, 2024" },
-	{ id: "32", name: "HR Monitor Band", type: "Product", status: "Published", modifiedBy: "Thomas Brown", language: "en", lastModified: "Dec 20, 2024" },
-	{ id: "33", name: "Smart Bike Trainer", type: "Product", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 19, 2024" },
-	{ id: "34", name: "Cadence Sensor", type: "Product", status: "Published", modifiedBy: "Amanda Price", language: "en", lastModified: "Dec 18, 2024" },
-	{ id: "35", name: "Power Meter", type: "Product", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 17, 2024" },
-	{ id: "36", name: "Speed Sensor", type: "Product", status: "Published", modifiedBy: "Steven Clark", language: "en", lastModified: "Dec 16, 2024" },
-	{ id: "37", name: "Aero Helmet", type: "Product", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 15, 2024" },
-	{ id: "38", name: "Bike Lights", type: "Product", status: "Published", modifiedBy: "Nancy Rodriguez", language: "en", lastModified: "Dec 14, 2024" },
-	{ id: "39", name: "Water Bottle Holder", type: "Product", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 13, 2024" },
-	{ id: "40", name: "Repair Tool Kit", type: "Product", status: "Published", modifiedBy: "Daniel Lewis", language: "en", lastModified: "Dec 12, 2024" },
-	{ id: "41", name: "Weekly Challenge Block", type: "Block", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 11, 2024" },
-	{ id: "42", name: "Achievement Block", type: "Block", status: "Published", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 10, 2024" },
-	{ id: "43", name: "Social Feed Block", type: "Block", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 9, 2024" },
-	{ id: "44", name: "Leaderboard Widget", type: "Block", status: "Published", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 8, 2024" },
-	{ id: "45", name: "Stats Summary", type: "Block", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 7, 2024" },
-	{ id: "46", name: "Upcoming Events Block", type: "Block", status: "Published", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 6, 2024" },
-	{ id: "47", name: "Testimonial Carousel", type: "Block", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 5, 2024" },
-	{ id: "48", name: "Payment Plans", type: "Block", status: "Published", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 4, 2024" },
-	{ id: "49", name: "Mountain Pass Scenery", type: "Image", status: "Published", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 3, 2024" },
-	{ id: "50", name: "Pro Cyclist In Action", type: "Image", status: "Draft", modifiedBy: "Tien Le", language: "en", lastModified: "Dec 2, 2024" },
+	{ id: "1", name: "Features", type: "Page", status: "Draft", modifiedBy: getRandomName("1"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "2", name: "Training Plans", type: "Page", status: "Draft", modifiedBy: getRandomName("2"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "3", name: "Heart Rate Monitor", type: "Product", status: "Published", modifiedBy: getRandomName("3"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "4", name: "Getting Started", type: "Page", status: "Draft", modifiedBy: getRandomName("4"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "5", name: "Pricing", type: "Block", status: "Draft", modifiedBy: getRandomName("5"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "6", name: "Stride Premium", type: "Page", status: "Draft", modifiedBy: getRandomName("6"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "7", name: "Community Stories", type: "Page", status: "Draft", modifiedBy: getRandomName("7"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "8", name: "My Dashboard", type: "Page", status: "Draft", modifiedBy: getRandomName("8"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "9", name: "Cycling Hero", type: "Image", status: "Draft", modifiedBy: getRandomName("9"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "10", name: "Help Center", type: "Page", status: "Draft", modifiedBy: getRandomName("10"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "11", name: "Beginner's Guide to Cycling", type: "Page", status: "Published", modifiedBy: getRandomName("11"), language: "en", lastModified: "Jan 10, 2025" },
+	{ id: "12", name: "Advanced Training Techniques", type: "Page", status: "Published", modifiedBy: getRandomName("12"), language: "en", lastModified: "Jan 9, 2025" },
+	{ id: "13", name: "Route Planning 101", type: "Page", status: "Draft", modifiedBy: getRandomName("13"), language: "en", lastModified: "Jan 8, 2025" },
+	{ id: "14", name: "Performance Metrics Explained", type: "Page", status: "Published", modifiedBy: getRandomName("14"), language: "en", lastModified: "Jan 7, 2025" },
+	{ id: "15", name: "Nutrition for Cyclists", type: "Page", status: "Draft", modifiedBy: getRandomName("15"), language: "en", lastModified: "Jan 6, 2025" },
+	{ id: "16", name: "Bike Maintenance Tips", type: "Page", status: "Published", modifiedBy: getRandomName("16"), language: "en", lastModified: "Jan 5, 2025" },
+	{ id: "17", name: "Indoor Training Guide", type: "Page", status: "Draft", modifiedBy: getRandomName("17"), language: "en", lastModified: "Jan 4, 2025" },
+	{ id: "18", name: "Weather & Safety", type: "Page", status: "Published", modifiedBy: getRandomName("18"), language: "en", lastModified: "Jan 3, 2025" },
+	{ id: "19", name: "Race Preparation", type: "Page", status: "Draft", modifiedBy: getRandomName("19"), language: "en", lastModified: "Jan 2, 2025" },
+	{ id: "20", name: "Recovery Strategies", type: "Page", status: "Published", modifiedBy: getRandomName("20"), language: "en", lastModified: "Jan 1, 2025" },
+	{ id: "21", name: "Climbing Techniques", type: "Page", status: "Draft", modifiedBy: getRandomName("21"), language: "en", lastModified: "Dec 31, 2024" },
+	{ id: "22", name: "Sprint Training", type: "Page", status: "Draft", modifiedBy: getRandomName("22"), language: "en", lastModified: "Dec 30, 2024" },
+	{ id: "23", name: "Cadence Optimization", type: "Page", status: "Published", modifiedBy: getRandomName("23"), language: "en", lastModified: "Dec 29, 2024" },
+	{ id: "24", name: "Gear Ratios Guide", type: "Page", status: "Draft", modifiedBy: getRandomName("24"), language: "en", lastModified: "Dec 28, 2024" },
+	{ id: "25", name: "Community Rides", type: "Page", status: "Published", modifiedBy: getRandomName("25"), language: "en", lastModified: "Dec 27, 2024" },
+	{ id: "26", name: "Leaderboards", type: "Page", status: "Draft", modifiedBy: getRandomName("26"), language: "en", lastModified: "Dec 26, 2024" },
+	{ id: "27", name: "Achievement Badges", type: "Page", status: "Published", modifiedBy: getRandomName("27"), language: "en", lastModified: "Dec 25, 2024" },
+	{ id: "28", name: "Social Features", type: "Page", status: "Draft", modifiedBy: getRandomName("28"), language: "en", lastModified: "Dec 24, 2024" },
+	{ id: "29", name: "Premium Benefits", type: "Page", status: "Published", modifiedBy: getRandomName("29"), language: "en", lastModified: "Dec 23, 2024" },
+	{ id: "30", name: "Subscription FAQ", type: "Page", status: "Draft", modifiedBy: getRandomName("30"), language: "en", lastModified: "Dec 22, 2024" },
+	{ id: "31", name: "Cycle Computer Pro", type: "Product", status: "Draft", modifiedBy: getRandomName("31"), language: "en", lastModified: "Dec 21, 2024" },
+	{ id: "32", name: "HR Monitor Band", type: "Product", status: "Published", modifiedBy: getRandomName("32"), language: "en", lastModified: "Dec 20, 2024" },
+	{ id: "33", name: "Smart Bike Trainer", type: "Product", status: "Draft", modifiedBy: getRandomName("33"), language: "en", lastModified: "Dec 19, 2024" },
+	{ id: "34", name: "Cadence Sensor", type: "Product", status: "Published", modifiedBy: getRandomName("34"), language: "en", lastModified: "Dec 18, 2024" },
+	{ id: "35", name: "Power Meter", type: "Product", status: "Draft", modifiedBy: getRandomName("35"), language: "en", lastModified: "Dec 17, 2024" },
+	{ id: "36", name: "Speed Sensor", type: "Product", status: "Published", modifiedBy: getRandomName("36"), language: "en", lastModified: "Dec 16, 2024" },
+	{ id: "37", name: "Aero Helmet", type: "Product", status: "Draft", modifiedBy: getRandomName("37"), language: "en", lastModified: "Dec 15, 2024" },
+	{ id: "38", name: "Bike Lights", type: "Product", status: "Published", modifiedBy: getRandomName("38"), language: "en", lastModified: "Dec 14, 2024" },
+	{ id: "39", name: "Water Bottle Holder", type: "Product", status: "Draft", modifiedBy: getRandomName("39"), language: "en", lastModified: "Dec 13, 2024" },
+	{ id: "40", name: "Repair Tool Kit", type: "Product", status: "Published", modifiedBy: getRandomName("40"), language: "en", lastModified: "Dec 12, 2024" },
+	{ id: "41", name: "Weekly Challenge Block", type: "Block", status: "Draft", modifiedBy: getRandomName("41"), language: "en", lastModified: "Dec 11, 2024" },
+	{ id: "42", name: "Achievement Block", type: "Block", status: "Published", modifiedBy: getRandomName("42"), language: "en", lastModified: "Dec 10, 2024" },
+	{ id: "43", name: "Social Feed Block", type: "Block", status: "Draft", modifiedBy: getRandomName("43"), language: "en", lastModified: "Dec 9, 2024" },
+	{ id: "44", name: "Leaderboard Widget", type: "Block", status: "Published", modifiedBy: getRandomName("44"), language: "en", lastModified: "Dec 8, 2024" },
+	{ id: "45", name: "Stats Summary", type: "Block", status: "Draft", modifiedBy: getRandomName("45"), language: "en", lastModified: "Dec 7, 2024" },
+	{ id: "46", name: "Upcoming Events Block", type: "Block", status: "Published", modifiedBy: getRandomName("46"), language: "en", lastModified: "Dec 6, 2024" },
+	{ id: "47", name: "Testimonial Carousel", type: "Block", status: "Draft", modifiedBy: getRandomName("47"), language: "en", lastModified: "Dec 5, 2024" },
+	{ id: "48", name: "Payment Plans", type: "Block", status: "Published", modifiedBy: getRandomName("48"), language: "en", lastModified: "Dec 4, 2024" },
+	{ id: "49", name: "Mountain Pass Scenery", type: "Image", status: "Published", modifiedBy: getRandomName("49"), language: "en", lastModified: "Dec 3, 2024" },
+	{ id: "50", name: "Pro Cyclist In Action", type: "Image", status: "Draft", modifiedBy: getRandomName("50"), language: "en", lastModified: "Dec 2, 2024" },
 ];
 
 function getIconForType(type: ContentItem["type"]) {
@@ -92,12 +101,14 @@ function getStatusIntent(status: ContentItem["status"]) {
 export default function ContentPage() {
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
+	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
 	const itemsPerPage = 10;
 	const totalPages = Math.ceil(contentItems.length / itemsPerPage);
 	const paginatedItems = contentItems.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
+	const selectedContent = contentItems.find(item => item.id === selectedContentId);
 
 	const handleSelectAll = (checked: boolean) => {
 		if (checked) {
@@ -151,7 +162,11 @@ export default function ContentPage() {
 				</thead>
 				<tbody>
 					{paginatedItems.map((item) => (
-						<Tr key={item.id}>
+						<Tr 
+							key={item.id}
+							onClick={() => setSelectedContentId(item.id)}
+							style={{ cursor: "pointer" }}
+						>
 							<Td type="raw" style={{ width: "40px" }}>
 								<Checkbox
 									checked={selectedRows.has(item.id)}
@@ -181,6 +196,17 @@ export default function ContentPage() {
 				onPageChange={setCurrentPage}
 				mt="24"
 			/>
+			
+			{selectedContentId && (
+				<Aside>
+					<DetailsPane 
+						content={selectedContent}
+						selectedIds={selectedRows}
+						allContent={paginatedItems}
+						onClose={() => setSelectedContentId(null)} 
+					/>
+				</Aside>
+			)}
 		</>
 	);
 }
