@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input } from "@optiaxiom/react";
-import { IconX } from "@tabler/icons-react";
+import { IconX, IconStack2 } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
@@ -70,21 +70,19 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
         px="24"
         py="24"
       >
-        {/* Preview Image */}
+        {/* Preview - Stacked Icon for Multiple Selection */}
         <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
           style={{
             borderRadius: "4px",
-            overflow: "hidden",
+            backgroundColor: "var(--ax-colors-bg-subtle)",
             height: "180px",
-            position: "relative",
+            color: "var(--ax-colors-fg-secondary)",
           }}
         >
-          <Image
-            src={metadata.previewImage}
-            alt="Preview of selected items"
-            fill
-            style={{ objectFit: "cover" }}
-          />
+          <IconStack2 size={80} />
         </Box>
 
         {/* Asset Information */}
