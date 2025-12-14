@@ -13,6 +13,7 @@ import {
   MenuTrigger,
   MenuContent,
   LabelMenuButton,
+  Pagination,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Input } from "@/app/components/Input";
@@ -34,6 +35,8 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modifiedBy, setModifiedBy] = useState("anyone");
   const [language, setLanguage] = useState("english");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Calculate tab counts
   const tabCounts = useMemo(() => {
@@ -76,6 +79,20 @@ export default function DashboardPage() {
 
       return true;
     });
+  }, [activeTab, searchQuery, modifiedBy]);
+
+  // Pagination setup
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    return filteredData.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [filteredData, currentPage]);
+
+  // Reset to page 1 when tab or filters change
+  useMemo(() => {
+    setCurrentPage(1);
   }, [activeTab, searchQuery, modifiedBy]);
 
   const formatDate = (date: Date) => {
@@ -176,8 +193,8 @@ export default function DashboardPage() {
                 </Tr>
               </thead>
               <tbody>
-                {filteredData.map((item) => (
-                  <Tr key={item.id}>
+                {paginatedData.map((item) => (
+                   <Tr key={item.id}>
                     <Td type="header">
                       <Box display="flex" gap="8" alignItems="center">
                         {item.type === "page" ? (
@@ -224,6 +241,12 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </Table>
+            <Pagination
+              total={totalPages}
+              page={currentPage}
+              onPageChange={setCurrentPage}
+              mt="24"
+            />
           </TabsContent>
         </Tabs>
       </Box>
