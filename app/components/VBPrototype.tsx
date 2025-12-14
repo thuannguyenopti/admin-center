@@ -1654,7 +1654,7 @@ export default function VBPrototype({
 			<Box
 				bg="bg.page"
 				w="full"
-				className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr]"
+				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
 				style={{ height: "100%", overflow: "hidden" }}
 			>
 				<CMSToolbar
@@ -1950,7 +1950,7 @@ export default function VBPrototype({
 
 				{/* RIGHT / CANVAS */}
 				<div
-					className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10"
+					className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
 					style={{ height: "100%", overflow: "hidden" }}
 				>
 					<PreviewCanvas
