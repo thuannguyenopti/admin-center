@@ -45,8 +45,10 @@ import ElementEditor from "./vb/ElementEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
+import { PreviewSettings } from "./vb/PreviewSettings";
 import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
 import styles from "./VBPrototype.module.css";
+import { on } from "events";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -862,6 +864,16 @@ export default function VBPrototype({
 	const [dragging, setDragging] = useState<any>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
 
+	const [preview, setPreview] = useState<PreviewSettings>({
+		mode: "responsive",
+		width: 1100,
+		maxWidth: 1100,
+	});
+
+	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
+		setPreview((p) => ({ ...p, ...patch }));
+	};
+
 	const defaultProps: PageProperties = {
 		seoTitle: "",
 		keywords: "",
@@ -1636,6 +1648,8 @@ export default function VBPrototype({
 						pageStatus={pageStatus}
 						onPublish={onPublish}
 						contentTypeIcon={<IconFile size={16} />}
+						preview={preview}
+						onPreviewChange={onPreviewChange}
 					/>
 					<Box px="24" pt="4" style={{ overflowY: "auto" }}>
 						<Heading level="4">Properties</Heading>
@@ -1663,6 +1677,8 @@ export default function VBPrototype({
 					pageStatus={pageStatus}
 					onPublish={onPublish}
 					contentTypeIcon={<IconFile size={16} />}
+					preview={preview}
+					onPreviewChange={onPreviewChange}
 				/>
 
 				{/* LEFT SIDEBAR */}
@@ -1961,6 +1977,7 @@ export default function VBPrototype({
 						setCurrentEle={setCurrentEleSmart}
 						setCurrentHoverEle={setCurrentHoverEle}
 						setOutlines={setOutlines}
+						preview={preview}
 					/>
 
 					{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}

@@ -1,18 +1,13 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 type PreviewMode = "fixed" | "scale" | "responsive";
 
 type Props = {
     mode?: PreviewMode;
-
-    // "design" width used for fixed/scale modes
-    width?: number;
-
-    // responsive mode width: fill container, but clamp if you want
-    maxWidth?: number; // optional clamp for responsive
-
+    width?: number;           // design width for fixed/scale
+    maxWidth?: number;        // clamp for responsive
     height?: number | "auto" | "fill";
     allowUpscale?: boolean;
 
@@ -22,10 +17,20 @@ type Props = {
     style?: React.CSSProperties;
 } & React.HTMLAttributes<HTMLDivElement>;
 
+function mergeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {
+    return (value: T) => {
+        refs.forEach((ref) => {
+            if (!ref) return;
+            if (typeof ref === "function") ref(value);
+            else (ref as any).current = value;
+        });
+    };
+}
+
 export default function PreviewWrapper({
     mode = "responsive",
     width = 1100,
-    maxWidth, // only used in responsive mode
+    maxWidth,
     height = "fill",
     allowUpscale = false,
     children,
@@ -34,76 +39,121 @@ export default function PreviewWrapper({
     style,
     ...rest
 }: Props) {
-    const containerRef = useRef<HTMLDivElement | null>(null);
+    const viewportRef = useRef<HTMLDivElement | null>(null); // ✅ measure THIS (always 100%)
+    const scrollRef = useRef<HTMLDivElement | null>(null);   // ✅ actual scroll container
+    const innerRef = useRef<HTMLDivElement | null>(null);    // ✅ unscaled content height
+
     const [scale, setScale] = useState(1);
+    const [scaledH, setScaledH] = useState<number | null>(null);
 
     const fill = height === "fill";
 
-    useEffect(() => {
+    // 1) compute scale from the viewport width (NOT the scaled content)
+    useLayoutEffect(() => {
         if (mode !== "scale") {
             setScale(1);
             return;
         }
 
-        const el = containerRef.current;
+        const el = viewportRef.current;
         if (!el) return;
 
-        const ro = new ResizeObserver(() => {
-            const avail = el.clientWidth;
+        const update = () => {
+            const avail = el.clientWidth;       // ✅ true viewport width
             const raw = avail / width;
-            const next = allowUpscale ? raw : Math.min(1, raw);
-            setScale(next);
-        });
+            setScale(allowUpscale ? raw : Math.min(1, raw));
+        };
 
+        update();
+        const ro = new ResizeObserver(update);
         ro.observe(el);
         return () => ro.disconnect();
     }, [mode, width, allowUpscale]);
 
-    // scroll container width
-    const scrollWidth =
-        mode === "responsive"
-            ? "100%"
-            : mode === "scale"
-                ? `${Math.max(1, Math.floor(width * scale))}px`
-                : `${width}px`;
+    // 2) make scroll height match scaled content (so scrolling stays correct)
+    useLayoutEffect(() => {
+        if (mode !== "scale") {
+            setScaledH(null);
+            return;
+        }
 
-    // what we actually render inside the scroller
-    const inner =
-        mode === "scale" ? (
-            <div style={{ width: `${width}px`, transform: `scale(${scale})`, transformOrigin: "top left" }}>
-                {children}
+        const el = innerRef.current;
+        if (!el) return;
+
+        const update = () => {
+            const unscaled = el.scrollHeight;     // transform doesn't change this (good!)
+            setScaledH(unscaled * scale);
+        };
+
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [mode, scale]);
+
+    const mergedScrollRef = useMemo(
+        () => mergeRefs<HTMLDivElement>(scrollRef as any, contentRef as any),
+        [contentRef]
+    );
+
+    // ✅ scroller is always the viewport width
+    const scrollerStyle: React.CSSProperties = {
+        width: "100%",
+        height: fill ? "100%" : height === "auto" ? "auto" : `${height}px`,
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        ...style,
+    };
+
+    let body: React.ReactNode;
+
+    if (mode === "scale") {
+        const scaledW = width * scale;
+
+        body = (
+            <div
+                style={{
+                    width: `${scaledW}px`,
+                    height: scaledH != null ? `${scaledH}px` : "auto",
+                    margin: "0 auto",          // centered, but width == avail so no gutters
+                    position: "relative",
+                }}
+            >
+                <div
+                    ref={innerRef}
+                    style={{
+                        width: `${width}px`,
+                        transform: `scale(${scale})`,
+                        transformOrigin: "top left",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                    }}
+                >
+                    {children}
+                </div>
             </div>
-        ) : mode === "fixed" ? (
-            <div style={{ width: `${width}px` }}>{children}</div>
-        ) : (
-            // responsive = let content reflow to available width
+        );
+    } else if (mode === "fixed") {
+        body = <div style={{ width: `${width}px`, margin: "0 auto" }}>{children}</div>;
+    } else {
+        body = (
             <div style={{ width: "100%", maxWidth: maxWidth ? `${maxWidth}px` : undefined, margin: "0 auto" }}>
                 {children}
             </div>
         );
+    }
 
     return (
         <div
-            ref={containerRef}
+            ref={viewportRef}
             className={className}
-            style={{ width: "100%", height: fill ? "100%" : undefined, minHeight: 0, display: "flex", justifyContent: "center" }}
+            style={{ width: "100%", height: fill ? "100%" : undefined, minHeight: 0, minWidth: 0 }}
         >
-            {/* ✅ scroll container */}
-            <div
-                ref={contentRef as any}
-                style={{
-                    width: scrollWidth,
-                    height: height === "fill" ? "100%" : height === "auto" ? "auto" : `${height}px`,
-                    minHeight: 0,
-                    overflowY: "auto",
-                    overflowX: "hidden",
-                    WebkitOverflowScrolling: "touch",
-                    ...(mode === "responsive" && maxWidth ? { maxWidth: `${maxWidth}px` } : null),
-                    ...style,
-                }}
-                {...rest}
-            >
-                {inner}
+            <div ref={mergedScrollRef} style={scrollerStyle} {...rest}>
+                {body}
             </div>
         </div>
     );

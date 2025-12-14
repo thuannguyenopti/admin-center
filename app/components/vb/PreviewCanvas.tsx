@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import PreviewWrapper from "./PreviewWrapper";
+import type { PreviewSettings } from "./PreviewSettings"; // adjust path
 import {
     IconPilcrow,
     IconForms,
@@ -32,6 +33,7 @@ export default function PreviewCanvas({
     setCurrentEle,
     setCurrentHoverEle,
     setOutlines,
+    preview,
 }: {
     outlines: Outline[];
     theEles: EleMap;
@@ -40,12 +42,41 @@ export default function PreviewCanvas({
     setCurrentEle: (value: React.SetStateAction<string>) => void;
     setCurrentHoverEle: (value: React.SetStateAction<string>) => void;
     setOutlines: React.Dispatch<React.SetStateAction<Outline[]>>;
+    preview: PreviewSettings;
 }) {
     const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
     const [dropPosition, setDropPosition] = useState<DropPosition>(null);
 
     // ✅ This MUST be the scroll container div inside PreviewWrapper
     const scrollRef = useRef<HTMLDivElement | null>(null);
+
+    const MOBILE_BP = 480; // or 480 if you want “mobile only” stricter
+    const [viewportW, setViewportW] = useState<number>(() => {
+        // fixed/scale should behave like that device width immediately
+        return preview.mode === "responsive" ? 0 : preview.width;
+    });
+
+    useEffect(() => {
+        if (preview.mode !== "responsive") {
+            setViewportW(preview.width);
+            return;
+        }
+
+        const el = scrollRef.current;
+        if (!el) return;
+
+        const update = () => setViewportW(el.clientWidth);
+        update();
+
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [preview.mode, preview.width]);
+
+    const isMobileViewport = viewportW > 0 && viewportW <= MOBILE_BP;
+
+    const wrapperWidth = preview.width ?? 1100;
+    const wrapperMaxWidth = preview.maxWidth ?? 1100;
 
     useEffect(() => {
         if (!currentEle || currentEle === "none") return;
@@ -328,6 +359,7 @@ export default function PreviewCanvas({
     const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
     const asideOutlines = outlines.filter((o) => isAsideOutline(o));
     const hasAside = asideOutlines.length > 0 && mainOutlines.length > 0;
+    const useTwoCol = hasAside && !isMobileViewport;
 
     return (
         <div
@@ -342,8 +374,9 @@ export default function PreviewCanvas({
         >
             <PreviewWrapper
                 contentRef={scrollRef}
-                mode="responsive"
-                width={1200}      // ✅ default is responsive
+                mode={preview.mode}
+                width={wrapperWidth}      // ✅ default is responsive
+                maxWidth={wrapperMaxWidth} // ✅ for responsive mode clamp
                 height="fill"            // ✅ THIS is what makes it overflow/scroll
                 className="h-full min-h-0"
                 onClick={() => setCurrentEle("none")}
@@ -373,8 +406,8 @@ export default function PreviewCanvas({
                 style={{ transition: "opacity 0.2s" }}
             >   {/* IMPORTANT: remove the extra max-w wrapper inside OR keep it but don’t double-cap */}
                 <div className="w-full p-4 pt-24" style={{ minHeight: "100%" }}>
-                    {hasAside ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
+                    {useTwoCol ? (
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
                             <div className="space-y-10">
                                 {mainOutlines.map((outline) => (
                                     <div key={outline.id}>
@@ -394,8 +427,9 @@ export default function PreviewCanvas({
                             </aside>
                         </div>
                     ) : (
+                        // ✅ narrow preview: stack main + aside vertically (no 2-col layout)
                         <div className="space-y-10">
-                            {outlines.map((outline) => (
+                            {[...mainOutlines, ...asideOutlines].map((outline) => (
                                 <div key={outline.id}>
                                     <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                     {renderOutlineTree(outline)}
