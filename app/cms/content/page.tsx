@@ -1,12 +1,9 @@
 "use client";
 
-import { Box, Heading, SearchInput } from "@optiaxiom/react";
+import { SearchInput } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import Link from "next/link";
 import { Button } from "@/app/components/Button";
-import { IconFilter, IconWand } from "@tabler/icons-react";
-import { Aside } from "@/app/context/LayoutContext";
-import RightToolbar from "@/app/components/RightToolbar";
+import { IconFilter } from "@tabler/icons-react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import { IconFile } from "@tabler/icons-react";
@@ -67,9 +64,6 @@ export default function ContentPage() {
 					))}
 				</tbody>
 			</Table>
-			<Aside>
-				<Box p="24">details pane</Box>
-			</Aside>
 		</>
 	);
 }

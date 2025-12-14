@@ -15,7 +15,7 @@ const rows: Array<{
 	{
 		url: "/cms/settings/applications/mosey-bank/settings",
 		children: [
-			{label: "Mosey Bank", type: "header"},
+			{label: "Stride", type: "header"},
 			{label: "1234"},
 			{label: "www"},
 			{label: "...", type: "button"},
