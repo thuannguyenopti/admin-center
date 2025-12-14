@@ -13,7 +13,7 @@ type Props = {
 
 const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({ prop, onChange, propIndex }) => {
   return (
-    <div className="p-6 pr-0 py-2">
+    <div className=" pr-0 py-2">
       <Field label={prop.label}>
         <AxiomInput placeholder={prop.placeholder || ""} value={prop.value || ""} onChange={(e: any) => onChange(e.currentTarget.value, propIndex)} />
       </Field>
@@ -23,7 +23,7 @@ const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({ prop
 
 export default function ElementEditor({ currentEle, elementType, propsList, onBack, onInputChange }: Props) {
   return (
-    <div className="min-w-[50%] w-[50%] pt-4">
+    <div className="flex-none w-full pt-4">
       <Text fontSize="sm" fontWeight="400" color="fg.accent" onClick={onBack} className="cursor-pointer">
         {"<-"} Outline
       </Text>
