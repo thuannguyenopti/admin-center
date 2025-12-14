@@ -342,10 +342,9 @@ export default function PreviewCanvas({
         >
             <PreviewWrapper
                 contentRef={scrollRef}
-                width="responsive"       // ✅ default is responsive
-                maxWidth={1100}          // ✅ shrink on small screens, cap on large
+                mode="responsive"
+                width={1200}      // ✅ default is responsive
                 height="fill"            // ✅ THIS is what makes it overflow/scroll
-                scaleToFit={true}
                 className="h-full min-h-0"
                 onClick={() => setCurrentEle("none")}
                 onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
