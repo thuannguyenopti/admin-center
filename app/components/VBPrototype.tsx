@@ -806,7 +806,7 @@ const Outline: React.FC<OutlineProps> = ({
 														{/* ✅ bar indicator at end */}
 														{assetOverCol === col.id &&
 															assetDrop?.colId === col.id &&
-															assetDrop.position === (col.children ?? []).length && (
+															assetDrop?.position === (col.children ?? []).length && (
 																<div
 																	style={{
 																		height: "2px",
