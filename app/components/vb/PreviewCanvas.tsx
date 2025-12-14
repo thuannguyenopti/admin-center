@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import PreviewWrapper from "./PreviewWrapper";
 import {
     IconPilcrow,
     IconForms,
@@ -25,7 +26,7 @@ type DropPosition = { outlineId: string; colId: string; position: number } | nul
 
 export default function PreviewCanvas({
     outlines,
-    theEles,
+    theEles, // unused but kept for prop compatibility
     currentEle,
     currentHoverEle,
     setCurrentEle,
@@ -42,9 +43,10 @@ export default function PreviewCanvas({
 }) {
     const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
     const [dropPosition, setDropPosition] = useState<DropPosition>(null);
+
+    // ✅ This MUST be the scroll container div inside PreviewWrapper
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
-    // Scroll the selected element into view (works across outlines)
     useEffect(() => {
         if (!currentEle || currentEle === "none") return;
 
@@ -56,24 +58,22 @@ export default function PreviewCanvas({
 
         const r = el.getBoundingClientRect();
         const cr = root.getBoundingClientRect();
-        const visible = r.top >= cr.top + 40 && r.bottom <= cr.bottom - 40;
-        if (visible) return;
 
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const topVisible = r.top >= cr.top + 40;
+        const bottomVisible = r.bottom <= cr.bottom - 40;
+        if (topVisible && bottomVisible) return;
+
+        const delta = (r.top - cr.top) - root.clientHeight / 2 + r.height / 2;
+        root.scrollTo({ top: root.scrollTop + delta, behavior: "smooth" });
     }, [currentEle]);
 
-    const insertImageIntoOutline = (
-        dp: NonNullable<DropPosition>,
-        imageUrl: string,
-        imageAlt: string
-    ) => {
+    const insertImageIntoOutline = (dp: NonNullable<DropPosition>, imageUrl: string, imageAlt: string) => {
         const uKey = `img-${dp.outlineId}-${Date.now()}`;
 
         setOutlines((prev) =>
             prev.map((o) => {
                 if (o.id !== dp.outlineId) return o;
 
-                // 1) add element meta
                 const nextElements: EleMap = {
                     ...o.elements,
                     [uKey]: {
@@ -88,7 +88,6 @@ export default function PreviewCanvas({
                     },
                 };
 
-                // 2) insert reference into correct col at correct position
                 const nextTree = o.tree.map((section: any) => ({
                     ...section,
                     children: (section.children || []).map((row: any) => ({
@@ -107,7 +106,6 @@ export default function PreviewCanvas({
         );
     };
 
-    // ✅ Outline-level aside detection (entire outline becomes sidebar column)
     const isAsideOutline = (o: any) => {
         if (!o || typeof o !== "object") return false;
         if (o.role === "aside") return true;
@@ -116,15 +114,11 @@ export default function PreviewCanvas({
         return t === "aside" || t === "sidebar";
     };
 
-    // ✅ Reuse your *original* outline renderer
     const renderOutlineTree = (outline: Outline) => {
         return outline.tree.map((section: any, sindex: number) => (
             <section key={section.id ?? sindex}>
                 {(section.children || []).map((row: any, rIndex: number) => (
-                    <section
-                        className="grid grid-flow-col auto-cols-fr gap-4 text-white"
-                        key={row.id ?? rIndex}
-                    >
+                    <section className="grid grid-flow-col auto-cols-fr gap-4 text-white" key={row.id ?? rIndex}>
                         {(row.children || []).map((col: any, cIndex: number) => (
                             <div
                                 key={col.id ?? cIndex}
@@ -150,11 +144,7 @@ export default function PreviewCanvas({
                                         }
                                     }
 
-                                    setDropPosition({
-                                        outlineId: outline.id,
-                                        colId: col.id,
-                                        position: insertPosition,
-                                    });
+                                    setDropPosition({ outlineId: outline.id, colId: col.id, position: insertPosition });
                                 }}
                                 onDragLeave={(e) => {
                                     e.stopPropagation();
@@ -165,7 +155,6 @@ export default function PreviewCanvas({
                                 }}
                                 className={dragOverColumn === col.id ? "relative" : ""}
                             >
-                                {/* insert line */}
                                 {dragOverColumn === col.id &&
                                     dropPosition &&
                                     dropPosition.outlineId === outline.id &&
@@ -176,8 +165,7 @@ export default function PreviewCanvas({
                                                 left: 0,
                                                 right: 0,
                                                 top: dropPosition.position === 0 ? 0 : undefined,
-                                                bottom:
-                                                    dropPosition.position === (col.children || []).length ? 0 : undefined,
+                                                bottom: dropPosition.position === (col.children || []).length ? 0 : undefined,
                                                 height: "2px",
                                                 backgroundColor: "#0037FF",
                                                 zIndex: 1000,
@@ -186,7 +174,6 @@ export default function PreviewCanvas({
                                         />
                                     )}
 
-                                {/* empty drop */}
                                 {(col.children || []).length === 0 && dragOverColumn === col.id && (
                                     <div
                                         style={{
@@ -208,12 +195,7 @@ export default function PreviewCanvas({
                                     const type = ele?.type;
 
                                     return (
-                                        <div
-                                            key={element.id ?? eleIndex}
-                                            className="relative group"
-                                            data-element-id={element.id}
-                                        >
-                                            {/* selection outline */}
+                                        <div key={element.id ?? eleIndex} className="relative group" data-element-id={element.id}>
                                             <div
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -221,32 +203,17 @@ export default function PreviewCanvas({
                                                     setCurrentHoverEle("none");
                                                 }}
                                                 style={{
-                                                    visibility:
-                                                        currentEle === element.id || currentHoverEle === element.id
-                                                            ? "visible"
-                                                            : undefined,
+                                                    visibility: currentEle === element.id || currentHoverEle === element.id ? "visible" : undefined,
                                                     opacity:
                                                         currentEle === element.id || currentHoverEle === element.id
                                                             ? currentEle === element.id
                                                                 ? 1
                                                                 : 0.5
                                                             : undefined,
-                                                    top:
-                                                        currentEle === element.id || currentHoverEle === element.id
-                                                            ? "-8px"
-                                                            : undefined,
-                                                    left:
-                                                        currentEle === element.id || currentHoverEle === element.id
-                                                            ? "-8px"
-                                                            : undefined,
-                                                    right:
-                                                        currentEle === element.id || currentHoverEle === element.id
-                                                            ? "-8px"
-                                                            : undefined,
-                                                    bottom:
-                                                        currentEle === element.id || currentHoverEle === element.id
-                                                            ? "-8px"
-                                                            : undefined,
+                                                    top: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+                                                    left: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+                                                    right: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
+                                                    bottom: currentEle === element.id || currentHoverEle === element.id ? "-8px" : undefined,
                                                 }}
                                                 className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
                                             >
@@ -271,24 +238,19 @@ export default function PreviewCanvas({
                                                 </div>
                                             </div>
 
-                                            {/* element render */}
                                             {(() => {
                                                 switch (type) {
                                                     case "Heading":
                                                         return (
                                                             <h1 className="text-3xl mb-5 font-bold">
-                                                                {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                                    <>&nbsp;</>
-                                                                )}
+                                                                {ele?.props.find((p: any) => p.label === "Text")?.value || <>&nbsp;</>}
                                                             </h1>
                                                         );
 
                                                     case "Text":
                                                         return (
                                                             <p className="mb-2">
-                                                                {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                                    <>&nbsp;</>
-                                                                )}
+                                                                {ele?.props.find((p: any) => p.label === "Text")?.value || <>&nbsp;</>}
                                                             </p>
                                                         );
 
@@ -300,17 +262,10 @@ export default function PreviewCanvas({
                                                                         {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
                                                                     </div>
                                                                 )}
-                                                                <label>
-                                                                    {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                                        <>&nbsp;</>
-                                                                    )}
-                                                                </label>
+                                                                <label>{ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}</label>
                                                                 <input
                                                                     type="text"
-                                                                    placeholder={
-                                                                        ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
-                                                                        undefined
-                                                                    }
+                                                                    placeholder={ele?.props.find((p: any) => p.label === "Placeholder")?.value || undefined}
                                                                     className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
                                                                 />
                                                             </div>
@@ -320,18 +275,14 @@ export default function PreviewCanvas({
                                                         return (
                                                             <div className="text-right mt-4">
                                                                 <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
-                                                                    {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                                        <>&nbsp;</>
-                                                                    )}
+                                                                    {ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}
                                                                 </div>
                                                             </div>
                                                         );
 
                                                     case "Image": {
-                                                        const imageUrlRaw =
-                                                            ele?.props.find((p: any) => p.label === "Image URL")?.value;
-                                                        const imageUrl =
-                                                            typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
+                                                        const imageUrlRaw = ele?.props.find((p: any) => p.label === "Image URL")?.value;
+                                                        const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
 
                                                         const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
                                                         const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
@@ -380,46 +331,49 @@ export default function PreviewCanvas({
 
     return (
         <div
-            className={`rounded-lg grow w-full mt-3 ${styles.canvas}`}
+            className={`rounded-lg grow w-full mt-3 min-h-0 min-w-0 ${styles.canvas}`}
             style={{
                 background:
                     "radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)",
                 height: "100%",
                 minHeight: 0,
-                overflow: "hidden", // wrapper NOT scroll
+                overflow: "hidden",
             }}
         >
-            {/* ✅ INNER SCROLLER (this is the actual scroll container) */}
-            <div
-                ref={scrollRef}
-                className="h-full min-h-0 overflow-y-auto"
+            <PreviewWrapper
+                contentRef={scrollRef}
+                width="responsive"       // ✅ default is responsive
+                maxWidth={1100}          // ✅ shrink on small screens, cap on large
+                height="fill"            // ✅ THIS is what makes it overflow/scroll
+                scaleToFit={true}
+                className="h-full min-h-0"
                 onClick={() => setCurrentEle("none")}
-                onDragOver={(e) => {
+                onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
                     e.preventDefault();
                     const hasImageData = e.dataTransfer.types.includes("image/url");
                     if (hasImageData) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
                 }}
-                onDragLeave={(e) => {
+                onDragLeave={(e: React.DragEvent<HTMLDivElement>) => {
                     (e.currentTarget as HTMLDivElement).style.opacity = "1";
                     setDragOverColumn(null);
                     setDropPosition(null);
                 }}
-                onDrop={(e) => {
+                onDrop={(e: React.DragEvent<HTMLDivElement>) => {
                     e.preventDefault();
                     (e.currentTarget as HTMLDivElement).style.opacity = "1";
 
                     const imageUrl = e.dataTransfer.getData("image/url");
                     const imageAlt = e.dataTransfer.getData("image/alt");
 
-                    const dp = dropPosition; // capture
+                    const dp = dropPosition;
                     setDragOverColumn(null);
                     setDropPosition(null);
 
                     if (imageUrl && dp) insertImageIntoOutline(dp, imageUrl, imageAlt);
                 }}
                 style={{ transition: "opacity 0.2s" }}
-            >
-                <div className="w-full max-w-[1100px] mx-auto p-4 pt-24" style={{ minHeight: "100%" }}>
+            >   {/* IMPORTANT: remove the extra max-w wrapper inside OR keep it but don’t double-cap */}
+                <div className="w-full p-4 pt-24" style={{ minHeight: "100%" }}>
                     {hasAside ? (
                         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
                             <div className="space-y-10">
@@ -451,7 +405,7 @@ export default function PreviewCanvas({
                         </div>
                     )}
                 </div>
-            </div>
+            </PreviewWrapper>
         </div>
     );
 }
