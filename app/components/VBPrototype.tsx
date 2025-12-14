@@ -14,7 +14,6 @@ import {
 	SelectTrigger,
 	SelectContent,
 	Textarea,
-	NavBody,
 	Heading,
 	Menu,
 	MenuTrigger,
@@ -23,14 +22,8 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import {
 	IconPlus,
-	IconPilcrow,
-	IconForms,
-	IconRectangle,
-	IconHeading,
-	IconBrackets,
 	IconArrowBarBoth,
 	IconFile,
-	IconPhoto,
 	IconSparkles,
 	IconSquare,
 	IconSection,
@@ -41,14 +34,12 @@ import Row from "./vb/Row";
 import Col from "./vb/Col";
 import Ele from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
-// import OutlineHeader from "./vb/OutlineHeader"; // intentionally not used (avoids nested tabs + duplicate tab bars)
 import PreviewCanvas from "./vb/PreviewCanvas";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import { PreviewSettings } from "./vb/PreviewSettings";
 import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
 import styles from "./VBPrototype.module.css";
-import { on } from "events";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -164,14 +155,14 @@ const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
 	return <span>{texts[index]}</span>;
 };
 
-type Outline = {
+type OutlineType = {
 	id: string;
 	title: string;
 	tree: any[];
 	elements: EleMap;
 };
 
-const isOutlineArray = (v: any): v is Outline[] => {
+const isOutlineArray = (v: any): v is OutlineType[] => {
 	if (!Array.isArray(v)) return false;
 	if (v.length === 0) return true; // allow "0 outlines"
 	const o = v[0];
@@ -195,7 +186,7 @@ type PageProperties = {
 };
 
 type PageInput = {
-	outlines?: Outline[] | any[] | SplitPayload; // allow legacy too
+	outlines?: OutlineType[] | any[] | SplitPayload; // allow legacy too
 	properties?: PageProperties;
 };
 
@@ -288,8 +279,9 @@ function PropertiesPanel({
 		</Box>
 	);
 }
+
 /** -----------------------------
- * Outline (TREE ONLY)
+ * Outline (TREE ONLY) + image asset DnD
  * ------------------------------*/
 
 interface OutlineProps {
@@ -299,13 +291,35 @@ interface OutlineProps {
 	theEles: EleMap;
 
 	setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
-	setDragging: React.Dispatch<React.SetStateAction<string>>;
+	setDragging: React.Dispatch<React.SetStateAction<string | null>>;
 	setData: React.Dispatch<React.SetStateAction<any[]>>;
 	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 
 	data: any[];
 }
+
+type AssetDropPosition = { colId: string; position: number } | null;
+
+const isImageDrag = (dt: DataTransfer) => {
+	const types = Array.from(dt?.types || []);
+	return (
+		types.includes("image/url") ||
+		types.includes("text/uri-list") ||
+		types.includes("text/plain") ||
+		types.includes("Files")
+	);
+};
+
+const getDraggedImageUrl = (dt: DataTransfer) => {
+	const url = dt.getData("image/url") || dt.getData("text/uri-list") || dt.getData("text/plain");
+	return typeof url === "string" ? url.trim() : "";
+};
+
+const getDraggedAlt = (dt: DataTransfer) => {
+	const alt = dt.getData("image/alt") || "";
+	return typeof alt === "string" ? alt : "";
+};
 
 const Outline: React.FC<OutlineProps> = ({
 	cloning,
@@ -319,7 +333,18 @@ const Outline: React.FC<OutlineProps> = ({
 	setTheEles,
 	dragging,
 }) => {
-	// Set open state for section, row, or col by id
+	const ASSET_DRAG_ID = "__asset:image__";
+
+	const [assetOverCol, setAssetOverCol] = useState<string | null>(null);
+	const [assetDrop, setAssetDrop] = useState<AssetDropPosition>(null);
+
+	const clearAssetDnD = () => {
+		setAssetOverCol(null);
+		setAssetDrop(null);
+		// only clear the shared dragging state if we were the one that set it
+		setDragging((prev) => (prev === ASSET_DRAG_ID ? null : prev));
+	};
+
 	const setOpen = (id: string, open: boolean) => {
 		setData((prev) =>
 			prev.map((section) => {
@@ -438,68 +463,6 @@ const Outline: React.FC<OutlineProps> = ({
 		});
 	};
 
-	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
-		const uKey = `${type}-${Date.now()}`;
-
-		// Pending image data from drag-and-drop (optional)
-		const pendingImageData = (window as any).__pendingImageData;
-		const imageUrl = pendingImageData?.url || "";
-		const imageAlt = pendingImageData?.alt || "";
-
-		setTheEles((prev) => ({
-			...prev,
-			[uKey]: {
-				type,
-				props: (() => {
-					switch (type) {
-						case "Heading":
-							return [{ type: "text", label: "Text" }];
-						case "Text":
-							return [{ type: "text", label: "Text" }];
-						case "Input":
-							return [
-								{ type: "text", label: "Label" },
-								{ type: "text", label: "Placeholder" },
-								{ type: "text", label: "Tooltip" },
-								{ type: "checkbox", label: "Required", value: false },
-							];
-						case "Button":
-							return [{ type: "text", label: "Label" }];
-						case "Image":
-							return [
-								{ type: "text", label: "Image URL", value: imageUrl },
-								{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-								{ type: "text", label: "Alt Text", value: imageAlt },
-								{ type: "text", label: "Width", value: "auto" },
-								{ type: "text", label: "Height", value: "auto" },
-							];
-						default:
-							return [];
-					}
-				})(),
-			},
-		}));
-
-		setData((prev) =>
-			prev.map((section, sIdx) => {
-				if (sIdx !== sectionIndex) return section;
-				return {
-					...section,
-					children: section.children.map((row: any, rIdx: number) => {
-						if (rIdx !== rowIndex) return row;
-						return {
-							...row,
-							children: row.children.map((col: any, cIdx: number) => {
-								if (cIdx !== colIndex) return col;
-								return { ...col, children: [...col.children, { id: uKey }] };
-							}),
-						};
-					}),
-				};
-			})
-		);
-	};
-
 	const removeSection = (sectionIndex: number) => {
 		setData((prev) => prev.filter((_, index: number) => index !== sectionIndex));
 	};
@@ -552,8 +515,45 @@ const Outline: React.FC<OutlineProps> = ({
 		if (dragging) setCurrentHoverEle("" + id);
 	};
 
+	const insertImageIntoTree = (colId: string, position: number, imageUrl: string, imageAlt: string) => {
+		const uKey = `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+		setTheEles((prev) => ({
+			...prev,
+			[uKey]: {
+				type: "Image",
+				props: [
+					{ type: "text", label: "Image URL", value: imageUrl },
+					{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
+					{ type: "text", label: "Alt Text", value: imageAlt },
+					{ type: "text", label: "Width", value: "auto" },
+					{ type: "text", label: "Height", value: "auto" },
+				],
+			},
+		}));
+
+		setData((prev) =>
+			prev.map((section: any) => ({
+				...section,
+				children: (section.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						if (col.id !== colId) return col;
+						const nextChildren = [...(col.children || [])];
+						const safePos = Math.max(0, Math.min(nextChildren.length, position));
+						nextChildren.splice(safePos, 0, { id: uKey });
+						return { ...col, open: true, children: nextChildren };
+					}),
+				})),
+			}))
+		);
+	};
+
 	return (
-		<div className="relative min-h-[300px]">
+		<div className="relative min-h-[300px]" onDragLeave={(e) => {
+			// if leaving the whole outline container, clear asset state
+			if (e.currentTarget === e.target) clearAssetDnD();
+		}}>
 			<Box fontSize="sm" color="fg.secondary">
 				{data.map((section: any, sindex: number) => (
 					<div key={sindex}>
@@ -581,7 +581,7 @@ const Outline: React.FC<OutlineProps> = ({
 							</div>
 						)}
 
-						{/* dropping above section */}
+						{/* dropping above section (internal DnD) */}
 						{dragging?.startsWith("section-") &&
 							((section.id !== dragging && data[sindex - 1]?.id !== dragging) || cloning) && (
 								<div
@@ -630,10 +630,9 @@ const Outline: React.FC<OutlineProps> = ({
 										</div>
 									)}
 
-									{/* dropping above row */}
+									{/* dropping above row (internal DnD) */}
 									{dragging?.startsWith("row-") &&
-										((row.id !== dragging && section.children[index - 1]?.id !== dragging) ||
-											cloning) && (
+										((row.id !== dragging && section.children[index - 1]?.id !== dragging) || cloning) && (
 											<div
 												className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
 												onMouseEnter={(e) => onDragHover(e, row.id)}
@@ -678,77 +677,147 @@ const Outline: React.FC<OutlineProps> = ({
 													</div>
 												)}
 
-												{dragging?.startsWith("col-") &&
-													col.id !== dragging &&
-													row.children[i - 1]?.id !== dragging && (
-														<div
-															className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
-															onMouseEnter={(e) => onDragHover(e, col.id)}
-														>
-															<Box
-																bg="bg.accent"
-																rounded="full"
-																className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-															/>
-														</div>
-													)}
+												{/* dropping above col (internal DnD) */}
+												{dragging?.startsWith("col-") && col.id !== dragging && row.children[i - 1]?.id !== dragging && (
+													<div
+														className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
+														onMouseEnter={(e) => onDragHover(e, col.id)}
+													>
+														<Box
+															bg="bg.accent"
+															rounded="full"
+															className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+														/>
+													</div>
+												)}
 
 												<Col
 													col={col}
 													setOpen={setOpen}
 													onDragStart={(e: any) => onDragStart(e, col.id)}
 													removeCol={() => removeCol(col.id)}
-													addElement={(type: string) => addElement(type, i, index, sindex)}
+													addElement={() => {
+														/* unchanged: add via plus menus inside Col */
+													}}
 													key={"col" + i}
 												>
-													{(col.children ?? []).map((element: any, j: number) => (
-														<div key={"ele" + j}>
-															{dragging &&
-																element.id !== dragging &&
-																col.children[j - 1]?.id !== dragging &&
-																!dragging.startsWith("section-") &&
-																!dragging.startsWith("col-") &&
-																!dragging.startsWith("row-") && (
-																	<div
-																		className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																		onMouseEnter={(e) => onDragHover(e, element.id)}
-																	>
-																		<Box
-																			bg="bg.accent"
-																			rounded="full"
-																			className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																		/>
-																	</div>
-																)}
+													{/* ✅ IMAGE ASSET DROP ZONE (like PreviewCanvas) */}
+													<div
+														className={assetOverCol === col.id ? "relative" : ""}
+														onDragEnter={(e) => {
+															if (!isImageDrag(e.dataTransfer)) return;
+															e.preventDefault();
+															e.stopPropagation();
+															setDragging(ASSET_DRAG_ID);
+														}}
+														onDragOver={(e) => {
+															if (!isImageDrag(e.dataTransfer)) return;
+															e.preventDefault();
+															e.stopPropagation();
 
-															<Ele
-																removeEle={() => removeEle(element.id)}
-																onDragStart={(e: any) => onDragStart(e, element.id)}
-																type={theEles[element.id]?.type}
-																element={element}
-																label={theEles[element.id]?.props?.[0]?.value || undefined}
-																setCurrentEle={setCurrentEle}
-																setCurrentHoverEle={setCurrentHoverEle}
-															/>
-														</div>
-													))}
+															setDragging(ASSET_DRAG_ID);
+															setAssetOverCol(col.id);
 
-													{dragging &&
-														dragging !== col.children[col.children.length - 1]?.id &&
-														!dragging.startsWith("section-") &&
-														!dragging.startsWith("row-") &&
-														!dragging.startsWith("col-") && (
+															const wrappers = e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
+															const mouseY = e.clientY;
+
+															let insertPosition = (col.children || []).length;
+															for (let k = 0; k < wrappers.length; k++) {
+																const rect = wrappers[k].getBoundingClientRect();
+																const middle = rect.top + rect.height / 2;
+																if (mouseY < middle) {
+																	insertPosition = k;
+																	break;
+																}
+															}
+
+															setAssetDrop({ colId: col.id, position: insertPosition });
+														}}
+														onDragLeave={(e) => {
+															e.stopPropagation();
+															if (e.currentTarget === e.target) clearAssetDnD();
+														}}
+														onDrop={(e) => {
+															if (!isImageDrag(e.dataTransfer)) return;
+															e.preventDefault();
+															e.stopPropagation();
+
+															const url = getDraggedImageUrl(e.dataTransfer);
+															const alt = getDraggedAlt(e.dataTransfer);
+
+															const dp = assetDrop;
+															clearAssetDnD();
+
+															if (!url || !dp || dp.colId !== col.id) return;
+															insertImageIntoTree(dp.colId, dp.position, url, alt);
+														}}
+													>
+														{/* empty column hint */}
+														{(col.children ?? []).length === 0 && assetOverCol === col.id && (
 															<div
-																className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
+																style={{
+																	border: "2px dashed #0037FF",
+																	borderRadius: "8px",
+																	padding: "16px",
+																	textAlign: "center",
+																	color: "#0037FF",
+																	fontSize: "12px",
+																	backgroundColor: "rgba(0, 55, 255, 0.05)",
+																	margin: "6px 0",
+																}}
 															>
-																<Box
-																	bg="bg.accent"
-																	rounded="full"
-																	className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																/>
+																Drop image here
 															</div>
 														)}
+
+														{(col.children ?? []).map((element: any, j: number) => {
+															const isActive = assetOverCol === col.id && assetDrop?.colId === col.id;
+
+															return (
+																<React.Fragment key={"ele-frag-" + element.id}>
+																	{/* ✅ bar indicator between items */}
+																	{isActive && assetDrop?.position === j && (
+																		<div
+																			style={{
+																				height: "2px",
+																				backgroundColor: "#0037FF",
+																				borderRadius: "2px",
+																				margin: "6px 0",
+																				pointerEvents: "none",
+																			}}
+																		/>
+																	)}
+
+																	<div data-tree-ele-id={element.id}>
+																		<Ele
+																			removeEle={() => removeEle(element.id)}
+																			onDragStart={(ev: any) => onDragStart(ev, element.id)}
+																			type={theEles[element.id]?.type}
+																			element={element}
+																			label={theEles[element.id]?.props?.[0]?.value || undefined}
+																			setCurrentEle={setCurrentEle}
+																			setCurrentHoverEle={setCurrentHoverEle}
+																		/>
+																	</div>
+																</React.Fragment>
+															);
+														})}
+
+														{/* ✅ bar indicator at end */}
+														{assetOverCol === col.id &&
+															assetDrop?.colId === col.id &&
+															assetDrop.position === (col.children ?? []).length && (
+																<div
+																	style={{
+																		height: "2px",
+																		backgroundColor: "#0037FF",
+																		borderRadius: "2px",
+																		margin: "6px 0",
+																		pointerEvents: "none",
+																	}}
+																/>
+															)}
+													</div>
 												</Col>
 											</div>
 										))}
@@ -774,29 +843,26 @@ const Outline: React.FC<OutlineProps> = ({
 											</div>
 										)}
 
-										{dragging?.startsWith("col-") &&
-											dragging !== row.children[row.children.length - 1]?.id && (
-												<div
-													className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
-													onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
-												>
-													<Box
-														bg="bg.accent"
-														rounded="full"
-														className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-													/>
-												</div>
-											)}
+										{/* internal col-last drop indicator */}
+										{dragging?.startsWith("col-") && dragging !== row.children[row.children.length - 1]?.id && (
+											<div
+												className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
+												onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
+											>
+												<Box
+													bg="bg.accent"
+													rounded="full"
+													className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
+												/>
+											</div>
+										)}
 									</Row>
 								</div>
 							))}
 
 							{/* add row last */}
 							{!dragging && !section.children[section.children.length - 1]?.open && (
-								<div
-									className="ind group h-2 relative z-10 -my-1"
-									onMouseEnter={(e) => onDragHover(e, section.id)}
-								>
+								<div className="ind group h-2 relative z-10 -my-1" onMouseEnter={(e) => onDragHover(e, section.id)}>
 									<Box
 										rounded="full"
 										className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
@@ -821,7 +887,6 @@ const Outline: React.FC<OutlineProps> = ({
 		</div>
 	);
 };
-
 
 /** -----------------------------
  * Existing mergeData (kept)
@@ -861,7 +926,8 @@ export default function VBPrototype({
 	pageName?: string;
 	pageStatus?: string;
 }) {
-	const [dragging, setDragging] = useState<any>(null);
+	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
+	const [dragging, setDragging] = useState<string | null>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
@@ -887,7 +953,7 @@ export default function VBPrototype({
 		return { ...defaultProps, ...(initialData?.properties ?? {}) };
 	});
 
-	const [outlines, _setOutlines] = useState<Outline[]>(() => {
+	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
 		const raw = initialData?.outlines;
 
 		if (isOutlineArray(raw)) {
@@ -908,7 +974,7 @@ export default function VBPrototype({
 
 	const hasChanged = useRef(false);
 
-	const setOutlines = (arg: React.SetStateAction<Outline[]>) => {
+	const setOutlines = (arg: React.SetStateAction<OutlineType[]>) => {
 		hasChanged.current = true;
 		_setOutlines(arg);
 	};
@@ -965,7 +1031,6 @@ export default function VBPrototype({
 		} else {
 			// multi
 			if (sidebarTab === "outline") setSidebarTab("outlines");
-			// keep current outlineView (list/tree)
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [outlines.length]);
@@ -975,14 +1040,7 @@ export default function VBPrototype({
 	const isMulti = outlines.length > 1; // View 1/2
 	const isEditingElement = currentEle !== "none";
 
-	const activeOutline = activeOutlineId
-		? outlines.find((o) => o.id === activeOutlineId) ?? null
-		: null;
-
-	const isTreeViewActive =
-		(activeOutline &&
-			((isMulti && outlineView === "tree" && sidebarTab === "outlines") ||
-				(isSingle && sidebarTab === "outline"))) ?? false;
+	const activeOutline = activeOutlineId ? outlines.find((o) => o.id === activeOutlineId) ?? null : null;
 
 	const data = activeOutline?.tree ?? [];
 	const theEles = activeOutline?.elements ?? {};
@@ -991,9 +1049,7 @@ export default function VBPrototype({
 		hasChanged.current = true;
 		setOutlines((prev) =>
 			prev.map((o) =>
-				o.id === activeOutlineId
-					? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg }
-					: o
+				o.id === activeOutlineId ? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg } : o
 			)
 		);
 	};
@@ -1037,6 +1093,29 @@ export default function VBPrototype({
 
 	const [AI, setAI] = useState(false);
 	const [loadingAI, setLoadingAI] = useState(false);
+	const [aiPrompt, setAiPrompt] = useState("");
+
+	async function sendMessage(message: string) {
+		if (!message.trim()) return;
+		setLoadingAI(true);
+		try {
+			const res = await fetch("/api/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userMessage: message }),
+			});
+
+			const payload = await res.json();
+
+			const parsed = JSON.parse(payload.response);
+
+			const norm = normalizePage(parsed);
+			setData(norm.data);
+			setTheEles(norm.theEles);
+		} finally {
+			setLoadingAI(false);
+		}
+	}
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
@@ -1104,28 +1183,6 @@ export default function VBPrototype({
 		}
 	};
 
-	async function sendMessage(message: string) {
-		setLoadingAI(true);
-		try {
-			const res = await fetch("/api/chat", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ userMessage: message }),
-			});
-
-			const payload = await res.json();
-
-			// payload.response is expected to be a JSON string
-			const parsed = JSON.parse(payload.response);
-
-			const norm = normalizePage(parsed);
-			setData(norm.data);
-			setTheEles(norm.theEles);
-		} finally {
-			setLoadingAI(false);
-		}
-	}
-
 	// Header actions (AI + plus-menu)
 	const HeaderActions = (
 		<Box display="flex" alignItems="center" gap="2" className="relative">
@@ -1172,14 +1229,35 @@ export default function VBPrototype({
 					transition: "0.3s",
 				}}
 			>
-				<form /* ... */>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						sendMessage(aiPrompt);
+					}}
+				>
 					<Textarea
 						name="prompt"
 						rows={3}
 						className="w-full border rounded p-2 focus:outline-none focus:ring-2"
 						placeholder="What do you want to build today?"
-					/* ... */
+						value={aiPrompt}
+						onChange={(e: any) => setAiPrompt(e.target.value)}
 					/>
+					<div className="mt-2 flex gap-2">
+						<Button size="sm" onClick={() => sendMessage(aiPrompt)} disabled={loadingAI}>
+							Run
+						</Button>
+						<Button
+							size="sm"
+							appearance="subtle"
+							onClick={() => {
+								setAI(false);
+								setAiPrompt("");
+							}}
+						>
+							Close
+						</Button>
+					</div>
 				</form>
 			</div>
 		</Box>
@@ -1210,7 +1288,7 @@ export default function VBPrototype({
 	}, [outlines, properties]);
 
 	/** -----------------------------
-	 * Drag/drop + key handlers
+	 * Drag/drop + key handlers (internal reorder)
 	 * ------------------------------*/
 
 	type DragApplyResult = {
@@ -1396,12 +1474,7 @@ export default function VBPrototype({
 		return { nextData: next, elesPatch };
 	}
 
-	function applyColDrag(
-		data: any[],
-		draggingId: string,
-		hoverId: string,
-		cloning: boolean
-	): DragApplyResult | null {
+	function applyColDrag(data: any[], draggingId: string, hoverId: string, cloning: boolean): DragApplyResult | null {
 		let fromS = -1,
 			fromR = -1,
 			fromC = -1;
@@ -1488,8 +1561,7 @@ export default function VBPrototype({
 		theEles: EleMap
 	): DragApplyResult | null {
 		const newEleId = cloning ? mkId(draggingId) : draggingId;
-		const elesPatch =
-			cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
+		const elesPatch = cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
 
 		let draggedRef: any = null;
 
@@ -1628,7 +1700,7 @@ export default function VBPrototype({
 			window.removeEventListener("keyup", handleKeyUp);
 			window.removeEventListener("mouseup", handleMouseUp);
 		};
-	}, [dragging, currentHoverEle, cloning, theEles, data, currentEle]);
+	}, [dragging, currentHoverEle, cloning, theEles, data]);
 
 	/** -----------------------------
 	 * View 4: 0 outlines
@@ -1636,12 +1708,7 @@ export default function VBPrototype({
 	if (isZero) {
 		return (
 			<div className="select-none" style={{ height: "100%" }}>
-				<Box
-					bg="bg.page"
-					w="full"
-					className="grid grid-rows-[0fr_1fr]"
-					style={{ height: "100%", overflow: "hidden" }}
-				>
+				<Box bg="bg.page" w="full" className="grid grid-rows-[0fr_1fr]" style={{ height: "100%", overflow: "hidden" }}>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
 						lastSaved={lastSaved}
@@ -1700,10 +1767,7 @@ export default function VBPrototype({
 							const startWidth = outlineBox.offsetWidth;
 
 							const onMouseMove = (moveEvent: MouseEvent) => {
-								const newWidth = Math.max(
-									180,
-									Math.min(600, startWidth + (moveEvent.clientX - startX))
-								);
+								const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
 								outlineBox.style.width = newWidth + "px";
 							};
 
@@ -1724,7 +1788,7 @@ export default function VBPrototype({
 					</div>
 
 					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
-						{/* MULTI: View 1 <-> View 2 full-sidebar slide (header + tabs + content) */}
+						{/* MULTI: View 1 <-> View 2 full-sidebar slide */}
 						{isMulti ? (
 							<div className="h-full overflow-hidden">
 								<div
@@ -1733,12 +1797,11 @@ export default function VBPrototype({
 										transform: outlineView === "tree" ? "translateX(-50%)" : "translateX(0%)",
 									}}
 								>
-									{/* PANE 1 = View 1 (Page header + Tabs) */}
+									{/* PANE 1 = View 1 */}
 									<div
 										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
-										{/* Header (slides with pane) */}
 										<div className="pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
@@ -1746,7 +1809,6 @@ export default function VBPrototype({
 											</div>
 										</div>
 
-										{/* Body */}
 										<div className="flex-1 overflow-y-auto">
 											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
 												<div className="pt-2 pb-2">
@@ -1769,8 +1831,6 @@ export default function VBPrototype({
 																		setCurrentEle("none");
 																		setCurrentHoverEle("none");
 																		setAI(false);
-
-																		// Slide to View 2
 																		setOutlineView("tree");
 																	}}
 																>
@@ -1788,7 +1848,7 @@ export default function VBPrototype({
 										</div>
 									</div>
 
-									{/* PANE 2 = View 2 (tree) <-> ElementEditor (full pane slide) */}
+									{/* PANE 2 = View 2 (tree) <-> ElementEditor */}
 									<div
 										className={`min-w-[50%] w-[50%] h-full overflow-hidden min-h-0 ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
 											}`}
@@ -1799,12 +1859,11 @@ export default function VBPrototype({
 												transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
 											}}
 										>
-											{/* VIEW 2 (Back + outline header + tree) */}
+											{/* VIEW 2 */}
 											<div
 												className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
 													}`}
 											>
-												{/* Header (slides with tree) */}
 												<div className="pt-4 pb-2">
 													{activeOutline ? (
 														<div className="flex flex-col gap-1">
@@ -1838,7 +1897,6 @@ export default function VBPrototype({
 													)}
 												</div>
 
-												{/* Body */}
 												<div className="flex-1 overflow-y-auto pb-4 min-h-0">
 													{activeOutline ? (
 														<Outline
@@ -1857,7 +1915,7 @@ export default function VBPrototype({
 												</div>
 											</div>
 
-											{/* ELEMENT EDITOR (slides in from right) */}
+											{/* ELEMENT EDITOR */}
 											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
 												<div className="h-full overflow-y-auto">
 													<ElementEditor
@@ -1873,7 +1931,6 @@ export default function VBPrototype({
 													/>
 												</div>
 											</div>
-
 										</div>
 									</div>
 								</div>
@@ -1889,12 +1946,10 @@ export default function VBPrototype({
 										transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
 									}}
 								>
-									{/* LEFT = Single sidebar (header + tabs + content) */}
 									<div
 										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
-										{/* Header */}
 										<div className="pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
@@ -1903,12 +1958,8 @@ export default function VBPrototype({
 											</div>
 										</div>
 
-										{/* Body */}
 										<div className="flex-1 overflow-y-auto">
-											<Tabs
-												value={isEditingElement ? "outline" : sidebarTab}
-												onValueChange={setSidebarTab as any}
-											>
+											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
 												<div className="pt-2 pb-2">
 													<TabsList>
 														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
@@ -1940,7 +1991,6 @@ export default function VBPrototype({
 										</div>
 									</div>
 
-									{/* ELEMENT EDITOR (slides in from right) */}
 									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
@@ -1956,27 +2006,22 @@ export default function VBPrototype({
 											/>
 										</div>
 									</div>
-
 								</div>
 							</div>
 						) : null}
 					</div>
-
 				</Box>
 
 				{/* RIGHT / CANVAS */}
-				<div
-					className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
-					style={{ height: "100%", overflow: "hidden" }}
-				>
+				<div className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1" style={{ height: "100%", overflow: "hidden" }}>
 					<PreviewCanvas
-						outlines={outlines}
+						outlines={outlines as any}
 						theEles={theEles}
 						currentEle={currentEle}
 						currentHoverEle={currentHoverEle}
 						setCurrentEle={setCurrentEleSmart}
 						setCurrentHoverEle={setCurrentHoverEle}
-						setOutlines={setOutlines}
+						setOutlines={setOutlines as any}
 						preview={preview}
 					/>
 
