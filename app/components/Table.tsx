@@ -1,4 +1,4 @@
-import {ReactNode} from "react";
+import {ReactNode, isValidElement} from "react";
 import {Badge, Box, Avatar, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
 import {Button} from "./Button";
@@ -56,12 +56,13 @@ export const Tr = ({
 		</tr>
 	);
 };
-export const Th = ({children, align}: {children?: ReactNode; align?: any}) => {
+export const Th = ({children, align, style, className}: {children?: ReactNode; align?: any; style?: React.CSSProperties; className?: string}) => {
 	return (
 		<th
-			className="text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)]"
+			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${className || ""}`}
 			style={{
 				textAlign: align,
+				...style,
 			}}
 		>
 			{children}
@@ -75,29 +76,38 @@ export const Td = ({
 	description,
 	data,
 	width,
+	style,
+	className,
 }: {
-	children: ReactNode;
+	children?: ReactNode;
 	type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
 	description?: string;
 	data?: any;
 	width?: string | number;
+	style?: React.CSSProperties;
+	className?: string;
 }) => {
 	return (
 		<td
-			className="p-4 border-t align-top"
+			className={`p-4 border-t align-top ${className || ""}`}
 			style={{
 				width: type === "button" ? "56px" : width,
 				borderColor: "var(--ax-colors-border-tertiary)",
+				...style,
 			}}
 		>
 			{type === undefined && (
 				<>
-					<Text
-						color="fg.default"
-						fontSize="md"
-					>
-						{children}
-					</Text>
+					{isValidElement(children) ? (
+						children
+					) : (
+						<Text
+							color="fg.default"
+							fontSize="md"
+						>
+							{children}
+						</Text>
+					)}
 					{description && (
 						<Text
 							fontSize="sm"
