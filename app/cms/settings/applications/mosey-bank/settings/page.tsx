@@ -14,7 +14,7 @@ export default function Home() {
 				label="Application Name"
 				required
 			>
-				<Input defaultValue="Mosey Bank" />
+				<Input defaultValue="Stride" />
 			</Field>
 			<Field
 				label="APP ID"
