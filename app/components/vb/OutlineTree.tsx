@@ -50,7 +50,7 @@ const INSERT_BAR_STYLE: React.CSSProperties = {
     height: "2px",
     backgroundColor: "#0037FF",
     borderRadius: "2px",
-    margin: "6px 0",
+    margin: "-1px 0",
     pointerEvents: "none",
 };
 
@@ -636,7 +636,6 @@ export default function OutlineTree({
                                                                     onDragOver={(e) => {
                                                                         if (dragging && isColId(dragging)) onDragHover(e, `col-last-${row.id}`);
                                                                     }}
-                                                                    style={{ height: 10 }}
                                                                 >
                                                                     {isInternalDrag &&
                                                                         dragging &&
@@ -653,7 +652,6 @@ export default function OutlineTree({
                                                         onDragOver={(e) => {
                                                             if (dragging && isColId(dragging)) onDragHover(e, `col-last-${row.id}`);
                                                         }}
-                                                        style={{ height: 10 }}
                                                     >
                                                         {isInternalDrag &&
                                                             dragging &&
@@ -668,7 +666,6 @@ export default function OutlineTree({
                                                     onDragOver={(e) => {
                                                         if (dragging && isRowId(dragging)) onDragHover(e, `row-last-${section.id}`);
                                                     }}
-                                                    style={{ height: 10 }}
                                                 >
                                                     {isInternalDrag &&
                                                         dragging &&
