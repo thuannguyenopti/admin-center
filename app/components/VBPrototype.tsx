@@ -1829,7 +1829,7 @@ export default function VBPrototype({
 								<Heading level="4">Properties</Heading>
 							</div>
 
-							<div className="pl-6 flex-1 overflow-y-auto">
+							<div className="flex-1 overflow-y-auto">
 								<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
 							</div>
 						</div>
@@ -1946,9 +1946,9 @@ export default function VBPrototype({
 											</div>
 										</div>
 
-										<div className="pl-6 flex-1 overflow-y-auto">
+										<div className=" flex-1 overflow-y-auto">
 											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pt-2 pb-2">
+												<div className="pl-6 pt-2 pb-2">
 													<TabsList>
 														<TabsTrigger value="outlines">Outlines</TabsTrigger>
 														<TabsTrigger value="properties">Properties</TabsTrigger>
@@ -1956,7 +1956,7 @@ export default function VBPrototype({
 												</div>
 
 												<TabsContent value="outlines">
-													<div className="pb-4">
+													<div className="pl-6 pb-4">
 														<div className="flex flex-col gap-2">
 															{outlines.map((o) => (
 																<Button
