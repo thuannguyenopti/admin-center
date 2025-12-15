@@ -76,10 +76,23 @@ export default function ContentPage() {
 		const newSet = new Set(selectedRows);
 		if (checked) {
 			newSet.add(id);
+			setSelectedRows(newSet);
+			setSelectedContentId(id);
 		} else {
 			newSet.delete(id);
+			setSelectedRows(newSet);
+			// If exactly one item remains selected, show that item
+			if (newSet.size === 1) {
+				const remainingId = Array.from(newSet)[0];
+				setSelectedContentId(remainingId);
+			} else if (newSet.size === 0) {
+				// If no items selected, close the panel
+				setSelectedContentId(null);
+			} else {
+				// Multiple items still selected, keep showing multi-select view
+				setSelectedContentId(null);
+			}
 		}
-		setSelectedRows(newSet);
 	};
 
 	const isAllSelected =
@@ -131,13 +144,7 @@ export default function ContentPage() {
 								<Checkbox
 									checked={selectedRows.has(item.id)}
 									onCheckedChange={(checked) => {
-										const isChecked = !!checked;
-										handleSelectRow(item.id, isChecked);
-										if (isChecked) {
-											setSelectedContentId(item.id);
-										} else {
-											setSelectedContentId(null);
-										}
+										handleSelectRow(item.id, !!checked);
 									}}
 								/>
 							</Td>
