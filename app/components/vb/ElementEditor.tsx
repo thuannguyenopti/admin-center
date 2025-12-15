@@ -80,7 +80,7 @@ export default function ElementEditor({
   }, [currentEle]);
 
   return (
-    <div ref={rootRef} className="pl-6 flex-none w-full pt-4">
+    <div ref={rootRef} className="pl-6 pr-6 flex-none w-full pt-4">
       <Text fontSize="sm" fontWeight="400" color="fg.accent" onClick={onBack} className="cursor-pointer">
         {"<-"} {outlineTitle || "Outline"}
       </Text>

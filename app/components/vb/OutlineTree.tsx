@@ -385,7 +385,7 @@ export default function OutlineTree({
 
     return (
         <div
-            className="relative min-h-[300px]"
+            className="relative min-h-[300px] pr-3"
             onDragLeave={(e) => {
                 if (e.currentTarget === e.target) clearAssetDnD();
             }}
