@@ -23,7 +23,7 @@ const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({ prop
 
 export default function ElementEditor({ currentEle, elementType, propsList, onBack, onInputChange }: Props) {
   return (
-    <div className="flex-none w-full pt-4">
+    <div className="pl-6 flex-none w-full pt-4">
       <Text fontSize="sm" fontWeight="400" color="fg.accent" onClick={onBack} className="cursor-pointer">
         {"<-"} Outline
       </Text>
