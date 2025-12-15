@@ -15,6 +15,7 @@ body {
 	background: var(--background);
 	font-family: Arial, Helvetica, sans-serif;
 	margin: 0;
+	height: 100%;
 }
 
 .parent {
@@ -28,9 +29,11 @@ body {
 .div1 {
 	grid-area: 1 / 1 / 2 / 6;
 }
+
 .div2 {
 	grid-area: 2 / 1 / 6 / 2;
 }
+
 .div3 {
 	grid-area: 2 / 2 / 6 / 6;
 }
@@ -52,6 +55,7 @@ body {
 	0% {
 		transform: translateX(0px);
 	}
+
 	100% {
 		transform: translateX(224px);
 	}
@@ -65,6 +69,7 @@ body {
 	0% {
 		opacity: 0;
 	}
+
 	100% {
 		opacity: 1;
 	}
@@ -88,6 +93,7 @@ body {
 ::-webkit-scrollbar-thumb:hover {
 	background: #555;
 }
+
 /* 
 .newsection {
   position: relative;

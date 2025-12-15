@@ -26,15 +26,24 @@ export default function EditPageDetail() {
 		}
 	}, [id, pages, isHydrated]);
 
-	const handleSave = (newContent: any[]) => {
+	type PagePatch = { outlines?: any; properties?: any };
+
+	const handleSave = (patch: PagePatch) => {
 		if (!page) return;
-		const updatedPages = pages.map((p) => {
-			if (p.id === id) {
-				return { ...p, content: newContent, status: "Changed" };
-			}
-			return p;
-		});
-		setPages(updatedPages);
+
+		const nextPage: Page = {
+			...page,
+			// merge the outlines + properties directly into the page
+			outlines: patch.outlines ?? page.outlines,
+			data: patch.properties ?? page.data,
+			status: "Changed" as const, // keep union literal type
+		};
+
+		setPages((prev: any[]) =>
+			prev.map((p) => (p.id === id ? nextPage : p))
+		);
+
+		setPage(nextPage);
 	};
 
 	const handlePublish = () => {
@@ -53,8 +62,9 @@ export default function EditPageDetail() {
 	}
 
 	return (
+
 		<VBPrototype
-			initialData={page.content}
+			initialData={page}
 			onSave={handleSave}
 			onPublish={handlePublish}
 			pageName={page.name}
