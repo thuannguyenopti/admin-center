@@ -1907,7 +1907,6 @@ export default function VBPrototype({
 
 				{/* LEFT SIDEBAR */}
 				<Box
-					px="24"
 					pt="4"
 					w="auto"
 					className="vb-outline"
@@ -1947,7 +1946,7 @@ export default function VBPrototype({
 					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
 						{/* MULTI: View 1 <-> View 2 full-sidebar slide */}
 						{isMulti ? (
-							<div className="h-full overflow-hidden">
+							<div className=" h-full overflow-hidden">
 								<div
 									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
@@ -1959,14 +1958,14 @@ export default function VBPrototype({
 										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
-										<div className="pt-4 pb-2">
+										<div className="pl-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
 												<div className="flex-1" />
 											</div>
 										</div>
 
-										<div className="flex-1 overflow-y-auto">
+										<div className="pl-6 flex-1 overflow-y-auto">
 											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
 												<div className="pt-2 pb-2">
 													<TabsList>
@@ -2023,7 +2022,7 @@ export default function VBPrototype({
 											>
 												<div className="pt-4 pb-2">
 													{activeOutline ? (
-														<div className="flex flex-col gap-1">
+														<div className="pl-6 flex flex-col gap-1">
 															<Text
 																fontSize="sm"
 																fontWeight="400"
@@ -2046,7 +2045,7 @@ export default function VBPrototype({
 															</div>
 														</div>
 													) : (
-														<div className="flex items-center gap-2">
+														<div className="pl-6 flex items-center gap-2">
 															<Heading level="4">Outline</Heading>
 															<div className="flex-1" />
 															{HeaderActions}
