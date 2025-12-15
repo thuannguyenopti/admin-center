@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox } from "@optiaxiom/react";
-import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto } from "@tabler/icons-react";
+import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto, IconEye, IconPencil } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useDetailsMetadata } from "./useDetailsMetadata";
@@ -226,10 +226,10 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
         py="24"
         style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
       >
-        <Button appearance="subtle" flex="1" style={{ justifyContent: "center" }}>
+        <Button appearance="default" flex="1" style={{ justifyContent: "center" }} addonBefore={<IconEye size={16} />}>
           View
         </Button>
-        <Button appearance="primary" flex="1" style={{ justifyContent: "center" }}>
+        <Button appearance="primary" flex="1" style={{ justifyContent: "center" }} addonBefore={<IconPencil size={16} />}>
           Edit
         </Button>
       </Box>
