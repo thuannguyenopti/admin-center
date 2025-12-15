@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect, useRef } from "react";
 import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading } from "@optiaxiom/react";
 
 type Props = {
@@ -9,28 +9,85 @@ type Props = {
   propsList?: any[];
   onBack: () => void;
   onInputChange: (value: any, propIndex: number) => void;
+  outlineTitle?: string;
 };
 
-const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({ prop, onChange, propIndex }) => {
+const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({
+  prop,
+  onChange,
+  propIndex,
+}) => {
   return (
     <div className=" pr-0 py-2">
       <Field label={prop.label}>
-        <AxiomInput placeholder={prop.placeholder || ""} value={prop.value || ""} onChange={(e: any) => onChange(e.currentTarget.value, propIndex)} />
+        <AxiomInput
+          placeholder={prop.placeholder || ""}
+          value={prop.value || ""}
+          onChange={(e: any) => onChange(e.currentTarget.value, propIndex)}
+        />
       </Field>
     </div>
   );
 };
 
-export default function ElementEditor({ currentEle, elementType, propsList, onBack, onInputChange }: Props) {
+export default function ElementEditor({
+  currentEle,
+  elementType,
+  propsList,
+  onBack,
+  onInputChange,
+  outlineTitle,
+}: Props) {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Don’t focus when “closed”
+    if (!currentEle || currentEle === "none") return;
+
+    // Match your slide duration (you use `duration-300`)
+    const SLIDE_MS = 300;
+
+    const t = window.setTimeout(() => {
+      const root = rootRef.current;
+      if (!root) return;
+
+      const selector = [
+        'input:not([type="hidden"]):not([disabled])',
+        "textarea:not([disabled])",
+        "select:not([disabled])",
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(",");
+
+      const el = root.querySelector(selector) as any;
+      if (!el) return;
+
+      // Prevent scroll-jank during/after transform animations
+      try {
+        el.focus?.({ preventScroll: true });
+      } catch {
+        el.focus?.();
+      }
+
+      // Optional: select text if it’s a real input/textarea
+      /*if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        try {
+          el.select?.();
+        } catch { }
+      }*/
+    }, SLIDE_MS);
+
+    return () => window.clearTimeout(t);
+  }, [currentEle]);
+
   return (
-    <div className="pl-6 flex-none w-full pt-4">
+    <div ref={rootRef} className="pl-6 flex-none w-full pt-4">
       <Text fontSize="sm" fontWeight="400" color="fg.accent" onClick={onBack} className="cursor-pointer">
-        {"<-"} Outline
+        {"<-"} {outlineTitle || "Outline"}
       </Text>
+
       <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" pr="0" py="4">
-        <Heading level="4">
-          {elementType}
-        </Heading>
+        <Heading level="4">{elementType}</Heading>
+
         <Box display="flex" alignItems="center" gap="8">
           <Box color="fg.default">
             <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -45,7 +102,10 @@ export default function ElementEditor({ currentEle, elementType, propsList, onBa
           {prop.type === "text" && <Input prop={prop} propIndex={ind} onChange={onInputChange} />}
           {prop.type === "checkbox" && (
             <div className="p-6 pr-0 py-2">
-              <Checkbox checked={prop.value === "true" ? true : false} onChange={(e: any) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}>
+              <Checkbox
+                checked={prop.value === "true" ? true : false}
+                onChange={(e: any) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
+              >
                 {prop.label}
               </Checkbox>
             </div>
