@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input } from "@optiaxiom/react";
-import { IconX, IconStack2 } from "@tabler/icons-react";
+import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
@@ -250,32 +250,32 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
               style={{ paddingLeft: "20px" }}
             >
               {metadata.typeDistribution.Page > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>📄</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconFile size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Pages ({metadata.typeDistribution.Page})
                   </Text>
                 </Box>
               )}
               {metadata.typeDistribution.Image > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>🖼️</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconPhoto size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Images ({metadata.typeDistribution.Image})
                   </Text>
                 </Box>
               )}
               {metadata.typeDistribution.Product > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>🛍️</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconShoppingBag size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Products ({metadata.typeDistribution.Product})
                   </Text>
                 </Box>
               )}
               {metadata.typeDistribution.Block > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>📦</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconBlocks size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Blocks ({metadata.typeDistribution.Block})
                   </Text>
