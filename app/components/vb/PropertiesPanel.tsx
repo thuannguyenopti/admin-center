@@ -28,7 +28,7 @@ type Props = {
 
 export default function PropertiesPanel({ value, onChange }: Props) {
     return (
-        <Box py="16" fontSize="sm">
+        <Box pl="24" py="16" fontSize="sm">
             <Box mb="16">
                 <Text fontSize="sm" fontWeight="600" mb="8">
                     SEO
