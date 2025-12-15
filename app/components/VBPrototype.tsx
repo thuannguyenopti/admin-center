@@ -1232,15 +1232,16 @@ export default function VBPrototype({
 
 		if (!eleId || eleId === "none") return;
 
+		// ✅ Always drill down from View 1 -> View 2 when multi-outline
+		// (even if the element belongs to the currently active outline)
+		if (isMulti) {
+			setSidebarTab("outlines");  // keep your View 2 layout expectations
+			setOutlineView("tree");
+		}
+
 		const owner = findOutlineIdForElement(eleId);
 		if (owner && owner !== activeOutlineId) {
 			setActiveOutlineId(owner);
-
-			// If multi-outline, drilling into an element should force View 2.
-			if (isMulti) {
-				setSidebarTab("outlines");
-				setOutlineView("tree");
-			}
 		}
 	};
 
@@ -2035,7 +2036,7 @@ export default function VBPrototype({
 																	setAI(false);
 																}}
 															>
-																← Back
+																← Page
 															</Text>
 
 															<div className="flex items-center gap-2">
@@ -2075,6 +2076,7 @@ export default function VBPrototype({
 											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
 												<div className="h-full overflow-y-auto">
 													<ElementEditor
+														outlineTitle={activeOutline?.title || "Outline"}
 														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 														currentEle={currentEle}
 														propsList={theEles[currentEle]?.props}
@@ -2150,6 +2152,7 @@ export default function VBPrototype({
 									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
+												outlineTitle={activeOutline?.title || "Outline"}
 												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 												currentEle={currentEle}
 												propsList={theEles[currentEle]?.props}
