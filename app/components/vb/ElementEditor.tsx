@@ -18,7 +18,7 @@ const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({
   propIndex,
 }) => {
   return (
-    <div className=" pr-0 py-2">
+    <div className=" pr-1 py-2">
       <Field label={prop.label}>
         <AxiomInput
           placeholder={prop.placeholder || ""}
