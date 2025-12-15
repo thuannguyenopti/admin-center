@@ -1118,7 +1118,7 @@ export default function VBPrototype({
 		}
 
 		if (raw == null) {
-			return [{ id: "outline-main", title: "Main", tree: [], elements: {} }];
+			return [];
 		}
 
 		const norm = normalizePage(raw);
@@ -1866,7 +1866,12 @@ export default function VBPrototype({
 	if (isZero) {
 		return (
 			<div className="select-none" style={{ height: "100%" }}>
-				<Box bg="bg.page" w="full" className="grid grid-rows-[0fr_1fr]" style={{ height: "100%", overflow: "hidden" }}>
+				<Box
+					bg="bg.page"
+					w="full"
+					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
+					style={{ height: "100%", overflow: "hidden" }}
+				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
 						lastSaved={lastSaved}
@@ -1876,10 +1881,81 @@ export default function VBPrototype({
 						preview={preview}
 						onPreviewChange={onPreviewChange}
 					/>
-					<Box px="24" pt="4" style={{ overflowY: "auto" }}>
-						<Heading level="4">Properties</Heading>
-						<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+
+					{/* LEFT SIDEBAR (Properties only) */}
+					<Box
+						pt="4"
+						w="auto"
+						className="vb-outline"
+						bg="bg.page"
+						style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
+					>
+						{/* Resizable handle (kept consistent) */}
+						<div
+							className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
+							onMouseDown={(e) => {
+								e.preventDefault();
+								const startX = e.clientX;
+								const outlineBox = e.currentTarget.parentElement as HTMLElement;
+								const startWidth = outlineBox.offsetWidth;
+
+								const onMouseMove = (moveEvent: MouseEvent) => {
+									const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
+									outlineBox.style.width = newWidth + "px";
+								};
+
+								const onMouseUp = () => {
+									window.removeEventListener("mousemove", onMouseMove);
+									window.removeEventListener("mouseup", onMouseUp);
+								};
+
+								window.addEventListener("mousemove", onMouseMove);
+								window.addEventListener("mouseup", onMouseUp);
+							}}
+						>
+							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
+							<Box color="fg.secondary">
+								<IconArrowBarBoth size="16" />
+							</Box>
+							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
+						</div>
+
+						<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
+							<div className="pl-6 pt-4 pb-2">
+								<Heading level="4">Properties</Heading>
+							</div>
+
+							<div className="pl-6 flex-1 overflow-y-auto">
+								<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+							</div>
+						</div>
 					</Box>
+
+					{/* RIGHT / CANVAS (still visible even with 0 outlines) */}
+					<div
+						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
+						style={{ height: "100%", overflow: "hidden" }}
+					>
+						<PreviewCanvas
+							outlines={outlines as any} // will be []
+							theEles={{}}              // no active outline
+							currentEle={currentEle}
+							currentHoverEle={currentHoverEle}
+							setCurrentEle={setCurrentEleSmart}
+							setCurrentHoverEle={setCurrentHoverEle}
+							setOutlines={setOutlines as any}
+							preview={preview}
+						/>
+
+						{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
+
+						<Box borderL="1" borderColor="border.tertiary">
+							<RightToolbar
+								onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
+								isFolderActive={isImageSelectorOpen}
+							/>
+						</Box>
+					</div>
 				</Box>
 			</div>
 		);
