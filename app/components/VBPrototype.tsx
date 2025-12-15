@@ -301,14 +301,14 @@ interface OutlineProps {
 
 type AssetDropPosition = { colId: string; position: number } | null;
 
+// Mark internal drags so we can ignore them in "asset image" handlers.
+const INTERNAL_DND_MIME = "application/x-vb-internal";
+
 const isImageDrag = (dt: DataTransfer) => {
 	const types = Array.from(dt?.types || []);
-	return (
-		types.includes("image/url") ||
-		types.includes("text/uri-list") ||
-		types.includes("text/plain") ||
-		types.includes("Files")
-	);
+	// NOTE: do NOT include "text/plain" here — internal drags can surface it and will
+	// incorrectly enter asset-drag mode.
+	return types.includes("image/url") || types.includes("text/uri-list") || types.includes("Files");
 };
 
 const getDraggedImageUrl = (dt: DataTransfer) => {
@@ -341,28 +341,40 @@ const Outline: React.FC<OutlineProps> = ({
 	const clearAssetDnD = () => {
 		setAssetOverCol(null);
 		setAssetDrop(null);
+		clearInternalDnD();
 		// only clear the shared dragging state if we were the one that set it
 		setDragging((prev) => (prev === ASSET_DRAG_ID ? null : prev));
 	};
 
+	type InternalDropPosition = { colId: string; position: number } | null;
+	const [internalDrop, setInternalDrop] = useState<InternalDropPosition>(null);
+
+	const isInternalEleDrag = (id: string | null) => {
+		if (!id) return false;
+		if (id === ASSET_DRAG_ID) return false;
+		// element ids are everything NOT section-/row-/col-
+		return !id.startsWith("section-") && !id.startsWith("row-") && !id.startsWith("col-");
+	};
+
+	const clearInternalDnD = () => {
+		setInternalDrop(null);
+	};
+
+	// Set open state for section, row, or col by id
 	const setOpen = (id: string, open: boolean) => {
 		setData((prev) =>
 			prev.map((section) => {
-				if (section.id === id) {
-					return { ...section, open };
-				}
+				if (section.id === id) return { ...section, open };
+
 				return {
 					...section,
 					children: section.children.map((row: any) => {
-						if (row.id === id) {
-							return { ...row, open };
-						}
+						if (row.id === id) return { ...row, open };
+
 						return {
 							...row,
 							children: row.children.map((col: any) => {
-								if (col.id === id) {
-									return { ...col, open };
-								}
+								if (col.id === id) return { ...col, open };
 								return col;
 							}),
 						};
@@ -463,6 +475,90 @@ const Outline: React.FC<OutlineProps> = ({
 		});
 	};
 
+	// ✅ RESTORE: addElement used by Col "+" menu (this is what broke)
+	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
+		const uKey = `${type}-${Date.now()}`;
+
+		// Pending image data from drag-and-drop (optional)
+		const pendingImageData = (window as any).__pendingImageData;
+		const imageUrl = pendingImageData?.url || "";
+		const imageAlt = pendingImageData?.alt || "";
+
+		setTheEles((prev) => ({
+			...prev,
+			[uKey]: {
+				type,
+				props: (() => {
+					switch (type) {
+						case "Heading":
+							return [{ type: "text", label: "Text" }];
+						case "Text":
+							return [{ type: "text", label: "Text" }];
+						case "Input":
+							return [
+								{ type: "text", label: "Label" },
+								{ type: "text", label: "Placeholder" },
+								{ type: "text", label: "Tooltip" },
+								{ type: "checkbox", label: "Required", value: false },
+							];
+						case "Button":
+							return [{ type: "text", label: "Label" }];
+						case "Image":
+							return [
+								{ type: "text", label: "Image URL", value: imageUrl },
+								{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
+								{ type: "text", label: "Alt Text", value: imageAlt },
+								{ type: "text", label: "Width", value: "auto" },
+								{ type: "text", label: "Height", value: "auto" },
+							];
+						default:
+							return [];
+					}
+				})(),
+			},
+		}));
+
+		setData((prev) =>
+			prev.map((section, sIdx) => {
+				if (sIdx !== sectionIndex) return section;
+				return {
+					...section,
+					children: section.children.map((row: any, rIdx: number) => {
+						if (rIdx !== rowIndex) return row;
+						return {
+							...row,
+							children: row.children.map((col: any, cIdx: number) => {
+								if (cIdx !== colIndex) return col;
+
+								const nextChildren = [...(col.children ?? [])];
+
+								// Default: append
+								let insertAt = nextChildren.length;
+
+								// If hovering the "last-ele-<colId>" indicator, append
+								if (
+									typeof currentHoverEle === "string" &&
+									currentHoverEle.startsWith("last-ele-")
+								) {
+									const targetColId = currentHoverEle.replace("last-ele-", "");
+									if (targetColId === col.id) insertAt = nextChildren.length;
+								} else if (typeof currentHoverEle === "string" && currentHoverEle !== "none") {
+									// If hovering an existing element in THIS column, insert before it
+									const idx = nextChildren.findIndex((r: any) => r?.id === currentHoverEle);
+									if (idx !== -1) insertAt = idx;
+								}
+
+								nextChildren.splice(insertAt, 0, { id: uKey });
+
+								return { ...col, open: true, children: nextChildren };
+							}),
+						};
+					}),
+				};
+			})
+		);
+	};
+
 	const removeSection = (sectionIndex: number) => {
 		setData((prev) => prev.filter((_, index: number) => index !== sectionIndex));
 	};
@@ -503,19 +599,35 @@ const Outline: React.FC<OutlineProps> = ({
 		);
 	};
 
+	// ✅ FIX: do NOT preventDefault on dragStart (can break native drag)
+	// ✅ Also: mark internal drags so asset logic doesn't hijack them.
 	const onDragStart = (e: any, id: string) => {
 		e.stopPropagation();
-		e.preventDefault();
+
+		try {
+			if (e?.dataTransfer) {
+				e.dataTransfer.setData(INTERNAL_DND_MIME, id);
+				e.dataTransfer.effectAllowed = cloning ? "copy" : "move";
+			}
+		} catch { }
+
 		setDragging(id);
 	};
 
 	const onDragHover = (e: any, id: string) => {
 		e.stopPropagation();
 		e.preventDefault();
-		if (dragging) setCurrentHoverEle("" + id);
+
+		// Only update hover for internal drags (not for asset drag)
+		if (dragging && dragging !== ASSET_DRAG_ID) setCurrentHoverEle(String(id));
 	};
 
-	const insertImageIntoTree = (colId: string, position: number, imageUrl: string, imageAlt: string) => {
+	const insertImageIntoTree = (
+		colId: string,
+		position: number,
+		imageUrl: string,
+		imageAlt: string
+	) => {
 		const uKey = `img-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
 		setTheEles((prev) => ({
@@ -550,10 +662,12 @@ const Outline: React.FC<OutlineProps> = ({
 	};
 
 	return (
-		<div className="relative min-h-[300px]" onDragLeave={(e) => {
-			// if leaving the whole outline container, clear asset state
-			if (e.currentTarget === e.target) clearAssetDnD();
-		}}>
+		<div
+			className="relative min-h-[300px]"
+			onDragLeave={(e) => {
+				if (e.currentTarget === e.target) clearAssetDnD();
+			}}
+		>
 			<Box fontSize="sm" color="fg.secondary">
 				{data.map((section: any, sindex: number) => (
 					<div key={sindex}>
@@ -581,21 +695,6 @@ const Outline: React.FC<OutlineProps> = ({
 							</div>
 						)}
 
-						{/* dropping above section (internal DnD) */}
-						{dragging?.startsWith("section-") &&
-							((section.id !== dragging && data[sindex - 1]?.id !== dragging) || cloning) && (
-								<div
-									className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]"
-									onMouseEnter={(e) => onDragHover(e, section.id)}
-								>
-									<Box
-										bg="bg.accent"
-										rounded="full"
-										className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-									/>
-								</div>
-							)}
-
 						<Section
 							setOpen={setOpen}
 							section={section}
@@ -606,45 +705,6 @@ const Outline: React.FC<OutlineProps> = ({
 						>
 							{(section.children ?? []).map((row: any, index: number) => (
 								<div key={index}>
-									{/* add row above */}
-									{!dragging && !section.children[index - 1]?.open && (
-										<div
-											className="ind group h-2 relative z-10 -my-1"
-											onMouseEnter={(e) => onDragHover(e, section.id)}
-										>
-											<Box
-												rounded="full"
-												className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-											>
-												<Box className="bg-black/5 h-1 w-full" />
-												<Button
-													aria-label="Add Row"
-													size="sm"
-													appearance="subtle"
-													className="min-w-6"
-													onClick={(e: any) => addRow(e, sindex, index)}
-													icon={<IconPlus size={16} />}
-												/>
-												<Box className="bg-black/5 h-1 w-full" />
-											</Box>
-										</div>
-									)}
-
-									{/* dropping above row (internal DnD) */}
-									{dragging?.startsWith("row-") &&
-										((row.id !== dragging && section.children[index - 1]?.id !== dragging) || cloning) && (
-											<div
-												className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
-												onMouseEnter={(e) => onDragHover(e, row.id)}
-											>
-												<Box
-													bg="bg.accent"
-													rounded="full"
-													className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-												/>
-											</div>
-										)}
-
 									<Row
 										row={row}
 										addRow={(e: any) => addRow(e, sindex, index)}
@@ -656,100 +716,121 @@ const Outline: React.FC<OutlineProps> = ({
 									>
 										{(row.children ?? []).map((col: any, i: number) => (
 											<div key={i}>
-												{/* add col above */}
-												{!dragging && (
-													<div
-														className="ind group h-2 relative z-10 -my-1"
-														onMouseEnter={(e) => onDragHover(e, section.id)}
-													>
-														<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-															<Box className="bg-black/5 h-1 w-full" />
-															<Button
-																aria-label="Add Column"
-																size="sm"
-																appearance="subtle"
-																className="min-w-6"
-																onClick={(e: any) => addCol(e, sindex, index, i)}
-																icon={<IconPlus size={16} />}
-															/>
-															<Box className="bg-black/5 h-1 w-full" />
-														</Box>
-													</div>
-												)}
-
-												{/* dropping above col (internal DnD) */}
-												{dragging?.startsWith("col-") && col.id !== dragging && row.children[i - 1]?.id !== dragging && (
-													<div
-														className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
-														onMouseEnter={(e) => onDragHover(e, col.id)}
-													>
-														<Box
-															bg="bg.accent"
-															rounded="full"
-															className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-														/>
-													</div>
-												)}
-
 												<Col
 													col={col}
 													setOpen={setOpen}
 													onDragStart={(e: any) => onDragStart(e, col.id)}
 													removeCol={() => removeCol(col.id)}
-													addElement={() => {
-														/* unchanged: add via plus menus inside Col */
-													}}
+													// ✅ FIX: wire column menu "+" back into Outline logic
+													addElement={(type: string) => addElement(type, i, index, sindex)}
 													key={"col" + i}
 												>
 													{/* ✅ IMAGE ASSET DROP ZONE (like PreviewCanvas) */}
 													<div
 														className={assetOverCol === col.id ? "relative" : ""}
 														onDragEnter={(e) => {
-															if (!isImageDrag(e.dataTransfer)) return;
-															e.preventDefault();
-															e.stopPropagation();
-															setDragging(ASSET_DRAG_ID);
-														}}
-														onDragOver={(e) => {
-															if (!isImageDrag(e.dataTransfer)) return;
-															e.preventDefault();
-															e.stopPropagation();
-
-															setDragging(ASSET_DRAG_ID);
-															setAssetOverCol(col.id);
-
-															const wrappers = e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
-															const mouseY = e.clientY;
-
-															let insertPosition = (col.children || []).length;
-															for (let k = 0; k < wrappers.length; k++) {
-																const rect = wrappers[k].getBoundingClientRect();
-																const middle = rect.top + rect.height / 2;
-																if (mouseY < middle) {
-																	insertPosition = k;
-																	break;
-																}
+															// Asset drag enter
+															if (isImageDrag(e.dataTransfer)) {
+																e.preventDefault();
+																e.stopPropagation();
+																setDragging(ASSET_DRAG_ID);
+																return;
 															}
 
-															setAssetDrop({ colId: col.id, position: insertPosition });
+															// Internal element drag enter (don’t do anything heavy yet; we’ll compute onDragOver)
+															if (isInternalEleDrag(dragging)) {
+																e.preventDefault();
+																e.stopPropagation();
+															}
+														}}
+														onDragOver={(e) => {
+															// ✅ Asset image drag (unchanged behavior)
+															if (isImageDrag(e.dataTransfer)) {
+																e.preventDefault();
+																e.stopPropagation();
+
+																setDragging(ASSET_DRAG_ID);
+																setAssetOverCol(col.id);
+
+																const wrappers = e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
+																const mouseY = e.clientY;
+
+																let insertPosition = (col.children || []).length;
+																for (let k = 0; k < wrappers.length; k++) {
+																	const rect = wrappers[k].getBoundingClientRect();
+																	const middle = rect.top + rect.height / 2;
+																	if (mouseY < middle) {
+																		insertPosition = k;
+																		break;
+																	}
+																}
+
+																setAssetDrop({ colId: col.id, position: insertPosition });
+																return;
+															}
+
+															// ✅ Internal element drag (NEW): compute index + map to currentHoverEle
+															if (isInternalEleDrag(dragging)) {
+																e.preventDefault();
+																e.stopPropagation();
+
+																const wrappers = e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
+																const mouseY = e.clientY;
+
+																let insertPosition = (col.children || []).length;
+																for (let k = 0; k < wrappers.length; k++) {
+																	const rect = wrappers[k].getBoundingClientRect();
+																	const middle = rect.top + rect.height / 2;
+																	if (mouseY < middle) {
+																		insertPosition = k;
+																		break;
+																	}
+																}
+
+																setInternalDrop({ colId: col.id, position: insertPosition });
+
+																const colChildren = col.children || [];
+																const hoverId =
+																	insertPosition >= colChildren.length
+																		? `last-ele-${col.id}`
+																		: (colChildren[insertPosition]?.id ?? `last-ele-${col.id}`);
+
+																setCurrentHoverEle(hoverId);
+															}
 														}}
 														onDragLeave={(e) => {
 															e.stopPropagation();
-															if (e.currentTarget === e.target) clearAssetDnD();
+															if (e.currentTarget === e.target) {
+																// leaving this column dropzone
+																setAssetOverCol(null);
+																setAssetDrop(null);
+																clearInternalDnD();
+															}
 														}}
 														onDrop={(e) => {
-															if (!isImageDrag(e.dataTransfer)) return;
-															e.preventDefault();
-															e.stopPropagation();
+															// Asset drop
+															if (isImageDrag(e.dataTransfer)) {
+																e.preventDefault();
+																e.stopPropagation();
 
-															const url = getDraggedImageUrl(e.dataTransfer);
-															const alt = getDraggedAlt(e.dataTransfer);
+																const url = getDraggedImageUrl(e.dataTransfer);
+																const alt = getDraggedAlt(e.dataTransfer);
 
-															const dp = assetDrop;
-															clearAssetDnD();
+																const dp = assetDrop;
+																clearAssetDnD();
 
-															if (!url || !dp || dp.colId !== col.id) return;
-															insertImageIntoTree(dp.colId, dp.position, url, alt);
+																if (!url || !dp || dp.colId !== col.id) return;
+																insertImageIntoTree(dp.colId, dp.position, url, alt);
+																return;
+															}
+
+															// Internal drop: we rely on your existing global mouseup/applyDragDrop,
+															// but we should at least stop propagation and keep state consistent.
+															if (isInternalEleDrag(dragging)) {
+																e.preventDefault();
+																e.stopPropagation();
+																clearInternalDnD();
+															}
 														}}
 													>
 														{/* empty column hint */}
@@ -771,12 +852,26 @@ const Outline: React.FC<OutlineProps> = ({
 														)}
 
 														{(col.children ?? []).map((element: any, j: number) => {
-															const isActive = assetOverCol === col.id && assetDrop?.colId === col.id;
+															const isAssetActive = assetOverCol === col.id && assetDrop?.colId === col.id;
+															const isInternalActive = isInternalEleDrag(dragging) && internalDrop?.colId === col.id;
 
 															return (
 																<React.Fragment key={"ele-frag-" + element.id}>
-																	{/* ✅ bar indicator between items */}
-																	{isActive && assetDrop?.position === j && (
+																	{/* ✅ INTERNAL insertion bar (between items) */}
+																	{isInternalActive && internalDrop?.position === j && (
+																		<div
+																			style={{
+																				height: "2px",
+																				backgroundColor: "#0037FF",
+																				borderRadius: "2px",
+																				margin: "6px 0",
+																				pointerEvents: "none",
+																			}}
+																		/>
+																	)}
+
+																	{/* ✅ ASSET insertion bar (between items) */}
+																	{isAssetActive && assetDrop?.position === j && (
 																		<div
 																			style={{
 																				height: "2px",
@@ -803,7 +898,22 @@ const Outline: React.FC<OutlineProps> = ({
 															);
 														})}
 
-														{/* ✅ bar indicator at end */}
+														{/* ✅ INTERNAL insertion bar at END */}
+														{isInternalEleDrag(dragging) &&
+															internalDrop?.colId === col.id &&
+															internalDrop?.position === (col.children ?? []).length && (
+																<div
+																	style={{
+																		height: "2px",
+																		backgroundColor: "#0037FF",
+																		borderRadius: "2px",
+																		margin: "6px 0",
+																		pointerEvents: "none",
+																	}}
+																/>
+															)}
+
+														{/* ✅ ASSET insertion bar at END */}
 														{assetOverCol === col.id &&
 															assetDrop?.colId === col.id &&
 															assetDrop?.position === (col.children ?? []).length && (
@@ -817,69 +927,14 @@ const Outline: React.FC<OutlineProps> = ({
 																	}}
 																/>
 															)}
+
 													</div>
 												</Col>
 											</div>
 										))}
-
-										{/* add column last */}
-										{!dragging && (
-											<div
-												className="ind group h-2 relative z-10 -my-1"
-												onMouseEnter={(e) => onDragHover(e, section.id)}
-											>
-												<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-													<Box className="bg-black/5 h-1 w-full" />
-													<Button
-														aria-label="Add Column"
-														size="sm"
-														appearance="subtle"
-														className="min-w-6"
-														onClick={(e: any) => addCol(e, sindex, index, row.children.length)}
-														icon={<IconPlus size={16} />}
-													/>
-													<Box className="bg-black/5 h-1 w-full" />
-												</Box>
-											</div>
-										)}
-
-										{/* internal col-last drop indicator */}
-										{dragging?.startsWith("col-") && dragging !== row.children[row.children.length - 1]?.id && (
-											<div
-												className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
-												onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
-											>
-												<Box
-													bg="bg.accent"
-													rounded="full"
-													className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-												/>
-											</div>
-										)}
 									</Row>
 								</div>
 							))}
-
-							{/* add row last */}
-							{!dragging && !section.children[section.children.length - 1]?.open && (
-								<div className="ind group h-2 relative z-10 -my-1" onMouseEnter={(e) => onDragHover(e, section.id)}>
-									<Box
-										rounded="full"
-										className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-									>
-										<Box className="bg-black/5 h-1 w-full" />
-										<Button
-											aria-label="Add Row"
-											size="sm"
-											appearance="subtle"
-											className="min-w-6"
-											onClick={(e: any) => addRow(e, sindex, section.children.length)}
-											icon={<IconPlus size={16} />}
-										/>
-										<Box className="bg-black/5 h-1 w-full" />
-									</Box>
-								</div>
-							)}
 						</Section>
 					</div>
 				))}
@@ -887,6 +942,7 @@ const Outline: React.FC<OutlineProps> = ({
 		</div>
 	);
 };
+
 
 /** -----------------------------
  * Existing mergeData (kept)
@@ -1677,6 +1733,8 @@ export default function VBPrototype({
 		};
 
 		window.addEventListener("mouseup", handleMouseUp);
+		window.addEventListener("dragend", handleMouseUp);
+		window.addEventListener("drop", handleMouseUp);
 
 		const handleKeyUp = (event: KeyboardEvent) => {
 			if (event.key === "Alt" && event.location === 1) setCloning(false);
@@ -1699,6 +1757,8 @@ export default function VBPrototype({
 			window.removeEventListener("keydown", handleKeyDown);
 			window.removeEventListener("keyup", handleKeyUp);
 			window.removeEventListener("mouseup", handleMouseUp);
+			window.removeEventListener("dragend", handleMouseUp);
+			window.removeEventListener("drop", handleMouseUp);
 		};
 	}, [dragging, currentHoverEle, cloning, theEles, data]);
 
