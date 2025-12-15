@@ -2106,7 +2106,7 @@ export default function VBPrototype({
 										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
-										<div className="pt-4 pb-2">
+										<div className="pl-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
 												<div className="flex-1" />
@@ -2116,7 +2116,7 @@ export default function VBPrototype({
 
 										<div className="flex-1 overflow-y-auto">
 											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pt-2 pb-2">
+												<div className="pl-6 pt-2 pb-2">
 													<TabsList>
 														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
 														<TabsTrigger value="properties">Properties</TabsTrigger>
