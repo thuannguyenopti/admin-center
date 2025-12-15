@@ -158,7 +158,6 @@ export default function CMSToolbar({
 								<Text fontSize="sm" fontWeight="500">
 									{previewLabel}
 								</Text>
-								<IconChevronDown size={12} />
 							</Box>
 						</LabelMenuButton>
 					</MenuTrigger>
