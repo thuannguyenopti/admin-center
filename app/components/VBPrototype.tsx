@@ -1118,6 +1118,7 @@ export default function VBPrototype({
 				{/* LEFT SIDEBAR */}
 				<Box
 					pt="4"
+					pr="0"
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
@@ -1125,7 +1126,7 @@ export default function VBPrototype({
 				>
 					{/* Resizable handle */}
 					<div
-						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
+						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-2 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
 						onMouseDown={(e) => {
 							e.preventDefault();
 							const startX = e.clientX;
@@ -1168,7 +1169,7 @@ export default function VBPrototype({
 										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
-										<div className="pl-6 pt-4 pb-2">
+										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
 												<div className="flex-1" />
@@ -1177,7 +1178,7 @@ export default function VBPrototype({
 
 										<div className=" flex-1 overflow-y-auto">
 											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pt-2 pb-2">
+												<div className="pl-6 pr-6 pt-2 pb-2">
 													<TabsList>
 														<TabsTrigger value="outlines">Outlines</TabsTrigger>
 														<TabsTrigger value="properties">Properties</TabsTrigger>
@@ -1185,7 +1186,7 @@ export default function VBPrototype({
 												</div>
 
 												<TabsContent value="outlines">
-													<div className="pl-6 pb-4">
+													<div className="pl-3 pr-3 pb-4">
 														<div className="flex flex-col gap-2">
 															{outlines.map((o) => (
 																<Button
@@ -1232,7 +1233,7 @@ export default function VBPrototype({
 											>
 												<div className="pt-4 pb-2">
 													{activeOutline ? (
-														<div className="pl-6 flex flex-col gap-1">
+														<div className="pl-6 pr-6 flex flex-col gap-1">
 															<Text
 																fontSize="sm"
 																fontWeight="400"
@@ -1255,7 +1256,7 @@ export default function VBPrototype({
 															</div>
 														</div>
 													) : (
-														<div className="pl-6 flex items-center gap-2">
+														<div className="pl-6 pr-6 flex items-center gap-2">
 															<Heading level="4">Outline</Heading>
 															<div className="flex-1" />
 															{HeaderActions}
@@ -1263,7 +1264,7 @@ export default function VBPrototype({
 													)}
 												</div>
 
-												<div className="flex-1 overflow-y-auto pb-4 min-h-0">
+												<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
 													{activeOutline ? (
 														<OutlineTree
 															cloning={cloning}
@@ -1317,7 +1318,7 @@ export default function VBPrototype({
 										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
 											}`}
 									>
-										<div className="pl-6 pt-4 pb-2">
+										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
 												<div className="flex-1" />
@@ -1327,7 +1328,7 @@ export default function VBPrototype({
 
 										<div className="flex-1 overflow-y-auto">
 											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pt-2 pb-2">
+												<div className="pl-6 pr-6 pt-2 pb-2">
 													<TabsList>
 														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
 														<TabsTrigger value="properties">Properties</TabsTrigger>
@@ -1335,7 +1336,7 @@ export default function VBPrototype({
 												</div>
 
 												<TabsContent value="outline">
-													<div className="pb-4">
+													<div className="pb-4 pr-3">
 														<OutlineTree
 															cloning={cloning}
 															dragging={dragging}
@@ -1381,7 +1382,7 @@ export default function VBPrototype({
 				</Box>
 
 				{/* RIGHT / CANVAS */}
-				<div className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1" style={{ height: "100%", overflow: "hidden" }}>
+				<div className=" pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1" style={{ height: "100%", overflow: "hidden" }}>
 					<PreviewCanvas
 						outlines={outlines as any}
 						theEles={theEles}
