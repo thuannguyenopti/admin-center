@@ -3,46 +3,42 @@
 import {
 	Box,
 	Button,
-	Field,
 	Text,
-	Input as Input2,
 	Tabs,
+	TabsList,
+	TabsTrigger,
 	TabsContent,
-	Select,
-	SelectTrigger,
-	SelectContent,
 	Textarea,
+	Heading,
+	Menu,
+	MenuTrigger,
+	MenuContent,
 } from "@optiaxiom/react";
-import React, { useEffect, useRef, SetStateAction, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	IconPlus,
-	IconPilcrow,
-	IconForms,
-	IconRectangle,
-	IconHeading,
-	IconBrackets,
 	IconArrowBarBoth,
 	IconFile,
-	IconPhoto,
+	IconSparkles,
+	IconSquare,
+	IconSection,
 } from "@tabler/icons-react";
 
-import Section from "./vb/Section";
-import Row from "./vb/Row";
-import Col from "./vb/Col";
-import Ele from "./vb/Ele";
+import { EleMap } from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
-import OutlineHeader from "./vb/OutlineHeader";
 import PreviewCanvas from "./vb/PreviewCanvas";
 import RightToolbar from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
+import { PreviewSettings } from "./vb/PreviewSettings";
 import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
 import styles from "./VBPrototype.module.css";
+import PropertiesPanel, { PageProperties } from "./vb/PropertiesPanel";
+import OutlineTree from "./vb/OutlineTree";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
  * ------------------------------*/
 
-type EleMap = Record<string, { type: string; props: any[] }>;
 type NormalizeResult = { data: any[]; theEles: EleMap };
 type SplitPayload = { data: any[]; theEles: EleMap };
 
@@ -61,7 +57,7 @@ const ensureOpen = (nodes: any[]): any[] => {
 	}));
 };
 
-// only strips truly transient flags (keep `open` so you can persist collapse state if you want)
+// only strips truly transient flags (keep `open`)
 const stripTransientFlags = (nodes: any[]): any[] => {
 	return nodes.map((n) => {
 		const { isNew, ...rest } = n;
@@ -130,7 +126,7 @@ const pruneEles = (data: any[], theEles: EleMap): EleMap => {
 };
 
 /** -----------------------------
- * AnimatedText
+ * AnimatedText (kept; optional)
  * ------------------------------*/
 
 const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
@@ -152,776 +148,34 @@ const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
 	return <span>{texts[index]}</span>;
 };
 
-/** -----------------------------
- * Outline
- * ------------------------------*/
+type OutlineType = {
+	id: string;
+	title: string;
+	tree: any[];
+	elements: EleMap;
+};
 
-interface OutlineProps {
-	cloning?: boolean;
-	currentEle: string;
-	currentHoverEle: string;
-	dragging: string;
-	theEles: EleMap;
-	onInputChange: (value: string, propIndex: number) => void;
-	setCurrentEle: React.Dispatch<React.SetStateAction<string>>;
-	setDragging: React.Dispatch<React.SetStateAction<string>>;
-	setData: React.Dispatch<React.SetStateAction<any[]>>;
-	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
-	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
-	data: any[];
-}
-
-const Outline: React.FC<OutlineProps> = ({
-	cloning,
-	setDragging,
-	currentEle,
-	theEles,
-	onInputChange,
-	setCurrentEle,
-	currentHoverEle,
-	setCurrentHoverEle,
-	data,
-	setData,
-	setTheEles,
-	dragging,
-}) => {
-	// Set open state for section, row, or col by id
-	const setOpen = (id: string, open: boolean) => {
-		setData((prev) =>
-			prev.map((section) => {
-				if (section.id === id) {
-					return { ...section, open };
-				}
-				return {
-					...section,
-					children: section.children.map((row: any) => {
-						if (row.id === id) {
-							return { ...row, open };
-						}
-						return {
-							...row,
-							children: row.children.map((col: any) => {
-								if (col.id === id) {
-									return { ...col, open };
-								}
-								return col;
-							}),
-						};
-					}),
-				};
-			})
-		);
-	};
-
-	const addSection = (id: string) => {
-		setData((prev) => {
-			const idx = prev.findIndex((section) => section.id === id);
-			const mk = () => {
-				const t = Date.now();
-				return {
-					id: "section-" + t,
-					open: true,
-					children: [
-						{
-							id: "row-" + t,
-							open: true,
-							children: [
-								{
-									id: "col-" + t,
-									open: true,
-									children: [],
-								},
-							],
-						},
-					],
-				};
-			};
-
-			if (idx === -1) return [...prev, mk()];
-			return [...prev.slice(0, idx), mk(), ...prev.slice(idx)];
-		});
-	};
-
-	const addCol = (e: any, section: number, row: number, at: any) => {
-		e?.stopPropagation();
-
-		setData((prev) => {
-			const updatedSection = {
-				...prev[section],
-				children: prev[section].children.map((r: any, idx: number) => {
-					if (idx === row) {
-						const newCol = {
-							label: "Column",
-							children: [],
-							isNew: true,
-							open: true,
-							id: "col-" + Date.now(),
-						};
-						const newChildren =
-							at === null || at === undefined
-								? [...r.children, newCol]
-								: [...r.children.slice(0, at), newCol, ...r.children.slice(at)];
-						return { ...r, open: true, children: newChildren };
-					}
-					return r;
-				}),
-			};
-			return [...prev.slice(0, section), updatedSection, ...prev.slice(section + 1)];
-		});
-	};
-
-	const addRow = (e: any, section: number, at: any) => {
-		e?.stopPropagation();
-
-		setData((prev) => {
-			const newRow = {
-				label: "Row",
-				open: true,
-				isNew: true,
-				children: [
-					{
-						label: "Column",
-						children: [],
-						open: true,
-						isNew: true,
-						id: "col-" + Date.now(),
-					},
-				],
-				id: "row-" + Date.now(),
-			};
-
-			const sectionObj = prev[section];
-			const newChildren =
-				at === null || at === undefined
-					? [...sectionObj.children, newRow]
-					: [...sectionObj.children.slice(0, at), newRow, ...sectionObj.children.slice(at)];
-
-			return [
-				...prev.slice(0, section),
-				{ ...sectionObj, open: true, children: newChildren },
-				...prev.slice(section + 1),
-			];
-		});
-	};
-
-	const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
-		const uKey = `${type}-${Date.now()}`;
-
-		// Pending image data from drag-and-drop (optional)
-		const pendingImageData = (window as any).__pendingImageData;
-		const imageUrl = pendingImageData?.url || "";
-		const imageAlt = pendingImageData?.alt || "";
-
-		setTheEles((prev) => ({
-			...prev,
-			[uKey]: {
-				type,
-				props: (() => {
-					switch (type) {
-						case "Heading":
-							return [{ type: "text", label: "Text" }];
-						case "Text":
-							return [{ type: "text", label: "Text" }];
-						case "Input":
-							return [
-								{ type: "text", label: "Label" },
-								{ type: "text", label: "Placeholder" },
-								{ type: "text", label: "Tooltip" },
-								{ type: "checkbox", label: "Required", value: false },
-							];
-						case "Button":
-							return [{ type: "text", label: "Label" }];
-						case "Image":
-							return [
-								{ type: "text", label: "Image URL", value: imageUrl },
-								{ type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-								{ type: "text", label: "Alt Text", value: imageAlt },
-								{ type: "text", label: "Width", value: "auto" },
-								{ type: "text", label: "Height", value: "auto" },
-							];
-						default:
-							return [];
-					}
-				})(),
-			},
-		}));
-
-		setData((prev) =>
-			prev.map((section, sIdx) => {
-				if (sIdx !== sectionIndex) return section;
-				return {
-					...section,
-					children: section.children.map((row: any, rIdx: number) => {
-						if (rIdx !== rowIndex) return row;
-						return {
-							...row,
-							children: row.children.map((col: any, cIdx: number) => {
-								if (cIdx !== colIndex) return col;
-								return { ...col, children: [...col.children, { id: uKey }] };
-							}),
-						};
-					}),
-				};
-			})
-		);
-	};
-
-	const removeSection = (sectionIndex: number) => {
-		setData((prev) => prev.filter((_, index: number) => index !== sectionIndex));
-	};
-
-	const removeRow = (id: string) => {
-		setData((prev) =>
-			prev.map((section) => ({
-				...section,
-				children: section.children.filter((row: any) => row.id !== id),
-			}))
-		);
-	};
-
-	const removeCol = (id: string) => {
-		setData((prev) =>
-			prev.map((section) => ({
-				...section,
-				children: section.children.map((row: any) => ({
-					...row,
-					children: row.children.filter((col: any) => col.id !== id),
-				})),
-			}))
-		);
-	};
-
-	const removeEle = (id: string) => {
-		setData((prev) =>
-			prev.map((section) => ({
-				...section,
-				children: section.children.map((row: any) => ({
-					...row,
-					children: row.children.map((col: any) => ({
-						...col,
-						children: col.children.filter((ele: any) => ele.id !== id),
-					})),
-				})),
-			}))
-		);
-	};
-
-	const onDragStart = (e: any, id: string) => {
-		e.stopPropagation();
-		e.preventDefault();
-		setDragging(id);
-	};
-
-	const onDragHover = (e: any, id: string) => {
-		e.stopPropagation();
-		e.preventDefault();
-		if (dragging) setCurrentHoverEle("" + id);
-	};
-
-	const [AI, setAI] = useState(false);
-	const [loadingAI, setLoadingAI] = useState(false);
-	const [activeTab, setActiveTab] = useState("main");
-
-	const onAddSection = () => addSection("section-last"); // append
-	const onAddRandomBlock = () => {
-		const blockNames = [
-			"My Block",
-			"CTA Block",
-			"Form Block",
-			"Hero Block",
-			"Info Block",
-			"Feature Block",
-			"Footer Block",
-			"Header Block",
-			"Pricing Block",
-			"Contact Block",
-		];
-		const randomName = blockNames[Math.floor(Math.random() * blockNames.length)];
-		setData((prev) => [
-			...prev,
-			{ label: randomName, isBlock: true, id: "section-" + Date.now(), children: [] },
-		]);
-	};
-
-	async function sendMessage(message: string) {
-		setLoadingAI(true);
-
-		const res = await fetch("/api/chat", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ userMessage: message }),
-		});
-
-		const payload = await res.json();
-		setLoadingAI(false);
-
-		// payload.response is expected to be a JSON string
-		const parsed = JSON.parse(payload.response);
-
-		// Normalize regardless of whether AI returns split or merged
-		const norm = normalizePage(parsed);
-		setData(norm.data);
-		setTheEles(norm.theEles);
-	}
-
+const isOutlineArray = (v: any): v is OutlineType[] => {
+	if (!Array.isArray(v)) return false;
+	if (v.length === 0) return true; // allow "0 outlines"
+	const o = v[0];
 	return (
-		<div className="">
-			<div
-				className="flex w-[200%] transition duration-300"
-				style={{
-					transform: currentEle === "none" ? "translateX(0%)" : "translateX(-50%)",
-				}}
-			>
-				<div className="min-w-[50%] w-[50%] relative min-h-[300px]">
-					<Tabs value={activeTab} onValueChange={setActiveTab}>
-						<OutlineHeader
-							AI={AI}
-							setAI={setAI}
-							activeTab={activeTab}
-							setActiveTab={setActiveTab}
-							onAddSection={onAddSection}
-							onAddRandomBlock={onAddRandomBlock}
-							onSendAIMessage={sendMessage}
-						/>
-
-						<TabsContent value="main">
-							{loadingAI && (
-								<div
-									className={`absolute left-0 top-0 right-0 bottom-0 flex items-center justify-center flex-col text-center z-50 ${styles.aiOverlay}`}
-								>
-									<div className="w-8 h-8 border-4 border-[#6846FF] border-t-transparent rounded-full animate-spin" />
-									<div className="h-10 mt-4 animate-fade-in-out text-[#6846FF] font-semibold text-sm w-20 text-center">
-										<AnimatedText
-											texts={[
-												"Building a form with magic",
-												"Summoning fields",
-												"Assembling your layout",
-												"Almost there",
-											]}
-											interval={1800}
-										/>
-									</div>
-								</div>
-							)}
-
-							<Box fontSize="sm" color="fg.secondary">
-								{data.map((section: any, sindex: number) => (
-									<div key={sindex}>
-										{/* add section above */}
-										{!dragging && !data[sindex - 1]?.open && (
-											<div
-												className="ind group h-2 mx-1 relative z-10 -my-1 -mr-[20px]"
-												onMouseEnter={(e) => onDragHover(e, section.id)}
-											>
-												<Box
-													rounded="full"
-													className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-												>
-													<Box className="bg-black/5 h-1 w-full" />
-													<Button
-														aria-label="Add Section"
-														size="sm"
-														appearance="subtle"
-														className="min-w-6"
-														onClick={() => addSection(section.id)}
-														icon={<IconPlus size={16} />}
-													/>
-													<Box className="bg-black/5 h-1 w-full" />
-												</Box>
-											</div>
-										)}
-
-										{/* dropping above section */}
-										{dragging?.startsWith("section-") &&
-											((section.id !== dragging && data[sindex - 1]?.id !== dragging) ||
-												cloning) && (
-												<div
-													className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]"
-													onMouseEnter={(e) => onDragHover(e, section.id)}
-												>
-													<Box
-														bg="bg.accent"
-														rounded="full"
-														className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-													/>
-												</div>
-											)}
-
-										<Section
-											setOpen={setOpen}
-											section={section}
-											onDragStart={(e: any) => onDragStart(e, section.id)}
-											removeSection={() => removeSection(sindex)}
-											addSection={() => addSection(section.id)}
-											addRow={(e: any) => addRow(e, sindex, null)}
-										>
-											{section.children.map((row: any, index: number) => (
-												<div key={index}>
-													{/* add row above */}
-													{!dragging && !section.children[index - 1]?.open && (
-														<div
-															className="ind group h-2 relative z-10 -my-1"
-															onMouseEnter={(e) => onDragHover(e, section.id)}
-														>
-															<Box
-																rounded="full"
-																className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-															>
-																<Box className="bg-black/5 h-1 w-full" />
-																<Button
-																	aria-label="Add Row"
-																	size="sm"
-																	appearance="subtle"
-																	className="min-w-6"
-																	onClick={(e: any) => addRow(e, sindex, index)}
-																	icon={<IconPlus size={16} />}
-																/>
-																<Box className="bg-black/5 h-1 w-full" />
-															</Box>
-														</div>
-													)}
-
-													{/* dropping above row */}
-													{dragging?.startsWith("row-") &&
-														((row.id !== dragging &&
-															section.children[index - 1]?.id !== dragging) ||
-															cloning) && (
-															<div
-																className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
-																onMouseEnter={(e) => onDragHover(e, row.id)}
-															>
-																<Box
-																	bg="bg.accent"
-																	rounded="full"
-																	className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																/>
-															</div>
-														)}
-
-													<Row
-														row={row}
-														addRow={(e: any) => addRow(e, sindex, index)}
-														addRowBelow={(e: any) => addRow(e, sindex, index + 1)}
-														setOpen={setOpen}
-														onDragStart={(e: any) => onDragStart(e, row.id)}
-														removeRow={() => removeRow(row.id)}
-														addCol={(e: any) => addCol(e, sindex, index, null)}
-													>
-														{row.children &&
-															row.children.map((col: any, i: number) => (
-																<div key={i}>
-																	{/* add col above */}
-																	{!dragging && (
-																		<div
-																			className="ind group h-2 relative z-10 -my-1"
-																			onMouseEnter={(e) => onDragHover(e, section.id)}
-																		>
-																			<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-																				<Box className="bg-black/5 h-1 w-full" />
-																				<Button
-																					aria-label="Add Column"
-																					size="sm"
-																					appearance="subtle"
-																					className="min-w-6"
-																					onClick={(e: any) => addCol(e, sindex, index, i)}
-																					icon={<IconPlus size={16} />}
-																				/>
-																				<Box className="bg-black/5 h-1 w-full" />
-																			</Box>
-																		</div>
-																	)}
-
-																	{dragging?.startsWith("col-") &&
-																		col.id !== dragging &&
-																		row.children[i - 1]?.id !== dragging && (
-																			<div
-																				className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] ml-9 mr-0"
-																				onMouseEnter={(e) => onDragHover(e, col.id)}
-																			>
-																				<Box
-																					bg="bg.accent"
-																					rounded="full"
-																					className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																				/>
-																			</div>
-																		)}
-
-																	<Col
-																		col={col}
-																		setOpen={setOpen}
-																		onDragStart={(e: any) => onDragStart(e, col.id)}
-																		removeCol={() => removeCol(col.id)}
-																		// FIX: Col should pass a "type", not an event
-																		addElement={(type: string) =>
-																			addElement(type, i, index, sindex)
-																		}
-																		key={"col" + i}
-																	>
-																		{col.children.map((element: any, j: number) => (
-																			<div key={"ele" + j}>
-																				{dragging &&
-																					element.id !== dragging &&
-																					col.children[j - 1]?.id !== dragging &&
-																					!dragging.startsWith("section-") &&
-																					!dragging.startsWith("col-") &&
-																					!dragging.startsWith("row-") && (
-																						<div
-																							className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																							onMouseEnter={(e) => onDragHover(e, element.id)}
-																						>
-																							<Box
-																								bg="bg.accent"
-																								rounded="full"
-																								className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																							/>
-																						</div>
-																					)}
-
-																				<Ele
-																					removeEle={() => removeEle(element.id)}
-																					onDragStart={(e: any) => onDragStart(e, element.id)}
-																					type={theEles[element.id]?.type}
-																					element={element}
-																					label={theEles[element.id]?.props?.[0]?.value || undefined}
-																					setCurrentEle={setCurrentEle}
-																					setCurrentHoverEle={setCurrentHoverEle}
-																				/>
-																			</div>
-																		))}
-
-																		{dragging &&
-																			dragging !== col.children[col.children.length - 1]?.id &&
-																			!dragging.startsWith("section-") &&
-																			!dragging.startsWith("row-") &&
-																			!dragging.startsWith("col-") && (
-																				<div
-																					className="ind group h-[44px] mx-1 relative z-10 -my-[22px] pt-[20px] ml-10 mr-0"
-																					onMouseEnter={(e) => onDragHover(e, "last-ele-" + col.id)}
-																				>
-																					<Box
-																						bg="bg.accent"
-																						rounded="full"
-																						className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																					/>
-																				</div>
-																			)}
-																	</Col>
-																</div>
-															))}
-
-														{/* add column last */}
-														{!dragging && (
-															<div
-																className="ind group h-2 relative z-10 -my-1"
-																onMouseEnter={(e) => onDragHover(e, section.id)}
-															>
-																<Box className="gap-1 transition duration-500 h-[4px] translate-y-0.5 group-hover:opacity-100 opacity-0 flex items-center justify-center">
-																	<Box className="bg-black/5 h-1 w-full" />
-																	<Button
-																		aria-label="Add Column"
-																		size="sm"
-																		appearance="subtle"
-																		className="min-w-6"
-																		onClick={(e: any) => addCol(e, sindex, index, row.children.length)}
-																		icon={<IconPlus size={16} />}
-																	/>
-																	<Box className="bg-black/5 h-1 w-full" />
-																</Box>
-															</div>
-														)}
-
-														{dragging?.startsWith("col-") &&
-															dragging !== row.children[row.children.length - 1]?.id && (
-																<div
-																	className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-9"
-																	onMouseEnter={(e) => onDragHover(e, "col-last-" + row.id)}
-																>
-																	<Box
-																		bg="bg.accent"
-																		rounded="full"
-																		className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-																	/>
-																</div>
-															)}
-													</Row>
-												</div>
-											))}
-
-											{/* add row last */}
-											{!dragging && !section.children[section.children.length - 1]?.open && (
-												<div
-													className="ind group h-2 relative z-10 -my-1"
-													onMouseEnter={(e) => onDragHover(e, section.id)}
-												>
-													<Box
-														rounded="full"
-														className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-													>
-														<Box className="bg-black/5 h-1 w-full" />
-														<Button
-															aria-label="Add Row"
-															size="sm"
-															appearance="subtle"
-															className="min-w-6"
-															onClick={(e: any) => addRow(e, sindex, section.children.length)}
-															icon={<IconPlus size={16} />}
-														/>
-														<Box className="bg-black/5 h-1 w-full" />
-													</Box>
-												</div>
-											)}
-
-											{dragging?.startsWith("row-") &&
-												(dragging !== section.children[section.children.length - 1]?.id ||
-													cloning) && (
-													<div
-														className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px] ml-5"
-														onMouseEnter={(e) => onDragHover(e, "row-last-" + section.id)}
-													>
-														<Box
-															bg="bg.accent"
-															rounded="full"
-															className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-														/>
-													</div>
-												)}
-										</Section>
-									</div>
-								))}
-
-								{!dragging && !data[data.length - 1]?.open && (
-									<div className="ind group h-2 mx-1 relative z-10 -my-1 -mr-[20px]">
-										<Box
-											rounded="full"
-											className="gap-1 translate-y-0.5 transition duration-500 h-[4px] group-hover:opacity-100 opacity-0 flex items-center justify-center"
-										>
-											<Box className="bg-black/5 h-1 w-full" />
-											<Button
-												aria-label="Add Section"
-												size="sm"
-												appearance="subtle"
-												className="min-w-6"
-												onClick={() =>
-													setData((prev) => [
-														...prev,
-														{
-															label: "",
-															id: "section-" + Date.now(),
-															open: true,
-															children: [
-																{
-																	label: "",
-																	id: "row-" + Date.now(),
-																	open: true,
-																	children: [
-																		{
-																			label: "",
-																			id: "col-" + Date.now(),
-																			open: true,
-																			children: [],
-																		},
-																	],
-																},
-															],
-														},
-													])
-												}
-												icon={<IconPlus size={16} />}
-											/>
-											<Box className="bg-black/5 h-1 w-full" />
-										</Box>
-									</div>
-								)}
-
-								{dragging?.startsWith("section-") &&
-									(dragging !== data[data.length - 1]?.id || cloning) && (
-										<div
-											className="ind group h-8 mx-1 relative z-10 -my-4 pt-[14px] -mr-[20px]"
-											onMouseEnter={(e) => onDragHover(e, "section-last")}
-										>
-											<Box
-												bg="bg.accent"
-												rounded="full"
-												className="transition duration-500 h-[4px] group-hover:opacity-100 opacity-10"
-											/>
-										</div>
-									)}
-							</Box>
-						</TabsContent>
-
-						<TabsContent value="properties">
-							<Box px="24" py="16" fontSize="sm">
-								<Box mb="16">
-									<Text fontSize="sm" fontWeight="600" mb="8">
-										SEO
-									</Text>
-									<Box display="flex" flexDirection="column" gap="8">
-										<Field label="Title">
-											<Input2 placeholder="Enter page title" />
-										</Field>
-										<Field label="Keywords">
-											<Input2 placeholder="Enter keywords" />
-										</Field>
-										<Field label="Description">
-											<Textarea placeholder="Enter description" rows={3} />
-										</Field>
-										<Field label="Meta">
-											<Textarea placeholder="Enter meta information" rows={3} />
-										</Field>
-									</Box>
-								</Box>
-
-								<Box>
-									<Text fontSize="sm" fontWeight="600" mb="8">
-										Settings
-									</Text>
-									<Box display="flex" flexDirection="column" gap="8">
-										<Field label="Campaign Mode">
-											<Select
-												defaultValue="no"
-												options={[
-													{ label: "No", value: "no" },
-													{ label: "Yes", value: "yes" },
-												]}
-											>
-												<SelectTrigger>No</SelectTrigger>
-												<SelectContent />
-											</Select>
-										</Field>
-
-										<Field label="Some other setting">
-											<Select
-												defaultValue="setting1"
-												options={[
-													{ label: "A setting", value: "setting1" },
-													{ label: "Another setting", value: "setting2" },
-												]}
-											>
-												<SelectTrigger>A setting</SelectTrigger>
-												<SelectContent />
-											</Select>
-										</Field>
-									</Box>
-								</Box>
-							</Box>
-						</TabsContent>
-					</Tabs>
-				</div>
-
-				<ElementEditor
-					elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
-					currentEle={currentEle}
-					propsList={theEles[currentEle]?.props}
-					onBack={() => setCurrentEle("none")}
-					onInputChange={onInputChange}
-				/>
-			</div>
-		</div>
+		o &&
+		typeof o === "object" &&
+		typeof o.id === "string" &&
+		typeof o.title === "string" &&
+		Array.isArray(o.tree) &&
+		typeof o.elements === "object"
 	);
 };
 
+type PageInput = {
+	outlines?: OutlineType[] | any[] | SplitPayload; // allow legacy too
+	properties?: PageProperties;
+};
+
 /** -----------------------------
- * Existing mergeData (kept for onSave compatibility)
+ * Existing mergeData (kept)
  * ------------------------------*/
 
 const mergeData = (structure: any[], elements: EleMap) => {
@@ -942,6 +196,9 @@ const mergeData = (structure: any[], elements: EleMap) => {
  * VBPrototype
  * ------------------------------*/
 
+type SidebarTab = "outlines" | "outline" | "properties";
+type OutlineView = "list" | "tree";
+
 export default function VBPrototype({
 	initialData,
 	onSave,
@@ -949,40 +206,258 @@ export default function VBPrototype({
 	pageName,
 	pageStatus,
 }: {
-	// Accept both merged tree array and split payload (AI / storage / etc.)
-	initialData?: any[] | SplitPayload;
-	onSave?: (data: any[]) => void;
+	initialData?: PageInput;
+	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
 	pageName?: string;
 	pageStatus?: string;
 }) {
-	const [dragging, setDragging] = useState<any>(null);
+	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
+	const [dragging, setDragging] = useState<string | null>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
+
+	const [preview, setPreview] = useState<PreviewSettings>({
+		mode: "responsive",
+		width: 1100,
+		maxWidth: 1100,
+	});
+
+	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
+		setPreview((p) => ({ ...p, ...patch }));
+	};
+
+	const defaultProps: PageProperties = {
+		seoTitle: "",
+		keywords: "",
+		description: "",
+		meta: "",
+		campaignMode: "no",
+		someOtherSetting: "setting1",
+	};
+
+	const [properties, setProperties] = useState<PageProperties>(() => {
+		return { ...defaultProps, ...(initialData?.properties ?? {}) };
+	});
+
+	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
+		const raw = initialData?.outlines;
+
+		if (isOutlineArray(raw)) {
+			return (raw ?? []).map((o) => ({
+				...o,
+				tree: ensureOpen(stripTransientFlags(o.tree ?? [])),
+				elements: o.elements ?? {},
+			}));
+		}
+
+		if (raw == null) {
+			return [];
+		}
+
+		const norm = normalizePage(raw);
+		return [{ id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles }];
+	});
+
+	const hasChanged = useRef(false);
+
+	const setOutlines = (arg: React.SetStateAction<OutlineType[]>) => {
+		hasChanged.current = true;
+		_setOutlines(arg);
+	};
+
+	const setPropertiesPatch = (patch: Partial<PageProperties>) => {
+		hasChanged.current = true;
+		setProperties((p) => ({ ...p, ...patch }));
+	};
+
+	const isFirstRender = useRef(true);
+	const onSaveRef = useRef(onSave);
+
+	useEffect(() => {
+		onSaveRef.current = onSave;
+	}, [onSave]);
+
+	// active outline
+	const [activeOutlineId, setActiveOutlineId] = useState<string | null>(() => {
+		return outlines.length ? outlines[0].id : null;
+	});
 
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
-	const hasChanged = useRef(false);
 
-	const initialNorm = useRef<NormalizeResult | null>(null);
-	if (!initialNorm.current) initialNorm.current = normalizePage(initialData ?? []);
+	// VIEW STATE
+	const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
+		if (outlines.length === 0) return "properties"; // View 4
+		if (outlines.length === 1) return "outline"; // View 3
+		return "outlines"; // View 1
+	});
 
-	const [theEles, _setTheEles] = useState<EleMap>(() => initialNorm.current!.theEles);
-	const setTheEles = (arg: SetStateAction<EleMap>) => {
+	const [outlineView, setOutlineView] = useState<OutlineView>(() => {
+		return outlines.length > 1 ? "list" : "tree";
+	});
+
+	useEffect(() => {
+		// Keep active outline valid
+		if (outlines.length === 0) {
+			setActiveOutlineId(null);
+			setCurrentEle("none");
+			setCurrentHoverEle("none");
+			setSidebarTab("properties");
+			setOutlineView("list");
+			return;
+		}
+		if (!activeOutlineId || !outlines.some((o) => o.id === activeOutlineId)) {
+			setActiveOutlineId(outlines[0].id);
+		}
+
+		// Enforce tabs/view by outline count
+		if (outlines.length === 1) {
+			if (sidebarTab === "outlines") setSidebarTab("outline");
+			setOutlineView("tree");
+		} else {
+			// multi
+			if (sidebarTab === "outline") setSidebarTab("outlines");
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [outlines.length]);
+
+	const isZero = outlines.length === 0; // View 4
+	const isSingle = outlines.length === 1; // View 3
+	const isMulti = outlines.length > 1; // View 1/2
+	const isEditingElement = currentEle !== "none";
+
+	const activeOutline = activeOutlineId ? outlines.find((o) => o.id === activeOutlineId) ?? null : null;
+
+	const data = activeOutline?.tree ?? [];
+	const theEles = activeOutline?.elements ?? {};
+
+	const setData = (arg: React.SetStateAction<any[]>) => {
 		hasChanged.current = true;
-		_setTheEles(arg);
+		setOutlines((prev) =>
+			prev.map((o) =>
+				o.id === activeOutlineId ? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg } : o
+			)
+		);
 	};
 
-	const [data, _setData] = useState<any[]>(() => initialNorm.current!.data);
-	const setData = (arg: SetStateAction<any[]>) => {
+	const setTheEles = (arg: React.SetStateAction<EleMap>) => {
 		hasChanged.current = true;
-		_setData(arg);
+		setOutlines((prev) =>
+			prev.map((o) =>
+				o.id === activeOutlineId
+					? { ...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg }
+					: o
+			)
+		);
+	};
+
+	const findOutlineIdForElement = (eleId: string) => {
+		for (const o of outlines) {
+			if (o.elements?.[eleId]) return o.id;
+		}
+		return null;
+	};
+
+	const setCurrentEleSmart = (value: React.SetStateAction<string>) => {
+		const eleId = typeof value === "function" ? value(currentEle) : value;
+
+		setCurrentEle(eleId);
+
+		if (!eleId || eleId === "none") return;
+
+		// ✅ Always drill down from View 1 -> View 2 when multi-outline
+		// (even if the element belongs to the currently active outline)
+		if (isMulti) {
+			setSidebarTab("outlines");  // keep your View 2 layout expectations
+			setOutlineView("tree");
+		}
+
+		const owner = findOutlineIdForElement(eleId);
+		if (owner && owner !== activeOutlineId) {
+			setActiveOutlineId(owner);
+		}
+	};
+
+	const [AI, setAI] = useState(false);
+	const [loadingAI, setLoadingAI] = useState(false);
+	const [aiPrompt, setAiPrompt] = useState("");
+
+	async function sendMessage(message: string) {
+		if (!message.trim()) return;
+		setLoadingAI(true);
+		try {
+			const res = await fetch("/api/chat", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userMessage: message }),
+			});
+
+			const payload = await res.json();
+
+			const parsed = JSON.parse(payload.response);
+
+			const norm = normalizePage(parsed);
+			setData(norm.data);
+			setTheEles(norm.theEles);
+		} finally {
+			setLoadingAI(false);
+		}
+	}
+
+	const addSectionToEndOfActiveOutline = () => {
+		setData((prev) => {
+			const t = Date.now();
+			const mkSection = () => ({
+				id: "section-" + t,
+				open: true,
+				children: [
+					{
+						id: "row-" + t,
+						open: true,
+						children: [
+							{
+								id: "col-" + t,
+								open: true,
+								children: [],
+							},
+						],
+					},
+				],
+			});
+
+			return [...(prev ?? []), mkSection()];
+		});
+	};
+
+	const addRandomBlockToEndOfActiveOutline = () => {
+		const blockNames = [
+			"My Block",
+			"CTA Block",
+			"Form Block",
+			"Hero Block",
+			"Info Block",
+			"Feature Block",
+			"Footer Block",
+			"Header Block",
+			"Pricing Block",
+			"Contact Block",
+		];
+		const randomName = blockNames[Math.floor(Math.random() * blockNames.length)];
+
+		setData((prev) => [
+			...(prev ?? []),
+			{
+				label: randomName,
+				isBlock: true,
+				id: "section-" + Date.now(),
+				open: true,
+				children: [],
+			},
+		]);
 	};
 
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
-	const isFirstRender = useRef(true);
-	const onSaveRef = useRef(onSave);
-
 
 	const onInputChange = (value: any, propIndex: number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
@@ -995,17 +470,125 @@ export default function VBPrototype({
 		}
 	};
 
+	// Header actions (AI + plus-menu)
+	const HeaderActions = (
+		<Box display="flex" alignItems="center" gap="2" className="relative">
+			<Button
+				onClick={() => setAI((v) => !v)}
+				appearance="subtle"
+				size="sm"
+				aria-label="AI"
+				icon={<IconSparkles size={16} />}
+				disabled={loadingAI}
+			/>
+
+			<Menu
+				options={[
+					{
+						addon: <IconSection size={16} />,
+						label: "Section",
+						execute: addSectionToEndOfActiveOutline,
+					},
+					{
+						addon: <IconSquare size={16} />,
+						label: "Random Block",
+						execute: addRandomBlockToEndOfActiveOutline,
+					},
+				]}
+			>
+				<MenuTrigger
+					icon={<IconPlus size={16} />}
+					aria-label="add"
+					appearance="subtle"
+					size="sm"
+					iconPosition="start"
+				/>
+				<MenuContent />
+			</Menu>
+
+			<div
+				className={`absolute -right-[10px] top-[32px] opacity-0 invisible z-10 p-2 rounded-md ${styles.popupMenu} w-[200px] max-w-[80vw] mr-12`}
+				style={{
+					visibility: AI ? "visible" : undefined,
+					opacity: AI ? 1 : 0,
+					transform: AI ? "scale(1)" : "scale(0.9)",
+					transformOrigin: "top center",
+					transition: "0.3s",
+				}}
+			>
+				<form
+					onSubmit={(e) => {
+						e.preventDefault();
+						sendMessage(aiPrompt);
+					}}
+				>
+					<Textarea
+						name="prompt"
+						rows={3}
+						className="w-full border rounded p-2 focus:outline-none focus:ring-2"
+						placeholder="What do you want to build today?"
+						value={aiPrompt}
+						onChange={(e: any) => setAiPrompt(e.target.value)}
+					/>
+					<div className="mt-2 flex gap-2">
+						<Button size="sm" onClick={() => sendMessage(aiPrompt)} disabled={loadingAI}>
+							Run
+						</Button>
+						<Button
+							size="sm"
+							appearance="subtle"
+							onClick={() => {
+								setAI(false);
+								setAiPrompt("");
+							}}
+						>
+							Close
+						</Button>
+					</div>
+				</form>
+			</div>
+		</Box>
+	);
+
+	/** -----------------------------
+	 * Save sync
+	 * ------------------------------*/
+	useEffect(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false;
+			return;
+		}
+		if (!hasChanged.current) return;
+
+		const nextOutlines = outlines.map((o) => ({
+			...o,
+			elements: pruneEles(o.tree, o.elements),
+			tree: stripTransientFlags(o.tree),
+		}));
+
+		onSaveRef.current?.({
+			outlines: nextOutlines,
+			properties,
+		});
+
+		setLastSaved(new Date());
+	}, [outlines, properties]);
+
+	/** -----------------------------
+	 * Drag/drop + key handlers (internal reorder)
+	 * ------------------------------*/
+
 	type DragApplyResult = {
 		nextData: any[];
-		elesPatch?: EleMap; // new element defs created during cloning
+		elesPatch?: EleMap;
 	};
 
-	const isSectionId = (id: string) => id.startsWith("section-");
+	const isSectionId = (id: string) => id.startsWith("section-") || id.startsWith("sec-");
 	const isRowId = (id: string) => id.startsWith("row-");
 	const isColId = (id: string) => id.startsWith("col-");
 	const isEleId = (id: string) => !isSectionId(id) && !isRowId(id) && !isColId(id);
 
-	const isSectionLast = (id: string) => id === "section-last" || id.startsWith("section-last");
+	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last");
 	const isRowLast = (id: string) => id.startsWith("row-last-");
 	const isColLast = (id: string) => id.startsWith("col-last-");
 	const isLastEle = (id: string) => id.startsWith("last-ele-");
@@ -1085,7 +668,6 @@ export default function VBPrototype({
 
 		const source = data[fromIdx];
 
-		// Build dragged payload
 		let dragged = source;
 		let elesPatch: EleMap | undefined;
 
@@ -1097,7 +679,6 @@ export default function VBPrototype({
 
 		let next = [...data];
 
-		// If moving (not cloning), remove original
 		if (!cloning) next.splice(fromIdx, 1);
 
 		if (isSectionLast(hoverId)) {
@@ -1143,7 +724,6 @@ export default function VBPrototype({
 			elesPatch = c.elesPatch;
 		}
 
-		// Figure destination
 		let toS = -1,
 			hoverR = -1;
 
@@ -1151,7 +731,7 @@ export default function VBPrototype({
 			const sectionId = hoverId.replace("row-last-", "");
 			toS = data.findIndex((s) => s.id === sectionId);
 			if (toS === -1) return null;
-			hoverR = (data[toS].children || []).length; // append
+			hoverR = (data[toS].children || []).length;
 		} else {
 			for (let s = 0; s < data.length; s++) {
 				const rIdx = (data[s].children || []).findIndex((r: any) => r.id === hoverId);
@@ -1164,20 +744,14 @@ export default function VBPrototype({
 			if (toS === -1) return null;
 		}
 
-		// Produce next
 		const next = data.map((sec: any, sIdx: number) => {
 			let children = [...(sec.children || [])];
 
-			// remove source row if moving
 			if (!cloning && sIdx === fromS) children.splice(fromR, 1);
 
-			// insert
 			if (sIdx === toS) {
 				let insertAt = hoverR;
-
-				// adjust if same section + moving downward
 				if (!cloning && fromS === toS && fromR < hoverR) insertAt = hoverR - 1;
-
 				children.splice(insertAt, 0, rowToInsert);
 			}
 
@@ -1187,15 +761,7 @@ export default function VBPrototype({
 		return { nextData: next, elesPatch };
 	}
 
-	function applyColDrag(
-		data: any[],
-		draggingId: string,
-		hoverId: string,
-		cloning: boolean
-	): DragApplyResult | null {
-		// NOTE: this is “move only” for now (your old code didn’t support col cloning)
-		// You can extend this later the same way as section/row.
-
+	function applyColDrag(data: any[], draggingId: string, hoverId: string, cloning: boolean): DragApplyResult | null {
 		let fromS = -1,
 			fromR = -1,
 			fromC = -1;
@@ -1218,7 +784,6 @@ export default function VBPrototype({
 		}
 		if (!draggedCol) return null;
 
-		// destination
 		let toS = -1,
 			toR = -1,
 			hoverC = -1;
@@ -1258,10 +823,8 @@ export default function VBPrototype({
 			const rows = (sec.children || []).map((row: any, rIdx: number) => {
 				let cols = [...(row.children || [])];
 
-				// remove from source
 				if (sIdx === fromS && rIdx === fromR) cols.splice(fromC, 1);
 
-				// insert to dest
 				if (sIdx === toS && rIdx === toR) {
 					let insertAt = hoverC;
 					if (fromS === toS && fromR === toR && fromC < hoverC) insertAt = hoverC - 1;
@@ -1287,9 +850,7 @@ export default function VBPrototype({
 		const newEleId = cloning ? mkId(draggingId) : draggingId;
 		const elesPatch = cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
 
-		// find source element + remove (if moving)
 		let draggedRef: any = null;
-		let fromColId: string | null = null;
 
 		const removed = data.map((sec: any) => ({
 			...sec,
@@ -1299,8 +860,7 @@ export default function VBPrototype({
 					const nextChildren = (col.children || []).filter((ref: any) => {
 						if (ref?.id === draggingId) {
 							draggedRef = cloning ? { id: newEleId } : ref;
-							fromColId = col.id;
-							return cloning; // keep original if cloning
+							return cloning;
 						}
 						return true;
 					});
@@ -1311,7 +871,6 @@ export default function VBPrototype({
 
 		if (!draggedRef) return null;
 
-		// insert to target
 		if (isLastEle(hoverId)) {
 			const targetColId = hoverId.replace("last-ele-", "");
 			const next = removed.map((sec: any) => ({
@@ -1320,10 +879,7 @@ export default function VBPrototype({
 					...row,
 					children: (row.children || []).map((col: any) => {
 						if (col.id !== targetColId) return col;
-
-						// don’t double-insert
 						if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
-
 						return { ...col, children: [...(col.children || []), draggedRef] };
 					}),
 				})),
@@ -1332,7 +888,6 @@ export default function VBPrototype({
 			return { nextData: next, elesPatch };
 		}
 
-		// hover is another element id: insert before it (within that col)
 		const next = removed.map((sec: any) => ({
 			...sec,
 			children: (sec.children || []).map((row: any) => ({
@@ -1363,22 +918,18 @@ export default function VBPrototype({
 		if (!draggingId || !hoverId || hoverId === "none") return null;
 		if (hoverId === draggingId && !cloning) return null;
 
-		// Section
 		if (isSectionId(draggingId) && (isSectionId(hoverId) || isSectionLast(hoverId))) {
 			return applySectionDrag(data, draggingId, hoverId, cloning, theEles);
 		}
 
-		// Row
 		if (isRowId(draggingId) && (isRowId(hoverId) || isRowLast(hoverId))) {
 			return applyRowDrag(data, draggingId, hoverId, cloning, theEles);
 		}
 
-		// Col
 		if (isColId(draggingId) && (isColId(hoverId) || isColLast(hoverId))) {
 			return applyColDrag(data, draggingId, hoverId, cloning);
 		}
 
-		// Element
 		if (
 			isEleId(draggingId) &&
 			(isEleId(hoverId) || isLastEle(hoverId)) &&
@@ -1392,26 +943,6 @@ export default function VBPrototype({
 		return null;
 	}
 
-	useEffect(() => {
-		onSaveRef.current = onSave;
-	}, [onSave]);
-
-	// Sync data changes to parent (keep API: onSave gets merged tree array)
-	useEffect(() => {
-		if (isFirstRender.current) {
-			isFirstRender.current = false;
-			return;
-		}
-		if (!hasChanged.current) return;
-
-		const pruned = pruneEles(data, theEles);
-		const mergedData = mergeData(stripTransientFlags(data), pruned);
-
-		onSaveRef.current?.(mergedData);
-		setLastSaved(new Date());
-	}, [data, theEles]);
-
-	// Drag/drop + key handlers
 	useEffect(() => {
 		const handleMouseUp = () => {
 			if (!dragging) {
@@ -1432,12 +963,9 @@ export default function VBPrototype({
 			setDragging(null);
 		};
 
-		if (currentEle !== "none") {
-			const firstInput = document.querySelector("input");
-			firstInput?.focus();
-		}
-
 		window.addEventListener("mouseup", handleMouseUp);
+		window.addEventListener("dragend", handleMouseUp);
+		window.addEventListener("drop", handleMouseUp);
 
 		const handleKeyUp = (event: KeyboardEvent) => {
 			if (event.key === "Alt" && event.location === 1) setCloning(false);
@@ -1447,6 +975,7 @@ export default function VBPrototype({
 			if (event.key === "Escape") {
 				setCurrentEle("none");
 				setCurrentHoverEle("none");
+				setAI(false);
 			} else if (event.key === "Alt" && event.location === 1) {
 				setCloning(true);
 			}
@@ -1459,15 +988,121 @@ export default function VBPrototype({
 			window.removeEventListener("keydown", handleKeyDown);
 			window.removeEventListener("keyup", handleKeyUp);
 			window.removeEventListener("mouseup", handleMouseUp);
+			window.removeEventListener("dragend", handleMouseUp);
+			window.removeEventListener("drop", handleMouseUp);
 		};
-	}, [currentEle, dragging, currentHoverEle, cloning, theEles, data]);
+	}, [dragging, currentHoverEle, cloning, theEles, data]);
 
+	/** -----------------------------
+	 * View 4: 0 outlines
+	 * ------------------------------*/
+	if (isZero) {
+		return (
+			<div className="select-none" style={{ height: "100%" }}>
+				<Box
+					bg="bg.page"
+					w="full"
+					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
+					style={{ height: "100%", overflow: "hidden" }}
+				>
+					<CMSToolbar
+						pageName={pageName || "New Page"}
+						lastSaved={lastSaved}
+						pageStatus={pageStatus}
+						onPublish={onPublish}
+						contentTypeIcon={<IconFile size={16} />}
+						preview={preview}
+						onPreviewChange={onPreviewChange}
+					/>
+
+					{/* LEFT SIDEBAR (Properties only) */}
+					<Box
+						pt="4"
+						w="auto"
+						className="vb-outline"
+						bg="bg.page"
+						style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
+					>
+						{/* Resizable handle (kept consistent) */}
+						<div
+							className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
+							onMouseDown={(e) => {
+								e.preventDefault();
+								const startX = e.clientX;
+								const outlineBox = e.currentTarget.parentElement as HTMLElement;
+								const startWidth = outlineBox.offsetWidth;
+
+								const onMouseMove = (moveEvent: MouseEvent) => {
+									const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
+									outlineBox.style.width = newWidth + "px";
+								};
+
+								const onMouseUp = () => {
+									window.removeEventListener("mousemove", onMouseMove);
+									window.removeEventListener("mouseup", onMouseUp);
+								};
+
+								window.addEventListener("mousemove", onMouseMove);
+								window.addEventListener("mouseup", onMouseUp);
+							}}
+						>
+							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
+							<Box color="fg.secondary">
+								<IconArrowBarBoth size="16" />
+							</Box>
+							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
+						</div>
+
+						<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
+							<div className="pl-6 pt-4 pb-2">
+								<Heading level="4">Properties</Heading>
+							</div>
+
+							<div className="flex-1 overflow-y-auto">
+								<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+							</div>
+						</div>
+					</Box>
+
+					{/* RIGHT / CANVAS (still visible even with 0 outlines) */}
+					<div
+						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
+						style={{ height: "100%", overflow: "hidden" }}
+					>
+						<PreviewCanvas
+							outlines={outlines as any} // will be []
+							theEles={{}}              // no active outline
+							currentEle={currentEle}
+							currentHoverEle={currentHoverEle}
+							setCurrentEle={setCurrentEleSmart}
+							setCurrentHoverEle={setCurrentHoverEle}
+							setOutlines={setOutlines as any}
+							preview={preview}
+						/>
+
+						{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
+
+						<Box borderL="1" borderColor="border.tertiary">
+							<RightToolbar
+								onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
+								isFolderActive={isImageSelectorOpen}
+							/>
+						</Box>
+					</div>
+				</Box>
+			</div>
+		);
+	}
+
+	/** -----------------------------
+	 * Main layout
+	 * ------------------------------*/
 	return (
 		<div className="select-none" style={{ height: "100%" }}>
 			<Box
 				bg="bg.page"
 				w="full"
-				className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr]"
+				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
 				style={{ height: "100%", overflow: "hidden" }}
 			>
 				<CMSToolbar
@@ -1476,9 +1111,14 @@ export default function VBPrototype({
 					pageStatus={pageStatus}
 					onPublish={onPublish}
 					contentTypeIcon={<IconFile size={16} />}
+					preview={preview}
+					onPreviewChange={onPreviewChange}
 				/>
 
+				{/* LEFT SIDEBAR */}
 				<Box
+					pt="4"
+					pr="0"
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
@@ -1486,7 +1126,7 @@ export default function VBPrototype({
 				>
 					{/* Resizable handle */}
 					<div
-						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
+						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-2 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
 						onMouseDown={(e) => {
 							e.preventDefault();
 							const startX = e.clientX;
@@ -1514,40 +1154,247 @@ export default function VBPrototype({
 						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 					</div>
 
-					<Outline
-						cloning={cloning}
-						dragging={dragging}
-						setDragging={setDragging}
-						currentHoverEle={currentHoverEle}
-						setCurrentEle={setCurrentEle}
-						data={data}
-						setTheEles={setTheEles}
-						setData={setData}
-						currentEle={currentEle}
-						theEles={theEles}
-						onInputChange={onInputChange}
-						setCurrentHoverEle={setCurrentHoverEle}
-					/>
+					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
+						{/* MULTI: View 1 <-> View 2 full-sidebar slide */}
+						{isMulti ? (
+							<div className=" h-full overflow-hidden">
+								<div
+									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									style={{
+										transform: outlineView === "tree" ? "translateX(-50%)" : "translateX(0%)",
+									}}
+								>
+									{/* PANE 1 = View 1 */}
+									<div
+										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
+											}`}
+									>
+										<div className="pl-6 pr-6 pt-4 pb-2">
+											<div className="flex items-center gap-2">
+												<Heading level="4">Page</Heading>
+												<div className="flex-1" />
+											</div>
+										</div>
+
+										<div className=" flex-1 overflow-y-auto">
+											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
+												<div className="pl-6 pr-6 pt-2 pb-2">
+													<TabsList>
+														<TabsTrigger value="outlines">Outlines</TabsTrigger>
+														<TabsTrigger value="properties">Properties</TabsTrigger>
+													</TabsList>
+												</div>
+
+												<TabsContent value="outlines">
+													<div className="pl-3 pr-3 pb-4">
+														<div className="flex flex-col gap-2">
+															{outlines.map((o) => (
+																<Button
+																	key={o.id}
+																	appearance="subtle"
+																	onClick={() => {
+																		setActiveOutlineId(o.id);
+																		setSidebarTab("outlines");
+																		setCurrentEle("none");
+																		setCurrentHoverEle("none");
+																		setAI(false);
+																		setOutlineView("tree");
+																	}}
+																>
+																	{o.title}
+																</Button>
+															))}
+														</div>
+													</div>
+												</TabsContent>
+
+												<TabsContent value="properties">
+													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+												</TabsContent>
+											</Tabs>
+										</div>
+									</div>
+
+									{/* PANE 2 = View 2 (tree) <-> ElementEditor */}
+									<div
+										className={`min-w-[50%] w-[50%] h-full overflow-hidden min-h-0 ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
+											}`}
+									>
+										<div
+											className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+											style={{
+												transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+											}}
+										>
+											{/* VIEW 2 */}
+											<div
+												className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
+													}`}
+											>
+												<div className="pt-4 pb-2">
+													{activeOutline ? (
+														<div className="pl-6 pr-6 flex flex-col gap-1">
+															<Text
+																fontSize="sm"
+																fontWeight="400"
+																color="fg.accent"
+																className="cursor-pointer"
+																onClick={() => {
+																	setOutlineView("list");
+																	setCurrentEle("none");
+																	setCurrentHoverEle("none");
+																	setAI(false);
+																}}
+															>
+																← Page
+															</Text>
+
+															<div className="flex items-center gap-2">
+																<Heading level="4">{activeOutline.title}</Heading>
+																<div className="flex-1" />
+																{HeaderActions}
+															</div>
+														</div>
+													) : (
+														<div className="pl-6 pr-6 flex items-center gap-2">
+															<Heading level="4">Outline</Heading>
+															<div className="flex-1" />
+															{HeaderActions}
+														</div>
+													)}
+												</div>
+
+												<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
+													{activeOutline ? (
+														<OutlineTree
+															cloning={cloning}
+															dragging={dragging}
+															setDragging={setDragging}
+															currentHoverEle={currentHoverEle}
+															setCurrentEle={setCurrentEle}
+															data={data}
+															setTheEles={setTheEles}
+															setData={setData}
+															theEles={theEles}
+															setCurrentHoverEle={setCurrentHoverEle}
+														/>
+													) : null}
+												</div>
+											</div>
+
+											{/* ELEMENT EDITOR */}
+											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+												<div className="h-full overflow-y-auto">
+													<ElementEditor
+														outlineTitle={activeOutline?.title || "Outline"}
+														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+														currentEle={currentEle}
+														propsList={theEles[currentEle]?.props}
+														onBack={() => {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+															setAI(false);
+														}}
+														onInputChange={onInputChange}
+													/>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						) : null}
+
+						{/* SINGLE: tree/properties (left) <-> ElementEditor (right) slide */}
+						{isSingle && activeOutline ? (
+							<div className="h-full overflow-hidden">
+								<div
+									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									style={{
+										transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+									}}
+								>
+									<div
+										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
+											}`}
+									>
+										<div className="pl-6 pr-6 pt-4 pb-2">
+											<div className="flex items-center gap-2">
+												<Heading level="4">Page</Heading>
+												<div className="flex-1" />
+												{HeaderActions}
+											</div>
+										</div>
+
+										<div className="flex-1 overflow-y-auto">
+											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
+												<div className="pl-6 pr-6 pt-2 pb-2">
+													<TabsList>
+														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
+														<TabsTrigger value="properties">Properties</TabsTrigger>
+													</TabsList>
+												</div>
+
+												<TabsContent value="outline">
+													<div className="pb-4 pr-3">
+														<OutlineTree
+															cloning={cloning}
+															dragging={dragging}
+															setDragging={setDragging}
+															currentHoverEle={currentHoverEle}
+															setCurrentEle={setCurrentEle}
+															data={data}
+															setTheEles={setTheEles}
+															setData={setData}
+															theEles={theEles}
+															setCurrentHoverEle={setCurrentHoverEle}
+														/>
+													</div>
+												</TabsContent>
+
+												<TabsContent value="properties">
+													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+												</TabsContent>
+											</Tabs>
+										</div>
+									</div>
+
+									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+										<div className="h-full overflow-y-auto">
+											<ElementEditor
+												outlineTitle={activeOutline?.title || "Outline"}
+												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+												currentEle={currentEle}
+												propsList={theEles[currentEle]?.props}
+												onBack={() => {
+													setCurrentEle("none");
+													setCurrentHoverEle("none");
+													setAI(false);
+												}}
+												onInputChange={onInputChange}
+											/>
+										</div>
+									</div>
+								</div>
+							</div>
+						) : null}
+					</div>
 				</Box>
 
-				<div
-					className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10"
-					style={{ height: "100%", overflow: "hidden" }}
-				>
+				{/* RIGHT / CANVAS */}
+				<div className=" pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1" style={{ height: "100%", overflow: "hidden" }}>
 					<PreviewCanvas
-						data={data}
+						outlines={outlines as any}
 						theEles={theEles}
 						currentEle={currentEle}
 						currentHoverEle={currentHoverEle}
-						setCurrentEle={setCurrentEle}
+						setCurrentEle={setCurrentEleSmart}
 						setCurrentHoverEle={setCurrentHoverEle}
-						setData={setData}
-						setTheEles={setTheEles}
+						setOutlines={setOutlines as any}
+						preview={preview}
 					/>
 
-					{isImageSelectorOpen && (
-						<ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />
-					)}
+					{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
 
 					<Box borderL="1" borderColor="border.tertiary">
 						<RightToolbar
