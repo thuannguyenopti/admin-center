@@ -194,6 +194,15 @@ export type ContentType = {
 
 export const initialContentTypes: ContentType[] = [
 	{
+		id: "ct-page",
+		name: "Page",
+		description: "Standard page (uses outlines)",
+		properties: [
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "mainOutline", name: "Main", type: "outline" },
+		],
+	},
+	{
 		id: "ct-blog-post",
 		name: "Blog Post",
 		description: "A standard blog/article page",
@@ -276,7 +285,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-27",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -330,7 +339,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Draft",
 		lastModified: "2023-10-26",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -382,7 +391,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-25",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -452,7 +461,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-24",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -498,7 +507,7 @@ export const initialPages: Page[] = [
 		parentId: "page-site-blog",
 		status: "Published",
 		lastModified: "2023-10-24",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -550,7 +559,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-23",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -596,7 +605,7 @@ export const initialPages: Page[] = [
 		parentId: "page-site-products",
 		status: "Review",
 		lastModified: "2023-10-23",
-		contentTypeId: "",
+		contentTypeId: "ct-page",
 		data: {},
 		outlines: [
 			{
@@ -819,6 +828,121 @@ export const initialPages: Page[] = [
 			},
 		],
 	},
+	{
+		id: "page-site-blog-post-1",
+		name: "5 Tips for Your First Marathon",
+		parentId: "page-site-blog",
+		status: "Published",
+		lastModified: "2023-10-24",
+		contentTypeId: "ct-blog-post",
+		slug: "5-tips-for-your-first-marathon",
+		data: {
+			title: "5 Tips for Your First Marathon",
+			subtitle: "Build confidence, stay consistent, and make race day feel familiar.",
+			body: `<p>Training for 26.2 miles starts with a single step — and a plan you can actually stick to. Here are five practical tips that help first-timers build fitness without burning out.</p>
+<h2>1) Keep the easy runs easy</h2>
+<p>Your easy pace should feel conversational. That’s where most of your aerobic gains come from.</p>
+<h2>2) Long runs are practice, not a test</h2>
+<p>Focus on time-on-feet and fueling. Don’t race your long run.</p>
+<h2>3) Fuel early and often</h2>
+<ul>
+  <li><p>Start fueling around 30–45 minutes in</p></li>
+  <li><p>Aim for consistent carbs + water</p></li>
+</ul>
+<h2>4) Don’t skip recovery</h2>
+<p>Sleep, easy days, and lower-intensity weeks are part of the training.</p>
+<h2>5) Rehearse race day</h2>
+<p>Try your breakfast, gels, and outfit on a long run so there are no surprises.</p>`,
+			author: "1",
+		},
+	},
+	{
+		id: "page-site-blog-post-2",
+		name: "Intervals for Beginners",
+		parentId: "page-site-blog",
+		status: "Published",
+		lastModified: "2023-10-28",
+		contentTypeId: "ct-blog-post",
+		slug: "intervals-for-beginners",
+		data: {
+			title: "Intervals for Beginners",
+			subtitle: "A simple approach to speedwork that won’t fry your legs.",
+			body: `<p>Intervals don’t have to be scary. Think of them as controlled effort followed by recovery, repeated a few times. The goal is better form, efficiency, and confidence — not exhaustion.</p>
+<h2>A starter workout</h2>
+<ul>
+  <li><p><strong>Warm up:</strong> 10 minutes easy + 3 short strides</p></li>
+  <li><p><strong>Main set:</strong> 6 × (1 min steady-hard, 2 min easy)</p></li>
+  <li><p><strong>Cool down:</strong> 10 minutes easy</p></li>
+</ul>
+<p>During the hard minute, aim for “comfortably hard” — you should finish feeling like you could do one more rep.</p>
+<h2>Common mistakes</h2>
+<ul>
+  <li><p>Starting too fast on rep 1</p></li>
+  <li><p>Skipping the warm-up</p></li>
+  <li><p>Doing intervals on tired legs every week</p></li>
+</ul>
+<p>One interval session per week is plenty for most runners.</p>`,
+			author: "2",
+		},
+	},
+
+	{
+		id: "page-site-blog-post-3",
+		name: "Race Day Checklist",
+		parentId: "page-site-blog",
+		status: "Draft",
+		lastModified: "2023-10-29",
+		contentTypeId: "ct-blog-post",
+		slug: "race-day-checklist",
+		data: {
+			title: "Race Day Checklist",
+			subtitle: "Remove the stress by planning the small stuff ahead of time.",
+			body: `<p>Race mornings get chaotic fast. The best way to stay calm is to remove decisions and make the day feel like a routine workout.</p>
+<h2>The night before</h2>
+<ul>
+  <li><p>Lay out your kit (shoes, socks, top, shorts/tights)</p></li>
+  <li><p>Pin your bib and pack safety pins (or your belt)</p></li>
+  <li><p>Charge your watch and phone</p></li>
+  <li><p>Plan breakfast + pack a backup snack</p></li>
+</ul>
+<h2>Race morning</h2>
+<ul>
+  <li><p>Arrive early and find toilets first</p></li>
+  <li><p>Do 5–10 minutes easy jogging + a few strides (if appropriate)</p></li>
+  <li><p>Start conservatively for the first 5–10 minutes</p></li>
+</ul>
+<blockquote><p><strong>Pro tip:</strong> Write your plan (pace + fueling) on a note in your phone. When nerves spike, you’ll follow the plan.</p></blockquote>`,
+			author: "3",
+		},
+	},
+
+	{
+		id: "page-site-blog-post-4",
+		name: "How to Choose Running Shoes",
+		parentId: "page-site-blog",
+		status: "Published",
+		lastModified: "2023-10-30",
+		contentTypeId: "ct-blog-post",
+		slug: "how-to-choose-running-shoes",
+		data: {
+			title: "How to Choose Running Shoes",
+			subtitle: "Comfort first, then match the shoe to your training.",
+			body: `<p>The “best” shoe is the one that fits your foot and your running. Start with comfort and stability, then refine based on your training goals.</p>
+<h2>Fit comes first</h2>
+<p>Look for a secure heel, a roomy toe box, and no hot spots. Your toes should be able to wiggle, and the shoe shouldn’t slip when you walk or jog.</p>
+<h2>Match the shoe to the session</h2>
+<ul>
+  <li><p><strong>Daily trainer:</strong> comfortable, durable, forgiving</p></li>
+  <li><p><strong>Workout shoe:</strong> lighter, snappier, more responsive</p></li>
+  <li><p><strong>Trail shoe:</strong> grip, protection, stable platform</p></li>
+</ul>
+<h2>Don’t overthink pronation labels</h2>
+<p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
+			author: "1",
+		},
+	},
+
+
 ];
 
 
