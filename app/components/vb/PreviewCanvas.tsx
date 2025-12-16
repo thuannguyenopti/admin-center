@@ -497,7 +497,7 @@ export default function PreviewCanvas({
                 }}
                 style={{ transition: "opacity 0.2s" }}
             >
-                <div className="w-full p-4 pt-24" style={{ minHeight: "100%" }}>
+                <div className="w-full p-4 px-24 pt-24" style={{ minHeight: "100%" }}>
                     {useTwoCol ? (
                         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
                             <div className="space-y-10">
