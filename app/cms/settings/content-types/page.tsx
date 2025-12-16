@@ -25,6 +25,8 @@ export default function ContentTypesSettings() {
 
 	const typeOptions = [
 		{ label: "All Types", value: null },
+		{ label: "Page", value: "Page" },
+		{ label: "Experience", value: "Experience" },
 		{ label: "Block", value: "Block" },
 		{ label: "Document", value: "Document" },
 		{ label: "Media", value: "Media" },
@@ -93,11 +95,10 @@ export default function ContentTypesSettings() {
 				</thead>
 				<tbody>
 					{filtered.map((ct) => {
-						const baseType = (ct.properties && ct.properties[0] && ct.properties[0].type) ? ct.properties[0].type : "Block";
 						return (
 							<Tr key={ct.id}>
 								<Td type="header">{ct.name}</Td>
-								<Td>{String(baseType)}</Td>
+								<Td>{ct.baseType}</Td>
 								<Td>Jan 13, 2024</Td>
 								<Td>Everyone</Td>
 								<Td type="button" data={() => console.log('actions for', ct.id)}>
