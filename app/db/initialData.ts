@@ -188,6 +188,7 @@ export type Property = {
 export type ContentType = {
 	id: string;
 	name: string;
+	baseType: "Page" | "Experience" | "Media";
 	description?: string;
 	properties: Property[];
 };
@@ -196,6 +197,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-page",
 		name: "Page",
+		baseType: "Experience",
 		description: "Standard page (uses outlines)",
 		properties: [
 			{ id: "title", name: "Title", type: "text", required: true },
@@ -205,6 +207,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-blog-post",
 		name: "Blog Post",
+		baseType: "Page",
 		description: "A standard blog/article page",
 		properties: [
 			{ id: "title", name: "Title", type: "text", required: true },
@@ -216,6 +219,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-about-page",
 		name: "About Page",
+		baseType: "Page",
 		description: "Company about page",
 		properties: [
 			{ id: "title", name: "Title", type: "text", required: true },
@@ -227,6 +231,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "exp-landing-page",
 		name: "Landing Page",
+		baseType: "Experience",
 		description: "Landing page experience with main and aside outlines",
 		properties: [
 			{ id: "mainOutline", name: "Main", type: "outline" },
