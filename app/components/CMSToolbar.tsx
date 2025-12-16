@@ -153,12 +153,7 @@ export default function CMSToolbar({
 				<Menu options={previewOptions}>
 					<MenuTrigger asChild>
 						<LabelMenuButton label="Preview" h="40">
-							<Box display="flex" alignItems="center" gap="8">
-								<IconDevices size={16} />
-								<Text fontSize="sm" fontWeight="500">
-									{previewLabel}
-								</Text>
-							</Box>
+							{previewLabel}
 						</LabelMenuButton>
 					</MenuTrigger>
 					<MenuContent />
