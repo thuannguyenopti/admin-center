@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Box, Heading, SearchInput, Button as AxiomButton } from "@optiaxiom/react";
+import { Box, Heading, SearchInput, Button as AxiomButton, Menu, MenuTrigger, LabelMenuButton, MenuContent } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, ContentType } from "@/app/db/initialData";
@@ -12,6 +12,27 @@ export default function ContentTypesSettings() {
 	const [accessFilter, setAccessFilter] = useState<string | null>(null);
 
 	const contentTypes: ContentType[] = initialContentTypes || [];
+
+	const accessLevelOptions = [
+		{ label: "Everyone", value: "Everyone" },
+		{ label: "Admins", value: "Admins" },
+	];
+	const onAccessLevelChange = (value: string) => {
+		setAccessFilter(value);
+	};
+
+	const currentAccessLevel = accessLevelOptions.find((opt) => opt.value === accessFilter) || accessLevelOptions[0];
+
+	const typeOptions = [
+		{ label: "All Types", value: null },
+		{ label: "Block", value: "Block" },
+		{ label: "Document", value: "Document" },
+		{ label: "Media", value: "Media" },
+	];
+	const onTypesChange = (value: string | null) => {
+		setTypeFilter(value);
+	};
+	const currentType = typeOptions.find((opt) => opt.value === typeFilter) || typeOptions[0];
 
 	const filtered = useMemo(() => {
 		return contentTypes.filter((ct) => {
@@ -35,19 +56,25 @@ export default function ContentTypesSettings() {
 			<Box display="flex" alignItems="center" gap="8" mb="16">
 				<SearchInput size="lg" placeholder="Filter by name" value={search} onChange={(e: any) => setSearch(e.target.value)} />
 
+				{/* Type Filter */}
+				<Menu options={typeOptions.map((opt) => ({ label: opt.label, execute: () => onTypesChange(opt.value) }))}>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Base Type" h="40">
+							{currentType?.label}
+						</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 
-				<select value={typeFilter ?? ""} onChange={(e) => setTypeFilter(e.target.value || null)} className="ax-select">
-					<option value="">All types</option>
-					<option value="page">Page</option>
-					<option value="block">Block</option>
-					<option value="media">Media</option>
-				</select>
-
-				<select value={accessFilter ?? ""} onChange={(e) => setAccessFilter(e.target.value || null)} className="ax-select">
-					<option value="">All access</option>
-					<option value="Everyone">Everyone</option>
-					<option value="Admins">Admins</option>
-				</select>
+				{/* Acce Level Filter */}
+				<Menu options={accessLevelOptions.map((opt) => ({ label: opt.label, execute: () => onAccessLevelChange(opt.value) }))}>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Access Level" h="40">
+							{currentAccessLevel?.label}
+						</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 
 				<div style={{ flex: 1 }} />
 
