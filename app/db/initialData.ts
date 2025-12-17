@@ -573,57 +573,6 @@ export const initialPages: Page[] = [
 		],
 	},
 
-	{
-		id: "page-site-blog-post-1",
-		name: "Blog Post 1",
-		parentId: "page-site-blog",
-		status: "Published",
-		lastModified: "2023-10-24",
-		contentTypeId: "ct-page",
-		data: {},
-		outlines: [
-			{
-				id: "ol-blogpost1-main",
-				title: "Main",
-				tree: [
-					{
-						id: "sec-blogpost1-hero",
-						name: "Hero",
-						open: true,
-						children: [
-							{
-								id: "row-blogpost1-hero",
-								open: true,
-								children: [
-									{
-										id: "col-blogpost1-hero",
-										open: true,
-										children: [{ id: "ele-blogpost1-heading" }, { id: "ele-blogpost1-subtext" }],
-									},
-								],
-							},
-						],
-					},
-				],
-				elements: {
-					"ele-blogpost1-heading": {
-						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "5 Tips for Your First Marathon" }],
-					},
-					"ele-blogpost1-subtext": {
-						type: "Text",
-						props: [
-							{
-								type: "text",
-								label: "Text",
-								value: "Training for 26.2 miles starts with a single step. Here is how to prepare.",
-							},
-						],
-					},
-				},
-			},
-		],
-	},
 
 	{
 		id: "page-site-products",

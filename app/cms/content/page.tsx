@@ -55,14 +55,14 @@ export default function ContentPage() {
 	const selectedContent = contentItems.find(item => item.id === selectedContentId);
 
 	const handleSelectAll = (checked: boolean) => {
+		const newSet = new Set(selectedRows);
 		if (checked) {
-			const allIds = new Set(paginatedItems.map((item) => item.id));
-			setSelectedRows(allIds);
-			setSelectedContentId(null);
+			paginatedItems.forEach((item) => newSet.add(item.id));
 		} else {
-			setSelectedRows(new Set());
-			setSelectedContentId(null);
+			paginatedItems.forEach((item) => newSet.delete(item.id));
 		}
+		setSelectedRows(newSet);
+		setSelectedContentId(null);
 	};
 
 	const handleSelectRow = (id: string, checked: boolean) => {
@@ -76,8 +76,10 @@ export default function ContentPage() {
 	};
 
 	const isAllSelected =
-		selectedRows.size === paginatedItems.length && paginatedItems.length > 0;
-	const isSomeSelected = selectedRows.size > 0 && !isAllSelected;
+		paginatedItems.length > 0 &&
+		paginatedItems.every((item) => selectedRows.has(item.id));
+	const isSomeSelected =
+		paginatedItems.some((item) => selectedRows.has(item.id)) && !isAllSelected;
 
 	return (
 		<>
