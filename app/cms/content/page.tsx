@@ -36,12 +36,12 @@ function getStatusIntent(status: ContentItem["status"]) {
 }
 
 export default function ContentPage() {
-    const [pages] = usePersistentState("pages", initialPages) as [Page[], any, boolean];
-    const allContentItems = getAllContentItems(pages || initialPages);
-    const contentItems: ContentItem[] = allContentItems.map(item => ({
-        ...item,
-        status: item.publishStatus
-    })).sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+	const [pages] = usePersistentState("pages", initialPages) as [Page[], any, boolean];
+	const allContentItems = getAllContentItems(pages || initialPages);
+	const contentItems: ContentItem[] = allContentItems.map(item => ({
+		...item,
+		status: item.publishStatus
+	})).sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
@@ -109,7 +109,7 @@ export default function ContentPage() {
 				</thead>
 				<tbody>
 					{paginatedItems.map((item) => (
-						<Tr 
+						<Tr
 							key={item.id}
 							onClick={() => {
 								if (selectedContentId === item.id) {
@@ -155,17 +155,17 @@ export default function ContentPage() {
 				onPageChange={setCurrentPage}
 				mt="24"
 			/>
-			
+
 			{(selectedContentId || selectedRows.size > 1) && (
 				<Aside>
-					<DetailsPane 
+					<DetailsPane
 						content={selectedContent}
 						selectedIds={selectedRows}
 						allContent={paginatedItems}
 						onClose={() => {
 							setSelectedContentId(null);
 							setSelectedRows(new Set());
-						}} 
+						}}
 					/>
 				</Aside>
 			)}
