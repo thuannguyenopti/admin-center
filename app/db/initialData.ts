@@ -1022,71 +1022,71 @@ export const initialPages: Page[] = [
 export type PublishStatus = "Draft" | "Published";
 
 export interface UnifiedContentItem {
-  id: string;
-  name: string;
-  baseType: ContentType["baseType"];
-  contentTypeId: string;
-  publishStatus: PublishStatus;
-  workflowStatus: "draft" | "in-review" | "approved" | "scheduled";
-  modifiedBy: string;
-  language: string;
-  lastModified: string;
+	id: string;
+	name: string;
+	baseType: ContentType["baseType"];
+	contentTypeId: string;
+	publishStatus: PublishStatus;
+	workflowStatus: "draft" | "in-review" | "approved" | "scheduled";
+	modifiedBy: string;
+	language: string;
+	lastModified: string;
 }
 
 const reportNames = ["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown", "Maria Garcia", "Sarah Chen", "Marcus Johnson", "Alex Rivera", "Emily Brown", "James Wilson", "Lisa Anderson", "David Kim", "Michelle Taylor", "Robert Garcia", "Jessica Moore", "Chris Lee", "Patricia White", "Kevin Davis", "Jennifer Martin", "Thomas Brown", "Steven Clark", "Nancy Rodriguez", "Daniel Lewis"];
 
 const getRandomName = (id: string) => {
-  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return reportNames[hash % reportNames.length];
+	const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	return reportNames[hash % reportNames.length];
 };
 
 export const initialOtherContent: UnifiedContentItem[] = [
-  { id: "3", name: "Heart Rate Monitor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("3"), language: "en", lastModified: "Jan 11, 2025" },
-  { id: "5", name: "Pricing Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("5"), language: "en", lastModified: "Jan 11, 2025" },
-  { id: "9", name: "Cycling Hero - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("9"), language: "en", lastModified: "Jan 11, 2025" },
-  { id: "13", name: "Route Planning Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Draft", workflowStatus: "in-review", modifiedBy: getRandomName("13"), language: "en", lastModified: "Jan 8, 2025" },
-  { id: "26", name: "Leaderboards Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("26"), language: "en", lastModified: "Dec 26, 2024" },
-  { id: "31", name: "Cycle Computer Pro - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("31"), language: "en", lastModified: "Dec 21, 2024" },
-  { id: "32", name: "HR Monitor Band - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("32"), language: "en", lastModified: "Dec 20, 2024" },
-  { id: "33", name: "Smart Bike Trainer - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("33"), language: "en", lastModified: "Dec 19, 2024" },
-  { id: "34", name: "Cadence Sensor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("34"), language: "en", lastModified: "Dec 18, 2024" },
-  { id: "35", name: "Power Meter - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("35"), language: "en", lastModified: "Dec 17, 2024" },
-  { id: "36", name: "Speed Sensor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("36"), language: "en", lastModified: "Dec 16, 2024" },
-  { id: "37", name: "Aero Helmet - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("37"), language: "en", lastModified: "Dec 15, 2024" },
-  { id: "38", name: "Bike Lights - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("38"), language: "en", lastModified: "Dec 14, 2024" },
-  { id: "39", name: "Water Bottle Holder - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("39"), language: "en", lastModified: "Dec 13, 2024" },
-  { id: "40", name: "Repair Tool Kit - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("40"), language: "en", lastModified: "Dec 12, 2024" },
-  { id: "41", name: "Weekly Challenge Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("41"), language: "en", lastModified: "Dec 11, 2024" },
-  { id: "42", name: "Achievement Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("42"), language: "en", lastModified: "Dec 10, 2024" },
-  { id: "43", name: "Social Feed Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("43"), language: "en", lastModified: "Dec 9, 2024" },
-  { id: "44", name: "Leaderboard Widget Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("44"), language: "en", lastModified: "Dec 8, 2024" },
-  { id: "45", name: "Stats Summary Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("45"), language: "en", lastModified: "Dec 7, 2024" },
-  { id: "46", name: "Upcoming Events Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("46"), language: "en", lastModified: "Dec 6, 2024" },
-  { id: "47", name: "Testimonial Carousel Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("47"), language: "en", lastModified: "Dec 5, 2024" },
-  { id: "48", name: "Payment Plans Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("48"), language: "en", lastModified: "Dec 4, 2024" },
-  { id: "49", name: "Mountain Pass Scenery - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("49"), language: "en", lastModified: "Dec 3, 2024" },
-  { id: "50", name: "Pro Cyclist In Action - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("50"), language: "en", lastModified: "Dec 2, 2024" },
+	{ id: "3", name: "Heart Rate Monitor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("3"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "5", name: "Pricing Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("5"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "9", name: "Cycling Hero - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("9"), language: "en", lastModified: "Jan 11, 2025" },
+	{ id: "13", name: "Route Planning Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Draft", workflowStatus: "in-review", modifiedBy: getRandomName("13"), language: "en", lastModified: "Jan 8, 2025" },
+	{ id: "26", name: "Leaderboards Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("26"), language: "en", lastModified: "Dec 26, 2024" },
+	{ id: "31", name: "Cycle Computer Pro - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("31"), language: "en", lastModified: "Dec 21, 2024" },
+	{ id: "32", name: "HR Monitor Band - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("32"), language: "en", lastModified: "Dec 20, 2024" },
+	{ id: "33", name: "Smart Bike Trainer - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("33"), language: "en", lastModified: "Dec 19, 2024" },
+	{ id: "34", name: "Cadence Sensor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("34"), language: "en", lastModified: "Dec 18, 2024" },
+	{ id: "35", name: "Power Meter - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("35"), language: "en", lastModified: "Dec 17, 2024" },
+	{ id: "36", name: "Speed Sensor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("36"), language: "en", lastModified: "Dec 16, 2024" },
+	{ id: "37", name: "Aero Helmet - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("37"), language: "en", lastModified: "Dec 15, 2024" },
+	{ id: "38", name: "Bike Lights - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("38"), language: "en", lastModified: "Dec 14, 2024" },
+	{ id: "39", name: "Water Bottle Holder - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("39"), language: "en", lastModified: "Dec 13, 2024" },
+	{ id: "40", name: "Repair Tool Kit - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("40"), language: "en", lastModified: "Dec 12, 2024" },
+	{ id: "41", name: "Weekly Challenge Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("41"), language: "en", lastModified: "Dec 11, 2024" },
+	{ id: "42", name: "Achievement Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("42"), language: "en", lastModified: "Dec 10, 2024" },
+	{ id: "43", name: "Social Feed Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("43"), language: "en", lastModified: "Dec 9, 2024" },
+	{ id: "44", name: "Leaderboard Widget Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("44"), language: "en", lastModified: "Dec 8, 2024" },
+	{ id: "45", name: "Stats Summary Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("45"), language: "en", lastModified: "Dec 7, 2024" },
+	{ id: "46", name: "Upcoming Events Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("46"), language: "en", lastModified: "Dec 6, 2024" },
+	{ id: "47", name: "Testimonial Carousel Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("47"), language: "en", lastModified: "Dec 5, 2024" },
+	{ id: "48", name: "Payment Plans Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("48"), language: "en", lastModified: "Dec 4, 2024" },
+	{ id: "49", name: "Mountain Pass Scenery - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("49"), language: "en", lastModified: "Dec 3, 2024" },
+	{ id: "50", name: "Pro Cyclist In Action - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("50"), language: "en", lastModified: "Dec 2, 2024" },
 ];
 
 export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContentItem[] => {
-    const pageItems: UnifiedContentItem[] = pages.map(p => {
-        const ct = initialContentTypes.find(c => c.id === p.contentTypeId);
-        const date = new Date(p.lastModified);
-        const formattedDate = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-        
-        return {
-            id: p.id,
-            name: p.name,
-            baseType: ct?.baseType || "Page",
-            contentTypeId: p.contentTypeId,
-            publishStatus: p.status === "Published" ? "Published" : "Draft",
-            workflowStatus: p.status === "Published" ? "approved" : "draft",
-            modifiedBy: getRandomName(p.id),
-            language: "en",
-            lastModified: formattedDate
-        };
-    });
-    return [...pageItems, ...initialOtherContent];
+	const pageItems: UnifiedContentItem[] = pages.map(p => {
+		const ct = initialContentTypes.find(c => c.id === p.contentTypeId);
+		const date = new Date(p.lastModified);
+		const formattedDate = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+		return {
+			id: p.id,
+			name: p.name,
+			baseType: ct?.baseType || "Page",
+			contentTypeId: p.contentTypeId,
+			publishStatus: p.status === "Published" ? "Published" : "Draft",
+			workflowStatus: p.status === "Published" ? "approved" : "draft",
+			modifiedBy: getRandomName(p.id),
+			language: "en",
+			lastModified: formattedDate
+		};
+	});
+	return [...pageItems, ...initialOtherContent];
 };
 
 
