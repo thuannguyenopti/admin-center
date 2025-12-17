@@ -10,37 +10,23 @@ import { Flex } from "@/app/components/Flex";
 import { Aside } from "@/app/context/LayoutContext";
 import DetailsPane from "./DetailsPane";
 import { useState } from "react";
-import { allContentItems, type ContentType } from "@/app/cms/sharedContentData";
+import { getAllContentItems, type UnifiedContentItem, initialPages, Page } from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
 
-export type ContentItem = {
-	id: string;
-	name: string;
-	type: ContentType;
+export type ContentItem = UnifiedContentItem & {
 	status: "Draft" | "Published";
-	modifiedBy: string;
-	language: string;
-	lastModified: string;
 };
 
-const contentItems: ContentItem[] = allContentItems.map(item => ({
-	id: item.id,
-	name: item.name,
-	type: item.type,
-	status: item.publishStatus,
-	modifiedBy: item.modifiedBy,
-	language: item.language,
-	lastModified: item.lastModified,
-}));
-
-function getIconForType(type: ContentItem["type"]) {
+function getIconForType(type: UnifiedContentItem["baseType"]) {
 	switch (type) {
 		case "Page":
+		case "Experience":
 			return <IconFile size={16} />;
 		case "Product":
 			return <IconBox size={16} />;
 		case "Block":
 			return <IconLayoutGrid size={16} />;
-		case "Image":
+		case "Media":
 			return <IconPhoto size={16} />;
 	}
 }
@@ -50,6 +36,13 @@ function getStatusIntent(status: ContentItem["status"]) {
 }
 
 export default function ContentPage() {
+    const [pages] = usePersistentState("pages", initialPages) as [Page[], any, boolean];
+    const allContentItems = getAllContentItems(pages || initialPages);
+    const contentItems: ContentItem[] = allContentItems.map(item => ({
+        ...item,
+        status: item.publishStatus
+    })).sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
@@ -142,9 +135,9 @@ export default function ContentPage() {
 								/>
 							</Td>
 							<Td type="header">
-								<Item icon={getIconForType(item.type)} title={item.name} />
+								<Item icon={getIconForType(item.baseType)} title={item.name} />
 							</Td>
-							<Td>{item.type}</Td>
+							<Td>{item.baseType}</Td>
 							<Td type="badge" data={getStatusIntent(item.status)}>
 								{item.status}
 							</Td>

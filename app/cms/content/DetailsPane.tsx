@@ -41,15 +41,16 @@ const getThumbnailImage = (id: string): string | null => {
   return thumbnails[id] || null;
 };
 
-const getIconForType = (type: ContentItem["type"], size: number = 16) => {
+const getIconForType = (type: ContentItem["baseType"], size: number = 16) => {
   switch (type) {
     case "Page":
+    case "Experience":
       return <IconFile size={size} />;
     case "Product":
       return <IconShoppingBag size={size} />;
     case "Block":
       return <IconBlocks size={size} />;
-    case "Image":
+    case "Media":
       return <IconPhoto size={size} />;
   }
 };
