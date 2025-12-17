@@ -26,8 +26,8 @@ export function useDetailsMetadata(content: ContentItem): DetailsPaneMetadata {
     sections: [],
   };
 
-  switch (content.type) {
-    case "Image":
+  switch (content.baseType) {
+    case "Media":
       return {
         previewImage: "/images/product-preview.png",
         sections: [
@@ -52,6 +52,7 @@ export function useDetailsMetadata(content: ContentItem): DetailsPaneMetadata {
       };
 
     case "Page":
+    case "Experience":
       return {
         previewImage: "/images/product-preview.png",
         sections: [

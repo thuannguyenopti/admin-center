@@ -1,5 +1,7 @@
 import { WorkflowItem, BrokenLink } from "./types";
-import { allContentItems } from "@/app/cms/sharedContentData";
+import { getAllContentItems } from "@/app/db/initialData";
+
+const allContentItems = getAllContentItems();
 
 // Get avatar from pravatar based on user name
 const getAvatar = (name: string, id: string) => {
@@ -9,7 +11,7 @@ const getAvatar = (name: string, id: string) => {
 export const workflowItems: WorkflowItem[] = allContentItems.map(item => ({
   id: item.id,
   name: item.name,
-  type: item.type === "Block" || item.type === "Image" ? (item.type === "Block" ? "block" : "page") : "page",
+  type: item.baseType === "Block" ? "block" : "page",
   lastModified: new Date(item.lastModified),
   modifiedBy: {
     name: item.modifiedBy,
