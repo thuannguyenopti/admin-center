@@ -28,7 +28,7 @@ export default function ContentTypesSettings() {
 		{ label: "Page", value: "Page" },
 		{ label: "Experience", value: "Experience" },
 		{ label: "Block", value: "Block" },
-		{ label: "Document", value: "Document" },
+		{ label: "Product", value: "Product" },
 		{ label: "Media", value: "Media" },
 	];
 	const onTypesChange = (value: string | null) => {
@@ -39,10 +39,9 @@ export default function ContentTypesSettings() {
 	const filtered = useMemo(() => {
 		return contentTypes.filter((ct) => {
 			if (search && !ct.name.toLowerCase().includes(search.toLowerCase())) return false;
-			// base type filter (simple heuristic: check first property)
+			// base type filter
 			if (typeFilter) {
-				const base = (ct.properties && ct.properties[0] && ct.properties[0].type) || "block";
-				if (base.toLowerCase() !== typeFilter.toLowerCase()) return false;
+				if (ct.baseType !== typeFilter) return false;
 			}
 			if (accessFilter) {
 				// our seed data does not include accessLevel; accept Everyone as default
