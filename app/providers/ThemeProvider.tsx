@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, memo, useLayoutEffect } from 'react';
+import { ReactNode, memo } from 'react';
 import { AxiomProvider } from '@optiaxiom/react';
 import { useTheme } from '@/app/hooks/useTheme';
 
@@ -9,31 +9,9 @@ type ThemeProviderProps = {
 };
 
 function ThemeProviderComponent({ children }: ThemeProviderProps) {
-  // Initialize theme on mount and listen for changes
+  // Initialize theme and listen for OS preference changes
+  // This is the single source of truth for theme management
   useTheme();
-  
-  // Additional safety net to ensure theme is applied before paint
-  useLayoutEffect(() => {
-    try {
-      const saved = localStorage.getItem('theme');
-      const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      const html = document.documentElement;
-      const body = document.body;
-      
-      // Only update if not already applied
-      const currentTheme = html.hasAttribute('data-theme') ? html.getAttribute('data-theme') : 
-                          html.classList.contains('dark') ? 'dark' : 'light';
-      
-      if (currentTheme !== theme) {
-        html.setAttribute('data-theme', theme);
-        html.classList.toggle('dark', theme === 'dark');
-        html.style.colorScheme = theme;
-        
-        body.classList.toggle('dark', theme === 'dark');
-        body.style.colorScheme = theme;
-      }
-    } catch (e) {}
-  }, []);
 
   return (
     <AxiomProvider>
