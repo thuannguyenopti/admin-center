@@ -1,12 +1,27 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox } from "@optiaxiom/react";
-import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto } from "@tabler/icons-react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox, Input, Badge, Popover, PopoverTrigger, PopoverContent } from "@optiaxiom/react";
+import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto, IconEye, IconPencil, IconCheck } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useDetailsMetadata } from "./useDetailsMetadata";
 import MultiSelectDetailsPane from "./MultiSelectDetailsPane";
 import Image from "next/image";
+import { useState } from "react";
+
+// Mock cycling/exercise tags
+const AVAILABLE_TAGS = [
+  "Cycling Training",
+  "Cycling Performance",
+  "Exercise Routine",
+  "Cardio Workout",
+  "Mountain Biking",
+  "Road Cycling",
+  "Indoor Training",
+  "Fitness Tracking",
+  "Endurance Training",
+  "Sprint Training"
+];
 
 interface DetailsPaneProps {
   content?: ContentItem;
@@ -66,6 +81,42 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
   if (!content) return null;
 
   const metadata = useDetailsMetadata(content);
+  
+  // Tags state management
+  const [tags, setTags] = useState<string[]>(["Cycling Training", "Fitness Tracking"]);
+  const [newTag, setNewTag] = useState("");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleAddTag = (tagValue: string) => {
+    if (tagValue.trim() && !tags.includes(tagValue)) {
+      setTags([...tags, tagValue]);
+      setNewTag("");
+    }
+  };
+
+  // Filter available tags based on input
+  const filteredTags = AVAILABLE_TAGS
+    .filter(tag => !newTag || tag.toLowerCase().includes(newTag.toLowerCase()));
+
+  // Create options for autocomplete dropdown
+  const autocompleteOptions = filteredTags.map(tag => ({
+    label: tag,
+    value: tag,
+    isSelected: tags.includes(tag)
+  }));
+
+  // Add custom tag option if input doesn't match any available tag
+  if (newTag.trim() && !AVAILABLE_TAGS.includes(newTag)) {
+    autocompleteOptions.push({
+      label: `+ Add "${newTag}" tag`,
+      value: newTag,
+      isSelected: false
+    });
+  }
 
   return (
     <Box
@@ -217,6 +268,120 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
             </DisclosureContent>
           </Disclosure>
         ))}
+
+        {/* Tags */}
+        <Disclosure defaultOpen>
+          <DisclosureTrigger>
+            Tags
+          </DisclosureTrigger>
+          <DisclosureContent asChild>
+            <Box
+              display="flex"
+              flexDirection="column"
+              gap="8"
+              mt="8"
+              style={{ paddingLeft: "20px" }}
+            >
+              {/* Tags Display */}
+              <Box
+                display="flex"
+                flexWrap="wrap"
+                gap="8"
+              >
+                {tags.map(tag => (
+                  <Badge key={tag} intent="neutral">
+                    <Box display="flex" alignItems="center" gap="4">
+                      <span>{tag}</span>
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "0",
+                          display: "flex",
+                          alignItems: "center",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          lineHeight: "1",
+                          color: "inherit",
+                        }}
+                        aria-label={`Remove tag ${tag}`}
+                      >
+                        ×
+                      </button>
+                    </Box>
+                  </Badge>
+                ))}
+              </Box>
+
+              {/* Add Tag Input with Custom Autocomplete */}
+              <Popover 
+                open={newTag.length > 0 && autocompleteOptions.length > 0}
+                onOpenChange={() => {}}
+              >
+                <PopoverTrigger asChild>
+                  <Box>
+                    <Input
+                      value={newTag}
+                      onChange={e => setNewTag(e.target.value)}
+                      onKeyPress={e => {
+                        if (e.key === "Enter" && autocompleteOptions.length > 0) {
+                          handleAddTag(autocompleteOptions[0].value);
+                        }
+                      }}
+                      placeholder="Add tag..."
+                      size="md"
+                    />
+                  </Box>
+                </PopoverTrigger>
+                <PopoverContent 
+                  side="bottom" 
+                  sideOffset={4}
+                  align="start"
+                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap="2"
+                    p="4"
+                    style={{ maxHeight: "200px" }}
+                    overflow="auto"
+                  >
+                    {autocompleteOptions.map((option, index) => (
+                      <Box
+                        key={option.value}
+                        display="flex"
+                        alignItems="center"
+                        gap="8"
+                        px="12"
+                        py="8"
+                        rounded="sm"
+                        cursor="pointer"
+                        transition="colors"
+                        bg={hoveredIndex === index ? "bg.secondary" : "transparent"}
+                        onClick={() => handleAddTag(option.value)}
+                        onMouseEnter={() => setHoveredIndex(index)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                      >
+                        {option.isSelected && (
+                          <IconCheck size={16} color="var(--ax-colors-fg-secondary)" />
+                        )}
+                        {!option.isSelected && <Box w="16" />}
+                        <Text fontSize="sm" color="fg.default">
+                          {option.label}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Box>
+                </PopoverContent>
+              </Popover>
+            </Box>
+          </DisclosureContent>
+        </Disclosure>
       </Box>
 
       {/* Buttons */}
@@ -227,10 +392,10 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
         py="24"
         style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
       >
-        <Button appearance="subtle" flex="1" style={{ justifyContent: "center" }}>
+        <Button appearance="default" flex="1" style={{ justifyContent: "center" }} addonBefore={<IconEye size={16} />}>
           View
         </Button>
-        <Button appearance="primary" flex="1" style={{ justifyContent: "center" }}>
+        <Button appearance="primary" flex="1" style={{ justifyContent: "center" }} addonBefore={<IconPencil size={16} />}>
           Edit
         </Button>
       </Box>
