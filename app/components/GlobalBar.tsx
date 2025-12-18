@@ -8,7 +8,11 @@ import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function GlobalBar() {
+type GlobalBarProps = {
+	onOpalClick?: () => void;
+};
+
+export default function GlobalBar({ onOpalClick }: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -171,6 +175,7 @@ export default function GlobalBar() {
 					appearance="subtle"
 					size="md"
 					aria-label="Opal AI Assistant"
+					onClick={onOpalClick}
 				>
 					<Image
 						src="/opal-orb.png"

@@ -12,6 +12,8 @@ import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import ContentSubNav from "../cms/content/components/ContentSubNav";
+import { OpalPanel } from "./OpalPanel";
+import { useOpalState } from "@/app/hooks/useOpalState";
 
 function TemplateContent({
 	children,
@@ -24,6 +26,7 @@ function TemplateContent({
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", true);
+	const { isOpen, togglePanel, closePanel } = useOpalState();
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -63,7 +66,8 @@ function TemplateContent({
 			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
 			bg="bg.page"
 		>
-			<GlobalBar />
+			<GlobalBar onOpalClick={togglePanel} />
+			<OpalPanel isOpen={isOpen} onClose={closePanel} />
 			<Box
 				display="flex"
 				z="10"

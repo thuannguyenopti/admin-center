@@ -1,6 +1,7 @@
 "use client";
 import Template from "./components/template";
 import "./globals.css";
+import "./styles/opalStyles.css";
 import {AxiomProvider} from "@optiaxiom/react";
 import {usePathname} from "next/navigation";
 import {useState} from "react";

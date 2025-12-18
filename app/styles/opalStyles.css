@@ -1,0 +1,254 @@
+/* Opal Panel Styles - Light & Dark Mode */
+
+:root {
+  /* Light Mode - Background Colors (from optiaxiom) */
+  --opal-bg-primary: #f9fafc;
+  --opal-bg-sidebar: #f2f4fa;
+  --opal-bg-suggest: linear-gradient(135deg, #ede9f5 0%, #dce8f5 100%);
+  --opal-bg-suggest-hover: linear-gradient(135deg, #dce0ed 0%, #cdd8ed 100%);
+  --opal-bg-input: #ffffff;
+  --opal-bg-assistant: #f0f2f7;
+  --opal-bg-user: #e8f0fe;
+  --opal-bg-history-active: #e9edf5;
+  
+  /* Light Mode - Border Colors */
+  --opal-border-primary: #dadfeb;
+  --opal-border-secondary: #e9edf5;
+  --opal-border-input: #cacfdc;
+  
+  /* Light Mode - Text Colors */
+  --opal-text-primary: #262b37;
+  --opal-text-secondary: #4f576e;
+  --opal-text-tertiary: #626a81;
+  --opal-text-body: #080736;
+  --opal-text-placeholder: #868fa4;
+  --opal-text-inverse: #ffffff;
+  --opal-text-user: #080736;
+  --opal-text-label: #4f576e;
+  
+  /* Light Mode - Special Colors */
+  --opal-spinner-border: #e9edf5;
+  --opal-spinner-top: #2e3442;
+  --opal-accent-red: #f45959;
+  --opal-icon-dark: #2e3442;
+  --opal-send-btn-bg: #7c5cff;
+  --opal-send-btn-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Dark Mode - Background Colors (from optiaxiom) */
+    --opal-bg-primary: #1a1d2e;
+    --opal-bg-sidebar: #161921;
+    --opal-bg-suggest: linear-gradient(135deg, rgba(89,74,180,0.25) 0%, rgba(153,128,230,0.15) 100%);
+    --opal-bg-suggest-hover: linear-gradient(135deg, rgba(99,84,200,0.35) 0%, rgba(163,138,240,0.25) 100%);
+    --opal-bg-input: #2a2d3f;
+    --opal-bg-assistant: #3a3d4f;
+    --opal-bg-user: #2d3a6b;
+    --opal-bg-history-active: #3a3d4f;
+    
+    /* Dark Mode - Border Colors */
+    --opal-border-primary: #404557;
+    --opal-border-secondary: #3a3d4f;
+    --opal-border-input: #404557;
+    
+    /* Dark Mode - Text Colors */
+    --opal-text-primary: #e0e4eb;
+    --opal-text-secondary: #a8afc1;
+    --opal-text-tertiary: #8a92a8;
+    --opal-text-body: #e8ecf5;
+    --opal-text-placeholder: #6a7289;
+    --opal-text-inverse: #1a1d2e;
+    --opal-text-user: #e8ecf5;
+    --opal-text-label: #a8afc1;
+    
+    /* Dark Mode - Special Colors */
+    --opal-spinner-border: #404557;
+    --opal-spinner-top: #7a8fb5;
+    --opal-accent-red: #ff6b6b;
+    --opal-icon-dark: #e0e4eb;
+    --opal-send-btn-bg: #9b8bff;
+    --opal-send-btn-text: #1a1d2e;
+  }
+}
+
+/* Animations */
+.opal-panel {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.opal-loading-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Custom scrollbar for chat */
+.opal-panel ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.opal-panel ::-webkit-scrollbar-track {
+  background: var(--opal-bg-primary);
+}
+
+.opal-panel ::-webkit-scrollbar-thumb {
+  background: var(--opal-border-secondary);
+  border-radius: 3px;
+}
+
+.opal-panel ::-webkit-scrollbar-thumb:hover {
+  background: var(--opal-border-primary);
+}
+
+/* History Sidebar Scrollbar */
+.opal-history-sidebar ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.opal-history-sidebar ::-webkit-scrollbar-track {
+  background: var(--opal-bg-sidebar);
+}
+
+.opal-history-sidebar ::-webkit-scrollbar-thumb {
+  background: var(--opal-border-secondary);
+  border-radius: 3px;
+}
+
+.opal-history-sidebar ::-webkit-scrollbar-thumb:hover {
+  background: var(--opal-border-input);
+}
+
+/* Suggestion Pills Hover State */
+.opal-suggestion-pill {
+  cursor: pointer;
+  padding: 10px 16px;
+  background: var(--opal-bg-suggest);
+  border: 1px solid var(--opal-border-secondary);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.opal-suggestion-pill:hover {
+  background: var(--opal-bg-suggest-hover);
+  border-color: var(--opal-border-primary);
+}
+
+/* History Item Styling */
+.opal-history-item {
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.opal-history-item:hover {
+  background-color: var(--opal-bg-history-active);
+}
+
+.opal-history-item.active {
+  background-color: var(--opal-bg-history-active);
+}
+
+/* New Chat Button */
+.opal-new-chat-btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--opal-border-input);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 10px;
+  cursor: pointer;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.opal-new-chat-btn:hover {
+  background-color: var(--opal-bg-history-active);
+}
+
+/* Message Bubbles */
+.opal-message-user {
+  max-width: 80%;
+  padding: 12px;
+  background-color: var(--opal-bg-user);
+  border-radius: 8px;
+  border-top-right-radius: 4px;
+  color: var(--opal-text-inverse);
+}
+
+.opal-message-assistant {
+  max-width: 80%;
+  padding: 12px;
+  background-color: var(--opal-bg-assistant);
+  border-radius: 8px;
+  border-top-left-radius: 4px;
+  color: var(--opal-text-body);
+}
+
+/* Input Container */
+.opal-input-container {
+  border-radius: 8px;
+  border: 1px solid var(--opal-border-input);
+  background-color: var(--opal-bg-input);
+}
+
+/* Send Button */
+.opal-send-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: none;
+}
+
+.opal-send-btn:not(:disabled) {
+  background-color: var(--opal-send-btn-bg);
+  color: var(--opal-send-btn-text);
+}
+
+.opal-send-btn:disabled {
+  background-color: var(--opal-button-disabled);
+  color: var(--opal-text-placeholder);
+  cursor: not-allowed;
+}
+
+.opal-send-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Panel Container */
+.opal-panel-container {
+  background-color: var(--opal-bg-primary);
+  border: 1px solid var(--opal-border-primary);
+  border-radius: 8px;
+}
