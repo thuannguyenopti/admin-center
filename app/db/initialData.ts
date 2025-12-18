@@ -175,7 +175,6 @@ export const initialUsers: User[] = [
 	},
 ];
 
-
 export type Property = {
 	id: string;
 	name: string;
@@ -200,8 +199,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Experience",
 		description: "Standard page (uses outlines)",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "mainOutline", name: "Main", type: "outline" },
+			{id: "title", name: "Title", type: "text", required: true},
+			{id: "mainOutline", name: "Main", type: "outline"},
 		],
 	},
 	{
@@ -210,10 +209,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Page",
 		description: "A standard blog/article page",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "subtitle", name: "Subtitle", type: "text" },
-			{ id: "body", name: "Body", type: "richtext", required: true },
-			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
+			{id: "title", name: "Title", type: "text", required: true},
+			{id: "subtitle", name: "Subtitle", type: "text"},
+			{id: "body", name: "Body", type: "richtext", required: true},
+			{id: "author", name: "Author", type: "reference", of: "users", required: true},
 		],
 	},
 	{
@@ -222,10 +221,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Page",
 		description: "Company about page",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "about", name: "About (Stride)", type: "richtext" },
-			{ id: "history", name: "History", type: "textarea" },
-			{ id: "orgAddress", name: "Org address", type: "address" },
+			{id: "title", name: "Title", type: "text", required: true},
+			{id: "about", name: "About (Stride)", type: "richtext"},
+			{id: "history", name: "History", type: "textarea"},
+			{id: "orgAddress", name: "Org address", type: "address"},
 		],
 	},
 	{
@@ -234,8 +233,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Experience",
 		description: "Landing page experience with main and aside outlines",
 		properties: [
-			{ id: "mainOutline", name: "Main", type: "outline" },
-			{ id: "asideOutline", name: "Aside", type: "outline" },
+			{id: "mainOutline", name: "Main", type: "outline"},
+			{id: "asideOutline", name: "Aside", type: "outline"},
 		],
 	},
 	{
@@ -244,9 +243,9 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Product",
 		description: "A standard product",
 		properties: [
-			{ id: "name", name: "Name", type: "text", required: true },
-			{ id: "description", name: "Description", type: "richtext" },
-			{ id: "price", name: "Price", type: "text" },
+			{id: "name", name: "Name", type: "text", required: true},
+			{id: "description", name: "Description", type: "richtext"},
+			{id: "price", name: "Price", type: "text"},
 		],
 	},
 	{
@@ -254,9 +253,7 @@ export const initialContentTypes: ContentType[] = [
 		name: "Block",
 		baseType: "Block",
 		description: "A reusable content block",
-		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-		],
+		properties: [{id: "title", name: "Title", type: "text", required: true}],
 	},
 	{
 		id: "ct-image",
@@ -264,8 +261,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "alt", name: "Alt Text", type: "text" },
+			{id: "title", name: "Title", type: "text", required: true},
+			{id: "alt", name: "Alt Text", type: "text"},
 		],
 	},
 	{
@@ -273,27 +270,21 @@ export const initialContentTypes: ContentType[] = [
 		name: "Heading",
 		baseType: "Block",
 		description: "A heading block",
-		properties: [
-			{ id: "text", name: "Text", type: "text", required: true },
-		],
+		properties: [{id: "text", name: "Text", type: "text", required: true}],
 	},
 	{
 		id: "ct-text",
 		name: "Text",
 		baseType: "Block",
 		description: "A text block",
-		properties: [
-			{ id: "text", name: "Text", type: "text", required: true },
-		],
+		properties: [{id: "text", name: "Text", type: "text", required: true}],
 	},
 	{
 		id: "ct-button",
 		name: "Button",
 		baseType: "Block",
 		description: "A button block",
-		properties: [
-			{ id: "label", name: "Label", type: "text", required: true },
-		],
+		properties: [{id: "label", name: "Label", type: "text", required: true}],
 	},
 	{
 		id: "ct-input",
@@ -301,8 +292,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "An input block",
 		properties: [
-			{ id: "label", name: "Label", type: "text", required: true },
-			{ id: "placeholder", name: "Placeholder", type: "text" },
+			{id: "label", name: "Label", type: "text", required: true},
+			{id: "placeholder", name: "Placeholder", type: "text"},
 		],
 	},
 ];
@@ -320,22 +311,24 @@ export type EleDef = {
 
 export type EleMap = Record<string, EleDef>;
 
-export type OutlineNode = {
-	id: string;
-	name?: string;
-	open?: boolean;
-	children?: OutlineNode[]; // section/row/col nodes
-} | {
-	id: string; // element ref node (ele id)
-};
+export type OutlineNode =
+	| {
+			id: string;
+			name?: string;
+			open?: boolean;
+			children?: OutlineNode[]; // section/row/col nodes
+	  }
+	| {
+			id: string; // element ref node (ele id)
+	  };
 
 export type OutlineId = string;
 
 export type Outline = {
 	id: OutlineId;
 	title: string;
-	tree: any[];       // or OutlineNode[] if you want to type it tighter
-	elements: EleMap;  // <-- this fixes "Cannot find name 'EleMap'"
+	tree: any[]; // or OutlineNode[] if you want to type it tighter
+	elements: EleMap; // <-- this fixes "Cannot find name 'EleMap'"
 };
 
 export type Page = {
@@ -377,9 +370,9 @@ export const initialPages: Page[] = [
 										id: "col-home-hero",
 										open: true,
 										children: [
-											{ id: "ele-home-hero-heading" },
-											{ id: "ele-home-hero-subtext" },
-											{ id: "ele-home-hero-cta" },
+											{id: "ele-home-hero-heading"},
+											{id: "ele-home-hero-subtext"},
+											{id: "ele-home-hero-cta"},
 										],
 									},
 								],
@@ -390,15 +383,21 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-home-hero-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Unleash Your Potential" }],
+						props: [{type: "text", label: "Text", value: "Unleash Your Potential"}],
 					},
 					"ele-home-hero-subtext": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Premium athletic wear for the modern runner." }],
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Premium athletic wear for the modern runner.",
+							},
+						],
 					},
 					"ele-home-hero-cta": {
 						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Shop Now" }],
+						props: [{type: "text", label: "Label", value: "Shop Now"}],
 					},
 				},
 			},
@@ -430,7 +429,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-about-story",
 										open: true,
-										children: [{ id: "ele-about-heading" }, { id: "ele-about-body" }],
+										children: [
+											{id: "ele-about-heading"},
+											{id: "ele-about-body"},
+										],
 									},
 								],
 							},
@@ -440,7 +442,7 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-about-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Our Story" }],
+						props: [{type: "text", label: "Text", value: "Our Story"}],
 					},
 					"ele-about-body": {
 						type: "Text",
@@ -483,11 +485,11 @@ export const initialPages: Page[] = [
 										id: "col-contact-form",
 										open: true,
 										children: [
-											{ id: "ele-contact-heading" },
-											{ id: "ele-contact-subtext" },
-											{ id: "ele-contact-name" },
-											{ id: "ele-contact-email" },
-											{ id: "ele-contact-submit" },
+											{id: "ele-contact-heading"},
+											{id: "ele-contact-subtext"},
+											{id: "ele-contact-name"},
+											{id: "ele-contact-email"},
+											{id: "ele-contact-submit"},
 										],
 									},
 								],
@@ -498,29 +500,35 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-contact-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Get in Touch" }],
+						props: [{type: "text", label: "Text", value: "Get in Touch"}],
 					},
 					"ele-contact-subtext": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Questions about your order? We're here to help." }],
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Questions about your order? We're here to help.",
+							},
+						],
 					},
 					"ele-contact-name": {
 						type: "Input",
 						props: [
-							{ type: "text", label: "Label", value: "Name" },
-							{ type: "text", label: "Placeholder", value: "Your Name" },
+							{type: "text", label: "Label", value: "Name"},
+							{type: "text", label: "Placeholder", value: "Your Name"},
 						],
 					},
 					"ele-contact-email": {
 						type: "Input",
 						props: [
-							{ type: "text", label: "Label", value: "Email" },
-							{ type: "text", label: "Placeholder", value: "you@example.com" },
+							{type: "text", label: "Label", value: "Email"},
+							{type: "text", label: "Placeholder", value: "you@example.com"},
 						],
 					},
 					"ele-contact-submit": {
 						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Send Message" }],
+						props: [{type: "text", label: "Label", value: "Send Message"}],
 					},
 				},
 			},
@@ -552,7 +560,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-blog-header",
 										open: true,
-										children: [{ id: "ele-blog-heading" }, { id: "ele-blog-subtext" }],
+										children: [
+											{id: "ele-blog-heading"},
+											{id: "ele-blog-subtext"},
+										],
 									},
 								],
 							},
@@ -562,17 +573,22 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-blog-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "The Stride Blog" }],
+						props: [{type: "text", label: "Text", value: "The Stride Blog"}],
 					},
 					"ele-blog-subtext": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Tips, training guides, and gear reviews." }],
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Tips, training guides, and gear reviews.",
+							},
+						],
 					},
 				},
 			},
 		],
 	},
-
 
 	{
 		id: "page-site-products",
@@ -599,7 +615,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-products-arrivals",
 										open: true,
-										children: [{ id: "ele-products-heading" }, { id: "ele-products-subtext" }],
+										children: [
+											{id: "ele-products-heading"},
+											{id: "ele-products-subtext"},
+										],
 									},
 								],
 							},
@@ -609,11 +628,17 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-products-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "New Arrivals" }],
+						props: [{type: "text", label: "Text", value: "New Arrivals"}],
 					},
 					"ele-products-subtext": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Check out the latest gear for this season." }],
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Check out the latest gear for this season.",
+							},
+						],
 					},
 				},
 			},
@@ -645,7 +670,11 @@ export const initialPages: Page[] = [
 									{
 										id: "col-product-a-hero",
 										open: true,
-										children: [{ id: "ele-product-a-heading" }, { id: "ele-product-a-body" }, { id: "ele-product-a-cta" }],
+										children: [
+											{id: "ele-product-a-heading"},
+											{id: "ele-product-a-body"},
+											{id: "ele-product-a-cta"},
+										],
 									},
 								],
 							},
@@ -655,17 +684,21 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-product-a-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Stride Elite Runner" }],
+						props: [{type: "text", label: "Text", value: "Stride Elite Runner"}],
 					},
 					"ele-product-a-body": {
 						type: "Text",
 						props: [
-							{ type: "text", label: "Text", value: "Our most advanced running shoe yet. Lightweight, responsive, and durable." },
+							{
+								type: "text",
+								label: "Text",
+								value: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
+							},
 						],
 					},
 					"ele-product-a-cta": {
 						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+						props: [{type: "text", label: "Label", value: "Add to Cart"}],
 					},
 				},
 			},
@@ -697,7 +730,11 @@ export const initialPages: Page[] = [
 									{
 										id: "col-landing-hero",
 										open: true,
-										children: [{ id: "ele-landing-hero-heading" }, { id: "ele-landing-hero-sub" }, { id: "ele-landing-hero-cta" }],
+										children: [
+											{id: "ele-landing-hero-heading"},
+											{id: "ele-landing-hero-sub"},
+											{id: "ele-landing-hero-cta"},
+										],
 									},
 								],
 							},
@@ -715,7 +752,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-landing-activities",
 										open: true,
-										children: [{ id: "ele-landing-activities-heading" }, { id: "ele-landing-activities-text" }],
+										children: [
+											{id: "ele-landing-activities-heading"},
+											{id: "ele-landing-activities-text"},
+										],
 									},
 								],
 							},
@@ -733,7 +773,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-landing-community",
 										open: true,
-										children: [{ id: "ele-landing-community-heading" }, { id: "ele-landing-community-text" }],
+										children: [
+											{id: "ele-landing-community-heading"},
+											{id: "ele-landing-community-text"},
+										],
 									},
 								],
 							},
@@ -751,7 +794,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-landing-partners",
 										open: true,
-										children: [{ id: "ele-landing-partners-heading" }, { id: "ele-landing-partners-text" }],
+										children: [
+											{id: "ele-landing-partners-heading"},
+											{id: "ele-landing-partners-text"},
+										],
 									},
 								],
 							},
@@ -761,39 +807,59 @@ export const initialPages: Page[] = [
 				elements: {
 					"ele-landing-hero-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Welcome to Stride" }]
+						props: [{type: "text", label: "Text", value: "Welcome to Stride"}],
 					},
 					"ele-landing-hero-sub": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Move faster with premium gear." }]
+						props: [
+							{type: "text", label: "Text", value: "Move faster with premium gear."},
+						],
 					},
 					"ele-landing-hero-cta": {
 						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Shop Now" }]
+						props: [{type: "text", label: "Label", value: "Shop Now"}],
 					},
 					"ele-landing-activities-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Activities" }]
+						props: [{type: "text", label: "Text", value: "Activities"}],
 					},
 					"ele-landing-activities-text": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Explore training plans and community events." }]
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Explore training plans and community events.",
+							},
+						],
 					},
 					"ele-landing-community-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Community" }]
+						props: [{type: "text", label: "Text", value: "Community"}],
 					},
 					"ele-landing-community-text": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "Join runners in your area and share progress." }]
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Join runners in your area and share progress.",
+							},
+						],
 					},
 					"ele-landing-partners-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Partners" }]
+						props: [{type: "text", label: "Text", value: "Partners"}],
 					},
 					"ele-landing-partners-text": {
 						type: "Text",
-						props: [{ type: "text", label: "Text", value: "We collaborate with the best brands." }]
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "We collaborate with the best brands.",
+							},
+						],
 					},
 				},
 			},
@@ -814,7 +880,7 @@ export const initialPages: Page[] = [
 									{
 										id: "col-aside-latest-blogposts",
 										open: true,
-										children: [{ id: "ele-aside-latest-heading" }],
+										children: [{id: "ele-aside-latest-heading"}],
 									},
 								],
 							},
@@ -832,7 +898,10 @@ export const initialPages: Page[] = [
 									{
 										id: "col-aside-join-race",
 										open: true,
-										children: [{ id: "ele-aside-join-heading" }, { id: "ele-aside-join-cta" }],
+										children: [
+											{id: "ele-aside-join-heading"},
+											{id: "ele-aside-join-cta"},
+										],
 									},
 								],
 							},
@@ -840,11 +909,20 @@ export const initialPages: Page[] = [
 					},
 				],
 				elements: {
-					"ele-aside-latest-heading": { type: "Heading", props: [{ type: "text", label: "Text", value: "Latest Blogposts" }] },
+					"ele-aside-latest-heading": {
+						type: "Heading",
+						props: [{type: "text", label: "Text", value: "Latest Blogposts"}],
+					},
 					// blog post refs still come from initialPages by contentTypeId === "ct-blog-post"
 
-					"ele-aside-join-heading": { type: "Heading", props: [{ type: "text", label: "Text", value: "Join Race" }] },
-					"ele-aside-join-cta": { type: "Button", props: [{ type: "text", label: "Label", value: "Sign Up" }] },
+					"ele-aside-join-heading": {
+						type: "Heading",
+						props: [{type: "text", label: "Text", value: "Join Race"}],
+					},
+					"ele-aside-join-cta": {
+						type: "Button",
+						props: [{type: "text", label: "Label", value: "Sign Up"}],
+					},
 				},
 			},
 		],
@@ -962,8 +1040,6 @@ export const initialPages: Page[] = [
 			author: "1",
 		},
 	},
-
-
 ];
 
 // --- Merged Content Data ---
@@ -982,46 +1058,324 @@ export interface UnifiedContentItem {
 	lastModified: string;
 }
 
-const reportNames = ["Alice Johnson", "Bob Smith", "Carol Williams", "David Brown", "Maria Garcia", "Sarah Chen", "Marcus Johnson", "Alex Rivera", "Emily Brown", "James Wilson", "Lisa Anderson", "David Kim", "Michelle Taylor", "Robert Garcia", "Jessica Moore", "Chris Lee", "Patricia White", "Kevin Davis", "Jennifer Martin", "Thomas Brown", "Steven Clark", "Nancy Rodriguez", "Daniel Lewis"];
+const reportNames = [
+	"Alice Johnson",
+	"Bob Smith",
+	"Carol Williams",
+	"David Brown",
+	"Maria Garcia",
+	"Sarah Chen",
+	"Marcus Johnson",
+	"Alex Rivera",
+	"Emily Brown",
+	"James Wilson",
+	"Lisa Anderson",
+	"David Kim",
+	"Michelle Taylor",
+	"Robert Garcia",
+	"Jessica Moore",
+	"Chris Lee",
+	"Patricia White",
+	"Kevin Davis",
+	"Jennifer Martin",
+	"Thomas Brown",
+	"Steven Clark",
+	"Nancy Rodriguez",
+	"Daniel Lewis",
+];
 
 const getRandomName = (id: string) => {
-	const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+	const hash = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
 	return reportNames[hash % reportNames.length];
 };
 
 export const initialOtherContent: UnifiedContentItem[] = [
-	{ id: "3", name: "Heart Rate Monitor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("3"), language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "5", name: "Pricing Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("5"), language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "9", name: "Cycling Hero - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Draft", workflowStatus: "draft", modifiedBy: getRandomName("9"), language: "en", lastModified: "Jan 11, 2025" },
-	{ id: "13", name: "Route Planning Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Draft", workflowStatus: "in-review", modifiedBy: getRandomName("13"), language: "en", lastModified: "Jan 8, 2025" },
-	{ id: "26", name: "Leaderboards Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("26"), language: "en", lastModified: "Dec 26, 2024" },
-	{ id: "31", name: "Cycle Computer Pro - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("31"), language: "en", lastModified: "Dec 21, 2024" },
-	{ id: "32", name: "HR Monitor Band - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("32"), language: "en", lastModified: "Dec 20, 2024" },
-	{ id: "33", name: "Smart Bike Trainer - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("33"), language: "en", lastModified: "Dec 19, 2024" },
-	{ id: "34", name: "Cadence Sensor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("34"), language: "en", lastModified: "Dec 18, 2024" },
-	{ id: "35", name: "Power Meter - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("35"), language: "en", lastModified: "Dec 17, 2024" },
-	{ id: "36", name: "Speed Sensor - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("36"), language: "en", lastModified: "Dec 16, 2024" },
-	{ id: "37", name: "Aero Helmet - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("37"), language: "en", lastModified: "Dec 15, 2024" },
-	{ id: "38", name: "Bike Lights - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("38"), language: "en", lastModified: "Dec 14, 2024" },
-	{ id: "39", name: "Water Bottle Holder - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("39"), language: "en", lastModified: "Dec 13, 2024" },
-	{ id: "40", name: "Repair Tool Kit - Product", baseType: "Product", contentTypeId: "ct-product", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("40"), language: "en", lastModified: "Dec 12, 2024" },
-	{ id: "41", name: "Weekly Challenge Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("41"), language: "en", lastModified: "Dec 11, 2024" },
-	{ id: "42", name: "Achievement Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("42"), language: "en", lastModified: "Dec 10, 2024" },
-	{ id: "43", name: "Social Feed Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("43"), language: "en", lastModified: "Dec 9, 2024" },
-	{ id: "44", name: "Leaderboard Widget Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("44"), language: "en", lastModified: "Dec 8, 2024" },
-	{ id: "45", name: "Stats Summary Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("45"), language: "en", lastModified: "Dec 7, 2024" },
-	{ id: "46", name: "Upcoming Events Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("46"), language: "en", lastModified: "Dec 6, 2024" },
-	{ id: "47", name: "Testimonial Carousel Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("47"), language: "en", lastModified: "Dec 5, 2024" },
-	{ id: "48", name: "Payment Plans Block", baseType: "Block", contentTypeId: "ct-block", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("48"), language: "en", lastModified: "Dec 4, 2024" },
-	{ id: "49", name: "Mountain Pass Scenery - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("49"), language: "en", lastModified: "Dec 3, 2024" },
-	{ id: "50", name: "Pro Cyclist In Action - Image", baseType: "Media", contentTypeId: "ct-image", publishStatus: "Published", workflowStatus: "approved", modifiedBy: getRandomName("50"), language: "en", lastModified: "Dec 2, 2024" },
+	{
+		id: "3",
+		name: "Heart Rate Monitor - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Draft",
+		workflowStatus: "draft",
+		modifiedBy: getRandomName("3"),
+		language: "en",
+		lastModified: "Jan 11, 2025",
+	},
+	{
+		id: "5",
+		name: "Pricing Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Draft",
+		workflowStatus: "draft",
+		modifiedBy: getRandomName("5"),
+		language: "en",
+		lastModified: "Jan 11, 2025",
+	},
+	{
+		id: "9",
+		name: "Cycling Hero - Image",
+		baseType: "Media",
+		contentTypeId: "ct-image",
+		publishStatus: "Draft",
+		workflowStatus: "draft",
+		modifiedBy: getRandomName("9"),
+		language: "en",
+		lastModified: "Jan 11, 2025",
+	},
+	{
+		id: "13",
+		name: "Route Planning Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Draft",
+		workflowStatus: "in-review",
+		modifiedBy: getRandomName("13"),
+		language: "en",
+		lastModified: "Jan 8, 2025",
+	},
+	{
+		id: "26",
+		name: "Leaderboards Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("26"),
+		language: "en",
+		lastModified: "Dec 26, 2024",
+	},
+	{
+		id: "31",
+		name: "Cycle Computer Pro - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("31"),
+		language: "en",
+		lastModified: "Dec 21, 2024",
+	},
+	{
+		id: "32",
+		name: "HR Monitor Band - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("32"),
+		language: "en",
+		lastModified: "Dec 20, 2024",
+	},
+	{
+		id: "33",
+		name: "Smart Bike Trainer - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("33"),
+		language: "en",
+		lastModified: "Dec 19, 2024",
+	},
+	{
+		id: "34",
+		name: "Cadence Sensor - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("34"),
+		language: "en",
+		lastModified: "Dec 18, 2024",
+	},
+	{
+		id: "35",
+		name: "Power Meter - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("35"),
+		language: "en",
+		lastModified: "Dec 17, 2024",
+	},
+	{
+		id: "36",
+		name: "Speed Sensor - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("36"),
+		language: "en",
+		lastModified: "Dec 16, 2024",
+	},
+	{
+		id: "37",
+		name: "Aero Helmet - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("37"),
+		language: "en",
+		lastModified: "Dec 15, 2024",
+	},
+	{
+		id: "38",
+		name: "Bike Lights - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("38"),
+		language: "en",
+		lastModified: "Dec 14, 2024",
+	},
+	{
+		id: "39",
+		name: "Water Bottle Holder - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("39"),
+		language: "en",
+		lastModified: "Dec 13, 2024",
+	},
+	{
+		id: "40",
+		name: "Repair Tool Kit - Product",
+		baseType: "Product",
+		contentTypeId: "ct-product",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("40"),
+		language: "en",
+		lastModified: "Dec 12, 2024",
+	},
+	{
+		id: "41",
+		name: "Weekly Challenge Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("41"),
+		language: "en",
+		lastModified: "Dec 11, 2024",
+	},
+	{
+		id: "42",
+		name: "Achievement Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("42"),
+		language: "en",
+		lastModified: "Dec 10, 2024",
+	},
+	{
+		id: "43",
+		name: "Social Feed Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("43"),
+		language: "en",
+		lastModified: "Dec 9, 2024",
+	},
+	{
+		id: "44",
+		name: "Leaderboard Widget Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("44"),
+		language: "en",
+		lastModified: "Dec 8, 2024",
+	},
+	{
+		id: "45",
+		name: "Stats Summary Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("45"),
+		language: "en",
+		lastModified: "Dec 7, 2024",
+	},
+	{
+		id: "46",
+		name: "Upcoming Events Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("46"),
+		language: "en",
+		lastModified: "Dec 6, 2024",
+	},
+	{
+		id: "47",
+		name: "Testimonial Carousel Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("47"),
+		language: "en",
+		lastModified: "Dec 5, 2024",
+	},
+	{
+		id: "48",
+		name: "Payment Plans Block",
+		baseType: "Block",
+		contentTypeId: "ct-block",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("48"),
+		language: "en",
+		lastModified: "Dec 4, 2024",
+	},
+	{
+		id: "49",
+		name: "Mountain Pass Scenery - Image",
+		baseType: "Media",
+		contentTypeId: "ct-image",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("49"),
+		language: "en",
+		lastModified: "Dec 3, 2024",
+	},
+	{
+		id: "50",
+		name: "Pro Cyclist In Action - Image",
+		baseType: "Media",
+		contentTypeId: "ct-image",
+		publishStatus: "Published",
+		workflowStatus: "approved",
+		modifiedBy: getRandomName("50"),
+		language: "en",
+		lastModified: "Dec 2, 2024",
+	},
 ];
 
 export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContentItem[] => {
-	const pageItems: UnifiedContentItem[] = pages.map(p => {
-		const ct = initialContentTypes.find(c => c.id === p.contentTypeId);
+	const pageItems: UnifiedContentItem[] = pages.map((p) => {
+		const ct = initialContentTypes.find((c) => c.id === p.contentTypeId);
 		const date = new Date(p.lastModified);
-		const formattedDate = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+		const formattedDate = date.toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+		});
 
 		return {
 			id: p.id,
@@ -1032,11 +1386,8 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 			workflowStatus: p.status === "Published" ? "approved" : "draft",
 			modifiedBy: getRandomName(p.id),
 			language: "en",
-			lastModified: formattedDate
+			lastModified: formattedDate,
 		};
 	});
 	return [...pageItems, ...initialOtherContent];
 };
-
-
-
