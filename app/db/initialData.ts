@@ -1040,3 +1040,20 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 
 
 
+
+export const siteConfig = {
+	header: {
+		logo: "STRIDE",
+		links: [
+			{ label: "Activities", href: "#" },
+			{ label: "Community", href: "#" },
+			{ label: "Challenges", href: "#" },
+			{ label: "Pricing", href: "#" },
+			{ label: "Stories", href: "#" },
+		],
+		auth: {
+			signIn: "Sign In",
+			cta: "Get Started",
+		},
+	},
+};

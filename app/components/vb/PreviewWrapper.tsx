@@ -137,10 +137,31 @@ export default function PreviewWrapper({
             </div>
         );
     } else if (mode === "fixed") {
-        body = <div style={{ width: `${width}px`, margin: "0 auto" }}>{children}</div>;
+        body = (
+            <div
+                style={{
+                    width: `${width}px`,
+                    margin: "0 auto",
+                    minHeight: fill ? "100%" : undefined,
+                    display: fill ? "flex" : undefined,
+                    flexDirection: fill ? "column" : undefined,
+                }}
+            >
+                {children}
+            </div>
+        );
     } else {
         body = (
-            <div style={{ width: "100%", maxWidth: maxWidth ? `${maxWidth}px` : undefined, margin: "0 auto" }}>
+            <div
+                style={{
+                    width: "100%",
+                    maxWidth: maxWidth ? `${maxWidth}px` : undefined,
+                    margin: "0 auto",
+                    minHeight: fill ? "100%" : undefined,
+                    display: fill ? "flex" : undefined,
+                    flexDirection: fill ? "column" : undefined,
+                }}
+            >
                 {children}
             </div>
         );
