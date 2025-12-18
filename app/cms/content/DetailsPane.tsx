@@ -182,7 +182,7 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
             />
           ) : (
             <Box style={{ display: "flex", alignItems: "center" }}>
-              {getIconForType(content.type, 80)}
+              {getIconForType(content.baseType, 80)}
             </Box>
           )}
         </Box>
@@ -194,7 +194,7 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
           </Text>
           <Box display="flex" gap="8" alignItems="center">
             <Box style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-              {getIconForType(content.type, 16)}
+              {getIconForType(content.baseType, 16)}
             </Box>
             <Text fontSize="md" fontWeight="600" style={{ wordBreak: "break-word" }}>
               {content.name}
