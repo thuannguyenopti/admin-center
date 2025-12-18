@@ -8,11 +8,19 @@ html {
 	color-scheme: light;
 }
 
-/* Dark mode support based on OS preference or explicit theme */
+/* Light mode as default */
+:root {
+	--background: #ffffff;
+	--foreground: #000000;
+	color-scheme: light;
+}
+
+/* Dark mode support based on OS preference */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    color-scheme: dark;
   }
   
   html {
@@ -20,18 +28,36 @@ html {
   }
 }
 
-[data-theme="dark"],
-html.dark,
+/* Dark mode via data-theme attribute - takes precedence over OS preference */
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"],
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  color-scheme: dark;
+}
+
 body.dark {
   --background: #0a0a0a;
   --foreground: #ededed;
   color-scheme: dark;
 }
 
-[data-theme="light"],
-html:not(.dark),
+/* Ensure AxiomProvider gets the correct color scheme */
+html[data-theme="dark"] body,
+html.dark body,
+body.dark {
+	color-scheme: dark;
+}
+
+html:not([data-theme="dark"]):not(.dark) body,
 body:not(.dark) {
-  color-scheme: light;
+	color-scheme: light;
 }
 
 body {
