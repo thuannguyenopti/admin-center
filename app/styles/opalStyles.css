@@ -1,7 +1,7 @@
-/* Opal Panel Styles - Light & Dark Mode */
+/* Opal Panel Styles - Light Mode (Default) */
 
 :root {
-  /* Light Mode - Background Colors (from optiaxiom) */
+  /* Light Mode - Background Colors */
   --opal-bg-primary: #f9fafc;
   --opal-bg-sidebar: #f2f4fa;
   --opal-bg-suggest: linear-gradient(135deg, #ede9f5 0%, #dce8f5 100%);
@@ -35,9 +35,10 @@
   --opal-send-btn-text: #ffffff;
 }
 
+/* Dark Mode - Apply based on OS preference or explicit theme setting */
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark Mode - Background Colors (from optiaxiom) */
+    /* Dark Mode - Background Colors */
     --opal-bg-primary: #1a1d2e;
     --opal-bg-sidebar: #161921;
     --opal-bg-suggest: linear-gradient(135deg, rgba(89,74,180,0.25) 0%, rgba(153,128,230,0.15) 100%);
@@ -70,6 +71,45 @@
     --opal-send-btn-bg: #9b8bff;
     --opal-send-btn-text: #1a1d2e;
   }
+}
+
+/* Dark Mode - Apply based on data attribute set by useTheme hook */
+/* Using [data-theme="dark"] or similar data attribute set by useTheme */
+[data-theme="dark"],
+html.dark,
+body.dark {
+  /* Dark Mode - Background Colors */
+  --opal-bg-primary: #1a1d2e;
+  --opal-bg-sidebar: #161921;
+  --opal-bg-suggest: linear-gradient(135deg, rgba(89,74,180,0.25) 0%, rgba(153,128,230,0.15) 100%);
+  --opal-bg-suggest-hover: linear-gradient(135deg, rgba(99,84,200,0.35) 0%, rgba(163,138,240,0.25) 100%);
+  --opal-bg-input: #2a2d3f;
+  --opal-bg-assistant: #3a3d4f;
+  --opal-bg-user: #2d3a6b;
+  --opal-bg-history-active: #3a3d4f;
+  
+  /* Dark Mode - Border Colors */
+  --opal-border-primary: #404557;
+  --opal-border-secondary: #3a3d4f;
+  --opal-border-input: #404557;
+  
+  /* Dark Mode - Text Colors */
+  --opal-text-primary: #e0e4eb;
+  --opal-text-secondary: #a8afc1;
+  --opal-text-tertiary: #8a92a8;
+  --opal-text-body: #e8ecf5;
+  --opal-text-placeholder: #6a7289;
+  --opal-text-inverse: #1a1d2e;
+  --opal-text-user: #e8ecf5;
+  --opal-text-label: #a8afc1;
+  
+  /* Dark Mode - Special Colors */
+  --opal-spinner-border: #404557;
+  --opal-spinner-top: #7a8fb5;
+  --opal-accent-red: #ff6b6b;
+  --opal-icon-dark: #e0e4eb;
+  --opal-send-btn-bg: #9b8bff;
+  --opal-send-btn-text: #1a1d2e;
 }
 
 /* Animations */
