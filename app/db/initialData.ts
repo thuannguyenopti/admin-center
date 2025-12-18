@@ -721,6 +721,7 @@ export const initialPages: Page[] = [
 					{
 						id: "sec-landing-hero",
 						name: "Hero",
+						bgImage: "https://picsum.photos/seed/cycling5/1200/800",
 						open: true,
 						children: [
 							{
@@ -731,10 +732,11 @@ export const initialPages: Page[] = [
 										id: "col-landing-hero",
 										open: true,
 										children: [
-											{ id: "ele-landing-hero-image" },
-											{ id: "ele-landing-hero-heading" },
+											{ id: "ele-landing-hero-badge" },
 											{ id: "ele-landing-hero-sub" },
-											{ id: "ele-landing-hero-cta" },
+											{ id: "ele-landing-hero-heading" },
+											{ id: "ele-landing-hero-cta-row" },
+											{ id: "ele-landing-hero-stats" },
 										],
 									},
 								],
@@ -742,20 +744,20 @@ export const initialPages: Page[] = [
 						],
 					},
 					{
-						id: "sec-landing-activities",
-						name: "Activities",
+						id: "sec-landing-features-intro",
+						name: "Features Intro",
 						open: true,
 						children: [
 							{
-								id: "row-landing-activities",
+								id: "row-landing-features-intro",
 								open: true,
 								children: [
 									{
-										id: "col-landing-activities",
+										id: "col-landing-features-intro",
 										open: true,
 										children: [
-											{ id: "ele-landing-activities-heading" },
-											{ id: "ele-landing-activities-text" },
+											{ id: "ele-landing-features-heading" },
+											{ id: "ele-landing-features-sub" },
 										],
 									},
 								],
@@ -763,41 +765,75 @@ export const initialPages: Page[] = [
 						],
 					},
 					{
-						id: "sec-landing-community",
-						name: "Community",
+						id: "sec-landing-features-grid",
+						name: "Features Grid",
 						open: true,
 						children: [
 							{
-								id: "row-landing-community",
+								id: "row-landing-features-1",
+								open: true,
+								children: [
+									{ id: "col-feat-1", open: true, children: [{ id: "ele-feat-1" }] },
+									{ id: "col-feat-2", open: true, children: [{ id: "ele-feat-2" }] },
+									{ id: "col-feat-3", open: true, children: [{ id: "ele-feat-3" }] },
+								],
+							},
+							{
+								id: "row-landing-features-2",
+								open: true,
+								children: [
+									{ id: "col-feat-4", open: true, children: [{ id: "ele-feat-4" }] },
+									{ id: "col-feat-5", open: true, children: [{ id: "ele-feat-5" }] },
+									{ id: "col-feat-6", open: true, children: [{ id: "ele-feat-6" }] },
+								],
+							},
+						],
+					},
+					{
+						id: "sec-landing-testimonials",
+						name: "Testimonials",
+						open: true,
+						children: [
+							{
+								id: "row-landing-testimonials-intro",
 								open: true,
 								children: [
 									{
-										id: "col-landing-community",
+										id: "col-landing-testimonials-intro",
 										open: true,
 										children: [
-											{ id: "ele-landing-community-heading" },
-											{ id: "ele-landing-community-text" },
+											{ id: "ele-landing-testimonials-heading" },
+											{ id: "ele-landing-testimonials-sub" },
 										],
 									},
+								],
+							},
+							{
+								id: "row-landing-testimonials-cards",
+								open: true,
+								children: [
+									{ id: "col-test-1", open: true, children: [{ id: "ele-test-1" }] },
+									{ id: "col-test-2", open: true, children: [{ id: "ele-test-2" }] },
 								],
 							},
 						],
 					},
 					{
-						id: "sec-landing-partners",
-						name: "Partners",
+						id: "sec-landing-cta",
+						name: "CTA",
 						open: true,
 						children: [
 							{
-								id: "row-landing-partners",
+								id: "row-landing-cta",
 								open: true,
 								children: [
 									{
-										id: "col-landing-partners",
+										id: "col-landing-cta",
 										open: true,
 										children: [
-											{ id: "ele-landing-partners-heading" },
-											{ id: "ele-landing-partners-text" },
+											{ id: "ele-landing-cta-heading" },
+											{ id: "ele-landing-cta-sub" },
+											{ id: "ele-landing-cta-button" },
 										],
 									},
 								],
@@ -805,49 +841,112 @@ export const initialPages: Page[] = [
 						],
 					},
 					{
-						id: "sec-landing-products",
-						name: "Featured Products",
+						id: "sec-landing-challenges",
+						name: "Challenges",
 						open: true,
 						children: [
 							{
-								id: "row-landing-products-1",
+								id: "row-landing-challenges-intro",
 								open: true,
 								children: [
 									{
-										id: "col-prod-1",
+										id: "col-landing-challenges-intro",
 										open: true,
-										children: [{ id: "ele-prod-1-img" }, { id: "ele-prod-1" }],
-									},
-									{
-										id: "col-prod-2",
-										open: true,
-										children: [{ id: "ele-prod-2-img" }, { id: "ele-prod-2" }],
-									},
-									{
-										id: "col-prod-3",
-										open: true,
-										children: [{ id: "ele-prod-3-img" }, { id: "ele-prod-3" }],
+										children: [
+											{ id: "ele-landing-challenges-heading" },
+											{ id: "ele-landing-challenges-sub" },
+										],
 									},
 								],
 							},
 							{
-								id: "row-landing-products-2",
+								id: "row-landing-challenges-cards",
+								open: true,
+								children: [
+									{ id: "col-chal-1", open: true, children: [{ id: "ele-chal-1" }] },
+									{ id: "col-chal-2", open: true, children: [{ id: "ele-chal-2" }] },
+									{ id: "col-chal-3", open: true, children: [{ id: "ele-chal-3" }] },
+								],
+							},
+						],
+					},
+					{
+						id: "sec-landing-pricing",
+						name: "Pricing",
+						open: true,
+						children: [
+							{
+								id: "row-landing-pricing-intro",
 								open: true,
 								children: [
 									{
-										id: "col-prod-4",
+										id: "col-landing-pricing-intro",
 										open: true,
-										children: [{ id: "ele-prod-4-img" }, { id: "ele-prod-4" }],
+										children: [
+											{ id: "ele-landing-pricing-heading" },
+											{ id: "ele-landing-pricing-sub" },
+										],
 									},
+								],
+							},
+							{
+								id: "row-landing-pricing-cards",
+								open: true,
+								children: [
+									{ id: "col-price-1", open: true, children: [{ id: "ele-price-1" }] },
+									{ id: "col-price-2", open: true, children: [{ id: "ele-price-2" }] },
+									{ id: "col-price-3", open: true, children: [{ id: "ele-price-3" }] },
+								],
+							},
+						],
+					},
+					{
+						id: "sec-landing-stories",
+						name: "Stories",
+						open: true,
+						children: [
+							{
+								id: "row-landing-stories-intro",
+								open: true,
+								children: [
 									{
-										id: "col-prod-5",
+										id: "col-landing-stories-intro",
 										open: true,
-										children: [{ id: "ele-prod-5-img" }, { id: "ele-prod-5" }],
+										children: [
+											{ id: "ele-landing-stories-heading" },
+											{ id: "ele-landing-stories-sub" },
+										],
 									},
+								],
+							},
+							{
+								id: "row-landing-stories-cards",
+								open: true,
+								children: [
+									{ id: "col-story-1", open: true, children: [{ id: "ele-story-1" }] },
+									{ id: "col-story-2", open: true, children: [{ id: "ele-story-2" }] },
+									{ id: "col-story-3", open: true, children: [{ id: "ele-story-3" }] },
+								],
+							},
+						],
+					},
+					{
+						id: "sec-landing-footer-cta",
+						name: "Footer CTA",
+						open: true,
+						children: [
+							{
+								id: "row-landing-footer-cta",
+								open: true,
+								children: [
 									{
-										id: "col-prod-6",
+										id: "col-landing-footer-cta",
 										open: true,
-										children: [{ id: "ele-prod-6-img" }, { id: "ele-prod-6" }],
+										children: [
+											{ id: "ele-landing-footer-cta-heading" },
+											{ id: "ele-landing-footer-cta-sub" },
+											{ id: "ele-landing-footer-cta-stats" },
+										],
 									},
 								],
 							},
@@ -855,134 +954,181 @@ export const initialPages: Page[] = [
 					},
 				],
 				elements: {
-					"ele-landing-hero-image": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling5/800/400" },
-							{ type: "text", label: "Alt Text", value: "Professional cyclist racing" },
-						],
-					},
-					"ele-landing-hero-heading": {
-						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Welcome to Stride" }],
+					"ele-landing-hero-badge": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "● Join 2M+ active users worldwide" }],
 					},
 					"ele-landing-hero-sub": {
 						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Ready. Set. Go." }],
+					},
+					"ele-landing-hero-heading": {
+						type: "Heading",
 						props: [
-							{ type: "text", label: "Text", value: "Move faster with premium gear." },
+							{
+								type: "text",
+								label: "Text",
+								value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
+							},
 						],
 					},
-					"ele-landing-hero-cta": {
-						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Shop Now" }],
+					"ele-landing-hero-cta-row": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "[ Register for your bib ]   [ Learn More ]" }],
 					},
-					"ele-landing-activities-heading": {
-						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Activities" }],
-					},
-					"ele-landing-activities-text": {
+					"ele-landing-hero-stats": {
 						type: "Text",
 						props: [
 							{
 								type: "text",
 								label: "Text",
-								value: "Explore training plans and community events.",
+								value: "500K+ Annual participants | 45+ Countries represented | 4.9/5 Average rating",
 							},
 						],
 					},
-					"ele-landing-community-heading": {
+					"ele-landing-features-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Community" }],
+						props: [{ type: "text", label: "Text", value: "Everything you need to stay motivated" }],
 					},
-					"ele-landing-community-text": {
+					"ele-landing-features-sub": {
 						type: "Text",
 						props: [
 							{
 								type: "text",
 								label: "Text",
-								value: "Join runners in your area and share progress.",
+								value: "Track your progress, connect with friends, and push your limits with our comprehensive fitness platform.",
 							},
 						],
 					},
-					"ele-landing-partners-heading": {
-						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Partners" }],
+					"ele-feat-1": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "GPS Tracking: Accurate route mapping and distance tracking for all your outdoor activities." }],
 					},
-					"ele-landing-partners-text": {
+					"ele-feat-2": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Heart Rate Monitoring: Real-time heart rate tracking to optimize your workout intensity." }],
+					},
+					"ele-feat-3": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Performance Analytics: Detailed insights and progress tracking to help you improve over time." }],
+					},
+					"ele-feat-4": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Achievement System: Unlock badges and celebrate milestones as you reach your fitness goals." }],
+					},
+					"ele-feat-5": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Social Features: Share your achievements and connect with a community of fitness enthusiasts." }],
+					},
+					"ele-feat-6": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Cross-Platform Sync: Seamlessly sync your data across all your devices and platforms." }],
+					},
+					"ele-landing-testimonials-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Join millions of active users" }],
+					},
+					"ele-landing-testimonials-sub": {
 						type: "Text",
 						props: [
 							{
 								type: "text",
 								label: "Text",
-								value: "We collaborate with the best brands.",
+								value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
 							},
 						],
 					},
-					"ele-prod-1-img": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling1/400/300" },
-							{ type: "text", label: "Alt Text", value: "Cycle Computer Pro" },
-						],
+					"ele-test-1": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Sarah M.: Amazing run through Central Park this morning! The GPS tracking was spot-on and I love seeing my progress over time. 🏃‍♀️✨" }],
 					},
-					"ele-prod-1": {
+					"ele-test-2": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Mike R.: Crushed my half-marathon goal! The community challenges really pushed me to go further than I thought possible. 💪🏆" }],
+					},
+					"ele-landing-cta-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Ready to join the community?" }],
+					},
+					"ele-landing-cta-sub": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Start sharing your fitness journey and get inspired by others." }],
+					},
+					"ele-landing-cta-button": {
 						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Cycle Computer Pro - $199" }],
+						props: [{ type: "text", label: "Label", value: "Join Now" }],
 					},
-					"ele-prod-2-img": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling3/400/300" },
-							{ type: "text", label: "Alt Text", value: "HR Monitor Band" },
-						],
+					"ele-landing-challenges-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Push your limits" }],
 					},
-					"ele-prod-2": {
-						type: "Button",
-						props: [{ type: "text", label: "Label", value: "HR Monitor Band - $79" }],
+					"ele-landing-challenges-sub": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones." }],
 					},
-					"ele-prod-3-img": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling2/400/300" },
-							{ type: "text", label: "Alt Text", value: "Smart Bike Trainer" },
-						],
+					"ele-chal-1": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "October Run Streak: Run at least 1 mile every day this month. Progress: 65%" }],
 					},
-					"ele-prod-3": {
-						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Smart Bike Trainer - $599" }],
+					"ele-chal-2": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "100 Mile Challenge: Complete 100 miles in 30 days. Progress: 42%" }],
 					},
-					"ele-prod-4-img": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling4/400/300" },
-							{ type: "text", label: "Alt Text", value: "Cadence Sensor" },
-						],
+					"ele-chal-3": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Weekend Warrior: Double your weekend mileage. Progress: 0%" }],
 					},
-					"ele-prod-4": {
-						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Cadence Sensor - $39" }],
+					"ele-landing-pricing-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Choose your plan" }],
 					},
-					"ele-prod-5-img": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling8/400/300" },
-							{ type: "text", label: "Alt Text", value: "Power Meter" },
-						],
+					"ele-landing-pricing-sub": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime." }],
 					},
-					"ele-prod-5": {
-						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Power Meter - $449" }],
+					"ele-price-1": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Free: $0/mo. Basic activity tracking, Community access, 5 challenges per month." }],
 					},
-					"ele-prod-6-img": {
-						type: "Image",
-						props: [
-							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling9/400/300" },
-							{ type: "text", label: "Alt Text", value: "Speed Sensor" },
-						],
+					"ele-price-2": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Pro: $9.99/mo. Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring." }],
 					},
-					"ele-prod-6": {
-						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Speed Sensor - $39" }],
+					"ele-price-3": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Team: $24.99/mo. Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard." }],
+					},
+					"ele-landing-stories-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Real results from real people" }],
+					},
+					"ele-landing-stories-sub": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "See how STRIDE has transformed the fitness journeys of our amazing community members." }],
+					},
+					"ele-story-1": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Jessica T.: STRIDE helped me train for my first marathon. The personalized plans kept me motivated!" }],
+					},
+					"ele-story-2": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Marcus R.: The analytics features are incredible. Being able to track my performance has helped me identify areas for improvement." }],
+					},
+					"ele-story-3": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Amanda K.: I love the social aspect of STRIDE. Connecting with other fitness enthusiasts has completely transformed my workout routine." }],
+					},
+					"ele-landing-footer-cta-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Join over 2 million users achieving their goals" }],
+					},
+					"ele-landing-footer-cta-sub": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Start your fitness journey today and become part of our success stories." }],
+					},
+					"ele-landing-footer-cta-stats": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "4.9/5 App Store Rating | 50K+ 5-Star Reviews | 2M+ Active Users" }],
 					},
 				},
 			},
@@ -992,38 +1138,48 @@ export const initialPages: Page[] = [
 				title: "Aside",
 				tree: [
 					{
-						id: "sec-aside-latest-blogposts",
-						name: "Latest Blogposts",
+						id: "sec-aside-blog",
+						name: "Latest Blog Posts",
 						open: true,
 						children: [
 							{
-								id: "row-aside-latest-blogposts",
+								id: "row-aside-blog",
 								open: true,
 								children: [
 									{
-										id: "col-aside-latest-blogposts",
+										id: "col-aside-blog",
 										open: true,
-										children: [{ id: "ele-aside-latest-heading" }],
+										children: [
+											{ id: "ele-aside-blog-heading" },
+											{ id: "ele-aside-blog-1" },
+											{ id: "ele-aside-blog-2" },
+											{ id: "ele-aside-blog-3" },
+										],
 									},
 								],
 							},
 						],
 					},
 					{
-						id: "sec-aside-join-race",
-						name: "Join Race",
+						id: "sec-aside-signup",
+						name: "Join STRIDE Today",
 						open: true,
 						children: [
 							{
-								id: "row-aside-join-race",
+								id: "row-aside-signup",
 								open: true,
 								children: [
 									{
-										id: "col-aside-join-race",
+										id: "col-aside-signup",
 										open: true,
 										children: [
-											{ id: "ele-aside-join-heading" },
-											{ id: "ele-aside-join-cta" },
+											{ id: "ele-aside-signup-heading" },
+											{ id: "ele-aside-signup-sub" },
+											{ id: "ele-aside-signup-name" },
+											{ id: "ele-aside-signup-email" },
+											{ id: "ele-aside-signup-pass" },
+											{ id: "ele-aside-signup-btn" },
+											{ id: "ele-aside-signup-footer" },
 										],
 									},
 								],
@@ -1032,19 +1188,49 @@ export const initialPages: Page[] = [
 					},
 				],
 				elements: {
-					"ele-aside-latest-heading": {
+					"ele-aside-blog-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Latest Blogposts" }],
+						props: [{ type: "text", label: "Text", value: "Latest Blog Posts" }],
 					},
-					// blog post refs still come from initialPages by contentTypeId === "ct-blog-post"
-
-					"ele-aside-join-heading": {
+					"ele-aside-blog-1": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "10 Tips For Your First Marathon (2 days ago)" }],
+					},
+					"ele-aside-blog-2": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Cycling Workouts for Beginners (5 days ago)" }],
+					},
+					"ele-aside-blog-3": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "The Science of Running Form (1 week ago)" }],
+					},
+					"ele-aside-signup-heading": {
 						type: "Heading",
-						props: [{ type: "text", label: "Text", value: "Join Race" }],
+						props: [{ type: "text", label: "Text", value: "Join STRIDE Today" }],
 					},
-					"ele-aside-join-cta": {
+					"ele-aside-signup-sub": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Start your fitness journey with our community" }],
+					},
+					"ele-aside-signup-name": {
+						type: "Input",
+						props: [{ type: "text", label: "Placeholder", value: "Full Name" }],
+					},
+					"ele-aside-signup-email": {
+						type: "Input",
+						props: [{ type: "text", label: "Placeholder", value: "Email Address" }],
+					},
+					"ele-aside-signup-pass": {
+						type: "Input",
+						props: [{ type: "text", label: "Placeholder", value: "Password" }],
+					},
+					"ele-aside-signup-btn": {
 						type: "Button",
-						props: [{ type: "text", label: "Label", value: "Sign Up" }],
+						props: [{ type: "text", label: "Label", value: "Create Account" }],
+					},
+					"ele-aside-signup-footer": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "By signing up, you agree to our Terms of Service and Privacy Policy" }],
 					},
 				},
 			},

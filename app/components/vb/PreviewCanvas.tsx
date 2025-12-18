@@ -187,213 +187,270 @@ export default function PreviewCanvas({
     };
 
     const renderOutlineTree = (outline: Outline) => {
-        return outline.tree.map((section: any, sindex: number) => (
-            <section key={section.id ?? sindex} className="mb-8 last:mb-0">
-                {(section.children || []).map((row: any, rIndex: number) => (
-                    <section
-                        className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 text-white`}
-                        key={row.id ?? rIndex}
-                    >
-                        {(row.children || []).map((col: any, cIndex: number) => {
-                            const colChildren = col.children || [];
-                            const isActiveDropCol =
-                                dragOverColumn === col.id &&
-                                dropPosition &&
-                                dropPosition.outlineId === outline.id &&
-                                dropPosition.colId === col.id;
+        const isAside = isAsideOutline(outline);
+        return outline.tree.map((section: any, sindex: number) => {
+            const hasBgImage = !!section.bgImage;
+            const isFooterCTA = section.name === "Footer CTA";
+            
+            return (
+                <section
+                    key={section.id ?? sindex}
+                    className={`mb-6 last:mb-0 overflow-hidden rounded-[10px] ${hasBgImage ? "relative min-h-[500px] flex items-center" : "bg-white shadow-sm"}`}
+                    style={hasBgImage ? {
+                        backgroundImage: `linear-gradient(rgba(25, 75, 255, 0.8), rgba(25, 75, 255, 0.8)), url(${section.bgImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    } : {}}
+                >
+                    <div className={hasBgImage ? "relative z-10 w-full p-12 md:p-20" : `w-full ${isAside ? "p-8" : "p-8 md:p-12"}`}>
+                        {(section.children || []).map((row: any, rIndex: number) => (
+                            <section
+                                className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"}`}
+                                key={row.id ?? rIndex}
+                            >
+                                {(row.children || []).map((col: any, cIndex: number) => {
+                                    const colChildren = col.children || [];
+                                    const isActiveDropCol =
+                                        dragOverColumn === col.id &&
+                                        dropPosition &&
+                                        dropPosition.outlineId === outline.id &&
+                                        dropPosition.colId === col.id;
 
-                            return (
-                                <div
-                                    key={col.id ?? cIndex}
-                                    onDragOver={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-
-                                        // ✅ IMPORTANT: do NOT rely on only "image/url"
-                                        if (!isImageDrag(e.dataTransfer)) return;
-
-                                        setDragOverColumn(col.id);
-
-                                        const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
-                                        const mouseY = e.clientY;
-
-                                        let insertPosition = colChildren.length;
-
-                                        for (let i = 0; i < elementDivs.length; i++) {
-                                            const rect = (elementDivs[i] as HTMLElement).getBoundingClientRect();
-                                            const middle = rect.top + rect.height / 2;
-                                            if (mouseY < middle) {
-                                                insertPosition = i;
-                                                break;
-                                            }
-                                        }
-
-                                        setDropPosition({
-                                            outlineId: outline.id,
-                                            colId: col.id,
-                                            position: insertPosition,
-                                        });
-                                    }}
-                                    onDragLeave={(e) => {
-                                        e.stopPropagation();
-                                        if (e.currentTarget === e.target) {
-                                            setDragOverColumn(null);
-                                            setDropPosition(null);
-                                        }
-                                    }}
-                                    className={dragOverColumn === col.id ? "relative" : ""}
-                                >
-                                    {/* empty drop */}
-                                    {colChildren.length === 0 && dragOverColumn === col.id && (
+                                    return (
                                         <div
-                                            style={{
-                                                border: "2px dashed #0037FF",
-                                                borderRadius: "8px",
-                                                padding: "20px",
-                                                textAlign: "center",
-                                                color: "#0037FF",
-                                                fontSize: "14px",
-                                                backgroundColor: "rgba(0, 55, 255, 0.05)",
+                                            key={col.id ?? cIndex}
+                                            onDragOver={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+
+                                                // ✅ IMPORTANT: do NOT rely on only "image/url"
+                                                if (!isImageDrag(e.dataTransfer)) return;
+
+                                                setDragOverColumn(col.id);
+
+                                                const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
+                                                const mouseY = e.clientY;
+
+                                                let insertPosition = colChildren.length;
+
+                                                for (let i = 0; i < elementDivs.length; i++) {
+                                                    const rect = (elementDivs[i] as HTMLElement).getBoundingClientRect();
+                                                    const middle = rect.top + rect.height / 2;
+                                                    if (mouseY < middle) {
+                                                        insertPosition = i;
+                                                        break;
+                                                    }
+                                                }
+
+                                                setDropPosition({
+                                                    outlineId: outline.id,
+                                                    colId: col.id,
+                                                    position: insertPosition,
+                                                });
                                             }}
+                                            onDragLeave={(e) => {
+                                                e.stopPropagation();
+                                                if (e.currentTarget === e.target) {
+                                                    setDragOverColumn(null);
+                                                    setDropPosition(null);
+                                                }
+                                            }}
+                                            className={dragOverColumn === col.id ? "relative" : ""}
                                         >
-                                            Drop image here
-                                        </div>
-                                    )}
+                                            {/* empty drop */}
+                                            {colChildren.length === 0 && dragOverColumn === col.id && (
+                                                <div
+                                                    style={{
+                                                        border: "2px dashed #0037FF",
+                                                        borderRadius: "8px",
+                                                        padding: "20px",
+                                                        textAlign: "center",
+                                                        color: "#0037FF",
+                                                        fontSize: "14px",
+                                                        backgroundColor: "rgba(0, 55, 255, 0.05)",
+                                                    }}
+                                                >
+                                                    Drop image here
+                                                </div>
+                                            )}
 
-                                    {/* list */}
-                                    {colChildren.map((element: any, eleIndex: number) => {
-                                        const ele = outline.elements[element.id];
-                                        const type = ele?.type;
+                                            {/* list */}
+                                            {colChildren.map((element: any, eleIndex: number) => {
+                                                const ele = outline.elements[element.id];
+                                                const type = ele?.type;
 
-                                        return (
-                                            <React.Fragment key={element.id ?? eleIndex}>
-                                                {/* ✅ insert line BEFORE the element (middle positions now visible/usable) */}
-                                                {isActiveDropCol && dropPosition!.position === eleIndex && (
-                                                    <div
-                                                        style={{
-                                                            height: "2px",
-                                                            backgroundColor: "#0037FF",
-                                                            borderRadius: "2px",
-                                                            margin: "6px 0",
-                                                            pointerEvents: "none",
-                                                        }}
-                                                    />
-                                                )}
+                                                return (
+                                                    <React.Fragment key={element.id ?? eleIndex}>
+                                                        {/* ✅ insert line BEFORE the element (middle positions now visible/usable) */}
+                                                        {isActiveDropCol && dropPosition!.position === eleIndex && (
+                                                            <div
+                                                                style={{
+                                                                    height: "2px",
+                                                                    backgroundColor: "#0037FF",
+                                                                    borderRadius: "2px",
+                                                                    margin: "6px 0",
+                                                                    pointerEvents: "none",
+                                                                }}
+                                                            />
+                                                        )}
 
-                                                <div className="relative group" data-element-id={element.id}>
-                                                    {/* selection outline */}
-                                                    <div
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCurrentEle(element.id);
-                                                            setCurrentHoverEle("none");
-                                                        }}
-                                                        style={{
-                                                            visibility:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "visible"
-                                                                    : undefined,
-                                                            opacity:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? currentEle === element.id
-                                                                        ? 1
-                                                                        : 0.5
-                                                                    : undefined,
-                                                            top:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                            left:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                            right:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                            bottom:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                        }}
-                                                        className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
-                                                    >
-                                                        <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
+                                                        <div className="relative group" data-element-id={element.id}>
+                                                            {/* selection outline */}
+                                                            <div
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setCurrentEle(element.id);
+                                                                    setCurrentHoverEle("none");
+                                                                }}
+                                                                style={{
+                                                                    visibility:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "visible"
+                                                                            : undefined,
+                                                                    opacity:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? currentEle === element.id
+                                                                                ? 1
+                                                                                : 0.5
+                                                                            : undefined,
+                                                                    top:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                    left:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                    right:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                    bottom:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                }}
+                                                                className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+                                                            >
+                                                                <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
+                                                                    {(() => {
+                                                                        switch (type) {
+                                                                            case "Heading":
+                                                                                return <IconHeading size={12} />;
+                                                                            case "Text":
+                                                                                return <IconPilcrow size={12} />;
+                                                                            case "Input":
+                                                                                return <IconForms size={12} />;
+                                                                            case "Button":
+                                                                                return <IconRectangle size={12} />;
+                                                                            case "Image":
+                                                                                return <IconPhoto size={12} />;
+                                                                            default:
+                                                                                return <IconBrackets size={12} />;
+                                                                        }
+                                                                    })()}
+                                                                    {type || "Unknown"}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* element render */}
                                                             {(() => {
                                                                 switch (type) {
                                                                     case "Heading":
-                                                                        return <IconHeading size={12} />;
-                                                                    case "Text":
-                                                                        return <IconPilcrow size={12} />;
-                                                                    case "Input":
-                                                                        return <IconForms size={12} />;
-                                                                    case "Button":
-                                                                        return <IconRectangle size={12} />;
-                                                                    case "Image":
-                                                                        return <IconPhoto size={12} />;
-                                                                    default:
-                                                                        return <IconBrackets size={12} />;
-                                                                }
-                                                            })()}
-                                                            {type || "Unknown"}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* element render */}
-                                                    {(() => {
-                                                        switch (type) {
-                                                            case "Heading":
-                                                                return (
-                                                                    <h1 className="text-3xl mb-5 font-bold">
+                                                                        return (
+                                                                    <h1 className={`font-bold leading-tight ${hasBgImage ? "text-4xl mb-6" : "text-3xl mb-4 text-center"}`}>
                                                                         {ele?.props.find((p: any) => p.label === "Text")?.value || (
                                                                             <>&nbsp;</>
                                                                         )}
                                                                     </h1>
                                                                 );
 
-                                                            case "Text":
+                                                            case "Text": {
+                                                                const textValue = ele?.props.find((p: any) => p.label === "Text")?.value || "";
+                                                                
+                                                                // Special handling for Hero Badge
+                                                                if (textValue.includes("●")) {
+                                                                    return (
+                                                                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-[10px] border border-white/20 mb-6">
+                                                                            <span className="text-green-400 text-xs">●</span>
+                                                                            <span className="text-white text-xs font-medium uppercase tracking-wider">{textValue.replace("●", "").trim()}</span>
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                // Special handling for Stats (Hero or Footer)
+                                                                if (textValue.includes("|")) {
+                                                                    const stats = textValue.split("|");
+                                                                    return (
+                                                                        <div className={`flex flex-wrap gap-8 md:gap-16 mt-12 ${!hasBgImage ? "justify-center" : ""}`}>
+                                                                            {stats.map((stat: string, i: number) => {
+                                                                                const [val, ...labelParts] = stat.trim().split(" ");
+                                                                                return (
+                                                                                    <div key={i} className="flex flex-col">
+                                                                                        <span className="text-3xl md:text-4xl font-bold text-white">{val}</span>
+                                                                                        <span className="text-xs text-white/60 uppercase tracking-widest mt-1">{labelParts.join(" ")}</span>
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    );
+                                                                }
+
+                                                                // Special handling for CTA Row
+                                                                if (textValue.includes("[") && textValue.includes("]")) {
+                                                                    const buttons = textValue.match(/\[(.*?)\]/g)?.map(b => b.slice(1, -1)) || [];
+                                                                    return (
+                                                                        <div className="flex flex-wrap gap-4 mb-8">
+                                                                            {buttons.map((btn, i) => (
+                                                                                <button key={i} className={`px-8 py-3 rounded-[10px] font-bold transition-all ${i === 0 ? "bg-white text-[#194BFF] hover:bg-gray-100" : "border-2 border-white text-white hover:bg-white/10"}`}>
+                                                                                    {btn}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    );
+                                                                }
+
                                                                 return (
-                                                                    <p className="mb-2">
-                                                                        {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                                            <>&nbsp;</>
-                                                                        )}
+                                                                    <p className={`leading-relaxed ${hasBgImage ? "text-lg text-white/90 mb-8 max-w-2xl" : "text-base text-gray-500 mb-4 text-center max-w-3xl mx-auto"}`}>
+                                                                        {textValue || <>&nbsp;</>}
                                                                     </p>
                                                                 );
-
-                                                            case "Input":
-                                                                return (
-                                                                    <div className="group relative mt-4">
-                                                                        {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
-                                                                            <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-                                                                                {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
+                                                            }
+                                                                        return (
+                                                                            <div className="group relative mt-4">
+                                                                                {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
+                                                                                    <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
+                                                                                        {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
+                                                                                    </div>
+                                                                                )}
+                                                                                {ele?.props.find((p: any) => p.label === "Label")?.value && (
+                                                                                    <label className={`block text-sm font-medium mb-1.5 ${hasBgImage ? "text-white/70" : "text-gray-600"}`}>
+                                                                                        {ele?.props.find((p: any) => p.label === "Label")?.value}
+                                                                                    </label>
+                                                                                )}
+                                                                                <input
+                                                                                    type="text"
+                                                                                    placeholder={
+                                                                                        ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
+                                                                                        undefined
+                                                                                    }
+                                                                                    className={`border rounded-[10px] p-3 w-full transition-colors focus:outline-none focus:border-blue-500 ${hasBgImage ? "bg-white/10 border-white/20 text-white placeholder:text-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"}`}
+                                                                                />
                                                                             </div>
-                                                                        )}
-                                                                        <label>
-                                                                            {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                                                <>&nbsp;</>
-                                                                            )}
-                                                                        </label>
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder={
-                                                                                ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
-                                                                                undefined
-                                                                            }
-                                                                            className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
-                                                                        />
-                                                                    </div>
-                                                                );
+                                                                        );
 
-                                                            case "Button":
+                                                            case "Button": {
+                                                                const label = ele?.props.find((p: any) => p.label === "Label")?.value || "";
+                                                                const isJoinNow = label === "Join Now";
+                                                                
                                                                 return (
-                                                                    <div className="text-right mt-4">
-                                                                        <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
-                                                                            {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                                                <>&nbsp;</>
-                                                                            )}
+                                                                    <div className={`mt-6 ${!hasBgImage ? "text-center" : ""}`}>
+                                                                        <div className={`rounded-[10px] px-10 py-4 text-center font-bold inline-block transition-all cursor-pointer ${isJoinNow ? "bg-[#194BFF] text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30" : "bg-white text-[#194BFF] border border-gray-200 hover:bg-gray-50"}`}>
+                                                                            {label}
                                                                         </div>
                                                                     </div>
                                                                 );
+                                                            }
 
                                                             case "Image": {
                                                                 const imageUrlRaw =
@@ -414,12 +471,12 @@ export default function PreviewCanvas({
                                                                                 style={{
                                                                                     width: imageWidth === "auto" ? "100%" : imageWidth,
                                                                                     height: imageHeight === "auto" ? "auto" : imageHeight,
-                                                                                    borderRadius: "8px",
+                                                                                    borderRadius: "10px",
                                                                                     objectFit: "cover",
                                                                                 }}
                                                                             />
                                                                         ) : (
-                                                                            <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
+                                                                            <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[10px] p-6 text-sm">
                                                                                 No image selected
                                                                             </div>
                                                                         )}
@@ -453,8 +510,10 @@ export default function PreviewCanvas({
                         })}
                     </section>
                 ))}
-            </section>
-        ));
+                    </div>
+                </section>
+            );
+        });
     };
 
     const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
@@ -466,9 +525,9 @@ export default function PreviewCanvas({
 
     return (
         <div
-            className={`rounded-lg grow w-full mt-3 min-h-0 min-w-0 ${styles.canvas}`}
+            className={`rounded-[10px] grow w-full mt-3 min-h-0 min-w-0 ${styles.canvas}`}
             style={{
-                background: "darkgray",
+                background: "#F3F4F6",
                 height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
@@ -560,7 +619,7 @@ export default function PreviewCanvas({
                                 >
                                     {siteConfig.header.auth.signIn}
                                 </a>
-                                <button className="bg-[#05051F] text-white px-5 py-2.5 rounded-lg text-[15px] font-semibold hover:bg-black transition-colors">
+                                <button className="bg-[#05051F] text-white px-5 py-2.5 rounded-[10px] text-[15px] font-semibold hover:bg-black transition-colors">
                                     {siteConfig.header.auth.cta}
                                 </button>
                             </>
@@ -595,7 +654,7 @@ export default function PreviewCanvas({
                                 {siteConfig.header.auth.signIn}
                             </a>
                             <button
-                                className="bg-[#05051F] text-white px-5 py-3 rounded-lg text-[16px] font-semibold hover:bg-black transition-colors w-full mt-2"
+                                className="bg-[#05051F] text-white px-5 py-3 rounded-[10px] text-[16px] font-semibold hover:bg-black transition-colors w-full mt-2"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {siteConfig.header.auth.cta}
@@ -604,12 +663,12 @@ export default function PreviewCanvas({
                     )}
                 </div>
 
-                <div className="w-full p-4 px-6 md:px-24 pt-8 md:pt-12 flex-1" style={{
-                    background: "radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)"
+                <div className="w-full p-6 md:p-6 flex-1" style={{
+                    background: "#F3F4F6"
                 }}>
                     {useTwoCol ? (
-                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
-                            <div className="space-y-8">
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 items-start">
+                            <div className="space-y-6">
                                 {mainOutlines.map((outline) => (
                                     <div key={outline.id}>
                                         {renderOutlineTree(outline)}
@@ -617,7 +676,7 @@ export default function PreviewCanvas({
                                 ))}
                             </div>
 
-                            <aside className="space-y-8">
+                            <aside className="space-y-6">
                                 {asideOutlines.map((outline) => (
                                     <div key={outline.id}>
                                         {renderOutlineTree(outline)}
@@ -626,7 +685,7 @@ export default function PreviewCanvas({
                             </aside>
                         </div>
                     ) : (
-                        <div className="space-y-8">
+                        <div className="space-y-6">
                             {[...mainOutlines, ...asideOutlines].map((outline) => (
                                 <div key={outline.id}>
                                     {renderOutlineTree(outline)}
