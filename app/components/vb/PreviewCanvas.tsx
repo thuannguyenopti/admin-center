@@ -76,8 +76,8 @@ export default function PreviewCanvas({
     // ✅ This MUST be the scroll container div inside PreviewWrapper
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
-    // "mobile only" breakpoint (tweak as you like)
-    const MOBILE_BP = 480;
+    // "tablet/mobile" breakpoint
+    const MOBILE_BP = 1024;
 
     const [viewportW, setViewportW] = useState<number>(() => {
         // fixed/scale should behave like that device width immediately
@@ -188,10 +188,10 @@ export default function PreviewCanvas({
 
     const renderOutlineTree = (outline: Outline) => {
         return outline.tree.map((section: any, sindex: number) => (
-            <section key={section.id ?? sindex}>
+            <section key={section.id ?? sindex} className="mb-8 last:mb-0">
                 {(section.children || []).map((row: any, rIndex: number) => (
                     <section
-                        className="grid grid-flow-col auto-cols-fr gap-4 text-white"
+                        className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 text-white`}
                         key={row.id ?? rIndex}
                     >
                         {(row.children || []).map((col: any, cIndex: number) => {
@@ -609,29 +609,26 @@ export default function PreviewCanvas({
                 }}>
                     {useTwoCol ? (
                         <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
-                            <div className="space-y-10">
+                            <div className="space-y-8">
                                 {mainOutlines.map((outline) => (
                                     <div key={outline.id}>
-                                        <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                         {renderOutlineTree(outline)}
                                     </div>
                                 ))}
                             </div>
 
-                            <aside className="space-y-10">
+                            <aside className="space-y-8">
                                 {asideOutlines.map((outline) => (
                                     <div key={outline.id}>
-                                        <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                         {renderOutlineTree(outline)}
                                     </div>
                                 ))}
                             </aside>
                         </div>
                     ) : (
-                        <div className="space-y-10">
+                        <div className="space-y-8">
                             {[...mainOutlines, ...asideOutlines].map((outline) => (
                                 <div key={outline.id}>
-                                    <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                     {renderOutlineTree(outline)}
                                 </div>
                             ))}

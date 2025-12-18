@@ -731,6 +731,7 @@ export const initialPages: Page[] = [
 										id: "col-landing-hero",
 										open: true,
 										children: [
+											{ id: "ele-landing-hero-image" },
 											{ id: "ele-landing-hero-heading" },
 											{ id: "ele-landing-hero-sub" },
 											{ id: "ele-landing-hero-cta" },
@@ -803,8 +804,64 @@ export const initialPages: Page[] = [
 							},
 						],
 					},
+					{
+						id: "sec-landing-products",
+						name: "Featured Products",
+						open: true,
+						children: [
+							{
+								id: "row-landing-products-1",
+								open: true,
+								children: [
+									{
+										id: "col-prod-1",
+										open: true,
+										children: [{ id: "ele-prod-1-img" }, { id: "ele-prod-1" }],
+									},
+									{
+										id: "col-prod-2",
+										open: true,
+										children: [{ id: "ele-prod-2-img" }, { id: "ele-prod-2" }],
+									},
+									{
+										id: "col-prod-3",
+										open: true,
+										children: [{ id: "ele-prod-3-img" }, { id: "ele-prod-3" }],
+									},
+								],
+							},
+							{
+								id: "row-landing-products-2",
+								open: true,
+								children: [
+									{
+										id: "col-prod-4",
+										open: true,
+										children: [{ id: "ele-prod-4-img" }, { id: "ele-prod-4" }],
+									},
+									{
+										id: "col-prod-5",
+										open: true,
+										children: [{ id: "ele-prod-5-img" }, { id: "ele-prod-5" }],
+									},
+									{
+										id: "col-prod-6",
+										open: true,
+										children: [{ id: "ele-prod-6-img" }, { id: "ele-prod-6" }],
+									},
+								],
+							},
+						],
+					},
 				],
 				elements: {
+					"ele-landing-hero-image": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling5/800/400" },
+							{ type: "text", label: "Alt Text", value: "Professional cyclist racing" },
+						],
+					},
 					"ele-landing-hero-heading": {
 						type: "Heading",
 						props: [{ type: "text", label: "Text", value: "Welcome to Stride" }],
@@ -860,6 +917,72 @@ export const initialPages: Page[] = [
 								value: "We collaborate with the best brands.",
 							},
 						],
+					},
+					"ele-prod-1-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling1/400/300" },
+							{ type: "text", label: "Alt Text", value: "Cycle Computer Pro" },
+						],
+					},
+					"ele-prod-1": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Cycle Computer Pro - $199" }],
+					},
+					"ele-prod-2-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling3/400/300" },
+							{ type: "text", label: "Alt Text", value: "HR Monitor Band" },
+						],
+					},
+					"ele-prod-2": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "HR Monitor Band - $79" }],
+					},
+					"ele-prod-3-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling2/400/300" },
+							{ type: "text", label: "Alt Text", value: "Smart Bike Trainer" },
+						],
+					},
+					"ele-prod-3": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Smart Bike Trainer - $599" }],
+					},
+					"ele-prod-4-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling4/400/300" },
+							{ type: "text", label: "Alt Text", value: "Cadence Sensor" },
+						],
+					},
+					"ele-prod-4": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Cadence Sensor - $39" }],
+					},
+					"ele-prod-5-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling8/400/300" },
+							{ type: "text", label: "Alt Text", value: "Power Meter" },
+						],
+					},
+					"ele-prod-5": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Power Meter - $449" }],
+					},
+					"ele-prod-6-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling9/400/300" },
+							{ type: "text", label: "Alt Text", value: "Speed Sensor" },
+						],
+					},
+					"ele-prod-6": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Speed Sensor - $39" }],
 					},
 				},
 			},
@@ -1039,6 +1162,937 @@ export const initialPages: Page[] = [
 <p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
 			author: "1",
 		},
+	},
+
+	{
+		id: "page-activities",
+		contentTypeId: "exp-landing-page",
+		name: "Activities",
+		slug: "activities",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-activities-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-activities-hero",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-activities-hero",
+								open: true,
+								children: [
+									{
+										id: "col-activities-hero",
+										open: true,
+										children: [
+											{ id: "ele-activities-hero-badge" },
+											{ id: "ele-activities-hero-heading" },
+											{ id: "ele-activities-hero-sub" },
+											{ id: "ele-activities-hero-cta" },
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "sec-activities-stats",
+						name: "Stats",
+						open: true,
+						children: [
+							{
+								id: "row-activities-stats",
+								open: true,
+								children: [
+									{
+										id: "col-activities-stats-1",
+										open: true,
+										children: [{ id: "ele-activities-stat-1" }],
+									},
+									{
+										id: "col-activities-stats-2",
+										open: true,
+										children: [{ id: "ele-activities-stat-2" }],
+									},
+									{
+										id: "col-activities-stats-3",
+										open: true,
+										children: [{ id: "ele-activities-stat-3" }],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-activities-hero-badge": {
+						type: "Text",
+						props: [{ type: "text", label: "Text", value: "Join 2M+ active users worldwide" }],
+					},
+					"ele-activities-hero-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Ready. Set. Go." }],
+					},
+					"ele-activities-hero-sub": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
+							},
+						],
+					},
+					"ele-activities-hero-cta": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Register for your bib" }],
+					},
+					"ele-activities-stat-1": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "500K+ Annual participants" }],
+					},
+					"ele-activities-stat-2": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "45+ Countries represented" }],
+					},
+					"ele-activities-stat-3": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "4.9/5 Average rating" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-community",
+		contentTypeId: "exp-landing-page",
+		name: "Community",
+		slug: "community",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-community-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-community-hero",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-community-hero",
+								open: true,
+								children: [
+									{
+										id: "col-community-hero",
+										open: true,
+										children: [
+											{ id: "ele-community-hero-heading" },
+											{ id: "ele-community-hero-sub" },
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "sec-community-testimonials",
+						name: "Testimonials",
+						open: true,
+						children: [
+							{
+								id: "row-community-testimonials",
+								open: true,
+								children: [
+									{
+										id: "col-community-test-1",
+										open: true,
+										children: [{ id: "ele-community-test-1" }],
+									},
+									{
+										id: "col-community-test-2",
+										open: true,
+										children: [{ id: "ele-community-test-2" }],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-community-hero-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Join millions of active users" }],
+					},
+					"ele-community-hero-sub": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Connect, compete, and get motivated by our global community of fitness enthusiasts.",
+							},
+						],
+					},
+					"ele-community-test-1": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Sarah M.: Amazing run through Central Park this morning! The GPS tracking was spot-on.",
+							},
+						],
+					},
+					"ele-community-test-2": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Mike R.: Crushed my half-marathon goal! The community challenges really pushed me.",
+							},
+						],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-challenges",
+		contentTypeId: "exp-landing-page",
+		name: "Challenges",
+		slug: "challenges",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-challenges-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-challenges-hero",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-challenges-hero",
+								open: true,
+								children: [
+									{
+										id: "col-challenges-hero",
+										open: true,
+										children: [
+											{ id: "ele-challenges-hero-heading" },
+											{ id: "ele-challenges-hero-sub" },
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "sec-challenges-list",
+						name: "Active Challenges",
+						open: true,
+						children: [
+							{
+								id: "row-challenges-list",
+								open: true,
+								children: [
+									{
+										id: "col-challenge-1",
+										open: true,
+										children: [{ id: "ele-challenge-1" }],
+									},
+									{
+										id: "col-challenge-2",
+										open: true,
+										children: [{ id: "ele-challenge-2" }],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-challenges-hero-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Push your limits" }],
+					},
+					"ele-challenges-hero-sub": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Join exciting challenges and compete with users worldwide to reach new fitness milestones.",
+							},
+						],
+					},
+					"ele-challenge-1": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "October Run Streak" }],
+					},
+					"ele-challenge-2": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "100 Mile Challenge" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-pricing",
+		contentTypeId: "exp-landing-page",
+		name: "Pricing",
+		slug: "pricing",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-pricing-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-pricing-hero",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-pricing-hero",
+								open: true,
+								children: [
+									{
+										id: "col-pricing-hero",
+										open: true,
+										children: [
+											{ id: "ele-pricing-hero-heading" },
+											{ id: "ele-pricing-hero-sub" },
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "sec-pricing-plans",
+						name: "Plans",
+						open: true,
+						children: [
+							{
+								id: "row-pricing-plans",
+								open: true,
+								children: [
+									{
+										id: "col-plan-free",
+										open: true,
+										children: [{ id: "ele-plan-free" }],
+									},
+									{
+										id: "col-plan-pro",
+										open: true,
+										children: [{ id: "ele-plan-pro" }],
+									},
+									{
+										id: "col-plan-team",
+										open: true,
+										children: [{ id: "ele-plan-team" }],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-pricing-hero-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Choose your plan" }],
+					},
+					"ele-pricing-hero-sub": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Select the perfect plan for your fitness journey. Upgrade or downgrade anytime.",
+							},
+						],
+					},
+					"ele-plan-free": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Free - $0" }],
+					},
+					"ele-plan-pro": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Pro - $9.99/mo" }],
+					},
+					"ele-plan-team": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Team - $24.99/mo" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-stories",
+		contentTypeId: "exp-landing-page",
+		name: "Stories",
+		slug: "stories",
+		parentId: null,
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-stories-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-stories-hero",
+						name: "Hero",
+						open: true,
+						children: [
+							{
+								id: "row-stories-hero",
+								open: true,
+								children: [
+									{
+										id: "col-stories-hero",
+										open: true,
+										children: [
+											{ id: "ele-stories-hero-heading" },
+											{ id: "ele-stories-hero-sub" },
+										],
+									},
+								],
+							},
+						],
+					},
+					{
+						id: "sec-stories-list",
+						name: "Success Stories",
+						open: true,
+						children: [
+							{
+								id: "row-stories-list",
+								open: true,
+								children: [
+									{
+										id: "col-story-1",
+										open: true,
+										children: [{ id: "ele-story-1" }],
+									},
+									{
+										id: "col-story-2",
+										open: true,
+										children: [{ id: "ele-story-2" }],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-stories-hero-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Real results from real people" }],
+					},
+					"ele-stories-hero-sub": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "See how STRIDE has transformed the fitness journeys of our amazing community members.",
+							},
+						],
+					},
+					"ele-story-1": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Jessica T.: STRIDE helped me train for my first marathon. The personalized plans kept me motivated!",
+							},
+						],
+					},
+					"ele-story-2": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Marcus R.: The analytics features are incredible. Being able to track my performance across swimming, cycling, and running has helped me identify areas for improvement.",
+							},
+						],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-product-31",
+		contentTypeId: "exp-landing-page",
+		name: "Cycle Computer Pro",
+		slug: "products/cycle-computer-pro",
+		parentId: "page-site-products",
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-prod-31-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-prod-31-hero",
+						name: "Product Hero",
+						open: true,
+						children: [
+							{
+								id: "row-prod-31-hero",
+								open: true,
+								children: [
+									{
+										id: "col-prod-31-hero",
+										open: true,
+										children: [
+											{ id: "ele-prod-31-img" },
+											{ id: "ele-prod-31-heading" },
+											{ id: "ele-prod-31-price" },
+											{ id: "ele-prod-31-desc" },
+											{ id: "ele-prod-31-buy" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-prod-31-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling1/400/300" },
+							{ type: "text", label: "Alt Text", value: "Cycle Computer Pro" },
+						],
+					},
+					"ele-prod-31-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Cycle Computer Pro" }],
+					},
+					"ele-prod-31-price": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "$199.00" }],
+					},
+					"ele-prod-31-desc": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Advanced GPS cycling computer with performance tracking and navigation.",
+							},
+						],
+					},
+					"ele-prod-31-buy": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-product-32",
+		contentTypeId: "exp-landing-page",
+		name: "HR Monitor Band",
+		slug: "products/hr-monitor-band",
+		parentId: "page-site-products",
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-prod-32-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-prod-32-hero",
+						name: "Product Hero",
+						open: true,
+						children: [
+							{
+								id: "row-prod-32-hero",
+								open: true,
+								children: [
+									{
+										id: "col-prod-32-hero",
+										open: true,
+										children: [
+											{ id: "ele-prod-32-img" },
+											{ id: "ele-prod-32-heading" },
+											{ id: "ele-prod-32-price" },
+											{ id: "ele-prod-32-desc" },
+											{ id: "ele-prod-32-buy" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-prod-32-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling3/400/300" },
+							{ type: "text", label: "Alt Text", value: "HR Monitor Band" },
+						],
+					},
+					"ele-prod-32-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "HR Monitor Band" }],
+					},
+					"ele-prod-32-price": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "$79.00" }],
+					},
+					"ele-prod-32-desc": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Precision heart rate monitoring for your most intense workouts.",
+							},
+						],
+					},
+					"ele-prod-32-buy": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-product-33",
+		contentTypeId: "exp-landing-page",
+		name: "Smart Bike Trainer",
+		slug: "products/smart-bike-trainer",
+		parentId: "page-site-products",
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-prod-33-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-prod-33-hero",
+						name: "Product Hero",
+						open: true,
+						children: [
+							{
+								id: "row-prod-33-hero",
+								open: true,
+								children: [
+									{
+										id: "col-prod-33-hero",
+										open: true,
+										children: [
+											{ id: "ele-prod-33-img" },
+											{ id: "ele-prod-33-heading" },
+											{ id: "ele-prod-33-price" },
+											{ id: "ele-prod-33-desc" },
+											{ id: "ele-prod-33-buy" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-prod-33-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling2/400/300" },
+							{ type: "text", label: "Alt Text", value: "Smart Bike Trainer" },
+						],
+					},
+					"ele-prod-33-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Smart Bike Trainer" }],
+					},
+					"ele-prod-33-price": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "$599.00" }],
+					},
+					"ele-prod-33-desc": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Transform your bike into a powerful indoor training machine.",
+							},
+						],
+					},
+					"ele-prod-33-buy": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-product-34",
+		contentTypeId: "exp-landing-page",
+		name: "Cadence Sensor",
+		slug: "products/cadence-sensor",
+		parentId: "page-site-products",
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-prod-34-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-prod-34-hero",
+						name: "Product Hero",
+						open: true,
+						children: [
+							{
+								id: "row-prod-34-hero",
+								open: true,
+								children: [
+									{
+										id: "col-prod-34-hero",
+										open: true,
+										children: [
+											{ id: "ele-prod-34-img" },
+											{ id: "ele-prod-34-heading" },
+											{ id: "ele-prod-34-price" },
+											{ id: "ele-prod-34-desc" },
+											{ id: "ele-prod-34-buy" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-prod-34-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling4/400/300" },
+							{ type: "text", label: "Alt Text", value: "Cadence Sensor" },
+						],
+					},
+					"ele-prod-34-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Cadence Sensor" }],
+					},
+					"ele-prod-34-price": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "$39.00" }],
+					},
+					"ele-prod-34-desc": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Track your pedaling cadence with precision and ease.",
+							},
+						],
+					},
+					"ele-prod-34-buy": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-product-35",
+		contentTypeId: "exp-landing-page",
+		name: "Power Meter",
+		slug: "products/power-meter",
+		parentId: "page-site-products",
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-prod-35-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-prod-35-hero",
+						name: "Product Hero",
+						open: true,
+						children: [
+							{
+								id: "row-prod-35-hero",
+								open: true,
+								children: [
+									{
+										id: "col-prod-35-hero",
+										open: true,
+										children: [
+											{ id: "ele-prod-35-img" },
+											{ id: "ele-prod-35-heading" },
+											{ id: "ele-prod-35-price" },
+											{ id: "ele-prod-35-desc" },
+											{ id: "ele-prod-35-buy" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-prod-35-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling8/400/300" },
+							{ type: "text", label: "Alt Text", value: "Power Meter" },
+						],
+					},
+					"ele-prod-35-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Power Meter" }],
+					},
+					"ele-prod-35-price": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "$449.00" }],
+					},
+					"ele-prod-35-desc": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Measure your power output and optimize your cycling performance.",
+							},
+						],
+					},
+					"ele-prod-35-buy": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+					},
+				},
+			},
+		],
+	},
+
+	{
+		id: "page-product-36",
+		contentTypeId: "exp-landing-page",
+		name: "Speed Sensor",
+		slug: "products/speed-sensor",
+		parentId: "page-site-products",
+		status: "Published",
+		lastModified: "2023-12-18",
+		data: {},
+		outlines: [
+			{
+				id: "ol-prod-36-main",
+				title: "Main",
+				tree: [
+					{
+						id: "sec-prod-36-hero",
+						name: "Product Hero",
+						open: true,
+						children: [
+							{
+								id: "row-prod-36-hero",
+								open: true,
+								children: [
+									{
+										id: "col-prod-36-hero",
+										open: true,
+										children: [
+											{ id: "ele-prod-36-img" },
+											{ id: "ele-prod-36-heading" },
+											{ id: "ele-prod-36-price" },
+											{ id: "ele-prod-36-desc" },
+											{ id: "ele-prod-36-buy" },
+										],
+									},
+								],
+							},
+						],
+					},
+				],
+				elements: {
+					"ele-prod-36-img": {
+						type: "Image",
+						props: [
+							{ type: "text", label: "Image URL", value: "https://picsum.photos/seed/cycling9/400/300" },
+							{ type: "text", label: "Alt Text", value: "Speed Sensor" },
+						],
+					},
+					"ele-prod-36-heading": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "Speed Sensor" }],
+					},
+					"ele-prod-36-price": {
+						type: "Heading",
+						props: [{ type: "text", label: "Text", value: "$39.00" }],
+					},
+					"ele-prod-36-desc": {
+						type: "Text",
+						props: [
+							{
+								type: "text",
+								label: "Text",
+								value: "Accurate speed tracking for your outdoor and indoor rides.",
+							},
+						],
+					},
+					"ele-prod-36-buy": {
+						type: "Button",
+						props: [{ type: "text", label: "Label", value: "Add to Cart" }],
+					},
+				},
+			},
+		],
 	},
 ];
 
@@ -1399,11 +2453,11 @@ export const siteConfig = {
 	header: {
 		logo: "STRIDE",
 		links: [
-			{ label: "Activities", href: "#" },
-			{ label: "Community", href: "#" },
-			{ label: "Challenges", href: "#" },
-			{ label: "Pricing", href: "#" },
-			{ label: "Stories", href: "#" },
+			{ label: "Activities", href: "/activities" },
+			{ label: "Community", href: "/community" },
+			{ label: "Challenges", href: "/challenges" },
+			{ label: "Pricing", href: "/pricing" },
+			{ label: "Stories", href: "/stories" },
 		],
 		auth: {
 			signIn: "Sign In",
