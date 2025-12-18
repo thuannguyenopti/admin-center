@@ -322,11 +322,11 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
                   </Text>
                 </Box>
               )}
-              {metadata.typeDistribution.Image > 0 && (
+              {metadata.typeDistribution.Media > 0 && (
                 <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
                   <IconPhoto size={16} />
                   <Text fontSize="sm" color="fg.default">
-                    Images ({metadata.typeDistribution.Image})
+                    Media ({metadata.typeDistribution.Media})
                   </Text>
                 </Box>
               )}
