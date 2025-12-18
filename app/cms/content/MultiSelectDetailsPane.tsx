@@ -1,12 +1,26 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input } from "@optiaxiom/react";
-import { IconX, IconStack2 } from "@tabler/icons-react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent } from "@optiaxiom/react";
+import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, IconPlus, IconCheck } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
 import Image from "next/image";
 import { useState } from "react";
+
+// Mock cycling/exercise tags
+const AVAILABLE_TAGS = [
+  "Cycling Training",
+  "Cycling Performance",
+  "Exercise Routine",
+  "Cardio Workout",
+  "Mountain Biking",
+  "Road Cycling",
+  "Indoor Training",
+  "Fitness Tracking",
+  "Endurance Training",
+  "Sprint Training"
+];
 
 interface MultiSelectDetailsPaneProps {
   items: ContentItem[];
@@ -17,17 +31,38 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
   const metadata = useMultiSelectMetadata(items);
   const [tags, setTags] = useState<string[]>(metadata.tags);
   const [newTag, setNewTag] = useState("");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
+  const handleAddTag = (tagValue: string) => {
+    if (tagValue.trim() && !tags.includes(tagValue)) {
+      setTags([...tags, tagValue]);
       setNewTag("");
     }
   };
+
+  // Filter available tags based on input
+  const filteredTags = AVAILABLE_TAGS
+    .filter(tag => !newTag || tag.toLowerCase().includes(newTag.toLowerCase()));
+
+  // Create options for autocomplete dropdown
+  const autocompleteOptions = filteredTags.map(tag => ({
+    label: tag,
+    value: tag,
+    isSelected: tags.includes(tag)
+  }));
+
+  // Add custom tag option if input doesn't match any available tag
+  if (newTag.trim() && !AVAILABLE_TAGS.includes(newTag)) {
+    autocompleteOptions.push({
+      label: `+ Add "${newTag}" tag`,
+      value: newTag,
+      isSelected: false
+    });
+  }
 
   return (
     <Box
@@ -170,68 +205,98 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
                 display="flex"
                 flexWrap="wrap"
                 gap="8"
-                style={{
-                  backgroundColor: "var(--ax-colors-bg-subtle)",
-                  padding: "8px",
-                  borderRadius: "4px",
-                }}
               >
                 {tags.map(tag => (
-                  <Box
-                    key={tag}
-                    display="flex"
-                    alignItems="center"
-                    gap="4"
-                    style={{
-                      backgroundColor: "var(--ax-colors-bg-default)",
-                      padding: "6px 8px",
-                      borderRadius: "4px",
-                      fontSize: "11px",
-                    }}
-                  >
-                    <span style={{ color: "white" }}>{tag}</span>
-                    <button
-                      onClick={() => handleRemoveTag(tag)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "0",
-                        display: "flex",
-                        alignItems: "center",
-                        color: "white",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        lineHeight: "1",
-                      }}
-                      aria-label={`Remove tag ${tag}`}
-                    >
-                      ×
-                    </button>
-                  </Box>
+                  <Badge key={tag} intent="neutral">
+                    <Box display="flex" alignItems="center" gap="4">
+                      <span>{tag}</span>
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: "0",
+                          display: "flex",
+                          alignItems: "center",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          lineHeight: "1",
+                          color: "inherit",
+                        }}
+                        aria-label={`Remove tag ${tag}`}
+                      >
+                        ×
+                      </button>
+                    </Box>
+                  </Badge>
                 ))}
               </Box>
 
-              {/* Add Tag Input */}
-              <Box display="flex" gap="4">
-                <Input
-                  value={newTag}
-                  onChange={e => setNewTag(e.target.value)}
-                  onKeyPress={e => {
-                    if (e.key === "Enter") {
-                      handleAddTag();
-                    }
-                  }}
-                  placeholder="Add tag..."
-                  size="md"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleAddTag}
+              {/* Add Tag Input with Custom Autocomplete */}
+              <Popover 
+                open={newTag.length > 0 && autocompleteOptions.length > 0}
+                onOpenChange={() => {}}
+              >
+                <PopoverTrigger asChild>
+                  <Box>
+                    <Input
+                      value={newTag}
+                      onChange={e => setNewTag(e.target.value)}
+                      onKeyPress={e => {
+                        if (e.key === "Enter" && autocompleteOptions.length > 0) {
+                          handleAddTag(autocompleteOptions[0].value);
+                        }
+                      }}
+                      placeholder="Add tag..."
+                      size="md"
+                    />
+                  </Box>
+                </PopoverTrigger>
+                <PopoverContent 
+                  side="bottom" 
+                  sideOffset={4}
+                  align="start"
+                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
                 >
-                  Add
-                </Button>
-              </Box>
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap="2"
+                    p="4"
+                    style={{ maxHeight: "200px" }}
+                    overflow="auto"
+                  >
+                    {autocompleteOptions.map((option, index) => (
+                      <Box
+                        key={option.value}
+                        display="flex"
+                        alignItems="center"
+                        gap="8"
+                        px="12"
+                        py="8"
+                        rounded="sm"
+                        cursor="pointer"
+                        transition="colors"
+                        bg={hoveredIndex === index ? "bg.secondary" : "transparent"}
+                        onClick={() => handleAddTag(option.value)}
+                        onMouseEnter={() => setHoveredIndex(index)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                      >
+                        {option.isSelected && (
+                          <IconCheck size={16} color="var(--ax-colors-fg-secondary)" />
+                        )}
+                        {!option.isSelected && <Box w="16" />}
+                        <Text fontSize="sm" color="fg.default">
+                          {option.label}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Box>
+                </PopoverContent>
+              </Popover>
             </Box>
           </DisclosureContent>
         </Disclosure>
@@ -250,32 +315,32 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
               style={{ paddingLeft: "20px" }}
             >
               {metadata.typeDistribution.Page > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>📄</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconFile size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Pages ({metadata.typeDistribution.Page})
                   </Text>
                 </Box>
               )}
               {metadata.typeDistribution.Image > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>🖼️</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconPhoto size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Images ({metadata.typeDistribution.Image})
                   </Text>
                 </Box>
               )}
               {metadata.typeDistribution.Product > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>🛍️</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconShoppingBag size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Products ({metadata.typeDistribution.Product})
                   </Text>
                 </Box>
               )}
               {metadata.typeDistribution.Block > 0 && (
-                <Box display="flex" gap="8" alignItems="center">
-                  <span style={{ fontSize: "14px" }}>📦</span>
+                <Box display="flex" gap="8" alignItems="center" color="fg.secondary">
+                  <IconBlocks size={16} />
                   <Text fontSize="sm" color="fg.default">
                     Blocks ({metadata.typeDistribution.Block})
                   </Text>

@@ -1,3 +1,5 @@
+"use client";
+
 import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
 import Link from "next/link";
