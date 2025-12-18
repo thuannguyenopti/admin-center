@@ -31,12 +31,11 @@ export function OpalHeader({
       display="flex"
       alignItems="center"
       justifyContent="space-between"
-      borderB="1"
-      borderColor="border.secondary"
-      bg="bg.default"
       style={{
         padding: '16px 24px',
         gap: '12px',
+        borderBottom: '1px solid var(--opal-border-secondary)',
+        backgroundColor: 'var(--opal-bg-primary)',
       }}
     >
       <Box display="flex" alignItems="center" gap="12">

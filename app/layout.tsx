@@ -2,7 +2,6 @@
 import Template from "./components/template";
 import "./globals.css";
 import "./styles/opalStyles.css";
-import {AxiomProvider} from "@optiaxiom/react";
 import {usePathname} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
@@ -10,6 +9,7 @@ import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
+import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -288,13 +288,13 @@ export default function RootLayout({
 	const {activeEffect} = useSecretCode();
 
 	return (
-		<html lang="en">
-			<body>
-				<AxiomProvider>
+		<html lang="en" suppressHydrationWarning>
+			<body suppressHydrationWarning>
+				<ThemeProvider>
 					{menu ? <Template structure={menu}>{children}</Template> : children}
 					{activeEffect === "snow" && <SnowEffect />}
 					{activeEffect === "newyear" && <NewYearEffect />}
-				</AxiomProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);
