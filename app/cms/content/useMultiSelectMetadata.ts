@@ -13,7 +13,7 @@ export interface MultiSelectMetadata {
     Page: number;
     Product: number;
     Block: number;
-    Image: number;
+    Media: number;
   };
 }
 
@@ -25,7 +25,7 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
       dateRange: { earliest: "", latest: "" },
       totalFileSize: "0 MB",
       tags: [],
-      typeDistribution: { Page: 0, Product: 0, Block: 0, Image: 0 },
+      typeDistribution: { Page: 0, Product: 0, Block: 0, Media: 0 },
     };
   }
 
@@ -40,10 +40,10 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
 
   // Calculate type distribution
   const typeDistribution: MultiSelectMetadata["typeDistribution"] = {
-    Page: items.filter(i => i.type === "Page").length,
-    Product: items.filter(i => i.type === "Product").length,
-    Block: items.filter(i => i.type === "Block").length,
-    Image: items.filter(i => i.type === "Image").length,
+    Page: items.filter(i => i.baseType === "Page").length,
+    Product: items.filter(i => i.baseType === "Product").length,
+    Block: items.filter(i => i.baseType === "Block").length,
+    Media: items.filter(i => i.baseType === "Media").length,
   };
 
   // Mock tags - in real implementation, these would come from data
