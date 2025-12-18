@@ -3,7 +3,19 @@ import Template from "./components/template";
 import "./globals.css";
 import "./styles/opalStyles.css";
 import {usePathname} from "next/navigation";
-import {useState} from "react";
+import {useState, useEffect, useLayoutEffect} from "react";
+
+// Initialize theme immediately on first load
+if (typeof window !== 'undefined') {
+	try {
+		const saved = localStorage.getItem('theme');
+		const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+		const html = document.documentElement;
+		html.setAttribute('data-theme', theme);
+		html.classList.toggle('dark', theme === 'dark');
+		html.style.colorScheme = theme;
+	} catch (e) {}
+}
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
@@ -38,6 +50,25 @@ export default function RootLayout({
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
 	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
+
+	// Use useLayoutEffect to ensure theme is applied before paint
+	// This runs synchronously and ensures theme is applied even on 404 pages
+	useLayoutEffect(() => {
+		try {
+			const saved = localStorage.getItem('theme');
+			const theme = saved || (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+			const html = document.documentElement;
+			const body = document.body;
+			
+			html.setAttribute('data-theme', theme);
+			html.classList.toggle('dark', theme === 'dark');
+			body.classList.toggle('dark', theme === 'dark');
+			html.style.colorScheme = theme;
+			body.style.colorScheme = theme;
+		} catch (e) {
+			// Silently fail
+		}
+	}, []);
 
 	const structure = {
 		cms: [
@@ -289,6 +320,29 @@ export default function RootLayout({
 
 	return (
 		<html lang="en" suppressHydrationWarning>
+			<head>
+				{/* Inline script to prevent FOUC (Flash of Unstyled Content) */}
+				{/* This runs before React renders, avoiding theme flashing */}
+				<script
+					dangerouslySetInnerHTML={{
+						__html: `
+							(function() {
+								try {
+									const saved = localStorage.getItem('theme');
+									const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+									const html = document.documentElement;
+									html.setAttribute('data-theme', theme);
+									html.classList.toggle('dark', theme === 'dark');
+									html.style.colorScheme = theme;
+									const body = document.body;
+									body.classList.toggle('dark', theme === 'dark');
+									body.style.colorScheme = theme;
+								} catch (e) {}
+							})();
+						`,
+					}}
+				/>
+			</head>
 			<body suppressHydrationWarning>
 				<ThemeProvider>
 					{menu ? <Template structure={menu}>{children}</Template> : children}
