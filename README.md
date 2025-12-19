@@ -1,37 +1,324 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Installation Guide for Axiom Play (VS Code/Cursor)
 
-## Getting Started
+This guide provides step-by-step instructions for installing the axiom-play project on a new machine using VS Code or Cursor IDE.
 
-First, install dependencies and run the development server:
+## Account Requirements (Required)
 
-```bash
-yarn install
-yarn dev
-# or
-npm run dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Before starting the installation, ensure you have the following accounts set up:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**GitHub Account**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Required to clone the repository from GitHub
+- Sign up at [github.com](https://github.com) if you don't have an account
+- **Important**: You must be invited to the GitHub repository before you can clone it
+- Contact the team to request access to `https://github.com/Ben-Holme/axiom-play.git`
+- Once invited, accept the invitation through your GitHub account
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+**Kombai Account**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Required to use the Kombai extension after installation
+- Sign up at [kombai.com](https://kombai.com) or through the Kombai extension after installation
+- You'll be prompted to sign in when you first use the Kombai extension
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Installation Steps
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 1. Prerequisites (All Required)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+**Manual Installation Required** (cannot be installed via IDE agent):
+
+**Node.js** (version 18 or higher recommended for Next.js 16)
+
+- Install from [nodejs.org](https://nodejs.org/) or via package manager (Homebrew, Chocolatey, etc.)
+- Verify installation: `node --version` in terminal
+
+**Git**
+
+- Usually pre-installed on macOS/Linux, or install from [git-scm.com](https://git-scm.com/)
+- Verify installation: `git --version` in terminal
+
+**VS Code or Cursor IDE**
+
+- Required (if you're reading this, you likely already have it installed)
+
+---
+
+**Can Be Installed via IDE Agent/Terminal** (if Node.js is already installed):
+
+**Yarn package manager**
+
+- Required (project uses Yarn; `.yarnrc.yml` and `.gitignore` indicate Yarn usage)
+- Install via IDE terminal: `npm install -g yarn` (npm comes with Node.js)
+- Or enable via: `corepack enable` (if using Node.js 16.10+)
+- Verify installation: `yarn --version` in terminal
+
+---
+
+### 2. Clone the Repository (Can Be Done via IDE Agent)
+
+**Note**: Ensure you have been invited to and have accepted access to the GitHub repository before attempting to clone.
+
+---
+
+**Option A: Using VS Code/Cursor Command Palette**
+
+1. Open VS Code/Cursor
+2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+3. Type "Git: Clone" and select it
+4. Enter repository URL: `https://github.com/Ben-Holme/axiom-play.git`
+5. Choose a location to clone the repository
+6. When prompted, click "Open" to open the cloned repository
+
+---
+
+**Option B: Using Terminal** (Can Be Executed via IDE Agent)
+
+1. Open integrated terminal in VS Code/Cursor (`Ctrl+`` or `View > Terminal`)
+2. Run: `git clone https://github.com/Ben-Holme/axiom-play.git`
+3. **Can be executed via IDE agent**: Ask the AI assistant to clone the repository
+4. Open the folder: `File > Open Folder...` and select the `axiom-play` directory
+
+---
+
+**Option C: Via IDE Agent**
+
+1. Ask the AI assistant: "Clone the repository https://github.com/Ben-Holme/axiom-play.git"
+2. The agent can execute the git clone command for you
+
+---
+
+### 3. Install VS Code/Cursor Extensions (Can Be Installed via IDE Agent)
+
+**Installation Methods**:
+
+---
+
+**Method 1: Via Command Palette**
+
+- Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
+- Type "Extensions: Install Extensions"
+- Search for extension name and install
+
+---
+
+**Method 2: Via IDE Agent**
+
+- Ask the AI assistant to install extensions by name
+- Example: "Install the Kombai extension"
+
+---
+
+**Method 3: Via Extensions Panel**
+
+- Click Extensions icon in sidebar (`Cmd+Shift+X` / `Ctrl+Shift+X`)
+- Search for extension name and install
+
+---
+
+**Required Extensions**:
+
+---
+
+**Kombai - AI Agent for Frontend Devs**
+
+- Search for: "Kombai" or "Kombai - AI Agent for Frontend Devs" in the Extensions marketplace
+- AI-powered extension that generates high-quality code from Figma designs, text, images, and existing code
+- Supports over 400 frontend frameworks and libraries
+- Features include UX interpretation, contextual codebase understanding, and Kombai Browser for previewing generated code
+- After installation, sign in to Kombai through the extension to access all features
+- Can be installed via IDE agent/Command Palette
+
+---
+
+**Live Preview by Microsoft** (VS Code Only)
+
+- Extension ID: `ms-vscode.live-server`
+- **Note**: You do not need to install this extension if using Cursor, as it has a built-in preview feature
+- Provides a local server to preview webpages directly within VS Code
+- Allows you to see live updates as you edit your code
+- Can be installed via IDE agent/Command Palette
+
+---
+
+### 4. Install Dependencies (Required - Can Be Done via IDE Agent)
+
+- Open the integrated terminal in VS Code/Cursor (`Ctrl+`` or `View > Terminal`)
+- Run: `yarn install` (project uses Yarn; `.yarnrc.yml` and `.gitignore` indicate Yarn usage)
+- **Can be executed via IDE agent**: Ask the AI assistant to run `yarn install` in the project directory
+- Wait for dependencies to install
+
+### 5. Run Development Server (Required to View the Application - Can Be Done via IDE Agent)
+
+- In the integrated terminal, run: `yarn dev`
+- **Can be executed via IDE agent**: Ask the AI assistant to start the development server
+- The terminal will show the Next.js dev server starting
+- The development server will be running at `http://localhost:3000`
+
+### 6. Viewing Changes (After Project is Running)
+
+Once the development server is running, you can view your application and see changes in real-time:
+
+---
+
+**Option A: Using Cursor's Built-in Browser**
+
+- Cursor has a built-in browser preview feature
+- You can open `http://localhost:3000` directly within Cursor
+- Changes will automatically reload as you edit your code files
+
+---
+
+**Option B: Using VS Code Live Preview Extension**
+
+- If using VS Code, use the Live Preview extension (installed in step 3)
+- Open the Live Preview panel and navigate to `http://localhost:3000`
+- The preview will show live updates as you edit your code
+
+---
+
+**Option C: Using Your Regular Browser**
+
+- Open your preferred web browser (Chrome, Firefox, Safari, etc.)
+- Navigate to `http://localhost:3000`
+- The page will auto-reload when you make changes to the code
+
+---
+
+**Note**: You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## VS Code/Cursor Specific Tips
+
+- **Integrated Terminal**: Use `Ctrl+`` (backtick) to toggle the terminal, or `View > Terminal`
+- **Command Palette**: Use `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux) for quick access to commands
+- **File Explorer**: Use `Cmd+B` (Mac) or `Ctrl+B` (Windows/Linux) to toggle the sidebar
+- **TypeScript Errors**: Errors will show inline with red squiggles. Check the Problems panel (`View > Problems`) for all issues
+- **Format on Save**: Configure VS Code/Cursor to format on save for consistent code style
+- **Git Integration**: Use the Source Control panel (`Ctrl+Shift+G`) to manage Git operations visually
+
+## Summary: Required vs Optional
+
+**Required Setup**:
+
+---
+
+**Manual Installation** (cannot be done via IDE agent):
+
+- Node.js 18+ (install from nodejs.org or package manager)
+- Git (usually pre-installed, or install from git-scm.com)
+- VS Code/Cursor IDE (already installed if using it)
+
+**Required Accounts**:
+
+- GitHub account (for cloning the repository)
+- Kombai account (for using the Kombai extension)
+
+---
+
+**Can Be Installed via IDE Agent/Terminal**:
+
+- Yarn - can install via `npm install -g yarn` if Node.js is installed
+- Kombai extension - can install via Command Palette or IDE agent
+- Live Preview extension (VS Code only) - can install via Command Palette or IDE agent (not needed for Cursor)
+
+---
+
+**Advanced (Contact the team - see Advanced section)**:
+
+- Vercel account and deployment (see Advanced section)
+- Deployment to Vercel (create branch, commit, push)
+
+---
+
+## Advanced: Deployment and Production Build
+
+**⚠️ Important Warning**: Before attempting any deployment or production build steps, **contact Ben, Aamr, or Stefan**. These steps require specific configuration and access that must be set up with guidance from the team.
+
+---
+
+**Vercel Account Setup**
+
+- Required for deployment and hosting the Next.js application
+- Sign up at [vercel.com](https://vercel.com)
+- **Important**: You must be invited to the enterprise Vercel workspace before you can deploy
+- Contact the team to request access to the Vercel workspace
+- Once invited, accept the invitation through your Vercel account
+- Next.js projects can be easily deployed to Vercel
+
+---
+
+**Deployment to Vercel** (Requires Team Guidance)
+
+**⚠️ Caution**: Do not proceed with these steps without contacting the team first. They will need to walk you through the deployment process.
+
+General steps for deploying to Vercel:
+
+1. **Create a branch**
+
+   - In the integrated terminal, run: `git checkout -b your-branch-name`
+   - Or use VS Code/Cursor's Source Control panel to create a new branch
+   - **Can be executed via IDE agent**: Ask the AI assistant to create a new branch
+
+2. **Add and commit your changes**
+
+   - Stage your changes: `git add .` (or use the Source Control panel in VS Code/Cursor)
+   - Commit with a descriptive message: `git commit -m "Your commit message describing the changes"`
+   - **Can be executed via IDE agent**: Ask the AI assistant to commit your changes
+
+3. **Add notes and push your branch**
+
+   - Ensure you've added a descriptive commit message in step 2
+   - Push the branch to GitHub: `git push origin your-branch-name`
+   - **Can be executed via IDE agent**: Ask the AI assistant to push your branch with notes
+
+4. **Vercel Deployment**
+
+   - Once your branch is pushed, Vercel will automatically detect the changes (if configured)
+   - Or contact the team for manual deployment instructions
+   - They will guide you through the Vercel deployment process
+
+**Note**: For local production build testing, you can run `yarn build` followed by `yarn start` in the integrated terminal, but actual deployment should be coordinated with the team.
+
+---
+
+## Additional Reading and References
+
+### Software Installation
+
+- **Node.js**: [nodejs.org](https://nodejs.org/) - Download and install Node.js
+- **Git**: [git-scm.com](https://git-scm.com/) - Download and install Git
+
+### Account Sign-up Links
+
+- **GitHub**: [github.com](https://github.com) - Sign up for a GitHub account
+- **Kombai**: [kombai.com](https://kombai.com) - Sign up for a Kombai account
+- **Vercel**: [vercel.com](https://vercel.com) - Sign up for a Vercel account
+
+### Project Repository
+
+- **Repository URL**: [https://github.com/Ben-Holme/axiom-play.git](https://github.com/Ben-Holme/axiom-play.git)
+
+### Development Server
+
+- **Local Development URL**: [http://localhost:3000](http://localhost:3000) - Access your running application
+
+### Extensions (for VS Code and Cursor)
+
+- **Live Preview by Microsoft**: [marketplace.visualstudio.com/items?itemName=ms-vscode.live-server](https://marketplace.visualstudio.com/items?itemName=ms-vscode.live-server) - VS Code extension for live preview (not needed for Cursor)
+- **Kombai - AI Agent for Frontend Devs**: [marketplace.visualstudio.com/search?term=kombai](https://marketplace.visualstudio.com/search?term=kombai) - Search for "Kombai" or "Kombai - AI Agent for Frontend Devs" in the Extensions marketplace
+
+### Framework and Technology Documentation
+
+- **Next.js Documentation**: [nextjs.org/docs](https://nextjs.org/docs) - Learn about Next.js features and API
+- **Next.js Learn**: [nextjs.org/learn](https://nextjs.org/learn) - Interactive Next.js tutorial
+- **Next.js GitHub Repository**: [github.com/vercel/next.js](https://github.com/vercel/next.js)
+
+### Deployment Resources
+
+- **Vercel Platform**: [vercel.com/new](https://vercel.com/new) - Deploy Next.js applications
