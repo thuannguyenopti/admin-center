@@ -398,10 +398,10 @@ export default function PreviewCanvas({
 
                                                                 // Special handling for CTA Row
                                                                 if (textValue.includes("[") && textValue.includes("]")) {
-                                                                    const buttons = textValue.match(/\[(.*?)\]/g)?.map(b => b.slice(1, -1)) || [];
+                                                                    const buttons = textValue.match(/\[(.*?)\]/g)?.map((b: string) => b.slice(1, -1)) || [];
                                                                     return (
                                                                         <div className="flex flex-wrap gap-4 mb-8">
-                                                                            {buttons.map((btn, i) => (
+                                                                            {buttons.map((btn: string, i: number) => (
                                                                                 <button key={i} className={`px-8 py-3 rounded-[10px] font-bold transition-all ${i === 0 ? "bg-white text-[#194BFF] hover:bg-gray-100" : "border-2 border-white text-white hover:bg-white/10"}`}>
                                                                                     {btn}
                                                                                 </button>

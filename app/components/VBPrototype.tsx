@@ -588,7 +588,7 @@ export default function VBPrototype({
 	const isColId = (id: string) => id.startsWith("col-");
 	const isEleId = (id: string) => !isSectionId(id) && !isRowId(id) && !isColId(id);
 
-	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last");
+	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last") || id === "section-last" || id.startsWith("section-last");
 	const isRowLast = (id: string) => id.startsWith("row-last-");
 	const isColLast = (id: string) => id.startsWith("col-last-");
 	const isLastEle = (id: string) => id.startsWith("last-ele-");

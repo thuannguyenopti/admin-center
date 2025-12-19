@@ -573,8 +573,6 @@ export default function OutlineTree({
                                                                         }
 
                                                                         if (isInternalEleDrag(dragging)) {
-                                                                            e.preventDefault();
-                                                                            e.stopPropagation();
                                                                             setInternalDrop(null);
                                                                         }
                                                                     }}

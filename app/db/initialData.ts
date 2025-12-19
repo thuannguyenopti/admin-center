@@ -721,7 +721,7 @@ export const initialPages: Page[] = [
 					{
 						id: "sec-landing-hero",
 						name: "Hero",
-						bgImage: "https://picsum.photos/seed/cycling5/1200/800",
+						bgImage: "/hero-cycling.jpg",
 						open: true,
 						children: [
 							{
