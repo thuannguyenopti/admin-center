@@ -25,32 +25,38 @@ const Col: React.FC<{
     const [isDragOver, setIsDragOver] = useState(false);
 
     const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const hasImageData = Array.from(e.dataTransfer.types).includes("image/url");
+        const hasImageData = Array.from(e.dataTransfer.types).includes("image/url") || 
+                            Array.from(e.dataTransfer.types).includes("text/uri-list") ||
+                            Array.from(e.dataTransfer.types).includes("Files");
         if (hasImageData) {
+            e.preventDefault();
+            e.stopPropagation();
             setIsDragOver(true);
         }
     };
 
     const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
+        if (isDragOver) {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(false);
+        }
     };
 
     const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
+        const imageUrl = e.dataTransfer.getData("image/url") || e.dataTransfer.getData("text/uri-list");
+        if (imageUrl || e.dataTransfer.files.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(false);
 
-        const imageUrl = e.dataTransfer.getData("image/url");
-        const imageAlt = e.dataTransfer.getData("image/alt");
+            const imageAlt = e.dataTransfer.getData("image/alt");
 
-        if (imageUrl) {
-            (window as any).__pendingImageData = { url: imageUrl, alt: imageAlt };
-            addElement("Image");
-            delete (window as any).__pendingImageData;
+            if (imageUrl) {
+                (window as any).__pendingImageData = { url: imageUrl, alt: imageAlt };
+                addElement("Image");
+                delete (window as any).__pendingImageData;
+            }
         }
     };
 
