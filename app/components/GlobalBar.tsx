@@ -1,10 +1,10 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
-import {Text} from "./Text";
-import {ReactNode} from "react";
-import {useRouter, usePathname} from "next/navigation";
-import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
+import { Box, Heading, Menu, MenuContent, MenuTrigger, Button } from "@optiaxiom/react";
+import { Text } from "./Text";
+import { ReactNode } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { IconSearch, IconBell, IconHelp, IconUser } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -96,7 +96,7 @@ export default function GlobalBar() {
 					options={[
 						{
 							label: "Opal",
-							disabledReason: "TBD",
+							execute: () => router.push("/opal"),
 						},
 						{
 							label: "Content Management System",
@@ -130,7 +130,7 @@ export default function GlobalBar() {
 							display="flex"
 							alignItems={"center"}
 							gap="8"
-							style={{cursor: "pointer"}}
+							style={{ cursor: "pointer" }}
 						>
 							<Text
 								fontSize="md"
