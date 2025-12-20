@@ -169,7 +169,7 @@ const PanelContainer = ({
         </Box>
 
         {/* Content */}
-        <Box flex="1" overflowY="auto" p="20" display="flex" flexDirection="column" gap="16">
+        <Box flex="1" style={{ overflowY: "scroll" }} p="20" display="flex" flexDirection="column" gap="16">
             {children}
         </Box>
 
@@ -229,7 +229,7 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
                     <Box display="flex" gap="8" alignItems="center">
                         <Box flex="1">
                             <Select defaultValue="contains" options={[{ label: "Contains", value: "contains" }, { label: "Equals", value: "equals" }]}>
-                                <SelectTrigger>
+                                <SelectTrigger size="lg">
                                     Contains
                                 </SelectTrigger>
                                 <SelectContent />
@@ -325,7 +325,7 @@ export function InAppEventPanel({ onClose }: PanelProps) {
 
             <Text fontWeight="600" fontSize="md" mt="4">Rules</Text>
 
-            <Box bg="bg.tertiary" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
+            <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
                 <Text fontWeight="600" fontSize="md">Rule 1</Text>
 
                 <Box>
@@ -436,7 +436,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
     return (
         <PanelContainer
             title="Scheduler"
-            icon={<IconClock />}
+            icon={<IconCalendar />}
             iconBg="bg.success.subtle"
             onClose={onClose}
         >
@@ -454,7 +454,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
             {!isRecurring ? (
                 // Non-Recurring View
-                <Box display="flex" flexDirection="column" style={{ gap: "28px" }}>
+                <Box display="flex" flexDirection="column" style={{ gap: "24px" }}>
                     <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}> {/* Using gap directly or className, but gap="24" is 1.5rem in axiom? 1.5rem = 24px usually. */}
                         <FormLabel label="Trigger Date" />
                         <Box style={{ position: "relative" }}>
@@ -469,15 +469,15 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                         <FormLabel label="Trigger Time" />
                         <Box display="flex" gap="4">
                             <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
-                                <SelectTrigger>{startHour}</SelectTrigger>
+                                <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                 <SelectContent />
                             </Select>
                             <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
-                                <SelectTrigger>{startMinute}</SelectTrigger>
+                                <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                 <SelectContent />
                             </Select>
                             <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
-                                <SelectTrigger>{startPeriod}</SelectTrigger>
+                                <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                 <SelectContent />
                             </Select>
                         </Box>
@@ -486,14 +486,14 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                     <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         <FormLabel label="Time Zone" />
                         <Select defaultValue="ny" options={timezoneOptions}>
-                            <SelectTrigger>New York, United States (UTC-05:00)</SelectTrigger>
+                            <SelectTrigger size="lg">New York, United States (UTC-05:00)</SelectTrigger>
                             <SelectContent />
                         </Select>
                     </Box>
                 </Box>
             ) : (
                 // Recurring View
-                <Box display="flex" flexDirection="column" style={{ gap: "28px" }}>
+                <Box display="flex" flexDirection="column" style={{ gap: "24px" }}>
                     <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         <FormLabel label="Start from" />
                         <Box style={{ position: "relative" }}>
@@ -507,18 +507,18 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                     <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                         <FormLabel label="Time Zone" />
                         <Select defaultValue="ny" options={timezoneOptions}>
-                            <SelectTrigger>New York, United States (UTC-05:00)</SelectTrigger>
+                            <SelectTrigger size="lg">New York, United States (UTC-05:00)</SelectTrigger>
                             <SelectContent />
                         </Select>
                     </Box>
 
                     <Tabs defaultValue="standard" value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList>
-                            <TabsTrigger value="standard" style={{ flex: 1 }}>Standard</TabsTrigger>
-                            <TabsTrigger value="advanced" style={{ flex: 1 }}>Advanced (Cron)</TabsTrigger>
+                        <TabsList style={{ width: "100%", display: "flex" }}>
+                            <TabsTrigger value="standard" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>Standard</TabsTrigger>
+                            <TabsTrigger value="advanced" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>Advanced (Cron)</TabsTrigger>
                         </TabsList>
                         <TabsContent value="standard">
-                            <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="16" mt="16">
+                            <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="24" mt="16">
                                 <Box>
                                     <FormLabel label="Recur every" />
                                     <Box display="flex" gap="8">
@@ -527,7 +527,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                         </Box>
                                         <Box style={{ flex: 2 }}>
                                             <Select value={recurUnit} onValueChange={setRecurUnit} options={recurUnitOptions}>
-                                                <SelectTrigger>
+                                                <SelectTrigger size="lg">
                                                     {recurUnitOptions.find(o => o.value === recurUnit)?.label}
                                                 </SelectTrigger>
                                                 <SelectContent />
@@ -566,15 +566,15 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                     <FormLabel label="Start time" />
                                     <Box display="flex" gap="4">
                                         <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
-                                            <SelectTrigger>{startHour}</SelectTrigger>
+                                            <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
                                         <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
-                                            <SelectTrigger>{startMinute}</SelectTrigger>
+                                            <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
                                         <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
-                                            <SelectTrigger>{startPeriod}</SelectTrigger>
+                                            <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
                                     </Box>
@@ -597,7 +597,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                             </Box>
                         </TabsContent>
                         <TabsContent value="advanced">
-                            <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="16" mt="16">
+                            <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="24" mt="16">
                                 <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                                     <FormLabel label="Cron Expression" />
                                     <Box bg="bg.default" p="12" rounded="sm" border="1" borderColor="border.tertiary">
