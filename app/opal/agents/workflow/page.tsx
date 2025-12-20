@@ -7,12 +7,11 @@ import {
     Button,
     Badge,
     Textarea,
+    type BoxProps,
     Disclosure,
     DisclosureTrigger,
     DisclosureContent,
-    type BoxProps,
 } from "@optiaxiom/react";
-import { Input } from "@/app/components/Input";
 import {
     IconSearch,
     IconMenu2,
@@ -38,6 +37,13 @@ import {
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
+    EmailTriggerPanel,
+    ConditionPanel,
+    InAppEventPanel,
+    SchedulerPanel,
+    WorkflowSetupPanel
+} from "./components/SidebarPanels";
+import {
     ReactFlow,
     ReactFlowProvider,
     addEdge,
@@ -50,35 +56,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-// Custom Toggle Component using Axiom Box
-function Switch({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (c: boolean) => void }) {
-    return (
-        <Box
-            onClick={() => onCheckedChange(!checked)}
-            cursor="pointer"
-            bg={checked ? "bg.accent" : "bg.tertiary"}
-            className="transition-colors duration-200"
-            style={{
-                width: "36px",
-                height: "20px",
-                borderRadius: "9999px",
-                position: "relative"
-            }}
-        >
-            <Box
-                bg="bg.default"
-                rounded="full"
-                className="absolute transition-all duration-200"
-                style={{
-                    top: "2px",
-                    width: "16px",
-                    height: "16px",
-                    left: checked ? "18px" : "2px",
-                }}
-            />
-        </Box>
-    );
-}
+
 
 const initialNodes = [
     {
@@ -94,7 +72,7 @@ const getId = () => `dndnode_${id++}`;
 
 function WorkflowBuilder() {
     const router = useRouter();
-    const [active, setActive] = useState(false);
+    const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
@@ -144,6 +122,14 @@ function WorkflowBuilder() {
         },
         [reactFlowInstance, setNodes],
     );
+
+    const onNodeClick = useCallback((event: any, node: any) => {
+        setSelectedNodeId(node.id);
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+        setSelectedNodeId(null);
+    }, []);
 
     const onDragStart = (event: any, nodeType: string, label: string) => {
         event.dataTransfer.setData('application/reactflow/type', nodeType);
@@ -307,6 +293,8 @@ function WorkflowBuilder() {
                             onInit={setReactFlowInstance}
                             onDrop={onDrop}
                             onDragOver={onDragOver}
+                            onNodeClick={onNodeClick}
+                            onPaneClick={onPaneClick}
                         >
                             <Controls />
                             <MiniMap />
@@ -315,121 +303,32 @@ function WorkflowBuilder() {
                     </div>
                 </Box>
 
-                {/* Right Sidebar: Setup */}
-                <Box
-                    style={{ width: "320px" }}
-                    borderL="1"
-                    borderColor="border.tertiary"
-                    display="flex"
-                    flexDirection="column"
-                    bg="bg.default"
-                >
-                    <Box
-                        style={{ height: "56px" }}
-                        px="20"
-                        borderB="1"
-                        borderColor="border.tertiary"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="space-between"
-                    >
-                        <Box display="flex" alignItems="center" gap="8">
-                            <IconCodeBranch size={20} color="var(--ax-colors-fg-secondary)" />
-                            <Text fontWeight="700">Workflow Setup</Text>
-                        </Box>
-                        <Button
-                            icon={<IconX size={16} />}
-                            appearance="subtle"
-                            aria-label="Close"
-                            size="sm"
-                        />
-                    </Box>
+                {/* Right Sidebar: Setup or Config */}
+                {(() => {
+                    const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+                    if (!selectedNode) {
+                        return <WorkflowSetupPanel onClose={() => setSelectedNodeId(null)} />;
+                    }
 
-                    <Box flex="1" overflowY="auto" p="20" display="flex" flexDirection="column" gap="20">
-                        <Box display="flex" alignItems="center" gap="12">
-                            <Switch checked={active} onCheckedChange={setActive} />
-                            <Text asChild fontSize="sm" fontWeight="500">
-                                <label>Active</label>
-                            </Text>
-                        </Box>
+                    // In the designs, the label is used to identify the node type
+                    const label = selectedNode.data.label;
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Box display="flex" gap="4">
-                                <Text asChild fontSize="sm" fontWeight="500">
-                                    <label>Name</label>
-                                </Text>
-                                <Text fontSize="sm" color="fg.error">*</Text>
-                            </Box>
-                            <Input defaultValue="Untitled workflow" />
-                        </Box>
-
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Box display="flex" gap="4">
-                                <Text asChild fontSize="sm" fontWeight="500">
-                                    <label>Id</label>
-                                </Text>
-                                <Text fontSize="sm" color="fg.error">*</Text>
-                            </Box>
-                            <Input defaultValue="workflow_id" />
-                            <Text fontSize="xs" color="fg.tertiary">@workflow_id</Text>
-                        </Box>
-
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Box display="flex" gap="4" alignItems="center">
-                                <Text asChild fontSize="sm" fontWeight="500">
-                                    <label>Description</label>
-                                </Text>
-                                <IconSearch size={14} color="var(--ax-colors-fg-tertiary)" />
-                            </Box>
-                            <Textarea
-                                placeholder="What does this workflow agent do?"
-                                resize="vertical"
-                                className="h-20"
-                            />
-                        </Box>
-
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Box display="flex" gap="4" alignItems="center">
-                                <Text asChild fontSize="sm" fontWeight="500">
-                                    <label>Plan</label>
-                                </Text>
-                                <IconSearch size={14} color="var(--ax-colors-fg-tertiary)" />
-                            </Box>
-                            <Box
-                                p="12"
-                                border="1"
-                                borderColor="border.tertiary"
-                                rounded="md"
-                                style={{ backgroundColor: "#f9fafb" }}
-                            >
-                                <Text fontSize="sm" color="fg.secondary">
-                                    The plan outlines how this agent will complete its task—step-by-step.
-                                    It will be auto-generated based on your agent description and selected tools.
-                                </Text>
-                                <Text fontSize="sm" color="fg.secondary" mt="12">
-                                    You can review and customize it after generation.
-                                </Text>
-                            </Box>
-                        </Box>
-                    </Box>
-
-                    <Box
-                        p="16"
-                        borderT="1"
-                        borderColor="border.tertiary"
-                        display="flex"
-                        justifyContent="flex-end"
-                        gap="8"
-                    >
-                        <Button appearance="subtle">Cancel</Button>
-                        <Button appearance="primary">Save</Button>
-                        <Button
-                            icon={<IconDots size={16} />}
-                            appearance="subtle"
-                            aria-label="More options"
-                        />
-                    </Box>
-                </Box>
+                    switch (label) {
+                        case "Email":
+                            return <EmailTriggerPanel onClose={() => setSelectedNodeId(null)} />;
+                        case "Condition":
+                            return <ConditionPanel onClose={() => setSelectedNodeId(null)} />;
+                        case "In-app Event":
+                            return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
+                        case "Scheduler":
+                            return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
+                        default:
+                            // If no specific panel, maybe show setup or a generic properties panel?
+                            // For now, show Setup but maybe with a different title if I had a generic one.
+                            // Or just show WorkflowSetupPanel as fallback
+                            return <WorkflowSetupPanel onClose={() => setSelectedNodeId(null)} />;
+                    }
+                })()}
             </Box>
         </Box>
     );
