@@ -128,3 +128,8 @@ body {
 .vb-outline:hover .chevron {
 	visibility: visible;
 }
+.menu-label-button {
+  height: auto !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
