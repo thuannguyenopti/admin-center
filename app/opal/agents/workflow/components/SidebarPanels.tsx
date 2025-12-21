@@ -117,13 +117,17 @@ const PanelContainer = ({
     iconBg,
     onClose,
     onSave,
+    hideCloseButton,
+    hideMenuButton,
 }: {
     children: React.ReactNode;
     title: string;
     icon: React.ReactNode;
     iconBg: BoxProps["bg"];
-    onClose: () => void;
+    onClose?: () => void;
     onSave?: () => void;
+    hideCloseButton?: boolean;
+    hideMenuButton?: boolean;
 }) => (
     <Box
         style={{ width: "380px" }}
@@ -159,18 +163,22 @@ const PanelContainer = ({
                 </Box>
                 <Heading level="4">{title}</Heading>
             </Box>
-            <Button
-                icon={<IconX size={16} />}
-                appearance="subtle"
-                aria-label="Close"
-                size="sm"
-                onClick={onClose}
-            />
+            {!hideCloseButton && (
+                <Button
+                    icon={<IconX size={16} />}
+                    appearance="subtle"
+                    aria-label="Close"
+                    size="sm"
+                    onClick={onClose}
+                />
+            )}
         </Box>
 
         {/* Content */}
-        <Box flex="1" style={{ overflowY: "scroll" }} p="20" display="flex" flexDirection="column" gap="16">
-            {children}
+        <Box flex="1" style={{ overflowY: "scroll" }} p="20" display="flex" flexDirection="column">
+            <Box bg="bg.secondary" rounded="md" p="16" display="flex" flexDirection="column" gap="24" flex="1">
+                {children}
+            </Box>
         </Box>
 
         {/* Footer */}
@@ -182,14 +190,9 @@ const PanelContainer = ({
             justifyContent="flex-end"
             gap="8"
         >
-            <Button
-                icon={<IconDots size={16} />}
-                appearance="subtle"
-                aria-label="More options"
-            />
-            <Button appearance="primary" onClick={onSave}>
-                Save
-            </Button>
+            {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
+            {!hideMenuButton && <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />}
+            <Button appearance="primary" onClick={onSave}>Save</Button>
         </Box>
     </Box>
 );
@@ -219,8 +222,12 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
 
             <Box>
                 <FormLabel label="Trigger Recipient" required tooltip />
-                <Input />
-                <Text fontSize="xs" color="fg.tertiary" mt="4">@stride.opal.optimizely.com</Text>
+                <Box display="flex" alignItems="center" gap="8">
+                    <Box flex="1">
+                        <Input />
+                    </Box>
+                    <Text fontSize="md" color="fg.default">@stride.opal.optimizely.com</Text>
+                </Box>
             </Box>
 
             <Box>
@@ -247,7 +254,7 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
                 Add Filter
             </Button>
 
-            <Box style={{ height: "1px", backgroundColor: "var(--ax-colors-border-tertiary)" }} my="8" />
+            <Box borderT="1" borderColor="border.tertiary" my="8" />
 
             <Button appearance="subtle" icon={<IconPlus />} alignSelf="start" >
                 Add Subject Filters
@@ -642,125 +649,83 @@ export function SchedulerPanel({ onClose }: PanelProps) {
     );
 }
 
-export function WorkflowSetupPanel({ onClose }: PanelProps) {
+export function WorkflowSetupPanel({ onClose, onSave, workflowName, onNameChange }: PanelProps & { onSave?: () => void; workflowName: string; onNameChange: (name: string) => void }) {
     const [active, setActive] = useState(false);
 
     return (
-        <Box
-            style={{ width: "320px" }}
-            borderL="1"
-            borderColor="border.tertiary"
-            display="flex"
-            flexDirection="column"
-            bg="bg.default"
-            h="full"
+        <PanelContainer
+            title="Workflow Setup"
+            icon={<IconCodeBranch />}
+            iconBg="bg.avatar.purple"
+            onClose={onClose}
+            onSave={onSave}
+            hideCloseButton
+            hideMenuButton
         >
-            <Box
-                style={{ height: "56px", minHeight: "56px" }}
-                px="20"
-                borderB="1"
-                borderColor="border.tertiary"
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-            >
-                <Box display="flex" alignItems="center" gap="8">
-                    <IconCodeBranch size={20} color="var(--ax-colors-fg-secondary)" />
-                    <Heading level="4">Workflow Setup</Heading>
-                </Box>
-                <Button
-                    icon={<IconX size={16} />}
-                    appearance="subtle"
-                    aria-label="Close"
-                    size="sm"
-                    onClick={onClose}
+            <Box display="flex" alignItems="center" gap="12">
+                <AxiomSwitch checked={active} onCheckedChange={setActive} />
+                <Text asChild fontSize="sm" fontWeight="500">
+                    <label>Active</label>
+                </Text>
+            </Box>
+
+            <Box display="flex" flexDirection="column" gap="8">
+                <FormLabel label="Name" required />
+                <Input
+                    value={workflowName}
+                    onChange={(e) => onNameChange(e.target.value)}
+                    autoFocus
                 />
             </Box>
 
-            <Box flex="1" overflowY="auto" p="20" display="flex" flexDirection="column" gap="20">
-                <Box display="flex" alignItems="center" gap="12">
-                    <AxiomSwitch checked={active} onCheckedChange={setActive} />
+            <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" gap="4">
                     <Text asChild fontSize="sm" fontWeight="500">
-                        <label>Active</label>
+                        <label>Id</label>
+                    </Text>
+                    <Text fontSize="sm" color="fg.error">*</Text>
+                </Box>
+                <Input defaultValue="workflow_id" />
+                <Text fontSize="xs" color="fg.tertiary">@workflow_id</Text>
+            </Box>
+
+            <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" gap="4" alignItems="center">
+                    <Text asChild fontSize="sm" fontWeight="500">
+                        <label>Description</label>
+                    </Text>
+                    <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
+                </Box>
+                <Textarea
+                    placeholder="What does this workflow agent do?"
+                    resize="vertical"
+                    className="h-20"
+                />
+            </Box>
+
+            <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" gap="4" alignItems="center">
+                    <Text asChild fontSize="sm" fontWeight="500">
+                        <label>Plan</label>
+                    </Text>
+                    <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
+                </Box>
+                <Box
+                    p="12"
+                    border="1"
+                    borderColor="border.tertiary"
+                    rounded="md"
+                    bg="bg.secondary"
+                >
+                    <Text fontSize="sm" color="fg.secondary">
+                        The plan outlines how this agent will complete its task—step-by-step.
+                        It will be auto-generated based on your agent description and selected tools.
+                    </Text>
+                    <Text fontSize="sm" color="fg.secondary" mt="12">
+                        You can review and customize it after generation.
                     </Text>
                 </Box>
-
-                <Box display="flex" flexDirection="column" gap="8">
-                    <Box display="flex" gap="4">
-                        <Text asChild fontSize="sm" fontWeight="500">
-                            <label>Name</label>
-                        </Text>
-                        <Text fontSize="sm" color="fg.error">*</Text>
-                    </Box>
-                    <Input defaultValue="Untitled workflow" />
-                </Box>
-
-                <Box display="flex" flexDirection="column" gap="8">
-                    <Box display="flex" gap="4">
-                        <Text asChild fontSize="sm" fontWeight="500">
-                            <label>Id</label>
-                        </Text>
-                        <Text fontSize="sm" color="fg.error">*</Text>
-                    </Box>
-                    <Input defaultValue="workflow_id" />
-                    <Text fontSize="xs" color="fg.tertiary">@workflow_id</Text>
-                </Box>
-
-                <Box display="flex" flexDirection="column" gap="8">
-                    <Box display="flex" gap="4" alignItems="center">
-                        <Text asChild fontSize="sm" fontWeight="500">
-                            <label>Description</label>
-                        </Text>
-                        <IconSearch size={14} color="var(--ax-colors-fg-tertiary)" />
-                    </Box>
-                    <Textarea
-                        placeholder="What does this workflow agent do?"
-                        resize="vertical"
-                        className="h-20"
-                    />
-                </Box>
-
-                <Box display="flex" flexDirection="column" gap="8">
-                    <Box display="flex" gap="4" alignItems="center">
-                        <Text asChild fontSize="sm" fontWeight="500">
-                            <label>Plan</label>
-                        </Text>
-                        <IconSearch size={14} color="var(--ax-colors-fg-tertiary)" />
-                    </Box>
-                    <Box
-                        p="12"
-                        border="1"
-                        borderColor="border.tertiary"
-                        rounded="md"
-                        style={{ backgroundColor: "#f9fafb" }}
-                    >
-                        <Text fontSize="sm" color="fg.secondary">
-                            The plan outlines how this agent will complete its task—step-by-step.
-                            It will be auto-generated based on your agent description and selected tools.
-                        </Text>
-                        <Text fontSize="sm" color="fg.secondary" mt="12">
-                            You can review and customize it after generation.
-                        </Text>
-                    </Box>
-                </Box>
             </Box>
-
-            <Box
-                p="16"
-                borderT="1"
-                borderColor="border.tertiary"
-                display="flex"
-                justifyContent="flex-end"
-                gap="8"
-            >
-                <Button appearance="subtle">Cancel</Button>
-                <Button appearance="primary">Save</Button>
-                <Button
-                    icon={<IconDots size={16} />}
-                    appearance="subtle"
-                    aria-label="More options"
-                />
-            </Box>
-        </Box>
+        </PanelContainer>
     );
 }

@@ -11,12 +11,15 @@ import {
     Disclosure,
     DisclosureTrigger,
     DisclosureContent,
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    SearchInput,
 } from "@optiaxiom/react";
 import {
     IconSearch,
     IconMenu2,
-    IconX,
-    IconDots,
     IconGripVertical,
     IconChevronDown,
     IconWebhook,
@@ -33,6 +36,9 @@ import {
     IconEnvelope,
     IconHandPointer,
     IconClock,
+    IconPlay,
+    IconXmark,
+    IconEllipsisStroke,
 } from "@optimizely/axiom-icons";
 import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -73,6 +79,11 @@ const getId = () => `dndnode_${id++}`;
 function WorkflowBuilder() {
     const router = useRouter();
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+    const [isSetupPanelOpen, setIsSetupPanelOpen] = useState(true);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(true);
+    const [workflowName, setWorkflowName] = useState("Untitled Workflow");
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
 
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
@@ -129,6 +140,13 @@ function WorkflowBuilder() {
 
     const onPaneClick = useCallback(() => {
         setSelectedNodeId(null);
+        // Do not close setup panel here necessarily, or maybe yes if we want to deselect node? 
+        // User request: "once users click on save, close the tray". 
+        // We will keep 'isSetupPanelOpen' independent of node selection, but if a node is selected, it takes precedence in view.
+        // Actually, usually selecting a node REPLACES the setup view. Deselecting might bring it back or empty. 
+        // Let's assume clicking pane deselects node, effectively hiding node panel. 
+        // If setup panel was open, it might show again, or we can say setup panel is "modal-ish" side panel. 
+        // Let's stick to: Node Panel overrides Setup Panel.
     }, []);
 
     const onDragStart = (event: any, nodeType: string, label: string) => {
@@ -180,99 +198,145 @@ function WorkflowBuilder() {
                 <Box display="flex" alignItems="center" gap="16">
                     <Button
                         icon={<IconMenu2 />}
-                        appearance="subtle"
-                        aria-label="Menu"
-                        onClick={() => router.back()}
+                        appearance={isLibraryOpen ? "default" : "subtle"}
+                        aria-label="Toggle Component Library"
+                        onClick={() => setIsLibraryOpen(!isLibraryOpen)}
                     />
-                    <Heading level="4">Untitled Workflow</Heading>
+                    <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
                 </Box>
-                <Box>
-                    {/* Header Actions */}
+                <Box display="flex" alignItems="center" gap="8">
+                    <Button appearance="primary">Save</Button>
+                    <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="Context Menu" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => {
+                                setSelectedNodeId(null);
+                                setIsSetupPanelOpen(true);
+                            }}>
+                                Edit Info
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button appearance="subtle" icon={<IconXmark />} onClick={() => router.push('/opal/agents')} aria-label="Close" />
                 </Box>
             </Box>
 
             {/* Main Content */}
-            <Box display="flex" flex="1" overflow="hidden">
+            <Box display="flex" flex="1" overflow="hidden" style={{ position: "relative" }}>
                 {/* Left Sidebar: Components */}
-                <Box
-                    style={{ width: "280px" }}
-                    borderR="1"
-                    borderColor="border.tertiary"
-                    display="flex"
-                    flexDirection="column"
-                    bg="bg.default"
-                >
-                    <Box p="16" borderB="1" borderColor="border.tertiary">
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb="12">
-                            <Text fontWeight="700">Components</Text>
-                            <IconSearch size={16} color="var(--ax-colors-fg-tertiary)" />
+                {isLibraryOpen && (
+                    <Box
+                        style={{ width: "280px" }}
+                        borderR="1"
+                        borderColor="border.tertiary"
+                        display="flex"
+                        flexDirection="column"
+                        bg="bg.default"
+                    >
+                        <Box p="16" borderB="1" borderColor="border.tertiary">
+                            {isSearching ? (
+                                <SearchInput
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onClear={() => {
+                                        setSearchQuery("");
+                                        setIsSearching(false);
+                                    }}
+                                    placeholder="Search components..."
+                                    autoFocus
+                                />
+                            ) : (
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    cursor="pointer"
+                                    onClick={() => setIsSearching(true)}
+                                >
+                                    <Text fontWeight="700">Components</Text>
+                                    <IconSearch size={16} color="var(--ax-colors-fg-tertiary)" />
+                                </Box>
+                            )}
+                        </Box>
+
+                        <Box flex="1" overflowY="auto">
+                            {Object.entries(components).map(([category, items]) => {
+                                const filteredItems = items.filter(item =>
+                                    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+                                );
+
+                                if (searchQuery && filteredItems.length === 0) {
+                                    return null;
+                                }
+
+                                return (
+                                    <Disclosure key={category} defaultOpen={["Agents", "Inputs", "Triggers", "Logic"].includes(category) || !!searchQuery}>
+                                        <DisclosureTrigger>
+                                            <Box
+                                                p="12"
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                alignItems="center"
+                                                cursor="pointer"
+                                                className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
+                                            >
+                                                <Text fontWeight="500">{category}</Text>
+                                                <IconChevronDown size={16} />
+                                            </Box>
+                                        </DisclosureTrigger>
+                                        <DisclosureContent>
+                                            <Box display="flex" flexDirection="column" gap="4">
+                                                {filteredItems.length > 0 ? (
+                                                    filteredItems.map((item, index) => (
+                                                        <div
+                                                            key={index}
+                                                            draggable
+                                                            onDragStart={(event) => onDragStart(event, 'default', item.name)}
+                                                            style={{ cursor: 'grab' }}
+                                                        >
+                                                            <Box
+                                                                p="8"
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                gap="8"
+                                                                className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
+                                                                mx="8"
+                                                            >
+                                                                <Box
+                                                                    p="6"
+                                                                    rounded={(category === "Triggers" || category === "Logic") ? "full" : "sm"}
+                                                                    // @ts-ignore - explicitly ignoring type check for bg prop here as tokens are dynamically assigned and valid
+                                                                    bg={item.bg || "bg.tertiary"}
+                                                                    color="fg.default"
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                    justifyContent="center"
+                                                                >
+                                                                    {item.icon}
+                                                                </Box>
+                                                                <Text fontSize="sm">{item.name}</Text>
+                                                                <Box ml="auto" color="fg.tertiary">
+                                                                    <IconGripVertical size={14} />
+                                                                </Box>
+                                                            </Box>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <Text fontSize="sm" color="fg.tertiary" px="16">
+                                                        No items
+                                                    </Text>
+                                                )}
+                                            </Box>
+                                        </DisclosureContent>
+                                    </Disclosure>
+                                );
+                            })}
                         </Box>
                     </Box>
-
-                    <Box flex="1" overflowY="auto">
-                        {Object.entries(components).map(([category, items]) => (
-                            <Disclosure key={category} defaultOpen={["Agents", "Inputs", "Triggers", "Logic"].includes(category)}>
-                                <DisclosureTrigger>
-                                    <Box
-                                        p="12"
-                                        display="flex"
-                                        justifyContent="space-between"
-                                        alignItems="center"
-                                        cursor="pointer"
-                                        className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
-                                    >
-                                        <Text fontWeight="500">{category}</Text>
-                                        <IconChevronDown size={16} />
-                                    </Box>
-                                </DisclosureTrigger>
-                                <DisclosureContent>
-                                    <Box display="flex" flexDirection="column" gap="4">
-                                        {items.length > 0 ? (
-                                            items.map((item, index) => (
-                                                <div
-                                                    key={index}
-                                                    draggable
-                                                    onDragStart={(event) => onDragStart(event, 'default', item.name)}
-                                                    style={{ cursor: 'grab' }}
-                                                >
-                                                    <Box
-                                                        p="8"
-                                                        display="flex"
-                                                        alignItems="center"
-                                                        gap="8"
-                                                        className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
-                                                        mx="8"
-                                                    >
-                                                        <Box
-                                                            p="6"
-                                                            rounded={(category === "Triggers" || category === "Logic") ? "full" : "sm"}
-                                                            // @ts-ignore - explicitly ignoring type check for bg prop here as tokens are dynamically assigned and valid
-                                                            bg={item.bg || "bg.tertiary"}
-                                                            color="fg.default"
-                                                            display="flex"
-                                                            alignItems="center"
-                                                            justifyContent="center"
-                                                        >
-                                                            {item.icon}
-                                                        </Box>
-                                                        <Text fontSize="sm">{item.name}</Text>
-                                                        <Box ml="auto" color="fg.tertiary">
-                                                            <IconGripVertical size={14} />
-                                                        </Box>
-                                                    </Box>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <Text fontSize="sm" color="fg.tertiary" px="16">
-                                                No items
-                                            </Text>
-                                        )}
-                                    </Box>
-                                </DisclosureContent>
-                            </Disclosure>
-                        ))}
-                    </Box>
-                </Box>
+                )}
 
                 {/* Center Canvas */}
                 <Box
@@ -303,31 +367,43 @@ function WorkflowBuilder() {
                     </div>
                 </Box>
 
-                {/* Right Sidebar: Setup or Config */}
+            </Box>
+
+            {/* Right Sidebar: Setup or Config */}
+            <Box style={{ position: "absolute", right: 0, top: 0, bottom: 0, zIndex: 10, display: "flex" }}>
                 {(() => {
                     const selectedNode = nodes.find((n) => n.id === selectedNodeId);
-                    if (!selectedNode) {
-                        return <WorkflowSetupPanel onClose={() => setSelectedNodeId(null)} />;
+                    if (selectedNode) {
+                        const label = selectedNode.data.label;
+
+                        switch (label) {
+                            case "Email":
+                                return <EmailTriggerPanel onClose={() => setSelectedNodeId(null)} />;
+                            case "Condition":
+                                return <ConditionPanel onClose={() => setSelectedNodeId(null)} />;
+                            case "In-app Event":
+                                return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
+                            case "Scheduler":
+                                return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
+                            default:
+                                return <WorkflowSetupPanel
+                                    onClose={() => setSelectedNodeId(null)}
+                                    workflowName={workflowName}
+                                    onNameChange={setWorkflowName}
+                                />;
+                        }
                     }
 
-                    // In the designs, the label is used to identify the node type
-                    const label = selectedNode.data.label;
-
-                    switch (label) {
-                        case "Email":
-                            return <EmailTriggerPanel onClose={() => setSelectedNodeId(null)} />;
-                        case "Condition":
-                            return <ConditionPanel onClose={() => setSelectedNodeId(null)} />;
-                        case "In-app Event":
-                            return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
-                        case "Scheduler":
-                            return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
-                        default:
-                            // If no specific panel, maybe show setup or a generic properties panel?
-                            // For now, show Setup but maybe with a different title if I had a generic one.
-                            // Or just show WorkflowSetupPanel as fallback
-                            return <WorkflowSetupPanel onClose={() => setSelectedNodeId(null)} />;
+                    if (isSetupPanelOpen) {
+                        return <WorkflowSetupPanel
+                            onClose={() => setIsSetupPanelOpen(false)}
+                            onSave={() => setIsSetupPanelOpen(false)}
+                            workflowName={workflowName}
+                            onNameChange={setWorkflowName}
+                        />;
                     }
+
+                    return null;
                 })()}
             </Box>
         </Box>
