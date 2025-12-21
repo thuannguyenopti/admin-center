@@ -260,9 +260,12 @@ function WorkflowBuilder() {
 
                         <Box flex="1" overflowY="auto">
                             {Object.entries(components).map(([category, items]) => {
-                                const filteredItems = items.filter(item =>
-                                    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-                                );
+                                const isCategoryMatch = category.toLowerCase().includes(searchQuery.toLowerCase());
+                                const filteredItems = isCategoryMatch
+                                    ? items
+                                    : items.filter(item =>
+                                        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+                                    );
 
                                 if (searchQuery && filteredItems.length === 0) {
                                     return null;
