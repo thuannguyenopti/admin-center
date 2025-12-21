@@ -241,10 +241,6 @@ function WorkflowBuilder() {
                                 <SearchInput
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    onClear={() => {
-                                        setSearchQuery("");
-                                        setIsSearching(false);
-                                    }}
                                     placeholder="Search components..."
                                     autoFocus
                                 />
