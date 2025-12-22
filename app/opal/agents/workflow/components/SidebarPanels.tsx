@@ -13,9 +13,16 @@ import {
     TabsTrigger,
     TabsContent,
     TabsList,
-    Switch as AxiomSwitch, // Try to use Axiom Switch if available, but the file used a custom one.
+    Switch,
+    Field,
     type BoxProps,
 } from "@optiaxiom/react";
+import {
+    DetailsPanel,
+    DetailsPanelBody,
+    DetailsPanelFooter,
+    DetailsPanelHeader,
+} from "@optiaxiom/react/unstable";
 import { Input } from "@/app/components/Input";
 import {
     IconX,
@@ -75,36 +82,6 @@ function describeCron(expression: string) {
     }
 }
 
-// Custom Toggle Component (copied from page.tsx for now)
-function Switch({ checked, onCheckedChange }: { checked: boolean; onCheckedChange: (c: boolean) => void }) {
-    return (
-        <Box
-            onClick={() => onCheckedChange(!checked)}
-            cursor="pointer"
-            bg={checked ? "bg.accent" : "bg.tertiary"}
-            className="transition-colors duration-200"
-            style={{
-                width: "36px",
-                height: "20px",
-                borderRadius: "9999px",
-                position: "relative"
-            }}
-        >
-            <Box
-                bg="bg.default"
-                rounded="full"
-                className="absolute transition-all duration-200"
-                style={{
-                    top: "2px",
-                    width: "16px",
-                    height: "16px",
-                    left: checked ? "18px" : "2px",
-                }}
-            />
-        </Box>
-    );
-}
-
 interface PanelProps {
     onClose: () => void;
     onSave?: () => void;
@@ -119,6 +96,7 @@ const PanelContainer = ({
     onSave,
     hideCloseButton,
     hideMenuButton,
+    headerAction,
 }: {
     children: React.ReactNode;
     title: string;
@@ -128,28 +106,11 @@ const PanelContainer = ({
     onSave?: () => void;
     hideCloseButton?: boolean;
     hideMenuButton?: boolean;
+    headerAction?: React.ReactNode;
 }) => (
-    <Box
-        style={{ width: "380px" }}
-        borderL="1"
-        borderColor="border.tertiary"
-        display="flex"
-        flexDirection="column"
-        bg="bg.default"
-        h="full"
-    >
-        {/* Header */}
-        <Box
-            h="56"
-            style={{ minHeight: "56px" }}
-            px="20"
-            borderB="1"
-            borderColor="border.tertiary"
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-        >
-            <Box display="flex" alignItems="center" gap="12">
+    <DetailsPanel style={{ width: "380px" }}>
+        <DetailsPanelHeader
+            addonBefore={
                 <Box
                     p="8"
                     rounded="full"
@@ -161,50 +122,44 @@ const PanelContainer = ({
                 >
                     {icon}
                 </Box>
-                <Heading level="4">{title}</Heading>
-            </Box>
-            {!hideCloseButton && (
-                <Button
-                    icon={<IconX size={16} />}
-                    appearance="subtle"
-                    aria-label="Close"
-                    size="sm"
-                    onClick={onClose}
-                />
-            )}
-        </Box>
+            }
+            addonAfter={
+                <Box display="flex" gap="8" alignItems="center">
+                    {headerAction}
+                    {!hideCloseButton && (
+                        <Button
+                            icon={<IconX size={16} />}
+                            appearance="subtle"
+                            aria-label="Close"
+                            size="sm"
+                            onClick={onClose}
+                        />
+                    )}
+                </Box>
+            }
+        >
+            <Heading level="4">{title}</Heading>
+        </DetailsPanelHeader>
 
-        {/* Content */}
-        <Box flex="1" style={{ overflowY: "scroll" }} p="20" display="flex" flexDirection="column">
+        <DetailsPanelBody p="20">
             <Box bg="bg.secondary" rounded="md" p="16" display="flex" flexDirection="column" gap="24" flex="1">
                 {children}
             </Box>
-        </Box>
+        </DetailsPanelBody>
 
-        {/* Footer */}
-        <Box
-            p="16"
-            borderT="1"
-            borderColor="border.tertiary"
-            display="flex"
-            justifyContent="flex-end"
-            gap="8"
-        >
-            {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
-            {!hideMenuButton && <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />}
-            <Button appearance="primary" onClick={onSave}>Save</Button>
-        </Box>
-    </Box>
-);
-
-const FormLabel = ({ label, required, tooltip }: { label: string; required?: boolean; tooltip?: boolean }) => (
-    <Box display="flex" gap="4" alignItems="center" mb="4">
-        <Text asChild fontSize="sm" fontWeight="500">
-            <label>{label}</label>
-        </Text>
-        {required && <Text fontSize="sm" color="fg.error">*</Text>}
-        {tooltip && <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />}
-    </Box>
+        <DetailsPanelFooter>
+            <Box
+                display="flex"
+                justifyContent="flex-end"
+                gap="8"
+                flex="1"
+            >
+                {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
+                {!hideMenuButton && <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />}
+                <Button appearance="primary" onClick={onSave}>Save</Button>
+            </Box>
+        </DetailsPanelFooter>
+    </DetailsPanel>
 );
 
 export function EmailTriggerPanel({ onClose }: PanelProps) {
@@ -215,24 +170,21 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
             iconBg="bg.success.subtle"
             onClose={onClose}
         >
-            <Box>
-                <FormLabel label="Short Description" />
+            <Field label="Short Description">
                 <Input placeholder="Describe this trigger" />
-            </Box>
+            </Field>
 
-            <Box>
-                <FormLabel label="Trigger Recipient" required tooltip />
+            <Field label="Trigger Recipient" required info="Recipient details">
                 <Box display="flex" alignItems="center" gap="8">
                     <Box flex="1">
                         <Input />
                     </Box>
                     <Text fontSize="md" color="fg.default">@stride.opal.optimizely.com</Text>
                 </Box>
-            </Box>
+            </Field>
 
             <Box>
-                <Box>
-                    <FormLabel label="Sender Filters" required tooltip />
+                <Field label="Sender Filters" required info="Filter criteria">
                     <Box display="flex" gap="8" alignItems="center">
                         <Box flex="1">
                             <Select defaultValue="contains" options={[{ label: "Contains", value: "contains" }, { label: "Equals", value: "equals" }]}>
@@ -247,7 +199,7 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
                         </Box>
                         <IconTrash size={16} className="cursor-pointer text-fg-tertiary hover:text-fg-default" />
                     </Box>
-                </Box>
+                </Field>
             </Box>
 
             <Button appearance="subtle" icon={<IconPlus />} alignSelf="start">
@@ -273,19 +225,17 @@ export function ConditionPanel({ onClose }: PanelProps) {
         >
             <Box bg="bg.tertiary" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
                 <Text fontWeight="600" fontSize="md">Condition 1</Text>
-                <Box>
-                    <FormLabel label="Match type" required />
+                <Field label="Match type" required>
                     <Select defaultValue="equals" options={[{ label: "Equals", value: "equals" }]}>
                         <SelectTrigger>
                             Equals
                         </SelectTrigger>
                         <SelectContent />
                     </Select>
-                </Box>
-                <Box>
-                    <FormLabel label="Condition" required />
+                </Field>
+                <Field label="Condition" required>
                     <Input defaultValue="CV" />
-                </Box>
+                </Field>
                 <Button appearance="subtle" icon={<IconPlus />} alignSelf="start" size="sm">
                     Add Rule
                 </Button>
@@ -293,19 +243,17 @@ export function ConditionPanel({ onClose }: PanelProps) {
 
             <Box bg="bg.tertiary" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
                 <Text fontWeight="600" fontSize="md">Condition 2</Text>
-                <Box>
-                    <FormLabel label="Match type" required />
+                <Field label="Match type" required>
                     <Select defaultValue="equals" options={[{ label: "Equals", value: "equals" }]}>
                         <SelectTrigger>
                             Equals
                         </SelectTrigger>
                         <SelectContent />
                     </Select>
-                </Box>
-                <Box>
-                    <FormLabel label="Condition" required />
+                </Field>
+                <Field label="Condition" required>
                     <Input defaultValue="OAS" />
-                </Box>
+                </Field>
                 <Button appearance="subtle" icon={<IconPlus />} alignSelf="start" size="sm">
                     Add Rule
                 </Button>
@@ -335,30 +283,27 @@ export function InAppEventPanel({ onClose }: PanelProps) {
             <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
                 <Text fontWeight="600" fontSize="md">Rule 1</Text>
 
-                <Box>
-                    <FormLabel label="Product" required />
+                <Field label="Product" required>
                     <Select defaultValue="cmp" options={[{ label: "Content Marketing Platform (CMP)", value: "cmp" }]}>
                         <SelectTrigger>
                             Content Marketing Platform (CMP)
                         </SelectTrigger>
                         <SelectContent />
                     </Select>
-                </Box>
+                </Field>
 
-                <Box>
-                    <FormLabel label="Event Type" required />
+                <Field label="Event Type" required>
                     <Select defaultValue="select" options={[{ label: "Select type", value: "select" }, { label: "Click", value: "click" }]}>
                         <SelectTrigger>
                             Select type
                         </SelectTrigger>
                         <SelectContent />
                     </Select>
-                </Box>
+                </Field>
 
-                <Box>
-                    <FormLabel label="Description" />
+                <Field label="Description">
                     <Textarea placeholder="Optional" className="h-24" />
-                </Box>
+                </Field>
 
                 <Button appearance="subtle" icon={<IconPlus />} alignSelf="start" size="sm">
                     Add Rule
@@ -447,33 +392,29 @@ export function SchedulerPanel({ onClose }: PanelProps) {
             iconBg="bg.success.subtle"
             onClose={onClose}
         >
-            <Box>
-                <FormLabel label="Name" />
+            <Field label="Name">
                 <Input defaultValue="Eg. Weekly Report" />
-            </Box>
+            </Field>
 
-            <Box display="flex" alignItems="center" gap="12" mb="8">
-                <AxiomSwitch checked={isRecurring} onCheckedChange={setIsRecurring} />
-                <Text asChild fontSize="sm" fontWeight="500">
-                    <label>Recurring</label>
-                </Text>
+            <Box mb="8">
+                <Switch checked={isRecurring} onCheckedChange={setIsRecurring}>
+                    Recurring
+                </Switch>
             </Box>
 
             {!isRecurring ? (
                 // Non-Recurring View
                 <Box display="flex" flexDirection="column" style={{ gap: "24px" }}>
-                    <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}> {/* Using gap directly or className, but gap="24" is 1.5rem in axiom? 1.5rem = 24px usually. */}
-                        <FormLabel label="Trigger Date" />
+                    <Field label="Trigger Date">
                         <Box style={{ position: "relative" }}>
                             <Box style={{ position: "absolute", left: "12px", top: "10px", zIndex: 1 }} color="fg.tertiary">
                                 <IconCalendar />
                             </Box>
                             <Input value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ paddingLeft: '40px', fontFamily: 'var(--font-intel)' }} />
                         </Box>
-                    </Box>
+                    </Field>
 
-                    <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <FormLabel label="Trigger Time" />
+                    <Field label="Trigger Time">
                         <Box display="flex" gap="4">
                             <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
                                 <SelectTrigger size="lg">{startHour}</SelectTrigger>
@@ -488,36 +429,33 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                 <SelectContent />
                             </Select>
                         </Box>
-                    </Box>
+                    </Field>
 
-                    <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <FormLabel label="Time Zone" />
+                    <Field label="Time Zone">
                         <Select defaultValue="ny" options={timezoneOptions}>
                             <SelectTrigger size="lg">New York, United States (UTC-05:00)</SelectTrigger>
                             <SelectContent />
                         </Select>
-                    </Box>
+                    </Field>
                 </Box>
             ) : (
                 // Recurring View
                 <Box display="flex" flexDirection="column" style={{ gap: "24px" }}>
-                    <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <FormLabel label="Start from" />
+                    <Field label="Start from">
                         <Box style={{ position: "relative" }}>
                             <Box style={{ position: "absolute", left: "12px", top: "10px", zIndex: 1 }} color="fg.tertiary">
                                 <IconCalendar />
                             </Box>
                             <Input value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ paddingLeft: '40px', fontFamily: 'var(--font-intel)' }} />
                         </Box>
-                    </Box>
+                    </Field>
 
-                    <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <FormLabel label="Time Zone" />
+                    <Field label="Time Zone">
                         <Select defaultValue="ny" options={timezoneOptions}>
                             <SelectTrigger size="lg">New York, United States (UTC-05:00)</SelectTrigger>
                             <SelectContent />
                         </Select>
-                    </Box>
+                    </Field>
 
                     <Tabs defaultValue="standard" value={activeTab} onValueChange={setActiveTab}>
                         <TabsList style={{ width: "100%", display: "flex" }}>
@@ -526,8 +464,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                         </TabsList>
                         <TabsContent value="standard">
                             <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="24" mt="16">
-                                <Box>
-                                    <FormLabel label="Recur every" />
+                                <Field label="Recur every">
                                     <Box display="flex" gap="8">
                                         <Box flex="1">
                                             <Input value={recurValue} onChange={(e) => setRecurValue(e.target.value)} />
@@ -541,10 +478,9 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             </Select>
                                         </Box>
                                     </Box>
-                                </Box>
+                                </Field>
 
-                                <Box>
-                                    <FormLabel label="On these days" />
+                                <Field label="On these days">
                                     <Box display="flex" gap="4">
                                         {days.map((d, i) => {
                                             const isSelected = selectedDays.includes(i);
@@ -567,10 +503,9 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             );
                                         })}
                                     </Box>
-                                </Box>
+                                </Field>
 
-                                <Box>
-                                    <FormLabel label="Start time" />
+                                <Field label="Start time">
                                     <Box display="flex" gap="4">
                                         <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
                                             <SelectTrigger size="lg">{startHour}</SelectTrigger>
@@ -585,10 +520,9 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             <SelectContent />
                                         </Select>
                                     </Box>
-                                </Box>
+                                </Field>
 
-                                <Box>
-                                    <FormLabel label="End date (Optional)" />
+                                <Field label="End date (Optional)">
                                     <Box style={{ position: "relative" }}>
                                         <Box style={{ position: "absolute", left: "12px", top: "10px", zIndex: 1 }} color="fg.tertiary">
                                             <IconCalendar size={20} />
@@ -600,13 +534,12 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             style={{ paddingLeft: '40px' }}
                                         />
                                     </Box>
-                                </Box>
+                                </Field>
                             </Box>
                         </TabsContent>
                         <TabsContent value="advanced">
                             <Box bg="bg.avatar.neutral" p="16" rounded="sm" display="flex" flexDirection="column" gap="24" mt="16">
-                                <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                                    <FormLabel label="Cron Expression" />
+                                <Field label="Cron Expression">
                                     <Box bg="bg.default" p="12" rounded="sm" border="1" borderColor="border.tertiary">
                                         <Input
                                             value={cronExpression}
@@ -615,10 +548,9 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             className="focus:ring-0"
                                         />
                                     </Box>
-                                </Box>
+                                </Field>
 
-                                <Box style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                                    <FormLabel label="End date (Optional)" />
+                                <Field label="End date (Optional)">
                                     <Box style={{ position: "relative" }}>
                                         <Box style={{ position: "absolute", left: "12px", top: "10px", zIndex: 1 }} color="fg.tertiary">
                                             <IconCalendar />
@@ -630,7 +562,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             style={{ paddingLeft: '40px', fontFamily: 'var(--font-intel)' }}
                                         />
                                     </Box>
-                                </Box>
+                                </Field>
                             </Box>
                         </TabsContent>
                     </Tabs>
@@ -661,71 +593,36 @@ export function WorkflowSetupPanel({ onClose, onSave, workflowName, onNameChange
             onSave={onSave}
             hideCloseButton
             hideMenuButton
+            headerAction={
+                <Switch checked={active} onCheckedChange={setActive}>
+                    Active
+                </Switch>
+            }
         >
-            <Box display="flex" alignItems="center" gap="12">
-                <AxiomSwitch checked={active} onCheckedChange={setActive} />
-                <Text asChild fontSize="sm" fontWeight="500">
-                    <label>Active</label>
-                </Text>
-            </Box>
-
-            <Box display="flex" flexDirection="column" gap="8">
-                <FormLabel label="Name" required />
+            <Field label="Name" required>
                 <Input
                     value={workflowName}
                     onChange={(e) => onNameChange(e.target.value)}
                     autoFocus
                 />
-            </Box>
+            </Field>
 
-            <Box display="flex" flexDirection="column" gap="8">
-                <Box display="flex" gap="4">
-                    <Text asChild fontSize="sm" fontWeight="500">
-                        <label>Id</label>
-                    </Text>
-                    <Text fontSize="sm" color="fg.error">*</Text>
+            <Field label="Id" required>
+                <Box display="flex" flexDirection="column" gap="4">
+                    <Input defaultValue="workflow_id" />
+                    <Text fontSize="md" color="fg.default">@workflow_id</Text>
                 </Box>
-                <Input defaultValue="workflow_id" />
-                <Text fontSize="xs" color="fg.tertiary">@workflow_id</Text>
-            </Box>
+            </Field>
 
-            <Box display="flex" flexDirection="column" gap="8">
-                <Box display="flex" gap="4" alignItems="center">
-                    <Text asChild fontSize="sm" fontWeight="500">
-                        <label>Description</label>
-                    </Text>
-                    <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
-                </Box>
+            <Field label="Description" info="Helper text">
                 <Textarea
                     placeholder="What does this workflow agent do?"
                     resize="vertical"
                     className="h-20"
                 />
-            </Box>
+            </Field>
 
-            <Box display="flex" flexDirection="column" gap="8">
-                <Box display="flex" gap="4" alignItems="center">
-                    <Text asChild fontSize="sm" fontWeight="500">
-                        <label>Plan</label>
-                    </Text>
-                    <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
-                </Box>
-                <Box
-                    p="12"
-                    border="1"
-                    borderColor="border.tertiary"
-                    rounded="md"
-                    bg="bg.secondary"
-                >
-                    <Text fontSize="sm" color="fg.secondary">
-                        The plan outlines how this agent will complete its task—step-by-step.
-                        It will be auto-generated based on your agent description and selected tools.
-                    </Text>
-                    <Text fontSize="sm" color="fg.secondary" mt="12">
-                        You can review and customize it after generation.
-                    </Text>
-                </Box>
-            </Box>
+
         </PanelContainer>
     );
 }
