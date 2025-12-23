@@ -5,38 +5,53 @@ import { OpalHeader } from "./Opal/OpalHeader";
 import { OpalChat } from "./Opal/OpalChat";
 import { OpalInput } from "./Opal/OpalInput";
 import { OpalHistorySidebar } from "./Opal/OpalHistorySidebar";
-import { useOpalState } from "@/app/hooks/useOpalState";
-import { useOpalHistory } from "@/app/hooks/useOpalHistory";
+import { ChatMessage } from "@/app/hooks/useOpalState";
+import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
 
 type OpalPanelProps = {
   isOpen: boolean;
   onClose: () => void;
+  messages: ChatMessage[];
+  inputValue: string;
+  isLoading: boolean;
+  error?: string;
+  setInputValue: (value: string) => void;
+  sendMessage: (content: string) => void;
+
+  groupedHistory: { [key: string]: ChatHistoryItem[] };
+  activeChat: string | null;
+  searchQuery: string;
+  isHistoryVisible: boolean;
+  mode: OpalMode;
+  setSearchQuery: (query: string) => void;
+  toggleHistory: () => void;
+  toggleMode: () => void;
+  createNewChat: () => void;
+  deleteChat: (id: string) => void;
+  selectChat: (id: string) => void;
 };
 
-export function OpalPanel({ isOpen, onClose }: OpalPanelProps) {
-  const {
-    messages,
-    inputValue,
-    isLoading,
-    error,
-    setInputValue,
-    sendMessage,
-  } = useOpalState();
-
-  const {
-    groupedHistory,
-    activeChat,
-    searchQuery,
-    isHistoryVisible,
-    mode,
-    setSearchQuery,
-    toggleHistory,
-    toggleMode,
-    createNewChat,
-    deleteChat,
-    selectChat,
-  } = useOpalHistory();
-
+export function OpalPanel({
+  isOpen,
+  onClose,
+  messages,
+  inputValue,
+  isLoading,
+  error,
+  setInputValue,
+  sendMessage,
+  groupedHistory,
+  activeChat,
+  searchQuery,
+  isHistoryVisible,
+  mode,
+  setSearchQuery,
+  toggleHistory,
+  toggleMode,
+  createNewChat,
+  deleteChat,
+  selectChat,
+}: OpalPanelProps) {
   const handleSend = () => {
     if (inputValue.trim() && !isLoading) {
       sendMessage(inputValue);

@@ -62,12 +62,6 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
           flexShrink: 0,
         }}
       >
-        {item.hasSmile && (
-          <IconSmile style={{ width: '16px', height: '16px', flexShrink: 0 }} />
-        )}
-        {item.hasRedDot && (
-          <IconRedDot style={{ width: '10px', height: '10px', flexShrink: 0 }} />
-        )}
         <div style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {isHovered && (
             <Button
