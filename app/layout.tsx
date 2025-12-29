@@ -3,7 +3,7 @@ import Template from "./components/template";
 import "./globals.css";
 import "./styles/opalStyles.css";
 import {usePathname} from "next/navigation";
-import {useState} from "react";
+import {useState, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
@@ -27,56 +27,74 @@ import {
 	IconBuildingStore,
 } from "@tabler/icons-react";
 
+// Memoize icon components outside component to prevent recreation
+const iconComponents = {
+	dashboard: <IconDashboard />,
+	folders: <IconFolders />,
+	pencil: <IconPencil />,
+	chartBar: <IconChartBar />,
+	users: <IconUsers />,
+	settings: <IconSettings />,
+	puzzle: <IconPuzzle />,
+	search: <IconSearch />,
+	buildingStore: <IconBuildingStore />,
+	hierarchy3: <IconHierarchy3 />,
+	list: <IconList />,
+};
+
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
 	const path = usePathname();
-	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
+	const algorithmMatch = useMemo(() => path.match(/\/cms\/search\/algorithms\/([^/]+)/), [path]);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
-	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
+	const currentAlgorithm = useMemo(
+		() => algorithms.find((a) => a.id === algorithmId),
+		[algorithms, algorithmId]
+	);
 
-	const structure = {
+	const structure = useMemo(() => ({
 		cms: [
 			{
 				label: "Dashboard",
 				highlight: "cms/dashboard",
 				url: "/cms/dashboard",
-				icon: <IconDashboard />,
+				icon: iconComponents.dashboard,
 			},
 			{
 				label: "Content Manager",
 				url: "/cms/content",
 				highlight: "cms/content",
-				icon: <IconFolders />,
+				icon: iconComponents.folders,
 			},
 			{
 				label: "Edit",
 				url: "/cms/edit",
 				highlight: "cms/edit",
-				icon: <IconPencil />,
+				icon: iconComponents.pencil,
 				customLayout: true,
 			},
 			{
 				label: "Reports",
 				highlight: "cms/reports",
 				url: "/cms/reports",
-				icon: <IconChartBar />,
+				icon: iconComponents.chartBar,
 			},
 			{
 				label: "Audiences",
 				highlight: "cms/audiences",
 				url: "/cms/audiences",
-				icon: <IconUsers />,
+				icon: iconComponents.users,
 			},
 			{
 				label: "Settings",
 				highlight: "cms/settings",
 				url: "/cms/settings/content-types",
-				icon: <IconSettings />,
+				icon: iconComponents.settings,
 				children: [
 					{label: "Configure"},
 					{
@@ -117,13 +135,13 @@ export default function RootLayout({
 				label: "Add-ons",
 				highlight: "cms/add-ons",
 				url: "/cms/add-ons",
-				icon: <IconPuzzle />,
+				icon: iconComponents.puzzle,
 			},
 			{
 				label: "Search Management",
 				url: "/cms/search/search-analytics",
 				highlight: "/cms/search",
-				icon: <IconSearch />,
+				icon: iconComponents.search,
 				children: [
 					{label: "Health & Monitoring"},
 					{
@@ -217,13 +235,13 @@ export default function RootLayout({
 				label: "Marketplace",
 				url: "/connect-platform/marketplace",
 				highlight: "/connect-platform/marketplace",
-				icon: <IconBuildingStore />,
+				icon: iconComponents.buildingStore,
 			},
 			{
 				label: "Graph",
 				url: "/connect-platform/graph/dashboard",
 				highlight: "/connect-platform/graph",
-				icon: <IconHierarchy3 />,
+				icon: iconComponents.hierarchy3,
 				children: [
 					{
 						label: "Dashboard",
@@ -249,7 +267,7 @@ export default function RootLayout({
 				label: "Applications",
 				url: "/fe-hosting/applications/apps",
 				highlight: "/fe-hosting/applications",
-				icon: <IconList />,
+				icon: iconComponents.list,
 				children: [
 					{
 						label: "Applications",
@@ -280,11 +298,11 @@ export default function RootLayout({
 				],
 			},
 		],
-	};
-	const key: string = path.split("/")[1];
-	const menu = structure[key as keyof typeof structure];
+	}), [currentAlgorithm, algorithmId]);
+	
+	const key = useMemo(() => path.split("/")[1], [path]);
+	const menu = useMemo(() => structure[key as keyof typeof structure], [structure, key]);
 
-	const [feHostingState, setFeHostingState] = useState({});
 	const {activeEffect} = useSecretCode();
 
 	return (
