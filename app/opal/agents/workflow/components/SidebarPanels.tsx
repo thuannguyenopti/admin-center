@@ -22,6 +22,7 @@ import {
     DetailsPanelBody,
     DetailsPanelFooter,
     DetailsPanelHeader,
+    Layout,
 } from "@optiaxiom/react/unstable";
 import { Input } from "@/app/components/Input";
 import {
@@ -108,7 +109,7 @@ const PanelContainer = ({
     hideMenuButton?: boolean;
     headerAction?: React.ReactNode;
 }) => (
-    <DetailsPanel style={{ width: "380px" }}>
+    <DetailsPanel w="full">
         <DetailsPanelHeader
             addonBefore={
                 <Box
@@ -156,7 +157,7 @@ const PanelContainer = ({
             >
                 {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
                 {!hideMenuButton && <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />}
-                <Button appearance="primary" onClick={onSave}>Save</Button>
+                <Button appearance="primary" onClick={onSave}>Apply</Button>
             </Box>
         </DetailsPanelFooter>
     </DetailsPanel>
