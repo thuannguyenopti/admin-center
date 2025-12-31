@@ -60,6 +60,8 @@ import {
     Background,
     MiniMap,
     BackgroundVariant,
+    type Connection,
+    type Edge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -89,11 +91,11 @@ function WorkflowBuilder() {
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
     const onConnect = useCallback(
-        (params: any) => setEdges((eds) => addEdge(params, eds)),
+        (params: Connection) => setEdges((eds) => addEdge(params, eds)),
         [setEdges],
     );
 
