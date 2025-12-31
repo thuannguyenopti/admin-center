@@ -212,7 +212,7 @@ export default function AgentsPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md">
+                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => router.push("/opal/agents/setup")}>
                             <Box mt="2" color="fg.default"><IconAgent /></Box>
                             <Box>
                                 <Text fontWeight="500" fontSize="md">Specialized Agent</Text>
