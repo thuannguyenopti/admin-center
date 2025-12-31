@@ -17,6 +17,7 @@ import {
     DropdownMenuItem,
     SearchInput,
 } from "@optiaxiom/react";
+import { Layout } from "@optiaxiom/react/unstable";
 import {
     IconSearch,
     IconMenu2,
@@ -182,161 +183,199 @@ function WorkflowBuilder() {
     };
 
     return (
-        <Box display="flex" flexDirection="column" h="full" bg="bg.default">
-            {/* Header */}
-            <Box
-                h="56"
-                style={{ height: "56px" }}
-                px="16"
-                borderB="1"
-                borderColor="border.tertiary"
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                bg="bg.default"
-            >
-                <Box display="flex" alignItems="center" gap="16">
-                    <Button
-                        icon={<IconMenu2 />}
-                        appearance={isLibraryOpen ? "default" : "subtle"}
-                        aria-label="Toggle Component Library"
-                        onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-                    />
-                    <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
-                </Box>
-                <Box display="flex" alignItems="center" gap="8">
-                    <Button appearance="primary">Save</Button>
-                    <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="Context Menu" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => {
-                                setSelectedNodeId(null);
-                                setIsSetupPanelOpen(true);
-                            }}>
-                                Edit Info
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button appearance="subtle" icon={<IconXmark />} onClick={() => router.push('/opal/agents')} aria-label="Close" />
-                </Box>
-            </Box>
-
-            {/* Main Content */}
-            <Box display="flex" flex="1" overflow="hidden" style={{ position: "relative" }}>
-                {/* Left Sidebar: Components */}
-                {isLibraryOpen && (
+        <Box h="full" bg="bg.default">
+            <Layout
+                resizable
+                style={{ height: '100%' }}
+                header={
                     <Box
-                        style={{ width: "280px" }}
-                        borderR="1"
+                        h="56"
+                        style={{ height: "56px" }}
+                        px="16"
+                        borderB="1"
                         borderColor="border.tertiary"
                         display="flex"
-                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="space-between"
                         bg="bg.default"
                     >
-                        <Box p="16" borderB="1" borderColor="border.tertiary">
-                            {isSearching ? (
-                                <SearchInput
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search components..."
-                                    autoFocus
-                                />
-                            ) : (
-                                <Box
-                                    display="flex"
-                                    justifyContent="space-between"
-                                    alignItems="center"
-                                    cursor="pointer"
-                                    onClick={() => setIsSearching(true)}
-                                >
-                                    <Text fontWeight="700">Components</Text>
-                                    <IconSearch size={16} color="var(--ax-colors-fg-tertiary)" />
-                                </Box>
-                            )}
+                        <Box display="flex" alignItems="center" gap="16">
+                            <Button
+                                icon={<IconMenu2 />}
+                                appearance={isLibraryOpen ? "default" : "subtle"}
+                                aria-label="Toggle Component Library"
+                                onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+                            />
+                            <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
                         </Box>
-
-                        <Box flex="1" overflowY="auto">
-                            {Object.entries(components).map(([category, items]) => {
-                                const isCategoryMatch = category.toLowerCase().includes(searchQuery.toLowerCase());
-                                const filteredItems = isCategoryMatch
-                                    ? items
-                                    : items.filter(item =>
-                                        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-                                    );
-
-                                if (searchQuery && filteredItems.length === 0) {
-                                    return null;
-                                }
-
-                                return (
-                                    <Disclosure key={category} defaultOpen={["Agents", "Inputs", "Triggers", "Logic"].includes(category) || !!searchQuery}>
-                                        <DisclosureTrigger>
-                                            <Box
-                                                p="12"
-                                                display="flex"
-                                                justifyContent="space-between"
-                                                alignItems="center"
-                                                cursor="pointer"
-                                                className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
-                                            >
-                                                <Text fontWeight="500">{category}</Text>
-                                                <IconChevronDown size={16} />
-                                            </Box>
-                                        </DisclosureTrigger>
-                                        <DisclosureContent>
-                                            <Box display="flex" flexDirection="column" gap="4">
-                                                {filteredItems.length > 0 ? (
-                                                    filteredItems.map((item, index) => (
-                                                        <div
-                                                            key={index}
-                                                            draggable
-                                                            onDragStart={(event) => onDragStart(event, 'default', item.name)}
-                                                            style={{ cursor: 'grab' }}
-                                                        >
-                                                            <Box
-                                                                p="8"
-                                                                display="flex"
-                                                                alignItems="center"
-                                                                gap="8"
-                                                                className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
-                                                                mx="8"
-                                                            >
-                                                                <Box
-                                                                    p="6"
-                                                                    rounded={(category === "Triggers" || category === "Logic") ? "full" : "sm"}
-                                                                    // @ts-ignore - explicitly ignoring type check for bg prop here as tokens are dynamically assigned and valid
-                                                                    bg={item.bg || "bg.tertiary"}
-                                                                    color="fg.default"
-                                                                    display="flex"
-                                                                    alignItems="center"
-                                                                    justifyContent="center"
-                                                                >
-                                                                    {item.icon}
-                                                                </Box>
-                                                                <Text fontSize="sm">{item.name}</Text>
-                                                                <Box ml="auto" color="fg.tertiary">
-                                                                    <IconGripVertical size={14} />
-                                                                </Box>
-                                                            </Box>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <Text fontSize="sm" color="fg.tertiary" px="16">
-                                                        No items
-                                                    </Text>
-                                                )}
-                                            </Box>
-                                        </DisclosureContent>
-                                    </Disclosure>
-                                );
-                            })}
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Button appearance="primary">Save</Button>
+                            <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="Context Menu" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onSelect={() => {
+                                        setSelectedNodeId(null);
+                                        setIsSetupPanelOpen(true);
+                                    }}>
+                                        Edit Info
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button appearance="subtle" icon={<IconXmark />} onClick={() => router.push('/opal/agents')} aria-label="Close" />
                         </Box>
                     </Box>
-                )}
+                }
+                sidebar={
+                    isLibraryOpen ? (
+                        <Box
+                            style={{ width: "280px", height: "100%" }}
+                            borderR="1"
+                            borderColor="border.tertiary"
+                            display="flex"
+                            flexDirection="column"
+                            bg="bg.default"
+                        >
+                            <Box p="16" borderB="1" borderColor="border.tertiary">
+                                {isSearching ? (
+                                    <SearchInput
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search components..."
+                                        autoFocus
+                                    />
+                                ) : (
+                                    <Box
+                                        display="flex"
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                        cursor="pointer"
+                                        onClick={() => setIsSearching(true)}
+                                    >
+                                        <Text fontWeight="700">Components</Text>
+                                        <IconSearch size={16} color="var(--ax-colors-fg-tertiary)" />
+                                    </Box>
+                                )}
+                            </Box>
 
+                            <Box flex="1" overflowY="auto">
+                                {Object.entries(components).map(([category, items]) => {
+                                    const isCategoryMatch = category.toLowerCase().includes(searchQuery.toLowerCase());
+                                    const filteredItems = isCategoryMatch
+                                        ? items
+                                        : items.filter(item =>
+                                            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+                                        );
+
+                                    if (searchQuery && filteredItems.length === 0) {
+                                        return null;
+                                    }
+
+                                    return (
+                                        <Disclosure key={category} defaultOpen={["Agents", "Inputs", "Triggers", "Logic"].includes(category) || !!searchQuery}>
+                                            <DisclosureTrigger>
+                                                <Box
+                                                    p="12"
+                                                    display="flex"
+                                                    justifyContent="space-between"
+                                                    alignItems="center"
+                                                    cursor="pointer"
+                                                    className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
+                                                >
+                                                    <Text fontWeight="500">{category}</Text>
+                                                    <IconChevronDown size={16} />
+                                                </Box>
+                                            </DisclosureTrigger>
+                                            <DisclosureContent>
+                                                <Box display="flex" flexDirection="column" gap="4">
+                                                    {filteredItems.length > 0 ? (
+                                                        filteredItems.map((item, index) => (
+                                                            <div
+                                                                key={index}
+                                                                draggable
+                                                                onDragStart={(event) => onDragStart(event, 'default', item.name)}
+                                                                style={{ cursor: 'grab' }}
+                                                            >
+                                                                <Box
+                                                                    p="8"
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                    gap="8"
+                                                                    className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md"
+                                                                    mx="8"
+                                                                >
+                                                                    <Box
+                                                                        p="6"
+                                                                        rounded={(category === "Triggers" || category === "Logic") ? "full" : "sm"}
+                                                                        // @ts-ignore - explicitly ignoring type check for bg prop here as tokens are dynamically assigned and valid
+                                                                        bg={item.bg || "bg.tertiary"}
+                                                                        color="fg.default"
+                                                                        display="flex"
+                                                                        alignItems="center"
+                                                                        justifyContent="center"
+                                                                    >
+                                                                        {item.icon}
+                                                                    </Box>
+                                                                    <Text fontSize="sm">{item.name}</Text>
+                                                                    <Box ml="auto" color="fg.tertiary">
+                                                                        <IconGripVertical size={14} />
+                                                                    </Box>
+                                                                </Box>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <Text fontSize="sm" color="fg.tertiary" px="16">
+                                                            No items
+                                                        </Text>
+                                                    )}
+                                                </Box>
+                                            </DisclosureContent>
+                                        </Disclosure>
+                                    );
+                                })}
+                            </Box>
+                        </Box>
+                    ) : null
+                }
+                detailsPanel={
+                    (() => {
+                        const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+                        if (selectedNode) {
+                            const label = selectedNode.data.label;
+
+                            switch (label) {
+                                case "Email":
+                                    return <EmailTriggerPanel onClose={() => setSelectedNodeId(null)} />;
+                                case "Condition":
+                                    return <ConditionPanel onClose={() => setSelectedNodeId(null)} />;
+                                case "In-app Event":
+                                    return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
+                                case "Scheduler":
+                                    return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
+                                default:
+                                    return <WorkflowSetupPanel
+                                        onClose={() => setSelectedNodeId(null)}
+                                        workflowName={workflowName}
+                                        onNameChange={setWorkflowName}
+                                    />;
+                            }
+                        }
+
+                        if (isSetupPanelOpen) {
+                            return <WorkflowSetupPanel
+                                onClose={() => setIsSetupPanelOpen(false)}
+                                onSave={() => setIsSetupPanelOpen(false)}
+                                workflowName={workflowName}
+                                onNameChange={setWorkflowName}
+                            />;
+                        }
+
+                        return null;
+                    })()
+                }
+            >
                 {/* Center Canvas */}
                 <Box
                     flex="1"
@@ -365,46 +404,7 @@ function WorkflowBuilder() {
                         </ReactFlow>
                     </div>
                 </Box>
-
-            </Box>
-
-            {/* Right Sidebar: Setup or Config */}
-            <Box style={{ position: "absolute", right: 0, top: 0, bottom: 0, zIndex: 10, display: "flex" }}>
-                {(() => {
-                    const selectedNode = nodes.find((n) => n.id === selectedNodeId);
-                    if (selectedNode) {
-                        const label = selectedNode.data.label;
-
-                        switch (label) {
-                            case "Email":
-                                return <EmailTriggerPanel onClose={() => setSelectedNodeId(null)} />;
-                            case "Condition":
-                                return <ConditionPanel onClose={() => setSelectedNodeId(null)} />;
-                            case "In-app Event":
-                                return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
-                            case "Scheduler":
-                                return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
-                            default:
-                                return <WorkflowSetupPanel
-                                    onClose={() => setSelectedNodeId(null)}
-                                    workflowName={workflowName}
-                                    onNameChange={setWorkflowName}
-                                />;
-                        }
-                    }
-
-                    if (isSetupPanelOpen) {
-                        return <WorkflowSetupPanel
-                            onClose={() => setIsSetupPanelOpen(false)}
-                            onSave={() => setIsSetupPanelOpen(false)}
-                            workflowName={workflowName}
-                            onNameChange={setWorkflowName}
-                        />;
-                    }
-
-                    return null;
-                })()}
-            </Box>
+            </Layout>
         </Box>
     );
 }
