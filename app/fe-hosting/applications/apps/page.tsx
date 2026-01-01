@@ -3,7 +3,6 @@ import EmptyList from "@/app/components/EmptyList";
 import usePersistentState from "../../../usePersistentState";
 
 import {
-	Button,
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
@@ -15,6 +14,7 @@ import {
 } from "@optiaxiom/react";
 
 import {useState, useEffect} from "react";
+import {Button} from "@/app/components/Button";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {IconChevronDown} from "@tabler/icons-react";

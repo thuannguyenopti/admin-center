@@ -287,6 +287,17 @@ export const initialContentTypes: ContentType[] = [
 		properties: [{ id: "label", name: "Label", type: "text", required: true }],
 	},
 	{
+		id: "ct-form",
+		name: "Form",
+		baseType: "Block",
+		description: "A form container block to group inputs and buttons",
+		properties: [
+			{ id: "formName", name: "Form Name", type: "text" },
+			{ id: "action", name: "Submit URL", type: "text" },
+			{ id: "successMsg", name: "Success Message", type: "text" },
+		],
+	},
+	{
 		id: "ct-input",
 		name: "Input",
 		baseType: "Block",
@@ -311,16 +322,12 @@ export type EleDef = {
 
 export type EleMap = Record<string, EleDef>;
 
-export type OutlineNode =
-	| {
-		id: string;
-		name?: string;
-		open?: boolean;
-		children?: OutlineNode[]; // section/row/col nodes
-	}
-	| {
-		id: string; // element ref node (ele id)
-	};
+export type OutlineNode = {
+	id: string;
+	name?: string;
+	open?: boolean;
+	children?: OutlineNode[];
+};
 
 export type OutlineId = string;
 

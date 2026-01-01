@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Box, Heading, SearchInput, Button as AxiomButton, Menu, MenuTrigger, LabelMenuButton, MenuContent } from "@optiaxiom/react";
+import { Box, Heading, SearchInput, Menu, MenuTrigger, LabelMenuButton, MenuContent } from "@optiaxiom/react";
+import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, ContentType } from "@/app/db/initialData";
@@ -78,8 +79,8 @@ export default function ContentTypesSettings() {
 				</Menu>
 
 				<div style={{ flex: 1 }} />
-
-				<AxiomButton appearance="primary" onClick={() => console.log('Create clicked')}>Create</AxiomButton>
+	
+				<Button appearance="primary" onClick={() => console.log('Create clicked')}>Create</Button>
 			</Box>
 
 			<Table>

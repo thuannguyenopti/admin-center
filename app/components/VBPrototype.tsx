@@ -90,7 +90,11 @@ const normalizePage = (input: any): NormalizeResult => {
 	const strip = (node: any): any => {
 		if (isEleNode(node)) {
 			theEles[node.id] = { type: node.type, props: node.props };
-			return { id: node.id };
+			const out: any = { id: node.id };
+			if (Array.isArray(node.children)) {
+				out.children = node.children.map(strip);
+			}
+			return out;
 		}
 
 		const out: any = { ...node };
@@ -106,15 +110,17 @@ const normalizePage = (input: any): NormalizeResult => {
 
 const collectElementIds = (data: any[]): Set<string> => {
 	const ids = new Set<string>();
-	for (const section of data) {
-		for (const row of section.children || []) {
-			for (const col of row.children || []) {
-				for (const ref of col.children || []) {
-					if (ref?.id) ids.add(ref.id);
-				}
+	const traverse = (nodes: any[]) => {
+		for (const node of nodes) {
+			if (node.id && !node.id.startsWith("section-") && !node.id.startsWith("sec-") && !node.id.startsWith("row-") && !node.id.startsWith("col-")) {
+				ids.add(node.id);
+			}
+			if (Array.isArray(node.children)) {
+				traverse(node.children);
 			}
 		}
-	}
+	};
+	traverse(data);
 	return ids;
 };
 
@@ -178,7 +184,7 @@ type PageInput = {
  * Existing mergeData (kept)
  * ------------------------------*/
 
-const mergeData = (structure: any[], elements: EleMap) => {
+const mergeData = (structure: any[], elements: EleMap): any[] => {
 	return structure.map((node) => {
 		const newNode = { ...node };
 		if (elements[node.id]) {
@@ -852,60 +858,57 @@ export default function VBPrototype({
 
 		let draggedRef: any = null;
 
-		const removed = data.map((sec: any) => ({
-			...sec,
-			children: (sec.children || []).map((row: any) => ({
-				...row,
-				children: (row.children || []).map((col: any) => {
-					const nextChildren = (col.children || []).filter((ref: any) => {
-						if (ref?.id === draggingId) {
-							draggedRef = cloning ? { id: newEleId } : ref;
-							return cloning;
-						}
-						return true;
-					});
-					return { ...col, children: nextChildren };
-				}),
-			})),
-		}));
+		const removeElement = (nodes: any[]): any[] => {
+			return nodes.filter((node) => {
+				if (node.id === draggingId) {
+					draggedRef = cloning ? { ...node, id: newEleId } : node;
+					return cloning; // Keep if cloning, remove if moving
+				}
+				return true;
+			}).map((node) => {
+				if (Array.isArray(node.children)) {
+					return { ...node, children: removeElement(node.children) };
+				}
+				return node;
+			});
+		};
+
+		const dataWithRemoved = removeElement(data);
 
 		if (!draggedRef) return null;
 
-		if (isLastEle(hoverId)) {
-			const targetColId = hoverId.replace("last-ele-", "");
-			const next = removed.map((sec: any) => ({
-				...sec,
-				children: (sec.children || []).map((row: any) => ({
-					...row,
-					children: (row.children || []).map((col: any) => {
-						if (col.id !== targetColId) return col;
-						if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
-						return { ...col, children: [...(col.children || []), draggedRef] };
-					}),
-				})),
-			}));
+		const insertElement = (nodes: any[]): any[] => {
+			if (isLastEle(hoverId)) {
+				const targetParentId = hoverId.replace("last-ele-", "");
+				return nodes.map((node) => {
+					if (node.id === targetParentId) {
+						if ((node.children || []).some((r: any) => r?.id === draggedRef.id)) return node;
+						return { ...node, children: [...(node.children || []), draggedRef] };
+					}
+					if (Array.isArray(node.children)) {
+						return { ...node, children: insertElement(node.children) };
+					}
+					return node;
+				});
+			}
 
-			return { nextData: next, elesPatch };
-		}
+			return nodes.map((node) => {
+				if (Array.isArray(node.children)) {
+					const idx = node.children.findIndex((r: any) => r?.id === hoverId);
+					if (idx !== -1) {
+						if (node.children.some((r: any) => r?.id === draggedRef.id)) return node;
+						const copy = [...node.children];
+						copy.splice(idx, 0, draggedRef);
+						return { ...node, children: copy };
+					}
+					return { ...node, children: insertElement(node.children) };
+				}
+				return node;
+			});
+		};
 
-		const next = removed.map((sec: any) => ({
-			...sec,
-			children: (sec.children || []).map((row: any) => ({
-				...row,
-				children: (row.children || []).map((col: any) => {
-					const idx = (col.children || []).findIndex((r: any) => r?.id === hoverId);
-					if (idx === -1) return col;
-
-					if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
-
-					const copy = [...(col.children || [])];
-					copy.splice(idx, 0, draggedRef);
-					return { ...col, children: copy };
-				}),
-			})),
-		}));
-
-		return { nextData: next, elesPatch };
+		const nextData = insertElement(dataWithRemoved);
+		return { nextData, elesPatch };
 	}
 
 	function applyDragDrop(

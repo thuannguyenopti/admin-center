@@ -187,6 +187,258 @@ export default function PreviewCanvas({
     };
 
     const renderOutlineTree = (outline: Outline) => {
+        const renderElement = (node: any, eleIndex: number) => {
+            const ele = outline.elements[node.id];
+            const type = ele?.type;
+
+            return (
+                <React.Fragment key={node.id ?? eleIndex}>
+                    <div className="relative group" data-element-id={node.id}>
+                        {/* selection outline */}
+                        <div
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setCurrentEle(node.id);
+                                setCurrentHoverEle("none");
+                            }}
+                            style={{
+                                visibility:
+                                    currentEle === node.id || currentHoverEle === node.id
+                                        ? "visible"
+                                        : undefined,
+                                opacity:
+                                    currentEle === node.id || currentHoverEle === node.id
+                                        ? currentEle === node.id
+                                            ? 1
+                                            : 0.5
+                                        : undefined,
+                                top:
+                                    currentEle === node.id || currentHoverEle === node.id
+                                        ? "-8px"
+                                        : undefined,
+                                left:
+                                    currentEle === node.id || currentHoverEle === node.id
+                                        ? "-8px"
+                                        : undefined,
+                                right:
+                                    currentEle === node.id || currentHoverEle === node.id
+                                        ? "-8px"
+                                        : undefined,
+                                bottom:
+                                    currentEle === node.id || currentHoverEle === node.id
+                                        ? "-8px"
+                                        : undefined,
+                            }}
+                            className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+                        >
+                            <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
+                                {(() => {
+                                    switch (type) {
+                                        case "Heading":
+                                            return <IconHeading size={12} />;
+                                        case "Text":
+                                            return <IconPilcrow size={12} />;
+                                        case "Input":
+                                            return <IconForms size={12} />;
+                                        case "Button":
+                                            return <IconRectangle size={12} />;
+                                        case "Image":
+                                            return <IconPhoto size={12} />;
+                                        default:
+                                            return <IconBrackets size={12} />;
+                                    }
+                                })()}
+                                {type || "Unknown"}
+                            </div>
+                        </div>
+
+                        {/* element render */}
+                        {(() => {
+                            switch (type) {
+                                case "Heading":
+                                    return (
+                                        <h1 className="text-3xl mb-5 font-bold">
+                                            {ele?.props.find((p: any) => p.label === "Text")?.value || (
+                                                <>&nbsp;</>
+                                            )}
+                                        </h1>
+                                    );
+
+                                case "Text":
+                                    return (
+                                        <p className="mb-2">
+                                            {ele?.props.find((p: any) => p.label === "Text")?.value || (
+                                                <>&nbsp;</>
+                                            )}
+                                        </p>
+                                    );
+
+                                case "Input": {
+                                    const inputType = ele?.props.find((p: any) => p.label === "Type")?.value || "text";
+                                    return (
+                                        <div className="group relative mt-4">
+                                            {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
+                                                <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
+                                                    {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
+                                                </div>
+                                            )}
+                                            <label className="block text-sm font-medium mb-1">
+                                                {ele?.props.find((p: any) => p.label === "Label")?.value || (
+                                                    <>&nbsp;</>
+                                                )}
+                                            </label>
+                                            <input
+                                                type={inputType}
+                                                placeholder={
+                                                    ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
+                                                    undefined
+                                                }
+                                                className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
+                                            />
+                                        </div>
+                                    );
+                                }
+
+                                case "Textarea":
+                                    return (
+                                        <div className="mt-4">
+                                            <label className="block text-sm font-medium mb-1">
+                                                {ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}
+                                            </label>
+                                            <textarea
+                                                placeholder={ele?.props.find((p: any) => p.label === "Placeholder")?.value || undefined}
+                                                className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66] min-h-[100px]"
+                                            />
+                                        </div>
+                                    );
+
+                                case "Dropdown": {
+                                    const options = (ele?.props.find((p: any) => p.label === "Options")?.value || "").split(",").map((s: string) => s.trim());
+                                    return (
+                                        <div className="mt-4">
+                                            <label className="block text-sm font-medium mb-1">
+                                                {ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}
+                                            </label>
+                                            <select className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] text-white">
+                                                {options.map((opt: string, i: number) => (
+                                                    <option key={i} value={opt}>{opt}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    );
+                                }
+
+                                case "Radio": {
+                                    const options = (ele?.props.find((p: any) => p.label === "Options")?.value || "").split(",").map((s: string) => s.trim());
+                                    const label = ele?.props.find((p: any) => p.label === "Label")?.value;
+                                    return (
+                                        <div className="mt-4">
+                                            <label className="block text-sm font-medium mb-2">{label || <>&nbsp;</>}</label>
+                                            <div className="flex flex-col gap-2">
+                                                {options.map((opt: string, i: number) => (
+                                                    <label key={i} className="flex items-center gap-2 cursor-pointer">
+                                                        <input type="radio" name={node.id} value={opt} className="w-4 h-4" />
+                                                        <span>{opt}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                case "Checkbox": {
+                                    const label = ele?.props.find((p: any) => p.label === "Label")?.value;
+                                    const checked = ele?.props.find((p: any) => p.label === "Default Checked")?.value === "true";
+                                    return (
+                                        <div className="mt-4 flex items-center gap-2">
+                                            <input type="checkbox" defaultChecked={checked} className="w-4 h-4" />
+                                            <label className="text-sm font-medium cursor-pointer">{label || <>&nbsp;</>}</label>
+                                        </div>
+                                    );
+                                }
+
+                                case "Slider": {
+                                    const label = ele?.props.find((p: any) => p.label === "Label")?.value;
+                                    const min = ele?.props.find((p: any) => p.label === "Min")?.value || "0";
+                                    const max = ele?.props.find((p: any) => p.label === "Max")?.value || "100";
+                                    const step = ele?.props.find((p: any) => p.label === "Step")?.value || "1";
+                                    return (
+                                        <div className="mt-4">
+                                            <label className="block text-sm font-medium mb-2">{label || <>&nbsp;</>}</label>
+                                            <input type="range" min={min} max={max} step={step} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                                            <div className="flex justify-between text-xs mt-1 opacity-60">
+                                                <span>{min}</span>
+                                                <span>{max}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                case "Button":
+                                    return (
+                                        <div className="text-right mt-4">
+                                            <button className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block hover:bg-[#5836FF] transition-colors">
+                                                {ele?.props.find((p: any) => p.label === "Label")?.value || (
+                                                    <>&nbsp;</>
+                                                )}
+                                            </button>
+                                        </div>
+                                    );
+
+                                case "Form": {
+                                    const formName = ele?.props.find((p: any) => p.label === "Form Name")?.value || "Form";
+                                    const action = ele?.props.find((p: any) => p.label === "Submit URL")?.value || "#";
+                                    return (
+                                        <div className="border border-[#ffffff22] rounded-lg p-6 bg-[#ffffff05] mt-6">
+                                            <h2 className="text-xl font-semibold mb-4 opacity-80">{formName}</h2>
+                                            <form action={action} onSubmit={(e) => e.preventDefault()}>
+                                                {(node.children || []).map((child: any, i: number) => renderElement(child, i))}
+                                            </form>
+                                        </div>
+                                    );
+                                }
+
+                                case "Image": {
+                                    const imageUrlRaw =
+                                        ele?.props.find((p: any) => p.label === "Image URL")?.value;
+                                    const imageUrl =
+                                        typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
+
+                                    const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
+                                    const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
+                                    const imageHeight = ele?.props.find((p: any) => p.label === "Height")?.value;
+
+                                    return (
+                                        <div className="mb-4">
+                                            {imageUrl ? (
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={imageAlt || "Image"}
+                                                    style={{
+                                                        width: imageWidth === "auto" ? "100%" : imageWidth,
+                                                        height: imageHeight === "auto" ? "auto" : imageHeight,
+                                                        borderRadius: "8px",
+                                                        objectFit: "cover",
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
+                                                    No image selected
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                }
+
+                                default:
+                                    return null;
+                            }
+                        })()}
+                    </div>
+                </React.Fragment>
+            );
+        };
+
         return outline.tree.map((section: any, sindex: number) => (
             <section key={section.id ?? sindex}>
                 {(section.children || []).map((row: any, rIndex: number) => (
@@ -262,13 +514,11 @@ export default function PreviewCanvas({
 
                                     {/* list */}
                                     {colChildren.map((element: any, eleIndex: number) => {
-                                        const ele = outline.elements[element.id];
-                                        const type = ele?.type;
-
+                                        const isActiveDropEle = isActiveDropCol && dropPosition!.position === eleIndex;
                                         return (
                                             <React.Fragment key={element.id ?? eleIndex}>
                                                 {/* ✅ insert line BEFORE the element (middle positions now visible/usable) */}
-                                                {isActiveDropCol && dropPosition!.position === eleIndex && (
+                                                {isActiveDropEle && (
                                                     <div
                                                         style={{
                                                             height: "2px",
@@ -279,163 +529,31 @@ export default function PreviewCanvas({
                                                         }}
                                                     />
                                                 )}
-
-                                                <div className="relative group" data-element-id={element.id}>
-                                                    {/* selection outline */}
-                                                    <div
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setCurrentEle(element.id);
-                                                            setCurrentHoverEle("none");
-                                                        }}
-                                                        style={{
-                                                            visibility:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "visible"
-                                                                    : undefined,
-                                                            opacity:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? currentEle === element.id
-                                                                        ? 1
-                                                                        : 0.5
-                                                                    : undefined,
-                                                            top:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                            left:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                            right:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                            bottom:
-                                                                currentEle === element.id || currentHoverEle === element.id
-                                                                    ? "-8px"
-                                                                    : undefined,
-                                                        }}
-                                                        className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
-                                                    >
-                                                        <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
-                                                            {(() => {
-                                                                switch (type) {
-                                                                    case "Heading":
-                                                                        return <IconHeading size={12} />;
-                                                                    case "Text":
-                                                                        return <IconPilcrow size={12} />;
-                                                                    case "Input":
-                                                                        return <IconForms size={12} />;
-                                                                    case "Button":
-                                                                        return <IconRectangle size={12} />;
-                                                                    case "Image":
-                                                                        return <IconPhoto size={12} />;
-                                                                    default:
-                                                                        return <IconBrackets size={12} />;
-                                                                }
-                                                            })()}
-                                                            {type || "Unknown"}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* element render */}
-                                                    {(() => {
-                                                        switch (type) {
-                                                            case "Heading":
-                                                                return (
-                                                                    <h1 className="text-3xl mb-5 font-bold">
-                                                                        {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                                            <>&nbsp;</>
-                                                                        )}
-                                                                    </h1>
-                                                                );
-
-                                                            case "Text":
-                                                                return (
-                                                                    <p className="mb-2">
-                                                                        {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                                            <>&nbsp;</>
-                                                                        )}
-                                                                    </p>
-                                                                );
-
-                                                            case "Input":
-                                                                return (
-                                                                    <div className="group relative mt-4">
-                                                                        {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
-                                                                            <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-                                                                                {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
-                                                                            </div>
-                                                                        )}
-                                                                        <label>
-                                                                            {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                                                <>&nbsp;</>
-                                                                            )}
-                                                                        </label>
-                                                                        <input
-                                                                            type="text"
-                                                                            placeholder={
-                                                                                ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
-                                                                                undefined
-                                                                            }
-                                                                            className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
-                                                                        />
-                                                                    </div>
-                                                                );
-
-                                                            case "Button":
-                                                                return (
-                                                                    <div className="text-right mt-4">
-                                                                        <div className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block">
-                                                                            {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                                                <>&nbsp;</>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                );
-
-                                                            case "Image": {
-                                                                const imageUrlRaw =
-                                                                    ele?.props.find((p: any) => p.label === "Image URL")?.value;
-                                                                const imageUrl =
-                                                                    typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-
-                                                                const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
-                                                                const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
-                                                                const imageHeight = ele?.props.find((p: any) => p.label === "Height")?.value;
-
-                                                                return (
-                                                                    <div className="mb-4">
-                                                                        {imageUrl ? (
-                                                                            <img
-                                                                                src={imageUrl}
-                                                                                alt={imageAlt || "Image"}
-                                                                                style={{
-                                                                                    width: imageWidth === "auto" ? "100%" : imageWidth,
-                                                                                    height: imageHeight === "auto" ? "auto" : imageHeight,
-                                                                                    borderRadius: "8px",
-                                                                                    objectFit: "cover",
-                                                                                }}
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
-                                                                                No image selected
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            }
-
-                                                            default:
-                                                                return null;
-                                                        }
-                                                    })()}
-                                                </div>
+                                                {renderElement(element, eleIndex)}
                                             </React.Fragment>
                                         );
                                     })}
 
+                                    {/* ✅ insert line at END of column */}
+                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
+                                        <div
+                                            style={{
+                                                height: "2px",
+                                                backgroundColor: "#0037FF",
+                                                borderRadius: "2px",
+                                                margin: "6px 0",
+                                                pointerEvents: "none",
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </section>
+                ))}
+            </section>
+        ));
+    };
                                     {/* ✅ insert line at END of column */}
                                     {isActiveDropCol && dropPosition!.position === colChildren.length && (
                                         <div

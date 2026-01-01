@@ -143,6 +143,11 @@ const Col: React.FC<{
                                 execute: () => addElement("Button"),
                             },
                             {
+                                addon: <IconForms size={16} />,
+                                label: "Form",
+                                execute: () => addElement("Form"),
+                            },
+                            {
                                 addon: <IconPhoto size={16} />,
                                 label: "Image",
                                 execute: () => addElement("Image"),
