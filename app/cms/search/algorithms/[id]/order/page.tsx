@@ -89,6 +89,7 @@ export default function OrderPage() {
 							<Button
 								icon={<IconPlus size={16} />}
 								appearance="subtle"
+								size="lg"
 							>
 								Add Rule...
 							</Button>

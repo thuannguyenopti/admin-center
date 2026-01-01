@@ -101,10 +101,10 @@ export default function ElementEditor({
         <Fragment key={ind}>
           {prop.type === "text" && <Input prop={prop} propIndex={ind} onChange={onInputChange} />}
           {prop.type === "checkbox" && (
-            <div className="p-6 pr-0 py-2">
+            <div className="pr-1 py-2">
               <Checkbox
-                checked={prop.value === "true" ? true : false}
-                onChange={(e: any) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
+                checked={prop.value === true || prop.value === "true"}
+                onChange={(e: any) => onInputChange(e.currentTarget.checked, ind)}
               >
                 {prop.label}
               </Checkbox>

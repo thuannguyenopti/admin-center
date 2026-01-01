@@ -102,28 +102,18 @@ export default function OutlineTree({
         setDragging((prev) => (prev === ASSET_DRAG_ID ? null : prev));
     };
 
-    // Set open state for section, row, or col by id
+    // Set open state for section, row, col, or element by id
     const setOpen = (id: string, open: boolean) => {
-        setData((prev) =>
-            prev.map((section) => {
-                if (section.id === id) return { ...section, open };
-
-                return {
-                    ...section,
-                    children: (section.children || []).map((row: any) => {
-                        if (row.id === id) return { ...row, open };
-
-                        return {
-                            ...row,
-                            children: (row.children || []).map((col: any) => {
-                                if (col.id === id) return { ...col, open };
-                                return col;
-                            }),
-                        };
-                    }),
-                };
-            })
-        );
+        const toggleOpen = (nodes: any[]): any[] => {
+            return nodes.map((node) => {
+                if (node.id === id) return { ...node, open };
+                if (Array.isArray(node.children)) {
+                    return { ...node, children: toggleOpen(node.children) };
+                }
+                return node;
+            });
+        };
+        setData((prev) => toggleOpen(prev));
     };
 
     const addSection = (id: string) => {
@@ -155,70 +145,72 @@ export default function OutlineTree({
         });
     };
 
-    const addCol = (e: any, section: number, row: number, at: any) => {
+    const addCol = (e: any, sectionId: string, rowId: string, at: any) => {
         e?.stopPropagation();
 
-        setData((prev) => {
-            const updatedSection = {
-                ...prev[section],
-                children: prev[section].children.map((r: any, idx: number) => {
-                    if (idx === row) {
-                        const newCol = {
-                            label: "Column",
-                            children: [],
-                            isNew: true,
-                            open: true,
-                            id: "col-" + Date.now(),
-                        };
-                        const newChildren =
-                            at === null || at === undefined
-                                ? [...r.children, newCol]
-                                : [...r.children.slice(0, at), newCol, ...r.children.slice(at)];
-                        return { ...r, open: true, children: newChildren };
-                    }
-                    return r;
-                }),
-            };
-            return [...prev.slice(0, section), updatedSection, ...prev.slice(section + 1)];
-        });
-    };
-
-    const addRow = (e: any, section: number, at: any) => {
-        e?.stopPropagation();
-
-        setData((prev) => {
-            const newRow = {
-                label: "Row",
-                open: true,
-                isNew: true,
-                children: [
-                    {
+        const insertCol = (nodes: any[]): any[] => {
+            return nodes.map((node) => {
+                if (node.id === rowId) {
+                    const newCol = {
                         label: "Column",
                         children: [],
-                        open: true,
                         isNew: true,
+                        open: true,
                         id: "col-" + Date.now(),
-                    },
-                ],
-                id: "row-" + Date.now(),
-            };
-
-            const sectionObj = prev[section];
-            const newChildren =
-                at === null || at === undefined
-                    ? [...sectionObj.children, newRow]
-                    : [...sectionObj.children.slice(0, at), newRow, ...sectionObj.children.slice(at)];
-
-            return [
-                ...prev.slice(0, section),
-                { ...sectionObj, open: true, children: newChildren },
-                ...prev.slice(section + 1),
-            ];
-        });
+                    };
+                    const newChildren =
+                        at === null || at === undefined
+                            ? [...(node.children || []), newCol]
+                            : [...(node.children || []).slice(0, at), newCol, ...(node.children || []).slice(at)];
+                    return { ...node, open: true, children: newChildren };
+                }
+                if (Array.isArray(node.children)) {
+                    return { ...node, children: insertCol(node.children) };
+                }
+                return node;
+            });
+        };
+        setData((prev) => insertCol(prev));
     };
 
-    // addElement used by Col "+" menu
-    const addElement = (type: string, colIndex: number, rowIndex: number, sectionIndex: number) => {
+    const addRow = (e: any, parentId: string, at: any) => {
+        e?.stopPropagation();
+
+        const insertRow = (nodes: any[]): any[] => {
+            return nodes.map((node) => {
+                if (node.id === parentId) {
+                    const newRow = {
+                        label: "Row",
+                        open: true,
+                        isNew: true,
+                        children: [
+                            {
+                                label: "Column",
+                                children: [],
+                                open: true,
+                                isNew: true,
+                                id: "col-" + Date.now(),
+                            },
+                        ],
+                        id: "row-" + Date.now(),
+                    };
+                    const newChildren =
+                        at === null || at === undefined
+                            ? [...(node.children || []), newRow]
+                            : [...(node.children || []).slice(0, at), newRow, ...(node.children || []).slice(at)];
+                    return { ...node, open: true, children: newChildren };
+                }
+                if (Array.isArray(node.children)) {
+                    return { ...node, children: insertRow(node.children) };
+                }
+                return node;
+            });
+        };
+        setData((prev) => insertRow(prev));
+    };
+
+    // addElement used by Col "+" menu or Form "+" menu
+    const addElement = (type: string, parentId: string) => {
         const uKey = `${type}-${Date.now()}`;
 
         const pendingImageData = (window as any).__pendingImageData;
@@ -241,9 +233,43 @@ export default function OutlineTree({
                                 { type: "text", label: "Placeholder" },
                                 { type: "text", label: "Tooltip" },
                                 { type: "checkbox", label: "Required", value: false },
+                                { type: "text", label: "Type", value: "text" },
                             ];
                         case "Button":
                             return [{ type: "text", label: "Label" }];
+                        case "Form":
+                            return [
+                                { type: "text", label: "Form Name", value: "New Form" },
+                                { type: "text", label: "Submit URL", value: "" },
+                                { type: "text", label: "Success Message", value: "Thank you!" },
+                            ];
+                        case "Textarea":
+                            return [
+                                { type: "text", label: "Label" },
+                                { type: "text", label: "Placeholder" },
+                            ];
+                        case "Dropdown":
+                            return [
+                                { type: "text", label: "Label" },
+                                { type: "text", label: "Options", value: "Option 1, Option 2, Option 3" },
+                            ];
+                        case "Radio":
+                            return [
+                                { type: "text", label: "Label" },
+                                { type: "text", label: "Options", value: "Yes, No" },
+                            ];
+                        case "Checkbox":
+                            return [
+                                { type: "text", label: "Label" },
+                                { type: "checkbox", label: "Default Checked", value: false },
+                            ];
+                        case "Slider":
+                            return [
+                                { type: "text", label: "Label" },
+                                { type: "text", label: "Min", value: "0" },
+                                { type: "text", label: "Max", value: "100" },
+                                { type: "text", label: "Step", value: "1" },
+                            ];
                         case "Image":
                             return [
                                 { type: "text", label: "Image URL", value: imageUrl },
@@ -259,77 +285,48 @@ export default function OutlineTree({
             },
         }));
 
-        setData((prev) =>
-            prev.map((section, sIdx) => {
-                if (sIdx !== sectionIndex) return section;
-                return {
-                    ...section,
-                    children: section.children.map((row: any, rIdx: number) => {
-                        if (rIdx !== rowIndex) return row;
-                        return {
-                            ...row,
-                            children: row.children.map((col: any, cIdx: number) => {
-                                if (cIdx !== colIndex) return col;
+        const insertEle = (nodes: any[]): any[] => {
+            return nodes.map((node) => {
+                if (node.id === parentId) {
+                    const nextChildren = [...(node.children ?? [])];
+                    let insertAt = nextChildren.length;
 
-                                const nextChildren = [...(col.children ?? [])];
-                                let insertAt = nextChildren.length;
+                    if (typeof currentHoverEle === "string" && currentHoverEle.startsWith("last-ele-")) {
+                        const targetColId = currentHoverEle.replace("last-ele-", "");
+                        if (targetColId === node.id) insertAt = nextChildren.length;
+                    } else if (typeof currentHoverEle === "string" && currentHoverEle !== "none") {
+                        const idx = nextChildren.findIndex((r: any) => r?.id === currentHoverEle);
+                        if (idx !== -1) insertAt = idx;
+                    }
 
-                                if (typeof currentHoverEle === "string" && currentHoverEle.startsWith("last-ele-")) {
-                                    const targetColId = currentHoverEle.replace("last-ele-", "");
-                                    if (targetColId === col.id) insertAt = nextChildren.length;
-                                } else if (typeof currentHoverEle === "string" && currentHoverEle !== "none") {
-                                    const idx = nextChildren.findIndex((r: any) => r?.id === currentHoverEle);
-                                    if (idx !== -1) insertAt = idx;
-                                }
-
-                                nextChildren.splice(insertAt, 0, { id: uKey });
-                                return { ...col, open: true, children: nextChildren };
-                            }),
-                        };
-                    }),
-                };
-            })
-        );
+                    nextChildren.splice(insertAt, 0, { id: uKey });
+                    return { ...node, open: true, children: nextChildren };
+                }
+                if (Array.isArray(node.children)) {
+                    return { ...node, children: insertEle(node.children) };
+                }
+                return node;
+            });
+        };
+        setData((prev) => insertEle(prev));
     };
 
     const removeSection = (sectionIndex: number) => {
         setData((prev) => prev.filter((_, index: number) => index !== sectionIndex));
     };
 
-    const removeRow = (id: string) => {
-        setData((prev) =>
-            prev.map((section) => ({
-                ...section,
-                children: section.children.filter((row: any) => row.id !== id),
-            }))
-        );
-    };
-
-    const removeCol = (id: string) => {
-        setData((prev) =>
-            prev.map((section) => ({
-                ...section,
-                children: section.children.map((row: any) => ({
-                    ...row,
-                    children: row.children.filter((col: any) => col.id !== id),
-                })),
-            }))
-        );
-    };
-
-    const removeEle = (id: string) => {
-        setData((prev) =>
-            prev.map((section) => ({
-                ...section,
-                children: (section.children || []).map((row: any) => ({
-                    ...row,
-                    children: (row.children || []).map((col: any) => ({
-                        ...col,
-                        children: (col.children || []).filter((ele: any) => ele.id !== id),
-                    })),
-                })),
-            }))
-        );
+    const removeById = (id: string) => {
+        const removeNode = (nodes: any[]): any[] => {
+            return nodes
+                .filter((node) => node.id !== id)
+                .map((node) => {
+                    if (Array.isArray(node.children)) {
+                        return { ...node, children: removeNode(node.children) };
+                    }
+                    return node;
+                });
+        };
+        setData((prev) => removeNode(prev));
     };
 
     const onDragStart = (e: any, id: string) => {
@@ -366,21 +363,21 @@ export default function OutlineTree({
             },
         }));
 
-        setData((prev) =>
-            prev.map((section: any) => ({
-                ...section,
-                children: (section.children || []).map((row: any) => ({
-                    ...row,
-                    children: (row.children || []).map((col: any) => {
-                        if (col.id !== colId) return col;
-                        const nextChildren = [...(col.children || [])];
-                        const safePos = Math.max(0, Math.min(nextChildren.length, position));
-                        nextChildren.splice(safePos, 0, { id: uKey });
-                        return { ...col, open: true, children: nextChildren };
-                    }),
-                })),
-            }))
-        );
+        const insertAtCol = (nodes: any[]): any[] => {
+            return nodes.map((node) => {
+                if (node.id === colId) {
+                    const nextChildren = [...(node.children || [])];
+                    const safePos = Math.max(0, Math.min(nextChildren.length, position));
+                    nextChildren.splice(safePos, 0, { id: uKey });
+                    return { ...node, open: true, children: nextChildren };
+                }
+                if (Array.isArray(node.children)) {
+                    return { ...node, children: insertAtCol(node.children) };
+                }
+                return node;
+            });
+        };
+        setData((prev) => insertAtCol(prev));
     };
 
     return (
@@ -451,12 +448,12 @@ export default function OutlineTree({
 
                                             <Row
                                                 row={row}
-                                                addRow={(e: any) => addRow(e, sindex, rIndex)}
-                                                addRowBelow={(e: any) => addRow(e, sindex, rIndex + 1)}
+                                                addRow={(e: any) => addRow(e, section.id, rIndex)}
+                                                addRowBelow={(e: any) => addRow(e, section.id, rIndex + 1)}
                                                 setOpen={setOpen}
                                                 onDragStart={(e: any) => onDragStart(e, row.id)}
-                                                removeRow={() => removeRow(row.id)}
-                                                addCol={(e: any) => addCol(e, sindex, rIndex, null)}
+                                                removeRow={() => removeById(row.id)}
+                                                addCol={(e: any) => addCol(e, section.id, row.id, null)}
                                             >
                                                 {(row.children ?? []).map((col: any, cIndex: number) => {
                                                     const showColBarAbove =
@@ -475,8 +472,8 @@ export default function OutlineTree({
                                                                 col={col}
                                                                 setOpen={setOpen}
                                                                 onDragStart={(e: any) => onDragStart(e, col.id)}
-                                                                removeCol={() => removeCol(col.id)}
-                                                                addElement={(type: string) => addElement(type, cIndex, rIndex, sindex)}
+                                                                removeCol={() => removeById(col.id)}
+                                                                addElement={(type: string) => addElement(type, col.id)}
                                                             >
                                                                 <div
                                                                     className={assetOverCol === col.id ? "relative" : ""}
@@ -601,22 +598,43 @@ export default function OutlineTree({
                                                                         const isInternalActive =
                                                                             isInternalEleDrag(dragging) && internalDrop?.colId === col.id;
 
+                                                                        const renderElement = (node: any, level: number = 0) => {
+                                                                            const eleType = theEles[node.id]?.type;
+                                                                            const hasChildren = Array.isArray(node.children) && node.children.length > 0;
+                                                                            const isOpen = node.open ?? true;
+
+                                                                            return (
+                                                                                <div key={node.id} data-tree-ele-id={node.id}>
+                                                                                    <Ele
+                                                                                        removeEle={() => removeById(node.id)}
+                                                                                        onDragStart={(ev: any) => onDragStart(ev, node.id)}
+                                                                                        type={eleType}
+                                                                                        element={node}
+                                                                                        label={theEles[node.id]?.props?.[0]?.value || undefined}
+                                                                                        setCurrentEle={setCurrentEle}
+                                                                                        setCurrentHoverEle={setCurrentHoverEle}
+                                                                                        // For nesting support, Ele needs to handle open/close and children
+                                                                                        isOpen={isOpen}
+                                                                                        setOpen={(val: boolean) => setOpen(node.id, val)}
+                                                                                        hasChildren={eleType === "Form"}
+                                                                                        addElement={eleType === "Form" ? (t: string) => addElement(t, node.id) : undefined}
+                                                                                    >
+                                                                                        {eleType === "Form" && isOpen && (
+                                                                                            <div className="ml-4">
+                                                                                                {(node.children || []).map((child: any) => renderElement(child, level + 1))}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </Ele>
+                                                                                </div>
+                                                                            );
+                                                                        };
+
                                                                         return (
                                                                             <React.Fragment key={"ele-frag-" + element.id}>
                                                                                 {isInternalActive && internalDrop?.position === j && <div style={INSERT_BAR_STYLE} />}
                                                                                 {isAssetActive && assetDrop?.position === j && <div style={INSERT_BAR_STYLE} />}
 
-                                                                                <div data-tree-ele-id={element.id}>
-                                                                                    <Ele
-                                                                                        removeEle={() => removeEle(element.id)}
-                                                                                        onDragStart={(ev: any) => onDragStart(ev, element.id)}
-                                                                                        type={theEles[element.id]?.type}
-                                                                                        element={element}
-                                                                                        label={theEles[element.id]?.props?.[0]?.value || undefined}
-                                                                                        setCurrentEle={setCurrentEle}
-                                                                                        setCurrentHoverEle={setCurrentHoverEle}
-                                                                                    />
-                                                                                </div>
+                                                                                {renderElement(element)}
                                                                             </React.Fragment>
                                                                         );
                                                                     })}

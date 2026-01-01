@@ -180,7 +180,7 @@ export default function ZeroResultPage() {
 					</Menu>
 				</Flex>
 				<Button
-					appearance="primary-opal"
+					appearance="primary"
 					size="lg"
 				>
 					Suggest Optimization
