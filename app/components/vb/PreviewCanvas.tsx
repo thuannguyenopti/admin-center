@@ -554,26 +554,27 @@ export default function PreviewCanvas({
             </section>
         ));
     };
-                                    {/* ✅ insert line at END of column */}
-                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
-                                        <div
-                                            style={{
-                                                height: "2px",
-                                                backgroundColor: "#0037FF",
-                                                borderRadius: "2px",
-                                                margin: "6px 0",
-                                                pointerEvents: "none",
-                                            }}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </section>
-                ))}
-            </section>
-        ));
-    };
+
+//                                    {/* ✅ insert line at END of column */}
+//                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
+//                                        <div
+//                                            style={{
+//                                                height: "2px",
+//                                                backgroundColor: "#0037FF",
+//                                                borderRadius: "2px",
+//                                                margin: "6px 0",
+//                                                pointerEvents: "none",
+//                                            }}
+//                                        />
+//                                    )}
+//                                </div>
+//                            );
+//                        })}
+//                    </section>
+//                ))}
+//            </section>
+//        ));
+//    };
 
     const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
     const asideOutlines = outlines.filter((o) => isAsideOutline(o));

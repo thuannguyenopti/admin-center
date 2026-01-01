@@ -67,7 +67,7 @@ const Ele: React.FC<{
             style={{
                 paddingLeft: `${4 + 16 + indentDistance * 3}px`,
             }}
-            py="1"
+            py="2"
             pr="20"
         >
             <div
