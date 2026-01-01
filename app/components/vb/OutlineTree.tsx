@@ -431,7 +431,7 @@ export default function OutlineTree({
                                 onDragStart={(e: any) => onDragStart(e, section.id)}
                                 removeSection={() => removeSection(sindex)}
                                 addSection={() => addSection(section.id)}
-                                addRow={(e: any) => addRow(e, sindex, null)}
+                                addRow={(e: any) => addRow(e, section.id, null)}
                             >
                                 {(section.children ?? []).map((row: any, rIndex: number) => {
                                     const showRowBarAbove =
