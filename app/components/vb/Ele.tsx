@@ -19,7 +19,7 @@ import {
     IconTrash,
     IconDots,
     IconPlus,
-    IconType,
+    IconTypeface,
     IconChevronDown,
     IconSelect,
     IconAdjustmentsHorizontal,
@@ -116,7 +116,7 @@ const Ele: React.FC<{
                                 case "Image":
                                     return <IconPhoto size={16} />;
                                 case "Form":
-                                    return <IconType size={16} />;
+                                    return <IconTypeface size={16} />;
                                 case "Textarea":
                                     return <IconPilcrow size={16} />;
                                 case "Dropdown":
