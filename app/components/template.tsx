@@ -14,6 +14,7 @@ import usePersistentState from "@/app/usePersistentState";
 import ContentSubNav from "../cms/content/components/ContentSubNav";
 import { OpalPanel } from "./OpalPanel";
 import { useOpalState } from "@/app/hooks/useOpalState";
+import { useOpalHistory } from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -26,7 +27,7 @@ function TemplateContent({
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", true);
-	const { isOpen, togglePanel, closePanel } = useOpalState();
+	// Opal is global + contextual: keep its state at the template level so it persists across pages.
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -61,13 +62,80 @@ function TemplateContent({
 
 	const customLayout = highlight1?.customLayout;
 
+	const {
+		groupedHistory,
+		allChatHistory,
+		activeChat,
+		searchQuery,
+		isHistoryVisible,
+		mode,
+		setSearchQuery,
+		toggleHistory,
+		toggleMode,
+		createNewChat,
+		deleteChat,
+		selectChat,
+		updateChat,
+	} = useOpalHistory();
+
+	// Ensure there is always an active chat. If history is empty, create one by default.
+	useEffect(() => {
+		if (activeChat) return;
+		if (allChatHistory.length > 0) {
+			selectChat(allChatHistory[0].id);
+			return;
+		}
+		createNewChat();
+	}, [activeChat, allChatHistory, selectChat, createNewChat]);
+
+	const handleMessageSent = (content: string) => {
+		if (!activeChat) return;
+		// If this is the first message in a new chat, use it as the title
+		updateChat(activeChat, {
+			title: content,
+			date: new Date(),
+		});
+	};
+
+	const {
+		isOpen,
+		messages,
+		inputValue,
+		isLoading,
+		error,
+		togglePanel,
+		closePanel,
+		setInputValue,
+		sendMessage,
+	} = useOpalState({ activeChatId: activeChat, onMessageSent: handleMessageSent });
+
 	return (
 		<Box
 			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
 			bg="bg.page"
 		>
 			<GlobalBar onOpalClick={togglePanel} />
-			<OpalPanel isOpen={isOpen} onClose={closePanel} />
+			<OpalPanel
+				isOpen={isOpen}
+				onClose={closePanel}
+				messages={messages}
+				inputValue={inputValue}
+				isLoading={isLoading}
+				error={error}
+				setInputValue={setInputValue}
+				sendMessage={sendMessage}
+				groupedHistory={groupedHistory}
+				activeChat={activeChat}
+				searchQuery={searchQuery}
+				isHistoryVisible={isHistoryVisible}
+				mode={mode}
+				setSearchQuery={setSearchQuery}
+				toggleHistory={toggleHistory}
+				toggleMode={toggleMode}
+				createNewChat={createNewChat}
+				deleteChat={deleteChat}
+				selectChat={selectChat}
+			/>
 			<Box
 				display="flex"
 				z="10"

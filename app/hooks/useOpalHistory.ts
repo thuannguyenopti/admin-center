@@ -16,6 +16,7 @@ export type OpalMode = 'docked' | 'popped-out';
 const HISTORY_STORAGE_KEY = 'opal_chat_history_items';
 const MODE_STORAGE_KEY = 'opal_panel_mode';
 const HISTORY_VISIBLE_KEY = 'opal_history_visible';
+const ACTIVE_CHAT_ID_KEY = 'opal_active_chat_id';
 
 // Mock chat history data
 const mockChatHistory: ChatHistoryItem[] = [
@@ -82,16 +83,22 @@ export function useOpalHistory() {
       const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
       const savedMode = localStorage.getItem(MODE_STORAGE_KEY);
       const savedHistoryVisible = localStorage.getItem(HISTORY_VISIBLE_KEY);
+      const savedActiveChatId = localStorage.getItem(ACTIVE_CHAT_ID_KEY);
 
-      if (savedHistory) {
-        const parsed = JSON.parse(savedHistory);
-        setChatHistory(parsed.map((item: any) => ({
-          ...item,
-          date: new Date(item.date),
-        })));
-      } else {
-        setChatHistory(mockChatHistory);
-      }
+      const loadedHistory: ChatHistoryItem[] = savedHistory
+        ? JSON.parse(savedHistory).map((item: any) => ({
+            ...item,
+            date: new Date(item.date),
+          }))
+        : mockChatHistory;
+
+      setChatHistory(loadedHistory);
+
+      // Prefer restoring previously selected chat; otherwise select the first chat if any.
+      const initialActive =
+        (savedActiveChatId && loadedHistory.some(h => h.id === savedActiveChatId) && savedActiveChatId) ||
+        (loadedHistory.length > 0 ? loadedHistory[0].id : null);
+      setActiveChat(initialActive);
 
       if (savedMode) {
         setMode(savedMode as OpalMode);
@@ -103,6 +110,7 @@ export function useOpalHistory() {
     } catch (err) {
       console.error('Failed to load history from localStorage:', err);
       setChatHistory(mockChatHistory);
+      setActiveChat(mockChatHistory.length > 0 ? mockChatHistory[0].id : null);
     }
   }, []);
 
@@ -130,6 +138,19 @@ export function useOpalHistory() {
       console.error('Failed to save history visibility to localStorage:', err);
     }
   }, [isHistoryVisible]);
+
+  // Persist active chat selection
+  useEffect(() => {
+    try {
+      if (activeChat) {
+        localStorage.setItem(ACTIVE_CHAT_ID_KEY, activeChat);
+      } else {
+        localStorage.removeItem(ACTIVE_CHAT_ID_KEY);
+      }
+    } catch (err) {
+      console.error('Failed to save active chat id to localStorage:', err);
+    }
+  }, [activeChat]);
 
   // Filter and group chat history
   const filteredHistory = useMemo(() => {
@@ -192,9 +213,13 @@ export function useOpalHistory() {
   }, []);
 
   const deleteChat = useCallback((id: string) => {
-    setChatHistory(prev => prev.filter(item => item.id !== id));
+    setChatHistory(prev => {
+      const next = prev.filter(item => item.id !== id);
+      return next;
+    });
     if (activeChat === id) {
-      setActiveChat(null);
+      // If the active chat is deleted, fall back to the next available chat (top of list)
+      setActiveChat(prevActive => (prevActive === id ? null : prevActive));
     }
   }, [activeChat]);
 
@@ -202,8 +227,15 @@ export function useOpalHistory() {
     setActiveChat(id);
   }, []);
 
+  const updateChat = useCallback((id: string, updates: Partial<ChatHistoryItem>) => {
+    setChatHistory(prev => prev.map(item => 
+      item.id === id ? { ...item, ...updates } : item
+    ));
+  }, []);
+
   return {
     chatHistory: filteredHistory,
+    allChatHistory: chatHistory,
     groupedHistory,
     activeChat,
     searchQuery,
@@ -215,5 +247,6 @@ export function useOpalHistory() {
     createNewChat,
     deleteChat,
     selectChat,
+    updateChat,
   };
 }
