@@ -30,10 +30,18 @@ import {
     IconFileImport,
     IconPlay,
 } from "@optimizely/axiom-icons";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SpecializedAgentSetup() {
+    return (
+        <Suspense fallback={<Box p="24"><Text>Loading...</Text></Box>}>
+            <SpecializedAgentSetupContent />
+        </Suspense>
+    );
+}
+
+function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
