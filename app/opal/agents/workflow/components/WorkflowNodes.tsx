@@ -1,0 +1,179 @@
+import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@optiaxiom/react';
+import { IconPlus, IconHome } from '@tabler/icons-react';
+import { IconPlay, IconEllipsisStroke } from '@optimizely/axiom-icons';
+import { ReactNode } from 'react';
+
+// Common wrapper for nodes to handle selection state and basic styling
+const NodeWrapper = ({ selected, children, ...props }: { selected?: boolean, children: ReactNode } & any) => (
+    <Box
+        bg="bg.default"
+        rounded="md"
+        border="1"
+        borderColor={selected ? "border.accent" : "border.tertiary"}
+        shadow={selected ? "md" : "sm"}
+        style={{ width: '240px' }}
+        position="relative"
+        className="group"
+        {...props}
+    >
+        {children}
+    </Box>
+);
+
+const NodeHeader = ({ icon, title, actions }: { icon: ReactNode, title: string, actions?: ReactNode }) => (
+    <Box display="flex" alignItems="center" justifyContent="space-between" p="12" borderB="1" borderColor="border.tertiary">
+        <Box display="flex" alignItems="center" gap="8">
+            <Box color="fg.default">
+                {icon}
+            </Box>
+            <Text fontWeight="600" fontSize="md">{title}</Text>
+        </Box>
+        {actions || (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={16} />} aria-label="Options" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem>Delete</DropdownMenuItem>
+                    <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )}
+    </Box>
+);
+
+const NodeBody = ({ children }: { children: ReactNode }) => (
+    <Box p="12">
+        {children}
+    </Box>
+);
+
+const NodeFooter = ({ children }: { children: ReactNode }) => (
+    <Box p="12" pt="0">
+        {children}
+    </Box>
+);
+
+export function ActionNode({ data, selected }: NodeProps) {
+    // data should contain: icon, label/name, description, isActive?
+    const { label, icon, description, active } = data;
+
+    return (
+        <NodeWrapper selected={selected}>
+            <Handle type="target" position={Position.Left} />
+            <Handle type="source" position={Position.Right} />
+
+            <NodeHeader
+                icon={
+                    <Box p="4" bg={data.bg || "bg.tertiary"} rounded="sm">
+                        {/* Render Icon component from data.icon which might be a React Element */}
+                        {data.icon}
+                    </Box>
+                }
+                title={label}
+            />
+
+            <NodeBody>
+                <Text fontSize="sm" color="fg.secondary">
+                    {description || "Description goes here"}
+                </Text>
+            </NodeBody>
+
+            {active && (
+                <NodeFooter>
+                    <Badge variant="success">Active</Badge>
+                </NodeFooter>
+            )}
+        </NodeWrapper>
+    );
+}
+
+// Similar to ActionNode but maybe different default styling or specific inputs
+// The screenshot shows "Chat Input" with specific text "User inputs goal/KPI..."
+export function TriggerNode(props: NodeProps) {
+    return <ActionNode {...props} />;
+}
+
+export function LoopNode({ data, selected }: NodeProps) {
+    return (
+        <Box
+            bg="bg.secondary"
+            rounded="md"
+            border="1"
+            borderStyle="dashed"
+            borderColor={selected ? "border.accent" : "border.tertiary"}
+            p="16"
+            style={{ minWidth: '240px', minHeight: '120px' }}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            className="group"
+            position="relative"
+        >
+            <Handle type="target" position={Position.Left} />
+            <Handle type="source" position={Position.Right} />
+
+            <Box display="flex" flexDirection="column" alignItems="center" gap="8">
+                {/* Loop Icon centrally */}
+                <Box color="fg.secondary">
+                    {data.icon}
+                </Box>
+                <Text fontWeight="600">{data.label || "Loop Name"}</Text>
+                <Text fontSize="sm" color="fg.tertiary">Drag and drop here</Text>
+            </Box>
+
+            <Box position="absolute" top="8" right="8">
+                <IconEllipsisStroke size={16} className="text-fg-tertiary" />
+            </Box>
+        </Box>
+    );
+}
+
+export function AddTriggerNode({ data }: NodeProps) {
+    return (
+        <Box
+            bg="bg.default"
+            rounded="md"
+            border="1"
+            borderStyle="dashed" // Design shows dashed
+            borderColor="border.tertiary"
+            style={{ width: '240px', height: '120px' }}
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            gap="12"
+        >
+            <Handle type="source" position={Position.Bottom} /> {/* Added handle for connecting downwards */}
+            <Box p="8" rounded="full" bg="bg.success.subtle" color="fg.success">
+                <IconPlus size={20} />
+            </Box>
+            <Box textAlign="center">
+                <Text fontWeight="600">Add Trigger</Text>
+                <Text fontSize="sm" color="fg.tertiary">Drag and drop here</Text>
+            </Box>
+        </Box>
+    )
+}
+
+export function StepPlaceholderNode({ data }: NodeProps) {
+    return (
+        <Box
+            bg="bg.default"
+            rounded="md"
+            border="1"
+            borderStyle="dashed"
+            borderColor="border.tertiary"
+            style={{ width: '240px', height: '64px' }}
+            display="flex"
+
+            alignItems="center"
+            justifyContent="center"
+        >
+            <Handle type="target" position={Position.Top} />
+            <Text fontSize="md" color="fg.tertiary">Drag and drop step</Text>
+        </Box>
+    )
+}
