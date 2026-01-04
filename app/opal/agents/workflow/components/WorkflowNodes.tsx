@@ -57,7 +57,9 @@ const NodeFooter = ({ children }: { children: ReactNode }) => (
 
 export function ActionNode({ data, selected }: NodeProps) {
     // data should contain: icon, label/name, description, isActive?
-    const { label, icon, description, active } = data;
+    const label = data.label as string;
+    const description = data.description as string;
+    const active = data.active as boolean;
 
     return (
         <NodeWrapper selected={selected}>
@@ -120,7 +122,7 @@ export function LoopNode({ data, selected }: NodeProps) {
                 <Box color="fg.secondary">
                     {data.icon as ReactNode}
                 </Box>
-                <Text fontWeight="600">{data.label || "Loop Name"}</Text>
+                <Text fontWeight="600">{(data.label as string) || "Loop Name"}</Text>
                 <Text fontSize="sm" color="fg.tertiary">Drag and drop here</Text>
             </Box>
 
