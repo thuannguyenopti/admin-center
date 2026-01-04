@@ -299,7 +299,7 @@ function WorkflowBuilder() {
                     data: { label: 'Drag and drop step' },
                     position: {
                         x: hitNode.position.x,
-                        y: hitNode.position.y + 150
+                        y: hitNode.position.y + (foundItem?.outputType ? 240 : 160)
                     },
                 };
 
@@ -311,7 +311,7 @@ function WorkflowBuilder() {
                 setEdges((eds) => {
                     const updatedEdges = eds.map(e => {
                         if (e.target === hitNode.id) {
-                            return { ...e, target: newNodeId };
+                            return { ...e, target: newNodeId, style: { strokeDasharray: '0' } };
                         }
                         return e;
                     });
