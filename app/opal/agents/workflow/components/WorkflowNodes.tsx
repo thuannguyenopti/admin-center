@@ -111,7 +111,7 @@ export function ActionNode({ data, selected }: NodeProps) {
 // Similar to ActionNode but maybe different default styling or specific inputs
 // The screenshot shows "Chat Input" with specific text "User inputs goal/KPI..."
 export function TriggerNode(props: NodeProps) {
-    return <ActionNode {...props} />;
+    return <ActionNode {...props} data={{ ...props.data, active: false }} />;
 }
 
 export function LoopNode({ data, selected }: NodeProps) {
