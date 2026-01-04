@@ -69,6 +69,38 @@ export function ActionNode({ id, data, selected }: NodeProps) {
         const outgoingEdge = edges.find(e => e.source === id);
         const currentNode = nodes.find(n => n.id === id);
 
+        // Scenario 1: Removing the Root Trigger
+        if (!incomingEdge && outgoingEdge && currentNode && currentNode.type === 'trigger') {
+            const targetNode = nodes.find(n => n.id === outgoingEdge.target);
+            if (targetNode) {
+                const newPlaceholder = {
+                    id: 'add-trigger',
+                    type: 'addTrigger',
+                    data: { label: 'Add Trigger' },
+                    position: currentNode.position,
+                };
+
+                const newEdge = {
+                    id: `e-add-trigger-${targetNode.id}`,
+                    source: 'add-trigger',
+                    target: targetNode.id,
+                    type: 'default',
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                    style: { strokeDasharray: '5,5' }
+                };
+
+                const newNodes = nodes.map(n => n.id === id ? newPlaceholder : n);
+                const newEdges = edges
+                    .filter(e => e.id !== outgoingEdge.id)
+                    .concat(newEdge);
+
+                setNodes(newNodes);
+                setEdges(newEdges);
+                return;
+            }
+        }
+
+        // Scenario 2: Removing a Middle Node (Graph Repair)
         if (incomingEdge && outgoingEdge && currentNode) {
             const sourceNode = nodes.find(n => n.id === incomingEdge.source);
             const targetNode = nodes.find(n => n.id === outgoingEdge.target);
