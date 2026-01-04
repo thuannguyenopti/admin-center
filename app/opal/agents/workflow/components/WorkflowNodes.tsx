@@ -1,6 +1,6 @@
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type BoxProps } from '@optiaxiom/react';
-import { IconPlus, IconHome } from '@tabler/icons-react';
+import { IconPlus, IconHome, IconCode } from '@tabler/icons-react';
 import { IconPlay, IconEllipsisStroke } from '@optimizely/axiom-icons';
 import { ReactNode } from 'react';
 
@@ -81,9 +81,27 @@ export function ActionNode({ data, selected }: NodeProps) {
                 </Text>
             </NodeBody>
 
-            {active && (
+            {(active || Boolean(data.outputType)) && (
                 <NodeFooter>
-                    <Badge intent="success">Active</Badge>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" width="full">
+                        {data.outputType && (
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                gap="4"
+                                px="8"
+                                py="2"
+                                rounded="full"
+                                border="1"
+                                borderColor="border.tertiary"
+                                bg="bg.default"
+                            >
+                                <IconCode size={12} className="text-fg-secondary" />
+                                <Text fontSize="xs" color="fg.secondary">{String(data.outputType)}</Text>
+                            </Box>
+                        )}
+                        {active && <Badge intent="success">Active</Badge>}
+                    </Box>
                 </NodeFooter>
             )}
         </NodeWrapper>
