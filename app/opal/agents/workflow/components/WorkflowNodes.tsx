@@ -12,8 +12,7 @@ const NodeWrapper = ({ selected, children, ...props }: { selected?: boolean, chi
         border="1"
         borderColor={selected ? "border.accent" : "border.tertiary"}
         shadow={selected ? "md" : "sm"}
-        style={{ width: '240px' }}
-        position="relative"
+        style={{ width: '240px', position: 'relative' }}
         className="group"
         {...props}
     >
@@ -84,7 +83,7 @@ export function ActionNode({ data, selected }: NodeProps) {
 
             {active && (
                 <NodeFooter>
-                    <Badge variant="success">Active</Badge>
+                    <Badge intent="success">Active</Badge>
                 </NodeFooter>
             )}
         </NodeWrapper>
@@ -103,16 +102,19 @@ export function LoopNode({ data, selected }: NodeProps) {
             bg="bg.secondary"
             rounded="md"
             border="1"
-            borderStyle="dashed"
             borderColor={selected ? "border.accent" : "border.tertiary"}
             p="16"
-            style={{ minWidth: '240px', minHeight: '120px' }}
+            style={{
+                minWidth: '240px',
+                minHeight: '120px',
+                borderStyle: 'dashed',
+                position: 'relative'
+            }}
             display="flex"
             flexDirection="column"
             alignItems="center"
             justifyContent="center"
             className="group"
-            position="relative"
         >
             <Handle type="target" position={Position.Top} />
             <Handle type="source" position={Position.Bottom} />
@@ -126,7 +128,7 @@ export function LoopNode({ data, selected }: NodeProps) {
                 <Text fontSize="sm" color="fg.tertiary">Drag and drop here</Text>
             </Box>
 
-            <Box position="absolute" top="8" right="8">
+            <Box style={{ position: 'absolute', top: '8px', right: '8px' }}>
                 <IconEllipsisStroke size={16} className="text-fg-tertiary" />
             </Box>
         </Box>
@@ -139,9 +141,12 @@ export function AddTriggerNode({ data }: NodeProps) {
             bg="bg.default"
             rounded="md"
             border="1"
-            borderStyle="dashed" // Design shows dashed
             borderColor="border.tertiary"
-            style={{ width: '240px', height: '120px' }}
+            style={{
+                width: '240px',
+                height: '120px',
+                borderStyle: 'dashed'
+            }}
             display="flex"
             flexDirection="column"
             alignItems="center"
@@ -166,9 +171,12 @@ export function StepPlaceholderNode({ data }: NodeProps) {
             bg="bg.default"
             rounded="md"
             border="1"
-            borderStyle="dashed"
             borderColor="border.tertiary"
-            style={{ width: '240px', height: '64px' }}
+            style={{
+                width: '240px',
+                height: '64px',
+                borderStyle: 'dashed'
+            }}
             display="flex"
 
             alignItems="center"
