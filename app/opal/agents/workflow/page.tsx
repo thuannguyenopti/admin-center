@@ -49,7 +49,8 @@ import {
     ConditionPanel,
     InAppEventPanel,
     SchedulerPanel,
-    WorkflowSetupPanel
+    WorkflowSetupPanel,
+    AgentNodePanel
 } from "./components/SidebarPanels";
 import {
     ActionNode,
@@ -185,8 +186,8 @@ function WorkflowBuilder() {
     // Sidebar Data
     const components: Record<string, any[]> = {
         Agents: [
-            { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple", type: 'action' },
-            { name: "Frontend Development...", icon: <IconCodeBranch />, bg: "bg.avatar.purple", type: 'action' },
+            { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple", type: 'action', outputType: 'JSON' },
+            { name: "Hypothesis Creator", icon: <IconCodeBranch />, bg: "bg.avatar.purple", type: 'action', outputType: 'JSON' },
         ],
         Data: [],
         Inputs: [
@@ -282,10 +283,11 @@ function WorkflowBuilder() {
                     type,
                     position: hitNode.position,
                     data: {
-                        label,
+                        label: label || 'Step',
                         icon: iconNode,
                         bg,
-                        description: "Step description"
+                        description: "Step description",
+                        outputType: foundItem?.outputType
                     }
                 };
 
@@ -336,7 +338,8 @@ function WorkflowBuilder() {
                     label: label,
                     icon: iconNode,
                     bg: bg,
-                    description: "Description goes here"
+                    description: "Description goes here",
+                    outputType: foundItem?.outputType
                 },
             };
 
@@ -558,6 +561,9 @@ function WorkflowBuilder() {
                                 case "Scheduler":
                                     return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
                                 default:
+                                    if ((selectedNode.data as any).outputType) {
+                                        return <AgentNodePanel onClose={() => setSelectedNodeId(null)} node={selectedNode} />;
+                                    }
                                     return <WorkflowSetupPanel
                                         onClose={() => setSelectedNodeId(null)}
                                         workflowName={workflowName}

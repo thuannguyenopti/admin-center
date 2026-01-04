@@ -41,7 +41,14 @@ import {
     IconClock,
     IconCodeBranch,
     IconCalendar,
+    IconSparkles,
+    IconFileImport,
 } from "@optimizely/axiom-icons";
+import {
+    IconChevronDown,
+    IconChevronRight,
+    IconCode,
+} from "@tabler/icons-react";
 import { useState } from "react";
 
 // Helper to describe basic cron expressions
@@ -625,5 +632,190 @@ export function WorkflowSetupPanel({ onClose, onSave, workflowName, onNameChange
 
 
         </PanelContainer>
+    );
+}
+
+export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
+    const [detailsOpen, setDetailsOpen] = useState(true);
+    const [inputOpen, setInputOpen] = useState(true);
+    const [outputOpen, setOutputOpen] = useState(false);
+
+    // Mock data based on node, falling back to defaults
+    const name = node?.data?.label || "Agent Name";
+    const description = node?.data?.description || "Agent description...";
+    // extract output type if available
+    const outputType = node?.data?.outputType || "JSON";
+
+    return (
+        <DetailsPanel w="full">
+            <DetailsPanelHeader
+                addonAfter={
+                    <Button
+                        icon={<IconX size={16} />}
+                        appearance="subtle"
+                        aria-label="Close"
+                        size="sm"
+                        onClick={onClose}
+                    />
+                }
+            >
+                <Box display="flex" alignItems="center" gap="8">
+                    <Box
+                        p="6"
+                        rounded="sm"
+                        bg={node?.data?.bg || "bg.avatar.purple"}
+                        color="fg.default"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                    >
+                        {node?.data?.icon}
+                    </Box>
+                    <Heading level="4">{name}</Heading>
+                </Box>
+
+                <Box mt="16">
+                    <Tabs defaultValue="setup">
+                        <TabsList style={{ width: '100%' }}>
+                            <TabsTrigger value="setup" style={{ flex: 1 }}>Setup</TabsTrigger>
+                            <TabsTrigger value="trace" style={{ flex: 1 }}>Trace</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </Box>
+            </DetailsPanelHeader>
+
+            <DetailsPanelBody p="20">
+                <Box bg="bg.secondary" rounded="md" p="16" display="flex" flexDirection="column" gap="24" flex="1">
+                    {/* Details Section */}
+                    <CollapsibleSection
+                        title="Details"
+                        isOpen={detailsOpen}
+                        onToggle={() => setDetailsOpen(!detailsOpen)}
+                    >
+                        <Field label="Name">
+                            <Box display="flex" gap="12" alignItems="center">
+                                <Box flex="1">
+                                    <Input defaultValue={name} />
+                                </Box>
+                            </Box>
+                        </Field>
+
+                        <Field label="Description">
+                            <Textarea defaultValue={description} />
+                        </Field>
+                    </CollapsibleSection>
+
+                    {/* Input Section */}
+                    <CollapsibleSection
+                        title="Input"
+                        isOpen={inputOpen}
+                        onToggle={() => setInputOpen(!inputOpen)}
+                    >
+                        <Field label="Prompt Template" info="Define the system instructions">
+                            <Textarea
+                                defaultValue={`Role: You are a marketing copy expert. Generate content for ${name}...`}
+                                className="h-32"
+                                readOnly
+                                bg="bg.tertiary"
+                            />
+                        </Field>
+
+                        <Box>
+                            <Text fontWeight="400" fontSize="md" mb="8">Variables</Text>
+                            <Box display="flex" flexDirection="column" gap="8">
+                                <Box border="1" borderColor="border.tertiary" rounded="sm" p="12" display="flex" alignItems="center" justifyContent="space-between" bg="bg.default">
+                                    <Box>
+                                        <Text fontWeight="600">overview</Text>
+                                        <Text fontSize="sm" color="fg.secondary">what the email is about</Text>
+                                    </Box>
+                                    <Box display="flex" gap="8" alignItems="center">
+                                        <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                        <Text fontSize="sm" color="fg.secondary">String</Text>
+                                    </Box>
+                                </Box>
+                                <Box border="1" borderColor="border.tertiary" rounded="sm" p="12" display="flex" alignItems="center" justifyContent="space-between" bg="bg.default">
+                                    <Box>
+                                        <Text fontWeight="600">target audience</Text>
+                                        <Text fontSize="sm" color="fg.secondary">target audience of the email</Text>
+                                    </Box>
+                                    <Box display="flex" gap="8" alignItems="center">
+                                        <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                        <Text fontSize="sm" color="fg.secondary">String</Text>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </Box>
+
+                        <Field label="Tools" info="Select tools for the agent">
+                            <Box border="1" borderColor="border.tertiary" rounded="sm" p="12" bg="bg.default">
+                                <Text>send_email</Text>
+                            </Box>
+                        </Field>
+                    </CollapsibleSection>
+
+                    {/* Output Section */}
+                    <CollapsibleSection
+                        title="Output"
+                        isOpen={outputOpen}
+                        onToggle={() => setOutputOpen(!outputOpen)}
+                        info="Read only"
+                    >
+                        <Box border="1" borderColor="border.tertiary" rounded="sm" p="12" bg="bg.default" display="flex" alignItems="center" gap="8">
+                            <IconCode size={20} className="text-fg-secondary" />
+                            <Text>{outputType}</Text>
+                        </Box>
+                    </CollapsibleSection>
+                </Box>
+            </DetailsPanelBody>
+            <DetailsPanelFooter>
+                <Box display="flex" justifyContent="flex-end" gap="8" flex="1">
+                    <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />
+                    <Button appearance="primary" onClick={onClose}>Done</Button>
+                </Box>
+            </DetailsPanelFooter>
+        </DetailsPanel>
+    );
+}
+
+function CollapsibleSection({
+    title,
+    children,
+    isOpen,
+    onToggle,
+    info,
+    action
+}: {
+    title: string;
+    children: React.ReactNode;
+    isOpen: boolean;
+    onToggle: () => void;
+    info?: string;
+    action?: React.ReactNode;
+}) {
+    return (
+        <Box bg="bg.secondary" rounded="md" overflow="hidden" style={{ flexShrink: 0 }}>
+            <Box
+                p="16"
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                cursor="pointer"
+                onClick={onToggle}
+                className="hover:bg-[var(--ax-colors-bg-secondary-hovered)]"
+            >
+                <Box display="flex" alignItems="center" gap="8">
+                    {isOpen ? <IconChevronDown size={20} /> : <IconChevronRight size={20} />}
+                    <Text fontSize="md" fontWeight="500">{title}</Text>
+                    {info && <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />}
+                </Box>
+                {action && <Box onClick={(e) => e.stopPropagation()}>{action}</Box>}
+            </Box>
+
+            {isOpen && (
+                <Box p="16" pt="0" style={{ paddingLeft: "44px", paddingRight: "24px" }} display="flex" flexDirection="column" gap="24">
+                    {children}
+                </Box>
+            )}
+        </Box>
     );
 }
