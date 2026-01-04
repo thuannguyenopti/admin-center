@@ -816,7 +816,16 @@ function CollapsibleSection({
             </Box>
 
             {isOpen && (
-                <Box p="24" pt="0" display="flex" flexDirection="column" gap="24">
+                <Box
+                    bg="bg.secondary"
+                    mx="16"
+                    mb="16"
+                    rounded="md"
+                    p="24"
+                    display="flex"
+                    flexDirection="column"
+                    gap="24"
+                >
                     {children}
                 </Box>
             )}
