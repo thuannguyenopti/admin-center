@@ -685,7 +685,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
             </DetailsPanelHeader>
 
             <DetailsPanelBody p="20">
-                <Box display="flex" flexDirection="column" gap="24" flex="1">
+                <Box display="flex" flexDirection="column" gap="24" flex="1" overflowY="auto">
                     {/* Details Section */}
                     <CollapsibleSection
                         title="Details"
@@ -695,13 +695,13 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                         <Field label="Name">
                             <Box display="flex" gap="12" alignItems="center">
                                 <Box flex="1">
-                                    <Input defaultValue={name} />
+                                    <Input defaultValue={name} disabled />
                                 </Box>
                             </Box>
                         </Field>
 
                         <Field label="Description">
-                            <Textarea defaultValue={description} />
+                            <Textarea defaultValue={description} disabled />
                         </Field>
                     </CollapsibleSection>
 
@@ -715,8 +715,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                             <Textarea
                                 defaultValue={`Role: You are a marketing copy expert. Generate content for ${name}...`}
                                 className="h-32"
-                                readOnly
-                                bg="bg.tertiary"
+                                disabled
                             />
                         </Field>
 
