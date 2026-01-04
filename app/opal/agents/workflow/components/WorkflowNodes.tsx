@@ -1,5 +1,5 @@
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@optiaxiom/react';
+import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type BoxProps } from '@optiaxiom/react';
 import { IconPlus, IconHome } from '@tabler/icons-react';
 import { IconPlay, IconEllipsisStroke } from '@optimizely/axiom-icons';
 import { ReactNode } from 'react';
@@ -66,7 +66,7 @@ export function ActionNode({ data, selected }: NodeProps) {
 
             <NodeHeader
                 icon={
-                    <Box p="4" bg={data.bg || "bg.tertiary"} rounded="sm">
+                    <Box p="4" bg={(data.bg as BoxProps["bg"]) || "bg.tertiary"} rounded="sm">
                         {/* Render Icon component from data.icon which might be a React Element */}
                         {data.icon}
                     </Box>
