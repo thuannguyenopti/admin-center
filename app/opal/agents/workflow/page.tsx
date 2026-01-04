@@ -239,7 +239,7 @@ function WorkflowBuilder() {
             }
 
             // --- HIT DETECTION ---
-            const hitNode = nodes.find(n => {
+            const hitNode = nodes.find((n: any) => {
                 const w = n.measured?.width || 240;
                 const h = n.measured?.height || 80;
                 return position.x >= n.position.x && position.x <= n.position.x + w &&
