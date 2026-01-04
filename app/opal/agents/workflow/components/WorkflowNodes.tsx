@@ -83,8 +83,8 @@ export function ActionNode({ data, selected }: NodeProps) {
 
             {(active || Boolean(data.outputType)) && (
                 <NodeFooter>
-                    <Box display="flex" justifyContent="space-between" alignItems="center" width="full">
-                        {data.outputType && (
+                    <Box display="flex" justifyContent="space-between" alignItems="center" w="full">
+                        {!!data.outputType && (
                             <Box
                                 display="flex"
                                 alignItems="center"
