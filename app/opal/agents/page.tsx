@@ -10,6 +10,7 @@ import {
     Menu,
     MenuTrigger,
     MenuContent,
+    LabelMenuButton,
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
@@ -22,6 +23,7 @@ import {
     IconChevronDown,
 } from "@tabler/icons-react";
 import { IconAgent, IconCodeBranch, IconFileImport } from "@optimizely/axiom-icons";
+import { Input } from "@/app/components/Input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -159,42 +161,21 @@ export default function AgentsPage() {
 
             {/* Toolbar */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Box display="flex" gap="12">
-                    <Box style={{ width: "240px", position: "relative" }}>
-                        <Box style={{ position: "absolute", left: "8px", top: "8px", zIndex: 20 }} color="fg.tertiary">
-                            <IconSearch size={16} />
-                        </Box>
-                        <Box asChild>
-                            <input
-                                placeholder="Enter name or description"
-                                style={{
-                                    width: "100%",
-                                    paddingLeft: "32px",
-                                    paddingRight: "12px",
-                                    paddingTop: "6px",
-                                    paddingBottom: "6px",
-                                    borderRadius: "6px",
-                                    border: "1px solid var(--ax-colors-border-default)",
-                                    outline: "none",
-                                    fontSize: "14px",
-                                    height: "32px",
-                                    backgroundColor: "var(--ax-colors-bg-default)"
-                                }}
-                            />
-                        </Box>
+                <Box display="flex" gap="12" alignItems="center">
+                    <Box className="w-[300px]">
+                        <Input placeholder="Enter name or description" />
                     </Box>
 
                     {["Type", "Category", "Created by", "Modified by"].map((filter) => (
-                        <Menu key={filter} options={[{ label: "All" }]}>
+                        <Menu
+                            key={filter}
+                            placeholder={`Search ${filter.toLowerCase()}...`}
+                            options={[{ label: "All" }]}
+                        >
                             <MenuTrigger asChild>
-                                <Button appearance="subtle" iconPosition="end" icon={<IconChevronDown />} className="menu-label-button">
-                                    <Box display="flex" flexDirection="column" alignItems="start" textAlign="start">
-                                        <Text fontSize="xs" color="fg.tertiary">
-                                            {filter}
-                                        </Text>
-                                        <Text fontSize="sm">All</Text>
-                                    </Box>
-                                </Button>
+                                <LabelMenuButton label={filter} h="40">
+                                    All
+                                </LabelMenuButton>
                             </MenuTrigger>
                             <MenuContent />
                         </Menu>
