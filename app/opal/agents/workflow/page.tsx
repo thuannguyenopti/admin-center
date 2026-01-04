@@ -41,6 +41,7 @@ import {
     IconPlay,
     IconXmark,
     IconEllipsisStroke,
+    IconSitemap,
 } from "@optimizely/axiom-icons";
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -72,6 +73,8 @@ import {
     type Connection,
     type Edge,
     MarkerType,
+    Panel,
+    ControlButton,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 // import ELK from 'elkjs/lib/elk.bundled.js'; // Disabled due to install error
@@ -411,11 +414,6 @@ function WorkflowBuilder() {
                             <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
                         </Box>
                         <Box display="flex" alignItems="center" gap="8">
-                            <Box mr="16">
-                                <Switch checked={isElkEnabled} onCheckedChange={toggleLayout}>
-                                    Vertical Layout
-                                </Switch>
-                            </Box>
                             <Button appearance="primary">Save</Button>
                             <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
                             <DropdownMenu>
@@ -609,7 +607,18 @@ function WorkflowBuilder() {
                         onPaneClick={onPaneClick}
                         ref={reactFlowWrapper}
                     >
-                        <Controls />
+                        <Controls>
+                            <ControlButton
+                                onClick={toggleLayout}
+                                title="Vertical Layout"
+                                aria-label="Vertical Layout"
+                                style={{
+                                    backgroundColor: isElkEnabled ? 'var(--ax-colors-bg-accent-subtle)' : undefined,
+                                }}
+                            >
+                                <IconSitemap />
+                            </ControlButton>
+                        </Controls>
                         <MiniMap />
                         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
                     </ReactFlow>
