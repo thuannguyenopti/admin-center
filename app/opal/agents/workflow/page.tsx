@@ -16,6 +16,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     SearchInput,
+    Switch,
 } from "@optiaxiom/react";
 import { Layout } from "@optiaxiom/react/unstable";
 import {
@@ -41,7 +42,7 @@ import {
     IconXmark,
     IconEllipsisStroke,
 } from "@optimizely/axiom-icons";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
     EmailTriggerPanel,
@@ -50,6 +51,12 @@ import {
     SchedulerPanel,
     WorkflowSetupPanel
 } from "./components/SidebarPanels";
+import {
+    ActionNode,
+    LoopNode,
+    AddTriggerNode,
+    StepPlaceholderNode
+} from "./components/WorkflowNodes";
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -62,18 +69,79 @@ import {
     BackgroundVariant,
     type Connection,
     type Edge,
+    MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+// import ELK from 'elkjs/lib/elk.bundled.js'; // Disabled due to install error
 
+// const elk = new ELK();
 
+const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}) => {
+    console.warn("Vertical Layout is currently disabled because 'elkjs' could not be installed.");
+    // Return nodes as-is
+    return { nodes, edges };
+
+    /*
+    const isHorizontal = options?.['elk.direction'] === 'RIGHT';
+    const graph: any = {
+        id: 'root',
+        layoutOptions: options,
+        children: nodes.map((node) => ({
+            ...node,
+            targetPosition: isHorizontal ? 'left' : 'top',
+            sourcePosition: isHorizontal ? 'right' : 'bottom',
+            width: node.measured?.width ?? 240,
+            height: node.measured?.height ?? 120,
+        })),
+        edges: edges.map((edge) => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target],
+        })),
+    };
+
+    try {
+        const layoutedGraph = await elk.layout(graph);
+         return {
+            nodes: layoutedGraph.children?.map((node: any) => ({
+                ...node,
+                position: { x: node.x, y: node.y },
+            })) || [],
+            edges: edges,
+        };
+    } catch (e) {
+        console.error("ELK Layout failed:", e);
+        return { nodes, edges };
+    }
+    */
+};
 
 const initialNodes = [
     {
-        id: '1',
-        type: 'input',
-        data: { label: 'Start' },
-        position: { x: 250, y: 5 },
+        id: 'add-trigger',
+        type: 'addTrigger',
+        data: { label: 'Add Trigger' },
+        position: { x: 300, y: 50 },
     },
+    {
+        id: 'node-placeholder-step',
+        type: 'stepPlaceholder',
+        data: { label: 'Drag and drop step' },
+        position: { x: 300, y: 250 },
+    }
+];
+
+const initialEdges = [
+    {
+        id: 'e1-2',
+        source: 'add-trigger',
+        target: 'node-placeholder-step',
+        type: 'default',
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+        },
+        style: { strokeDasharray: '5,5' } // Make edge dashed as per common design patterns for placeholders or future steps
+    }
 ];
 
 let id = 0;
@@ -87,12 +155,22 @@ function WorkflowBuilder() {
     const [workflowName, setWorkflowName] = useState("Untitled Workflow");
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isElkEnabled, setIsElkEnabled] = useState(false);
+
 
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+
+    const nodeTypes = useMemo(() => ({
+        action: ActionNode,
+        trigger: ActionNode, // Using ActionNode for triggers as they look similar
+        loop: LoopNode,
+        addTrigger: AddTriggerNode,
+        stepPlaceholder: StepPlaceholderNode
+    }), []);
 
     const onConnect = useCallback(
         (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -104,6 +182,32 @@ function WorkflowBuilder() {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
+    // Sidebar Data
+    const components: Record<string, any[]> = {
+        Agents: [
+            { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple", type: 'action' },
+            { name: "Frontend Development...", icon: <IconCodeBranch />, bg: "bg.avatar.purple", type: 'action' },
+        ],
+        Data: [],
+        Inputs: [
+            { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle", type: 'action' },
+        ],
+        Triggers: [
+            { name: "Chat Input", icon: <IconComments />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Email", icon: <IconEnvelope />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "In-app Event", icon: <IconHandPointer />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Scheduler", icon: <IconClock />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Webhook", icon: <IconWebhook />, bg: "bg.success.subtle", type: 'trigger' },
+        ],
+        Outputs: [],
+        Logic: [
+            { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle", type: 'loop' },
+            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'action' },
+        ],
+    };
+
     const onDrop = useCallback(
         (event: any) => {
             event.preventDefault();
@@ -114,8 +218,9 @@ function WorkflowBuilder() {
 
             const type = event.dataTransfer.getData('application/reactflow/type');
             const label = event.dataTransfer.getData('application/reactflow/label');
+            const iconKey = event.dataTransfer.getData('application/reactflow/iconKey');
+            const bg = event.dataTransfer.getData('application/reactflow/bg');
 
-            // check if the dropped element is valid
             if (typeof type === 'undefined' || !type) {
                 return;
             }
@@ -125,64 +230,155 @@ function WorkflowBuilder() {
                 y: event.clientY,
             });
 
+            // Find valid component info
+            let iconNode = null;
+            let foundItem: any = null;
+            Object.values(components).flat().forEach((c: any) => {
+                if (c.name === label) foundItem = c;
+            })
+            if (foundItem) {
+                iconNode = foundItem.icon;
+            }
+
+            // --- HIT DETECTION ---
+            const hitNode = nodes.find((n: any) => {
+                const w = n.measured?.width || 240;
+                const h = n.measured?.height || 80;
+                return position.x >= n.position.x && position.x <= n.position.x + w &&
+                    position.y >= n.position.y && position.y <= n.position.y + h;
+            });
+
+            // --- SCENARIO 1: Drop Trigger into 'Add Trigger' ---
+            if (hitNode && hitNode.id === 'add-trigger' && type === 'trigger') {
+                const newTriggerId = getId();
+                const newTriggerNode = {
+                    id: newTriggerId,
+                    type: 'trigger',
+                    position: hitNode.position,
+                    data: {
+                        label,
+                        icon: iconNode,
+                        bg,
+                        description: "Trigger configuration",
+                        active: true
+                    },
+                };
+
+                setNodes((nds) => nds.map(n => n.id === 'add-trigger' ? newTriggerNode : n));
+                setEdges((eds) => eds.map(e => {
+                    if (e.source === 'add-trigger') {
+                        return { ...e, source: newTriggerId };
+                    }
+                    return e;
+                }));
+                return;
+            }
+
+            // --- SCENARIO 2: Drop Step into Placeholder ---
+            if (hitNode && hitNode.type === 'stepPlaceholder') {
+                const newNodeId = getId();
+                const newNode = {
+                    id: newNodeId,
+                    type,
+                    position: hitNode.position,
+                    data: {
+                        label,
+                        icon: iconNode,
+                        bg,
+                        description: "Step description"
+                    }
+                };
+
+                const newPlaceholderId = `placeholder-${Date.now()}`;
+                const newPlaceholder = {
+                    id: newPlaceholderId,
+                    type: 'stepPlaceholder',
+                    data: { label: 'Drag and drop step' },
+                    position: {
+                        x: hitNode.position.x,
+                        y: hitNode.position.y + 150
+                    },
+                };
+
+                setNodes((nds) => {
+                    const filtered = nds.filter(n => n.id !== hitNode.id);
+                    return [...filtered, newNode, newPlaceholder];
+                });
+
+                setEdges((eds) => {
+                    const updatedEdges = eds.map(e => {
+                        if (e.target === hitNode.id) {
+                            return { ...e, target: newNodeId };
+                        }
+                        return e;
+                    });
+
+                    const newEdge = {
+                        id: `e-${newNodeId}-${newPlaceholderId}`,
+                        source: newNodeId,
+                        target: newPlaceholderId,
+                        type: 'default',
+                        markerEnd: { type: MarkerType.ArrowClosed },
+                        style: { strokeDasharray: '5,5' }
+                    };
+
+                    return [...updatedEdges, newEdge];
+                });
+                return;
+            }
+
+            // --- SCENARIO 3: Default Drop ---
             const newNode = {
                 id: getId(),
                 type,
                 position,
-                data: { label: label || `${type} node` },
+                data: {
+                    label: label,
+                    icon: iconNode,
+                    bg: bg,
+                    description: "Description goes here"
+                },
             };
 
             setNodes((nds) => nds.concat(newNode));
         },
-        [reactFlowInstance, setNodes],
+        [reactFlowInstance, setNodes, setEdges, nodes, components],
     );
 
     const onNodeClick = useCallback((event: any, node: any) => {
         setSelectedNodeId(node.id);
+        setIsSetupPanelOpen(false); // Close main setup panel when a node is selected
     }, []);
 
     const onPaneClick = useCallback(() => {
         setSelectedNodeId(null);
-        // Do not close setup panel here necessarily, or maybe yes if we want to deselect node? 
-        // User request: "once users click on save, close the tray". 
-        // We will keep 'isSetupPanelOpen' independent of node selection, but if a node is selected, it takes precedence in view.
-        // Actually, usually selecting a node REPLACES the setup view. Deselecting might bring it back or empty. 
-        // Let's assume clicking pane deselects node, effectively hiding node panel. 
-        // If setup panel was open, it might show again, or we can say setup panel is "modal-ish" side panel. 
-        // Let's stick to: Node Panel overrides Setup Panel.
+        // Do not automatically re-open setup panel, let user choose actions
     }, []);
 
-    const onDragStart = (event: any, nodeType: string, label: string) => {
+    const onDragStart = (event: any, nodeType: string, item: any) => {
         event.dataTransfer.setData('application/reactflow/type', nodeType);
-        event.dataTransfer.setData('application/reactflow/label', label);
+        event.dataTransfer.setData('application/reactflow/label', item.name);
+        event.dataTransfer.setData('application/reactflow/bg', item.bg);
         event.dataTransfer.effectAllowed = 'move';
     };
 
-    // Sidebar Data
-    const components = {
-        Agents: [
-            { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple" },
-            { name: "Frontend Development...", icon: <IconCodeBranch />, bg: "bg.avatar.purple" },
-        ],
-        Data: [],
-        Inputs: [
-            { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle" },
-            { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle" },
-        ],
-        Triggers: [
-            { name: "Chat Input", icon: <IconComments />, bg: "bg.success.subtle" },
-            { name: "Email", icon: <IconEnvelope />, bg: "bg.success.subtle" },
-            { name: "In-app Event", icon: <IconHandPointer />, bg: "bg.success.subtle" },
-            { name: "Scheduler", icon: <IconClock />, bg: "bg.success.subtle" },
-            { name: "Webhook", icon: <IconWebhook />, bg: "bg.success.subtle" },
-        ],
-        Outputs: [],
-        Logic: [
-            { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle" },
-            { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle" },
-            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle" },
-        ],
-    };
+    const onLayout = useCallback(({ direction }: { direction: string }) => {
+        const opts = { 'elk.direction': direction, 'elk.algorithm': 'layered' };
+        getLayoutedElements(nodes, edges, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+            setNodes(layoutedNodes);
+            setEdges(layoutedEdges);
+        });
+    }, [nodes, edges, setNodes, setEdges]);
+
+    const toggleLayout = useCallback(() => {
+        setIsElkEnabled((prev) => {
+            const next = !prev;
+            if (next) {
+                onLayout({ direction: 'DOWN' });
+            }
+            return next;
+        });
+    }, [onLayout]);
 
     return (
         <Box h="full" bg="bg.default">
@@ -211,6 +407,11 @@ function WorkflowBuilder() {
                             <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
                         </Box>
                         <Box display="flex" alignItems="center" gap="8">
+                            <Box mr="16">
+                                <Switch checked={isElkEnabled} onCheckedChange={toggleLayout}>
+                                    Vertical Layout
+                                </Switch>
+                            </Box>
                             <Button appearance="primary">Save</Button>
                             <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
                             <DropdownMenu>
@@ -297,7 +498,7 @@ function WorkflowBuilder() {
                                                             <div
                                                                 key={index}
                                                                 draggable
-                                                                onDragStart={(event) => onDragStart(event, 'default', item.name)}
+                                                                onDragStart={(event) => onDragStart(event, item.type, item)}
                                                                 style={{ cursor: 'grab' }}
                                                             >
                                                                 <Box
@@ -387,24 +588,24 @@ function WorkflowBuilder() {
                         height: '100%'
                     }}
                 >
-                    <div ref={reactFlowWrapper} style={{ width: '100%', height: '100%' }}>
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            onInit={setReactFlowInstance}
-                            onDrop={onDrop}
-                            onDragOver={onDragOver}
-                            onNodeClick={onNodeClick}
-                            onPaneClick={onPaneClick}
-                        >
-                            <Controls />
-                            <MiniMap />
-                            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-                        </ReactFlow>
-                    </div>
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        nodeTypes={nodeTypes}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        onInit={setReactFlowInstance}
+                        onDrop={onDrop}
+                        onDragOver={onDragOver}
+                        onNodeClick={onNodeClick}
+                        onPaneClick={onPaneClick}
+                        ref={reactFlowWrapper}
+                    >
+                        <Controls />
+                        <MiniMap />
+                        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+                    </ReactFlow>
                 </Box>
             </Layout>
         </Box>
