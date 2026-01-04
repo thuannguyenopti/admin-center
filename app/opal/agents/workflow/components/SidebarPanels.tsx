@@ -685,7 +685,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
             </DetailsPanelHeader>
 
             <DetailsPanelBody p="20">
-                <Box bg="bg.secondary" rounded="md" p="16" display="flex" flexDirection="column" gap="24" flex="1">
+                <Box display="flex" flexDirection="column" gap="24" flex="1">
                     {/* Details Section */}
                     <CollapsibleSection
                         title="Details"
@@ -795,7 +795,8 @@ function CollapsibleSection({
     return (
         <Box rounded="md" overflow="hidden" style={{ flexShrink: 0 }}>
             <Box
-                p="24"
+                h="40"
+                px="24"
                 display="flex"
                 alignItems="center"
                 justifyContent="space-between"
