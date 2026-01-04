@@ -320,6 +320,7 @@ export default function RootLayout({
 						height={20}
 					/>
 				),
+				customLayout: true,
 			},
 			{
 				label: "Activities",
