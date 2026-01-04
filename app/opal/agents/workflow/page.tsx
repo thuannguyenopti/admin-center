@@ -492,7 +492,7 @@ function WorkflowBuilder() {
                                                     className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
                                                 >
                                                     <Text fontWeight="500">{category}</Text>
-                                                    <IconChevronDown size={16} />
+
                                                 </Box>
                                             </DisclosureTrigger>
                                             <DisclosureContent>
