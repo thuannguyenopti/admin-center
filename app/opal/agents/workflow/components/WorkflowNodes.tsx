@@ -68,7 +68,7 @@ export function ActionNode({ data, selected }: NodeProps) {
                 icon={
                     <Box p="4" bg={(data.bg as BoxProps["bg"]) || "bg.tertiary"} rounded="sm">
                         {/* Render Icon component from data.icon which might be a React Element */}
-                        {data.icon}
+                        {data.icon as ReactNode}
                     </Box>
                 }
                 title={label}
@@ -118,7 +118,7 @@ export function LoopNode({ data, selected }: NodeProps) {
             <Box display="flex" flexDirection="column" alignItems="center" gap="8">
                 {/* Loop Icon centrally */}
                 <Box color="fg.secondary">
-                    {data.icon}
+                    {data.icon as ReactNode}
                 </Box>
                 <Text fontWeight="600">{data.label || "Loop Name"}</Text>
                 <Text fontSize="sm" color="fg.tertiary">Drag and drop here</Text>
