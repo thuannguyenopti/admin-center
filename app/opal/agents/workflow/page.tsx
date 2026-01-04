@@ -41,7 +41,7 @@ import {
     IconXmark,
     IconEllipsisStroke,
 } from "@optimizely/axiom-icons";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
     EmailTriggerPanel,
@@ -50,6 +50,12 @@ import {
     SchedulerPanel,
     WorkflowSetupPanel
 } from "./components/SidebarPanels";
+import {
+    ActionNode,
+    LoopNode,
+    AddTriggerNode,
+    StepPlaceholderNode
+} from "./components/WorkflowNodes";
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -60,6 +66,7 @@ import {
     Background,
     MiniMap,
     BackgroundVariant,
+    MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -67,11 +74,30 @@ import "@xyflow/react/dist/style.css";
 
 const initialNodes = [
     {
-        id: '1',
-        type: 'input',
-        data: { label: 'Start' },
-        position: { x: 250, y: 5 },
+        id: 'add-trigger',
+        type: 'addTrigger',
+        data: { label: 'Add Trigger' },
+        position: { x: 300, y: 50 },
     },
+    {
+        id: 'node-placeholder-step',
+        type: 'stepPlaceholder',
+        data: { label: 'Drag and drop step' },
+        position: { x: 300, y: 250 },
+    }
+];
+
+const initialEdges = [
+    {
+        id: 'e1-2',
+        source: 'add-trigger',
+        target: 'node-placeholder-step',
+        type: 'default',
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+        },
+        style: { strokeDasharray: '5,5' } // Make edge dashed as per common design patterns for placeholders or future steps
+    }
 ];
 
 let id = 0;
@@ -89,8 +115,16 @@ function WorkflowBuilder() {
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+
+    const nodeTypes = useMemo(() => ({
+        action: ActionNode,
+        trigger: ActionNode, // Using ActionNode for triggers as they look similar
+        loop: LoopNode,
+        addTrigger: AddTriggerNode,
+        stepPlaceholder: StepPlaceholderNode
+    }), []);
 
     const onConnect = useCallback(
         (params: any) => setEdges((eds) => addEdge(params, eds)),
@@ -112,6 +146,8 @@ function WorkflowBuilder() {
 
             const type = event.dataTransfer.getData('application/reactflow/type');
             const label = event.dataTransfer.getData('application/reactflow/label');
+            const iconKey = event.dataTransfer.getData('application/reactflow/iconKey');
+            const bg = event.dataTransfer.getData('application/reactflow/bg');
 
             // check if the dropped element is valid
             if (typeof type === 'undefined' || !type) {
@@ -123,11 +159,32 @@ function WorkflowBuilder() {
                 y: event.clientY,
             });
 
+            // Reconstruct the icon component based on the key (this is a simplified way, ideally we'd pass serializable data)
+            // Since we can't pass the React element through dataTransfer, we need to lookup from the components list again or a map.
+            // For now, I'll essentially rely on finding the item in the components list.
+
+            let iconNode = null;
+            // Iterate over all components to find the matching name/icon.
+            // This is slightly inefficient but fine for this scale.
+            let foundItem: any = null;
+            Object.values(components).flat().forEach((c: any) => {
+                if (c.name === label) foundItem = c;
+            })
+
+            if (foundItem) {
+                iconNode = foundItem.icon;
+            }
+
             const newNode = {
                 id: getId(),
                 type,
                 position,
-                data: { label: label || `${type} node` },
+                data: {
+                    label: label,
+                    icon: iconNode,
+                    bg: bg,
+                    description: "Description goes here" // Default description
+                },
             };
 
             setNodes((nds) => nds.concat(newNode));
@@ -137,48 +194,44 @@ function WorkflowBuilder() {
 
     const onNodeClick = useCallback((event: any, node: any) => {
         setSelectedNodeId(node.id);
+        setIsSetupPanelOpen(false); // Close main setup panel when a node is selected
     }, []);
 
     const onPaneClick = useCallback(() => {
         setSelectedNodeId(null);
-        // Do not close setup panel here necessarily, or maybe yes if we want to deselect node? 
-        // User request: "once users click on save, close the tray". 
-        // We will keep 'isSetupPanelOpen' independent of node selection, but if a node is selected, it takes precedence in view.
-        // Actually, usually selecting a node REPLACES the setup view. Deselecting might bring it back or empty. 
-        // Let's assume clicking pane deselects node, effectively hiding node panel. 
-        // If setup panel was open, it might show again, or we can say setup panel is "modal-ish" side panel. 
-        // Let's stick to: Node Panel overrides Setup Panel.
+        // Do not automatically re-open setup panel, let user choose actions
     }, []);
 
-    const onDragStart = (event: any, nodeType: string, label: string) => {
+    const onDragStart = (event: any, nodeType: string, item: any) => {
         event.dataTransfer.setData('application/reactflow/type', nodeType);
-        event.dataTransfer.setData('application/reactflow/label', label);
+        event.dataTransfer.setData('application/reactflow/label', item.name);
+        event.dataTransfer.setData('application/reactflow/bg', item.bg);
         event.dataTransfer.effectAllowed = 'move';
     };
 
     // Sidebar Data
-    const components = {
+    const components: Record<string, any[]> = {
         Agents: [
-            { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple" },
-            { name: "Frontend Development...", icon: <IconCodeBranch />, bg: "bg.avatar.purple" },
+            { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple", type: 'action' },
+            { name: "Frontend Development...", icon: <IconCodeBranch />, bg: "bg.avatar.purple", type: 'action' },
         ],
         Data: [],
         Inputs: [
-            { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle" },
-            { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle" },
+            { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle", type: 'action' },
         ],
         Triggers: [
-            { name: "Chat Input", icon: <IconComments />, bg: "bg.success.subtle" },
-            { name: "Email", icon: <IconEnvelope />, bg: "bg.success.subtle" },
-            { name: "In-app Event", icon: <IconHandPointer />, bg: "bg.success.subtle" },
-            { name: "Scheduler", icon: <IconClock />, bg: "bg.success.subtle" },
-            { name: "Webhook", icon: <IconWebhook />, bg: "bg.success.subtle" },
+            { name: "Chat Input", icon: <IconComments />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Email", icon: <IconEnvelope />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "In-app Event", icon: <IconHandPointer />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Scheduler", icon: <IconClock />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Webhook", icon: <IconWebhook />, bg: "bg.success.subtle", type: 'trigger' },
         ],
         Outputs: [],
         Logic: [
-            { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle" },
-            { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle" },
-            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle" },
+            { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle", type: 'loop' },
+            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'action' },
         ],
     };
 
@@ -295,7 +348,7 @@ function WorkflowBuilder() {
                                                             <div
                                                                 key={index}
                                                                 draggable
-                                                                onDragStart={(event) => onDragStart(event, 'default', item.name)}
+                                                                onDragStart={(event) => onDragStart(event, item.type, item)}
                                                                 style={{ cursor: 'grab' }}
                                                             >
                                                                 <Box
@@ -385,24 +438,24 @@ function WorkflowBuilder() {
                         height: '100%'
                     }}
                 >
-                    <div ref={reactFlowWrapper} style={{ width: '100%', height: '100%' }}>
-                        <ReactFlow
-                            nodes={nodes}
-                            edges={edges}
-                            onNodesChange={onNodesChange}
-                            onEdgesChange={onEdgesChange}
-                            onConnect={onConnect}
-                            onInit={setReactFlowInstance}
-                            onDrop={onDrop}
-                            onDragOver={onDragOver}
-                            onNodeClick={onNodeClick}
-                            onPaneClick={onPaneClick}
-                        >
-                            <Controls />
-                            <MiniMap />
-                            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-                        </ReactFlow>
-                    </div>
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        nodeTypes={nodeTypes}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        onInit={setReactFlowInstance}
+                        onDrop={onDrop}
+                        onDragOver={onDragOver}
+                        onNodeClick={onNodeClick}
+                        onPaneClick={onPaneClick}
+                        ref={reactFlowWrapper}
+                    >
+                        <Controls />
+                        <MiniMap />
+                        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+                    </ReactFlow>
                 </Box>
             </Layout>
         </Box>
