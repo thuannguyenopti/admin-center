@@ -796,7 +796,7 @@ function CollapsibleSection({
 }) {
     return (
         <Disclosure open={isOpen} onOpenChange={onToggle} className="w-full">
-            <DisclosureTrigger className="w-full" chevronPosition="end">
+            <DisclosureTrigger className="w-full p-0 flex items-center justify-between border-none shadow-none focus:ring-0 focus:outline-none bg-transparent hover:bg-transparent" chevronPosition="end">
                 <Box
                     h="40"
                     px="0"
@@ -806,7 +806,7 @@ function CollapsibleSection({
                     bg="bg.default"
                     className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
                 >
-                    <Box pl="20" display="flex" alignItems="center" gap="8">
+                    <Box pl="0" display="flex" alignItems="center" gap="8">
                         <Text fontSize="md" fontWeight="500">{title}</Text>
                         {info && <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />}
                     </Box>

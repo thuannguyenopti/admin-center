@@ -1,4 +1,4 @@
-import { Handle, Position, NodeProps } from '@xyflow/react';
+import { Handle, Position, NodeProps, useReactFlow, MarkerType } from '@xyflow/react';
 import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type BoxProps } from '@optiaxiom/react';
 import { IconPlus, IconHome, IconCode } from '@tabler/icons-react';
 import { IconPlay, IconEllipsisStroke } from '@optimizely/axiom-icons';
@@ -20,7 +20,7 @@ const NodeWrapper = ({ selected, children, ...props }: { selected?: boolean, chi
     </Box>
 );
 
-const NodeHeader = ({ icon, title, actions }: { icon: ReactNode, title: string, actions?: ReactNode }) => (
+const NodeHeader = ({ icon, title, actions, onRemove, onDuplicate }: { icon: ReactNode, title: string, actions?: ReactNode, onRemove?: () => void, onDuplicate?: () => void }) => (
     <Box display="flex" alignItems="center" justifyContent="space-between" p="12" borderB="1" borderColor="border.tertiary">
         <Box display="flex" alignItems="center" gap="8">
             <Box color="fg.default">
@@ -33,9 +33,9 @@ const NodeHeader = ({ icon, title, actions }: { icon: ReactNode, title: string, 
                 <DropdownMenuTrigger asChild>
                     <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={16} />} aria-label="Options" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    <DropdownMenuItem>Delete</DropdownMenuItem>
-                    <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={onDuplicate}>Duplicate</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={onRemove} className="text-red-600 focus:text-red-600 focus:bg-red-50">Remove</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         )}
@@ -54,11 +54,85 @@ const NodeFooter = ({ children }: { children: ReactNode }) => (
     </Box>
 );
 
-export function ActionNode({ data, selected }: NodeProps) {
+export function ActionNode({ id, data, selected }: NodeProps) {
     // data should contain: icon, label/name, description, isActive?
     const label = data.label as string;
     const description = data.description as string;
     const active = data.active as boolean;
+
+    const { deleteElements, addNodes, getNode, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+
+    const onRemove = () => {
+        const nodes = getNodes();
+        const edges = getEdges();
+        const incomingEdge = edges.find(e => e.target === id);
+        const outgoingEdge = edges.find(e => e.source === id);
+        const currentNode = nodes.find(n => n.id === id);
+
+        if (incomingEdge && outgoingEdge && currentNode) {
+            const sourceNode = nodes.find(n => n.id === incomingEdge.source);
+            const targetNode = nodes.find(n => n.id === outgoingEdge.target);
+
+            if (sourceNode && targetNode) {
+                const isTall = !!sourceNode.data?.outputType;
+                // Using 160/240 based on recent spacing adjustments
+                const gap = isTall ? 240 : 160;
+                const newTargetY = sourceNode.position.y + gap;
+                const shift = newTargetY - targetNode.position.y;
+
+                // Remove current node, shift others below it
+                const newNodes = nodes
+                    .filter(n => n.id !== id)
+                    .map(n => {
+                        if (n.position.y > currentNode.position.y) {
+                            return { ...n, position: { ...n.position, y: n.position.y + shift } };
+                        }
+                        return n;
+                    });
+
+                // Reconnect
+                const newEdge = {
+                    id: `e-${sourceNode.id}-${targetNode.id}`,
+                    source: sourceNode.id,
+                    target: targetNode.id,
+                    type: 'default',
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                    style: targetNode.type === 'stepPlaceholder' ? { strokeDasharray: '5,5' } : { strokeDasharray: '0' }
+                };
+
+                const newEdges = edges
+                    .filter(e => e.id !== incomingEdge.id && e.id !== outgoingEdge.id)
+                    .concat(newEdge);
+
+                setNodes(newNodes);
+                setEdges(newEdges);
+                return;
+            }
+        }
+
+        deleteElements({ nodes: [{ id }] });
+    };
+
+    const onDuplicate = () => {
+        const node = getNode(id);
+        if (!node) return;
+
+        const newNode = {
+            ...node,
+            id: `${node.id}-copy-${Date.now()}`,
+            position: {
+                x: node.position.x + 50,
+                y: node.position.y + 50,
+            },
+            selected: true,
+            data: {
+                ...node.data,
+                label: `${node.data.label} (Copy)`,
+            },
+        };
+
+        addNodes(newNode);
+    };
 
     return (
         <NodeWrapper selected={selected}>
@@ -73,6 +147,8 @@ export function ActionNode({ data, selected }: NodeProps) {
                     </Box>
                 }
                 title={label}
+                onRemove={onRemove}
+                onDuplicate={onDuplicate}
             />
 
             <NodeBody>
