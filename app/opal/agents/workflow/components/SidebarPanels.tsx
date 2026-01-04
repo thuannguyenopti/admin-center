@@ -648,8 +648,22 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
 
     return (
         <DetailsPanel w="full">
-            <DetailsPanelHeader
-                addonAfter={
+            <DetailsPanelHeader>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap="8">
+                        <Box
+                            p="6"
+                            rounded="sm"
+                            bg={node?.data?.bg || "bg.avatar.purple"}
+                            color="fg.default"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                        >
+                            {node?.data?.icon}
+                        </Box>
+                        <Heading level="4">{name}</Heading>
+                    </Box>
                     <Button
                         icon={<IconX size={16} />}
                         appearance="subtle"
@@ -657,21 +671,6 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                         size="sm"
                         onClick={onClose}
                     />
-                }
-            >
-                <Box display="flex" alignItems="center" gap="8">
-                    <Box
-                        p="6"
-                        rounded="sm"
-                        bg={node?.data?.bg || "bg.avatar.purple"}
-                        color="fg.default"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                    >
-                        {node?.data?.icon}
-                    </Box>
-                    <Heading level="4">{name}</Heading>
                 </Box>
 
                 <Box mt="16">
@@ -684,8 +683,8 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                 </Box>
             </DetailsPanelHeader>
 
-            <DetailsPanelBody p="20">
-                <Box display="flex" flexDirection="column" gap="24" flex="1" overflowY="auto">
+            <DetailsPanelBody p="0">
+                <Box display="flex" flexDirection="column" gap="4" flex="1" overflowY="auto">
                     {/* Details Section */}
                     <CollapsibleSection
                         title="Details"
@@ -772,7 +771,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                     <Button appearance="primary" onClick={onClose}>Done</Button>
                 </Box>
             </DetailsPanelFooter>
-        </DetailsPanel>
+        </DetailsPanel >
     );
 }
 
@@ -792,10 +791,11 @@ function CollapsibleSection({
     action?: React.ReactNode;
 }) {
     return (
-        <Box rounded="md" overflow="hidden" style={{ flexShrink: 0 }}>
+        <Box style={{ flexShrink: 0 }}>
             <Box
                 h="40"
-                px="24"
+                pl="20"
+                pr="0"
                 display="flex"
                 alignItems="center"
                 justifyContent="space-between"
@@ -817,10 +817,8 @@ function CollapsibleSection({
             {isOpen && (
                 <Box
                     bg="bg.secondary"
-                    mx="16"
-                    mb="16"
-                    rounded="md"
                     p="24"
+                    rounded="lg"
                     display="flex"
                     flexDirection="column"
                     gap="24"

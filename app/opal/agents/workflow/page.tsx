@@ -54,6 +54,7 @@ import {
 } from "./components/SidebarPanels";
 import {
     ActionNode,
+    TriggerNode,
     LoopNode,
     AddTriggerNode,
     StepPlaceholderNode
@@ -167,7 +168,7 @@ function WorkflowBuilder() {
 
     const nodeTypes = useMemo(() => ({
         action: ActionNode,
-        trigger: ActionNode, // Using ActionNode for triggers as they look similar
+        trigger: TriggerNode,
         loop: LoopNode,
         addTrigger: AddTriggerNode,
         stepPlaceholder: StepPlaceholderNode
