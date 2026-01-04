@@ -16,6 +16,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     SearchInput,
+    Switch,
 } from "@optiaxiom/react";
 import { Layout } from "@optiaxiom/react/unstable";
 import {
@@ -69,8 +70,49 @@ import {
     MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+// import ELK from 'elkjs/lib/elk.bundled.js'; // Disabled due to install error
 
+// const elk = new ELK();
 
+const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}) => {
+    console.warn("Vertical Layout is currently disabled because 'elkjs' could not be installed.");
+    // Return nodes as-is
+    return { nodes, edges };
+
+    /*
+    const isHorizontal = options?.['elk.direction'] === 'RIGHT';
+    const graph: any = {
+        id: 'root',
+        layoutOptions: options,
+        children: nodes.map((node) => ({
+            ...node,
+            targetPosition: isHorizontal ? 'left' : 'top',
+            sourcePosition: isHorizontal ? 'right' : 'bottom',
+            width: node.measured?.width ?? 240,
+            height: node.measured?.height ?? 120,
+        })),
+        edges: edges.map((edge) => ({
+            id: edge.id,
+            sources: [edge.source],
+            targets: [edge.target],
+        })),
+    };
+
+    try {
+        const layoutedGraph = await elk.layout(graph);
+         return {
+            nodes: layoutedGraph.children?.map((node: any) => ({
+                ...node,
+                position: { x: node.x, y: node.y },
+            })) || [],
+            edges: edges,
+        };
+    } catch (e) {
+        console.error("ELK Layout failed:", e);
+        return { nodes, edges };
+    }
+    */
+};
 
 const initialNodes = [
     {
@@ -111,6 +153,8 @@ function WorkflowBuilder() {
     const [workflowName, setWorkflowName] = useState("Untitled Workflow");
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isElkEnabled, setIsElkEnabled] = useState(false);
+
 
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
@@ -135,79 +179,6 @@ function WorkflowBuilder() {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
     }, []);
-
-    const onDrop = useCallback(
-        (event: any) => {
-            event.preventDefault();
-
-            if (!reactFlowInstance) {
-                return;
-            }
-
-            const type = event.dataTransfer.getData('application/reactflow/type');
-            const label = event.dataTransfer.getData('application/reactflow/label');
-            const iconKey = event.dataTransfer.getData('application/reactflow/iconKey');
-            const bg = event.dataTransfer.getData('application/reactflow/bg');
-
-            // check if the dropped element is valid
-            if (typeof type === 'undefined' || !type) {
-                return;
-            }
-
-            const position = reactFlowInstance.screenToFlowPosition({
-                x: event.clientX,
-                y: event.clientY,
-            });
-
-            // Reconstruct the icon component based on the key (this is a simplified way, ideally we'd pass serializable data)
-            // Since we can't pass the React element through dataTransfer, we need to lookup from the components list again or a map.
-            // For now, I'll essentially rely on finding the item in the components list.
-
-            let iconNode = null;
-            // Iterate over all components to find the matching name/icon.
-            // This is slightly inefficient but fine for this scale.
-            let foundItem: any = null;
-            Object.values(components).flat().forEach((c: any) => {
-                if (c.name === label) foundItem = c;
-            })
-
-            if (foundItem) {
-                iconNode = foundItem.icon;
-            }
-
-            const newNode = {
-                id: getId(),
-                type,
-                position,
-                data: {
-                    label: label,
-                    icon: iconNode,
-                    bg: bg,
-                    description: "Description goes here" // Default description
-                },
-            };
-
-            setNodes((nds) => nds.concat(newNode));
-        },
-        [reactFlowInstance, setNodes],
-    );
-
-    const onNodeClick = useCallback((event: any, node: any) => {
-        setSelectedNodeId(node.id);
-        setIsSetupPanelOpen(false); // Close main setup panel when a node is selected
-    }, []);
-
-    const onPaneClick = useCallback(() => {
-        setSelectedNodeId(null);
-        // Do not automatically re-open setup panel, let user choose actions
-    }, []);
-
-    const onDragStart = (event: any, nodeType: string, item: any) => {
-        event.dataTransfer.setData('application/reactflow/type', nodeType);
-        event.dataTransfer.setData('application/reactflow/label', item.name);
-        event.dataTransfer.setData('application/reactflow/bg', item.bg);
-        event.dataTransfer.effectAllowed = 'move';
-    };
 
     // Sidebar Data
     const components: Record<string, any[]> = {
@@ -234,6 +205,178 @@ function WorkflowBuilder() {
             { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'action' },
         ],
     };
+
+    const onDrop = useCallback(
+        (event: any) => {
+            event.preventDefault();
+
+            if (!reactFlowInstance) {
+                return;
+            }
+
+            const type = event.dataTransfer.getData('application/reactflow/type');
+            const label = event.dataTransfer.getData('application/reactflow/label');
+            const iconKey = event.dataTransfer.getData('application/reactflow/iconKey');
+            const bg = event.dataTransfer.getData('application/reactflow/bg');
+
+            if (typeof type === 'undefined' || !type) {
+                return;
+            }
+
+            const position = reactFlowInstance.screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+
+            // Find valid component info
+            let iconNode = null;
+            let foundItem: any = null;
+            Object.values(components).flat().forEach((c: any) => {
+                if (c.name === label) foundItem = c;
+            })
+            if (foundItem) {
+                iconNode = foundItem.icon;
+            }
+
+            // --- HIT DETECTION ---
+            const hitNode = nodes.find(n => {
+                const w = n.measured?.width || 240;
+                const h = n.measured?.height || 80;
+                return position.x >= n.position.x && position.x <= n.position.x + w &&
+                    position.y >= n.position.y && position.y <= n.position.y + h;
+            });
+
+            // --- SCENARIO 1: Drop Trigger into 'Add Trigger' ---
+            if (hitNode && hitNode.id === 'add-trigger' && type === 'trigger') {
+                const newTriggerId = getId();
+                const newTriggerNode = {
+                    id: newTriggerId,
+                    type: 'trigger',
+                    position: hitNode.position,
+                    data: {
+                        label,
+                        icon: iconNode,
+                        bg,
+                        description: "Trigger configuration",
+                        active: true
+                    },
+                };
+
+                setNodes((nds) => nds.map(n => n.id === 'add-trigger' ? newTriggerNode : n));
+                setEdges((eds) => eds.map(e => {
+                    if (e.source === 'add-trigger') {
+                        return { ...e, source: newTriggerId };
+                    }
+                    return e;
+                }));
+                return;
+            }
+
+            // --- SCENARIO 2: Drop Step into Placeholder ---
+            if (hitNode && hitNode.type === 'stepPlaceholder') {
+                const newNodeId = getId();
+                const newNode = {
+                    id: newNodeId,
+                    type,
+                    position: hitNode.position,
+                    data: {
+                        label,
+                        icon: iconNode,
+                        bg,
+                        description: "Step description"
+                    }
+                };
+
+                const newPlaceholderId = `placeholder-${Date.now()}`;
+                const newPlaceholder = {
+                    id: newPlaceholderId,
+                    type: 'stepPlaceholder',
+                    data: { label: 'Drag and drop step' },
+                    position: {
+                        x: hitNode.position.x,
+                        y: hitNode.position.y + 150
+                    },
+                };
+
+                setNodes((nds) => {
+                    const filtered = nds.filter(n => n.id !== hitNode.id);
+                    return [...filtered, newNode, newPlaceholder];
+                });
+
+                setEdges((eds) => {
+                    const updatedEdges = eds.map(e => {
+                        if (e.target === hitNode.id) {
+                            return { ...e, target: newNodeId };
+                        }
+                        return e;
+                    });
+
+                    const newEdge = {
+                        id: `e-${newNodeId}-${newPlaceholderId}`,
+                        source: newNodeId,
+                        target: newPlaceholderId,
+                        type: 'default',
+                        markerEnd: { type: MarkerType.ArrowClosed },
+                        style: { strokeDasharray: '5,5' }
+                    };
+
+                    return [...updatedEdges, newEdge];
+                });
+                return;
+            }
+
+            // --- SCENARIO 3: Default Drop ---
+            const newNode = {
+                id: getId(),
+                type,
+                position,
+                data: {
+                    label: label,
+                    icon: iconNode,
+                    bg: bg,
+                    description: "Description goes here"
+                },
+            };
+
+            setNodes((nds) => nds.concat(newNode));
+        },
+        [reactFlowInstance, setNodes, setEdges, nodes, components],
+    );
+
+    const onNodeClick = useCallback((event: any, node: any) => {
+        setSelectedNodeId(node.id);
+        setIsSetupPanelOpen(false); // Close main setup panel when a node is selected
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+        setSelectedNodeId(null);
+        // Do not automatically re-open setup panel, let user choose actions
+    }, []);
+
+    const onDragStart = (event: any, nodeType: string, item: any) => {
+        event.dataTransfer.setData('application/reactflow/type', nodeType);
+        event.dataTransfer.setData('application/reactflow/label', item.name);
+        event.dataTransfer.setData('application/reactflow/bg', item.bg);
+        event.dataTransfer.effectAllowed = 'move';
+    };
+
+    const onLayout = useCallback(({ direction }: { direction: string }) => {
+        const opts = { 'elk.direction': direction, 'elk.algorithm': 'layered' };
+        getLayoutedElements(nodes, edges, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+            setNodes(layoutedNodes);
+            setEdges(layoutedEdges);
+        });
+    }, [nodes, edges, setNodes, setEdges]);
+
+    const toggleLayout = useCallback(() => {
+        setIsElkEnabled((prev) => {
+            const next = !prev;
+            if (next) {
+                onLayout({ direction: 'DOWN' });
+            }
+            return next;
+        });
+    }, [onLayout]);
 
     return (
         <Box h="full" bg="bg.default">
@@ -262,6 +405,11 @@ function WorkflowBuilder() {
                             <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
                         </Box>
                         <Box display="flex" alignItems="center" gap="8">
+                            <Box mr="16">
+                                <Switch checked={isElkEnabled} onCheckedChange={toggleLayout}>
+                                    Vertical Layout
+                                </Switch>
+                            </Box>
                             <Button appearance="primary">Save</Button>
                             <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
                             <DropdownMenu>
