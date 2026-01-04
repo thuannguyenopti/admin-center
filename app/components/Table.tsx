@@ -1,8 +1,8 @@
-import {ReactNode, isValidElement} from "react";
-import {Badge, Box, Avatar, Tooltip} from "@optiaxiom/react";
-import {Text} from "./Text";
-import {Button} from "./Button";
-import {IconDots as IconMenu} from "@tabler/icons-react";
+import { ReactNode, isValidElement } from "react";
+import { Badge, Box, Avatar, Tooltip } from "@optiaxiom/react";
+import { Text } from "./Text";
+import { Button } from "./Button";
+import { IconDots as IconMenu } from "@tabler/icons-react";
 
 export const Table = ({
 	children,
@@ -27,7 +27,7 @@ export const Table = ({
 	);
 };
 
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 export const Tr = ({
 	children,
 	url,
@@ -62,7 +62,7 @@ export const Tr = ({
 		</tr>
 	);
 };
-export const Th = ({children, align, style, className}: {children?: ReactNode; align?: any; style?: React.CSSProperties; className?: string}) => {
+export const Th = ({ children, align, style, className }: { children?: ReactNode; align?: any; style?: React.CSSProperties; className?: string }) => {
 	return (
 		<th
 			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${className || ""}`}
@@ -104,15 +104,14 @@ export const Td = ({
 		>
 			{type === undefined && (
 				<>
-					{isValidElement(children) ? (
+					{isValidElement(children) && !Array.isArray(children) ? (
 						children
 					) : (
-						<Text
+						<Box
 							color="fg.default"
-							fontSize="md"
 						>
 							{children}
-						</Text>
+						</Box>
 					)}
 					{description && (
 						<Text
@@ -144,12 +143,12 @@ export const Td = ({
 				</>
 			)}
 			{type === "badge" && (
-				<Box style={{height: "20px", marginTop: "-4px"}}>
+				<Box style={{ height: "20px", marginTop: "-4px" }}>
 					<Badge intent={data}>{children}</Badge>
 				</Box>
 			)}
 			{type === "avatar" && (
-				<Box style={{height: "20px", marginTop: "-6px"}}>
+				<Box style={{ height: "20px", marginTop: "-6px" }}>
 					<Tooltip content={children}>
 						<Avatar
 							src={data}
@@ -165,7 +164,7 @@ export const Td = ({
 					display="flex"
 					alignItems="center"
 					justifyContent="end"
-					style={{height: "20px"}}
+					style={{ height: "20px" }}
 				>
 					{children ? (
 						children

@@ -469,7 +469,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                         </Select>
                     </Field>
 
-                    <Tabs defaultValue="standard" value={activeTab} onValueChange={setActiveTab}>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
                         <TabsList style={{ width: "100%", display: "flex" }}>
                             <TabsTrigger value="standard" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>Standard</TabsTrigger>
                             <TabsTrigger value="advanced" style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>Advanced (Cron)</TabsTrigger>

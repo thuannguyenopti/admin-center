@@ -7,29 +7,31 @@ import {
     Button,
     Badge,
     Avatar,
-    Select,
-    SelectTrigger,
-    SelectContent,
     Link,
+    Menu,
+    MenuTrigger,
+    MenuContent,
+    LabelMenuButton,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
     IconClock,
-    IconSearch,
-    IconAlertCircle,
-    IconCopy,
-    IconRefresh,
-    IconCircleCheck,
 } from "@tabler/icons-react";
-import { IconEllipsisStroke, IconSparkles } from "@optimizely/axiom-icons";
+import {
+    IconEllipsisStroke,
+    IconCircleExclamation,
+    IconTriangleExclamation
+} from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
+import { useState } from "react";
 
 const executions = [
     {
         id: "b2953c08",
         status: "failed",
         errorType: "Tool Timeout",
+        errorSource: "Agent",
         agent: "Hypothesis Creator",
         version: "V15",
         startTime: "4:14:50 PM",
@@ -40,7 +42,8 @@ const executions = [
     {
         id: "d8k2o19s",
         status: "review",
-        errorType: "Guardrail Breach",
+        errorType: "Evaluation Error",
+        errorSource: "Logic: Condition 1",
         agent: "Content Localizer",
         version: "V12",
         startTime: "2:30:15 PM",
@@ -51,7 +54,8 @@ const executions = [
     {
         id: "f9s2m10x",
         status: "failed",
-        errorType: "Too many tool calls",
+        errorType: "Trigger Timeout",
+        errorSource: "Trigger: In-app Event",
         agent: "Web Researcher",
         version: "V8",
         startTime: "11:05:42 AM",
@@ -62,101 +66,140 @@ const executions = [
 ];
 
 export default function NotificationsPage() {
+    const [agentFilter, setAgentFilter] = useState("All Agents");
+    const [statusFilter, setStatusFilter] = useState("All Statuses");
+    const [timeFilter, setTimeFilter] = useState("Last 24 Hours");
+
     return (
         <Box p="32" display="flex" flexDirection="column" gap="24" h="full" bg="bg.default">
             {/* Header */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
-                    <Heading level="2">Execution Logs</Heading>
-                    <Text color="fg.tertiary">Monitor agent runs and resolve execution errors.</Text>
+                    <Heading level="2">Notifications</Heading>
                 </Box>
-                <Button appearance="primary" icon={<IconRefresh size={16} />}>Refresh Logs</Button>
             </Box>
 
             {/* Filters */}
             <Box display="flex" gap="12" alignItems="center" flexWrap="wrap">
                 <Box className="w-[300px]">
-                    <Input placeholder="Search execution IDs..." />
+                    <Input placeholder="Search notifications..." />
                 </Box>
-                <Select defaultValue="all" options={[{ label: "All Agents", value: "all" }, { label: "Hypothesis Creator", value: "hc" }]}>
-                    <SelectTrigger className="w-[200px]">
-                        All Agents
-                    </SelectTrigger>
-                    <SelectContent />
-                </Select>
-                <Select defaultValue="status" options={[{ label: "All Statuses", value: "status" }, { label: "Failed", value: "failed" }, { label: "Review Needed", value: "review" }]}>
-                    <SelectTrigger className="w-[200px]">
-                        All Statuses
-                    </SelectTrigger>
-                    <SelectContent />
-                </Select>
-                <Button appearance="subtle" icon={<IconClock size={16} />}>
-                    Last 24 Hours
-                </Button>
+
+                <Menu
+                    placeholder="Search agents..."
+                    options={[
+                        { label: "All Agents", execute: () => setAgentFilter("All Agents") },
+                        { label: "Hypothesis Creator", execute: () => setAgentFilter("Hypothesis Creator") },
+                        { label: "Content Localizer", execute: () => setAgentFilter("Content Localizer") },
+                        { label: "Web Researcher", execute: () => setAgentFilter("Web Researcher") }
+                    ]}
+                >
+                    <MenuTrigger asChild>
+                        <LabelMenuButton label="Agent" h="40">
+                            {agentFilter}
+                        </LabelMenuButton>
+                    </MenuTrigger>
+                    <MenuContent />
+                </Menu>
+
+                <Menu
+                    placeholder="Search statuses..."
+                    options={[
+                        { label: "All Statuses", execute: () => setStatusFilter("All Statuses") },
+                        { label: "Failed", execute: () => setStatusFilter("Failed") },
+                        { label: "Review Needed", execute: () => setStatusFilter("Review Needed") }
+                    ]}>
+                    <MenuTrigger asChild>
+                        <LabelMenuButton label="Status" h="40">
+                            {statusFilter}
+                        </LabelMenuButton>
+                    </MenuTrigger>
+                    <MenuContent />
+                </Menu>
+
+                <Menu options={[
+                    { label: "Last Hour", execute: () => setTimeFilter("Last Hour") },
+                    { label: "Last 24 Hours", execute: () => setTimeFilter("Last 24 Hours") },
+                    { label: "Last 7 Days", execute: () => setTimeFilter("Last 7 Days") },
+                    { label: "Last 30 Days", execute: () => setTimeFilter("Last 30 Days") }
+                ]}>
+                    <MenuTrigger asChild>
+                        <LabelMenuButton label="Time" h="40">
+                            <Box display="flex" alignItems="center" gap="8">
+                                <IconClock size={16} />
+                                {timeFilter}
+                            </Box>
+                        </LabelMenuButton>
+                    </MenuTrigger>
+                    <MenuContent />
+                </Menu>
             </Box>
 
             {/* Table */}
-            <Box border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
+            <Box overflow="hidden">
                 <Table>
-                    <Tr>
-                        <Th>Execution ID</Th>
-                        <Th>Status</Th>
-                        <Th>Agent / Error Trace</Th>
-                        <Th>Quality</Th>
-                        <Th>Executed By</Th>
-                        <Th></Th>
-                    </Tr>
-                    {executions.map((run) => (
-                        <Tr key={run.id}>
-                            <Td>
-                                <NextLink href={`/opal/notifications/${run.id}`} passHref legacyBehavior>
-                                    <Link color="fg.default" fontWeight="600" className="hover:underline">
-                                        {run.id}
-                                    </Link>
-                                </NextLink>
-                                <Text fontSize="xs" color="fg.tertiary" mt="4">{run.startTime}</Text>
-                            </Td>
-                            <Td>
-                                <Box display="flex" alignItems="center" gap="8">
-                                    <IconAlertCircle size={16} className={run.status === 'failed' ? 'text-fg-error' : 'text-fg-warning'} />
-                                    <Box>
-                                        <Text color={run.status === 'failed' ? 'fg.error' : 'fg.warning'} fontWeight="500">
-                                            {run.status === 'failed' ? 'Failed' : 'Review Needed'}
-                                        </Text>
-                                        <Text fontSize="xs" color="fg.tertiary">{run.duration}</Text>
-                                    </Box>
-                                </Box>
-                            </Td>
-                            <Td>
-                                <Box display="flex" flexDirection="column" gap="4">
-                                    <Box display="flex" alignItems="center" gap="8">
-                                        <Text fontWeight="600" fontSize="sm">{run.agent}</Text>
-                                        <Text fontSize="xs" color="fg.tertiary">{run.version}</Text>
-                                    </Box>
-                                    <Box display="flex" alignItems="center" gap="6">
-                                        <Badge intent={run.status === 'failed' ? 'danger' : 'warning'} size="sm">
-                                            {run.errorType}
-                                        </Badge>
-                                    </Box>
-                                </Box>
-                            </Td>
-                            <Td>
-                                <Box display="flex" alignItems="center" gap="4">
-                                    <Text fontWeight="600">{run.qualityScore}</Text>
-                                    {run.qualityScore !== 'N/A' && <IconCircleCheck size={14} className="text-fg-success" />}
-                                </Box>
-                            </Td>
-                            <Td>
-                                <Box display="flex" alignItems="center" gap="8">
-                                    <Avatar name={run.author.name} size="xs" />
-                                    <Text color="fg.tertiary" fontSize="sm">{run.author.name}</Text>
-                                </Box>
-                            </Td>
-                            <Td>
-                                <Button appearance="subtle" icon={<IconEllipsisStroke />} size="sm" aria-label="Options" />
-                            </Td>
+                    <thead>
+                        <Tr>
+                            <Th>Workflow Name</Th>
+                            <Th>Timestamp</Th>
+                            <Th>Status</Th>
+                            <Th>Error Trace</Th>
+                            <Th>Executed By</Th>
+                            <Th></Th>
                         </Tr>
-                    ))}
+                    </thead>
+                    <tbody>
+                        {executions.map((run) => (
+                            <Tr key={run.id} url={`/opal/notifications/${run.id}`}>
+                                <Td>
+                                    <Link asChild color="fg.default" fontWeight="600" className="underline underline-offset-4 decoration-border-default hover:decoration-fg-default transition-colors">
+                                        <NextLink href={`/opal/notifications/${run.id}`}>
+                                            {run.agent}
+                                        </NextLink>
+                                    </Link>
+                                    <Text fontSize="xs" color="fg.tertiary" mt="4">{run.id}</Text>
+                                </Td>
+                                <Td>
+                                    <Text color="fg.default">{run.startTime}</Text>
+                                </Td>
+                                <Td>
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        {run.status === 'failed' ? (
+                                            <IconCircleExclamation size={16} color="fg.error" />
+                                        ) : (
+                                            <IconTriangleExclamation size={16} color="fg.warning" />
+                                        )}
+                                        <Box>
+                                            <Text color={run.status === 'failed' ? 'fg.error' : 'fg.warning'} fontWeight="500">
+                                                {run.status === 'failed' ? 'Failed' : 'Review Needed'}
+                                            </Text>
+                                            <Text fontSize="xs" color="fg.tertiary">{run.duration}</Text>
+                                        </Box>
+                                    </Box>
+                                </Td>
+                                <Td>
+                                    <Box display="flex" flexDirection="column" gap="4">
+                                        <Box display="flex" alignItems="center" gap="16">
+                                            <Text fontSize="xs" color="fg.tertiary" fontWeight="600" textTransform="uppercase">{run.errorSource}</Text>
+                                            <Text fontSize="xs" color="fg.tertiary">{run.version}</Text>
+                                        </Box>
+                                        <Text fontSize="sm" fontWeight="500" color={run.status === 'failed' ? 'fg.error' : 'fg.warning'}>
+                                            {run.errorType}
+                                        </Text>
+                                    </Box>
+                                </Td>
+                                <Td>
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        <Avatar name={run.author.name} size="xs" />
+                                        <Text color="fg.tertiary" fontSize="sm">{run.author.name}</Text>
+                                    </Box>
+                                </Td>
+                                <Td>
+                                    <Button appearance="subtle" icon={<IconEllipsisStroke />} size="sm" aria-label="Options" />
+                                </Td>
+                            </Tr>
+                        ))}
+                    </tbody>
                 </Table>
             </Box>
         </Box>
