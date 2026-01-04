@@ -651,7 +651,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
     const outputType = node?.data?.outputType || "JSON";
 
     return (
-        <DetailsPanel w="full">
+        <DetailsPanel w="full" h="full" style={{ height: '100%' }}>
             <DetailsPanelHeader>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap="8">
@@ -687,8 +687,8 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                 </Box>
             </DetailsPanelHeader>
 
-            <DetailsPanelBody p="0">
-                <Box display="flex" flexDirection="column" gap="4" flex="1" overflowY="auto">
+            <DetailsPanelBody p="0" overflowY="auto">
+                <Box display="flex" flexDirection="column" gap="4" flex="1">
                     {/* Details Section */}
                     <CollapsibleSection
                         title="Details"
