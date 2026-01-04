@@ -15,6 +15,8 @@ import {
     Switch,
     Textarea,
     Link,
+    Indicator,
+    Breadcrumb,
 } from "@optiaxiom/react";
 import {
     IconAlertCircle,
@@ -81,6 +83,7 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
         { author: "Support Team", text: "The hypothesis agent is hitting a timeout. It might be due to the large context size of the collected data.", time: "1h ago" },
     ]);
     const [newComment, setNewComment] = useState("");
+    const [activeTab, setActiveTab] = useState("details");
 
     const handleAddComment = () => {
         if (!newComment.trim()) return;
@@ -92,23 +95,18 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
         <Box p="32" display="flex" flexDirection="column" gap="24" h="full" bg="bg.default" overflowY="auto">
             {/* Header */}
             <Box display="flex" flexDirection="column" gap="16">
-                <Box display="flex" alignItems="center" gap="8">
-                    <Link asChild color="fg.tertiary">
-                        <NextLink href="/opal/notifications">
-                            <Box display="flex" alignItems="center" gap="4">
-                                <IconChevronLeft size={16} /> Notifications
-                            </Box>
-                        </NextLink>
-                    </Link>
+                <Box display="flex" alignItems="center">
+                    <Breadcrumb
+                        items={[
+                            { label: "Notifications", href: "/opal/notifications" },
+                            { label: "" }
+                        ]}
+                    />
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box display="flex" alignItems="center" gap="12">
                         <Heading level="2">{workflowName}</Heading>
                         <Badge intent="danger">Failed</Badge>
-                    </Box>
-                    <Box display="flex" gap="12">
-                        <Button appearance="default" icon={<IconRefresh size={16} />}>Restart Workflow</Button>
-                        <Button appearance="subtle" icon={<IconEllipsisStroke size={16} />} aria-label="Options" />
                     </Box>
                 </Box>
             </Box>
@@ -116,11 +114,29 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
             <Box display="flex" gap="32" alignItems="start">
                 {/* Main Content */}
                 <Box flex="1" display="flex" flexDirection="column">
-                    <Tabs defaultValue="details">
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
                         <TabsList>
                             <TabsTrigger value="details">Details</TabsTrigger>
                             <TabsTrigger value="trace">Trace</TabsTrigger>
-                            <TabsTrigger value="ticket">Support Ticket</TabsTrigger>
+                            <TabsTrigger value="ticket">
+                                <Box style={{ position: 'relative' }} display="flex" alignItems="center">
+                                    Messages
+                                    {activeTab !== "ticket" && (
+                                        <Box
+                                            style={{
+                                                position: 'absolute',
+                                                top: '2px',
+                                                right: '-8px',
+                                                height: '8px',
+                                                width: '8px',
+                                                border: '1.5px solid #FFFFFF'
+                                            }}
+                                            bg="bg.error"
+                                            rounded="full"
+                                        />
+                                    )}
+                                </Box>
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="details" mt="24">
@@ -142,19 +158,17 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
                                         <Badge variant="subtle">Execution View</Badge>
                                     </Box>
 
-                                    <Box p="32" display="flex" flexDirection="column" gap="32" overflow="hidden" className="relative h-[400px]">
+                                    <Box p="32" style={{ position: 'relative', height: '400px', overflow: 'hidden' }}>
+
                                         {/* Simple representative graph layout */}
-                                        <Box display="flex" gap="48" alignItems="center" h="full" className="w-max">
+                                        <Box display="flex" gap="48" alignItems="center" h="full" style={{ position: 'relative', zIndex: 10 }} className="w-max">
                                             {/* Column 1: Triggers */}
                                             <Box display="flex" flexDirection="column" gap="24">
                                                 <WorkflowNode icon={IconCalendar} title="Scheduler" description="Runs 7 AM everyday" />
                                                 <WorkflowNode icon={IconMessage} title="Chat Input" description="When message is sent" status="success" />
                                             </Box>
 
-                                            {/* Arrows Placeholder (Visual only) */}
-                                            <Box bg="bg.tertiary" className="h-[1px] w-10 relative">
-                                                <Box borderColor="border.tertiary" style={{ transform: 'rotate(-45deg)' }} className="absolute right-0 -top-1 w-2 h-2 border-b-2 border-r-2" />
-                                            </Box>
+                                            <Box w="48" />
 
                                             {/* Column 2: Data Agents */}
                                             <Box display="flex" flexDirection="column" gap="24">
@@ -162,7 +176,7 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
                                                 <WorkflowNode icon={IconCube} title="Test Idea Agent" description="Ideation for experiments" status="success" />
                                             </Box>
 
-                                            <Box bg="bg.tertiary" className="h-[1px] w-10 relative" />
+                                            <Box w="48" />
 
                                             {/* Column 3: Analysis & Final Steps */}
                                             <Box display="flex" flexDirection="column" gap="24">
@@ -231,8 +245,8 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
                             <Box border="1" borderColor="border.tertiary" rounded="md" p="24" display="flex" flexDirection="column" gap="24">
                                 <Box display="flex" justifyContent="space-between" alignItems="center">
                                     <Box>
-                                        <Heading level="4">Ticket #4928</Heading>
-                                        <Text color="fg.tertiary">Created 2h ago</Text>
+                                        <Heading level="4">Messages</Heading>
+                                        <Text color="fg.tertiary">Workflow ID: {id}</Text>
                                     </Box>
                                     <Badge intent="success">Open</Badge>
                                 </Box>
@@ -310,10 +324,6 @@ export default function NotificationDetailsPage({ params }: { params: Promise<{ 
                                 </Box>
                             </Box>
                         </Box>
-                    </Box>
-                    <Box display="flex" gap="8">
-                        <Button w="full" appearance="subtle" icon={<IconDownload size={16} />}>Download Log</Button>
-                        <Button w="full" appearance="subtle" icon={<IconPlayerStop size={16} />} className="text-red-600">Stop</Button>
                     </Box>
                 </Box>
             </Box>
