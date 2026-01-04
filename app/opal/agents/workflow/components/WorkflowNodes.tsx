@@ -61,8 +61,8 @@ export function ActionNode({ data, selected }: NodeProps) {
 
     return (
         <NodeWrapper selected={selected}>
-            <Handle type="target" position={Position.Left} />
-            <Handle type="source" position={Position.Right} />
+            <Handle type="target" position={Position.Top} />
+            <Handle type="source" position={Position.Bottom} />
 
             <NodeHeader
                 icon={
@@ -112,8 +112,8 @@ export function LoopNode({ data, selected }: NodeProps) {
             className="group"
             position="relative"
         >
-            <Handle type="target" position={Position.Left} />
-            <Handle type="source" position={Position.Right} />
+            <Handle type="target" position={Position.Top} />
+            <Handle type="source" position={Position.Bottom} />
 
             <Box display="flex" flexDirection="column" alignItems="center" gap="8">
                 {/* Loop Icon centrally */}
