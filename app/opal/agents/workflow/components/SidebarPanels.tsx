@@ -793,26 +793,29 @@ function CollapsibleSection({
     action?: React.ReactNode;
 }) {
     return (
-        <Box bg="bg.secondary" rounded="md" overflow="hidden" style={{ flexShrink: 0 }}>
+        <Box rounded="md" overflow="hidden" style={{ flexShrink: 0 }}>
             <Box
-                p="16"
+                p="24"
                 display="flex"
                 alignItems="center"
                 justifyContent="space-between"
                 cursor="pointer"
                 onClick={onToggle}
-                className="hover:bg-[var(--ax-colors-bg-secondary-hovered)]"
+                bg="bg.default"
+                className="hover:bg-[var(--ax-colors-bg-default-hovered)]"
             >
                 <Box display="flex" alignItems="center" gap="8">
-                    {isOpen ? <IconChevronDown size={20} /> : <IconChevronRight size={20} />}
                     <Text fontSize="md" fontWeight="500">{title}</Text>
                     {info && <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />}
                 </Box>
-                {action && <Box onClick={(e) => e.stopPropagation()}>{action}</Box>}
+                <Box display="flex" alignItems="center" gap="8">
+                    {action && <Box onClick={(e) => e.stopPropagation()}>{action}</Box>}
+                    {isOpen ? <IconChevronDown size={20} /> : <IconChevronRight size={20} />}
+                </Box>
             </Box>
 
             {isOpen && (
-                <Box p="16" pt="0" style={{ paddingLeft: "44px", paddingRight: "24px" }} display="flex" flexDirection="column" gap="24">
+                <Box p="24" pt="0" display="flex" flexDirection="column" gap="24">
                     {children}
                 </Box>
             )}
