@@ -15,6 +15,9 @@ import {
     TabsList,
     Switch,
     Field,
+    Disclosure,
+    DisclosureTrigger,
+    DisclosureContent,
     type BoxProps,
 } from "@optiaxiom/react";
 import {
@@ -43,6 +46,7 @@ import {
     IconCalendar,
     IconSparkles,
     IconFileImport,
+    IconXmark,
 } from "@optimizely/axiom-icons";
 import {
     IconChevronDown,
@@ -665,7 +669,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                         <Heading level="4">{name}</Heading>
                     </Box>
                     <Button
-                        icon={<IconX size={16} />}
+                        icon={<IconXmark size={16} />}
                         appearance="subtle"
                         aria-label="Close"
                         size="sm"
@@ -791,33 +795,31 @@ function CollapsibleSection({
     action?: React.ReactNode;
 }) {
     return (
-        <Box style={{ flexShrink: 0 }}>
-            <Box
-                h="40"
-                pl="20"
-                pr="0"
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                cursor="pointer"
-                onClick={onToggle}
-                bg="bg.default"
-                className="hover:bg-[var(--ax-colors-bg-default-hovered)]"
-            >
-                <Box display="flex" alignItems="center" gap="8">
-                    <Text fontSize="md" fontWeight="500">{title}</Text>
-                    {info && <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />}
+        <Disclosure open={isOpen} onOpenChange={onToggle} className="w-full">
+            <DisclosureTrigger className="w-full" chevronPosition="end">
+                <Box
+                    h="40"
+                    px="0"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    bg="bg.default"
+                    className="hover:bg-[var(--ax-colors-bg-default-hovered)] w-full"
+                >
+                    <Box pl="20" display="flex" alignItems="center" gap="8">
+                        <Text fontSize="md" fontWeight="500">{title}</Text>
+                        {info && <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />}
+                    </Box>
+                    <Box pr="0" display="flex" alignItems="center" gap="8">
+                        {action && <Box onClick={(e) => e.stopPropagation()}>{action}</Box>}
+                    </Box>
                 </Box>
-                <Box display="flex" alignItems="center" gap="8">
-                    {action && <Box onClick={(e) => e.stopPropagation()}>{action}</Box>}
-                    {isOpen ? <IconChevronDown size={20} /> : <IconChevronRight size={20} />}
-                </Box>
-            </Box>
+            </DisclosureTrigger>
 
-            {isOpen && (
+            <DisclosureContent>
                 <Box
                     bg="bg.secondary"
-                    p="24"
+                    p="16"
                     rounded="lg"
                     display="flex"
                     flexDirection="column"
@@ -825,7 +827,7 @@ function CollapsibleSection({
                 >
                     {children}
                 </Box>
-            )}
-        </Box>
+            </DisclosureContent>
+        </Disclosure>
     );
 }
