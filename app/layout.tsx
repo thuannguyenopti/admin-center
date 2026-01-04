@@ -426,7 +426,7 @@ export default function RootLayout({
 	const { activeEffect } = useSecretCode();
 
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<body>
 				<AxiomProvider>
 					{menu ? <Template structure={menu}>{children}</Template> : children}

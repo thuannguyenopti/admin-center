@@ -14,10 +14,10 @@ import {
 	Skeleton,
 } from "@optiaxiom/react";
 
-import {useState, useEffect} from "react";
-import {Table, Tr, Th, Td} from "@/app/components/Table";
+import { useState, useEffect } from "react";
+import { Table, Tr, Th, Td } from "@/app/components/Table";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {IconChevronDown} from "@tabler/icons-react";
+import { IconChevronDown } from "@tabler/icons-react";
 
 const GitHub = (
 	<svg
@@ -35,7 +35,7 @@ const GitHub = (
 );
 
 export default function Home() {
-	const [sites, setSites] = usePersistentState("sites", {status: "loading", sites: []});
+	const [sites, setSites] = usePersistentState("sites", { status: "loading", sites: [] });
 	const [open, setOpen] = useState(false);
 	const [dropped, setDropped] = useState(false);
 	const [search, setSearch] = useState("");
@@ -81,10 +81,10 @@ export default function Home() {
 	};
 
 	const columns: any = [
-		{label: "Application"},
-		{label: "Application Status"},
-		{label: "Last Deploy Status"},
-		{label: "Last Published"},
+		{ label: "Application" },
+		{ label: "Application Status" },
+		{ label: "Last Deploy Status" },
+		{ label: "Last Published" },
 	];
 	const rows = sites.sites?.map((site: any) => {
 		return {
@@ -95,9 +95,9 @@ export default function Home() {
 					description: site.description,
 					type: "header",
 				},
-				{label: site.status, type: "badge", data: "information"},
-				{label: site.deployStatus, type: "badge", data: "success"},
-				{label: "Jan 11, 2024", description: "15:50:45"},
+				{ label: site.status, type: "badge", data: "information" },
+				{ label: site.deployStatus, type: "badge", data: "success" },
+				{ label: "Jan 11, 2024", description: "15:50:45" },
 			],
 		};
 	});
@@ -116,11 +116,10 @@ export default function Home() {
 						display="flex"
 						justifyContent="space-between"
 						pb="16"
-						style={{maxWidth: "1280px"}}
+						style={{ maxWidth: "1280px" }}
 					>
 						<SearchInput
 							disabled
-							defaultValue=""
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
 						/>
@@ -132,7 +131,7 @@ export default function Home() {
 							Create Application...
 						</Button>
 					</Box>
-					<Table style={{maxWidth: "1280px"}}>
+					<Table style={{ maxWidth: "1280px" }}>
 						<thead>
 							<Tr>
 								{columns.map((col: any) => (
@@ -192,10 +191,9 @@ export default function Home() {
 						display="flex"
 						justifyContent="space-between"
 						pb="16"
-						style={{maxWidth: "1280px"}}
+						style={{ maxWidth: "1280px" }}
 					>
 						<SearchInput
-							defaultValue=""
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
 						/>
@@ -206,7 +204,7 @@ export default function Home() {
 							Create Application...
 						</Button>
 					</Box>
-					<Table style={{maxWidth: "1280px"}}>
+					<Table style={{ maxWidth: "1280px" }}>
 						<thead>
 							<Tr>
 								{columns.map((col: any) => (
@@ -242,7 +240,7 @@ export default function Home() {
 					</Table>
 					{rows.length > 5 && (
 						<Box
-							style={{maxWidth: "1280px"}}
+							style={{ maxWidth: "1280px" }}
 							mt="16"
 							justifyContent="center"
 							display="flex"
