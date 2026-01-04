@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Heading, Menu, MenuContent, MenuTrigger, Button } from "@optiaxiom/react";
+import { Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator } from "@optiaxiom/react";
 import { Text } from "./Text";
 import { ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -179,12 +179,26 @@ export default function GlobalBar() {
 						height={20}
 					/>
 				</Button>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconBell size={20} />}
-					aria-label="Notifications"
-				/>
+				<Box style={{ position: 'relative' }}>
+					<Button
+						appearance="subtle"
+						size="md"
+						icon={<IconBell size={20} />}
+						aria-label="Notifications"
+					/>
+					<Box
+						style={{
+							position: 'absolute',
+							top: '4px',
+							right: '4px',
+							height: '8px',
+							width: '8px',
+							border: '1.5px solid #FFFFFF'
+						}}
+						bg="bg.error"
+						rounded="full"
+					/>
+				</Box>
 				<Button
 					appearance="subtle"
 					size="md"

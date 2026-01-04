@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button } from "@optiaxiom/react";
+import { Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button, Indicator } from "@optiaxiom/react";
 import { Text } from "./Text";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -94,7 +94,25 @@ function TemplateContent({
 										active={menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight)}
 										key={menuItem.label}
 										aria-label={menuItem.label}
-										icon={menuItem.icon}
+										icon={
+											menuItem.label === "Notifications" && !path.startsWith("/opal/notifications") ? (
+												<Box style={{ position: 'relative' }}>
+													{menuItem.icon}
+													<Box
+														style={{
+															position: 'absolute',
+															top: '-2px',
+															right: '-2px',
+															height: '8px',
+															width: '8px',
+															border: '1.5px solid #FFFFFF'
+														}}
+														bg="bg.error"
+														rounded="full"
+													/>
+												</Box>
+											) : menuItem.icon
+										}
 									>
 										{menuItem.label}
 									</NavItem>
