@@ -41,7 +41,6 @@ import {
     IconPlay,
     IconXmark,
     IconEllipsisStroke,
-    IconSitemap,
 } from "@optimizely/axiom-icons";
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -60,6 +59,7 @@ import {
     AddTriggerNode,
     StepPlaceholderNode
 } from "./components/WorkflowNodes";
+import BroomIcon from "./icon/BroomIcon";
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -77,16 +77,11 @@ import {
     ControlButton,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-// import ELK from 'elkjs/lib/elk.bundled.js'; // Disabled due to install error
+import ELK from 'elkjs/lib/elk.bundled.js';
 
-// const elk = new ELK();
+const elk = new ELK();
 
 const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}) => {
-    console.warn("Vertical Layout is currently disabled because 'elkjs' could not be installed.");
-    // Return nodes as-is
-    return { nodes, edges };
-
-    /*
     const isHorizontal = options?.['elk.direction'] === 'RIGHT';
     const graph: any = {
         id: 'root',
@@ -107,7 +102,7 @@ const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}
 
     try {
         const layoutedGraph = await elk.layout(graph);
-         return {
+        return {
             nodes: layoutedGraph.children?.map((node: any) => ({
                 ...node,
                 position: { x: node.x, y: node.y },
@@ -118,7 +113,6 @@ const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}
         console.error("ELK Layout failed:", e);
         return { nodes, edges };
     }
-    */
 };
 
 const initialNodes = [
@@ -369,13 +363,64 @@ function WorkflowBuilder() {
         event.dataTransfer.effectAllowed = 'move';
     };
 
+
     const onLayout = useCallback(({ direction }: { direction: string }) => {
-        const opts = { 'elk.direction': direction, 'elk.algorithm': 'layered' };
+        if (!reactFlowInstance) return;
+
+        // Store current viewport to restore after layout
+        const currentViewport = reactFlowInstance.getViewport();
+
+        // Find the first non-placeholder node to use as anchor
+        const firstNode = nodes.find(n => n.type !== 'stepPlaceholder' && n.id !== 'add-trigger');
+        const firstNodeOriginalPosition = firstNode ? { ...firstNode.position } : null;
+
+        const opts = {
+            'elk.direction': direction,
+            'elk.algorithm': 'layered',
+            'elk.spacing.nodeNode': '64',
+            'elk.layered.spacing.nodeNodeBetweenLayers': '160',
+        };
+
         getLayoutedElements(nodes, edges, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-            setNodes(layoutedNodes);
+            if (!firstNode || !firstNodeOriginalPosition) {
+                setNodes(layoutedNodes);
+                setEdges(layoutedEdges);
+                setTimeout(() => {
+                    reactFlowInstance.setViewport(currentViewport);
+                }, 0);
+                return;
+            }
+
+            // Find the first node in the layouted nodes
+            const layoutedFirstNode = layoutedNodes.find(n => n.id === firstNode.id);
+
+            if (layoutedFirstNode) {
+                // Calculate the offset needed to keep first node in place
+                const offsetX = firstNodeOriginalPosition.x - layoutedFirstNode.position.x;
+                const offsetY = firstNodeOriginalPosition.y - layoutedFirstNode.position.y;
+
+                // Apply offset to all nodes to preserve first node position
+                const adjustedNodes = layoutedNodes.map(node => ({
+                    ...node,
+                    position: {
+                        x: node.position.x + offsetX,
+                        y: node.position.y + offsetY
+                    }
+                }));
+
+                setNodes(adjustedNodes);
+            } else {
+                setNodes(layoutedNodes);
+            }
+
             setEdges(layoutedEdges);
+
+            // Restore viewport to prevent shifting
+            setTimeout(() => {
+                reactFlowInstance.setViewport(currentViewport);
+            }, 0);
         });
-    }, [nodes, edges, setNodes, setEdges]);
+    }, [nodes, edges, setNodes, setEdges, reactFlowInstance]);
 
     const toggleLayout = useCallback(() => {
         setIsElkEnabled((prev) => {
@@ -386,6 +431,93 @@ function WorkflowBuilder() {
             return next;
         });
     }, [onLayout]);
+
+    const onNodeDragStop = useCallback((event: any, node: any) => {
+        // Check if the node was dragged over a dropzone
+        const nodeRect = event.target.getBoundingClientRect?.();
+        if (!nodeRect) return;
+
+        // Find if there's a dropzone at this position
+        const hitNode = nodes.find((n: any) => {
+            if (n.id === node.id) return false; // Skip self
+            const w = n.measured?.width || 240;
+            const h = n.measured?.height || 80;
+            const centerX = node.position.x + (node.measured?.width || 240) / 2;
+            const centerY = node.position.y + (node.measured?.height || 80) / 2;
+
+            return centerX >= n.position.x && centerX <= n.position.x + w &&
+                centerY >= n.position.y && centerY <= n.position.y + h;
+        });
+
+        if (!hitNode) return;
+
+        // Handle dropping on "Add Trigger"
+        if (hitNode.id === 'add-trigger' && node.type === 'trigger') {
+            setNodes((nds) => nds.map(n => {
+                if (n.id === 'add-trigger') {
+                    return { ...node, position: hitNode.position };
+                }
+                if (n.id === node.id && n.id !== 'add-trigger') {
+                    return null as any;
+                }
+                return n;
+            }).filter(Boolean));
+
+            setEdges((eds) => eds.map(e => {
+                if (e.source === 'add-trigger') {
+                    return { ...e, source: node.id };
+                }
+                return e;
+            }));
+            return;
+        }
+
+        // Handle dropping on step placeholder
+        if (hitNode.type === 'stepPlaceholder') {
+            const newPlaceholderId = `placeholder-${Date.now()}`;
+            const isTall = !!(node.data as any)?.outputType;
+
+            const newPlaceholder = {
+                id: newPlaceholderId,
+                type: 'stepPlaceholder',
+                data: { label: 'Drag and drop step' },
+                position: {
+                    x: hitNode.position.x,
+                    y: hitNode.position.y + (isTall ? 240 : 160)
+                },
+            };
+
+            setNodes((nds) => nds.map(n => {
+                if (n.id === node.id) {
+                    return { ...n, position: hitNode.position };
+                }
+                if (n.id === hitNode.id) {
+                    return newPlaceholder;
+                }
+                return n;
+            }));
+
+            setEdges((eds) => {
+                const updatedEdges = eds.map(e => {
+                    if (e.target === hitNode.id) {
+                        return { ...e, target: node.id, style: { strokeDasharray: '0' } };
+                    }
+                    return e;
+                });
+
+                const newEdge = {
+                    id: `e-${node.id}-${newPlaceholderId}`,
+                    source: node.id,
+                    target: newPlaceholderId,
+                    type: 'default',
+                    markerEnd: { type: MarkerType.ArrowClosed },
+                    style: { strokeDasharray: '5,5' }
+                };
+
+                return [...updatedEdges, newEdge];
+            });
+        }
+    }, [nodes, setNodes, setEdges]);
 
     return (
         <Box h="full" bg="bg.default">
@@ -605,6 +737,7 @@ function WorkflowBuilder() {
                         onDragOver={onDragOver}
                         onNodeClick={onNodeClick}
                         onPaneClick={onPaneClick}
+                        onNodeDragStop={onNodeDragStop}
                         ref={reactFlowWrapper}
                     >
                         <Controls>
@@ -616,7 +749,7 @@ function WorkflowBuilder() {
                                     backgroundColor: isElkEnabled ? 'var(--ax-colors-bg-accent-subtle)' : undefined,
                                 }}
                             >
-                                <IconSitemap />
+                                <BroomIcon size={16} />
                             </ControlButton>
                         </Controls>
                         <MiniMap />
