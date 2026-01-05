@@ -17,7 +17,7 @@ export default function GlobalBar() {
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
-		return "Prototype";
+		return "Opal";
 	};
 
 	return (

@@ -150,7 +150,7 @@ const PanelContainer = ({
                 </Box>
             }
         >
-            <Heading level="4">{title}</Heading>
+            <Text fontWeight="600" fontSize="lg">{title}</Text>
         </DetailsPanelHeader>
 
         <DetailsPanelBody p="20">
@@ -666,7 +666,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                         >
                             {node?.data?.icon}
                         </Box>
-                        <Heading level="4">{name}</Heading>
+                        <Text fontWeight="600" fontSize="lg">{name}</Text>
                     </Box>
                     <Button
                         icon={<IconXmark size={16} />}

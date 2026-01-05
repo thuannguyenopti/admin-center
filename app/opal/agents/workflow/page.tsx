@@ -135,7 +135,7 @@ const initialEdges = [
         id: 'e1-2',
         source: 'add-trigger',
         target: 'node-placeholder-step',
-        type: 'default',
+        type: 'smoothstep',
         markerEnd: {
             type: MarkerType.ArrowClosed,
         },
@@ -317,7 +317,7 @@ function WorkflowBuilder() {
                         id: `e-${newNodeId}-${newPlaceholderId}`,
                         source: newNodeId,
                         target: newPlaceholderId,
-                        type: 'default',
+                        type: 'smoothstep',
                         markerEnd: { type: MarkerType.ArrowClosed },
                         style: { strokeDasharray: '5,5' }
                     };
@@ -370,15 +370,20 @@ function WorkflowBuilder() {
         // Store current viewport to restore after layout
         const currentViewport = reactFlowInstance.getViewport();
 
-        // Find the first non-placeholder node to use as anchor
-        const firstNode = nodes.find(n => n.type !== 'stepPlaceholder' && n.id !== 'add-trigger');
+        // Find the top-most node to use as anchor (min Y)
+        const firstNode = nodes.reduce((highest, node) => {
+            // Prefer non-placeholder nodes if at similar Y, but generally trust Y
+            if (!highest) return node;
+            return (node.position.y < highest.position.y) ? node : highest;
+        }, null as any);
+
         const firstNodeOriginalPosition = firstNode ? { ...firstNode.position } : null;
 
         const opts = {
             'elk.direction': direction,
             'elk.algorithm': 'layered',
             'elk.spacing.nodeNode': '64',
-            'elk.layered.spacing.nodeNodeBetweenLayers': '160',
+            'elk.layered.spacing.nodeNodeBetweenLayers': '88',
         };
 
         getLayoutedElements(nodes, edges, opts).then(({ nodes: layoutedNodes, edges: layoutedEdges }) => {
@@ -509,7 +514,7 @@ function WorkflowBuilder() {
                     id: `e-${node.id}-${newPlaceholderId}`,
                     source: node.id,
                     target: newPlaceholderId,
-                    type: 'default',
+                    type: 'smoothstep',
                     markerEnd: { type: MarkerType.ArrowClosed },
                     style: { strokeDasharray: '5,5' }
                 };
@@ -738,6 +743,7 @@ function WorkflowBuilder() {
                         onNodeClick={onNodeClick}
                         onPaneClick={onPaneClick}
                         onNodeDragStop={onNodeDragStop}
+                        defaultEdgeOptions={{ type: 'smoothstep' }}
                         ref={reactFlowWrapper}
                     >
                         <Controls>
