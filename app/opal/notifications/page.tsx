@@ -15,63 +15,232 @@ import {
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
-    IconClock,
-} from "@tabler/icons-react";
-import {
     IconEllipsisStroke,
     IconCircleExclamation,
-    IconTriangleExclamation
+    IconTriangleExclamation,
+    IconComments,
+    IconCheckCircleSolid,
+    IconFileArrowUp,
+    IconTableCells,
+    IconList,
+    IconClock,
+    IconEnvelope,
+    IconHandPointer,
+    IconUserCheck,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
 import { useState } from "react";
 
-const executions = [
+// Notification types
+type NotificationType =
+    | "agent_log_review"      // Agent log needs review (execution failed, guardrail triggered)
+    | "agent_executed"        // Agent executed autonomously
+    | "update_available"      // Update available in agent directory
+    | "guardrail_triggered"   // Guardrail triggered
+    | "execution_failed";     // Execution failed
+
+interface Notification {
+    id: string;
+    type: NotificationType;
+    title: string;
+    message: string;
+    status: "failed" | "review" | "success" | "info";
+    agent?: string;
+    version?: string;
+    timestamp: string;
+    date: string; // For grouping: "Today", "Yesterday", etc.
+    executionStatus?: "success" | "failed";
+    guardrailStatus?: "success" | "failed" | "triggered";
+    errorType?: string;
+    errorSource?: string;
+    duration?: string;
+    author?: { name: string; avatar: string | null };
+    triggeredBy?: {
+        type: "email" | "in_app" | "scheduler" | "user" | "api" | "system";
+        name: string;
+        username?: string;
+    };
+    unread?: boolean;
+}
+
+const notifications: Notification[] = [
     {
         id: "b2953c08",
+        type: "agent_log_review",
+        title: "Hypothesis Creator",
+        message: "Agent log needs review - execution failed with tool timeout",
         status: "failed",
-        errorType: "Tool Timeout",
-        errorSource: "Agent",
         agent: "Hypothesis Creator",
         version: "V15",
-        startTime: "4:14:50 PM",
+        timestamp: "4:14:50 PM",
+        date: "Today",
+        executionStatus: "failed",
+        guardrailStatus: "success",
+        errorType: "Tool Timeout",
+        errorSource: "Agent",
         duration: "62.45s",
-        qualityScore: "75%",
         author: { name: "bigmonkiki", avatar: null },
+        triggeredBy: { type: "email", name: "Email trigger", username: "john.doe@example.com" },
+        unread: true,
     },
     {
         id: "d8k2o19s",
+        type: "guardrail_triggered",
+        title: "Content Localizer",
+        message: "Guardrail triggered - output quality below threshold",
         status: "review",
-        errorType: "Evaluation Error",
-        errorSource: "Logic: Condition 1",
         agent: "Content Localizer",
         version: "V12",
-        startTime: "2:30:15 PM",
+        timestamp: "2:30:15 PM",
+        date: "Today",
+        executionStatus: "success",
+        guardrailStatus: "triggered",
+        errorType: "Evaluation Error",
+        errorSource: "Logic: Condition 1",
         duration: "12.20s",
-        qualityScore: "82%",
         author: { name: "bigmonkiki", avatar: null },
+        triggeredBy: { type: "in_app", name: "Button click", username: "sarah.chen" },
+        unread: true,
     },
     {
         id: "f9s2m10x",
+        type: "execution_failed",
+        title: "Web Researcher",
+        message: "Execution failed - trigger timeout exceeded",
         status: "failed",
-        errorType: "Trigger Timeout",
-        errorSource: "Trigger: In-app Event",
         agent: "Web Researcher",
         version: "V8",
-        startTime: "11:05:42 AM",
+        timestamp: "11:05:42 AM",
+        date: "Today",
+        executionStatus: "failed",
+        guardrailStatus: "failed",
+        errorType: "Trigger Timeout",
+        errorSource: "Trigger: In-app Event",
         duration: "120.0s",
-        qualityScore: "N/A",
         author: { name: "bigmonkiki", avatar: null },
+        triggeredBy: { type: "in_app", name: "Page load", username: "mike.wilson" },
+        unread: true,
+    },
+    {
+        id: "g7t3n22p",
+        type: "agent_executed",
+        title: "Email Composer",
+        message: "Autonomous workflow completed successfully",
+        status: "success",
+        agent: "Email Composer",
+        version: "V5",
+        timestamp: "9:45:00 AM",
+        date: "Today",
+        executionStatus: "success",
+        guardrailStatus: "success",
+        duration: "8.32s",
+        author: { name: "automation", avatar: null },
+        triggeredBy: { type: "scheduler", name: "Daily 9AM" },
+    },
+    {
+        id: "h1k4m33q",
+        type: "update_available",
+        title: "Data Analyzer",
+        message: "New version available in agent directory (V6 → V7)",
+        status: "info",
+        agent: "Data Analyzer",
+        version: "V6",
+        timestamp: "Yesterday",
+        date: "Yesterday",
+        triggeredBy: { type: "system", name: "System update" },
+    },
+    {
+        id: "i2l5n44r",
+        type: "agent_executed",
+        title: "Report Generator",
+        message: "Scheduled workflow executed",
+        status: "success",
+        agent: "Report Generator",
+        version: "V3",
+        timestamp: "Yesterday",
+        date: "Yesterday",
+        executionStatus: "success",
+        guardrailStatus: "success",
+        duration: "45.20s",
+        author: { name: "scheduler", avatar: null },
+        triggeredBy: { type: "scheduler", name: "Weekly report" },
     },
 ];
 
+// Group notifications by date
+const groupNotificationsByDate = (items: Notification[]) => {
+    const groups: { [key: string]: Notification[] } = {};
+    items.forEach(item => {
+        if (!groups[item.date]) {
+            groups[item.date] = [];
+        }
+        groups[item.date].push(item);
+    });
+    return groups;
+};
+
+// Get icon based on notification type
+const getNotificationIcon = (notification: Notification) => {
+    switch (notification.type) {
+        case "agent_log_review":
+        case "execution_failed":
+            return <IconCircleExclamation size={20} />;
+        case "guardrail_triggered":
+            return <IconTriangleExclamation size={20} />;
+        case "agent_executed":
+            return <IconCheckCircleSolid size={20} />;
+        case "update_available":
+            return <IconFileArrowUp size={20} />;
+        default:
+            return <IconCircleExclamation size={20} />;
+    }
+};
+
+// Get icon color based on status
+const getIconColor = (status: string) => {
+    switch (status) {
+        case "failed":
+            return "fg.error";
+        case "review":
+            return "fg.warning";
+        case "success":
+            return "fg.success";
+        case "info":
+            return "fg.accent";
+        default:
+            return "fg.tertiary";
+    }
+};
+
+// Get trigger icon based on trigger type
+const getTriggerIcon = (triggerType?: string) => {
+    switch (triggerType) {
+        case "email":
+            return <IconEnvelope size={16} />;
+        case "in_app":
+            return <IconHandPointer size={16} />;
+        case "scheduler":
+            return <IconClock size={16} />;
+        case "user":
+            return <IconUserCheck size={16} />;
+        case "api":
+        case "system":
+        default:
+            return <IconClock size={16} />;
+    }
+};
+
 export default function NotificationsPage() {
-    const [agentFilter, setAgentFilter] = useState("All Agents");
-    const [statusFilter, setStatusFilter] = useState("All Statuses");
-    const [timeFilter, setTimeFilter] = useState("Last 24 Hours");
+    const [typeFilter, setTypeFilter] = useState("All");
+    const [placeholderFilter, setPlaceholderFilter] = useState("All");
+    const [dateRangeFilter, setDateRangeFilter] = useState("All");
+    const [viewMode, setViewMode] = useState<"table" | "card">("card");
+
+    const groupedNotifications = groupNotificationsByDate(notifications);
 
     return (
-        <Box p="32" display="flex" flexDirection="column" gap="24" h="full" bg="bg.default">
+        <Box p="32" display="flex" flexDirection="column" gap="24" h="full" bg="bg.page">
             {/* Header */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Box>
@@ -79,129 +248,282 @@ export default function NotificationsPage() {
                 </Box>
             </Box>
 
-            {/* Filters */}
-            <Box display="flex" gap="12" alignItems="center" flexWrap="wrap">
-                <Box className="w-[300px]">
-                    <Input placeholder="Search notifications..." />
+            {/* Filters and View Toggle */}
+            <Box display="flex" gap="12" alignItems="center" justifyContent="space-between" flexWrap="wrap">
+                <Box display="flex" gap="12" alignItems="center" flexWrap="wrap">
+                    <Box className="w-[200px]">
+                        <Input placeholder="Search" />
+                    </Box>
+
+                    <Menu
+                        options={[
+                            { label: "All", execute: () => setTypeFilter("All") },
+                            { label: "Agent Log Review", execute: () => setTypeFilter("Agent Log Review") },
+                            { label: "Agent Executed", execute: () => setTypeFilter("Agent Executed") },
+                            { label: "Update Available", execute: () => setTypeFilter("Update Available") },
+                            { label: "Guardrail Triggered", execute: () => setTypeFilter("Guardrail Triggered") },
+                            { label: "Execution Failed", execute: () => setTypeFilter("Execution Failed") },
+                        ]}
+                    >
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Type" h="40">
+                                {typeFilter}
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent />
+                    </Menu>
+
+                    <Menu
+                        options={[
+                            { label: "All", execute: () => setPlaceholderFilter("All") },
+                            { label: "Option 1", execute: () => setPlaceholderFilter("Option 1") },
+                            { label: "Option 2", execute: () => setPlaceholderFilter("Option 2") },
+                        ]}
+                    >
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Placeholder" h="40">
+                                {placeholderFilter}
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent />
+                    </Menu>
+
+                    <Menu
+                        options={[
+                            { label: "All", execute: () => setDateRangeFilter("All") },
+                            { label: "Today", execute: () => setDateRangeFilter("Today") },
+                            { label: "Last 7 Days", execute: () => setDateRangeFilter("Last 7 Days") },
+                            { label: "Last 30 Days", execute: () => setDateRangeFilter("Last 30 Days") },
+                        ]}
+                    >
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Date Range" h="40">
+                                {dateRangeFilter}
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent />
+                    </Menu>
                 </Box>
 
-                <Menu
-                    placeholder="Search agents..."
-                    options={[
-                        { label: "All Agents", execute: () => setAgentFilter("All Agents") },
-                        { label: "Hypothesis Creator", execute: () => setAgentFilter("Hypothesis Creator") },
-                        { label: "Content Localizer", execute: () => setAgentFilter("Content Localizer") },
-                        { label: "Web Researcher", execute: () => setAgentFilter("Web Researcher") }
-                    ]}
-                >
-                    <MenuTrigger asChild>
-                        <LabelMenuButton label="Agent" h="40">
-                            {agentFilter}
-                        </LabelMenuButton>
-                    </MenuTrigger>
-                    <MenuContent />
-                </Menu>
+                {/* View Toggle */}
+                <Box display="flex" gap="4" alignItems="center">
+                    <Button
+                        appearance={viewMode === "table" ? "default" : "subtle"}
+                        icon={<IconList size={18} />}
+                        size="sm"
+                        aria-label="Table View"
+                        onClick={() => setViewMode("table")}
+                    />
+                    <Button
+                        appearance={viewMode === "card" ? "default" : "subtle"}
+                        icon={<IconTableCells size={18} />}
+                        size="sm"
+                        aria-label="Card View"
+                        onClick={() => setViewMode("card")}
+                    />
+                </Box>
+            </Box>
 
-                <Menu
-                    placeholder="Search statuses..."
-                    options={[
-                        { label: "All Statuses", execute: () => setStatusFilter("All Statuses") },
-                        { label: "Failed", execute: () => setStatusFilter("Failed") },
-                        { label: "Review Needed", execute: () => setStatusFilter("Review Needed") }
-                    ]}>
-                    <MenuTrigger asChild>
-                        <LabelMenuButton label="Status" h="40">
-                            {statusFilter}
-                        </LabelMenuButton>
-                    </MenuTrigger>
-                    <MenuContent />
-                </Menu>
+            {/* Card View */}
+            {viewMode === "card" && (
+                <Box display="flex" flexDirection="column" gap="24" style={{ maxWidth: '980px' }}>
+                    {Object.entries(groupedNotifications).map(([date, items]) => (
+                        <Box key={date} display="flex" flexDirection="column" gap="12">
+                            <Text fontSize="sm" fontWeight="500" color="fg.tertiary">{date}</Text>
+                            <Box display="flex" flexDirection="column" gap="12">
+                                {items.map((notification) => (
+                                    <NextLink key={notification.id} href={`/opal/notifications/${notification.id}`} style={{ textDecoration: 'none' }}>
+                                        <Box
+                                            display="flex"
+                                            alignItems="start"
+                                            gap="16"
+                                            p="16"
+                                            bg="bg.default"
+                                            border="1"
+                                            borderColor="border.tertiary"
+                                            rounded="md"
+                                            className="cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)] hover:border-[var(--ax-colors-border-default)] transition-colors"
+                                        >
+                                            {/* Unread indicator */}
+                                            {notification.unread && (
+                                                <Box
+                                                    rounded="full"
+                                                    bg="bg.error"
+                                                    style={{ width: '8px', height: '8px', flexShrink: 0, marginTop: '6px' }}
+                                                />
+                                            )}
+                                            {!notification.unread && (
+                                                <Box style={{ width: '8px', flexShrink: 0 }} />
+                                            )}
 
-                <Menu options={[
-                    { label: "Last Hour", execute: () => setTimeFilter("Last Hour") },
-                    { label: "Last 24 Hours", execute: () => setTimeFilter("Last 24 Hours") },
-                    { label: "Last 7 Days", execute: () => setTimeFilter("Last 7 Days") },
-                    { label: "Last 30 Days", execute: () => setTimeFilter("Last 30 Days") }
-                ]}>
-                    <MenuTrigger asChild>
-                        <LabelMenuButton label="Time" h="40">
-                            <Box display="flex" alignItems="center" gap="8">
-                                <IconClock size={16} />
-                                {timeFilter}
+                                            {/* Icon */}
+                                            <Box
+                                                color={getIconColor(notification.status)}
+                                                mt="2"
+                                            >
+                                                {getNotificationIcon(notification)}
+                                            </Box>
+
+                                            {/* Content */}
+                                            <Box display="flex" flexDirection="column" gap="4" flex="1">
+                                                {/* Title row with timestamp - vertically center aligned */}
+                                                <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
+                                                    <Box display="flex" alignItems="center" gap="8">
+                                                        <Text fontWeight="500" color="fg.default">
+                                                            {notification.title}
+                                                        </Text>
+                                                        {notification.status === 'failed' && (
+                                                            <Button
+                                                                appearance="subtle"
+                                                                icon={<IconComments size={16} />}
+                                                                size="sm"
+                                                                aria-label="Comments"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                    {/* Timestamp - vertically center aligned with title */}
+                                                    <Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: 'nowrap' }}>
+                                                        {notification.timestamp}
+                                                    </Text>
+                                                </Box>
+                                                <Text fontSize="sm" color="fg.secondary">
+                                                    {notification.message}
+                                                </Text>
+                                            </Box>
+
+                                            {/* Actions */}
+                                            <Button
+                                                appearance="subtle"
+                                                icon={<IconEllipsisStroke />}
+                                                size="sm"
+                                                aria-label="Options"
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        </Box>
+                                    </NextLink>
+                                ))}
                             </Box>
-                        </LabelMenuButton>
-                    </MenuTrigger>
-                    <MenuContent />
-                </Menu>
-            </Box>
+                        </Box>
+                    ))}
+                </Box>
+            )}
 
-            {/* Table */}
-            <Box overflow="hidden">
-                <Table>
-                    <thead>
-                        <Tr>
-                            <Th>Workflow Name</Th>
-                            <Th>Timestamp</Th>
-                            <Th>Status</Th>
-                            <Th>Error Trace</Th>
-                            <Th>Executed By</Th>
-                            <Th></Th>
-                        </Tr>
-                    </thead>
-                    <tbody>
-                        {executions.map((run) => (
-                            <Tr key={run.id} url={`/opal/notifications/${run.id}`}>
-                                <Td>
-                                    <Link asChild color="fg.default" fontWeight="600" className="underline underline-offset-4 decoration-border-default hover:decoration-fg-default transition-colors">
-                                        <NextLink href={`/opal/notifications/${run.id}`}>
-                                            {run.agent}
-                                        </NextLink>
-                                    </Link>
-                                    <Text fontSize="xs" color="fg.tertiary" mt="4">{run.id}</Text>
-                                </Td>
-                                <Td>
-                                    <Text color="fg.default">{run.startTime}</Text>
-                                </Td>
-                                <Td>
-                                    <Box display="flex" alignItems="center" gap="8">
-                                        {run.status === 'failed' ? (
-                                            <IconCircleExclamation size={16} color="fg.error" />
-                                        ) : (
-                                            <IconTriangleExclamation size={16} color="fg.warning" />
-                                        )}
-                                        <Box>
-                                            <Text color={run.status === 'failed' ? 'fg.error' : 'fg.warning'} fontWeight="500">
-                                                {run.status === 'failed' ? 'Failed' : 'Review Needed'}
-                                            </Text>
-                                            <Text fontSize="xs" color="fg.tertiary">{run.duration}</Text>
-                                        </Box>
-                                    </Box>
-                                </Td>
-                                <Td>
-                                    <Box display="flex" flexDirection="column" gap="4">
-                                        <Box display="flex" alignItems="center" gap="16">
-                                            <Text fontSize="xs" color="fg.tertiary" fontWeight="600" textTransform="uppercase">{run.errorSource}</Text>
-                                            <Text fontSize="xs" color="fg.tertiary">{run.version}</Text>
-                                        </Box>
-                                        <Text fontSize="sm" fontWeight="500" color={run.status === 'failed' ? 'fg.error' : 'fg.warning'}>
-                                            {run.errorType}
-                                        </Text>
-                                    </Box>
-                                </Td>
-                                <Td>
-                                    <Box display="flex" alignItems="center" gap="8">
-                                        <Avatar name={run.author.name} size="xs" />
-                                        <Text color="fg.tertiary" fontSize="sm">{run.author.name}</Text>
-                                    </Box>
-                                </Td>
-                                <Td>
-                                    <Button appearance="subtle" icon={<IconEllipsisStroke />} size="sm" aria-label="Options" />
-                                </Td>
+            {/* Table View */}
+            {viewMode === "table" && (
+                <Box overflow="hidden">
+                    <Table>
+                        <thead>
+                            <Tr>
+                                <Th>Type</Th>
+                                <Th>Notification / Context</Th>
+                                <Th>Status / Diagnostics</Th>
+                                <Th>Triggered by</Th>
+                                <Th>Time</Th>
+                                <Th>Actions</Th>
                             </Tr>
-                        ))}
-                    </tbody>
-                </Table>
-            </Box>
+                        </thead>
+                        <tbody>
+                            {notifications.map((notification) => (
+                                <Tr key={notification.id} url={`/opal/notifications/${notification.id}`}>
+                                    {/* Type - Status icon only */}
+                                    <Td>
+                                        <Box display="flex" alignItems="center" justifyContent="center">
+                                            {notification.status === 'failed' ? (
+                                                <Box color="fg.error"><IconCircleExclamation size={20} /></Box>
+                                            ) : notification.status === 'review' ? (
+                                                <Box color="fg.warning"><IconTriangleExclamation size={20} /></Box>
+                                            ) : notification.status === 'success' ? (
+                                                <Box color="fg.success"><IconCheckCircleSolid size={20} /></Box>
+                                            ) : (
+                                                <Box color="fg.accent"><IconFileArrowUp size={20} /></Box>
+                                            )}
+                                        </Box>
+                                    </Td>
+
+                                    {/* Notification / Context */}
+                                    <Td>
+                                        <Link asChild color="fg.default" fontWeight="600" className="underline underline-offset-4 decoration-border-default hover:decoration-fg-default transition-colors">
+                                            <NextLink href={`/opal/notifications/${notification.id}`}>
+                                                {notification.agent || notification.title}
+                                            </NextLink>
+                                        </Link>
+                                        <Text fontSize="sm" color="fg.secondary" mt="4">{notification.message}</Text>
+                                        <Text fontSize="xs" color="fg.tertiary" mt="4">{notification.id}</Text>
+                                    </Td>
+
+                                    {/* Status / Diagnostics - Badge at top */}
+                                    <Td>
+                                        <Box display="flex" flexDirection="column" gap="8" alignItems="start">
+                                            <Badge
+                                                intent={
+                                                    notification.type === "agent_executed" ? "success" :
+                                                        notification.type === "update_available" ? "information" :
+                                                            notification.type === "guardrail_triggered" ? "warning" :
+                                                                "danger"
+                                                }
+                                            >
+                                                {notification.type === "agent_log_review" && "Log Review"}
+                                                {notification.type === "agent_executed" && "Executed"}
+                                                {notification.type === "update_available" && "Update"}
+                                                {notification.type === "guardrail_triggered" && "Guardrail"}
+                                                {notification.type === "execution_failed" && "Failed"}
+                                            </Badge>
+                                            {notification.errorSource && (
+                                                <Box display="flex" alignItems="center" gap="8">
+                                                    <Text fontSize="xs" color="fg.tertiary" fontWeight="600" textTransform="uppercase">{notification.errorSource}</Text>
+                                                    {notification.version && <Text fontSize="xs" color="fg.tertiary">{notification.version}</Text>}
+                                                </Box>
+                                            )}
+                                            {notification.errorType && (
+                                                <Text fontSize="sm" color={notification.status === 'failed' ? 'fg.error' : 'fg.warning'}>
+                                                    {notification.errorType}
+                                                </Text>
+                                            )}
+                                            {notification.duration && (
+                                                <Text fontSize="xs" color="fg.tertiary">Duration: {notification.duration}</Text>
+                                            )}
+                                        </Box>
+                                    </Td>
+
+                                    {/* Triggered by */}
+                                    <Td>
+                                        {notification.triggeredBy ? (
+                                            <Box display="flex" flexDirection="column" gap="4">
+                                                <Box display="flex" alignItems="center" gap="8">
+                                                    <Box color="fg.tertiary">
+                                                        {getTriggerIcon(notification.triggeredBy.type)}
+                                                    </Box>
+                                                    <Text fontSize="sm" color="fg.default">{notification.triggeredBy.name}</Text>
+                                                </Box>
+                                                {notification.triggeredBy.username && (
+                                                    <Box display="flex" alignItems="center" gap="8">
+                                                        <Avatar name={notification.triggeredBy.username} size="xs" />
+                                                        <Text fontSize="xs" color="fg.tertiary">{notification.triggeredBy.username}</Text>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        ) : (
+                                            <Text fontSize="sm" color="fg.tertiary">—</Text>
+                                        )}
+                                    </Td>
+
+                                    {/* Time */}
+                                    <Td>
+                                        <Text color="fg.default">{notification.timestamp}</Text>
+                                        <Text fontSize="xs" color="fg.tertiary" mt="4">{notification.date}</Text>
+                                    </Td>
+
+                                    {/* Actions */}
+                                    <Td>
+                                        <Button appearance="subtle" icon={<IconEllipsisStroke />} size="sm" aria-label="Options" />
+                                    </Td>
+                                </Tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Box>
+            )}
         </Box>
     );
 }
