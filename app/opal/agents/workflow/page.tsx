@@ -56,8 +56,10 @@ import {
     ActionNode,
     TriggerNode,
     LoopNode,
+    ConditionNode,
     AddTriggerNode,
-    StepPlaceholderNode
+    StepPlaceholderNode,
+    ConditionEdge
 } from "./components/WorkflowNodes";
 import BroomIcon from "./icon/BroomIcon";
 import {
@@ -167,8 +169,13 @@ function WorkflowBuilder() {
         action: ActionNode,
         trigger: TriggerNode,
         loop: LoopNode,
+        condition: ConditionNode,
         addTrigger: AddTriggerNode,
         stepPlaceholder: StepPlaceholderNode
+    }), []);
+
+    const edgeTypes = useMemo(() => ({
+        condition: ConditionEdge
     }), []);
 
     const onConnect = useCallback(
@@ -201,7 +208,7 @@ function WorkflowBuilder() {
         ],
         Outputs: [],
         Logic: [
-            { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle", type: 'condition', category: 'Logic' },
             { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle", type: 'loop' },
             { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'action' },
         ],
@@ -284,10 +291,66 @@ function WorkflowBuilder() {
                         label: label || 'Step',
                         icon: iconNode,
                         bg,
-                        description: "Step description",
-                        outputType: foundItem?.outputType
+                        description: type === 'condition' ? "All website activities" : "Step description",
+                        outputType: foundItem?.outputType,
+                        conditions: type === 'condition' ? [{ matchType: "equals", value: "" }, { matchType: "equals", value: "" }] : undefined
                     }
                 };
+
+                if (type === 'condition') {
+                    const p1Id = `placeholder-${Date.now()}-1`;
+                    const p2Id = `placeholder-${Date.now()}-2`;
+                    const newPlaceholderY = hitNode.position.y + 160;
+
+                    const p1 = {
+                        id: p1Id,
+                        type: 'stepPlaceholder',
+                        data: { label: 'Drag and drop step' },
+                        position: { x: hitNode.position.x - 140, y: newPlaceholderY },
+                    };
+                    const p2 = {
+                        id: p2Id,
+                        type: 'stepPlaceholder',
+                        data: { label: 'Drag and drop step' },
+                        position: { x: hitNode.position.x + 140, y: newPlaceholderY },
+                    };
+
+                    setNodes((nds) => {
+                        const filtered = nds.filter(n => n.id !== hitNode.id);
+                        return [...filtered, newNode, p1, p2];
+                    });
+
+                    setEdges((eds) => {
+                        const updatedEdges = eds.map(e => {
+                            if (e.target === hitNode.id) {
+                                return { ...e, target: newNodeId, style: { strokeDasharray: '0' } };
+                            }
+                            return e;
+                        });
+
+                        const e1 = {
+                            id: `e-${newNodeId}-${p1Id}`,
+                            source: newNodeId,
+                            target: p1Id,
+                            type: 'condition',
+                            label: '',
+                            markerEnd: { type: MarkerType.ArrowClosed },
+                            style: { strokeDasharray: '5,5' }
+                        };
+                        const e2 = {
+                            id: `e-${newNodeId}-${p2Id}`,
+                            source: newNodeId,
+                            target: p2Id,
+                            type: 'condition',
+                            label: '',
+                            markerEnd: { type: MarkerType.ArrowClosed },
+                            style: { strokeDasharray: '5,5' }
+                        };
+
+                        return [...updatedEdges, e1, e2];
+                    });
+                    return;
+                }
 
                 const newPlaceholderId = `placeholder-${Date.now()}`;
                 const newPlaceholder = {
@@ -685,19 +748,19 @@ function WorkflowBuilder() {
                     (() => {
                         const selectedNode = nodes.find((n) => n.id === selectedNodeId);
                         if (selectedNode) {
-                            const label = selectedNode.data.label;
+                            const label = selectedNode.data?.label;
 
                             switch (label) {
                                 case "Email":
                                     return <EmailTriggerPanel onClose={() => setSelectedNodeId(null)} />;
                                 case "Condition":
-                                    return <ConditionPanel onClose={() => setSelectedNodeId(null)} />;
+                                    return <ConditionPanel key={selectedNode.id} onClose={() => setSelectedNodeId(null)} node={selectedNode} />;
                                 case "In-app Event":
                                     return <InAppEventPanel onClose={() => setSelectedNodeId(null)} />;
                                 case "Scheduler":
                                     return <SchedulerPanel onClose={() => setSelectedNodeId(null)} />;
                                 default:
-                                    if ((selectedNode.data as any).outputType) {
+                                    if ((selectedNode.data as any)?.outputType) {
                                         return <AgentNodePanel onClose={() => setSelectedNodeId(null)} node={selectedNode} />;
                                     }
                                     return <WorkflowSetupPanel
@@ -734,6 +797,7 @@ function WorkflowBuilder() {
                         nodes={nodes}
                         edges={edges}
                         nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes}
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
                         onConnect={onConnect}
