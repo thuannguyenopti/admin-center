@@ -1,7 +1,7 @@
-import { Handle, Position, NodeProps, useReactFlow, MarkerType } from '@xyflow/react';
+import { Handle, Position, NodeProps, useReactFlow, MarkerType, BaseEdge, getSmoothStepPath, EdgeLabelRenderer, type EdgeProps } from '@xyflow/react';
 import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type BoxProps } from '@optiaxiom/react';
 import { IconPlus, IconHome, IconCode } from '@tabler/icons-react';
-import { IconPlay, IconEllipsisStroke } from '@optimizely/axiom-icons';
+import { IconPlay, IconEllipsisStroke, IconSplit } from '@optimizely/axiom-icons';
 import { ReactNode } from 'react';
 
 // Common wrapper for nodes to handle selection state and basic styling
@@ -56,9 +56,9 @@ const NodeFooter = ({ children }: { children: ReactNode }) => (
 
 export function ActionNode({ id, data, selected }: NodeProps) {
     // data should contain: icon, label/name, description, isActive?
-    const label = data.label as string;
-    const description = data.description as string;
-    const active = data.active as boolean;
+    const label = data?.label as string;
+    const description = data?.description as string;
+    const active = data?.active as boolean;
 
     const { deleteElements, addNodes, getNode, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
 
@@ -173,7 +173,11 @@ export function ActionNode({ id, data, selected }: NodeProps) {
 
             <NodeHeader
                 icon={
-                    <Box p="4" bg={(data.bg as BoxProps["bg"]) || "bg.tertiary"} rounded="sm">
+                    <Box
+                        p="4"
+                        bg={(data.bg as BoxProps["bg"]) || "bg.tertiary"}
+                        rounded={data.type === 'trigger' || data.category === 'Logic' ? "full" : "sm"}
+                    >
                         {/* Render Icon component from data.icon which might be a React Element */}
                         {data.icon as ReactNode}
                     </Box>
@@ -212,6 +216,46 @@ export function ActionNode({ id, data, selected }: NodeProps) {
                     </Box>
                 </NodeFooter>
             )}
+        </NodeWrapper>
+    );
+}
+
+export function ConditionNode({ id, data, selected }: NodeProps) {
+    const label = data.label as string;
+    const description = data.description as string;
+    const { deleteElements, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+
+    // Standard removal logic
+    const onRemove = () => {
+        deleteElements({ nodes: [{ id }] });
+    };
+
+    return (
+        <NodeWrapper
+            selected={selected}
+            borderColor={selected ? "border.accent" : "border.tertiary"}
+            border={selected ? "2" : "1"}
+        >
+            <Handle type="target" position={Position.Top} />
+
+            <NodeHeader
+                icon={
+                    <Box p="4" bg="bg.accent.subtle" rounded="full" color="fg.accent">
+                        <IconSplit size={16} />
+                    </Box>
+                }
+                title={label}
+                onRemove={onRemove}
+            />
+
+            <NodeBody>
+                <Text fontSize="sm" color="fg.secondary">
+                    {description || "All website activities"}
+                </Text>
+            </NodeBody>
+
+            {/* We use one source handle but it can have multiple edges */}
+            <Handle type="source" position={Position.Bottom} />
         </NodeWrapper>
     );
 }
@@ -312,4 +356,49 @@ export function StepPlaceholderNode({ data }: NodeProps) {
             <Text fontSize="md" color="fg.tertiary">Drag and drop step</Text>
         </Box>
     )
+}
+
+export function ConditionEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerEnd,
+    label,
+}: EdgeProps) {
+    const labelText = label as string;
+    const [edgePath, labelX, labelY] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+    });
+
+    return (
+        <>
+            <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+            {labelText && (
+                <EdgeLabelRenderer>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                            pointerEvents: 'all',
+                        }}
+                        className="nodrag nopan"
+                    >
+                        <Box bg="bg.default" px="4" rounded="sm" border="1" borderColor="border.accent">
+                            <Text fontSize="xs" fontWeight="700" color="fg.accent">{labelText}</Text>
+                        </Box>
+                    </div>
+                </EdgeLabelRenderer>
+            )}
+        </>
+    );
 }
