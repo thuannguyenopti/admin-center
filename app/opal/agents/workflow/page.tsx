@@ -24,7 +24,6 @@ import {
     IconMenu2,
     IconGripVertical,
     IconChevronDown,
-    IconWebhook,
 } from "@tabler/icons-react";
 import {
     IconAgent,
@@ -62,6 +61,7 @@ import {
     ConditionEdge
 } from "./components/WorkflowNodes";
 import BroomIcon from "./icon/BroomIcon";
+import WebhookIcon from "./icon/WebhookIcon";
 import {
     ReactFlow,
     ReactFlowProvider,
@@ -204,7 +204,7 @@ function WorkflowBuilder() {
             { name: "Email", icon: <IconEnvelope />, bg: "bg.success.subtle", type: 'trigger' },
             { name: "In-app Event", icon: <IconHandPointer />, bg: "bg.success.subtle", type: 'trigger' },
             { name: "Scheduler", icon: <IconClock />, bg: "bg.success.subtle", type: 'trigger' },
-            { name: "Webhook", icon: <IconWebhook />, bg: "bg.success.subtle", type: 'trigger' },
+            { name: "Webhook", icon: <WebhookIcon />, bg: "bg.success.subtle", type: 'trigger' },
         ],
         Outputs: [],
         Logic: [
