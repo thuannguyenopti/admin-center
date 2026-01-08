@@ -1,15 +1,25 @@
 "use client";
 
-import { Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button, Indicator } from "@optiaxiom/react";
-import { Text } from "./Text";
+import {
+	Box,
+	Sidebar,
+	NavBody,
+	NavItem,
+	Nav,
+	Heading,
+	SubNav,
+	Button,
+	Indicator,
+} from "@optiaxiom/react";
+import {Text} from "./Text";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 
-import { useRouter, usePathname } from "next/navigation";
+import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
-import { LayoutProvider, useLayout } from "../context/LayoutContext";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {LayoutProvider, useLayout} from "../context/LayoutContext";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import ContentSubNav from "../cms/content/components/ContentSubNav";
 
@@ -20,10 +30,10 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const { asideContent } = useLayout();
+	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
-	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", true);
+	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", false);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -48,7 +58,7 @@ function TemplateContent({
 	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
 
 	// Check if we're on the Content Manager page
-	const isContentManager = path.includes('/cms/content');
+	const isContentManager = path.includes("/cms/content");
 
 	const showVT =
 		highlight1?.children?.length > 1 ||
@@ -61,63 +71,68 @@ function TemplateContent({
 	const customLayout = highlight1?.customLayout;
 
 	// Check if we're on the Workflow Builder page
-	const isWorkflowBuilder = path.startsWith('/opal/agents/workflow');
+	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
 	if (isWorkflowBuilder) {
 		return (
-			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
+			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
 				{children}
 			</Box>
 		);
 	}
 
 	return (
-		<Box
-			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
-			bg="bg.page"
-		>
+		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]" bg="bg.page">
 			<GlobalBar />
-			<Box
-				display="flex"
-				z="10"
-			>
-				<Sidebar
-					className="h-full z-10 relative"
-					expanded={isExpanded}
-				>
+			<Box display="flex" z="10">
+				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
 						<NavBody>
-							{menuItems.map((menuItem: any) => (
+							{menuItems.map((menuItem: any) =>
 								menuItem.url ? (
 									<NavItem
 										onClick={() => menuClick(menuItem.url)}
-										active={menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight)}
+										active={
+											menuItem.exact
+												? path === menuItem.highlight
+												: path.includes(menuItem.highlight)
+										}
 										key={menuItem.label}
 										aria-label={menuItem.label}
 										icon={
-											menuItem.label === "Notifications" && !path.startsWith("/opal/notifications") ? (
-												<Box style={{ position: 'relative' }}>
+											menuItem.label === "Notifications" &&
+											!path.startsWith("/opal/notifications") ? (
+												<Box style={{position: "relative"}}>
 													{menuItem.icon}
 													<Box
 														style={{
-															position: 'absolute',
-															top: '-2px',
-															right: '-2px',
-															height: '8px',
-															width: '8px',
-															border: '1.5px solid #FFFFFF'
+															position: "absolute",
+															top: "-2px",
+															right: "-2px",
+															height: "8px",
+															width: "8px",
+															border: "1.5px solid #FFFFFF",
 														}}
 														bg="bg.error"
 														rounded="full"
 													/>
 												</Box>
-											) : menuItem.icon
+											) : (
+												menuItem.icon
+											)
 										}
 									>
 										{menuItem.label}
 									</NavItem>
 								) : (
-									<Box key={menuItem.label} px="16" py="8" mt="4" borderT="1" borderColor="border.tertiary">
+									<Box
+										key={menuItem.label}
+										px="16"
+										py="8"
+										mt="4"
+										borderT="1"
+										borderColor="border.tertiary"
+									>
 										{isExpanded && (
 											<Text fontSize="sm" color="fg.tertiary" mt="2">
 												{menuItem.label}
@@ -125,13 +140,10 @@ function TemplateContent({
 										)}
 									</Box>
 								)
-							))}
+							)}
 						</NavBody>
 					</Nav>
-					<Box
-						className="absolute bottom-0 left-0 right-0"
-						p="8"
-					>
+					<Box className="absolute bottom-0 left-0 right-0" p="8">
 						<Button
 							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
 							icon={!isExpanded ? <IconChevronRight /> : <IconChevronLeft />}
@@ -157,16 +169,14 @@ function TemplateContent({
 					{isContentManager ? (
 						<ContentSubNav />
 					) : showVT ? (
-						<Sidebar
-							className="flex"
-							h="full"
-						>
+						<Sidebar className="flex" h="full">
 							<SubNav>
 								<div
 									className="flex w-[500%]"
 									style={{
-										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
-											}px)`,
+										transform: `translateX(-${
+											224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
+										}px)`,
 										transition: ".7s cubic-bezier(0, 1, 0, 1)",
 									}}
 								>
@@ -217,7 +227,9 @@ function TemplateContent({
 								marginLeft: "224px",
 								marginRight: "-224px",
 								width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
-								transform: showSecondarySidebar ? "translatex(0px)" : "translatex(-224px)",
+								transform: showSecondarySidebar
+									? "translatex(0px)"
+									: "translatex(-224px)",
 								transition: ".7s cubic-bezier(0, 1, 0, 1)",
 							}}
 							color="fg.default"
@@ -227,11 +239,7 @@ function TemplateContent({
 							<>
 								<Heading level="3">{heading || highlight1?.label}</Heading>
 								{desc && <Text mt="4">{desc}</Text>}
-								<Box
-									mt="16"
-									z="10"
-									className="relative"
-								>
+								<Box mt="16" z="10" className="relative">
 									{children}
 								</Box>
 							</>
@@ -250,7 +258,7 @@ function TemplateContent({
 					</Box>
 				)}
 			</Box>
-		</Box >
+		</Box>
 	);
 }
 
