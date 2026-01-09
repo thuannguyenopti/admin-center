@@ -2,28 +2,31 @@
 
 import React, { Fragment, useEffect, useRef } from "react";
 import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading } from "@optiaxiom/react";
+import { BLOCK_SCHEMAS } from "./blocks/schemas";
 
 type Props = {
   currentEle: string;
   elementType: string;
   propsList?: any[];
+  properties?: any;
   onBack: () => void;
-  onInputChange: (value: any, propIndex: number) => void;
+  onInputChange: (value: any, keyOrIndex: string | number) => void;
   outlineTitle?: string;
 };
 
-const Input: React.FC<{ prop: any; onChange: any; propIndex: number }> = ({
-  prop,
+const Input: React.FC<{ label: string; placeholder?: string; value: any; onChange: any }> = ({
+  label,
+  placeholder,
+  value,
   onChange,
-  propIndex,
 }) => {
   return (
     <div className=" pr-1 py-2">
-      <Field label={prop.label}>
+      <Field label={label}>
         <AxiomInput
-          placeholder={prop.placeholder || ""}
-          value={prop.value || ""}
-          onChange={(e: any) => onChange(e.currentTarget.value, propIndex)}
+          placeholder={placeholder || ""}
+          value={value || ""}
+          onChange={(e: any) => onChange(e.currentTarget.value)}
         />
       </Field>
     </div>
@@ -34,6 +37,7 @@ export default function ElementEditor({
   currentEle,
   elementType,
   propsList,
+  properties,
   onBack,
   onInputChange,
   outlineTitle,
@@ -97,9 +101,17 @@ export default function ElementEditor({
         </Box>
       </Box>
 
+      {/* Legacy Props List Support */}
       {propsList?.map((prop: any, ind: number) => (
         <Fragment key={ind}>
-          {prop.type === "text" && <Input prop={prop} propIndex={ind} onChange={onInputChange} />}
+          {prop.type === "text" && (
+            <Input
+              label={prop.label}
+              placeholder={prop.placeholder}
+              value={prop.value}
+              onChange={(val: any) => onInputChange(val, ind)}
+            />
+          )}
           {prop.type === "checkbox" && (
             <div className="p-6 pr-0 py-2">
               <Checkbox
@@ -112,6 +124,69 @@ export default function ElementEditor({
           )}
         </Fragment>
       ))}
+
+      {/* Production-Aligned Schema-Driven Properties */}
+      {(() => {
+        const schema = BLOCK_SCHEMAS[elementType];
+        if (!schema) return null;
+
+        return Object.entries(schema.properties).map(([key, def]) => {
+          const propData = properties ? properties[key] : null;
+          const value = propData ? propData.value : (def.default ?? "");
+
+          return (
+            <Fragment key={key}>
+              {(def.type === "text" || def.type === "richtext" || def.type === "textarea") && (
+                <Input
+                  label={def.label}
+                  value={value}
+                  onChange={(val: any) => onInputChange(val, key)}
+                />
+              )}
+              {def.type === "checkbox" && (
+                <div className="p-6 pr-0 py-2">
+                  <Checkbox
+                    checked={value === true || value === "true"}
+                    onChange={(e: any) => onInputChange(e.currentTarget.checked, key)}
+                  >
+                    {def.label}
+                  </Checkbox>
+                </div>
+              )}
+            </Fragment>
+          );
+        });
+      })()}
+
+      {/* Fallback for properties not in schema but present in data */}
+      {properties &&
+        Object.entries(properties).map(([key, prop]: [string, any]) => {
+          const schema = BLOCK_SCHEMAS[elementType];
+          if (schema && schema.properties[key]) return null;
+
+          return (
+            <Fragment key={key}>
+              {(!prop.type || prop.type === "text") && (
+                <Input
+                  label={key.charAt(0).toUpperCase() + key.slice(1)}
+                  placeholder={prop.placeholder}
+                  value={prop.value}
+                  onChange={(val: any) => onInputChange(val, key)}
+                />
+              )}
+              {prop.type === "checkbox" && (
+                <div className="p-6 pr-0 py-2">
+                  <Checkbox
+                    checked={prop.value === "true" ? true : false}
+                    onChange={(e: any) => onInputChange(e.currentTarget.checked ? "true" : "false", key)}
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </Checkbox>
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
     </div>
   );
 }

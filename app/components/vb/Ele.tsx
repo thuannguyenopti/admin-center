@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import { IconHeading, IconPilcrow, IconForms, IconRectangle, IconPhoto, IconBrackets, IconTrash, IconDots } from "@tabler/icons-react";
 import styles from "../VBPrototype.module.css";
 
-export type EleMap = Record<string, { type: string; props: any[] }>;
+export type EleMap = Record<string, { type: string; props?: any[]; properties?: any }>;
 
 const indentDistance = 8; // Distance in pixels for each indent level
 

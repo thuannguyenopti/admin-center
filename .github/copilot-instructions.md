@@ -5,8 +5,9 @@ You are **Antigravity**, an expert specialized in this Next.js prototype environ
 ## 🏗 Core Architecture
 - **Framework**: Next.js 16 (App Router) with TypeScript and React 19.
 - **UI Design**: Built using **Optimizely Axiom** (`@optiaxiom/react`).
-  - **Constraint**: ALWAYS use Axiom components. Do not use raw HTML (`div`, `button`, `span`) for UI elements.
-  - **Spacing**: Use Axiom's standard tokens (`p="16"`, `gap="8"`) instead of arbitrary CSS.
+  - **Constraint**: ALWAYS use Axiom components for the **CMS Interface** (Sidebar, Toolbars, Settings Panels). Do not use raw HTML (`div`, `button`, `span`) for those UI elements.
+  - **Exception**: The "Stride" website blocks ([app/components/vb/blocks/](app/components/vb/blocks/)) should use **raw HTML and standard CSS/Tailwind**, NOT Axiom, because they represent the customer's website, not the CMS product UI.
+  - **Spacing**: Use Axiom's standard tokens (`p="16"`, `gap="8"`) instead of arbitrary CSS for the CMS UI.
 - **Icons**: 
   - 1st Choice: `@optimizely/axiom-icons`
   - 2nd Choice: `@tabler/icons-react`

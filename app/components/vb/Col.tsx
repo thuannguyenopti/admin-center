@@ -128,30 +128,30 @@ const Col: React.FC<{
                                 addon: <IconHeading size={16} />,
                                 label: "Heading",
                                 execute: () => {
-                                    addElement("Heading");
+                                    addElement("ct-heading");
                                 },
                             },
                             {
                                 addon: <IconPilcrow size={16} />,
                                 label: "Text",
                                 execute: () => {
-                                    addElement("Text");
+                                    addElement("ct-text");
                                 },
                             },
                             {
                                 addon: <IconForms size={16} />,
                                 label: "Input",
-                                execute: () => addElement("Input"),
+                                execute: () => addElement("ct-input"),
                             },
                             {
                                 addon: <IconRectangle size={16} />,
                                 label: "Button",
-                                execute: () => addElement("Button"),
+                                execute: () => addElement("ct-button"),
                             },
                             {
                                 addon: <IconPhoto size={16} />,
                                 label: "Image",
-                                execute: () => addElement("Image"),
+                                execute: () => addElement("ct-image"),
                             },
                         ]}
                     >
