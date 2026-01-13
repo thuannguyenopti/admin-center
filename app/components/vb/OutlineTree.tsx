@@ -8,6 +8,8 @@ import Section from "./Section";
 import Row from "./Row";
 import Col from "./Col";
 import Ele, { EleMap } from "./Ele";
+import { getProperty } from "./blocks/utils";
+import { BLOCK_SCHEMAS } from "./blocks/schemas";
 
 interface OutlineProps {
     cloning?: boolean;
@@ -126,6 +128,8 @@ export default function OutlineTree({
         );
     };
 
+    const getColChildren = (col: any) => col.elements || col.children || [];
+
     const addSection = (id: string) => {
         setData((prev) => {
             const idx = prev.findIndex((section) => section.id === id);
@@ -142,7 +146,7 @@ export default function OutlineTree({
                                 {
                                     id: "col-" + t,
                                     open: true,
-                                    children: [],
+                                    elements: [],
                                 },
                             ],
                         },
@@ -165,7 +169,7 @@ export default function OutlineTree({
                     if (idx === row) {
                         const newCol = {
                             label: "Column",
-                            children: [],
+                            elements: [],
                             isNew: true,
                             open: true,
                             id: "col-" + Date.now(),
@@ -194,7 +198,7 @@ export default function OutlineTree({
                 children: [
                     {
                         label: "Column",
-                        children: [],
+                        elements: [],
                         open: true,
                         isNew: true,
                         id: "col-" + Date.now(),
@@ -229,31 +233,52 @@ export default function OutlineTree({
             ...prev,
             [uKey]: {
                 type,
-                props: (() => {
+                properties: (() => {
+                    const schema = BLOCK_SCHEMAS[type];
+                    if (schema) {
+                        const props: Record<string, { value: any }> = {};
+                        Object.entries(schema.properties).forEach(([key, def]) => {
+                            props[key] = { value: def.default ?? "" };
+                        });
+                        
+                        // Special case for image if we have pending data
+                        if ((type === "ct-image" || type === "Image") && imageUrl) {
+                            if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
+                            if (props["altText"]) props["altText"].value = imageAlt;
+                            if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
+                        }
+                        
+                        return props;
+                    }
+
+                    // Fallback for legacy Switch if no schema (shouldn't happen with production alignment)
                     switch (type) {
+                        case "ct-heading":
                         case "Heading":
-                            return [{ type: "text", label: "Text" }];
+                            return { text: { value: "" } };
+                        case "ct-text":
                         case "Text":
-                            return [{ type: "text", label: "Text" }];
+                            return { text: { value: "" } };
+                        case "ct-input":
                         case "Input":
-                            return [
-                                { type: "text", label: "Label" },
-                                { type: "text", label: "Placeholder" },
-                                { type: "text", label: "Tooltip" },
-                                { type: "checkbox", label: "Required", value: false },
-                            ];
+                            return {
+                                label: { value: "" },
+                                placeholder: { value: "" },
+                                required: { value: false },
+                            };
+                        case "ct-button":
                         case "Button":
-                            return [{ type: "text", label: "Label" }];
+                            return { label: { value: "" } };
+                        case "ct-image":
                         case "Image":
-                            return [
-                                { type: "text", label: "Image URL", value: imageUrl },
-                                { type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-                                { type: "text", label: "Alt Text", value: imageAlt },
-                                { type: "text", label: "Width", value: "auto" },
-                                { type: "text", label: "Height", value: "auto" },
-                            ];
+                            return {
+                                imageUrl: { value: imageUrl },
+                                altText: { value: imageAlt },
+                                width: { value: "auto" },
+                                height: { value: "auto" },
+                            };
                         default:
-                            return [];
+                            return {};
                     }
                 })(),
             },
@@ -271,7 +296,7 @@ export default function OutlineTree({
                             children: row.children.map((col: any, cIdx: number) => {
                                 if (cIdx !== colIndex) return col;
 
-                                const nextChildren = [...(col.children ?? [])];
+                                const nextChildren = [...(getColChildren(col) ?? [])];
                                 let insertAt = nextChildren.length;
 
                                 if (typeof currentHoverEle === "string" && currentHoverEle.startsWith("last-ele-")) {
@@ -283,7 +308,9 @@ export default function OutlineTree({
                                 }
 
                                 nextChildren.splice(insertAt, 0, { id: uKey });
-                                return { ...col, open: true, children: nextChildren };
+                                // Normalizing to use 'elements' for columns
+                                const { children: _old, ...rest } = col;
+                                return { ...rest, open: true, elements: nextChildren };
                             }),
                         };
                     }),
@@ -325,7 +352,7 @@ export default function OutlineTree({
                     ...row,
                     children: (row.children || []).map((col: any) => ({
                         ...col,
-                        children: (col.children || []).filter((ele: any) => ele.id !== id),
+                        children: (getColChildren(col) || []).filter((ele: any) => ele.id !== id),
                     })),
                 })),
             }))
@@ -373,7 +400,7 @@ export default function OutlineTree({
                     ...row,
                     children: (row.children || []).map((col: any) => {
                         if (col.id !== colId) return col;
-                        const nextChildren = [...(col.children || [])];
+                        const nextChildren = [...(getColChildren(col) || [])];
                         const safePos = Math.max(0, Math.min(nextChildren.length, position));
                         nextChildren.splice(safePos, 0, { id: uKey });
                         return { ...col, open: true, children: nextChildren };
@@ -505,7 +532,7 @@ export default function OutlineTree({
                                                                                 e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
                                                                             const mouseY = e.clientY;
 
-                                                                            let insertPosition = (col.children || []).length;
+                                                                            let insertPosition = (getColChildren(col) || []).length;
                                                                             for (let k = 0; k < wrappers.length; k++) {
                                                                                 const rect = wrappers[k].getBoundingClientRect();
                                                                                 const middle = rect.top + rect.height / 2;
@@ -527,7 +554,7 @@ export default function OutlineTree({
                                                                                 e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
                                                                             const mouseY = e.clientY;
 
-                                                                            let insertPosition = (col.children || []).length;
+                                                                            let insertPosition = (getColChildren(col) || []).length;
                                                                             for (let k = 0; k < wrappers.length; k++) {
                                                                                 const rect = wrappers[k].getBoundingClientRect();
                                                                                 const middle = rect.top + rect.height / 2;
@@ -539,7 +566,7 @@ export default function OutlineTree({
 
                                                                             setInternalDrop({ colId: col.id, position: insertPosition });
 
-                                                                            const colChildren = col.children || [];
+                                                                            const colChildren = getColChildren(col) || [];
                                                                             const hoverId =
                                                                                 insertPosition >= colChildren.length
                                                                                     ? `last-ele-${col.id}`
@@ -577,7 +604,7 @@ export default function OutlineTree({
                                                                         }
                                                                     }}
                                                                 >
-                                                                    {(col.children ?? []).length === 0 && assetOverCol === col.id && (
+                                                                    {(getColChildren(col) ?? []).length === 0 && assetOverCol === col.id && (
                                                                         <div
                                                                             style={{
                                                                                 border: "2px dashed #0037FF",
@@ -594,7 +621,7 @@ export default function OutlineTree({
                                                                         </div>
                                                                     )}
 
-                                                                    {(col.children ?? []).map((element: any, j: number) => {
+                                                                    {(getColChildren(col) ?? []).map((element: any, j: number) => {
                                                                         const isAssetActive = assetOverCol === col.id && assetDrop?.colId === col.id;
                                                                         const isInternalActive =
                                                                             isInternalEleDrag(dragging) && internalDrop?.colId === col.id;
@@ -610,7 +637,7 @@ export default function OutlineTree({
                                                                                         onDragStart={(ev: any) => onDragStart(ev, element.id)}
                                                                                         type={theEles[element.id]?.type}
                                                                                         element={element}
-                                                                                        label={theEles[element.id]?.props?.[0]?.value || undefined}
+                                                                                        label={getProperty(theEles[element.id]?.properties || theEles[element.id]?.props, "text", "Text") || getProperty(theEles[element.id]?.properties || theEles[element.id]?.props, "label", "Label") || undefined}
                                                                                         setCurrentEle={setCurrentEle}
                                                                                         setCurrentHoverEle={setCurrentHoverEle}
                                                                                     />
@@ -621,11 +648,11 @@ export default function OutlineTree({
 
                                                                     {isInternalEleDrag(dragging) &&
                                                                         internalDrop?.colId === col.id &&
-                                                                        internalDrop?.position === (col.children ?? []).length && <div style={INSERT_BAR_STYLE} />}
+                                                                        internalDrop?.position === (getColChildren(col) ?? []).length && <div style={INSERT_BAR_STYLE} />}
 
                                                                     {assetOverCol === col.id &&
                                                                         assetDrop?.colId === col.id &&
-                                                                        assetDrop?.position === (col.children ?? []).length && <div style={INSERT_BAR_STYLE} />}
+                                                                        assetDrop?.position === (getColChildren(col) ?? []).length && <div style={INSERT_BAR_STYLE} />}
                                                                 </div>
                                                             </Col>
 

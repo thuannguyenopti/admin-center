@@ -16,8 +16,9 @@ import {
 } from "@tabler/icons-react";
 
 import styles from "../VBPrototype.module.css";
+import { BlockRegistry } from "./blocks";
 
-export type EleMap = Record<string, { type: string; props: any[] }>;
+export type EleMap = Record<string, { type: string; props?: any[]; properties?: any }>;
 
 export type Outline = {
     id: string;
@@ -165,9 +166,12 @@ export default function PreviewCanvas({
                         ...row,
                         children: (row.children || []).map((col: any) => {
                             if (col.id !== dp.colId) return col;
-                            const nextChildren = [...(col.children || [])];
+                            const currentChildren = col.elements || col.children || [];
+                            const nextChildren = [...currentChildren];
                             nextChildren.splice(dp.position, 0, { id: uKey });
-                            return { ...col, children: nextChildren };
+                            // normalize to elements
+                            const { children: _old, ...rest } = col;
+                            return { ...rest, elements: nextChildren };
                         }),
                     })),
                 }));
@@ -209,7 +213,7 @@ export default function PreviewCanvas({
                                 key={row.id ?? rIndex}
                             >
                                 {(row.children || []).map((col: any, cIndex: number) => {
-                                    const colChildren = col.children || [];
+                                    const colChildren = col.elements || col.children || [];
                                     const isActiveDropCol =
                                         dragOverColumn === col.id &&
                                         dropPosition &&
@@ -355,141 +359,16 @@ export default function PreviewCanvas({
 
                                                             {/* element render */}
                                                             {(() => {
-                                                                switch (type) {
-                                                                    case "Heading":
-                                                                        return (
-                                                                    <h1 className={`font-bold leading-tight ${hasBgImage ? "text-4xl mb-6" : "text-3xl mb-4 text-center"}`}>
-                                                                        {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                                            <>&nbsp;</>
-                                                                        )}
-                                                                    </h1>
-                                                                );
-
-                                                            case "Text": {
-                                                                const textValue = ele?.props.find((p: any) => p.label === "Text")?.value || "";
-                                                                
-                                                                // Special handling for Hero Badge
-                                                                if (textValue.includes("●")) {
-                                                                    return (
-                                                                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-[10px] border border-white/20 mb-6">
-                                                                            <span className="text-green-400 text-xs">●</span>
-                                                                            <span className="text-white text-xs font-medium uppercase tracking-wider">{textValue.replace("●", "").trim()}</span>
-                                                                        </div>
-                                                                    );
+                                                                const BlockComponent = BlockRegistry[type];
+                                                                if (BlockComponent) {
+                                                                    // Normalize older props array to properties object if needed
+                                                                    const properties = ele.properties || ele.props;
+                                                                    return <BlockComponent properties={properties} hasBgImage={hasBgImage} />;
                                                                 }
-
-                                                                // Special handling for Stats (Hero or Footer)
-                                                                if (textValue.includes("|")) {
-                                                                    const stats = textValue.split("|");
-                                                                    return (
-                                                                        <div className={`flex flex-wrap gap-8 md:gap-16 mt-12 ${!hasBgImage ? "justify-center" : ""}`}>
-                                                                            {stats.map((stat: string, i: number) => {
-                                                                                const [val, ...labelParts] = stat.trim().split(" ");
-                                                                                return (
-                                                                                    <div key={i} className="flex flex-col">
-                                                                                        <span className="text-3xl md:text-4xl font-bold text-white">{val}</span>
-                                                                                        <span className="text-xs text-white/60 uppercase tracking-widest mt-1">{labelParts.join(" ")}</span>
-                                                                                    </div>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    );
-                                                                }
-
-                                                                // Special handling for CTA Row
-                                                                if (textValue.includes("[") && textValue.includes("]")) {
-                                                                    const buttons = textValue.match(/\[(.*?)\]/g)?.map((b: string) => b.slice(1, -1)) || [];
-                                                                    return (
-                                                                        <div className="flex flex-wrap gap-4 mb-8">
-                                                                            {buttons.map((btn: string, i: number) => (
-                                                                                <button key={i} className={`px-8 py-3 rounded-[10px] font-bold transition-all ${i === 0 ? "bg-white text-[#194BFF] hover:bg-gray-100" : "border-2 border-white text-white hover:bg-white/10"}`}>
-                                                                                    {btn}
-                                                                                </button>
-                                                                            ))}
-                                                                        </div>
-                                                                    );
-                                                                }
-
-                                                                return (
-                                                                    <p className={`leading-relaxed ${hasBgImage ? "text-lg text-white/90 mb-8 max-w-2xl" : "text-base text-gray-500 mb-4 text-center max-w-3xl mx-auto"}`}>
-                                                                        {textValue || <>&nbsp;</>}
-                                                                    </p>
-                                                                );
-                                                            }
-                                                                        return (
-                                                                            <div className="group relative mt-4">
-                                                                                {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
-                                                                                    <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-                                                                                        {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
-                                                                                    </div>
-                                                                                )}
-                                                                                {ele?.props.find((p: any) => p.label === "Label")?.value && (
-                                                                                    <label className={`block text-sm font-medium mb-1.5 ${hasBgImage ? "text-white/70" : "text-gray-600"}`}>
-                                                                                        {ele?.props.find((p: any) => p.label === "Label")?.value}
-                                                                                    </label>
-                                                                                )}
-                                                                                <input
-                                                                                    type="text"
-                                                                                    placeholder={
-                                                                                        ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
-                                                                                        undefined
-                                                                                    }
-                                                                                    className={`border rounded-[10px] p-3 w-full transition-colors focus:outline-none focus:border-blue-500 ${hasBgImage ? "bg-white/10 border-white/20 text-white placeholder:text-white/30" : "bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400"}`}
-                                                                                />
-                                                                            </div>
-                                                                        );
-
-                                                            case "Button": {
-                                                                const label = ele?.props.find((p: any) => p.label === "Label")?.value || "";
-                                                                const isJoinNow = label === "Join Now";
-                                                                
-                                                                return (
-                                                                    <div className={`mt-6 ${!hasBgImage ? "text-center" : ""}`}>
-                                                                        <div className={`rounded-[10px] px-10 py-4 text-center font-bold inline-block transition-all cursor-pointer ${isJoinNow ? "bg-[#194BFF] text-white hover:bg-blue-700 shadow-lg shadow-blue-500/30" : "bg-white text-[#194BFF] border border-gray-200 hover:bg-gray-50"}`}>
-                                                                            {label}
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            }
-
-                                                            case "Image": {
-                                                                const imageUrlRaw =
-                                                                    ele?.props.find((p: any) => p.label === "Image URL")?.value;
-                                                                const imageUrl =
-                                                                    typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-
-                                                                const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
-                                                                const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
-                                                                const imageHeight = ele?.props.find((p: any) => p.label === "Height")?.value;
-
-                                                                return (
-                                                                    <div className="mb-4">
-                                                                        {imageUrl ? (
-                                                                            <img
-                                                                                src={imageUrl}
-                                                                                alt={imageAlt || "Image"}
-                                                                                style={{
-                                                                                    width: imageWidth === "auto" ? "100%" : imageWidth,
-                                                                                    height: imageHeight === "auto" ? "auto" : imageHeight,
-                                                                                    borderRadius: "10px",
-                                                                                    objectFit: "cover",
-                                                                                }}
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[10px] p-6 text-sm">
-                                                                                No image selected
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            }
-
-                                                            default:
                                                                 return null;
-                                                        }
-                                                    })()}
-                                                </div>
-                                            </React.Fragment>
+                                                            })()}
+                                                        </div>
+                                                    </React.Fragment>
                                         );
                                     })}
 

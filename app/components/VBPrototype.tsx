@@ -47,13 +47,17 @@ const isEleNode = (n: any) =>
 	typeof n === "object" &&
 	typeof n.id === "string" &&
 	typeof n.type === "string" &&
-	Array.isArray(n.props);
+	(Array.isArray(n.props) || (n.properties && typeof n.properties === "object"));
 
 const ensureOpen = (nodes: any[]): any[] => {
 	return nodes.map((node) => ({
 		...node,
 		open: node.open ?? true,
-		children: Array.isArray(node.children) ? ensureOpen(node.children) : node.children,
+		children: Array.isArray(node.children)
+			? ensureOpen(node.children)
+			: Array.isArray(node.elements)
+				? ensureOpen(node.elements)
+				: node.children,
 	}));
 };
 
@@ -63,7 +67,11 @@ const stripTransientFlags = (nodes: any[]): any[] => {
 		const { isNew, ...rest } = n;
 		return {
 			...rest,
-			children: Array.isArray(n.children) ? stripTransientFlags(n.children) : n.children,
+			children: Array.isArray(n.children)
+				? stripTransientFlags(n.children)
+				: Array.isArray(n.elements)
+					? stripTransientFlags(n.elements)
+					: n.children,
 		};
 	});
 };
@@ -89,12 +97,17 @@ const normalizePage = (input: any): NormalizeResult => {
 
 	const strip = (node: any): any => {
 		if (isEleNode(node)) {
-			theEles[node.id] = { type: node.type, props: node.props };
+			theEles[node.id] = {
+				type: node.type,
+				props: node.props,
+				properties: node.properties,
+			};
 			return { id: node.id };
 		}
 
 		const out: any = { ...node };
-		if (Array.isArray(node.children)) out.children = node.children.map(strip);
+		const children = node.elements || node.children;
+		if (Array.isArray(children)) out.children = children.map(strip);
 		return out;
 	};
 
@@ -109,7 +122,8 @@ const collectElementIds = (data: any[]): Set<string> => {
 	for (const section of data) {
 		for (const row of section.children || []) {
 			for (const col of row.children || []) {
-				for (const ref of col.children || []) {
+				const children = col.elements || col.children || [];
+				for (const ref of children) {
 					if (ref?.id) ids.add(ref.id);
 				}
 			}
@@ -459,13 +473,30 @@ export default function VBPrototype({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
 
-	const onInputChange = (value: any, propIndex: number) => {
+	const onInputChange = (value: any, keyOrIndex: string | number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev) => {
-				const oldProps = prev[currentEle].props;
-				const newProps = [...oldProps];
-				newProps[propIndex] = { ...oldProps[propIndex], value };
-				return { ...prev, [currentEle]: { ...prev[currentEle], props: newProps } };
+				const ele = prev[currentEle];
+				if (ele.properties && typeof keyOrIndex === "string") {
+					return {
+						...prev,
+						[currentEle]: {
+							...ele,
+							properties: {
+								...ele.properties,
+								[keyOrIndex]: { ...ele.properties[keyOrIndex], value },
+							},
+						},
+					};
+				}
+
+				if (ele.props && typeof keyOrIndex === "number") {
+					const newProps = [...ele.props];
+					newProps[keyOrIndex] = { ...ele.props[keyOrIndex], value };
+					return { ...prev, [currentEle]: { ...ele, props: newProps } };
+				}
+
+				return prev;
 			});
 		}
 	};
@@ -1290,6 +1321,7 @@ export default function VBPrototype({
 														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 														currentEle={currentEle}
 														propsList={theEles[currentEle]?.props}
+														properties={theEles[currentEle]?.properties}
 														onBack={() => {
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
@@ -1366,6 +1398,7 @@ export default function VBPrototype({
 												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 												currentEle={currentEle}
 												propsList={theEles[currentEle]?.props}
+												properties={theEles[currentEle]?.properties}
 												onBack={() => {
 													setCurrentEle("none");
 													setCurrentHoverEle("none");
