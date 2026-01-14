@@ -21,6 +21,7 @@ import {
     IconClockRotateLeft,
     IconCopy,
     IconEyeSlash,
+    IconArrowsLeftRight,
 } from "@optimizely/axiom-icons";
 
 interface Version {
@@ -41,6 +42,7 @@ interface VersionHistoryProps {
     onDuplicateVersion: (versionId: string) => void;
     onHideVersion: (versionId: string) => void;
     onNameVersion: (versionId: string) => void;
+    onCompareVersion: (versionId: string) => void;
 }
 
 // Mock data for versions
@@ -104,6 +106,7 @@ export function VersionHistory({
     onDuplicateVersion,
     onHideVersion,
     onNameVersion,
+    onCompareVersion,
 }: VersionHistoryProps) {
     const currentVersion = mockVersions.find(v => v.isCurrent);
     const previousVersions = mockVersions.filter(v => !v.isCurrent);
@@ -169,6 +172,7 @@ export function VersionHistory({
                                     onDuplicateVersion={onDuplicateVersion}
                                     onHideVersion={onHideVersion}
                                     onNameVersion={onNameVersion}
+                                    onCompareVersion={onCompareVersion}
                                     isCurrent
                                 />
                             </Box>
@@ -190,6 +194,7 @@ export function VersionHistory({
                                             onDuplicateVersion={onDuplicateVersion}
                                             onHideVersion={onHideVersion}
                                             onNameVersion={onNameVersion}
+                                            onCompareVersion={onCompareVersion}
                                         />
                                     ))}
                                 </Box>
@@ -209,6 +214,7 @@ interface VersionCardProps {
     onDuplicateVersion: (versionId: string) => void;
     onHideVersion: (versionId: string) => void;
     onNameVersion: (versionId: string) => void;
+    onCompareVersion: (versionId: string) => void;
     isCurrent?: boolean;
 }
 
@@ -219,6 +225,7 @@ function VersionCard({
     onDuplicateVersion,
     onHideVersion,
     onNameVersion,
+    onCompareVersion,
     isCurrent = false,
 }: VersionCardProps) {
     return (
@@ -297,6 +304,16 @@ function VersionCard({
                             <Box display="flex" alignItems="center" gap="8">
                                 <IconClockRotateLeft size={16} />
                                 <Text>Restore this version</Text>
+                            </Box>
+                        </DropdownMenuItem>
+                    )}
+                    {!isCurrent && (
+                        <DropdownMenuItem
+                            onSelect={() => onCompareVersion(version.id)}
+                        >
+                            <Box display="flex" alignItems="center" gap="8">
+                                <IconArrowsLeftRight size={16} />
+                                <Text>Compare with current</Text>
                             </Box>
                         </DropdownMenuItem>
                     )}

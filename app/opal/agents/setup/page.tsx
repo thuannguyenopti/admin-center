@@ -54,7 +54,6 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { TableColumnConfig } from "@/app/components/TableColumnConfig";
 import { VersionHistory } from "./components/VersionHistory";
 import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
 import { ComparisonBanner } from "./components/ComparisonBanner";
@@ -214,6 +213,8 @@ function SpecializedAgentSetupContent() {
         setViewingVersionData(null);
         // In real app, restore the version and refresh data
     };
+
+
 
     const handleDuplicateVersion = (versionId: string) => {
         console.log('Duplicating version:', versionId);
@@ -687,13 +688,20 @@ function SpecializedAgentSetupContent() {
                                                 </Box>
 
                                                 <Field label="Tools" info="Select tools for the agent">
-                                                    <Input
-                                                        value={tools}
-                                                        onChange={(e) => setTools(e.target.value)}
-                                                        placeholder="Select tools..."
-                                                        readOnly={isReadOnly}
-                                                        tabIndex={isReadOnly ? -1 : 0}
-                                                    />
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            currentValue={tools}
+                                                            previousValue={comparisonData.tools}
+                                                        />
+                                                    ) : (
+                                                        <Input
+                                                            value={tools}
+                                                            onChange={(e) => setTools(e.target.value)}
+                                                            placeholder="Select tools..."
+                                                            readOnly={isReadOnly}
+                                                            tabIndex={isReadOnly ? -1 : 0}
+                                                        />
+                                                    )}
                                                 </Field>
 
                                                 <Box display="flex" gap="24">
@@ -747,7 +755,7 @@ function SpecializedAgentSetupContent() {
                                             Output
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="32" pb="32">
-                                            <Box style={{ maxWidth: "800px" }} display="flex" flexDirection="column" gap="24">
+                                            <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
                                                 <Text color="fg.secondary">Output configuration content goes here...</Text>
                                             </Box>
                                         </DisclosureContent>
@@ -777,6 +785,7 @@ function SpecializedAgentSetupContent() {
                 isOpen={isVersionHistoryOpen}
                 onClose={() => setIsVersionHistoryOpen(false)}
                 onViewVersion={handleViewVersion}
+                onRestoreVersion={handleRestoreVersion}
                 onCompareVersion={handleCompareVersion}
                 onDuplicateVersion={handleDuplicateVersion}
                 onHideVersion={handleHideVersion}
