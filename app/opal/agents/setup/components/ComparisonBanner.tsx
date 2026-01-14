@@ -5,7 +5,7 @@ import {
     Button,
     Box,
 } from "@optiaxiom/react";
-import { IconX } from "@tabler/icons-react";
+import { IconXmark } from "@optimizely/axiom-icons";
 
 interface ComparisonBannerProps {
     versionName: string;
@@ -23,9 +23,9 @@ export function ComparisonBanner({
                     You're comparing <strong>{versionName}</strong> (left) with <strong>Current Version</strong> (right)
                 </Box>
                 <Button
-                    appearance="default"
+                    appearance="subtle"
                     size="md"
-                    icon={<IconX size={16} />}
+                    icon={<IconXmark size={16} />}
                     onClick={onExitComparison}
                 >
                     Exit Comparison

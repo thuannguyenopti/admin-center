@@ -243,7 +243,7 @@ function VersionCard({
                 border: isCurrent
                     ? "2px solid var(--ax-colors-border-accent-bold)"
                     : "1px solid var(--ax-colors-border-secondary)",
-                borderRadius: "var(--ax-radii-md)",
+                borderRadius: "var(--ax-radii-sm)",
                 backgroundColor: "var(--ax-colors-bg-default)",
                 cursor: "pointer",
             }}
