@@ -8,12 +8,14 @@ import {
 } from "@optiaxiom/react";
 import {
     IconArrowRotateLeft,
+    IconXmark,
 } from "@optimizely/axiom-icons";
 
 interface VersionPreviewBannerProps {
     versionName: string;
     timestamp: string;
     onRestore: () => void;
+    onExit: () => void;
     showDiffs: boolean;
     onToggleDiffs: (show: boolean) => void;
 }
@@ -22,6 +24,7 @@ export function VersionPreviewBanner({
     versionName,
     timestamp,
     onRestore,
+    onExit,
     showDiffs,
     onToggleDiffs,
 }: VersionPreviewBannerProps) {
@@ -47,9 +50,15 @@ export function VersionPreviewBanner({
                     >
                         Restore
                     </Button>
+                    <Button
+                        appearance="subtle"
+                        size="md"
+                        icon={<IconXmark size={16} />}
+                        aria-label="Exit version view"
+                        onClick={onExit}
+                    />
                 </Box>
             </Box>
         </Alert>
     );
 }
-

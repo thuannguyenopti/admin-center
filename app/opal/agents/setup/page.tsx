@@ -217,6 +217,12 @@ function SpecializedAgentSetupContent() {
         // In real app, restore the version and refresh data
     };
 
+    const handleExitVersionView = () => {
+        setViewingVersion(null);
+        setViewingVersionData(null);
+        setShowDiffs(false);
+    };
+
 
 
     const handleDuplicateVersion = (versionId: string) => {
@@ -455,6 +461,7 @@ function SpecializedAgentSetupContent() {
                                     versionName={viewingVersionData.name}
                                     timestamp={viewingVersionData.timestamp}
                                     onRestore={() => handleRestoreVersion(viewingVersion)}
+                                    onExit={handleExitVersionView}
                                     showDiffs={showDiffs}
                                     onToggleDiffs={setShowDiffs}
                                 />
@@ -821,6 +828,7 @@ function SpecializedAgentSetupContent() {
                 onDuplicateVersion={handleDuplicateVersion}
                 onHideVersion={handleHideVersion}
                 onNameVersion={handleNameVersion}
+                onExitVersionView={handleExitVersionView}
             />
         </Box>
     );

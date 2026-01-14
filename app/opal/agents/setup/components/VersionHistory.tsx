@@ -43,6 +43,7 @@ interface VersionHistoryProps {
     onHideVersion: (versionId: string) => void;
     onNameVersion: (versionId: string) => void;
     onCompareVersion: (versionId: string) => void;
+    onExitVersionView?: () => void;
 }
 
 // Mock data for versions
@@ -107,6 +108,7 @@ export function VersionHistory({
     onHideVersion,
     onNameVersion,
     onCompareVersion,
+    onExitVersionView,
 }: VersionHistoryProps) {
     const currentVersion = mockVersions.find(v => v.isCurrent);
     const previousVersions = mockVersions.filter(v => !v.isCurrent);
@@ -173,6 +175,7 @@ export function VersionHistory({
                                     onHideVersion={onHideVersion}
                                     onNameVersion={onNameVersion}
                                     onCompareVersion={onCompareVersion}
+                                    onExitVersionView={onExitVersionView}
                                     isCurrent
                                 />
                             </Box>
@@ -215,6 +218,7 @@ interface VersionCardProps {
     onHideVersion: (versionId: string) => void;
     onNameVersion: (versionId: string) => void;
     onCompareVersion: (versionId: string) => void;
+    onExitVersionView?: () => void;
     isCurrent?: boolean;
 }
 
@@ -226,6 +230,7 @@ function VersionCard({
     onHideVersion,
     onNameVersion,
     onCompareVersion,
+    onExitVersionView,
     isCurrent = false,
 }: VersionCardProps) {
     return (
@@ -240,10 +245,12 @@ function VersionCard({
                     : "1px solid var(--ax-colors-border-secondary)",
                 borderRadius: "var(--ax-radii-md)",
                 backgroundColor: "var(--ax-colors-bg-default)",
-                cursor: !isCurrent ? "pointer" : "default",
+                cursor: "pointer",
             }}
             onClick={() => {
-                if (!isCurrent) {
+                if (isCurrent && onExitVersionView) {
+                    onExitVersionView();
+                } else if (!isCurrent) {
                     onViewVersion(version.id);
                 }
             }}
