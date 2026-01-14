@@ -4,6 +4,7 @@ import {
     Alert,
     Button,
     Box,
+    Switch,
 } from "@optiaxiom/react";
 import {
     IconArrowRotateLeft,
@@ -13,12 +14,16 @@ interface VersionPreviewBannerProps {
     versionName: string;
     timestamp: string;
     onRestore: () => void;
+    showDiffs: boolean;
+    onToggleDiffs: (show: boolean) => void;
 }
 
 export function VersionPreviewBanner({
     versionName,
     timestamp,
     onRestore,
+    showDiffs,
+    onToggleDiffs,
 }: VersionPreviewBannerProps) {
     return (
         <Alert intent="information">
@@ -26,14 +31,23 @@ export function VersionPreviewBanner({
                 <Box>
                     You are viewing <strong>{versionName}</strong> created on {timestamp}.
                 </Box>
-                <Button
-                    appearance="default"
-                    size="md"
-                    icon={<IconArrowRotateLeft size={16} />}
-                    onClick={onRestore}
-                >
-                    Restore
-                </Button>
+                <Box display="flex" alignItems="center" gap="16">
+                    <Switch
+                        checked={showDiffs}
+                        onCheckedChange={onToggleDiffs}
+                    >
+                        Show diffs
+                    </Switch>
+                    <Box h="16" style={{ width: "1px", backgroundColor: "var(--ax-colors-border-secondary)" }} />
+                    <Button
+                        appearance="default"
+                        size="md"
+                        icon={<IconArrowRotateLeft size={16} />}
+                        onClick={onRestore}
+                    >
+                        Restore
+                    </Button>
+                </Box>
             </Box>
         </Alert>
     );

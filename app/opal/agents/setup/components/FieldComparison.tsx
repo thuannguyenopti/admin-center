@@ -6,13 +6,131 @@ interface FieldComparisonProps {
     currentValue: string;
     previousValue: string;
     multiline?: boolean;
+    mode?: 'side-by-side' | 'stacked';
 }
 
 export function FieldComparison({
     currentValue,
     previousValue,
     multiline = false,
+    mode = 'side-by-side',
 }: FieldComparisonProps) {
+    // Shared render function for a diff line
+    const renderDiffLine = (content: string, type: 'removed' | 'added' | 'unchanged', lineNumber: number | null = null, prefix: string = '') => {
+        let bg: "bg.default" | "bg.error.subtle" | "bg.success.subtle" = "bg.default";
+        let color = "var(--ax-colors-fg-default)";
+        let indicatorColor = "transparent";
+
+        if (type === 'removed') {
+            bg = "bg.error.subtle";
+            color = "var(--ax-colors-fg-danger-strong)";
+            indicatorColor = "var(--ax-colors-fg-danger-strong)";
+        } else if (type === 'added') {
+            bg = "bg.success.subtle";
+            color = "var(--ax-colors-fg-success-strong)";
+            indicatorColor = "var(--ax-colors-fg-success-strong)";
+        }
+
+        return (
+            <Box
+                p="8"
+                px="12"
+                bg={bg}
+            >
+                <Box display="flex" gap="8">
+                    <Text
+                        fontSize="sm"
+                        style={{
+                            color: indicatorColor,
+                            minWidth: "12px",
+                            fontFamily: "monospace",
+                            textAlign: "center"
+                        }}
+                    >
+                        {prefix}
+                    </Text>
+                    {lineNumber !== null && (
+                        <Text
+                            fontSize="sm"
+                            style={{
+                                color: "var(--ax-colors-fg-tertiary)",
+                                minWidth: "32px",
+                                fontFamily: "monospace",
+                                textAlign: "right"
+                            }}
+                        >
+                            {lineNumber}
+                        </Text>
+                    )}
+                    <Text
+                        fontSize="sm"
+                        style={{
+                            color,
+                            whiteSpace: "pre-wrap",
+                            fontFamily: "monospace",
+                            flex: 1
+                        }}
+                    >
+                        {content || ' '}
+                    </Text>
+                </Box>
+            </Box>
+        );
+    };
+
+    if (mode === 'stacked') {
+        if (!multiline) {
+            // Single line stacked
+            return (
+                <Box w="full" rounded="sm" style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
+                    {previousValue !== currentValue && (
+                        renderDiffLine(previousValue, 'removed', null, '-')
+                    )}
+                    {renderDiffLine(currentValue, previousValue !== currentValue ? 'added' : 'unchanged', null, previousValue !== currentValue ? '+' : '')}
+                </Box>
+            );
+        }
+
+        // Multiline stacked
+        const currentLines = currentValue.split('\n');
+        const previousLines = previousValue.split('\n');
+        const maxLines = Math.max(currentLines.length, previousLines.length);
+
+        return (
+            <Box w="full" rounded="sm" style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
+                {Array.from({ length: maxLines }).map((_, index) => {
+                    const lineVal = currentLines[index] || '';
+                    const prevLineVal = previousLines[index] || '';
+
+                    const prevTrimmed = prevLineVal.trim();
+                    const currTrimmed = lineVal.trim();
+                    const isDifferent = prevTrimmed !== currTrimmed;
+                    // Check if lines effectively exist
+                    const hasPrev = index < previousLines.length;
+                    const hasCurr = index < currentLines.length;
+
+                    // Logic:
+                    // If different:
+                    //   Show PREV line (Removed) if it existed
+                    //   Show CURR line (Added) if it exists
+                    // Else:
+                    //   Show CURR line (Unchanged)
+
+                    if (isDifferent) {
+                        return (
+                            <div key={index}>
+                                {hasPrev && renderDiffLine(prevLineVal, 'removed', index + 1, '-')}
+                                {hasCurr && renderDiffLine(lineVal, 'added', index + 1, '+')}
+                            </div>
+                        );
+                    } else {
+                        return <div key={index}>{renderDiffLine(lineVal, 'unchanged', index + 1)}</div>;
+                    }
+                })}
+            </Box>
+        );
+    }
+
     if (!multiline) {
         // Single line side-by-side comparison
         return (

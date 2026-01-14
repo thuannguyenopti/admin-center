@@ -104,6 +104,7 @@ function SpecializedAgentSetupContent() {
         promptTemplate: string;
         tools: string;
     } | null>(null);
+    const [showDiffs, setShowDiffs] = useState(false);
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         const scrollTop = e.currentTarget.scrollTop;
@@ -120,6 +121,7 @@ function SpecializedAgentSetupContent() {
         });
 
         // Simulate a version change in the prompt template for visual feedback
+        // For V4 (which we used for comparison), let's simulate it specifically
         if (versionId === "v4") {
             setAgentName("Content Localizer Pro");
             setDescription("Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.\nSupports multiple language pairs and regional variants.");
@@ -452,6 +454,8 @@ function SpecializedAgentSetupContent() {
                                     versionName={viewingVersionData.name}
                                     timestamp={viewingVersionData.timestamp}
                                     onRestore={() => handleRestoreVersion(viewingVersion)}
+                                    showDiffs={showDiffs}
+                                    onToggleDiffs={setShowDiffs}
                                 />
                             </Box>
                         )}
@@ -512,6 +516,12 @@ function SpecializedAgentSetupContent() {
                                                             currentValue={agentName}
                                                             previousValue={comparisonData.name}
                                                         />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={agentName}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].name}
+                                                            mode="stacked"
+                                                        />
                                                     ) : (
                                                         <Box display="flex" gap="12" alignItems="center">
                                                             <Box flex="1">
@@ -553,6 +563,13 @@ function SpecializedAgentSetupContent() {
                                                             previousValue={comparisonData.description}
                                                             multiline
                                                         />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={description}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].description}
+                                                            multiline
+                                                            mode="stacked"
+                                                        />
                                                     ) : (
                                                         <Textarea
                                                             value={description}
@@ -584,6 +601,13 @@ function SpecializedAgentSetupContent() {
                                                             currentValue={promptTemplate}
                                                             previousValue={comparisonData.promptTemplate}
                                                             multiline
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={promptTemplate}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
+                                                            multiline
+                                                            mode="stacked"
                                                         />
                                                     ) : isReadOnly ? (
                                                         <Box
