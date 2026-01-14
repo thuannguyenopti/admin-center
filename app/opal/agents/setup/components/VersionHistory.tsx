@@ -239,12 +239,11 @@ function VersionCard({
             display="flex"
             gap="8"
             alignItems="center"
+            rounded="sm"
+            border={isCurrent ? "2" : "1"}
+            borderColor={isCurrent ? "border.accent" : "border.secondary"}
+            bg="bg.default"
             style={{
-                border: isCurrent
-                    ? "2px solid var(--ax-colors-border-accent-bold)"
-                    : "1px solid var(--ax-colors-border-secondary)",
-                borderRadius: "var(--ax-radii-sm)",
-                backgroundColor: "var(--ax-colors-bg-default)",
                 cursor: "pointer",
             }}
             onClick={() => {
