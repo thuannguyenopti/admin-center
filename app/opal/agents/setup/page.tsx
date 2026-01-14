@@ -126,6 +126,7 @@ function SpecializedAgentSetupContent() {
             setAgentName("Content Localizer Pro");
             setDescription("Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.\nSupports multiple language pairs and regional variants.");
             setPromptTemplate("You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n- Consider cultural sensitivities and taboos.\n- Adapt idioms and metaphors appropriately.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker` `Cultural Analyzer`");
+            setTools("Translate, Style Guide Checker, Regional Thesaurus, Cultural Analyzer");
         } else if (versionId === "v23") {
             setPromptTemplate("Process the meeting transcript: [[transcript]].\n\n{Instruction}\nExtract:\n1. Summary\n2. Key items\n\nUse `Natural Language Processor`.");
         } else if (versionId === "v22") {
@@ -716,6 +717,12 @@ function SpecializedAgentSetupContent() {
                                                         <FieldComparison
                                                             currentValue={tools}
                                                             previousValue={comparisonData.tools}
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={tools}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].tools}
+                                                            mode="stacked"
                                                         />
                                                     ) : (
                                                         <Input
