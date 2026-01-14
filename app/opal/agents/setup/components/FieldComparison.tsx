@@ -1,20 +1,23 @@
 "use client";
 
 import { Box, Text } from "@optiaxiom/react";
+import { forwardRef } from "react";
 
 interface FieldComparisonProps {
     currentValue: string;
     previousValue: string;
     multiline?: boolean;
     mode?: 'side-by-side' | 'stacked';
+    [key: string]: any;
 }
 
-export function FieldComparison({
+export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(({
     currentValue,
     previousValue,
     multiline = false,
     mode = 'side-by-side',
-}: FieldComparisonProps) {
+    ...props
+}, ref) => {
     // Shared render function for a diff line
     const renderDiffLine = (content: string, type: 'removed' | 'added' | 'unchanged', lineNumber: number | null = null, prefix: string = '') => {
         let bg: "bg.default" | "bg.error.subtle" | "bg.success.subtle" = "bg.default";
@@ -82,7 +85,13 @@ export function FieldComparison({
         if (!multiline) {
             // Single line stacked
             return (
-                <Box w="full" rounded="sm" style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
+                <Box
+                    ref={ref}
+                    w="full"
+                    rounded="sm"
+                    style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}
+                    {...props}
+                >
                     {previousValue !== currentValue && (
                         renderDiffLine(previousValue, 'removed', null, '-')
                     )}
@@ -97,7 +106,13 @@ export function FieldComparison({
         const maxLines = Math.max(currentLines.length, previousLines.length);
 
         return (
-            <Box w="full" rounded="sm" style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}>
+            <Box
+                ref={ref}
+                w="full"
+                rounded="sm"
+                style={{ border: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden" }}
+                {...props}
+            >
                 {Array.from({ length: maxLines }).map((_, index) => {
                     const lineVal = currentLines[index] || '';
                     const prevLineVal = previousLines[index] || '';
@@ -109,22 +124,15 @@ export function FieldComparison({
                     const hasPrev = index < previousLines.length;
                     const hasCurr = index < currentLines.length;
 
-                    // Logic:
-                    // If different:
-                    //   Show PREV line (Removed) if it existed
-                    //   Show CURR line (Added) if it exists
-                    // Else:
-                    //   Show CURR line (Unchanged)
-
                     if (isDifferent) {
                         return (
-                            <div key={index}>
+                            <Box key={index}>
                                 {hasPrev && renderDiffLine(prevLineVal, 'removed', index + 1, '-')}
                                 {hasCurr && renderDiffLine(lineVal, 'added', index + 1, '+')}
-                            </div>
+                            </Box>
                         );
                     } else {
-                        return <div key={index}>{renderDiffLine(lineVal, 'unchanged', index + 1)}</div>;
+                        return <Box key={index}>{renderDiffLine(lineVal, 'unchanged', index + 1)}</Box>;
                     }
                 })}
             </Box>
@@ -134,7 +142,13 @@ export function FieldComparison({
     if (!multiline) {
         // Single line side-by-side comparison
         return (
-            <Box display="flex" gap="8" w="full">
+            <Box
+                ref={ref}
+                display="flex"
+                gap="8"
+                w="full"
+                {...props}
+            >
                 {/* Previous Version (Left) */}
                 <Box
                     flex="1"
@@ -178,7 +192,13 @@ export function FieldComparison({
     const maxLines = Math.max(currentLines.length, previousLines.length);
 
     return (
-        <Box display="flex" gap="8" w="full">
+        <Box
+            ref={ref}
+            display="flex"
+            gap="8"
+            w="full"
+            {...props}
+        >
             {/* Previous Version (Left) */}
             <Box
                 flex="1"
@@ -348,4 +368,6 @@ export function FieldComparison({
             </Box>
         </Box>
     );
-}
+});
+
+FieldComparison.displayName = "FieldComparison";
