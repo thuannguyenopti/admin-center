@@ -17,7 +17,6 @@ import {
     Link,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { PageTitle } from "@/app/components/PageTitle";
 import {
     IconSearch,
     IconPlus,
@@ -134,10 +133,10 @@ export default function AgentsPage() {
     return (
         <Box p="24" display="flex" flexDirection="column" gap="24">
             {/* Header */}
-            <PageTitle
-                title="Agents"
-                description="Empower your marketing team by customizing Opal agents to meet your specific needs."
-            />
+            <Box display="flex" flexDirection="column" gap="8">
+                <Heading level="1" fontSize="2xl">Agents</Heading>
+                <Text color="fg.secondary">Empower your marketing team by customizing Opal agents to meet your specific needs.</Text>
+            </Box>
 
             {/* Tabs */}
             <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">

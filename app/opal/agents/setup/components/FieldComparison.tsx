@@ -208,7 +208,7 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
                     overflow: "hidden"
                 }}
             >
-                {previousLines.map((line, index) => {
+                {previousLines.map((line: string, index: number) => {
                     const currentLine = currentLines[index] || '';
                     // Treat whitespace-only lines as empty
                     const prevTrimmed = line.trim();
@@ -292,7 +292,7 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
                     overflow: "hidden"
                 }}
             >
-                {currentLines.map((line, index) => {
+                {currentLines.map((line: string, index: number) => {
                     const previousLine = previousLines[index] || '';
                     // Treat whitespace-only lines as empty
                     const prevTrimmed = previousLine.trim();
