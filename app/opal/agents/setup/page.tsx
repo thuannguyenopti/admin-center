@@ -701,7 +701,7 @@ function SpecializedAgentSetupContent() {
                                                                                 <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
                                                                             )}
                                                                             <Text fontSize="sm" color="fg.secondary">{variable.type}</Text>
-                                                                            <Button appearance="subtle" size="sm" icon={<IconTrash />} disabled={isReadOnly} />
+                                                                            <Button appearance="subtle" size="sm" icon={<IconTrash />} aria-label="Delete variable" disabled={isReadOnly} />
                                                                         </Box>
                                                                     </Box>
                                                                 </Card>
