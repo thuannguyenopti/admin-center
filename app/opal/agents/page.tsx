@@ -29,90 +29,97 @@ import { useRouter } from "next/navigation";
 
 const agents = [
     {
+        id: "content-localizer",
         icon: <IconAgent />,
         name: "Content Localizer",
         handle: "@content_localizer",
         creator: { name: "User Name", avatar: "/avatars/user.png" }, // Mock avatar
-        category: "Category B",
+        category: "Marketing",
         categoryColor: "primary",
-        description: "Localize your content with specific regional context.",
+        description: "Localize your content with specific regional context while maintaining brand voice.",
         activity: "1 Run",
         lastModified: { date: "Dec 1, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "heatmap-analysis",
         icon: <IconAgent />,
         name: "Heatmap Analysis",
         handle: "@heatmap_analysis",
         creator: { name: "Optimizely", type: "system" },
-        category: "Option A",
+        category: "Optimization",
         categoryColor: "primary",
         description:
-            "Transforms a provided heatmap image and url into precise, tailored test ideas. It eliminates the burden of manual analysis, converting c...",
+            "Transforms a provided heatmap image and url into precise, tailored test ideas. It eliminates the burden of manual analysis, converting data into insights.",
         activity: "3 Runs",
         lastModified: { date: "Sep 15, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "experiment-planning",
         icon: <IconAgent />,
         name: "Experiment Planning Agent",
         handle: "@test_planning",
         creator: { name: "Optimizely", type: "system" },
-        category: "Option B",
+        category: "Product",
         categoryColor: "primary",
         description:
-            "Transforms your raw ideas into a fully-formed test plan, complete with suggested hypotheses, key metrics, identified risks, an...",
+            "Transforms your raw ideas into a fully-formed test plan, complete with suggested hypotheses, key metrics, identified risks, and more.",
         activity: "6 Runs",
         lastModified: { date: "Jul 29, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "geo-recommendations",
         icon: <IconCodeBranch />,
         name: "GEO Recommendations",
         handle: "@opti_geo_recommendati...",
         tag: "Updated",
         creator: { name: "Optimizely", type: "system" },
-        category: "Option C",
+        category: "SEO",
         categoryColor: "primary",
         description:
-            "Audits webpages for LLM discoverability, retrievability, and understandability to deliver actionable recommendations to optimize co...",
+            "Audits webpages for LLM discoverability, retrievability, and understandability to deliver actionable recommendations to optimize conversion.",
         activity: "4 Runs",
         lastModified: { date: "Oct 10, 2025", user: "John Smith" },
         status: "Inactive",
     },
     {
+        id: "resource-manager",
         icon: <IconCodeBranch />,
         name: "Resource Manager",
         handle: "@rm",
         creator: { name: "Optimizely", type: "system" },
-        category: "Category B",
+        category: "Project Mgmt",
         categoryColor: "primary",
-        description: "Look up available team members for task assignment.",
+        description: "Look up available team members for task assignment based on workload and expertise.",
         activity: "7 Runs",
         lastModified: { date: "Jul 30, 2025", user: "John Smith" },
         status: "Inactive",
     },
     {
+        id: "seo-keyword-research",
         icon: <IconCodeBranch />,
         name: "SEO Keyword Research",
         handle: "@seo_keyword_resaerch",
         creator: { name: "Optimizely", type: "system" },
-        category: "Category C",
+        category: "Marketing",
         categoryColor: "primary",
         description:
-            "Takes a topic, leverages data from Idea Lab and the broader web, and returns a curated list of keywords designed to maximize conte...",
+            "Takes a topic, leverages data from Idea Lab and the broader web, and returns a curated list of keywords designed to maximize content reach.",
         activity: "2 Runs",
         lastModified: { date: "Nov 3, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "meeting-synthesizer",
         icon: <IconAgent />,
-        name: "Synthesize Agent",
+        name: "Meeting Synthesizer",
         handle: "@meeting_synthesizer",
         creator: { name: "User Name", avatar: "/avatars/user.png" },
-        category: "All Products",
+        category: "Productivity",
         categoryColor: "primary",
-        description: "Summarize your meeting.",
+        description: "Summarize your meeting transcripts into actionable items and key takeaways.",
         activity: "5 Runs",
         lastModified: { date: "Aug 20, 2025", user: "John Smith" },
         status: "Inactive",
@@ -126,15 +133,9 @@ export default function AgentsPage() {
     return (
         <Box p="24" display="flex" flexDirection="column" gap="24">
             {/* Header */}
-            <Box>
-                <Heading level="2">Agents</Heading>
-                <Box display="flex" gap="8" alignItems="center" mt="4">
-                    <Text color="fg.secondary">
-                        Empower your marketing team by customizing Opal agents to meet your
-                        specific needs.
-                    </Text>
-                    <Link href="#">Learn more.</Link>
-                </Box>
+            <Box display="flex" flexDirection="column" gap="8">
+                <Heading level="1" fontSize="2xl">Agents</Heading>
+                <Text color="fg.secondary">Empower your marketing team by customizing Opal agents to meet your specific needs.</Text>
             </Box>
 
             {/* Tabs */}
@@ -235,7 +236,7 @@ export default function AgentsPage() {
                 </thead>
                 <tbody>
                     {agents.map((agent, index) => (
-                        <Tr key={index}>
+                        <Tr key={index} url={`/opal/agents/setup?id=${agent.id}&mode=edit`}>
                             <Td>
                                 <Box color="fg.secondary">{agent.icon}</Box>
                             </Td>
