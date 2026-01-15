@@ -152,8 +152,8 @@ export function TestRunTray({
 
                         {/* Output Section */}
                         <Disclosure defaultOpen>
-                            <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
-                                <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
+                            <Box display="flex" alignItems="center" gap="8" w="full">
+                                <DisclosureTrigger>
                                     <Box display="flex" alignItems="center" gap="8">
                                         <Text fontWeight="600">Output</Text>
                                     </Box>
