@@ -42,6 +42,7 @@ export function TestRunTray({
     const [inputValues, setInputValues] = useState<Record<string, string>>({});
     const [output, setOutput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
+    const [isInputOpen, setIsInputOpen] = useState(true);
 
     const handleInputChange = (name: string, value: string) => {
         setInputValues(prev => ({
@@ -118,14 +119,14 @@ export function TestRunTray({
                         gap="16"
                     >
                         {/* Input Section */}
-                        <Disclosure defaultOpen>
+                        <Disclosure defaultOpen onOpenChange={setIsInputOpen}>
                             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                                 <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
                                         <Text fontWeight="600">Input</Text>
                                     </Box>
                                 </DisclosureTrigger>
-                                {hasInputs && (
+                                {hasInputs && isInputOpen && (
                                     <Button
                                         appearance="subtle"
                                         size="sm"
