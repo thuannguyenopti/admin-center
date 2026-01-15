@@ -25,6 +25,10 @@ import {
     MenuTrigger,
     MenuContent,
     LabelMenuButton,
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
     Select,
     SelectTrigger,
     SelectContent,
@@ -64,6 +68,80 @@ import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
 import { ComparisonBanner } from "./components/ComparisonBanner";
 import { FieldComparison } from "./components/FieldComparison";
 
+// Mock data for agents
+const MOCK_AGENTS_DATA: Record<string, any> = {
+    "content-localizer": {
+        name: "Content Localizer",
+        agentId: "content_localizer",
+        description: "Localize your content with specific regional context while maintaining brand voice.",
+        promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker`",
+        tools: "Translate, Style Guide Checker, Regional Thesaurus",
+        variables: [
+            { name: "region", description: "The country or area to localize for", type: "String", required: true },
+            { name: "content", description: "The text that needs localization", type: "String", required: true }
+        ],
+        creativity: 30
+    },
+    "heatmap-analysis": {
+        name: "Heatmap Analysis",
+        agentId: "heatmap_analysis",
+        description: "Transforms a provided heatmap image and url into precise, tailored test ideas.",
+        promptTemplate: "Analyze the attached heatmap image and the corresponding URL: [[url]].\n\n{RAG}\nIdentify patterns in user behavior from recent sessions.\n\n{Instruction}\n1. Areas of high friction (low engagement where expected)\n2. Elements causing confusion\n3. Opportunities for A/B testing\n\nProvide 3 specific test hypotheses based on the visual data using `Image Recognition`.",
+        tools: "Image Recognition, Analytics Connector, Test Idea Lab",
+        variables: [
+            { name: "url", description: "The webpage URL matching the heatmap", type: "String", required: true },
+            { name: "heatmap_image", description: "The uploaded heatmap screenshot", type: "File", required: true }
+        ],
+        creativity: 50
+    },
+    "experiment-planning": {
+        name: "Experiment Planning Agent",
+        agentId: "test_planning",
+        description: "Transforms your raw ideas into a fully-formed test plan.",
+        promptTemplate: "Based on the raw idea: [[raw_idea]], generate a comprehensive experiment plan.\n\n{Instruction}\nInclude:\n- Primary Hypothesis\n- Success Metrics (Primary & Secondary)\n- Target Audience\n- Estimated Duration\n- Technical Implementation Notes\n\nUse `Stats Calculator` to estimate duration.",
+        tools: "Stats Calculator, Audience Segmenter, Jira Integrator",
+        variables: [
+            { name: "raw_idea", description: "The initial thought or problem statement", type: "String", required: true },
+            { name: "previous_results", description: "Link to relevant past experiments", type: "String", required: false }
+        ],
+        creativity: 60
+    },
+    "geo-recommendations": {
+        name: "GEO Recommendations",
+        agentId: "geo_recommendations",
+        description: "Provide recommendations based on geographic data.",
+        promptTemplate: "Based on the location: [[location]], provide top recommendations.\n\nContent: [[content]]",
+        tools: "Geo Service",
+        variables: [
+            { name: "location", description: "User's location", type: "String", required: true },
+            { name: "content", description: "What to recommend", type: "String", required: true }
+        ],
+        creativity: 40
+    },
+    "market-analyzer": {
+        name: "Market Analyzer",
+        agentId: "market_analyzer",
+        description: "Analyzes market trends for a specific region.",
+        promptTemplate: "Analyze market trends for [[market]].\n\n{Instruction}\nFocus on:\n- Top competitors\n- Growth opportunities",
+        tools: "Market Data Tool",
+        variables: [
+            { name: "market", description: "Target market (e.g. US, UK)", type: "String", required: true }
+        ],
+        creativity: 45
+    },
+    "meeting-synthesizer": {
+        name: "Meeting Synthesizer",
+        agentId: "meeting_synthesizer",
+        description: "Summarize your meeting transcripts into actionable items.",
+        promptTemplate: "Process the meeting transcript: [[transcript]].\n\n{Instruction}\nExtract:\n- Executive Summary\n- Key Decisions Made\n- Action Items (assigned to owner if mentioned)\n- Unresolved Questions\n\nUse `Natural Language Processor` for extraction.",
+        tools: "Natural Language Processor, Slack Notifier, Task Creator",
+        variables: [
+            { name: "transcript", description: "The raw text of the meeting", type: "String", required: true }
+        ],
+        creativity: 25
+    }
+};
+
 export default function SpecializedAgentSetup() {
     return (
         <Suspense fallback={<Box p="24"><Text>Loading...</Text></Box>}>
@@ -76,6 +154,11 @@ function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
+
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // State for collapsible sections
     const [detailsOpen, setDetailsOpen] = useState(true);
@@ -304,91 +387,7 @@ function SpecializedAgentSetupContent() {
         console.log('Naming version:', versionId);
         // In real app, show dialog to name the version
     };
-    // Mock data for agents
-    const MOCK_AGENTS_DATA: Record<string, any> = {
-        "content-localizer": {
-            name: "Content Localizer",
-            agentId: "content_localizer",
-            description: "Localize your content with specific regional context while maintaining brand voice.",
-            promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker`",
-            tools: "Translate, Style Guide Checker, Regional Thesaurus",
-            variables: [
-                { name: "region", description: "The country or area to localize for", type: "String", required: true },
-                { name: "content", description: "The text that needs localization", type: "String", required: true }
-            ],
-            creativity: 30
-        },
-        "heatmap-analysis": {
-            name: "Heatmap Analysis",
-            agentId: "heatmap_analysis",
-            description: "Transforms a provided heatmap image and url into precise, tailored test ideas.",
-            promptTemplate: "Analyze the attached heatmap image and the corresponding URL: [[url]].\n\n{RAG}\nIdentify patterns in user behavior from recent sessions.\n\n{Instruction}\n1. Areas of high friction (low engagement where expected)\n2. Elements causing confusion\n3. Opportunities for A/B testing\n\nProvide 3 specific test hypotheses based on the visual data using `Image Recognition`.",
-            tools: "Image Recognition, Analytics Connector, Test Idea Lab",
-            variables: [
-                { name: "url", description: "The webpage URL matching the heatmap", type: "String", required: true },
-                { name: "heatmap_image", description: "The uploaded heatmap screenshot", type: "File", required: true }
-            ],
-            creativity: 50
-        },
-        "experiment-planning": {
-            name: "Experiment Planning Agent",
-            agentId: "test_planning",
-            description: "Transforms your raw ideas into a fully-formed test plan.",
-            promptTemplate: "Based on the raw idea: [[raw_idea]], generate a comprehensive experiment plan.\n\n{Instruction}\nInclude:\n- Primary Hypothesis\n- Success Metrics (Primary & Secondary)\n- Target Audience\n- Estimated Duration\n- Technical Implementation Notes\n\nUse `Stats Calculator` to estimate duration.",
-            tools: "Stats Calculator, Audience Segmenter, Jira Integrator",
-            variables: [
-                { name: "raw_idea", description: "The initial thought or problem statement", type: "String", required: true },
-                { name: "previous_results", description: "Link to relevant past experiments", type: "String", required: false }
-            ],
-            creativity: 60
-        },
-        "geo-recommendations": {
-            name: "GEO Recommendations",
-            agentId: "geo_recommendations",
-            description: "Audits webpages for LLM discoverability and delivers actionable recommendations.",
-            promptTemplate: "Scan the provided domain: [[domain]] for generative engine optimization (GEO).\n\n{RAG}\nReference latest search engine documentation on GEO.\n\n{Instruction}\nFocus on:\n1. Content retrievability by LLMs\n2. Structured data verification\n3. Conversational search relevance\n\nGenerate prioritized SEO vs GEO recommendations using `Web Crawler`.",
-            tools: "Web Crawler, Schema Auditor, LLM Predictor",
-            variables: [
-                { name: "domain", description: "The website domain to audit", type: "String", required: true }
-            ],
-            creativity: 20
-        },
-        "resource-manager": {
-            name: "Resource Manager",
-            agentId: "resource_manager",
-            description: "Look up available team members for task assignment.",
-            promptTemplate: "Find the best person for a task with the following requirements: [[task_requirements]].\n\n{Instruction}\nCheck for:\n- Availability in the next [[horizon]] days\n- Skill match scores\n- Current workload balance\n\nCross-reference with `Outlook Calendar`.",
-            tools: "Outlook Calendar, HR Skill Matrix, Project Board",
-            variables: [
-                { name: "task_requirements", description: "Skills and seniority needed", type: "String", required: true },
-                { name: "horizon", description: "Timeframe for the task (in days)", type: "Number", required: true }
-            ],
-            creativity: 10
-        },
-        "seo-keyword-research": {
-            name: "SEO Keyword Research",
-            agentId: "keyword_research",
-            description: "Returns a curated list of keywords designed to maximize content reach.",
-            promptTemplate: "Research high-intent keywords for the topic: [[topic]].\n\n{Instruction}\nAlgorithm:\n1. Identify seed keywords\n2. Analyze search volume and difficulty\n3. Find long-tail variants\n4. Map to user intent categories\n\nUse `Keyword Planner` and `Competitor Scout`.",
-            tools: "Keyword Planner, Competitor Scout, SERP Analyzer",
-            variables: [
-                { name: "topic", description: "Main subject matter", type: "String", required: true },
-                { name: "market", description: "Target market (e.g. US, UK)", type: "String", required: true }
-            ],
-            creativity: 45
-        },
-        "meeting-synthesizer": {
-            name: "Meeting Synthesizer",
-            agentId: "meeting_synthesizer",
-            description: "Summarize your meeting transcripts into actionable items.",
-            promptTemplate: "Process the meeting transcript: [[transcript]].\n\n{Instruction}\nExtract:\n- Executive Summary\n- Key Decisions Made\n- Action Items (assigned to owner if mentioned)\n- Unresolved Questions\n\nUse `Natural Language Processor` for extraction.",
-            tools: "Natural Language Processor, Slack Notifier, Task Creator",
-            variables: [
-                { name: "transcript", description: "The raw text of the meeting", type: "String", required: true }
-            ],
-            creativity: 25
-        }
-    };
+
     // Initialize state based on mode and search params
     useEffect(() => {
         const id = searchParams.get("id");
@@ -436,6 +435,10 @@ function SpecializedAgentSetupContent() {
         }
         setOutputOpen(false);
     }, [mode, searchParams]);
+
+    if (!isMounted) {
+        return <Box h="full" bg="bg.page" />;
+    }
 
     return (
         <Box h="full" bg="bg.page" display="flex" flexDirection="row">
@@ -699,7 +702,7 @@ function SpecializedAgentSetupContent() {
                                                             }}
                                                             tabIndex={-1}
                                                         >
-                                                            {promptTemplate.split(/(\\[\\[.*?\\]\\]|\\{.*?\\}|`.*?`)/g).map((part, i) => {
+                                                            {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
                                                                 if (part.startsWith("[[") && part.endsWith("]]")) {
                                                                     return <span key={i} style={{ color: "var(--ax-colors-fg-warning-strong)", fontWeight: "600" }}>{part}</span>;
                                                                 }
@@ -776,7 +779,15 @@ function SpecializedAgentSetupContent() {
                                                                             )}
                                                                             <Badge intent="neutral">{variable.type}</Badge>
                                                                         </Box>
-                                                                        <Button appearance="subtle" size="sm" icon={<IconEllipsisSolid size={16} />} aria-label="Variable options" disabled={isReadOnly} />
+                                                                        <DropdownMenu>
+                                                                            <DropdownMenuTrigger asChild>
+                                                                                <Button appearance="subtle" size="sm" icon={<IconEllipsisSolid size={16} />} aria-label="Variable options" disabled={isReadOnly} />
+                                                                            </DropdownMenuTrigger>
+                                                                            <DropdownMenuContent>
+                                                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                                                <DropdownMenuItem>Remove</DropdownMenuItem>
+                                                                            </DropdownMenuContent>
+                                                                        </DropdownMenu>
                                                                     </Box>
                                                                 </Card>
                                                             ))
@@ -831,20 +842,20 @@ function SpecializedAgentSetupContent() {
                                                                         <Text fontWeight="500" fontSize="md">{tool.name}</Text>
                                                                         <Text color="fg.secondary" fontSize="sm" mt="4">{tool.description}</Text>
                                                                     </Box>
-                                                                    <Menu options={[]}>
-                                                                        <MenuTrigger asChild>
+                                                                    <DropdownMenu>
+                                                                        <DropdownMenuTrigger asChild>
                                                                             <Button
                                                                                 appearance="subtle"
                                                                                 size="sm"
                                                                                 icon={<IconEllipsisSolid size={16} />}
                                                                                 aria-label="Tool options"
                                                                             />
-                                                                        </MenuTrigger>
-                                                                        <MenuContent>
-                                                                            <LabelMenuButton label="Edit" />
-                                                                            <LabelMenuButton label="Remove" />
-                                                                        </MenuContent>
-                                                                    </Menu>
+                                                                        </DropdownMenuTrigger>
+                                                                        <DropdownMenuContent>
+                                                                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                                            <DropdownMenuItem>Remove</DropdownMenuItem>
+                                                                        </DropdownMenuContent>
+                                                                    </DropdownMenu>
                                                                 </Box>
                                                             ))}
                                                         </Box>
