@@ -266,9 +266,13 @@ function SpecializedAgentSetupContent() {
             },
             "v5": {
                 name: "Content Localizer Pro",
-                description: "Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.",
-                promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Maintain brand voice.\n- Ensure brevity.\n\nContent to localize: [[content]]",
-                tools: "Translate, Style Guide Checker",
+                description: "Localize your content with specific regional context while maintaining brand voice.\n[LEGACY] Ensures cultural sensitivity and local relevance.",
+                promptTemplate: "-- DUMMY DIFF CONTENT --\nThis header was removed in the current version.\n\nYou are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Maintain brand voice.\n- Ensure brevity.\n\nContent to localize: [[content]]",
+                tools: "Translate, Style Guide Checker, Legacy Parser",
+                variables: [
+                    { name: "region", description: "The country or area to localize for", type: "String", required: true },
+                    { name: "legacy_var", description: "DUMMY DIFF: This variable was removed.", type: "String", required: false }
+                ],
                 inferenceLevel: "fast",
                 creativity: 0.2,
             },
@@ -942,6 +946,11 @@ function SpecializedAgentSetupContent() {
                                                             currentValue={inferenceLevel}
                                                             previousValue={comparisonData.inferenceLevel || "balanced"}
                                                         />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={inferenceLevel}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].inferenceLevel || "balanced"}
+                                                        />
                                                     ) : viewingVersion ? (
                                                         <Input
                                                             value={inferenceLevel === "fast" ? "Fast" : inferenceLevel === "advanced" ? "Advanced" : "Balanced (Default)"}
@@ -970,6 +979,11 @@ function SpecializedAgentSetupContent() {
                                                         <FieldComparison
                                                             currentValue={(creativity / 100).toFixed(1)}
                                                             previousValue={comparisonData.creativity?.toFixed(1) || (creativity / 100).toFixed(1)}
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={(creativity / 100).toFixed(1)}
+                                                            currentValue={(MOCK_AGENTS_DATA["content-localizer"].creativity / 100).toFixed(1)}
                                                         />
                                                     ) : (
                                                         <Box display="flex" gap="8" alignItems="center">
