@@ -432,6 +432,8 @@ function SpecializedAgentSetupContent() {
         setIsComparing(false);
         setComparisonVersionId(null);
         setComparisonData(null);
+        setIsVersionHistoryOpen(false);
+        setShowDiffs(false);
 
         // Add new version to history as the current version
         const nextVersionNum = versions.length + 1;
@@ -635,6 +637,7 @@ function SpecializedAgentSetupContent() {
                                 <ComparisonBanner
                                     versionName={comparisonVersionId.toUpperCase()}
                                     onExitComparison={handleExitComparison}
+                                    onRestore={() => handleRestoreVersion(comparisonVersionId)}
                                 />
                             </Box>
                         )}
