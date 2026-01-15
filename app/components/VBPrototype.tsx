@@ -47,7 +47,7 @@ const isEleNode = (n: any) =>
 	typeof n === "object" &&
 	typeof n.id === "string" &&
 	typeof n.type === "string" &&
-	(Array.isArray(n.props) || (n.properties && typeof n.properties === "object"));
+	(n.properties || Array.isArray(n.props));
 
 const ensureOpen = (nodes: any[]): any[] => {
 	return nodes.map((node) => ({
@@ -97,17 +97,39 @@ const normalizePage = (input: any): NormalizeResult => {
 
 	const strip = (node: any): any => {
 		if (isEleNode(node)) {
+			let properties = node.properties;
+			if (!properties && Array.isArray(node.props)) {
+				// Normalize legacy props array to properties map
+				properties = {};
+				node.props.forEach((p: any) => {
+					// Use label-based mapping for legacy support
+					const key = p.label.toLowerCase().includes("text") ? "text" :
+						p.label.toLowerCase().includes("heading") ? "text" :
+							p.label.toLowerCase().includes("label") ? "label" :
+								p.label.toLowerCase().includes("image") ? "imageUrl" :
+									p.label.toLowerCase().replace(/\s+/g, "");
+					properties[key] = { value: p.value };
+				});
+			}
 			theEles[node.id] = {
 				type: node.type,
-				props: node.props,
-				properties: node.properties,
+				properties: properties || {},
 			};
 			return { id: node.id };
 		}
 
 		const out: any = { ...node };
-		const children = node.elements || node.children;
-		if (Array.isArray(children)) out.children = children.map(strip);
+		if (Array.isArray(node.elements)) {
+			out.elements = node.elements.map(strip);
+		} else if (Array.isArray(node.children)) {
+			// If it's likely a column but using 'children', normalize to 'elements'
+			if (node.id && (node.id.startsWith("col-") || node.id.startsWith("c-"))) {
+				out.elements = node.children.map(strip);
+				delete out.children;
+			} else {
+				out.children = node.children.map(strip);
+			}
+		}
 		return out;
 	};
 
@@ -197,10 +219,11 @@ const mergeData = (structure: any[], elements: EleMap) => {
 		const newNode = { ...node };
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
-			newNode.props = elements[node.id].props;
+			newNode.properties = elements[node.id].properties;
 		}
-		if (node.children) {
-			newNode.children = mergeData(node.children, elements);
+		const children = node.elements || node.children;
+		if (Array.isArray(children)) {
+			newNode.children = mergeData(children, elements);
 		}
 		return newNode;
 	});
@@ -477,26 +500,19 @@ export default function VBPrototype({
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev) => {
 				const ele = prev[currentEle];
-				if (ele.properties && typeof keyOrIndex === "string") {
-					return {
-						...prev,
-						[currentEle]: {
-							...ele,
-							properties: {
-								...ele.properties,
-								[keyOrIndex]: { ...ele.properties[keyOrIndex], value },
-							},
-						},
-					};
+				const properties = { ...(ele.properties || {}) };
+
+				if (typeof keyOrIndex === "string") {
+					properties[keyOrIndex] = { ...properties[keyOrIndex], value };
 				}
 
-				if (ele.props && typeof keyOrIndex === "number") {
-					const newProps = [...ele.props];
-					newProps[keyOrIndex] = { ...ele.props[keyOrIndex], value };
-					return { ...prev, [currentEle]: { ...ele, props: newProps } };
-				}
-
-				return prev;
+				return {
+					...prev,
+					[currentEle]: {
+						...ele,
+						properties,
+					},
+				};
 			});
 		}
 	};
@@ -640,10 +656,11 @@ export default function VBPrototype({
 					id: newRowId,
 					children: (row.children || []).map((col: any) => {
 						const newColId = mkId(col.id);
+						const colChildren = col.elements || col.children || [];
 						return {
 							...col,
 							id: newColId,
-							children: (col.children || []).map((ref: any) => {
+							elements: colChildren.map((ref: any) => {
 								const oldEleId = ref?.id;
 								if (!oldEleId) return ref;
 
@@ -669,10 +686,11 @@ export default function VBPrototype({
 			id: newRowId,
 			children: (row.children || []).map((col: any) => {
 				const newColId = mkId(col.id);
+				const colChildren = col.elements || col.children || [];
 				return {
 					...col,
 					id: newColId,
-					children: (col.children || []).map((ref: any) => {
+					elements: colChildren.map((ref: any) => {
 						const oldEleId = ref?.id;
 						if (!oldEleId) return ref;
 
@@ -888,14 +906,15 @@ export default function VBPrototype({
 			children: (sec.children || []).map((row: any) => ({
 				...row,
 				children: (row.children || []).map((col: any) => {
-					const nextChildren = (col.children || []).filter((ref: any) => {
+					const colChildren = col.elements || col.children || [];
+					const nextChildren = colChildren.filter((ref: any) => {
 						if (ref?.id === draggingId) {
 							draggedRef = cloning ? { id: newEleId } : ref;
 							return cloning;
 						}
 						return true;
 					});
-					return { ...col, children: nextChildren };
+					return { ...col, elements: nextChildren };
 				}),
 			})),
 		}));
@@ -909,10 +928,11 @@ export default function VBPrototype({
 				children: (sec.children || []).map((row: any) => ({
 					...row,
 					children: (row.children || []).map((col: any) => {
-						if (col.id !== targetColId) return col;
-						if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
-						return { ...col, children: [...(col.children || []), draggedRef] };
-					}),
+					if (col.id !== targetColId) return col;
+					const colChildren = col.elements || col.children || [];
+					if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
+					return { ...col, elements: [...colChildren, draggedRef] };
+				}),
 				})),
 			}));
 
@@ -924,14 +944,15 @@ export default function VBPrototype({
 			children: (sec.children || []).map((row: any) => ({
 				...row,
 				children: (row.children || []).map((col: any) => {
-					const idx = (col.children || []).findIndex((r: any) => r?.id === hoverId);
+					const colChildren = col.elements || col.children || [];
+					const idx = colChildren.findIndex((r: any) => r?.id === hoverId);
 					if (idx === -1) return col;
 
-					if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
+					if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
 
-					const copy = [...(col.children || [])];
+					const copy = [...colChildren];
 					copy.splice(idx, 0, draggedRef);
-					return { ...col, children: copy };
+					return { ...col, elements: copy };
 				}),
 			})),
 		}));
@@ -1320,7 +1341,6 @@ export default function VBPrototype({
 														outlineTitle={activeOutline?.title || "Outline"}
 														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 														currentEle={currentEle}
-														propsList={theEles[currentEle]?.props}
 														properties={theEles[currentEle]?.properties}
 														onBack={() => {
 															setCurrentEle("none");
@@ -1397,7 +1417,6 @@ export default function VBPrototype({
 												outlineTitle={activeOutline?.title || "Outline"}
 												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 												currentEle={currentEle}
-												propsList={theEles[currentEle]?.props}
 												properties={theEles[currentEle]?.properties}
 												onBack={() => {
 													setCurrentEle("none");

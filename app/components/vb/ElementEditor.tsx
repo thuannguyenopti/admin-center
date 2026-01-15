@@ -7,7 +7,6 @@ import { BLOCK_SCHEMAS } from "./blocks/schemas";
 type Props = {
   currentEle: string;
   elementType: string;
-  propsList?: any[];
   properties?: any;
   onBack: () => void;
   onInputChange: (value: any, keyOrIndex: string | number) => void;
@@ -100,30 +99,6 @@ export default function ElementEditor({
           </Box>
         </Box>
       </Box>
-
-      {/* Legacy Props List Support */}
-      {propsList?.map((prop: any, ind: number) => (
-        <Fragment key={ind}>
-          {prop.type === "text" && (
-            <Input
-              label={prop.label}
-              placeholder={prop.placeholder}
-              value={prop.value}
-              onChange={(val: any) => onInputChange(val, ind)}
-            />
-          )}
-          {prop.type === "checkbox" && (
-            <div className="p-6 pr-0 py-2">
-              <Checkbox
-                checked={prop.value === "true" ? true : false}
-                onChange={(e: any) => onInputChange(e.currentTarget.checked ? "true" : "false", ind)}
-              >
-                {prop.label}
-              </Checkbox>
-            </div>
-          )}
-        </Fragment>
-      ))}
 
       {/* Production-Aligned Schema-Driven Properties */}
       {(() => {

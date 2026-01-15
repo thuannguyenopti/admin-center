@@ -17,8 +17,9 @@ import {
 
 import styles from "../VBPrototype.module.css";
 import { BlockRegistry } from "./blocks";
+import { isImageDrag, isInternalDrag, isValidVBDrag, VB_INTERNAL_MIME } from "./blocks/utils";
 
-export type EleMap = Record<string, { type: string; props?: any[]; properties?: any }>;
+export type EleMap = Record<string, { type: string; properties: any }>;
 
 export type Outline = {
     id: string;
@@ -28,16 +29,6 @@ export type Outline = {
 };
 
 type DropPosition = { outlineId: string; colId: string; position: number } | null;
-
-const isImageDrag = (dt: DataTransfer) => {
-    const types = Array.from(dt?.types || []);
-    return (
-        types.includes("image/url") || // your custom type (if browser exposes it)
-        types.includes("text/uri-list") || // common for URL drags
-        types.includes("text/plain") || // common fallback
-        types.includes("Files") // if dragging files
-    );
-};
 
 const getDraggedImageUrl = (dt: DataTransfer) => {
     const url =
@@ -135,6 +126,73 @@ export default function PreviewCanvas({
         root.scrollTo({ top: root.scrollTop + delta, behavior: "smooth" });
     }, [currentEle]);
 
+    const moveElementInOutlines = (eleId: string, dp: DropPosition) => {
+        if (!dp) return;
+
+        setOutlines((prev) => {
+            let movedEleNode: any = null;
+            let movedEleData: any = null;
+
+            // Step 1: Remove from everywhere
+            const nextOutlines = prev.map((outline: any) => {
+                let foundInThisOutline = false;
+                const nextTree = outline.tree.map((section: any) => ({
+                    ...section,
+                    children: (section.children || []).map((row: any) => ({
+                        ...row,
+                        children: (row.children || []).map((col: any) => {
+                            const colChildren = col.elements || col.children || [];
+                            const found = colChildren.find((e: any) => e.id === eleId);
+                            if (found) {
+                                movedEleNode = found;
+                                movedEleData = outline.elements[eleId];
+                                foundInThisOutline = true;
+                            }
+                            const nextChildren = colChildren.filter((e: any) => e.id !== eleId);
+                            return { ...col, elements: nextChildren };
+                        }),
+                    })),
+                }));
+
+                if (foundInThisOutline) {
+                    const nextElements = { ...outline.elements };
+                    delete nextElements[eleId];
+                    return { ...outline, tree: nextTree, elements: nextElements };
+                }
+                return { ...outline, tree: nextTree };
+            });
+
+            if (!movedEleNode) return prev;
+
+            // Step 2: Insert into target
+            return nextOutlines.map((outline: any) => {
+                if (outline.id !== dp.outlineId) return outline;
+
+                const nextElements = {
+                    ...outline.elements,
+                    [eleId]: movedEleData,
+                };
+
+                const nextTree = outline.tree.map((section: any) => ({
+                    ...section,
+                    children: (section.children || []).map((row: any) => ({
+                        ...row,
+                        children: (row.children || []).map((col: any) => {
+                            if (col.id !== dp.colId) return col;
+                            const colChildren = col.elements || col.children || [];
+                            const nextChildren = [...colChildren];
+                            const safePos = Math.max(0, Math.min(nextChildren.length, dp.position));
+                            nextChildren.splice(safePos, 0, movedEleNode);
+                            return { ...col, elements: nextChildren, open: true };
+                        }),
+                    })),
+                }));
+
+                return { ...outline, tree: nextTree, elements: nextElements };
+            });
+        });
+    };
+
     const insertImageIntoOutline = (
         dp: NonNullable<DropPosition>,
         imageUrl: string,
@@ -149,14 +207,13 @@ export default function PreviewCanvas({
                 const nextElements: EleMap = {
                     ...o.elements,
                     [uKey]: {
-                        type: "Image",
-                        props: [
-                            { type: "text", label: "Image URL", value: imageUrl },
-                            { type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-                            { type: "text", label: "Alt Text", value: imageAlt },
-                            { type: "text", label: "Width", value: "auto" },
-                            { type: "text", label: "Height", value: "auto" },
-                        ],
+                        type: "ct-image",
+                        properties: {
+                            imageUrl: { value: imageUrl },
+                            altText: { value: imageAlt || "Untitled Image" },
+                            width: { value: "auto" },
+                            height: { value: "auto" },
+                        },
                     },
                 };
 
@@ -168,7 +225,8 @@ export default function PreviewCanvas({
                             if (col.id !== dp.colId) return col;
                             const currentChildren = col.elements || col.children || [];
                             const nextChildren = [...currentChildren];
-                            nextChildren.splice(dp.position, 0, { id: uKey });
+                            const safePos = Math.max(0, Math.min(nextChildren.length, dp.position));
+                            nextChildren.splice(safePos, 0, { id: uKey });
                             // normalize to elements
                             const { children: _old, ...rest } = col;
                             return { ...rest, elements: nextChildren };
@@ -228,7 +286,7 @@ export default function PreviewCanvas({
                                                 e.stopPropagation();
 
                                                 // ✅ IMPORTANT: do NOT rely on only "image/url"
-                                                if (!isImageDrag(e.dataTransfer)) return;
+                                                if (!isValidVBDrag(e.dataTransfer)) return;
 
                                                 setDragOverColumn(col.id);
 
@@ -261,23 +319,6 @@ export default function PreviewCanvas({
                                             }}
                                             className={dragOverColumn === col.id ? "relative" : ""}
                                         >
-                                            {/* empty drop */}
-                                            {colChildren.length === 0 && dragOverColumn === col.id && (
-                                                <div
-                                                    style={{
-                                                        border: "2px dashed #0037FF",
-                                                        borderRadius: "8px",
-                                                        padding: "20px",
-                                                        textAlign: "center",
-                                                        color: "#0037FF",
-                                                        fontSize: "14px",
-                                                        backgroundColor: "rgba(0, 55, 255, 0.05)",
-                                                    }}
-                                                >
-                                                    Drop image here
-                                                </div>
-                                            )}
-
                                             {/* list */}
                                             {colChildren.map((element: any, eleIndex: number) => {
                                                 const ele = outline.elements[element.id];
@@ -340,14 +381,19 @@ export default function PreviewCanvas({
                                                                     {(() => {
                                                                         switch (type) {
                                                                             case "Heading":
+                                                                            case "ct-heading":
                                                                                 return <IconHeading size={12} />;
                                                                             case "Text":
+                                                                            case "ct-text":
                                                                                 return <IconPilcrow size={12} />;
                                                                             case "Input":
+                                                                            case "ct-input":
                                                                                 return <IconForms size={12} />;
                                                                             case "Button":
+                                                                            case "ct-button":
                                                                                 return <IconRectangle size={12} />;
                                                                             case "Image":
+                                                                            case "ct-image":
                                                                                 return <IconPhoto size={12} />;
                                                                             default:
                                                                                 return <IconBrackets size={12} />;
@@ -361,9 +407,7 @@ export default function PreviewCanvas({
                                                             {(() => {
                                                                 const BlockComponent = BlockRegistry[type];
                                                                 if (BlockComponent) {
-                                                                    // Normalize older props array to properties object if needed
-                                                                    const properties = ele.properties || ele.props;
-                                                                    return <BlockComponent properties={properties} hasBgImage={hasBgImage} />;
+                                                                    return <BlockComponent properties={ele.properties} hasBgImage={hasBgImage} />;
                                                                 }
                                                                 return null;
                                                             })()}
@@ -422,7 +466,7 @@ export default function PreviewCanvas({
                 onClick={() => setCurrentEle("none")}
                 onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
                     e.preventDefault();
-                    if (isImageDrag(e.dataTransfer)) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
+                    if (isValidVBDrag(e.dataTransfer)) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
                 }}
                 onDragLeave={(e: React.DragEvent<HTMLDivElement>) => {
                     (e.currentTarget as HTMLDivElement).style.opacity = "1";
@@ -435,12 +479,14 @@ export default function PreviewCanvas({
 
                     const imageUrl = getDraggedImageUrl(e.dataTransfer);
                     const imageAlt = getDraggedAlt(e.dataTransfer);
+                    const internalId = e.dataTransfer.getData(VB_INTERNAL_MIME);
 
                     const dp = dropPosition;
                     setDragOverColumn(null);
                     setDropPosition(null);
 
                     if (imageUrl && dp) insertImageIntoOutline(dp, imageUrl, imageAlt);
+                    if (internalId && dp) moveElementInOutlines(internalId, dp);
                 }}
                 style={{ transition: "opacity 0.2s" }}
             >
