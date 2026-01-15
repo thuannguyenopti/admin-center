@@ -37,7 +37,8 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
         return (
             <Box
                 p="8"
-                px="12"
+                pl="6"
+                pr="12"
                 bg={bg}
             >
                 <Box display="flex" gap="8">
@@ -219,7 +220,8 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
                         <Box
                             key={index}
                             p="8"
-                            px="12"
+                            pl="6"
+                            pr="12"
                             bg={isDifferent ? "bg.error.subtle" : "bg.default"}
                         >
                             <Box display="flex" gap="8">
@@ -265,7 +267,8 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
                     <Box
                         key={`empty-prev-${index}`}
                         p="8"
-                        px="12"
+                        pl="6"
+                        pr="12"
                         style={{
                             backgroundColor: "var(--ax-colors-bg-secondary)"
                         }}
@@ -303,7 +306,8 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
                         <Box
                             key={index}
                             p="8"
-                            px="12"
+                            pl="6"
+                            pr="12"
                             bg={isDifferent ? "bg.success.subtle" : "bg.default"}
                         >
                             <Box display="flex" gap="8">
@@ -349,7 +353,8 @@ export const FieldComparison = forwardRef<HTMLDivElement, FieldComparisonProps>(
                     <Box
                         key={`empty-curr-${index}`}
                         p="8"
-                        px="12"
+                        pl="6"
+                        pr="12"
                         style={{
                             backgroundColor: "var(--ax-colors-bg-secondary)"
                         }}

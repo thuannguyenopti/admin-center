@@ -44,6 +44,9 @@ interface VersionHistoryProps {
     onNameVersion: (versionId: string) => void;
     onCompareVersion: (versionId: string) => void;
     onExitVersionView?: () => void;
+    viewingVersionId?: string | null;
+    isComparing?: boolean;
+    comparisonVersionId?: string | null;
 }
 
 // Mock data for versions
@@ -109,6 +112,9 @@ export function VersionHistory({
     onNameVersion,
     onCompareVersion,
     onExitVersionView,
+    viewingVersionId,
+    isComparing = false,
+    comparisonVersionId,
 }: VersionHistoryProps) {
     const currentVersion = mockVersions.find(v => v.isCurrent);
     const previousVersions = mockVersions.filter(v => !v.isCurrent);
@@ -177,6 +183,9 @@ export function VersionHistory({
                                     onCompareVersion={onCompareVersion}
                                     onExitVersionView={onExitVersionView}
                                     isCurrent
+                                    isViewing={!viewingVersionId}
+                                    isComparing={isComparing}
+                                    isCompared={false}
                                 />
                             </Box>
                         )}
@@ -198,6 +207,9 @@ export function VersionHistory({
                                             onHideVersion={onHideVersion}
                                             onNameVersion={onNameVersion}
                                             onCompareVersion={onCompareVersion}
+                                            isViewing={viewingVersionId === version.id}
+                                            isComparing={isComparing}
+                                            isCompared={comparisonVersionId === version.id}
                                         />
                                     ))}
                                 </Box>
@@ -220,6 +232,9 @@ interface VersionCardProps {
     onCompareVersion: (versionId: string) => void;
     onExitVersionView?: () => void;
     isCurrent?: boolean;
+    isViewing?: boolean;
+    isComparing?: boolean;
+    isCompared?: boolean;
 }
 
 function VersionCard({
@@ -232,6 +247,9 @@ function VersionCard({
     onCompareVersion,
     onExitVersionView,
     isCurrent = false,
+    isViewing = false,
+    isComparing = false,
+    isCompared = false,
 }: VersionCardProps) {
     return (
         <Box
@@ -239,16 +257,19 @@ function VersionCard({
             display="flex"
             gap="8"
             alignItems="center"
-            rounded="sm"
-            border={isCurrent ? "2" : "1"}
-            borderColor={isCurrent ? "border.accent" : "border.secondary"}
-            bg="bg.default"
+            rounded="md"
+            border={isViewing ? "2" : "1"}
+            borderColor={isViewing ? "border.accent" : "border.secondary"}
+            bg={isCompared ? "bg.accent.subtle" : "bg.default"}
             style={{
                 cursor: "pointer",
             }}
             onClick={() => {
                 if (isCurrent && onExitVersionView) {
                     onExitVersionView();
+                } else if (isComparing) {
+                    // In comparison mode, clicking a version switches the comparison
+                    onCompareVersion(version.id);
                 } else if (!isCurrent) {
                     onViewVersion(version.id);
                 }

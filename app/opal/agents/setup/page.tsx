@@ -25,6 +25,9 @@ import {
     MenuTrigger,
     MenuContent,
     LabelMenuButton,
+    Select,
+    SelectTrigger,
+    SelectContent,
 } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input";
 import {
@@ -34,6 +37,7 @@ import {
     IconHelp,
     IconSparkles,
     IconDots,
+    IconDotsVertical,
 } from "@tabler/icons-react";
 import {
     IconFileImport,
@@ -49,6 +53,7 @@ import {
     IconToggleOff,
     IconFile,
     IconBracketsSquare,
+    IconEllipsisSolid,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -85,6 +90,7 @@ function SpecializedAgentSetupContent() {
     const [creativity, setCreativity] = useState(40);
     const [promptTemplate, setPromptTemplate] = useState("");
     const [tools, setTools] = useState("");
+    const [inferenceLevel, setInferenceLevel] = useState("balanced");
     const [variables, setVariables] = useState<any[]>([]);
 
     // State for scroll
@@ -103,6 +109,8 @@ function SpecializedAgentSetupContent() {
         description: string;
         promptTemplate: string;
         tools: string;
+        inferenceLevel?: string;
+        creativity?: number;
     } | null>(null);
     const [showDiffs, setShowDiffs] = useState(false);
 
@@ -132,23 +140,68 @@ function SpecializedAgentSetupContent() {
         } else if (versionId === "v22") {
             setPromptTemplate("Version 22 Prompt: [[overview]].\n\n{RAG}\nCheck documentation archive.\n\nUse `Translate`.");
         }
+
+        // Mock inference level for versions
+        if (versionId === "v5") {
+            setInferenceLevel("fast");
+        } else {
+            setInferenceLevel("balanced");
+        }
     };
 
     const handleCompareVersion = (versionId: string) => {
         console.log('Comparing version:', versionId, 'with current');
         setComparisonVersionId(versionId);
 
-        // Load comparison data (mock data for now)
-        // V4 has MORE content (showing removals when compared to current)
-        const mockData = {
-            name: versionId === "v4" ? "Content Localizer Pro" : agentName,
-            description: versionId === "v4"
-                ? "Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.\nSupports multiple language pairs and regional variants."
-                : description,
-            promptTemplate: versionId === "v4"
-                ? "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n- Consider cultural sensitivities and taboos.\n- Adapt idioms and metaphors appropriately.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker` `Cultural Analyzer`"
-                : promptTemplate,
-            tools: versionId === "v4" ? "Translate, Style Guide Checker, Regional Thesaurus, Cultural Analyzer" : tools,
+        // Mock version data with actual differences for comparison
+        const versionMockData: Record<string, any> = {
+            "v6": {
+                name: "Content Localizer Enterprise",
+                description: "Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.\nSupports multiple language pairs and regional variants.\nAI-powered suggestions for optimal localization.\nQuality scoring and validation.",
+                promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n- Consider cultural sensitivities and taboos.\n- Adapt idioms and metaphors appropriately.\n- Provide quality score and suggestions.\n- Validate against regional guidelines.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker` `Cultural Analyzer` `Quality Scorer`",
+                tools: "Translate, Style Guide Checker, Regional Thesaurus, Cultural Analyzer, Quality Scorer",
+            },
+            "v5": {
+                name: "Content Localizer Pro",
+                description: "Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.",
+                promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Maintain brand voice.\n- Ensure brevity.\n\nContent to localize: [[content]]",
+                tools: "Translate, Style Guide Checker",
+                inferenceLevel: "fast",
+                creativity: 0.2,
+            },
+            "v4": {
+                name: "Content Localizer Advanced",
+                description: "Localize your content with regional context.\nEnsures cultural sensitivity.\nSupports multiple languages.",
+                promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker`",
+                tools: "Translate, Style Guide Checker, Regional Thesaurus",
+            },
+            "v3": {
+                name: "Content Localizer",
+                description: "Localize your content with regional context while maintaining brand voice.\nSupports multiple languages.",
+                promptTemplate: "You are a localization expert. Adapt the content for: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Maintain brand voice.\n\nContent: [[content]]\n\n`Translate`",
+                tools: "Translate, Style Guide Checker",
+            },
+            "v2": {
+                name: "Content Localizer Beta",
+                description: "Localize your content for different regions.\nMaintains brand consistency.",
+                promptTemplate: "Adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Keep the same tone.\n\nContent: [[content]]",
+                tools: "Translate",
+            },
+            "v1": {
+                name: "Localizer",
+                description: "Basic content localization tool.",
+                promptTemplate: "Translate content for: [[region]].\n\nContent: [[content]]",
+                tools: "Translate",
+            },
+        };
+
+        const mockData = versionMockData[versionId] || {
+            name: agentName,
+            description: description,
+            promptTemplate: promptTemplate,
+            tools: tools,
+            inferenceLevel: inferenceLevel,
+            creativity: creativity / 100,
         };
 
         setComparisonData(mockData);
@@ -163,7 +216,7 @@ function SpecializedAgentSetupContent() {
         setComparisonData(null);
     };
 
-    const isReadOnly = !!viewingVersion;
+    const isReadOnly = !!viewingVersion || isComparing;
 
     // Helper for syntax highlighting in prompt template
     const HighlightedPrompt = ({ text }: { text: string }) => {
@@ -171,7 +224,10 @@ function SpecializedAgentSetupContent() {
         const parts = text.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g);
         return (
             <Box
-                p="12"
+                pt="12"
+                pr="12"
+                pb="12"
+                pl="6"
                 rounded="sm"
                 bg="bg.secondary"
                 style={{
@@ -341,6 +397,7 @@ function SpecializedAgentSetupContent() {
                 setTools(data.tools);
                 setVariables(data.variables);
                 setCreativity(data.creativity || 40);
+                setInferenceLevel(data.inferenceLevel || "balanced");
             } else {
                 // Default fallback (Email Creation)
                 setAgentName("Email Creation");
@@ -366,6 +423,7 @@ function SpecializedAgentSetupContent() {
             setTools("");
             setVariables([]);
             setCreativity(40);
+            setInferenceLevel("balanced");
         }
         setOutputOpen(false);
     }, [mode, searchParams]);
@@ -703,13 +761,13 @@ function SpecializedAgentSetupContent() {
                                                                                 <Text fontSize="sm" color="fg.secondary">{variable.description}</Text>
                                                                             </Box>
                                                                         </Box>
-                                                                        <Box display="flex" gap="8" alignItems="center">
+                                                                        <Box display="flex" gap="8" alignItems="center" mr="32">
                                                                             {variable.required && (
-                                                                                <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
+                                                                                <Badge intent="information">Required</Badge>
                                                                             )}
-                                                                            <Text fontSize="sm" color="fg.secondary">{variable.type}</Text>
-                                                                            <Button appearance="subtle" size="sm" icon={<IconTrash />} aria-label="Delete variable" disabled={isReadOnly} />
+                                                                            <Badge intent="neutral">{variable.type}</Badge>
                                                                         </Box>
+                                                                        <Button appearance="subtle" size="sm" icon={<IconEllipsisSolid size={16} />} aria-label="Variable options" disabled={isReadOnly} />
                                                                     </Box>
                                                                 </Card>
                                                             ))
@@ -732,48 +790,127 @@ function SpecializedAgentSetupContent() {
                                                             mode="stacked"
                                                         />
                                                     ) : (
-                                                        <Input
-                                                            value={tools}
-                                                            onChange={(e) => setTools(e.target.value)}
-                                                            placeholder="Select tools..."
-                                                            readOnly={isReadOnly}
-                                                            tabIndex={isReadOnly ? -1 : 0}
-                                                        />
+                                                        <Box display="flex" flexDirection="column" gap="8">
+                                                            {/* Mock tools data */}
+                                                            {[
+                                                                {
+                                                                    name: "translate",
+                                                                    description: "Translates text between languages with context awareness"
+                                                                },
+                                                                {
+                                                                    name: "style-guide-checker",
+                                                                    description: "Validates content against brand style guidelines and tone"
+                                                                },
+                                                                {
+                                                                    name: "regional-thesaurus",
+                                                                    description: "Provides region-specific synonyms and terminology alternatives"
+                                                                }
+                                                            ].map((tool, index) => (
+                                                                <Box
+                                                                    key={index}
+                                                                    p="12"
+                                                                    border="1"
+                                                                    borderColor="border.secondary"
+                                                                    rounded="md"
+                                                                    bg="bg.default"
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                    justifyContent="space-between"
+                                                                    gap="12"
+                                                                >
+                                                                    <Box flex="1">
+                                                                        <Text fontWeight="500" fontSize="md">{tool.name}</Text>
+                                                                        <Text color="fg.secondary" fontSize="sm" mt="4">{tool.description}</Text>
+                                                                    </Box>
+                                                                    <Menu options={[]}>
+                                                                        <MenuTrigger asChild>
+                                                                            <Button
+                                                                                appearance="subtle"
+                                                                                size="sm"
+                                                                                icon={<IconEllipsisSolid size={16} />}
+                                                                                aria-label="Tool options"
+                                                                            />
+                                                                        </MenuTrigger>
+                                                                        <MenuContent>
+                                                                            <LabelMenuButton label="Edit" />
+                                                                            <LabelMenuButton label="Remove" />
+                                                                        </MenuContent>
+                                                                    </Menu>
+                                                                </Box>
+                                                            ))}
+                                                        </Box>
                                                     )}
                                                 </Field>
 
-                                                <Box display="flex" gap="24">
-                                                    <Box flex="1">
-                                                        <Field label="Inference Level" info="Select model intelligence">
-                                                            <Input defaultValue="Balanced (Default)" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : 0} />
-                                                        </Field>
-                                                    </Box>
-                                                    <Box flex="1">
-                                                        <Field label="Creativity" info="Adjust temperature">
-                                                            <Box display="flex" gap="8" alignItems="center" mt="8">
-                                                                {/* Custom Slider Mockup */}
-                                                                <Box style={{ height: "4px", position: "relative" }} bg="bg.accent" flex="1" rounded="full">
-                                                                    <Box
-                                                                        w="16"
-                                                                        h="16"
-                                                                        bg="bg.accent"
-                                                                        rounded="full"
-                                                                        border="2"
-                                                                        style={{
-                                                                            borderColor: "var(--ax-colors-bg-default)",
-                                                                            position: "absolute",
-                                                                            top: "-6px",
-                                                                            left: `${creativity}%`
-                                                                        }}
-                                                                    />
-                                                                </Box>
-                                                                <Box border="1" borderColor="border.tertiary" px="8" py="2" rounded="sm">
-                                                                    {(creativity / 100).toFixed(1)}
-                                                                </Box>
+                                                <Field label="Inference Level" info="Select model intelligence" style={{ maxWidth: "320px" }}>
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            currentValue={inferenceLevel}
+                                                            previousValue={comparisonData.inferenceLevel || "balanced"}
+                                                        />
+                                                    ) : viewingVersion ? (
+                                                        <Input
+                                                            value={inferenceLevel === "fast" ? "Fast" : inferenceLevel === "advanced" ? "Advanced" : "Balanced (Default)"}
+                                                            readOnly
+                                                            size="md"
+                                                        />
+                                                    ) : (
+                                                        <Select
+                                                            value={inferenceLevel}
+                                                            onValueChange={setInferenceLevel}
+                                                            disabled={isReadOnly}
+                                                            options={[
+                                                                { label: "Fast", value: "fast" },
+                                                                { label: "Balanced (Default)", value: "balanced" },
+                                                                { label: "Advanced", value: "advanced" },
+                                                            ]}
+                                                        >
+                                                            <SelectTrigger size="md" />
+                                                            <SelectContent />
+                                                        </Select>
+                                                    )}
+                                                </Field>
+
+                                                <Field label="Creativity" info="Adjust temperature" style={{ maxWidth: "320px" }}>
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            currentValue={(creativity / 100).toFixed(1)}
+                                                            previousValue={comparisonData.creativity?.toFixed(1) || (creativity / 100).toFixed(1)}
+                                                        />
+                                                    ) : (
+                                                        <Box display="flex" gap="8" alignItems="center">
+                                                            {/* Custom Slider Mockup */}
+                                                            <Box style={{ height: "4px", position: "relative" }} bg="bg.accent" flex="1" rounded="full">
+                                                                <Box
+                                                                    w="16"
+                                                                    h="16"
+                                                                    bg="bg.accent"
+                                                                    rounded="full"
+                                                                    border="2"
+                                                                    style={{
+                                                                        borderColor: "var(--ax-colors-bg-default)",
+                                                                        position: "absolute",
+                                                                        top: "-6px",
+                                                                        left: `${creativity}%`
+                                                                    }}
+                                                                />
                                                             </Box>
-                                                        </Field>
-                                                    </Box>
-                                                </Box>
+                                                            <Input
+                                                                value={(creativity / 100).toFixed(1)}
+                                                                onChange={(e) => {
+                                                                    const val = parseFloat(e.target.value);
+                                                                    if (!isNaN(val) && val >= 0 && val <= 1) {
+                                                                        setCreativity(Math.round(val * 100));
+                                                                    }
+                                                                }}
+                                                                style={{ width: "80px" }}
+                                                                readOnly={isReadOnly}
+                                                                tabIndex={isReadOnly ? -1 : 0}
+                                                                size="md"
+                                                            />
+                                                        </Box>
+                                                    )}
+                                                </Field>
 
                                                 {/* Files Section nested inside Input per instruction */}
                                                 <Box mt="8">
@@ -829,6 +966,9 @@ function SpecializedAgentSetupContent() {
                 onHideVersion={handleHideVersion}
                 onNameVersion={handleNameVersion}
                 onExitVersionView={handleExitVersionView}
+                viewingVersionId={viewingVersion}
+                isComparing={isComparing}
+                comparisonVersionId={comparisonVersionId}
             />
         </Box>
     );
