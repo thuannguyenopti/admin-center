@@ -35,7 +35,6 @@ const Input: React.FC<{ label: string; placeholder?: string; value: any; onChang
 export default function ElementEditor({
   currentEle,
   elementType,
-  propsList,
   properties,
   onBack,
   onInputChange,
