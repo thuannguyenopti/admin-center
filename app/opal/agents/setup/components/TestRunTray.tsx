@@ -108,7 +108,6 @@ export function TestRunTray({
                         <Disclosure defaultOpen>
                             <DisclosureTrigger>
                                 <Box display="flex" alignItems="center" gap="8" w="full">
-                                    <IconChevronRight size={16} style={{ transform: "var(--ax-Disclosure-transform)" }} />
                                     <Text fontWeight="600">Input</Text>
                                 </Box>
                             </DisclosureTrigger>
@@ -133,15 +132,17 @@ export function TestRunTray({
                                         <Text color="fg.secondary" fontSize="sm">No variables defined for this agent.</Text>
                                     )}
 
-                                    <Button
-                                        appearance="primary"
-                                        icon={<IconPlay />}
-                                        onClick={handleRun}
-                                        loading={isRunning}
-                                        disabled={variables.length > 0 && variables.some(v => v.required && !inputValues[v.name])}
-                                    >
-                                        Run Test
-                                    </Button>
+                                    <Box display="flex">
+                                        <Button
+                                            appearance="primary"
+                                            icon={<IconPlay />}
+                                            onClick={handleRun}
+                                            loading={isRunning}
+                                            disabled={variables.length > 0 && variables.some(v => v.required && !inputValues[v.name])}
+                                        >
+                                            Run Test
+                                        </Button>
+                                    </Box>
                                 </Box>
                             </DisclosureContent>
                         </Disclosure>
@@ -150,7 +151,6 @@ export function TestRunTray({
                         <Disclosure defaultOpen>
                             <DisclosureTrigger>
                                 <Box display="flex" alignItems="center" gap="8" w="full">
-                                    <IconChevronRight size={16} style={{ transform: "var(--ax-Disclosure-transform)" }} />
                                     <Text fontWeight="600">Output</Text>
                                 </Box>
                             </DisclosureTrigger>
