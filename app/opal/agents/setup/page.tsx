@@ -637,7 +637,6 @@ function SpecializedAgentSetupContent() {
                                 <ComparisonBanner
                                     versionName={comparisonVersionId.toUpperCase()}
                                     onExitComparison={handleExitComparison}
-                                    onRestore={() => handleRestoreVersion(comparisonVersionId)}
                                 />
                             </Box>
                         )}
