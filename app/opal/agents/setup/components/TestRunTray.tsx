@@ -59,6 +59,16 @@ export function TestRunTray({
         }, 1500);
     };
 
+    const handleClearInputs = () => {
+        const cleared = Object.keys(inputValues).reduce((acc, key) => {
+            acc[key] = "";
+            return acc;
+        }, {} as Record<string, string>);
+        setInputValues(cleared);
+    };
+
+    const hasInputs = Object.values(inputValues).some(val => val.length > 0);
+
     return (
         <Box
             style={{
@@ -109,11 +119,25 @@ export function TestRunTray({
                     >
                         {/* Input Section */}
                         <Disclosure defaultOpen>
-                            <DisclosureTrigger>
-                                <Box display="flex" alignItems="center" gap="8" w="full">
-                                    <Text fontWeight="600">Input</Text>
-                                </Box>
-                            </DisclosureTrigger>
+                            <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+                                <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        <Text fontWeight="600">Input</Text>
+                                    </Box>
+                                </DisclosureTrigger>
+                                {hasInputs && (
+                                    <Button
+                                        appearance="subtle"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleClearInputs();
+                                        }}
+                                    >
+                                        Clear all
+                                    </Button>
+                                )}
+                            </Box>
                             <DisclosureContent>
                                 <Box display="flex" flexDirection="column" gap="16" pt="12">
                                     {variables.length > 0 ? (
@@ -152,8 +176,8 @@ export function TestRunTray({
 
                         {/* Output Section */}
                         <Disclosure defaultOpen>
-                            <Box display="flex" alignItems="center" gap="8" w="full">
-                                <DisclosureTrigger>
+                            <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+                                <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
                                         <Text fontWeight="600">Output</Text>
                                     </Box>
