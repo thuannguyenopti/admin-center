@@ -143,6 +143,19 @@ const MOCK_AGENTS_DATA: Record<string, any> = {
 };
 
 export default function SpecializedAgentSetup() {
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+        return (
+            <Box h="full" bg="bg.page" display="flex" alignItems="center" justifyContent="center">
+                <Box p="24"><Text>Loading...</Text></Box>
+            </Box>
+        );
+    }
+
     return (
         <Suspense fallback={<Box p="24"><Text>Loading...</Text></Box>}>
             <SpecializedAgentSetupContent />
@@ -155,10 +168,7 @@ function SpecializedAgentSetupContent() {
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
 
-    const [isMounted, setIsMounted] = useState(false);
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+
 
     // State for collapsible sections
     const [detailsOpen, setDetailsOpen] = useState(true);
@@ -334,7 +344,8 @@ function SpecializedAgentSetupContent() {
         setAgentName(data.name);
         setDescription(data.description);
         setPromptTemplate(data.promptTemplate);
-        setTools(data.tools);
+        setTools(data.tools || "");
+        setVariables(data.variables || []);
         setInferenceLevel(data.inferenceLevel || "balanced");
         if (data.creativity !== undefined) setCreativity(Math.round(data.creativity * 100));
     };
@@ -411,7 +422,8 @@ function SpecializedAgentSetupContent() {
         setAgentName(data.name);
         setDescription(data.description);
         setPromptTemplate(data.promptTemplate);
-        setTools(data.tools);
+        setTools(data.tools || "");
+        setVariables(data.variables || []);
         setInferenceLevel(data.inferenceLevel || "balanced");
         if (data.creativity !== undefined) setCreativity(data.creativity * 100);
 
@@ -514,9 +526,7 @@ function SpecializedAgentSetupContent() {
         setOutputOpen(false);
     }, [mode, searchParams]);
 
-    if (!isMounted) {
-        return <Box h="full" bg="bg.page" />;
-    }
+
 
     return (
         <Box h="full" bg="bg.page" display="flex" flexDirection="row">
@@ -669,8 +679,8 @@ function SpecializedAgentSetupContent() {
                                                 <Field label="Name" required>
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
-                                                            currentValue={agentName}
                                                             previousValue={comparisonData.name}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].name}
                                                         />
                                                     ) : showDiffs && viewingVersion ? (
                                                         <FieldComparison
@@ -686,7 +696,6 @@ function SpecializedAgentSetupContent() {
                                                                     onChange={(e) => setAgentName(e.target.value)}
                                                                     placeholder="e.g. Email Creation"
                                                                     readOnly={isReadOnly}
-                                                                    tabIndex={isReadOnly ? -1 : 0}
                                                                 />
                                                             </Box>
                                                             <Box display="flex" alignItems="center" gap="8">
@@ -715,8 +724,8 @@ function SpecializedAgentSetupContent() {
                                                 <Field label="Description" info="What does this agent do?">
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
-                                                            currentValue={description}
                                                             previousValue={comparisonData.description}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].description}
                                                             multiline
                                                         />
                                                     ) : showDiffs && viewingVersion ? (
@@ -733,7 +742,6 @@ function SpecializedAgentSetupContent() {
                                                             placeholder="What is the goal for this agent?"
                                                             className="h-24"
                                                             readOnly={isReadOnly}
-                                                            tabIndex={isReadOnly ? -1 : 0}
                                                         />
                                                     )}
                                                 </Field>
@@ -754,8 +762,8 @@ function SpecializedAgentSetupContent() {
                                                 <Field label="Prompt Template" info="Define the system instructions">
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
-                                                            currentValue={promptTemplate}
                                                             previousValue={comparisonData.promptTemplate}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
                                                             multiline
                                                         />
                                                     ) : showDiffs && viewingVersion ? (
@@ -778,7 +786,6 @@ function SpecializedAgentSetupContent() {
                                                                 userSelect: "text",
                                                                 border: "1px solid var(--ax-colors-border-secondary)"
                                                             }}
-                                                            tabIndex={-1}
                                                         >
                                                             {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
                                                                 if (part.startsWith("[[") && part.endsWith("]]")) {
@@ -878,8 +885,8 @@ function SpecializedAgentSetupContent() {
                                                 <Field label="Tools" info="Select tools for the agent">
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
-                                                            currentValue={tools}
                                                             previousValue={comparisonData.tools}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].tools}
                                                         />
                                                     ) : showDiffs && viewingVersion ? (
                                                         <FieldComparison
@@ -943,13 +950,14 @@ function SpecializedAgentSetupContent() {
                                                 <Field label="Inference Level" info="Select model intelligence" style={{ maxWidth: "320px" }}>
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
-                                                            currentValue={inferenceLevel}
                                                             previousValue={comparisonData.inferenceLevel || "balanced"}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].inferenceLevel || "balanced"}
                                                         />
                                                     ) : showDiffs && viewingVersion ? (
                                                         <FieldComparison
                                                             previousValue={inferenceLevel}
                                                             currentValue={MOCK_AGENTS_DATA["content-localizer"].inferenceLevel || "balanced"}
+                                                            mode="stacked"
                                                         />
                                                     ) : viewingVersion ? (
                                                         <Input
@@ -977,13 +985,14 @@ function SpecializedAgentSetupContent() {
                                                 <Field label="Creativity" info="Adjust temperature" style={{ maxWidth: "320px" }}>
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
-                                                            currentValue={(creativity / 100).toFixed(1)}
                                                             previousValue={comparisonData.creativity?.toFixed(1) || (creativity / 100).toFixed(1)}
+                                                            currentValue={(MOCK_AGENTS_DATA["content-localizer"].creativity / 100).toFixed(1)}
                                                         />
                                                     ) : showDiffs && viewingVersion ? (
                                                         <FieldComparison
                                                             previousValue={(creativity / 100).toFixed(1)}
                                                             currentValue={(MOCK_AGENTS_DATA["content-localizer"].creativity / 100).toFixed(1)}
+                                                            mode="stacked"
                                                         />
                                                     ) : (
                                                         <Box display="flex" gap="8" alignItems="center">
