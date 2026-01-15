@@ -67,6 +67,7 @@ import { VersionHistory, Version } from "./components/VersionHistory";
 import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
 import { ComparisonBanner } from "./components/ComparisonBanner";
 import { FieldComparison } from "./components/FieldComparison";
+import { TestRunTray } from "./components/TestRunTray";
 
 // Mock data for agents
 const MOCK_AGENTS_DATA: Record<string, any> = {
@@ -188,6 +189,9 @@ function SpecializedAgentSetupContent() {
 
     // State for scroll
     const [isScrolled, setIsScrolled] = useState(false);
+
+    // Test Run State
+    const [isTestRunOpen, setIsTestRunOpen] = useState(false);
 
     // Version History State
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -603,14 +607,28 @@ function SpecializedAgentSetupContent() {
                                         >
                                             Save
                                         </Button>
-                                        <Button appearance="default" size="lg" icon={<IconPlay />} disabled={isReadOnly}>Test Run</Button>
+                                        <Button
+                                            appearance="default"
+                                            size="lg"
+                                            icon={<IconPlay />}
+                                            disabled={isReadOnly}
+                                            onClick={() => {
+                                                setIsTestRunOpen(!isTestRunOpen);
+                                                if (!isTestRunOpen) setIsVersionHistoryOpen(false);
+                                            }}
+                                        >
+                                            Test Run
+                                        </Button>
                                         <Tooltip content="Version History">
                                             <Button
                                                 appearance="default"
                                                 size="lg"
                                                 icon={<IconClockRotateLeft size={20} />}
                                                 aria-label="Version History"
-                                                onClick={() => setIsVersionHistoryOpen(!isVersionHistoryOpen)}
+                                                onClick={() => {
+                                                    setIsVersionHistoryOpen(!isVersionHistoryOpen);
+                                                    if (!isVersionHistoryOpen) setIsTestRunOpen(false);
+                                                }}
                                             />
                                         </Tooltip>
                                         <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" disabled={isReadOnly} />
@@ -1094,6 +1112,12 @@ function SpecializedAgentSetupContent() {
                 isComparing={isComparing}
                 comparisonVersionId={comparisonVersionId}
                 versions={versions}
+            />
+
+            <TestRunTray
+                isOpen={isTestRunOpen}
+                onClose={() => setIsTestRunOpen(false)}
+                variables={variables}
             />
         </Box>
     );
