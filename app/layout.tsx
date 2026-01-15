@@ -328,7 +328,7 @@ export default function RootLayout({
 				highlight: "/opal/activities",
 				icon: (
 					<img
-						src="/nav_icons/clock-rotate-left.svg"
+						src="/nav_icons/wave_pulse.svg"
 						alt="Activities"
 						width={20}
 						height={20}
@@ -387,19 +387,6 @@ export default function RootLayout({
 					<img
 						src="/nav_icons/database.svg"
 						alt="RAG"
-						width={20}
-						height={20}
-					/>
-				),
-			},
-			{
-				label: "Connections",
-				url: "/opal/connections",
-				highlight: "/opal/connections",
-				icon: (
-					<img
-						src="/nav_icons/toggle-off.svg"
-						alt="Connections"
 						width={20}
 						height={20}
 					/>
