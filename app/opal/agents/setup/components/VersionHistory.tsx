@@ -24,7 +24,7 @@ import {
     IconArrowsLeftRight,
 } from "@optimizely/axiom-icons";
 
-interface Version {
+export interface Version {
     id: string;
     version: string;
     mode: string;
@@ -47,60 +47,10 @@ interface VersionHistoryProps {
     viewingVersionId?: string | null;
     isComparing?: boolean;
     comparisonVersionId?: string | null;
+    versions: Version[];
 }
 
-// Mock data for versions
-const mockVersions: Version[] = [
-    {
-        id: "v6",
-        version: "V6",
-        mode: "Enforcer",
-        timestamp: "Nov 17, 2025, 10:18 PM",
-        author: "John Smith",
-        authorInitials: "JS",
-        isCurrent: true,
-    },
-    {
-        id: "v5",
-        version: "V5",
-        mode: "Enforcer",
-        timestamp: "Nov 17, 2025, 10:08 PM",
-        author: "John Smith",
-        authorInitials: "JS",
-    },
-    {
-        id: "v4",
-        version: "V4",
-        mode: "Observer",
-        timestamp: "Nov 17, 2025, 9:00 PM",
-        author: "John Smith",
-        authorInitials: "JS",
-    },
-    {
-        id: "v3",
-        version: "V3",
-        mode: "Observer",
-        timestamp: "Nov 17, 2025, 8:45 PM",
-        author: "John Smith",
-        authorInitials: "JS",
-    },
-    {
-        id: "v2",
-        version: "V2",
-        mode: "Learner",
-        timestamp: "Nov 17, 2025, 8:30 PM",
-        author: "John Smith",
-        authorInitials: "JS",
-    },
-    {
-        id: "v1",
-        version: "V1",
-        mode: "Learner",
-        timestamp: "Nov 17, 2025, 8:15 PM",
-        author: "John Smith",
-        authorInitials: "JS",
-    },
-];
+
 
 export function VersionHistory({
     isOpen,
@@ -115,9 +65,10 @@ export function VersionHistory({
     viewingVersionId,
     isComparing = false,
     comparisonVersionId,
+    versions,
 }: VersionHistoryProps) {
-    const currentVersion = mockVersions.find(v => v.isCurrent);
-    const previousVersions = mockVersions.filter(v => !v.isCurrent);
+    const currentVersion = versions.find(v => v.isCurrent);
+    const previousVersions = versions.filter(v => !v.isCurrent);
 
     return (
         <Box

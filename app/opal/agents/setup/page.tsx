@@ -63,7 +63,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { VersionHistory } from "./components/VersionHistory";
+import { VersionHistory, Version } from "./components/VersionHistory";
 import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
 import { ComparisonBanner } from "./components/ComparisonBanner";
 import { FieldComparison } from "./components/FieldComparison";
@@ -183,6 +183,57 @@ function SpecializedAgentSetupContent() {
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
     const [viewingVersion, setViewingVersion] = useState<string | null>(null);
     const [viewingVersionData, setViewingVersionData] = useState<{ name: string; timestamp: string } | null>(null);
+    const [versions, setVersions] = useState<Version[]>([
+        {
+            id: "v6",
+            version: "V6",
+            mode: "Enforcer",
+            timestamp: "Jan 12, 2026, 8:14 PM",
+            author: "Pei Chien",
+            authorInitials: "PC",
+            isCurrent: true,
+        },
+        {
+            id: "v5",
+            version: "V5",
+            mode: "Enforcer",
+            timestamp: "Jan 08, 2026, 4:22 PM",
+            author: "Pei Chien",
+            authorInitials: "PC",
+        },
+        {
+            id: "v4",
+            version: "V4",
+            mode: "Observer",
+            timestamp: "Jan 07, 2026, 11:30 AM",
+            author: "Pei Chien",
+            authorInitials: "PC",
+        },
+        {
+            id: "v3",
+            version: "V3",
+            mode: "Observer",
+            timestamp: "Dec 23, 2025, 2:15 PM",
+            author: "Pei Chien",
+            authorInitials: "PC",
+        },
+        {
+            id: "v2",
+            version: "V2",
+            mode: "Learner",
+            timestamp: "Dec 20, 2025, 10:05 AM",
+            author: "Pei Chien",
+            authorInitials: "PC",
+        },
+        {
+            id: "v1",
+            version: "V1",
+            mode: "Learner",
+            timestamp: "Dec 18, 2025, 9:20 AM",
+            author: "Pei Chien",
+            authorInitials: "PC",
+        },
+    ]);
 
     // Comparison State
     const [isComparing, setIsComparing] = useState(false);
@@ -362,7 +413,30 @@ function SpecializedAgentSetupContent() {
 
         setViewingVersion(null);
         setViewingVersionData(null);
-        // In real app, this would also trigger a save or update the backend versioning
+
+        // Add new version to history as the current version
+        const nextVersionNum = versions.length + 1;
+        const newVersion: Version = {
+            id: `v${nextVersionNum}`,
+            version: `V${nextVersionNum}`,
+            mode: "Enforcer", // Defaulting to Enforcer for now
+            timestamp: new Date().toLocaleString('en-US', {
+                month: 'short',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }),
+            author: "Pei Chien",
+            authorInitials: "PC",
+            isCurrent: true,
+        };
+
+        setVersions(prev => [
+            newVersion,
+            ...prev.map(v => ({ ...v, isCurrent: false }))
+        ]);
     };
 
     const handleExitVersionView = () => {
@@ -989,6 +1063,7 @@ function SpecializedAgentSetupContent() {
                 viewingVersionId={viewingVersion}
                 isComparing={isComparing}
                 comparisonVersionId={comparisonVersionId}
+                versions={versions}
             />
         </Box>
     );
