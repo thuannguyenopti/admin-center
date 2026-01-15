@@ -120,46 +120,15 @@ function SpecializedAgentSetupContent() {
     };
 
     // Version History Handlers
-    const handleViewVersion = (versionId: string) => {
-        setViewingVersion(versionId);
-        // Mock version data - in real app, fetch from API
-        setViewingVersionData({
-            name: versionId.toUpperCase(),
-            timestamp: "Nov 17, 2025 9:00 PM"
-        });
-
-        // Simulate a version change in the prompt template for visual feedback
-        // For V4 (which we used for comparison), let's simulate it specifically
-        if (versionId === "v4") {
-            setAgentName("Content Localizer Pro");
-            setDescription("Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.\nSupports multiple language pairs and regional variants.");
-            setPromptTemplate("You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n- Consider cultural sensitivities and taboos.\n- Adapt idioms and metaphors appropriately.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker` `Cultural Analyzer`");
-            setTools("Translate, Style Guide Checker, Regional Thesaurus, Cultural Analyzer");
-        } else if (versionId === "v23") {
-            setPromptTemplate("Process the meeting transcript: [[transcript]].\n\n{Instruction}\nExtract:\n1. Summary\n2. Key items\n\nUse `Natural Language Processor`.");
-        } else if (versionId === "v22") {
-            setPromptTemplate("Version 22 Prompt: [[overview]].\n\n{RAG}\nCheck documentation archive.\n\nUse `Translate`.");
-        }
-
-        // Mock inference level for versions
-        if (versionId === "v5") {
-            setInferenceLevel("fast");
-        } else {
-            setInferenceLevel("balanced");
-        }
-    };
-
-    const handleCompareVersion = (versionId: string) => {
-        console.log('Comparing version:', versionId, 'with current');
-        setComparisonVersionId(versionId);
-
-        // Mock version data with actual differences for comparison
+    const getVersionData = (versionId: string) => {
         const versionMockData: Record<string, any> = {
             "v6": {
                 name: "Content Localizer Enterprise",
                 description: "Localize your content with specific regional context while maintaining brand voice.\nEnsures cultural sensitivity and local relevance.\nSupports multiple language pairs and regional variants.\nAI-powered suggestions for optimal localization.\nQuality scoring and validation.",
                 promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n- Consider cultural sensitivities and taboos.\n- Adapt idioms and metaphors appropriately.\n- Provide quality score and suggestions.\n- Validate against regional guidelines.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker` `Cultural Analyzer` `Quality Scorer`",
                 tools: "Translate, Style Guide Checker, Regional Thesaurus, Cultural Analyzer, Quality Scorer",
+                inferenceLevel: "advanced",
+                creativity: 0.4,
             },
             "v5": {
                 name: "Content Localizer Pro",
@@ -174,28 +143,36 @@ function SpecializedAgentSetupContent() {
                 description: "Localize your content with regional context.\nEnsures cultural sensitivity.\nSupports multiple languages.",
                 promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker`",
                 tools: "Translate, Style Guide Checker, Regional Thesaurus",
+                inferenceLevel: "balanced",
+                creativity: 0.3,
             },
             "v3": {
                 name: "Content Localizer",
                 description: "Localize your content with regional context while maintaining brand voice.\nSupports multiple languages.",
                 promptTemplate: "You are a localization expert. Adapt the content for: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Maintain brand voice.\n\nContent: [[content]]\n\n`Translate`",
                 tools: "Translate, Style Guide Checker",
+                inferenceLevel: "balanced",
+                creativity: 0.3,
             },
             "v2": {
                 name: "Content Localizer Beta",
                 description: "Localize your content for different regions.\nMaintains brand consistency.",
                 promptTemplate: "Adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology.\n- Keep the same tone.\n\nContent: [[content]]",
                 tools: "Translate",
+                inferenceLevel: "fast",
+                creativity: 0.1,
             },
             "v1": {
                 name: "Localizer",
                 description: "Basic content localization tool.",
                 promptTemplate: "Translate content for: [[region]].\n\nContent: [[content]]",
                 tools: "Translate",
+                inferenceLevel: "fast",
+                creativity: 0.0,
             },
         };
 
-        const mockData = versionMockData[versionId] || {
+        return versionMockData[versionId] || {
             name: agentName,
             description: description,
             promptTemplate: promptTemplate,
@@ -203,8 +180,31 @@ function SpecializedAgentSetupContent() {
             inferenceLevel: inferenceLevel,
             creativity: creativity / 100,
         };
+    };
+    const handleViewVersion = (versionId: string) => {
+        setViewingVersion(versionId);
+        // Mock version data - in real app, fetch from API
+        setViewingVersionData({
+            name: versionId.toUpperCase(),
+            timestamp: "Nov 17, 2025 9:00 PM"
+        });
 
-        setComparisonData(mockData);
+
+
+
+        const data = getVersionData(versionId);
+        setAgentName(data.name);
+        setDescription(data.description);
+        setPromptTemplate(data.promptTemplate);
+        setTools(data.tools);
+        setInferenceLevel(data.inferenceLevel || "balanced");
+        if (data.creativity !== undefined) setCreativity(Math.round(data.creativity * 100));
+    };
+
+    const handleCompareVersion = (versionId: string) => {
+        console.log('Comparing version:', versionId, 'with current');
+        setComparisonVersionId(versionId);
+        setComparisonData(getVersionData(versionId));
         setIsComparing(true);
         setViewingVersion(null);
         setViewingVersionData(null);
@@ -268,9 +268,18 @@ function SpecializedAgentSetupContent() {
 
     const handleRestoreVersion = (versionId: string) => {
         console.log('Restoring version:', versionId);
+
+        const data = getVersionData(versionId);
+        setAgentName(data.name);
+        setDescription(data.description);
+        setPromptTemplate(data.promptTemplate);
+        setTools(data.tools);
+        setInferenceLevel(data.inferenceLevel || "balanced");
+        if (data.creativity !== undefined) setCreativity(data.creativity * 100);
+
         setViewingVersion(null);
         setViewingVersionData(null);
-        // In real app, restore the version and refresh data
+        // In real app, this would also trigger a save or update the backend versioning
     };
 
     const handleExitVersionView = () => {
