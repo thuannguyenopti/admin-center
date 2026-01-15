@@ -429,6 +429,9 @@ function SpecializedAgentSetupContent() {
 
         setViewingVersion(null);
         setViewingVersionData(null);
+        setIsComparing(false);
+        setComparisonVersionId(null);
+        setComparisonData(null);
 
         // Add new version to history as the current version
         const nextVersionNum = versions.length + 1;
