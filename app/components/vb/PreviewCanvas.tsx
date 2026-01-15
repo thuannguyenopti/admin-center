@@ -195,7 +195,7 @@ export default function PreviewCanvas({
         return outline.tree.map((section: any, sindex: number) => {
             const hasBgImage = !!section.bgImage;
             const isFooterCTA = section.name === "Footer CTA";
-            
+
             return (
                 <section
                     key={section.id ?? sindex}
@@ -369,26 +369,26 @@ export default function PreviewCanvas({
                                                             })()}
                                                         </div>
                                                     </React.Fragment>
-                                        );
-                                    })}
+                                                );
+                                            })}
 
-                                    {/* ✅ insert line at END of column */}
-                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
-                                        <div
-                                            style={{
-                                                height: "2px",
-                                                backgroundColor: "#0037FF",
-                                                borderRadius: "2px",
-                                                margin: "6px 0",
-                                                pointerEvents: "none",
-                                            }}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </section>
-                ))}
+                                            {/* ✅ insert line at END of column */}
+                                            {isActiveDropCol && dropPosition!.position === colChildren.length && (
+                                                <div
+                                                    style={{
+                                                        height: "2px",
+                                                        backgroundColor: "#0037FF",
+                                                        borderRadius: "2px",
+                                                        margin: "6px 0",
+                                                        pointerEvents: "none",
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </section>
+                        ))}
                     </div>
                 </section>
             );
