@@ -152,25 +152,25 @@ export function TestRunTray({
 
                         {/* Output Section */}
                         <Disclosure defaultOpen>
-                            <DisclosureTrigger>
-                                <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+                            <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+                                <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
                                         <Text fontWeight="600">Output</Text>
                                     </Box>
-                                    {output && !isRunning && (
-                                        <Button
-                                            appearance="subtle"
-                                            size="sm"
-                                            icon={<IconArrowRotateLeft size={16} />}
-                                            aria-label="Re-run test"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleRun();
-                                            }}
-                                        />
-                                    )}
-                                </Box>
-                            </DisclosureTrigger>
+                                </DisclosureTrigger>
+                                {output && !isRunning && (
+                                    <Button
+                                        appearance="subtle"
+                                        size="sm"
+                                        icon={<IconArrowRotateLeft size={16} />}
+                                        aria-label="Re-run test"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRun();
+                                        }}
+                                    />
+                                )}
+                            </Box>
                             <DisclosureContent>
                                 <Box pt="12">
                                     <Textarea
