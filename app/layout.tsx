@@ -328,7 +328,7 @@ export default function RootLayout({
 				highlight: "/opal/activities",
 				icon: (
 					<img
-						src="/nav_icons/clock-rotate-left.svg"
+						src="/nav_icons/wave-pulse.svg"
 						alt="Activities"
 						width={20}
 						height={20}
