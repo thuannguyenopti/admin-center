@@ -25,9 +25,9 @@ const Col: React.FC<{
     const [isDragOver, setIsDragOver] = useState(false);
 
     const handleDragOver = (e: React.DragEvent) => {
-        const hasImageData = Array.from(e.dataTransfer.types).includes("image/url") || 
-                            Array.from(e.dataTransfer.types).includes("text/uri-list") ||
-                            Array.from(e.dataTransfer.types).includes("Files");
+        const hasImageData = Array.from(e.dataTransfer.types).includes("image/url") ||
+            Array.from(e.dataTransfer.types).includes("text/uri-list") ||
+            Array.from(e.dataTransfer.types).includes("Files");
         if (hasImageData) {
             e.preventDefault();
             e.stopPropagation();
