@@ -15,7 +15,10 @@ import {
     IconX,
     IconChevronRight,
 } from "@tabler/icons-react";
-import { IconPlay } from "@optimizely/axiom-icons";
+import {
+    IconPlay,
+    IconArrowRotateLeft,
+} from "@optimizely/axiom-icons";
 import { useState } from "react";
 
 interface Variable {
@@ -150,8 +153,22 @@ export function TestRunTray({
                         {/* Output Section */}
                         <Disclosure defaultOpen>
                             <DisclosureTrigger>
-                                <Box display="flex" alignItems="center" gap="8" w="full">
-                                    <Text fontWeight="600">Output</Text>
+                                <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        <Text fontWeight="600">Output</Text>
+                                    </Box>
+                                    {output && !isRunning && (
+                                        <Button
+                                            appearance="subtle"
+                                            size="sm"
+                                            icon={<IconArrowRotateLeft size={16} />}
+                                            aria-label="Re-run test"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRun();
+                                            }}
+                                        />
+                                    )}
                                 </Box>
                             </DisclosureTrigger>
                             <DisclosureContent>
