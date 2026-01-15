@@ -258,7 +258,7 @@ function VersionCard({
                         onClick={(e) => e.stopPropagation()}
                     />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent onClick={(e) => e.stopPropagation()}>
                     {!isCurrent && (
                         <DropdownMenuItem
                             onSelect={() => onViewVersion(version.id)}

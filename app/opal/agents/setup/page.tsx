@@ -418,6 +418,16 @@ function SpecializedAgentSetupContent() {
     const handleRestoreVersion = (versionId: string) => {
         console.log('Restoring version:', versionId);
 
+        // 1. Immediately exit all specialized modes
+        setIsComparing(false);
+        setComparisonVersionId(null);
+        setComparisonData(null);
+        setViewingVersion(null);
+        setViewingVersionData(null);
+        setShowDiffs(false);
+        setIsVersionHistoryOpen(false);
+
+        // 2. Process data restoration
         const data = getVersionData(versionId);
         setAgentName(data.name);
         setDescription(data.description);
@@ -427,15 +437,7 @@ function SpecializedAgentSetupContent() {
         setInferenceLevel(data.inferenceLevel || "balanced");
         if (data.creativity !== undefined) setCreativity(data.creativity * 100);
 
-        setViewingVersion(null);
-        setViewingVersionData(null);
-        setIsComparing(false);
-        setComparisonVersionId(null);
-        setComparisonData(null);
-        setIsVersionHistoryOpen(false);
-        setShowDiffs(false);
-
-        // Add new version to history as the current version
+        // 3. Update version history
         const nextVersionNum = versions.length + 1;
         const newVersion: Version = {
             id: `v${nextVersionNum}`,
