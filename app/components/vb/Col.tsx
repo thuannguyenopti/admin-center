@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ReactNode } from "react";
 import { Box, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
 import {
@@ -22,51 +22,9 @@ const Col: React.FC<{
     removeCol: any;
     onDragStart: any;
 }> = ({ setOpen, col, children, addElement, removeCol, onDragStart }) => {
-    const [isDragOver, setIsDragOver] = useState(false);
-
-    const handleDragOver = (e: React.DragEvent) => {
-        const hasImageData = Array.from(e.dataTransfer.types).includes("image/url") ||
-            Array.from(e.dataTransfer.types).includes("text/uri-list") ||
-            Array.from(e.dataTransfer.types).includes("Files");
-        if (hasImageData) {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsDragOver(true);
-        }
-    };
-
-    const handleDragLeave = (e: React.DragEvent) => {
-        if (isDragOver) {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsDragOver(false);
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        const imageUrl = e.dataTransfer.getData("image/url") || e.dataTransfer.getData("text/uri-list");
-        if (imageUrl || e.dataTransfer.files.length > 0) {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsDragOver(false);
-
-            const imageAlt = e.dataTransfer.getData("image/alt");
-
-            if (imageUrl) {
-                (window as any).__pendingImageData = { url: imageUrl, alt: imageAlt };
-                addElement("Image");
-                delete (window as any).__pendingImageData;
-            }
-        }
-    };
-
     return (
         <Box
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             style={{
-                backgroundColor: isDragOver ? "#0037FF10" : "transparent",
                 transition: "background-color 0.2s",
             }}
         >

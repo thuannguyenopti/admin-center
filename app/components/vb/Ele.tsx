@@ -12,7 +12,7 @@ import React, { useState } from "react";
 import { IconHeading, IconPilcrow, IconForms, IconRectangle, IconPhoto, IconBrackets, IconTrash, IconDots } from "@tabler/icons-react";
 import styles from "../VBPrototype.module.css";
 
-export type EleMap = Record<string, { type: string; props?: any[]; properties?: any }>;
+export type EleMap = Record<string, { type: string; properties: any }>;
 
 const indentDistance = 8; // Distance in pixels for each indent level
 
@@ -52,14 +52,19 @@ const Ele: React.FC<{
                         {(() => {
                             switch (type) {
                                 case "Heading":
+                                case "ct-heading":
                                     return <IconHeading size={16} />;
                                 case "Text":
+                                case "ct-text":
                                     return <IconPilcrow size={16} />;
                                 case "Input":
+                                case "ct-input":
                                     return <IconForms size={16} />;
                                 case "Button":
+                                case "ct-button":
                                     return <IconRectangle size={16} />;
                                 case "Image":
+                                case "ct-image":
                                     return <IconPhoto size={16} />;
                                 default:
                                     return <IconBrackets size={16} />;
@@ -72,7 +77,7 @@ const Ele: React.FC<{
                                 asChild
                                 color="fg.secondary"
                             >
-                                <span className="italic">{`Empty ${type}`}</span>
+                                <span className="italic">{`Empty ${(type || "Element").replace("ct-", "")}`}</span>
                             </Text>
                         )}
                     </span>
