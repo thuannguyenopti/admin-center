@@ -446,7 +446,7 @@ function SpecializedAgentSetupContent() {
         const newVersion: Version = {
             id: `v${nextVersionNum}`,
             version: `V${nextVersionNum}`,
-            mode: "Enforcer", // Defaulting to Enforcer for now
+            mode: "Learner", // New versions always start as Learner (1-20 runs), then Observer (20-50), then Enforcer (50+)
             timestamp: new Date().toLocaleString('en-US', {
                 month: 'short',
                 day: '2-digit',
@@ -540,7 +540,7 @@ function SpecializedAgentSetupContent() {
 
 
     return (
-        <Box h="full" bg="bg.page" display="flex" flexDirection="row">
+        <Box h="full" bg="bg.page" display="flex" flexDirection="row" suppressHydrationWarning>
             {/* Main Content */}
             <Box flex="1" display="flex" flexDirection="column" style={{ minWidth: 0 }}>
                 <Tabs defaultValue="setup" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -584,9 +584,9 @@ function SpecializedAgentSetupContent() {
                                     <Box display="flex" alignItems="center" gap="12">
                                         {isScrolled && (
                                             <>
-                                                <Breadcrumb
-                                                    items={[{ label: "Agents", href: "/opal/agents" }]}
-                                                />
+                                                <Link href="/opal/agents" color="fg.secondary" fontSize="md">
+                                                    Agents
+                                                </Link>
                                                 <Text color="fg.tertiary">/</Text>
                                             </>
                                         )}
@@ -1057,10 +1057,9 @@ function SpecializedAgentSetupContent() {
                                                 {/* Files Section nested inside Input per instruction */}
                                                 <Box mt="8">
                                                     <Text fontWeight="400" fontSize="md" mb="8">Files</Text>
-                                                    <Box border="1" borderColor="border.tertiary" style={{ borderStyle: "dashed" }} p="24" rounded="md" display="flex" flexDirection="column" alignItems="center" justifyContent="center" bg="bg.secondary">
-                                                        <IconFileImport size={24} color="var(--ax-colors-fg-tertiary)" />
-                                                        <Text color="fg.tertiary" mt="8">Drag & drop files here, or click to browse</Text>
-                                                    </Box>
+                                                    <FileUpload>
+                                                        <FileUploadDropzone />
+                                                    </FileUpload>
                                                 </Box>
                                             </Box>
                                         </DisclosureContent>
