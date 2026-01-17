@@ -32,10 +32,10 @@ import {
     Select,
     SelectTrigger,
     SelectContent,
+    Progress,
 } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input";
 import {
-    IconChevronRight,
     IconTrash,
     IconPlus,
     IconHelp,
@@ -58,6 +58,12 @@ import {
     IconFile,
     IconBracketsSquare,
     IconEllipsisSolid,
+    IconCircleQuestion,
+    IconShieldCheck,
+    IconEye,
+    IconBook,
+    IconChevronRight,
+    IconChevronLeft,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -167,13 +173,65 @@ export default function SpecializedAgentSetup() {
 function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
+    const activeTab = isMounted ? (searchParams.get("tab") || "setup") : "setup";
+    const qualitySubTab = isMounted ? (searchParams.get("subtab") || "evaluation") : "evaluation";
 
+    const handleTabChange = (value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", value);
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
 
+    const handleSubTabChange = (value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("subtab", value);
+        router.push(`?${params.toString()}`, { scroll: false });
+    };
 
     // State for collapsible sections
     const [detailsOpen, setDetailsOpen] = useState(true);
     const [inputOpen, setInputOpen] = useState(false);
+
+    // Enforcer Mode Carousel State
+    const [currentModeIndex, setCurrentModeIndex] = useState(2);
+    const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
+
+    const enforcerModes = [
+        {
+            title: "Learner mode",
+            description: "Establishes baseline guardrails by learning from first 20 approved executions. No active monitoring or alerts are performed.",
+            icon: <IconBook size={16} />,
+            isCurrent: false
+        },
+        {
+            title: "Observer mode",
+            description: "Refines guardrails by flagging deviations with a 'Warning' status for review. Improves guardrail accuracy over the next 30 executions.",
+            icon: <IconEye size={16} />,
+            isCurrent: false
+        },
+        {
+            title: "Enforcer mode",
+            description: "Automates enforcement against guardrails, terminating agents that breach critical safety limits and escalating alerts.",
+            icon: <IconShieldCheck size={16} />,
+            isCurrent: true
+        }
+    ];
+
+    const currentMode = enforcerModes[currentModeIndex];
+
+    const handleNextMode = () => {
+        setCurrentModeIndex((prev) => (prev + 1) % enforcerModes.length);
+    };
+
+    const handlePrevMode = () => {
+        setCurrentModeIndex((prev) => (prev - 1 + enforcerModes.length) % enforcerModes.length);
+    };
     const [outputOpen, setOutputOpen] = useState(false);
 
     // Setup Fields State
@@ -186,6 +244,7 @@ function SpecializedAgentSetupContent() {
     const [tools, setTools] = useState("");
     const [inferenceLevel, setInferenceLevel] = useState("balanced");
     const [variables, setVariables] = useState<any[]>([]);
+    const [sensitivity, setSensitivity] = useState(3);
 
     // State for scroll
     const [isScrolled, setIsScrolled] = useState(false);
@@ -543,7 +602,7 @@ function SpecializedAgentSetupContent() {
         <Box h="full" bg="bg.page" display="flex" flexDirection="row" suppressHydrationWarning>
             {/* Main Content */}
             <Box flex="1" display="flex" flexDirection="column" style={{ minWidth: 0 }}>
-                <Tabs defaultValue="setup" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                <Tabs value={activeTab} onValueChange={handleTabChange} style={{ display: "flex", flexDirection: "column", height: "100%" }} suppressHydrationWarning>
                     {/* Sticky Header */}
                     <Box
                         style={{
@@ -629,6 +688,7 @@ function SpecializedAgentSetupContent() {
                                                     setIsVersionHistoryOpen(!isVersionHistoryOpen);
                                                     if (!isVersionHistoryOpen) setIsTestRunOpen(false);
                                                 }}
+                                                suppressHydrationWarning
                                             />
                                         </Tooltip>
                                         <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" disabled={isReadOnly} />
@@ -663,10 +723,11 @@ function SpecializedAgentSetupContent() {
 
                         {/* Tabs List */}
                         <Box px="24">
-                            <TabsList>
-                                <TabsTrigger value="setup">Setup</TabsTrigger>
-                                <TabsTrigger value="triggers">In-app Triggers</TabsTrigger>
-                                <TabsTrigger value="logs">Logs</TabsTrigger>
+                            <TabsList suppressHydrationWarning>
+                                <TabsTrigger value="setup" suppressHydrationWarning>Setup</TabsTrigger>
+                                <TabsTrigger value="triggers" suppressHydrationWarning>In-app Triggers</TabsTrigger>
+                                <TabsTrigger value="quality" suppressHydrationWarning>Quality</TabsTrigger>
+                                <TabsTrigger value="logs" suppressHydrationWarning>Logs</TabsTrigger>
                             </TabsList>
                         </Box>
                     </Box>
@@ -675,7 +736,7 @@ function SpecializedAgentSetupContent() {
 
                     {/* Content Area */}
                     <Box flex="1" display="flex" flexDirection="column" style={{ minHeight: 0 }}>
-                        <TabsContent value="setup" style={{ height: "100%" }}>
+                        <TabsContent value="setup" style={{ height: "100%" }} suppressHydrationWarning>
                             <Box
                                 h="full"
                                 display="flex"
@@ -695,11 +756,11 @@ function SpecializedAgentSetupContent() {
                                     }}
                                 >
                                     {/* Details Section */}
-                                    <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }}>
-                                        <DisclosureTrigger fontSize="md" fontWeight="500">
+                                    <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Details
                                         </DisclosureTrigger>
-                                        <DisclosureContent pl="32" pb="32">
+                                        <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
                                                 <Field label="Name" required>
                                                     {isComparing && comparisonData ? (
@@ -775,14 +836,14 @@ function SpecializedAgentSetupContent() {
                                     </Disclosure>
 
                                     {/* Input Section */}
-                                    <Disclosure defaultOpen={inputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }}>
-                                        <DisclosureTrigger fontSize="md" fontWeight="500">
+                                    <Disclosure defaultOpen={inputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Input
                                                 <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                             </Box>
                                         </DisclosureTrigger>
-                                        <DisclosureContent pl="32" pb="32">
+                                        <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
                                                 <Field label="Prompt Template" info="Define the system instructions">
                                                     {isComparing && comparisonData ? (
@@ -890,8 +951,8 @@ function SpecializedAgentSetupContent() {
                                                                             <Badge intent="neutral">{variable.type}</Badge>
                                                                         </Box>
                                                                         <DropdownMenu>
-                                                                            <DropdownMenuTrigger asChild>
-                                                                                <Button appearance="subtle" size="sm" icon={<IconEllipsisSolid size={16} />} aria-label="Variable options" disabled={isReadOnly} />
+                                                                            <DropdownMenuTrigger asChild suppressHydrationWarning>
+                                                                                <Button appearance="subtle" size="sm" icon={<IconEllipsisSolid size={16} />} aria-label="Variable options" disabled={isReadOnly} suppressHydrationWarning />
                                                                             </DropdownMenuTrigger>
                                                                             <DropdownMenuContent>
                                                                                 <DropdownMenuItem>Edit</DropdownMenuItem>
@@ -953,12 +1014,13 @@ function SpecializedAgentSetupContent() {
                                                                         <Text color="fg.secondary" fontSize="sm" mt="4">{tool.description}</Text>
                                                                     </Box>
                                                                     <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
+                                                                        <DropdownMenuTrigger asChild suppressHydrationWarning>
                                                                             <Button
                                                                                 appearance="subtle"
                                                                                 size="sm"
                                                                                 icon={<IconEllipsisSolid size={16} />}
                                                                                 aria-label="Tool options"
+                                                                                suppressHydrationWarning
                                                                             />
                                                                         </DropdownMenuTrigger>
                                                                         <DropdownMenuContent>
@@ -1001,8 +1063,8 @@ function SpecializedAgentSetupContent() {
                                                                 { label: "Advanced", value: "advanced" },
                                                             ]}
                                                         >
-                                                            <SelectTrigger size="md" />
-                                                            <SelectContent />
+                                                            <SelectTrigger size="md" suppressHydrationWarning />
+                                                            <SelectContent suppressHydrationWarning />
                                                         </Select>
                                                     )}
                                                 </Field>
@@ -1066,11 +1128,11 @@ function SpecializedAgentSetupContent() {
                                     </Disclosure>
 
                                     {/* Output Section */}
-                                    <Disclosure defaultOpen={outputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }}>
-                                        <DisclosureTrigger fontSize="md" fontWeight="500">
+                                    <Disclosure defaultOpen={outputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Output
                                         </DisclosureTrigger>
-                                        <DisclosureContent pl="32" pb="32">
+                                        <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
                                                 <Text color="fg.secondary">Output configuration content goes here...</Text>
                                             </Box>
@@ -1081,13 +1143,397 @@ function SpecializedAgentSetupContent() {
                             </Box>
                         </TabsContent>
 
-                        <TabsContent value="triggers">
+                        <TabsContent value="triggers" suppressHydrationWarning>
                             <Box p="24">
                                 <Text>In-app Triggers Configuration</Text>
                             </Box>
                         </TabsContent>
 
-                        <TabsContent value="logs">
+                        <TabsContent value="quality" suppressHydrationWarning>
+                            <Box
+                                h="full"
+                                display="flex"
+                                flexDirection="column"
+                                overflowY="auto"
+                            >
+                                <Box
+                                    px="24"
+                                    py="24"
+                                    style={{
+                                        maxWidth: "1464px",
+                                        width: "100%",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "24px"
+                                    }}
+                                >
+                                    {/* Sub-tabs for Output Evaluation and Execution Guardrails */}
+                                    <Box display="flex" gap="4" p="4" bg="bg.secondary" rounded="md" style={{ width: "fit-content" }} suppressHydrationWarning>
+                                        <Button
+                                            appearance={qualitySubTab === "evaluation" ? "default" : "subtle"}
+                                            size="md"
+                                            onClick={() => handleSubTabChange("evaluation")}
+                                            style={qualitySubTab === "evaluation" ? {
+                                                backgroundColor: "var(--ax-colors-bg-default)",
+                                                border: "1px solid var(--ax-colors-border-secondary)"
+                                            } : {}}
+                                            suppressHydrationWarning
+                                        >
+                                            Output Evaluation
+                                        </Button>
+                                        <Button
+                                            appearance={qualitySubTab === "guardrails" ? "default" : "subtle"}
+                                            size="md"
+                                            onClick={() => handleSubTabChange("guardrails")}
+                                            style={qualitySubTab === "guardrails" ? {
+                                                backgroundColor: "var(--ax-colors-bg-default)",
+                                                border: "1px solid var(--ax-colors-border-secondary)"
+                                            } : {}}
+                                            suppressHydrationWarning
+                                        >
+                                            Execution Guardrails
+                                        </Button>
+                                    </Box>
+
+                                    {/* Output Evaluation Content */}
+                                    {qualitySubTab === "evaluation" && (
+                                        <Box display="flex" flexDirection="column" gap="24">
+                                            <Card p="24" suppressHydrationWarning style={{ maxWidth: "1280px" }}>
+                                                <Box display="flex" alignItems="center" justifyContent="space-between" mb="24">
+                                                    <Box>
+                                                        <Text fontWeight="600" fontSize="md">Evaluation Metrics</Text>
+                                                        <Text fontSize="sm" color="fg.secondary">Measure and score the quality of your agent's outputs.</Text>
+                                                    </Box>
+                                                    <Button icon={<IconPlus size={16} />} appearance="default">Add Evaluator</Button>
+                                                </Box>
+
+                                                <Table>
+                                                    <thead>
+                                                        <Tr>
+                                                            <Th>Evaluator</Th>
+                                                            <Th>Criteria</Th>
+                                                            <Th>Weight</Th>
+                                                            <Th>Average Score</Th>
+                                                            <Th style={{ textAlign: "right" }}>Actions</Th>
+                                                        </Tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <Tr>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Box bg="bg.accent.subtle" p="4" rounded="sm">
+                                                                        <IconSparkles size={16} color="var(--ax-colors-fg-accent-strong)" />
+                                                                    </Box>
+                                                                    <Text fontWeight="500">Tone & Voice</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td><Text fontSize="sm" color="fg.secondary">Matches brand guidelines</Text></Td>
+                                                            <Td><Badge variant="subtle" intent="neutral">40%</Badge></Td>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Progress value={92} size="sm" style={{ width: "60px" }} />
+                                                                    <Text fontSize="sm" fontWeight="600">9.2</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td style={{ textAlign: "right" }}>
+                                                                <Button appearance="subtle" size="sm" icon={<IconDotsVertical size={16} />} aria-label="More actions" />
+                                                            </Td>
+                                                        </Tr>
+                                                        <Tr>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Box bg="bg.accent.subtle" p="4" rounded="sm">
+                                                                        <IconCircleCheck size={16} color="var(--ax-colors-fg-success-strong)" />
+                                                                    </Box>
+                                                                    <Text fontWeight="500">Factuality</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td><Text fontSize="sm" color="fg.secondary">Accurate and grounded</Text></Td>
+                                                            <Td><Badge variant="subtle" intent="neutral">40%</Badge></Td>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Progress value={98} size="sm" style={{ width: "60px" }} />
+                                                                    <Text fontSize="sm" fontWeight="600">9.8</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td style={{ textAlign: "right" }}>
+                                                                <Button appearance="subtle" size="sm" icon={<IconDotsVertical size={16} />} aria-label="More actions" />
+                                                            </Td>
+                                                        </Tr>
+                                                        <Tr>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Box bg="bg.accent.subtle" p="4" rounded="sm">
+                                                                        <IconFile size={16} color="var(--ax-colors-fg-secondary)" />
+                                                                    </Box>
+                                                                    <Text fontWeight="500">Conciseness</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td><Text fontSize="sm" color="fg.secondary">Under 200 words</Text></Td>
+                                                            <Td><Badge variant="subtle" intent="neutral">20%</Badge></Td>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Progress value={85} size="sm" style={{ width: "60px" }} />
+                                                                    <Text fontSize="sm" fontWeight="600">8.5</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td style={{ textAlign: "right" }}>
+                                                                <Button appearance="subtle" size="sm" icon={<IconDotsVertical size={16} />} aria-label="More actions" />
+                                                            </Td>
+                                                        </Tr>
+                                                    </tbody>
+                                                </Table>
+                                            </Card>
+                                        </Box>
+                                    )}
+
+                                    {/* Execution guardrail settings */}
+                                    {qualitySubTab === "guardrails" && (
+                                        <Box display="flex" flexDirection="column" gap="24">
+                                            {/* Summary Card moved here */}
+                                            <Card p="24" suppressHydrationWarning style={{ maxWidth: "1280px" }}>
+                                                <Box display="grid" gap="64" suppressHydrationWarning style={{ gridTemplateColumns: "1fr 1fr" }}>
+
+                                                    <Box>
+                                                        <Text fontWeight="600" fontSize="md" mb="12">Summary for V24</Text>
+                                                        <Box
+                                                            display="flex"
+                                                            alignItems="center"
+                                                            p="2"
+                                                            rounded="sm"
+                                                            mb="4"
+                                                            bg={hoveredStatus === 'total' ? 'bg.default.pressed' : 'transparent'}
+                                                            style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                            onMouseEnter={() => setHoveredStatus('total')}
+                                                            onMouseLeave={() => setHoveredStatus(null)}
+                                                            suppressHydrationWarning
+                                                        >
+                                                            <Text fontSize="sm" color="fg.secondary">Total Executions: 75</Text>
+                                                        </Box>
+                                                        <Box display="flex" flexDirection="column" gap="4">
+                                                            <Box
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                gap="8"
+                                                                p="2"
+                                                                rounded="sm"
+                                                                bg={hoveredStatus === 'passed' ? 'bg.default.pressed' : 'transparent'}
+                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                onMouseEnter={() => setHoveredStatus('passed')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                                suppressHydrationWarning
+                                                            >
+                                                                <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#17B26A" }} />
+                                                                <Text fontSize="sm" color="fg.secondary">Passed</Text>
+                                                                <Text fontSize="sm" fontWeight="500" ml="auto">68</Text>
+                                                            </Box>
+                                                            <Box
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                gap="8"
+                                                                p="2"
+                                                                rounded="sm"
+                                                                bg={hoveredStatus === 'warning' ? 'bg.default.pressed' : 'transparent'}
+                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                onMouseEnter={() => setHoveredStatus('warning')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                                suppressHydrationWarning
+                                                            >
+                                                                <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#F79009" }} />
+                                                                <Text fontSize="sm" color="fg.secondary">Warning</Text>
+                                                                <Text fontSize="sm" fontWeight="500" ml="auto">5</Text>
+                                                            </Box>
+                                                            <Box
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                gap="8"
+                                                                p="2"
+                                                                rounded="sm"
+                                                                bg={hoveredStatus === 'failed' ? 'bg.default.pressed' : 'transparent'}
+                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                onMouseEnter={() => setHoveredStatus('failed')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                                suppressHydrationWarning
+                                                            >
+                                                                <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#D92D20" }} />
+                                                                <Text fontSize="sm" color="fg.secondary">Failed</Text>
+                                                                <Text fontSize="sm" fontWeight="500" ml="auto">2</Text>
+                                                            </Box>
+                                                            <Box
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                gap="8"
+                                                                p="2"
+                                                                rounded="sm"
+                                                                bg={hoveredStatus === 'terminated' ? 'bg.default.pressed' : 'transparent'}
+                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                onMouseEnter={() => setHoveredStatus('terminated')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                                suppressHydrationWarning
+                                                            >
+                                                                <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#949494" }} />
+                                                                <Text fontSize="sm" color="fg.secondary">Terminated</Text>
+                                                                <Text fontSize="sm" fontWeight="500" ml="auto">2</Text>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+
+                                                    <Box display="flex" flexDirection="column">
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8" style={{ width: "100%" }}>
+                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                {currentMode.icon}
+                                                                <Text fontWeight="600" fontSize="md">{currentMode.title}</Text>
+                                                                {currentMode.isCurrent && <Badge variant="subtle" intent="information" ml="8">Current</Badge>}
+                                                            </Box>
+                                                            <Box display="flex" gap="8">
+                                                                <Button appearance="subtle" size="sm" icon={<IconChevronLeft />} onClick={handlePrevMode} disabled={currentModeIndex === 0} aria-label="Previous mode" />
+                                                                <Button appearance="subtle" size="sm" icon={<IconChevronRight />} onClick={handleNextMode} disabled={currentModeIndex === enforcerModes.length - 1} aria-label="Next mode" />
+                                                            </Box>
+                                                        </Box>
+                                                        <Box mb="12" style={{ height: "80px" }}>
+                                                            <Text fontSize="sm" color="fg.secondary">
+                                                                {currentMode.description}
+                                                            </Text>
+                                                        </Box>
+                                                        <Box mt="auto" display="flex" alignItems="end" gap="4">
+                                                            <Box flex="1" display="flex" gap="2" alignItems="end" style={{ height: "16px" }}>
+                                                                <Box
+                                                                    flex="1"
+                                                                    style={{
+                                                                        height: "8px",
+                                                                        backgroundColor: "#17B26A",
+                                                                        borderRadius: "4px",
+                                                                        cursor: "pointer",
+                                                                        transform: hoveredStatus === 'passed' ? "scaleY(1.5)" : "none",
+                                                                        transformOrigin: "bottom",
+                                                                        transition: "transform 0.2s"
+                                                                    }}
+                                                                    onMouseEnter={() => setHoveredStatus('passed')}
+                                                                    onMouseLeave={() => setHoveredStatus(null)}
+                                                                />
+                                                                <Box
+                                                                    style={{
+                                                                        width: "40px",
+                                                                        height: "8px",
+                                                                        backgroundColor: "#F79009",
+                                                                        borderRadius: "4px",
+                                                                        cursor: "pointer",
+                                                                        transform: hoveredStatus === 'warning' ? "scaleY(1.5)" : "none",
+                                                                        transformOrigin: "bottom",
+                                                                        transition: "transform 0.2s"
+                                                                    }}
+                                                                    onMouseEnter={() => setHoveredStatus('warning')}
+                                                                    onMouseLeave={() => setHoveredStatus(null)}
+                                                                />
+                                                                <Box
+                                                                    style={{
+                                                                        width: "20px",
+                                                                        height: "8px",
+                                                                        backgroundColor: "#D92D20",
+                                                                        borderRadius: "4px",
+                                                                        cursor: "pointer",
+                                                                        transform: hoveredStatus === 'failed' ? "scaleY(1.5)" : "none",
+                                                                        transformOrigin: "bottom",
+                                                                        transition: "transform 0.2s"
+                                                                    }}
+                                                                    onMouseEnter={() => setHoveredStatus('failed')}
+                                                                    onMouseLeave={() => setHoveredStatus(null)}
+                                                                />
+                                                                <Box
+                                                                    style={{
+                                                                        width: "20px",
+                                                                        height: "8px",
+                                                                        backgroundColor: "#949494",
+                                                                        borderRadius: "4px",
+                                                                        cursor: "pointer",
+                                                                        transform: hoveredStatus === 'terminated' ? "scaleY(1.5)" : "none",
+                                                                        transformOrigin: "bottom",
+                                                                        transition: "transform 0.2s"
+                                                                    }}
+                                                                    onMouseEnter={() => setHoveredStatus('terminated')}
+                                                                    onMouseLeave={() => setHoveredStatus(null)}
+                                                                />
+                                                            </Box>
+                                                            <Button
+                                                                appearance="subtle"
+                                                                size="sm"
+                                                                style={{ height: "16px", padding: "0 4px", fontSize: "12px", color: "var(--ax-colors-fg-secondary)" }}
+                                                                onMouseEnter={() => setHoveredStatus('total')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                            >
+                                                                75
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </Card>
+
+                                            <Box bg="bg.secondary" p="24" rounded="md" style={{ maxWidth: "1280px" }}>
+                                                <Text fontWeight="600" fontSize="md" mb="24">Execution guardrail settings</Text>
+                                                <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="24">
+                                                    <Field
+                                                        label={
+                                                            <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                                                Sensitivity
+                                                                <Tooltip content="Adjust how strictly guardrails are enforced">
+                                                                    <span style={{ display: "inline-flex" }} suppressHydrationWarning>
+                                                                        <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                    </span>
+                                                                </Tooltip>
+                                                            </span>
+                                                        }
+                                                    >
+                                                        <Box display="flex" alignItems="start" gap="12" style={{ maxWidth: "400px" }}>
+                                                            <Box flex="1" pt="6">
+                                                                <Range
+                                                                    value={sensitivity}
+                                                                    onValueChange={setSensitivity}
+                                                                    max={5}
+                                                                    min={1}
+                                                                    step={1}
+                                                                    suppressHydrationWarning
+                                                                    marks={[
+                                                                        { value: 1, label: "1 (Strict)" },
+                                                                        { value: 5, label: "5" },
+                                                                    ]}
+                                                                />
+                                                            </Box>
+                                                            <Input
+                                                                type="number"
+                                                                value={sensitivity}
+                                                                onChange={(e) => {
+                                                                    const val = parseInt(e.target.value);
+                                                                    if (!isNaN(val) && val >= 1 && val <= 5) {
+                                                                        setSensitivity(val);
+                                                                    }
+                                                                }}
+                                                                style={{ width: "80px" }}
+                                                                suppressHydrationWarning
+                                                            />
+                                                        </Box>
+
+                                                    </Field>
+
+                                                    <Field>
+                                                        <Box display="flex" alignItems="center" gap="8">
+                                                            <Switch defaultChecked />
+                                                            <Text>Automatically terminate executions in Enforcer mode</Text>
+                                                            <Tooltip content="When enabled, executions that exceed critical guardrails will be terminated automatically in Enforcer mode. This prevents rogue agent runs, and credits for the terminated executions will be automatically refunded.">
+                                                                <Box display="inline-flex" suppressHydrationWarning>
+                                                                    <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Box>
+                                                            </Tooltip>
+                                                        </Box>
+                                                    </Field>
+                                                </Box>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Box>
+                        </TabsContent>
+
+                        <TabsContent value="logs" suppressHydrationWarning>
                             <Box p="24">
                                 <Text>Agent Activity Logs</Text>
                             </Box>
