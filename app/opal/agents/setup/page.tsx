@@ -34,6 +34,11 @@ import {
     SelectContent,
     Progress,
 } from "@optiaxiom/react";
+import {
+    HoverCard,
+    HoverCardTrigger,
+    HoverCardContent,
+} from "@optiaxiom/react/unstable";
 import { Input } from "@/app/components/Input";
 import {
     IconTrash,
@@ -41,7 +46,6 @@ import {
     IconHelp,
     IconSparkles,
     IconDots,
-    IconDotsVertical,
 } from "@tabler/icons-react";
 import {
     IconFileImport,
@@ -64,6 +68,8 @@ import {
     IconBook,
     IconChevronRight,
     IconChevronLeft,
+    IconLink,
+    IconPen,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -1198,130 +1204,228 @@ function SpecializedAgentSetupContent() {
                                     {/* Output Evaluation Content */}
                                     {qualitySubTab === "evaluation" && (
                                         <Box display="flex" flexDirection="column" gap="24">
-                                            <Card p="24" suppressHydrationWarning style={{ maxWidth: "1280px" }}>
-                                                <Box display="flex" alignItems="center" justifyContent="space-between" mb="24">
+                                            {/* Summary Card and Explanation */}
+                                            <Card pt="24" px="24" pb="16" suppressHydrationWarning style={{ maxWidth: "1280px" }}>
+                                                <Box display="grid" gap="48" suppressHydrationWarning style={{ gridTemplateColumns: "1fr 1fr" }}>
+
                                                     <Box>
-                                                        <Text fontWeight="600" fontSize="md">Evaluation Metrics</Text>
-                                                        <Text fontSize="sm" color="fg.secondary">Measure and score the quality of your agent's outputs.</Text>
+                                                        <Box display="flex" flexDirection="column" gap="16" style={{ width: "100%" }}>
+                                                            <Text fontWeight="600" fontSize="md">Summary for V24</Text>
+
+                                                            <Box display="flex" flexDirection="column" gap="8" style={{ width: "100%" }}>
+                                                                <Box display="flex" justifyContent="space-between">
+                                                                    <Text fontSize="sm" color="fg.secondary">Total Executions</Text>
+                                                                    <Text fontSize="sm" fontWeight="500">75</Text>
+                                                                </Box>
+                                                                <Box display="flex" justifyContent="space-between">
+                                                                    <Text fontSize="sm" color="fg.secondary">Avg. Output Quality Score</Text>
+                                                                    <Text fontSize="sm" fontWeight="500">82%</Text>
+                                                                </Box>
+                                                                <Box
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                    gap="8"
+                                                                    p="2"
+                                                                    rounded="sm"
+                                                                    bg={hoveredStatus === 'passed' ? 'bg.default.pressed' : 'transparent'}
+                                                                    style={{ cursor: "pointer", transition: "background-color 0.2s" }}
+                                                                    onMouseEnter={() => setHoveredStatus('passed')}
+                                                                    onMouseLeave={() => setHoveredStatus(null)}
+                                                                >
+                                                                    <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#17B26A" }} />
+                                                                    <Text fontSize="sm" color="fg.secondary">Passed</Text>
+                                                                    <Text fontSize="sm" fontWeight="500" ml="auto">65</Text>
+                                                                </Box>
+                                                                <Box
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                    gap="8"
+                                                                    p="2"
+                                                                    rounded="sm"
+                                                                    bg={hoveredStatus === 'failed' ? 'bg.default.pressed' : 'transparent'}
+                                                                    style={{ cursor: "pointer", transition: "background-color 0.2s" }}
+                                                                    onMouseEnter={() => setHoveredStatus('failed')}
+                                                                    onMouseLeave={() => setHoveredStatus(null)}
+                                                                >
+                                                                    <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#D92D20" }} />
+                                                                    <Text fontSize="sm" color="fg.secondary">Failed</Text>
+                                                                    <Text fontSize="sm" fontWeight="500" ml="auto">10</Text>
+                                                                </Box>
+                                                            </Box>
+                                                        </Box>
                                                     </Box>
-                                                    <Button icon={<IconPlus size={16} />} appearance="default">Add Evaluator</Button>
+
+                                                    <Box display="flex" flexDirection="column">
+                                                        <Text fontWeight="600" fontSize="md" mb="12">Output Evaluation</Text>
+                                                        <Text fontSize="md" color="fg.secondary" mb="16">
+                                                            Opal automatically evaluates the quality of agent outputs based on your defined examples and baseline quality score. Outputs that meet or exceed your quality threshold are marked as passed, while those below are flagged for review or automatic retry.
+                                                        </Text>
+                                                        <Box style={{ height: "12px", width: "100%", display: "flex", alignItems: "end" }}>
+                                                            <Box
+                                                                style={{
+                                                                    width: "87%",
+                                                                    height: "8px",
+                                                                    backgroundColor: "#17B26A",
+                                                                    borderRadius: "4px 0 0 4px",
+                                                                    cursor: "pointer",
+                                                                    transform: hoveredStatus === 'passed' ? "scaleY(1.5)" : "scaleY(1)",
+                                                                    transformOrigin: "bottom",
+                                                                    transition: "transform 0.2s"
+                                                                }}
+                                                                onMouseEnter={() => setHoveredStatus('passed')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                            />
+                                                            <Box
+                                                                style={{
+                                                                    width: "13%",
+                                                                    height: "8px",
+                                                                    backgroundColor: "#D92D20",
+                                                                    borderRadius: "0 4px 4px 0",
+                                                                    cursor: "pointer",
+                                                                    transform: hoveredStatus === 'failed' ? "scaleY(1.5)" : "scaleY(1)",
+                                                                    transformOrigin: "bottom",
+                                                                    transition: "transform 0.2s"
+                                                                }}
+                                                                onMouseEnter={() => setHoveredStatus('failed')}
+                                                                onMouseLeave={() => setHoveredStatus(null)}
+                                                            />
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </Card>
+
+                                            {/* Output Evaluation Examples */}
+                                            <Box bg="bg.secondary" p="24" rounded="md" style={{ maxWidth: "1280px" }} suppressHydrationWarning>
+                                                <Box display="flex" alignItems="center" gap="8" mb="8">
+                                                    <Text fontWeight="600" fontSize="lg">Output Evaluation Examples</Text>
+                                                    <Tooltip content="Provide examples of good outputs to guide the evaluation">
+                                                        <Box display="inline-flex" suppressHydrationWarning>
+                                                            <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                        </Box>
+                                                    </Tooltip>
+                                                </Box>
+                                                <Text fontSize="md" color="fg.secondary" mb="24">Add your preferred outputs (up to 5) to help Opal evaluate its responses.</Text>
+
+                                                <Box display="flex" justifyContent="flex-end" mb="16" suppressHydrationWarning>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild suppressHydrationWarning>
+                                                            <Button icon={<IconPlus size={16} />} appearance="subtle">Add Example</Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent suppressHydrationWarning>
+                                                            <DropdownMenuItem>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <IconLink size={16} />
+                                                                    <Text>Link from execution logs</Text>
+                                                                </Box>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <IconPen size={16} />
+                                                                    <Text>Add manually</Text>
+                                                                </Box>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </Box>
 
-                                                <Table>
-                                                    <thead>
-                                                        <Tr>
-                                                            <Th>Evaluator</Th>
-                                                            <Th>Criteria</Th>
-                                                            <Th>Weight</Th>
-                                                            <Th>Average Score</Th>
-                                                            <Th style={{ textAlign: "right" }}>Actions</Th>
-                                                        </Tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <Tr>
-                                                            <Td>
-                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                    <Box bg="bg.accent.subtle" p="4" rounded="sm">
-                                                                        <IconSparkles size={16} color="var(--ax-colors-fg-accent-strong)" />
-                                                                    </Box>
-                                                                    <Text fontWeight="500">Tone & Voice</Text>
-                                                                </Box>
-                                                            </Td>
-                                                            <Td><Text fontSize="sm" color="fg.secondary">Matches brand guidelines</Text></Td>
-                                                            <Td><Badge variant="subtle" intent="neutral">40%</Badge></Td>
-                                                            <Td>
-                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                    <Progress value={92} size="sm" style={{ width: "60px" }} />
-                                                                    <Text fontSize="sm" fontWeight="600">9.2</Text>
-                                                                </Box>
-                                                            </Td>
-                                                            <Td style={{ textAlign: "right" }}>
-                                                                <Button appearance="subtle" size="sm" icon={<IconDotsVertical size={16} />} aria-label="More actions" />
-                                                            </Td>
-                                                        </Tr>
-                                                        <Tr>
-                                                            <Td>
-                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                    <Box bg="bg.accent.subtle" p="4" rounded="sm">
-                                                                        <IconCircleCheck size={16} color="var(--ax-colors-fg-success-strong)" />
-                                                                    </Box>
-                                                                    <Text fontWeight="500">Factuality</Text>
-                                                                </Box>
-                                                            </Td>
-                                                            <Td><Text fontSize="sm" color="fg.secondary">Accurate and grounded</Text></Td>
-                                                            <Td><Badge variant="subtle" intent="neutral">40%</Badge></Td>
-                                                            <Td>
-                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                    <Progress value={98} size="sm" style={{ width: "60px" }} />
-                                                                    <Text fontSize="sm" fontWeight="600">9.8</Text>
-                                                                </Box>
-                                                            </Td>
-                                                            <Td style={{ textAlign: "right" }}>
-                                                                <Button appearance="subtle" size="sm" icon={<IconDotsVertical size={16} />} aria-label="More actions" />
-                                                            </Td>
-                                                        </Tr>
-                                                        <Tr>
-                                                            <Td>
-                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                    <Box bg="bg.accent.subtle" p="4" rounded="sm">
-                                                                        <IconFile size={16} color="var(--ax-colors-fg-secondary)" />
-                                                                    </Box>
-                                                                    <Text fontWeight="500">Conciseness</Text>
-                                                                </Box>
-                                                            </Td>
-                                                            <Td><Text fontSize="sm" color="fg.secondary">Under 200 words</Text></Td>
-                                                            <Td><Badge variant="subtle" intent="neutral">20%</Badge></Td>
-                                                            <Td>
-                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                    <Progress value={85} size="sm" style={{ width: "60px" }} />
-                                                                    <Text fontSize="sm" fontWeight="600">8.5</Text>
-                                                                </Box>
-                                                            </Td>
-                                                            <Td style={{ textAlign: "right" }}>
-                                                                <Button appearance="subtle" size="sm" icon={<IconDotsVertical size={16} />} aria-label="More actions" />
-                                                            </Td>
-                                                        </Tr>
-                                                    </tbody>
-                                                </Table>
-                                            </Card>
+                                                <Box display="flex" flexDirection="column" gap="16" mb="24" suppressHydrationWarning>
+                                                    <Card p="16" w="full">
+                                                        <Box display="flex" flexDirection="column" gap="4" w="full">
+                                                            <Box display="flex" justifyContent="space-between" alignItems="center" w="full">
+                                                                <Text fontWeight="500">Example Name</Text>
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild suppressHydrationWarning>
+                                                                        <Button appearance="subtle" size="sm" icon={<IconEllipsisSolid />} aria-label="More actions" />
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent suppressHydrationWarning>
+                                                                        <DropdownMenuItem>
+                                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                                <IconPen size={16} />
+                                                                                <Text>Edit</Text>
+                                                                            </Box>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem>
+                                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                                <IconPlus size={16} />
+                                                                                <Text>Add example shot to prompt</Text>
+                                                                            </Box>
+                                                                        </DropdownMenuItem>
+                                                                        <DropdownMenuItem>
+                                                                            <Box display="flex" alignItems="center" gap="8" color="fg.error">
+                                                                                <IconTrash size={16} />
+                                                                                <Text>Delete</Text>
+                                                                            </Box>
+                                                                        </DropdownMenuItem>
+                                                                    </DropdownMenuContent>
+                                                                </DropdownMenu>
+                                                            </Box>
+                                                            <Text fontSize="sm" color="fg.secondary">The research topic statement.</Text>
+                                                        </Box>
+                                                    </Card>
+                                                </Box>
+
+                                                <Box display="flex" flexDirection="column" gap="24" suppressHydrationWarning>
+                                                    <Box>
+                                                        <Text fontSize="md" color="fg.secondary" mb="8">Set your baseline quality score to inform Opal's execution.</Text>
+                                                        <Select defaultValue="85" options={[
+                                                            { label: "85%", value: "85" },
+                                                            { label: "80%", value: "80" },
+                                                            { label: "75%", value: "75" },
+                                                            { label: "70%", value: "70" },
+                                                        ]}>
+                                                            <SelectTrigger style={{ width: "80px" }} />
+                                                            <SelectContent suppressHydrationWarning />
+                                                        </Select>
+                                                    </Box>
+
+                                                    <Box>
+                                                        <Text fontSize="md" color="fg.secondary" mb="8">Automatically retry if output quality is below the minimum quality score?</Text>
+                                                        <Box display="flex" alignItems="center" gap="16">
+                                                            <Switch defaultChecked>Auto Retry</Switch>
+                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                <Text fontSize="sm" color="fg.secondary">Retry up to</Text>
+                                                                <Select defaultValue="1" options={[
+                                                                    { label: "1", value: "1" },
+                                                                    { label: "2", value: "2" },
+                                                                    { label: "3", value: "3" },
+                                                                ]}>
+                                                                    <SelectTrigger style={{ width: "60px" }} />
+                                                                    <SelectContent suppressHydrationWarning />
+                                                                </Select>
+                                                                <Text fontSize="md" color="fg.secondary">attempt(s) if the output doesn't meet the baseline quality score.</Text>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </Box>
                                         </Box>
                                     )}
 
                                     {/* Execution guardrail settings */}
                                     {qualitySubTab === "guardrails" && (
                                         <Box display="flex" flexDirection="column" gap="24">
-                                            {/* Summary Card moved here */}
-                                            <Card p="24" suppressHydrationWarning style={{ maxWidth: "1280px" }}>
-                                                <Box display="grid" gap="64" suppressHydrationWarning style={{ gridTemplateColumns: "1fr 1fr" }}>
+                                            {/* Summary Card and Enforcer Mode */}
+                                            <Card pt="24" px="24" pb="16" suppressHydrationWarning style={{ maxWidth: "1280px" }}>
+                                                <Box display="grid" gap="48" suppressHydrationWarning style={{ gridTemplateColumns: "1fr 1fr" }}>
 
                                                     <Box>
                                                         <Text fontWeight="600" fontSize="md" mb="12">Summary for V24</Text>
-                                                        <Box
-                                                            display="flex"
-                                                            alignItems="center"
-                                                            p="2"
-                                                            rounded="sm"
-                                                            mb="4"
-                                                            bg={hoveredStatus === 'total' ? 'bg.default.pressed' : 'transparent'}
-                                                            style={{ transition: "background-color 0.2s", cursor: "pointer" }}
-                                                            onMouseEnter={() => setHoveredStatus('total')}
-                                                            onMouseLeave={() => setHoveredStatus(null)}
-                                                            suppressHydrationWarning
-                                                        >
-                                                            <Text fontSize="sm" color="fg.secondary">Total Executions: 75</Text>
-                                                        </Box>
-                                                        <Box display="flex" flexDirection="column" gap="4">
+                                                        <Box mb="12">
+                                                            <Box display="flex" justifyContent="space-between" mb="8">
+                                                                <Text fontSize="sm" color="fg.secondary">Total Executions</Text>
+                                                                <Text fontSize="sm" fontWeight="500">75</Text>
+                                                            </Box>
                                                             <Box
                                                                 display="flex"
                                                                 alignItems="center"
                                                                 gap="8"
+                                                                mb="4"
                                                                 p="2"
                                                                 rounded="sm"
                                                                 bg={hoveredStatus === 'passed' ? 'bg.default.pressed' : 'transparent'}
-                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                style={{ cursor: "pointer", transition: "background-color 0.2s" }}
                                                                 onMouseEnter={() => setHoveredStatus('passed')}
                                                                 onMouseLeave={() => setHoveredStatus(null)}
-                                                                suppressHydrationWarning
                                                             >
                                                                 <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#17B26A" }} />
                                                                 <Text fontSize="sm" color="fg.secondary">Passed</Text>
@@ -1331,13 +1435,13 @@ function SpecializedAgentSetupContent() {
                                                                 display="flex"
                                                                 alignItems="center"
                                                                 gap="8"
+                                                                mb="4"
                                                                 p="2"
                                                                 rounded="sm"
                                                                 bg={hoveredStatus === 'warning' ? 'bg.default.pressed' : 'transparent'}
-                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                style={{ cursor: "pointer", transition: "background-color 0.2s" }}
                                                                 onMouseEnter={() => setHoveredStatus('warning')}
                                                                 onMouseLeave={() => setHoveredStatus(null)}
-                                                                suppressHydrationWarning
                                                             >
                                                                 <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#F79009" }} />
                                                                 <Text fontSize="sm" color="fg.secondary">Warning</Text>
@@ -1347,13 +1451,13 @@ function SpecializedAgentSetupContent() {
                                                                 display="flex"
                                                                 alignItems="center"
                                                                 gap="8"
+                                                                mb="4"
                                                                 p="2"
                                                                 rounded="sm"
                                                                 bg={hoveredStatus === 'failed' ? 'bg.default.pressed' : 'transparent'}
-                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                style={{ cursor: "pointer", transition: "background-color 0.2s" }}
                                                                 onMouseEnter={() => setHoveredStatus('failed')}
                                                                 onMouseLeave={() => setHoveredStatus(null)}
-                                                                suppressHydrationWarning
                                                             >
                                                                 <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#D92D20" }} />
                                                                 <Text fontSize="sm" color="fg.secondary">Failed</Text>
@@ -1366,10 +1470,9 @@ function SpecializedAgentSetupContent() {
                                                                 p="2"
                                                                 rounded="sm"
                                                                 bg={hoveredStatus === 'terminated' ? 'bg.default.pressed' : 'transparent'}
-                                                                style={{ transition: "background-color 0.2s", cursor: "pointer" }}
+                                                                style={{ cursor: "pointer", transition: "background-color 0.2s" }}
                                                                 onMouseEnter={() => setHoveredStatus('terminated')}
                                                                 onMouseLeave={() => setHoveredStatus(null)}
-                                                                suppressHydrationWarning
                                                             >
                                                                 <Box style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#949494" }} />
                                                                 <Text fontSize="sm" color="fg.secondary">Terminated</Text>
@@ -1391,20 +1494,20 @@ function SpecializedAgentSetupContent() {
                                                             </Box>
                                                         </Box>
                                                         <Box mb="12" style={{ height: "80px" }}>
-                                                            <Text fontSize="sm" color="fg.secondary">
+                                                            <Text fontSize="md" color="fg.secondary">
                                                                 {currentMode.description}
                                                             </Text>
                                                         </Box>
-                                                        <Box mt="auto" display="flex" alignItems="end" gap="4">
-                                                            <Box flex="1" display="flex" gap="2" alignItems="end" style={{ height: "16px" }}>
+                                                        <Box display="flex" alignItems="end" gap="4">
+                                                            <Box flex="1" display="flex" style={{ height: "12px", alignItems: "end" }}>
                                                                 <Box
-                                                                    flex="1"
                                                                     style={{
+                                                                        flex: "1",
                                                                         height: "8px",
                                                                         backgroundColor: "#17B26A",
-                                                                        borderRadius: "4px",
+                                                                        borderRadius: "4px 0 0 4px",
                                                                         cursor: "pointer",
-                                                                        transform: hoveredStatus === 'passed' ? "scaleY(1.5)" : "none",
+                                                                        transform: hoveredStatus === 'passed' ? "scaleY(1.5)" : "scaleY(1)",
                                                                         transformOrigin: "bottom",
                                                                         transition: "transform 0.2s"
                                                                     }}
@@ -1416,9 +1519,8 @@ function SpecializedAgentSetupContent() {
                                                                         width: "40px",
                                                                         height: "8px",
                                                                         backgroundColor: "#F79009",
-                                                                        borderRadius: "4px",
                                                                         cursor: "pointer",
-                                                                        transform: hoveredStatus === 'warning' ? "scaleY(1.5)" : "none",
+                                                                        transform: hoveredStatus === 'warning' ? "scaleY(1.5)" : "scaleY(1)",
                                                                         transformOrigin: "bottom",
                                                                         transition: "transform 0.2s"
                                                                     }}
@@ -1430,9 +1532,8 @@ function SpecializedAgentSetupContent() {
                                                                         width: "20px",
                                                                         height: "8px",
                                                                         backgroundColor: "#D92D20",
-                                                                        borderRadius: "4px",
                                                                         cursor: "pointer",
-                                                                        transform: hoveredStatus === 'failed' ? "scaleY(1.5)" : "none",
+                                                                        transform: hoveredStatus === 'failed' ? "scaleY(1.5)" : "scaleY(1)",
                                                                         transformOrigin: "bottom",
                                                                         transition: "transform 0.2s"
                                                                     }}
@@ -1444,9 +1545,9 @@ function SpecializedAgentSetupContent() {
                                                                         width: "20px",
                                                                         height: "8px",
                                                                         backgroundColor: "#949494",
-                                                                        borderRadius: "4px",
+                                                                        borderRadius: "0 4px 4px 0",
                                                                         cursor: "pointer",
-                                                                        transform: hoveredStatus === 'terminated' ? "scaleY(1.5)" : "none",
+                                                                        transform: hoveredStatus === 'terminated' ? "scaleY(1.5)" : "scaleY(1)",
                                                                         transformOrigin: "bottom",
                                                                         transition: "transform 0.2s"
                                                                     }}
@@ -1471,48 +1572,69 @@ function SpecializedAgentSetupContent() {
                                             <Box bg="bg.secondary" p="24" rounded="md" style={{ maxWidth: "1280px" }}>
                                                 <Text fontWeight="600" fontSize="md" mb="24">Execution guardrail settings</Text>
                                                 <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="24">
-                                                    <Field
-                                                        label={
-                                                            <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                                                Sensitivity
-                                                                <Tooltip content="Adjust how strictly guardrails are enforced">
-                                                                    <span style={{ display: "inline-flex" }} suppressHydrationWarning>
-                                                                        <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                    <HoverCard openDelay={200}>
+                                                        <Field
+                                                            label={
+                                                                <HoverCardTrigger asChild>
+                                                                    <span style={{ display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                                                                        Sensitivity
+                                                                        <span style={{ display: "inline-flex" }} suppressHydrationWarning>
+                                                                            <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                        </span>
                                                                     </span>
-                                                                </Tooltip>
-                                                            </span>
-                                                        }
-                                                    >
-                                                        <Box display="flex" alignItems="start" gap="12" style={{ maxWidth: "400px" }}>
-                                                            <Box flex="1" pt="6">
-                                                                <Range
+                                                                </HoverCardTrigger>
+                                                            }
+                                                        >
+                                                            <Box display="flex" alignItems="start" gap="12" style={{ maxWidth: "400px" }}>
+                                                                <HoverCardTrigger asChild>
+                                                                    <Box flex="1" pt="6">
+                                                                        <Range
+                                                                            value={sensitivity}
+                                                                            onValueChange={setSensitivity}
+                                                                            max={5}
+                                                                            min={1}
+                                                                            step={1}
+                                                                            suppressHydrationWarning
+                                                                            marks={[
+                                                                                { value: 1, label: "1 (Strict)" },
+                                                                                { value: 5, label: "5" },
+                                                                            ]}
+                                                                        />
+                                                                    </Box>
+                                                                </HoverCardTrigger>
+                                                                <Input
+                                                                    type="number"
                                                                     value={sensitivity}
-                                                                    onValueChange={setSensitivity}
-                                                                    max={5}
-                                                                    min={1}
-                                                                    step={1}
+                                                                    onChange={(e) => {
+                                                                        const val = parseInt(e.target.value);
+                                                                        if (!isNaN(val) && val >= 1 && val <= 5) {
+                                                                            setSensitivity(val);
+                                                                        }
+                                                                    }}
+                                                                    style={{ width: "80px" }}
                                                                     suppressHydrationWarning
-                                                                    marks={[
-                                                                        { value: 1, label: "1 (Strict)" },
-                                                                        { value: 5, label: "5" },
-                                                                    ]}
                                                                 />
                                                             </Box>
-                                                            <Input
-                                                                type="number"
-                                                                value={sensitivity}
-                                                                onChange={(e) => {
-                                                                    const val = parseInt(e.target.value);
-                                                                    if (!isNaN(val) && val >= 1 && val <= 5) {
-                                                                        setSensitivity(val);
-                                                                    }
-                                                                }}
-                                                                style={{ width: "80px" }}
-                                                                suppressHydrationWarning
-                                                            />
-                                                        </Box>
 
-                                                    </Field>
+                                                        </Field>
+                                                        <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                            <Box display="flex" flexDirection="column" gap="8">
+                                                                <Text fontSize="md" fontWeight="500">Sensitivity</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">
+                                                                    Adjusts how sensitive the guardrails are to anomalous behavior. Higher values are stricter and will flag deviations more quickly.
+                                                                </Text>
+                                                                <Text fontSize="sm" color="fg.secondary">
+                                                                    <strong>Low</strong> (e.g., 1–2): More permissive. Allows for more variation before flagging an issue.
+                                                                </Text>
+                                                                <Text fontSize="sm" color="fg.secondary">
+                                                                    <strong>High</strong> (e.g., 4–5): More conservative. Flags even minor deviations from the baseline.
+                                                                </Text>
+                                                                <Text fontSize="sm" color="fg.secondary">
+                                                                    A setting of 2 is the recommended balance for most agents.
+                                                                </Text>
+                                                            </Box>
+                                                        </HoverCardContent>
+                                                    </HoverCard>
 
                                                     <Field>
                                                         <Box display="flex" alignItems="center" gap="8">
