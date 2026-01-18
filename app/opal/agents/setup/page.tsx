@@ -1075,7 +1075,7 @@ function SpecializedAgentSetupContent() {
                                                     )}
                                                 </Field>
 
-                                                <Field label="Creativity" info="Adjust temperature" style={{ maxWidth: "320px" }}>
+                                                <Field label="Creativity" info="Adjust temperature" style={{ maxWidth: "400px" }}>
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
                                                             previousValue={comparisonData.creativity?.toFixed(1) || (creativity / 100).toFixed(1)}
@@ -1088,24 +1088,24 @@ function SpecializedAgentSetupContent() {
                                                             mode="stacked"
                                                         />
                                                     ) : (
-                                                        <Box display="flex" gap="8" alignItems="center">
-                                                            {/* Custom Slider Mockup */}
-                                                            <Box style={{ height: "4px", position: "relative" }} bg="bg.accent" flex="1" rounded="full">
-                                                                <Box
-                                                                    w="16"
-                                                                    h="16"
-                                                                    bg="bg.accent"
-                                                                    rounded="full"
-                                                                    border="2"
-                                                                    style={{
-                                                                        borderColor: "var(--ax-colors-bg-default)",
-                                                                        position: "absolute",
-                                                                        top: "-6px",
-                                                                        left: `${creativity}%`
-                                                                    }}
+                                                        <Box display="flex" alignItems="start" gap="12">
+                                                            <Box flex="1" pt="6">
+                                                                <Range
+                                                                    value={creativity}
+                                                                    onValueChange={setCreativity}
+                                                                    max={100}
+                                                                    min={0}
+                                                                    step={1}
+                                                                    suppressHydrationWarning
+                                                                    marks={[
+                                                                        { value: 0, label: "0.0" },
+                                                                        { value: 100, label: "1.0" },
+                                                                    ]}
+                                                                    disabled={isReadOnly}
                                                                 />
                                                             </Box>
                                                             <Input
+                                                                type="number"
                                                                 value={(creativity / 100).toFixed(1)}
                                                                 onChange={(e) => {
                                                                     const val = parseFloat(e.target.value);
@@ -1117,6 +1117,7 @@ function SpecializedAgentSetupContent() {
                                                                 readOnly={isReadOnly}
                                                                 tabIndex={isReadOnly ? -1 : 0}
                                                                 size="md"
+                                                                suppressHydrationWarning
                                                             />
                                                         </Box>
                                                     )}
@@ -1612,6 +1613,7 @@ function SpecializedAgentSetupContent() {
                                                                         }
                                                                     }}
                                                                     style={{ width: "80px" }}
+                                                                    size="md"
                                                                     suppressHydrationWarning
                                                                 />
                                                             </Box>
