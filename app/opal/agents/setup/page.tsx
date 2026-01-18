@@ -1571,7 +1571,7 @@ function SpecializedAgentSetupContent() {
                                             </Card>
 
                                             <Box bg="bg.secondary" p="24" rounded="md" style={{ maxWidth: "1280px" }}>
-                                                <Text fontWeight="600" fontSize="md" mb="24">Execution guardrail settings</Text>
+                                                <Text fontWeight="600" fontSize="lg" mb="24">Execution guardrail settings</Text>
                                                 <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="24">
                                                     <HoverCard openDelay={200}>
                                                         <Field
