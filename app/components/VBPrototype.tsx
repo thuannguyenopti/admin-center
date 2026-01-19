@@ -566,6 +566,33 @@ export default function VBPrototype({
 				<MenuContent />
 			</Menu>
 
+			<Menu
+				options={[
+					{
+						addon: <IconSettings size={16} />,
+						label: "Properties",
+						execute: () => {
+							setSidebarTab("properties");
+							setEditingSectionId(null);
+						},
+					},
+					{
+						addon: <IconCopy size={16} />,
+						label: "Duplicate",
+						execute: duplicateActiveOutline,
+					},
+				]}
+			>
+				<MenuTrigger
+					icon={<IconDots size={16} />}
+					aria-label="more"
+					appearance="subtle"
+					size="sm"
+					iconPosition="start"
+				/>
+				<MenuContent />
+			</Menu>
+
 			<div
 				className={`absolute -right-[10px] top-[32px] opacity-0 invisible z-10 p-2 rounded-md ${styles.popupMenu} w-[200px] max-w-[80vw] mr-12`}
 				style={{
@@ -1241,25 +1268,92 @@ export default function VBPrototype({
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
 												<div className="flex-1" />
+												<div className="flex items-center gap-1">
+													<Menu
+														options={[
+															{
+																addon: <IconSettings size={16} />,
+																label: "Properties",
+																execute: () => {
+																	setSidebarTab("properties");
+																	setEditingSectionId(null);
+																},
+															},
+														]}
+													>
+														<MenuTrigger
+															icon={<IconDots size={16} />}
+															aria-label="more"
+															appearance="subtle"
+															size="sm"
+															iconPosition="start"
+														/>
+														<MenuContent />
+													</Menu>
+												</div>
 											</div>
 										</div>
 										<div className="flex-1 overflow-y-auto pl-3 pr-3 pb-4">
-											<div className="flex flex-col gap-2">
+											<div className="flex flex-col gap-1">
 												{outlines.map((o) => (
-													<Button
+													<div
 														key={o.id}
-														appearance="subtle"
-														onClick={() => {
-															setActiveOutlineId(o.id);
-															setSidebarTab("outlines");
-															setCurrentEle("none");
-															setCurrentHoverEle("none");
-															setAI(false);
-															setOutlineView("tree");
-														}}
+														className="group flex items-center gap-1 rounded-[4px] hover:bg-[#091E4208] pr-2"
 													>
-														{o.title}
-													</Button>
+														<Button
+															appearance="subtle"
+															fullWidth
+															justifyContent="start"
+															onClick={() => {
+																setActiveOutlineId(o.id);
+																setSidebarTab("outlines");
+																setCurrentEle("none");
+																setCurrentHoverEle("none");
+																setAI(false);
+																setOutlineView("tree");
+															}}
+														>
+															{o.title}
+														</Button>
+														<div className="group-hover:visible invisible">
+															<Menu
+																options={[
+																	{
+																		addon: <IconSettings size={16} />,
+																		label: "Properties",
+																		execute: () => {
+																			setActiveOutlineId(o.id);
+																			setSidebarTab("properties");
+																			setEditingSectionId(null);
+																		},
+																	},
+																	{
+																		addon: <IconCopy size={16} />,
+																		label: "Duplicate",
+																		execute: () => {
+																			// Manual duplication since activeOutline state might be stale
+																			const newId = `outline-${Date.now()}`;
+																			const newOutline: OutlineType = {
+																				...o,
+																				id: newId,
+																				title: `${o.title} (Copy)`,
+																			};
+																			setOutlines((prev) => [...prev, newOutline]);
+																			setActiveOutlineId(newId);
+																		},
+																	},
+																]}
+															>
+																<MenuTrigger
+																	icon={<IconDots size={16} />}
+																	aria-label="more"
+																	appearance="subtle"
+																	size="sm"
+																/>
+																<MenuContent />
+															</Menu>
+														</div>
+													</div>
 												))}
 											</div>
 										</div>
