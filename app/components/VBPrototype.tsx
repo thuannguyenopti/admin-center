@@ -1302,8 +1302,8 @@ export default function VBPrototype({
 													>
 														<Button
 															appearance="subtle"
-															fullWidth
-															justifyContent="start"
+															w="full"
+															justifyContent="flex-start"
 															onClick={() => {
 																setActiveOutlineId(o.id);
 																setSidebarTab("outlines");
