@@ -22,6 +22,7 @@ interface OutlineProps {
     setData: React.Dispatch<React.SetStateAction<any[]>>;
     setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
     setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
+    onEditProperties?: (id: string) => void;
 
     data: any[];
 }
@@ -57,6 +58,7 @@ export default function OutlineTree({
     setData,
     setTheEles,
     dragging,
+    onEditProperties,
 }: OutlineProps) {
     const ASSET_DRAG_ID = "__asset:image__";
 
@@ -463,6 +465,7 @@ export default function OutlineTree({
                                 section={section}
                                 onDragStart={(e: any) => onDragStart(e, section.id)}
                                 removeSection={() => removeSection(sindex)}
+                                onEditProperties={() => onEditProperties?.(section.id)}
                                 addSection={() => addSection(section.id)}
                                 addRow={(e: any) => addRow(e, sindex, null)}
                             >

@@ -36,7 +36,7 @@ export default function RootLayout({
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 
-	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const [algorithms, , isHydrated] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any, boolean];
 	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
 
 	const structure = {

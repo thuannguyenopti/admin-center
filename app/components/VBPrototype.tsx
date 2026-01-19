@@ -4,10 +4,6 @@ import {
 	Box,
 	Button,
 	Text,
-	Tabs,
-	TabsList,
-	TabsTrigger,
-	TabsContent,
 	Textarea,
 	Heading,
 	Menu,
@@ -22,6 +18,10 @@ import {
 	IconSparkles,
 	IconSquare,
 	IconSection,
+	IconDots,
+	IconSettings,
+	IconChevronLeft,
+	IconCopy,
 } from "@tabler/icons-react";
 
 import { EleMap } from "./vb/Ele";
@@ -319,6 +319,7 @@ export default function VBPrototype({
 		return outlines.length ? outlines[0].id : null;
 	});
 
+	const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 
@@ -386,6 +387,18 @@ export default function VBPrototype({
 					: o
 			)
 		);
+	};
+
+	const duplicateActiveOutline = () => {
+		if (!activeOutline) return;
+		const newId = `outline-${Date.now()}`;
+		const newOutline: OutlineType = {
+			...activeOutline,
+			id: newId,
+			title: `${activeOutline.title} (Copy)`,
+		};
+		setOutlines((prev) => [...prev, newOutline]);
+		setActiveOutlineId(newId);
 	};
 
 	const findOutlineIdForElement = (eleId: string) => {
@@ -928,11 +941,11 @@ export default function VBPrototype({
 				children: (sec.children || []).map((row: any) => ({
 					...row,
 					children: (row.children || []).map((col: any) => {
-					if (col.id !== targetColId) return col;
-					const colChildren = col.elements || col.children || [];
-					if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
-					return { ...col, elements: [...colChildren, draggedRef] };
-				}),
+						if (col.id !== targetColId) return col;
+						const colChildren = col.elements || col.children || [];
+						if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
+						return { ...col, elements: [...colChildren, draggedRef] };
+					}),
 				})),
 			}));
 
@@ -1207,211 +1220,281 @@ export default function VBPrototype({
 					</div>
 
 					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
-						{/* MULTI: View 1 <-> View 2 full-sidebar slide */}
+						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
 						{isMulti ? (
-							<div className=" h-full overflow-hidden">
+							<div className="h-full overflow-hidden">
 								<div
-									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									className="flex w-[400%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
-										transform: outlineView === "tree" ? "translateX(-50%)" : "translateX(0%)",
+										transform: isEditingElement
+											? "translateX(-75%)"
+											: sidebarTab === "properties"
+												? "translateX(-50%)"
+												: outlineView === "tree"
+													? "translateX(-25%)"
+													: "translateX(0%)",
 									}}
 								>
-									{/* PANE 1 = View 1 */}
-									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
-											}`}
-									>
+									{/* PANE 1: Outlines List */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
 										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">Page</Heading>
 												<div className="flex-1" />
 											</div>
 										</div>
-
-										<div className=" flex-1 overflow-y-auto">
-											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pr-6 pt-2 pb-2">
-													<TabsList>
-														<TabsTrigger value="outlines">Outlines</TabsTrigger>
-														<TabsTrigger value="properties">Properties</TabsTrigger>
-													</TabsList>
-												</div>
-
-												<TabsContent value="outlines">
-													<div className="pl-3 pr-3 pb-4">
-														<div className="flex flex-col gap-2">
-															{outlines.map((o) => (
-																<Button
-																	key={o.id}
-																	appearance="subtle"
-																	onClick={() => {
-																		setActiveOutlineId(o.id);
-																		setSidebarTab("outlines");
-																		setCurrentEle("none");
-																		setCurrentHoverEle("none");
-																		setAI(false);
-																		setOutlineView("tree");
-																	}}
-																>
-																	{o.title}
-																</Button>
-															))}
-														</div>
-													</div>
-												</TabsContent>
-
-												<TabsContent value="properties">
-													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-												</TabsContent>
-											</Tabs>
+										<div className="flex-1 overflow-y-auto pl-3 pr-3 pb-4">
+											<div className="flex flex-col gap-2">
+												{outlines.map((o) => (
+													<Button
+														key={o.id}
+														appearance="subtle"
+														onClick={() => {
+															setActiveOutlineId(o.id);
+															setSidebarTab("outlines");
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+															setAI(false);
+															setOutlineView("tree");
+														}}
+													>
+														{o.title}
+													</Button>
+												))}
+											</div>
 										</div>
 									</div>
 
-									{/* PANE 2 = View 2 (tree) <-> ElementEditor */}
-									<div
-										className={`min-w-[50%] w-[50%] h-full overflow-hidden min-h-0 ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
-											}`}
-									>
-										<div
-											className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
-											style={{
-												transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
-											}}
-										>
-											{/* VIEW 2 */}
-											<div
-												className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
-													}`}
-											>
-												<div className="pt-4 pb-2">
-													{activeOutline ? (
-														<div className="pl-6 pr-6 flex flex-col gap-1">
-															<Text
-																fontSize="sm"
-																fontWeight="400"
-																color="fg.accent"
-																className="cursor-pointer"
-																onClick={() => {
-																	setOutlineView("list");
-																	setCurrentEle("none");
-																	setCurrentHoverEle("none");
-																	setAI(false);
-																}}
-															>
-																← Page
-															</Text>
-
-															<div className="flex items-center gap-2">
-																<Heading level="4">{activeOutline.title}</Heading>
-																<div className="flex-1" />
-																{HeaderActions}
-															</div>
-														</div>
-													) : (
-														<div className="pl-6 pr-6 flex items-center gap-2">
-															<Heading level="4">Outline</Heading>
-															<div className="flex-1" />
-															{HeaderActions}
-														</div>
-													)}
-												</div>
-
-												<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
-													{activeOutline ? (
-														<OutlineTree
-															cloning={cloning}
-															dragging={dragging}
-															setDragging={setDragging}
-															currentHoverEle={currentHoverEle}
-															setCurrentEle={setCurrentEle}
-															data={data}
-															setTheEles={setTheEles}
-															setData={setData}
-															theEles={theEles}
-															setCurrentHoverEle={setCurrentHoverEle}
-														/>
-													) : null}
-												</div>
-											</div>
-
-											{/* ELEMENT EDITOR */}
-											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
-												<div className="h-full overflow-y-auto">
-													<ElementEditor
-														outlineTitle={activeOutline?.title || "Outline"}
-														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
-														currentEle={currentEle}
-														properties={theEles[currentEle]?.properties}
-														onBack={() => {
+									{/* PANE 2: Outline Tree */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										<div className="pt-4 pb-2">
+											{activeOutline ? (
+												<div className="pl-6 pr-6 flex flex-col gap-1">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer"
+														onClick={() => {
+															setOutlineView("list");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
 															setAI(false);
 														}}
-														onInputChange={onInputChange}
-													/>
+													>
+														← Pages
+													</Text>
+
+													<div className="flex items-center gap-2">
+														<Heading level="4">{activeOutline.title}</Heading>
+														<div className="flex-1" />
+														<div className="flex items-center gap-1">
+															{HeaderActions}
+														</div>
+													</div>
+												</div>
+											) : (
+												<div className="pl-6 pr-6 flex items-center gap-2">
+													<Heading level="4">Outline</Heading>
+													<div className="flex-1" />
+													{HeaderActions}
+												</div>
+											)}
+										</div>
+										<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
+											{activeOutline ? (
+												<OutlineTree
+													cloning={cloning}
+													dragging={dragging}
+													setDragging={setDragging}
+													currentHoverEle={currentHoverEle}
+													setCurrentEle={setCurrentEle}
+													data={data}
+													setTheEles={setTheEles}
+													setData={setData}
+													theEles={theEles}
+													setCurrentHoverEle={setCurrentHoverEle}
+													onEditProperties={(id) => {
+														setSidebarTab("properties");
+														setEditingSectionId(id);
+													}}
+												/>
+											) : null}
+										</div>
+									</div>
+
+									{/* PANE 3: Properties */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										{!editingSectionId && (
+											<div className="pl-6 pr-6 pt-4 pb-2">
+												<Text
+													fontSize="sm"
+													fontWeight="400"
+													color="fg.accent"
+													className="cursor-pointer mb-1"
+													onClick={() => {
+														setSidebarTab("outlines");
+														setEditingSectionId(null);
+													}}
+												>
+													← {activeOutline?.title || "Page"}
+												</Text>
+												<div className="flex items-center gap-2">
+													<Heading level="4">Properties</Heading>
+													<div className="flex-1" />
 												</div>
 											</div>
+										)}
+										<div className="flex-1 overflow-y-auto">
+											{editingSectionId ? (
+												<Box p="24">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer mb-1"
+														onClick={() => {
+															setSidebarTab("outlines");
+															setEditingSectionId(null);
+														}}
+													>
+														← {activeOutline?.title || "Page"}
+													</Text>
+													<Heading level="4" mb="16">Section Properties</Heading>
+													<Text fontSize="sm" color="fg.secondary">
+														Editing properties for section: {editingSectionId}
+													</Text>
+													{/* Add section specific fields here later */}
+												</Box>
+											) : (
+												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+											)}
+										</div>
+									</div>
+
+									{/* PANE 4: Element Editor */}
+									<div className="min-w-[25%] w-[25%] h-full">
+										<div className="h-full overflow-y-auto">
+											<ElementEditor
+												outlineTitle={activeOutline?.title || "Outline"}
+												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+												currentEle={currentEle}
+												properties={theEles[currentEle]?.properties}
+												onBack={() => {
+													setCurrentEle("none");
+													setCurrentHoverEle("none");
+													setAI(false);
+												}}
+												onInputChange={onInputChange}
+											/>
 										</div>
 									</div>
 								</div>
 							</div>
 						) : null}
 
-						{/* SINGLE: tree/properties (left) <-> ElementEditor (right) slide */}
+						{/* SINGLE: tree/properties/ElementEditor drill-down slide */}
 						{isSingle && activeOutline ? (
 							<div className="h-full overflow-hidden">
 								<div
-									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									className="flex w-[300%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
-										transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+										transform: isEditingElement
+											? "translateX(-66.666%)"
+											: sidebarTab === "properties"
+												? "translateX(-33.333%)"
+												: "translateX(0%)",
 									}}
 								>
+									{/* PANE 1: Outline Tree */}
 									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
-											}`}
+										className="min-w-[33.333%] w-[33.333%] h-full flex flex-col"
 									>
 										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
-												<Heading level="4">Page</Heading>
+												<Heading level="4">{activeOutline.title}</Heading>
 												<div className="flex-1" />
-												{HeaderActions}
+												<div className="flex items-center gap-1">
+													{HeaderActions}
+												</div>
 											</div>
 										</div>
-
-										<div className="flex-1 overflow-y-auto">
-											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pr-6 pt-2 pb-2">
-													<TabsList>
-														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
-														<TabsTrigger value="properties">Properties</TabsTrigger>
-													</TabsList>
-												</div>
-
-												<TabsContent value="outline">
-													<div className="pb-4 pr-3">
-														<OutlineTree
-															cloning={cloning}
-															dragging={dragging}
-															setDragging={setDragging}
-															currentHoverEle={currentHoverEle}
-															setCurrentEle={setCurrentEle}
-															data={data}
-															setTheEles={setTheEles}
-															setData={setData}
-															theEles={theEles}
-															setCurrentHoverEle={setCurrentHoverEle}
-														/>
-													</div>
-												</TabsContent>
-
-												<TabsContent value="properties">
-													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-												</TabsContent>
-											</Tabs>
+										<div className="flex-1 overflow-y-auto pb-4 pr-3">
+											<OutlineTree
+												cloning={cloning}
+												dragging={dragging}
+												setDragging={setDragging}
+												currentHoverEle={currentHoverEle}
+												setCurrentEle={setCurrentEle}
+												data={data}
+												setTheEles={setTheEles}
+												setData={setData}
+												theEles={theEles}
+												setCurrentHoverEle={setCurrentHoverEle}
+												onEditProperties={(id) => {
+													setSidebarTab("properties");
+													setEditingSectionId(id);
+												}}
+											/>
 										</div>
 									</div>
 
-									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+									{/* PANE 2: Properties (Page or Section) */}
+									<div
+										className="min-w-[33.333%] w-[33.333%] h-full flex flex-col"
+									>
+										{!editingSectionId && (
+											<div className="pl-6 pr-6 pt-4 pb-2">
+												<Text
+													fontSize="sm"
+													fontWeight="400"
+													color="fg.accent"
+													className="cursor-pointer mb-1"
+													onClick={() => {
+														setSidebarTab("outline");
+														setEditingSectionId(null);
+													}}
+												>
+													← {activeOutline?.title || "Page"}
+												</Text>
+												<div className="flex items-center gap-2">
+													<Heading level="4">Properties</Heading>
+													<div className="flex-1" />
+													<div className="flex items-center gap-1">
+														{HeaderActions}
+													</div>
+												</div>
+											</div>
+										)}
+										<div className="flex-1 overflow-y-auto">
+											{editingSectionId ? (
+												<Box p="24">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer mb-1"
+														onClick={() => {
+															setSidebarTab("outline");
+															setEditingSectionId(null);
+														}}
+													>
+														← {activeOutline?.title || "Page"}
+													</Text>
+													<Heading level="4" mb="16">Section Properties</Heading>
+													<Text fontSize="sm" color="fg.secondary">
+														Editing properties for section: {editingSectionId}
+													</Text>
+													{/* Add section specific fields here later */}
+												</Box>
+											) : (
+												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+											)}
+										</div>
+									</div>
+
+									{/* PANE 3: Element Editor */}
+									<div className="min-w-[33.333%] w-[33.333%] h-full">
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
 												outlineTitle={activeOutline?.title || "Outline"}
