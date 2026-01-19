@@ -33,7 +33,7 @@ function TemplateContent({
 	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
-	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", false);
+	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -72,6 +72,8 @@ function TemplateContent({
 
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
+
+	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
 
 	if (isWorkflowBuilder) {
 		return (
