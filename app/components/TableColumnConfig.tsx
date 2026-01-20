@@ -22,9 +22,11 @@ export interface ColumnConfig {
 interface TableColumnConfigProps {
     columns: ColumnConfig[];
     onColumnsChange: (columns: ColumnConfig[]) => void;
+    icon?: React.ReactNode;
+    extraContent?: React.ReactNode;
 }
 
-export function TableColumnConfig({ columns, onColumnsChange }: TableColumnConfigProps) {
+export function TableColumnConfig({ columns, onColumnsChange, icon, extraContent }: TableColumnConfigProps) {
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -78,7 +80,7 @@ export function TableColumnConfig({ columns, onColumnsChange }: TableColumnConfi
             <PopoverTrigger asChild>
                 <Button
                     appearance="default"
-                    icon={<IconSettings />}
+                    icon={icon || <IconSettings />}
                     aria-label="Configure columns"
                 />
             </PopoverTrigger>
@@ -144,6 +146,7 @@ export function TableColumnConfig({ columns, onColumnsChange }: TableColumnConfi
                             );
                         })}
                     </Box>
+                    {extraContent}
                 </Box>
             </PopoverContent>
         </Popover>
