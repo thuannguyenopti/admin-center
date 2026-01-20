@@ -1266,11 +1266,11 @@ export default function VBPrototype({
 								>
 									{/* PANE 1: Outlines List */}
 									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
-										<div className="pl-6 pr-6 pt-4 pb-2">
-											<div className="flex items-center gap-2">
+										<Box px="24" pt="16" mb="16">
+											<Box display="flex" alignItems="center" gap="8">
 												<Heading level="4">Page</Heading>
-												<div className="flex-1" />
-												<div className="flex items-center gap-1">
+												<Box flex="1" />
+												<Box display="flex" alignItems="center" gap="4">
 													<Menu
 														options={[
 															{
@@ -1292,9 +1292,9 @@ export default function VBPrototype({
 														/>
 														<MenuContent />
 													</Menu>
-												</div>
-											</div>
-										</div>
+												</Box>
+											</Box>
+										</Box>
 										<div className="flex-1 overflow-y-auto pl-3 pr-3 pb-4">
 											<div className="flex flex-col gap-1">
 												{outlines.map((o) => (
