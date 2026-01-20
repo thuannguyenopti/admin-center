@@ -10,7 +10,7 @@ import {
     Text,
 } from "@optiaxiom/react";
 import { IconSettings } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 
 export interface ColumnConfig {
     id: string;
@@ -24,9 +24,10 @@ interface TableColumnConfigProps {
     onColumnsChange: (columns: ColumnConfig[]) => void;
     icon?: React.ReactNode;
     extraContent?: React.ReactNode;
+    renderColumnExtra?: (columnId: string) => React.ReactNode;
 }
 
-export function TableColumnConfig({ columns, onColumnsChange, icon, extraContent }: TableColumnConfigProps) {
+export function TableColumnConfig({ columns, onColumnsChange, icon, extraContent, renderColumnExtra }: TableColumnConfigProps) {
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -97,52 +98,54 @@ export function TableColumnConfig({ columns, onColumnsChange, icon, extraContent
                         {columns.map((column, index) => {
                             const isMovable = column.movable !== false;
                             return (
-                                <Box
-                                    key={column.id}
-                                    draggable={isMovable}
-                                    onDragStart={() => handleDragStart(index)}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDrop={(e) => handleDrop(e, index)}
-                                    onDragEnd={handleDragEnd}
-                                    p="8"
-                                    display="flex"
-                                    alignItems="center"
-                                    gap="8"
-                                    rounded="sm"
-                                    bg={dragOverIndex === index ? "bg.accent.subtle" : "bg.default"}
-                                    className={isMovable ? "hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors cursor-grab" : "hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"}
-                                    style={{
-                                        opacity: draggedIndex === index ? 0.5 : 1,
-                                        borderWidth: "1px",
-                                        borderStyle: "solid",
-                                        borderColor: dragOverIndex === index
-                                            ? "var(--ax-colors-border-accent)"
-                                            : "var(--ax-colors-border-tertiary)"
-                                    }}
-                                >
-                                    {isMovable && (
-                                        <Box
-                                            display="flex"
-                                            flexDirection="column"
-                                            gap="2"
-                                            color="fg.tertiary"
-                                            className="cursor-grab"
-                                        >
-                                            <div style={{ width: "12px", height: "1px", backgroundColor: "var(--ax-colors-fg-tertiary)" }} />
-                                            <div style={{ width: "12px", height: "1px", backgroundColor: "var(--ax-colors-fg-tertiary)" }} />
-                                            <div style={{ width: "12px", height: "1px", backgroundColor: "var(--ax-colors-fg-tertiary)" }} />
-                                        </Box>
-                                    )}
+                                <Fragment key={column.id}>
+                                    <Box
+                                        draggable={isMovable}
+                                        onDragStart={() => handleDragStart(index)}
+                                        onDragOver={(e) => handleDragOver(e, index)}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        p="8"
+                                        display="flex"
+                                        alignItems="center"
+                                        gap="8"
+                                        rounded="sm"
+                                        bg={dragOverIndex === index ? "bg.accent.subtle" : "bg.default"}
+                                        className={isMovable ? "hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors cursor-grab" : "hover:bg-[var(--ax-colors-bg-default-hovered)] transition-colors"}
+                                        style={{
+                                            opacity: draggedIndex === index ? 0.5 : 1,
+                                            borderWidth: "1px",
+                                            borderStyle: "solid",
+                                            borderColor: dragOverIndex === index
+                                                ? "var(--ax-colors-border-accent)"
+                                                : "var(--ax-colors-border-tertiary)"
+                                        }}
+                                    >
+                                        {isMovable && (
+                                            <Box
+                                                display="flex"
+                                                flexDirection="column"
+                                                gap="2"
+                                                color="fg.tertiary"
+                                                className="cursor-grab"
+                                            >
+                                                <div style={{ width: "12px", height: "1px", backgroundColor: "var(--ax-colors-fg-tertiary)" }} />
+                                                <div style={{ width: "12px", height: "1px", backgroundColor: "var(--ax-colors-fg-tertiary)" }} />
+                                                <div style={{ width: "12px", height: "1px", backgroundColor: "var(--ax-colors-fg-tertiary)" }} />
+                                            </Box>
+                                        )}
 
-                                    <Checkbox
-                                        checked={column.visible}
-                                        onCheckedChange={() => toggleColumn(column.id)}
-                                    />
+                                        <Checkbox
+                                            checked={column.visible}
+                                            onCheckedChange={() => toggleColumn(column.id)}
+                                        />
 
-                                    <Text fontSize="sm" flex="1">
-                                        {column.label || "(No label)"}
-                                    </Text>
-                                </Box>
+                                        <Text fontSize="sm" flex="1">
+                                            {column.label || "(No label)"}
+                                        </Text>
+                                    </Box>
+                                    {renderColumnExtra?.(column.id)}
+                                </Fragment>
                             );
                         })}
                     </Box>

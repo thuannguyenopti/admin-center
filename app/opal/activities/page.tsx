@@ -485,12 +485,18 @@ export default function ActivitiesPage() {
                             columns={columns}
                             onColumnsChange={setColumns}
                             icon={<IconColumns3 />}
-                            extraContent={
-                                <Box pt="12" style={{ borderTop: "1px solid var(--ax-colors-border-secondary)" }}>
-                                    <Switch checked={showQualityBadges} onCheckedChange={setShowQualityBadges}>
-                                        Show Quality Badges
-                                    </Switch>
-                                </Box>
+                            renderColumnExtra={(columnId: string) =>
+                                columnId === "qualityScore" && (
+                                    <Box pl="32" pb="4" style={{ marginTop: "-4px" }}>
+                                        <Switch
+                                            checked={showQualityBadges}
+                                            onCheckedChange={setShowQualityBadges}
+                                            size="md"
+                                        >
+                                            Show Quality Badges
+                                        </Switch>
+                                    </Box>
+                                )
                             }
                         />
                         <Button appearance="default" icon={<IconDownload />}>
