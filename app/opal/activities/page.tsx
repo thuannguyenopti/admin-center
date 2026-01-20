@@ -19,6 +19,8 @@ import {
     Menu,
     MenuTrigger,
     MenuContent,
+    Switch,
+    Spinner,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { PageTitle } from "@/app/components/PageTitle";
@@ -35,6 +37,7 @@ import {
     IconCirclePause,
     IconAgent,
     IconCodeBranch,
+    IconColumns3,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import { useState, Fragment } from "react";
@@ -53,7 +56,7 @@ const StatusIcon = ({ status, agentName }: { status: string; agentName?: string 
         case "Completed":
             return <IconCircleCheck {...iconProps} color="#17B26A" />;
         case "In Progress":
-            return <IconRefresh {...iconProps} color="#2E90FA" />;
+            return <Spinner size="sm" />;
         case "Failed":
             return <IconCircleExclamation {...iconProps} color="#D92D20" />;
         case "Terminated":
@@ -84,6 +87,7 @@ const activities = [
         output: "--",
         duration: "--",
         qualityScore: "--",
+        guardrails: "--",
         subRuns: [
             {
                 id: "1-1",
@@ -94,7 +98,8 @@ const activities = [
                 variables: "Variables",
                 output: "View Output",
                 duration: "3 minutes",
-                qualityScore: "8.7"
+                qualityScore: "87%",
+                guardrails: "Passed"
             },
             {
                 id: "1-2",
@@ -105,7 +110,8 @@ const activities = [
                 variables: "Variables",
                 output: "--",
                 duration: "--",
-                qualityScore: "--"
+                qualityScore: "--",
+                guardrails: "--"
             }
         ]
     },
@@ -125,7 +131,8 @@ const activities = [
         variables: "Variables when",
         output: "View Output",
         duration: "6 minutes",
-        qualityScore: "8.5",
+        qualityScore: "85%",
+        guardrails: "Passed",
         subRuns: []
     },
     {
@@ -144,7 +151,8 @@ const activities = [
         variables: "Variables",
         output: "View Output",
         duration: "12 minutes",
-        qualityScore: "9.2",
+        qualityScore: "92%",
+        guardrails: "Passed",
         subRuns: [
             {
                 id: "3-1",
@@ -155,7 +163,8 @@ const activities = [
                 variables: "Variables",
                 output: "View Output",
                 duration: "4 minutes",
-                qualityScore: "8.8"
+                qualityScore: "88%",
+                guardrails: "Passed"
             },
             {
                 id: "3-2",
@@ -166,7 +175,8 @@ const activities = [
                 variables: "Variables",
                 output: "View Output",
                 duration: "8 minutes",
-                qualityScore: "9.5"
+                qualityScore: "95%",
+                guardrails: "Review Needed"
             }
         ]
     },
@@ -186,7 +196,8 @@ const activities = [
         variables: "Variables",
         output: "View Output",
         duration: "6 minutes",
-        qualityScore: "7.9",
+        qualityScore: "79%",
+        guardrails: "Review Needed",
         subRuns: []
     },
     {
@@ -206,6 +217,7 @@ const activities = [
         output: "--",
         duration: "--",
         qualityScore: "--",
+        guardrails: "--",
         subRuns: [
             {
                 id: "5-1",
@@ -216,7 +228,8 @@ const activities = [
                 variables: "Variables",
                 output: "View Output",
                 duration: "5 minutes",
-                qualityScore: "9.1"
+                qualityScore: "91%",
+                guardrails: "Passed"
             },
             {
                 id: "5-2",
@@ -227,7 +240,8 @@ const activities = [
                 variables: "Variables",
                 output: "--",
                 duration: "--",
-                qualityScore: "--"
+                qualityScore: "--",
+                guardrails: "--"
             }
         ]
     },
@@ -248,6 +262,7 @@ const activities = [
         output: "View execution log",
         duration: "--",
         qualityScore: "--",
+        guardrails: "Terminated",
         subRuns: [
             {
                 id: "6-1",
@@ -258,7 +273,8 @@ const activities = [
                 variables: "Variables",
                 output: "View Output",
                 duration: "4 minutes",
-                qualityScore: "7.5"
+                qualityScore: "75%",
+                guardrails: "Passed"
             },
             {
                 id: "6-2",
@@ -269,7 +285,8 @@ const activities = [
                 variables: "Variables",
                 output: "View execution log",
                 duration: "--",
-                qualityScore: "--"
+                qualityScore: "--",
+                guardrails: "Terminated"
             }
         ]
     },
@@ -289,7 +306,8 @@ const activities = [
         variables: "Variables",
         output: "Foo",
         duration: "6 minutes",
-        qualityScore: "8.2",
+        qualityScore: "82%",
+        guardrails: "Passed",
         subRuns: []
     },
     {
@@ -308,7 +326,8 @@ const activities = [
         variables: "Variables",
         output: "Foo",
         duration: "6 minutes",
-        qualityScore: "4.1",
+        qualityScore: "41%",
+        guardrails: "Failed",
         subRuns: [
             {
                 id: "8-1",
@@ -319,7 +338,8 @@ const activities = [
                 variables: "Variables",
                 output: "View Output",
                 duration: "3 minutes",
-                qualityScore: "8.0"
+                qualityScore: "80%",
+                guardrails: "Passed"
             },
             {
                 id: "8-2",
@@ -330,7 +350,8 @@ const activities = [
                 variables: "Variables",
                 output: "View execution log",
                 duration: "3 minutes",
-                qualityScore: "2.5"
+                qualityScore: "25%",
+                guardrails: "Failed"
             }
         ]
     }
@@ -349,7 +370,8 @@ const allColumns: ColumnConfig[] = [
     { id: "duration", label: "Duration", visible: true, movable: true },
     { id: "agentVersion", label: "Agent Version", visible: false, movable: true },
     { id: "agentMode", label: "Agent Mode", visible: false, movable: true },
-    { id: "qualityScore", label: "Quality Score", visible: false, movable: true },
+    { id: "qualityScore", label: "Output Quality Score", visible: true, movable: true },
+    { id: "guardrails", label: "Execution Guardrails", visible: true, movable: true },
 ];
 
 export default function ActivitiesPage() {
@@ -357,6 +379,7 @@ export default function ActivitiesPage() {
     const [columns, setColumns] = useState(allColumns);
     const [agentTypeFilter, setAgentTypeFilter] = useState<string>("All");
     const [statusFilter, setStatusFilter] = useState<string>("All");
+    const [showQualityBadges, setShowQualityBadges] = useState(true);
 
     const toggleRow = (id: string) => {
         const newExpanded = new Set(expandedRows);
@@ -458,7 +481,18 @@ export default function ActivitiesPage() {
                     </Box>
 
                     <Box display="flex" gap="8">
-                        <TableColumnConfig columns={columns} onColumnsChange={setColumns} />
+                        <TableColumnConfig
+                            columns={columns}
+                            onColumnsChange={setColumns}
+                            icon={<IconColumns3 />}
+                            extraContent={
+                                <Box pt="12" style={{ borderTop: "1px solid var(--ax-colors-border-secondary)" }}>
+                                    <Switch checked={showQualityBadges} onCheckedChange={setShowQualityBadges}>
+                                        Show Quality Badges
+                                    </Switch>
+                                </Box>
+                            }
+                        />
                         <Button appearance="default" icon={<IconDownload />}>
                             Download
                         </Button>
@@ -508,7 +542,7 @@ export default function ActivitiesPage() {
                                         if (col.id === "started") {
                                             return (
                                                 <Td key={col.id}>
-                                                    <Text fontWeight="500">{activity.started}</Text>
+                                                    <Text>{activity.started}</Text>
                                                 </Td>
                                             );
                                         }
@@ -550,7 +584,7 @@ export default function ActivitiesPage() {
                                                                 "neutral";
                                             return (
                                                 <Td key={col.id}>
-                                                    <Badge intent={statusIntent as any}>{activity.status}</Badge>
+                                                    <Badge intent={statusIntent as any} style={{ whiteSpace: "nowrap" }}>{activity.status}</Badge>
                                                 </Td>
                                             );
                                         }
@@ -578,7 +612,35 @@ export default function ActivitiesPage() {
                                             return <Td key={col.id}>{activity.agent.mode}</Td>;
                                         }
                                         if (col.id === "qualityScore") {
-                                            return <Td key={col.id}>{activity.qualityScore}</Td>;
+                                            const score = parseInt(activity.qualityScore);
+                                            const isPassed = !isNaN(score) && score >= 85;
+                                            return (
+                                                <Td key={col.id}>
+                                                    <Box display="flex" alignItems="center" gap="8">
+                                                        <Text>{activity.qualityScore}</Text>
+                                                        {!isNaN(score) && showQualityBadges && (
+                                                            <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
+                                                                {isPassed ? "Passed" : "Failed"}
+                                                            </Badge>
+                                                        )}
+                                                    </Box>
+                                                </Td>
+                                            );
+                                        }
+                                        if (col.id === "guardrails") {
+                                            const status = (activity as any).guardrails;
+                                            let intent: "success" | "danger" | "warning" | "neutral" = "neutral";
+                                            if (status === "Passed") intent = "success";
+                                            if (status === "Failed" || status === "Terminated") intent = "danger";
+                                            if (status === "Review Needed") intent = "warning";
+
+                                            return (
+                                                <Td key={col.id}>
+                                                    {status && status !== "--" ? (
+                                                        <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                    ) : "--"}
+                                                </Td>
+                                            );
                                         }
                                         return null;
                                     })}
@@ -602,7 +664,7 @@ export default function ActivitiesPage() {
                                                 return (
                                                     <Td key={col.id}>
                                                         <Box pl="32">
-                                                            <Text fontWeight="500">{subRun.started}</Text>
+                                                            <Text>{subRun.started}</Text>
                                                         </Box>
                                                     </Td>
                                                 );
@@ -645,7 +707,7 @@ export default function ActivitiesPage() {
                                                                     "neutral";
                                                 return (
                                                     <Td key={col.id}>
-                                                        <Badge intent={statusIntent as any}>{subRun.status}</Badge>
+                                                        <Badge intent={statusIntent as any} style={{ whiteSpace: "nowrap" }}>{subRun.status}</Badge>
                                                     </Td>
                                                 );
                                             }
@@ -673,7 +735,35 @@ export default function ActivitiesPage() {
                                                 return <Td key={col.id}>{subRun.agent.mode}</Td>;
                                             }
                                             if (col.id === "qualityScore") {
-                                                return <Td key={col.id}>{subRun.qualityScore}</Td>;
+                                                const score = parseInt(subRun.qualityScore);
+                                                const isPassed = !isNaN(score) && score >= 85;
+                                                return (
+                                                    <Td key={col.id}>
+                                                        <Box display="flex" alignItems="center" gap="8">
+                                                            <Text>{subRun.qualityScore}</Text>
+                                                            {!isNaN(score) && showQualityBadges && (
+                                                                <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
+                                                                    {isPassed ? "Passed" : "Failed"}
+                                                                </Badge>
+                                                            )}
+                                                        </Box>
+                                                    </Td>
+                                                );
+                                            }
+                                            if (col.id === "guardrails") {
+                                                const status = (subRun as any).guardrails;
+                                                let intent: "success" | "danger" | "warning" | "neutral" = "neutral";
+                                                if (status === "Passed") intent = "success";
+                                                if (status === "Failed" || status === "Terminated") intent = "danger";
+                                                if (status === "Review Needed") intent = "warning";
+
+                                                return (
+                                                    <Td key={col.id}>
+                                                        {status && status !== "--" ? (
+                                                            <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                        ) : "--"}
+                                                    </Td>
+                                                );
                                             }
                                             return null;
                                         })}
