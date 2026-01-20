@@ -167,26 +167,12 @@ export default function MetricCard({
 			color="fg.disabled"
 			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
 		>
-			<Text
-				fontSize="md"
-				fontWeight="600"
-				mb="16"
-				color="fg.default"
-			>
+			<Text fontSize="md" fontWeight="600" mb="16" color="fg.default">
 				{label}
 			</Text>
 
-			<Box
-				display="flex"
-				alignItems="end"
-				gap="12"
-				mb="12"
-				w="full"
-			>
-				<Box
-					style={{flex: 1, minWidth: 0, position: "relative"}}
-					color="fg.disabled"
-				>
+			<Box display="flex" alignItems="end" gap="12" mb="12" w="full">
+				<Box style={{flex: 1, minWidth: 0, position: "relative"}} color="fg.disabled">
 					<svg
 						width="100%"
 						height="60"
@@ -253,17 +239,9 @@ export default function MetricCard({
 			</Box>
 
 			{(previousValue !== undefined || changeData) && (
-				<Box
-					display="flex"
-					gap="12"
-					justifyContent="space-between"
-					w="full"
-				>
+				<Box display="flex" gap="12" justifyContent="space-between" w="full">
 					{previousValue !== undefined && (
-						<Text
-							fontSize="sm"
-							color="fg.information.light"
-						>
+						<Text fontSize="sm" color="fg.information.light">
 							Prev: {formatValue(previousValue)}
 						</Text>
 					)}
