@@ -19,7 +19,7 @@ import {
     Menu,
     MenuTrigger,
     MenuContent,
-    Switch,
+    Checkbox,
     Spinner,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -56,7 +56,7 @@ const StatusIcon = ({ status, agentName }: { status: string; agentName?: string 
         case "Completed":
             return <IconCircleCheck {...iconProps} color="#17B26A" />;
         case "In Progress":
-            return <Spinner size="sm" />;
+            return <Spinner size="md" />;
         case "Failed":
             return <IconCircleExclamation {...iconProps} color="#D92D20" />;
         case "Terminated":
@@ -488,13 +488,12 @@ export default function ActivitiesPage() {
                             renderColumnExtra={(columnId: string) =>
                                 columnId === "qualityScore" && (
                                     <Box pl="32" pb="4" style={{ marginTop: "-4px" }}>
-                                        <Switch
+                                        <Checkbox
                                             checked={showQualityBadges}
                                             onCheckedChange={setShowQualityBadges}
-                                            size="md"
                                         >
                                             Show Quality Badges
-                                        </Switch>
+                                        </Checkbox>
                                     </Box>
                                 )
                             }
