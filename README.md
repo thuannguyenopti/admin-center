@@ -30,10 +30,14 @@ Before starting the installation, ensure you have the following accounts set up 
 
 ### macOS / Linux / Windows
 
-```bash
-./axiomplay install
-```
-(Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`)
+1. Run the installer from the project folder:
+
+   ```bash
+   ./axiomplay install
+   ```
+   (Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`)
+
+2. Download and open [VS Code](https://code.visualstudio.com/download) or [Cursor](https://cursor.sh) (or see [VS Code/Cursor setup](#vs-code-or-cursor-ide) below), then open this folder to develop. The installer has already set up Node/Yarn/deps.
 
 #### What this does
 - Auto-detects your OS and forwards to `install.sh` or `install.bat`.
