@@ -37,13 +37,12 @@ Before starting the installation, ensure you have the following accounts set up 
 
 #### What this does
 - Auto-detects your OS and forwards to `install.sh` or `install.bat`.
-- Ensures Node (via nvm on macOS/Linux; prompts to install on Windows).
+- Handles Node: installs LTS via nvm on macOS/Linux if missing; on Windows, prompts you to install Node LTS (e.g., `winget install OpenJS.NodeJS.LTS`) if it isn't present.
 - Enables Corepack (Yarn 4) and installs dependencies.
 - Prompts for `.env` secrets if missing, exports them for install, and can start the dev server.
 
 ### Requirements
 - A GitHub account with access to the repo (if you haven't cloned yet).
-- Node.js 18+ (installer will guide you; uses Node 20 LTS by default via nvm on macOS/Linux).
 - Your secrets for `.env`: `OPENAI_API_KEY`, `OPTIMIZELY_AUTH_IDENT`, `OPTIMIZELY_USERNAME`, `OPTIMIZELY_PASSWORD`.
 
 ---
