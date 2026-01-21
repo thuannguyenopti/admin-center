@@ -379,7 +379,17 @@ export default function ActivitiesPage() {
     const [columns, setColumns] = useState(allColumns);
     const [agentTypeFilter, setAgentTypeFilter] = useState<string>("All");
     const [statusFilter, setStatusFilter] = useState<string>("All");
+    const [triggeredByFilter, setTriggeredByFilter] = useState<string[]>([]);
+    const [agentFilter, setAgentFilter] = useState<string[]>([]);
+    const [agentSearchTerm, setAgentSearchTerm] = useState("");
     const [showQualityBadges, setShowQualityBadges] = useState(true);
+
+    const users = [
+        { name: "Mary Anne", avatar: "/avatars/user.png" },
+        { name: "William Mo...", avatar: "/avatars/user2.png" }
+    ];
+
+    const uniqueAgents = Array.from(new Set(activities.map(a => a.agent.name)));
 
     const toggleRow = (id: string) => {
         const newExpanded = new Set(expandedRows);
@@ -401,7 +411,11 @@ export default function ActivitiesPage() {
 
         const matchesStatus = statusFilter === "All" || activity.status === statusFilter;
 
-        return matchesAgentType && matchesStatus;
+        const matchesTriggeredBy = triggeredByFilter.length === 0 || triggeredByFilter.includes(activity.triggeredBy.name);
+
+        const matchesAgent = agentFilter.length === 0 || agentFilter.includes(activity.agent.name);
+
+        return matchesAgentType && matchesStatus && matchesTriggeredBy && matchesAgent;
     });
 
     return (
@@ -467,6 +481,92 @@ export default function ActivitiesPage() {
                                 <DropdownMenuItem onClick={() => setStatusFilter("Terminated")}>
                                     Terminated
                                 </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <LabelMenuButton label="Triggered by" h="40">
+                                    {triggeredByFilter.length === 0 ? "All" : triggeredByFilter.length === 1 ? triggeredByFilter[0] : `${triggeredByFilter.length} selected`}
+                                </LabelMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                {users.map(user => (
+                                    <DropdownMenuItem
+                                        key={user.name}
+                                        onSelect={(e) => e.preventDefault()}
+                                        onClick={() => {
+                                            setTriggeredByFilter(prev =>
+                                                prev.includes(user.name)
+                                                    ? prev.filter(n => n !== user.name)
+                                                    : [...prev, user.name]
+                                            );
+                                        }}
+                                    >
+                                        <Box display="flex" alignItems="center" gap="8" w="full">
+                                            <Checkbox checked={triggeredByFilter.includes(user.name)} />
+                                            <Avatar src={user.avatar} name={user.name} size="xs" />
+                                            <Text fontSize="sm">{user.name}</Text>
+                                        </Box>
+                                    </DropdownMenuItem>
+                                ))}
+                                {triggeredByFilter.length > 0 && (
+                                    <>
+                                        <Box style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)" }} my="4" />
+                                        <DropdownMenuItem onClick={() => setTriggeredByFilter([])}>
+                                            <Text color="fg.accent" w="full" textAlign="center">Clear all</Text>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <LabelMenuButton label="Agent" h="40">
+                                    {agentFilter.length === 0 ? "All" : agentFilter.length === 1 ? agentFilter[0] : `${agentFilter.length} selected`}
+                                </LabelMenuButton>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent style={{ minWidth: "240px" }}>
+                                <Box p="8" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
+                                    <Input
+                                        placeholder="Search agents..."
+                                        value={agentSearchTerm}
+                                        onChange={(e: any) => setAgentSearchTerm(e.currentTarget.value)}
+                                        size="md"
+                                        autoFocus
+                                    />
+                                </Box>
+                                <Box style={{ maxHeight: "300px", overflowY: "auto" }}>
+                                    {uniqueAgents
+                                        .filter(name => name.toLowerCase().includes(agentSearchTerm.toLowerCase()))
+                                        .map(agentName => (
+                                            <DropdownMenuItem
+                                                key={agentName}
+                                                onSelect={(e) => e.preventDefault()}
+                                                onClick={() => {
+                                                    setAgentFilter(prev =>
+                                                        prev.includes(agentName)
+                                                            ? prev.filter(n => n !== agentName)
+                                                            : [...prev, agentName]
+                                                    );
+                                                }}
+                                            >
+                                                <Box display="flex" alignItems="center" gap="8" w="full">
+                                                    <Checkbox checked={agentFilter.includes(agentName)} />
+                                                    <Text fontSize="md">{agentName}</Text>
+                                                </Box>
+                                            </DropdownMenuItem>
+                                        ))}
+                                </Box>
+                                {agentFilter.length > 0 && (
+                                    <>
+                                        <Box style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)" }} my="4" />
+                                        <DropdownMenuItem onClick={() => setAgentFilter([])}>
+                                            <Text color="fg.accent" w="full" textAlign="center">Clear all</Text>
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
                             </DropdownMenuContent>
                         </DropdownMenu>
 
