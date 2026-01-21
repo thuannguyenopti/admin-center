@@ -40,8 +40,9 @@ import {
     IconColumns3,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
-import { useState, Fragment } from "react";
+import { useState, Fragment, useRef, useEffect } from "react";
 import { TableColumnConfig, ColumnConfig } from "@/app/components/TableColumnConfig";
+import DetailsPanel from "./DetailsPanel";
 
 // Status icon mapping
 const StatusIcon = ({ status, agentName }: { status: string; agentName?: string }) => {
@@ -376,6 +377,8 @@ const allColumns: ColumnConfig[] = [
 
 export default function ActivitiesPage() {
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    const [selectedActivity, setSelectedActivity] = useState<any>(null);
+    const [focusOutput, setFocusOutput] = useState(false);
     const [columns, setColumns] = useState(allColumns);
     const [agentTypeFilter, setAgentTypeFilter] = useState<string>("All");
     const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -383,6 +386,7 @@ export default function ActivitiesPage() {
     const [agentFilter, setAgentFilter] = useState<string[]>([]);
     const [agentSearchTerm, setAgentSearchTerm] = useState("");
     const [showQualityBadges, setShowQualityBadges] = useState(true);
+    const tableContainerRef = useRef<HTMLDivElement>(null);
 
     const users = [
         { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -400,6 +404,17 @@ export default function ActivitiesPage() {
         }
         setExpandedRows(newExpanded);
     };
+
+    // Reset table scroll when details panel opens/closes
+    useEffect(() => {
+        if (tableContainerRef.current) {
+            setTimeout(() => {
+                if (tableContainerRef.current) {
+                    tableContainerRef.current.scrollLeft = 0;
+                }
+            }, 0);
+        }
+    }, [selectedActivity]);
 
     const visibleColumns = columns.filter(col => col.visible);
 
@@ -419,8 +434,8 @@ export default function ActivitiesPage() {
     });
 
     return (
-        <div suppressHydrationWarning>
-            <Box p="24" display="flex" flexDirection="column" gap="24" bg="bg.page" h="full">
+        <div suppressHydrationWarning className="flex h-screen overflow-hidden">
+            <Box p="24" display="flex" flexDirection="column" gap="24" bg="bg.page" h="full" flex="1" overflow="hidden">
                 {/* Header */}
                 <PageTitle
                     title="Activities"
@@ -598,186 +613,61 @@ export default function ActivitiesPage() {
                                 )
                             }
                         />
-                        <Button appearance="default" icon={<IconDownload />}>
+                        <Button appearance="default" icon={<IconDownload />} aria-label="Download activities">
                             Download
                         </Button>
                     </Box>
                 </Box>
 
                 {/* Table */}
-                <Table>
-                    <thead>
-                        <Tr>
-                            {visibleColumns.map(col => (
-                                <Th key={col.id}>{col.label}</Th>
-                            ))}
-                            <Th></Th>
-                        </Tr>
-                    </thead>
-                    <tbody suppressHydrationWarning>
-                        {filteredActivities.map((activity) => (
-                            <Fragment key={activity.id}>
-                                <Tr>
-                                    {visibleColumns.map(col => {
-                                        if (col.id === "starred") {
-                                            return (
-                                                <Td key={col.id} width="80px">
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <StatusIcon status={activity.status} agentName={activity.agent.name} />
-                                                        {activity.subRuns.length > 0 && (
-                                                            <Box
-                                                                cursor="pointer"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    toggleRow(activity.id);
-                                                                }}
-                                                                color="fg.secondary"
-                                                            >
-                                                                {expandedRows.has(activity.id) ? (
-                                                                    <IconChevronDown size={16} />
-                                                                ) : (
-                                                                    <IconChevronRight size={16} />
-                                                                )}
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "started") {
-                                            const [date, time] = activity.started.split("\n");
-                                            return (
-                                                <Td key={col.id}>
-                                                    <Box>
-                                                        <Text>{date}</Text>
-                                                        {time && (
-                                                            <Text fontSize="sm" color="fg.secondary">
-                                                                {time}
-                                                            </Text>
-                                                        )}
-                                                    </Box>
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "agent") {
-                                            return (
-                                                <Td key={col.id}>
-                                                    <Box>
-                                                        <Text fontWeight="500">{activity.agent.name}</Text>
-                                                        <Text fontSize="sm" color="fg.secondary">
-                                                            {activity.agent.handle}
-                                                        </Text>
-                                                    </Box>
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "trigger") {
-                                            return <Td key={col.id}>{activity.trigger}</Td>;
-                                        }
-                                        if (col.id === "triggeredBy") {
-                                            return (
-                                                <Td key={col.id}>
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <Avatar
-                                                            name={activity.triggeredBy.name}
-                                                            src={activity.triggeredBy.avatar}
-                                                            size="sm"
-                                                        />
-                                                        <Text>{activity.triggeredBy.name}</Text>
-                                                    </Box>
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "status") {
-                                            const statusIntent =
-                                                activity.status === "Completed" ? "success" :
-                                                    activity.status === "In Progress" ? "information" :
-                                                        activity.status === "Failed" ? "danger" :
-                                                            activity.status === "Terminated" ? "danger" :
-                                                                "neutral";
-                                            return (
-                                                <Td key={col.id}>
-                                                    <Badge intent={statusIntent as any} style={{ whiteSpace: "nowrap" }}>{activity.status}</Badge>
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "variables") {
-                                            return <Td key={col.id}>{activity.variables}</Td>;
-                                        }
-                                        if (col.id === "output") {
-                                            return (
-                                                <Td key={col.id}>
-                                                    {activity.output.startsWith("View") ? (
-                                                        <Link href="#">{activity.output}</Link>
-                                                    ) : (
-                                                        activity.output
-                                                    )}
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "duration") {
-                                            return <Td key={col.id}>{activity.duration}</Td>;
-                                        }
-                                        if (col.id === "agentVersion") {
-                                            return <Td key={col.id}>{activity.agent.version}</Td>;
-                                        }
-                                        if (col.id === "agentMode") {
-                                            return <Td key={col.id}>{activity.agent.mode}</Td>;
-                                        }
-                                        if (col.id === "qualityScore") {
-                                            const score = parseInt(activity.qualityScore);
-                                            const isPassed = !isNaN(score) && score >= 85;
-                                            return (
-                                                <Td key={col.id}>
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <Text>{activity.qualityScore}</Text>
-                                                        {!isNaN(score) && showQualityBadges && (
-                                                            <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
-                                                                {isPassed ? "Passed" : "Failed"}
-                                                            </Badge>
-                                                        )}
-                                                    </Box>
-                                                </Td>
-                                            );
-                                        }
-                                        if (col.id === "guardrails") {
-                                            const status = (activity as any).guardrails;
-                                            let intent: "success" | "danger" | "warning" | "neutral" = "neutral";
-                                            if (status === "Passed") intent = "success";
-                                            if (status === "Failed" || status === "Terminated") intent = "danger";
-                                            if (status === "Review Needed") intent = "warning";
-
-                                            return (
-                                                <Td key={col.id}>
-                                                    {status && status !== "--" ? (
-                                                        <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
-                                                    ) : "--"}
-                                                </Td>
-                                            );
-                                        }
-                                        return null;
-                                    })}
-                                    <Td type="button" />
-                                </Tr>
-
-                                {/* Expandable sub-runs */}
-                                {expandedRows.has(activity.id) && activity.subRuns.map((subRun) => (
-                                    <Tr key={subRun.id} className="bg-[var(--ax-colors-bg-secondary)]">
+                <Box ref={tableContainerRef} overflow="auto" flex="1" className="axiom-scrollbar">
+                    <Table style={{ minWidth: '1000px' }}>
+                        <thead>
+                            <Tr>
+                                {visibleColumns.map(col => (
+                                    <Th key={col.id}>{col.label}</Th>
+                                ))}
+                                <Th></Th>
+                            </Tr>
+                        </thead>
+                        <tbody suppressHydrationWarning>
+                            {filteredActivities.map((activity) => (
+                                <Fragment key={activity.id}>
+                                    <Tr onClick={() => {
+                                        setSelectedActivity(activity);
+                                        setFocusOutput(false);
+                                    }}>
                                         {visibleColumns.map(col => {
                                             if (col.id === "starred") {
                                                 return (
                                                     <Td key={col.id} width="80px">
-                                                        <Box pl="32">
-                                                            <StatusIcon status={subRun.status} agentName={subRun.agent.name} />
+                                                        <Box display="flex" alignItems="center" gap="8">
+                                                            <StatusIcon status={activity.status} agentName={activity.agent.name} />
+                                                            {activity.subRuns.length > 0 && (
+                                                                <Box
+                                                                    cursor="pointer"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        toggleRow(activity.id);
+                                                                    }}
+                                                                    color="fg.secondary"
+                                                                >
+                                                                    {expandedRows.has(activity.id) ? (
+                                                                        <IconChevronDown size={16} />
+                                                                    ) : (
+                                                                        <IconChevronRight size={16} />
+                                                                    )}
+                                                                </Box>
+                                                            )}
                                                         </Box>
                                                     </Td>
                                                 );
                                             }
                                             if (col.id === "started") {
-                                                const [date, time] = subRun.started.split("\n");
+                                                const [date, time] = activity.started.split("\n");
                                                 return (
                                                     <Td key={col.id}>
-                                                        <Box pl="32">
+                                                        <Box>
                                                             <Text>{date}</Text>
                                                             {time && (
                                                                 <Text fontSize="sm" color="fg.secondary">
@@ -791,75 +681,85 @@ export default function ActivitiesPage() {
                                             if (col.id === "agent") {
                                                 return (
                                                     <Td key={col.id}>
-                                                        <Box pl="32">
-                                                            <Text fontWeight="500">{subRun.agent.name}</Text>
+                                                        <Box>
+                                                            <Text fontWeight="500">{activity.agent.name}</Text>
                                                             <Text fontSize="sm" color="fg.secondary">
-                                                                {subRun.agent.handle}
+                                                                {activity.agent.handle}
                                                             </Text>
                                                         </Box>
                                                     </Td>
                                                 );
                                             }
                                             if (col.id === "trigger") {
-                                                return <Td key={col.id}>--</Td>;
+                                                return <Td key={col.id}>{activity.trigger}</Td>;
                                             }
                                             if (col.id === "triggeredBy") {
                                                 return (
                                                     <Td key={col.id}>
                                                         <Box display="flex" alignItems="center" gap="8">
                                                             <Avatar
-                                                                name={subRun.triggeredBy.name}
-                                                                src={subRun.triggeredBy.avatar}
+                                                                name={activity.triggeredBy.name}
+                                                                src={activity.triggeredBy.avatar}
                                                                 size="sm"
                                                             />
-                                                            <Text>{subRun.triggeredBy.name}</Text>
+                                                            <Text>{activity.triggeredBy.name}</Text>
                                                         </Box>
                                                     </Td>
                                                 );
                                             }
                                             if (col.id === "status") {
                                                 const statusIntent =
-                                                    subRun.status === "Completed" ? "success" :
-                                                        subRun.status === "In Progress" ? "information" :
-                                                            subRun.status === "Failed" ? "danger" :
-                                                                subRun.status === "Terminated" ? "danger" :
+                                                    activity.status === "Completed" ? "success" :
+                                                        activity.status === "In Progress" ? "information" :
+                                                            activity.status === "Failed" ? "danger" :
+                                                                activity.status === "Terminated" ? "danger" :
                                                                     "neutral";
                                                 return (
                                                     <Td key={col.id}>
-                                                        <Badge intent={statusIntent as any} style={{ whiteSpace: "nowrap" }}>{subRun.status}</Badge>
+                                                        <Badge intent={statusIntent as any} style={{ whiteSpace: "nowrap" }}>{activity.status}</Badge>
                                                     </Td>
                                                 );
                                             }
                                             if (col.id === "variables") {
-                                                return <Td key={col.id}>{subRun.variables}</Td>;
+                                                return <Td key={col.id}>{activity.variables}</Td>;
                                             }
                                             if (col.id === "output") {
                                                 return (
                                                     <Td key={col.id}>
-                                                        {subRun.output.startsWith("View") ? (
-                                                            <Link href="#">{subRun.output}</Link>
+                                                        {activity.output.startsWith("View") ? (
+                                                            <Link
+                                                                href="#"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    setSelectedActivity(activity);
+                                                                    setFocusOutput(true);
+                                                                }}
+                                                            >
+                                                                {activity.output}
+                                                            </Link>
                                                         ) : (
-                                                            subRun.output
+                                                            activity.output
                                                         )}
                                                     </Td>
                                                 );
                                             }
                                             if (col.id === "duration") {
-                                                return <Td key={col.id}>{subRun.duration}</Td>;
+                                                return <Td key={col.id}>{activity.duration}</Td>;
                                             }
                                             if (col.id === "agentVersion") {
-                                                return <Td key={col.id}>{subRun.agent.version}</Td>;
+                                                return <Td key={col.id}>{activity.agent.version}</Td>;
                                             }
                                             if (col.id === "agentMode") {
-                                                return <Td key={col.id}>{subRun.agent.mode}</Td>;
+                                                return <Td key={col.id}>{activity.agent.mode}</Td>;
                                             }
                                             if (col.id === "qualityScore") {
-                                                const score = parseInt(subRun.qualityScore);
+                                                const score = parseInt(activity.qualityScore);
                                                 const isPassed = !isNaN(score) && score >= 85;
                                                 return (
                                                     <Td key={col.id}>
                                                         <Box display="flex" alignItems="center" gap="8">
-                                                            <Text>{subRun.qualityScore}</Text>
+                                                            <Text>{activity.qualityScore}</Text>
                                                             {!isNaN(score) && showQualityBadges && (
                                                                 <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
                                                                     {isPassed ? "Passed" : "Failed"}
@@ -870,7 +770,7 @@ export default function ActivitiesPage() {
                                                 );
                                             }
                                             if (col.id === "guardrails") {
-                                                const status = (subRun as any).guardrails;
+                                                const status = (activity as any).guardrails;
                                                 let intent: "success" | "danger" | "warning" | "neutral" = "neutral";
                                                 if (status === "Passed") intent = "success";
                                                 if (status === "Failed" || status === "Terminated") intent = "danger";
@@ -888,12 +788,149 @@ export default function ActivitiesPage() {
                                         })}
                                         <Td type="button" />
                                     </Tr>
-                                ))}
-                            </Fragment>
-                        ))}
-                    </tbody>
-                </Table>
+
+                                    {/* Expandable sub-runs */}
+                                    {expandedRows.has(activity.id) && activity.subRuns.map((subRun) => (
+                                        <Tr key={subRun.id} className="bg-[var(--ax-colors-bg-secondary)]">
+                                            {visibleColumns.map(col => {
+                                                if (col.id === "starred") {
+                                                    return (
+                                                        <Td key={col.id} width="80px">
+                                                            <Box pl="32">
+                                                                <StatusIcon status={subRun.status} agentName={subRun.agent.name} />
+                                                            </Box>
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "started") {
+                                                    const [date, time] = subRun.started.split("\n");
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            <Box pl="32">
+                                                                <Text>{date}</Text>
+                                                                {time && (
+                                                                    <Text fontSize="sm" color="fg.secondary">
+                                                                        {time}
+                                                                    </Text>
+                                                                )}
+                                                            </Box>
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "agent") {
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            <Box pl="32">
+                                                                <Text fontWeight="500">{subRun.agent.name}</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">
+                                                                    {subRun.agent.handle}
+                                                                </Text>
+                                                            </Box>
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "trigger") {
+                                                    return <Td key={col.id}>--</Td>;
+                                                }
+                                                if (col.id === "triggeredBy") {
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                <Avatar
+                                                                    name={subRun.triggeredBy.name}
+                                                                    src={subRun.triggeredBy.avatar}
+                                                                    size="sm"
+                                                                />
+                                                                <Text>{subRun.triggeredBy.name}</Text>
+                                                            </Box>
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "status") {
+                                                    const statusIntent =
+                                                        subRun.status === "Completed" ? "success" :
+                                                            subRun.status === "In Progress" ? "information" :
+                                                                subRun.status === "Failed" ? "danger" :
+                                                                    subRun.status === "Terminated" ? "danger" :
+                                                                        "neutral";
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            <Badge intent={statusIntent as any} style={{ whiteSpace: "nowrap" }}>{subRun.status}</Badge>
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "variables") {
+                                                    return <Td key={col.id}>{subRun.variables}</Td>;
+                                                }
+                                                if (col.id === "output") {
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            {subRun.output.startsWith("View") ? (
+                                                                <Link href="#">{subRun.output}</Link>
+                                                            ) : (
+                                                                subRun.output
+                                                            )}
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "duration") {
+                                                    return <Td key={col.id}>{subRun.duration}</Td>;
+                                                }
+                                                if (col.id === "agentVersion") {
+                                                    return <Td key={col.id}>{subRun.agent.version}</Td>;
+                                                }
+                                                if (col.id === "agentMode") {
+                                                    return <Td key={col.id}>{subRun.agent.mode}</Td>;
+                                                }
+                                                if (col.id === "qualityScore") {
+                                                    const score = parseInt(subRun.qualityScore);
+                                                    const isPassed = !isNaN(score) && score >= 85;
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                <Text>{subRun.qualityScore}</Text>
+                                                                {!isNaN(score) && showQualityBadges && (
+                                                                    <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
+                                                                        {isPassed ? "Passed" : "Failed"}
+                                                                    </Badge>
+                                                                )}
+                                                            </Box>
+                                                        </Td>
+                                                    );
+                                                }
+                                                if (col.id === "guardrails") {
+                                                    const status = (subRun as any).guardrails;
+                                                    let intent: "success" | "danger" | "warning" | "neutral" = "neutral";
+                                                    if (status === "Passed") intent = "success";
+                                                    if (status === "Failed" || status === "Terminated") intent = "danger";
+                                                    if (status === "Review Needed") intent = "warning";
+
+                                                    return (
+                                                        <Td key={col.id}>
+                                                            {status && status !== "--" ? (
+                                                                <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                            ) : "--"}
+                                                        </Td>
+                                                    );
+                                                }
+                                                return null;
+                                            })}
+                                            <Td type="button" />
+                                        </Tr>
+                                    ))}
+                                </Fragment>
+                            ))}
+                        </tbody>
+                    </Table>
+                </Box>
             </Box>
+            {selectedActivity && (
+                <DetailsPanel
+                    activity={selectedActivity}
+                    onClose={() => setSelectedActivity(null)}
+                    focusOutput={focusOutput}
+                />
+            )}
         </div>
     );
 }
