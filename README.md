@@ -48,7 +48,7 @@ Before starting the installation, ensure you have the following accounts set up 
 
 ---
 
-## Installation Steps
+## Manual Installation Steps
 
 ### 1. Prerequisites (All Required)
 
