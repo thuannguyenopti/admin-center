@@ -90,10 +90,22 @@ install_dependencies() {
 	(cd "$REPO_ROOT" && export $(cat .env | grep -v '^#' | xargs) && yarn install)
 }
 
+open_browser() {
+	local url="http://localhost:3000"
+	if command -v open >/dev/null 2>&1; then
+		( sleep 2 && open "$url" ) >/dev/null 2>&1 &
+	elif command -v xdg-open >/dev/null 2>&1; then
+		( sleep 2 && xdg-open "$url" ) >/dev/null 2>&1 &
+	else
+		log "Dev server starting; open $url in your browser."
+	fi
+}
+
 maybe_start_dev_server() {
 	read -r -p "Start the dev server now? [Y/n]: " reply || true
 	if [ -z "$reply" ] || [ "$reply" = "Y" ] || [ "$reply" = "y" ]; then
 		log "Starting dev server (Ctrl+C to stop)…"
+		open_browser
 		yarn dev
 	else
 		log "Skipped starting dev server. Run 'yarn dev' when ready."
