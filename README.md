@@ -29,9 +29,17 @@ Before starting the installation, ensure you have the following accounts set up 
 ## One-Click Install (Recommended)
 
 ### macOS / Linux / Windows
-- From the project folder, run: `./axiomplay install` (Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`).
-- The command auto-detects your OS and forwards to the right installer (`install.sh` or `install.bat`).
-- It will: ensure Node (via nvm on macOS/Linux or prompt on Windows), enable Corepack (Yarn 4), prompt for `.env` secrets if missing, install dependencies, and optionally start the dev server.
+
+```bash
+./axiomplay install
+```
+(Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`)
+
+#### What this does
+- Auto-detects your OS and forwards to `install.sh` or `install.bat`.
+- Ensures Node (via nvm on macOS/Linux; prompts to install on Windows).
+- Enables Corepack (Yarn 4) and installs dependencies.
+- Prompts for `.env` secrets if missing, exports them for install, and can start the dev server.
 
 ### Requirements
 - A GitHub account with access to the repo (if you haven't cloned yet).
