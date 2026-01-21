@@ -26,7 +26,7 @@ Before starting the installation, ensure you have the following accounts set up 
 
 ---
 
-## One-Click Install (Recommended)
+## Quick Install (Recommended)
 
 ### macOS / Linux / Windows
 
