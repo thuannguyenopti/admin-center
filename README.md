@@ -2,9 +2,9 @@
 
 This guide provides step-by-step instructions for installing the axiom-play project on a new machine using VS Code or Cursor IDE.
 
-## Account Requirements (Required)
+## Account Requirements
 
-Before starting the installation, ensure you have the following accounts set up:
+Before starting the installation, ensure you have the following accounts set up when needed:
 
 ---
 
@@ -18,9 +18,9 @@ Before starting the installation, ensure you have the following accounts set up:
 
 ---
 
-**Kombai Account**
+**Kombai Account (Optional)**
 
-- Required to use the Kombai extension after installation
+- Only needed if you want to use the Kombai extension
 - Sign up at [kombai.com](https://kombai.com) or through the Kombai extension after installation
 - You'll be prompted to sign in when you first use the Kombai extension
 
