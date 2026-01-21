@@ -1,3 +1,15 @@
+# Quick Install
+
+## macOS / Linux / WSL
+- From the project folder run: `./axiomplay install`
+- The installer will: install/upgrade Node (via nvm), enable Corepack (Yarn 4), prompt for `.env` secrets if missing, install dependencies, and optionally start `yarn dev`.
+
+## Windows
+- Open PowerShell/CMD in the project folder and run: `axiomplay install` (or `./axiomplay install`).
+- If Node LTS is missing, install it first (e.g., `winget install OpenJS.NodeJS.LTS`), then rerun.
+
+---
+
 # Installation Guide for Axiom Play (VS Code/Cursor)
 
 This guide provides step-by-step instructions for installing the axiom-play project on a new machine using VS Code or Cursor IDE.
@@ -23,6 +35,20 @@ Before starting the installation, ensure you have the following accounts set up:
 - Required to use the Kombai extension after installation
 - Sign up at [kombai.com](https://kombai.com) or through the Kombai extension after installation
 - You'll be prompted to sign in when you first use the Kombai extension
+
+---
+
+## One-Click Install (Recommended)
+
+### macOS / Linux / Windows
+- From the project folder, run: `./axiomplay install` (Windows PowerShell/CMD: `axiomplay install` or `./axiomplay install`).
+- The command auto-detects your OS and forwards to the right installer (`install.sh` or `install.bat`).
+- It will: ensure Node (via nvm on macOS/Linux or prompt on Windows), enable Corepack (Yarn 4), prompt for `.env` secrets if missing, install dependencies, and optionally start the dev server.
+
+### Requirements
+- A GitHub account with access to the repo (if you haven't cloned yet).
+- Node.js 18+ (installer will guide you; uses Node 20 LTS by default via nvm on macOS/Linux).
+- Your secrets for `.env`: `OPENAI_API_KEY`, `OPTIMIZELY_AUTH_IDENT`, `OPTIMIZELY_USERNAME`, `OPTIMIZELY_PASSWORD`.
 
 ---
 
