@@ -117,7 +117,7 @@ const activities = [
     },
     {
         id: "2",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n03:42 PM",
         agent: {
             name: "Segment Research",
             handle: "@segment-research",
@@ -137,7 +137,7 @@ const activities = [
     },
     {
         id: "3",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n03:30 PM",
         agent: {
             name: "Experiment Planning Agent",
             handle: "@experiment_plan",
@@ -156,7 +156,7 @@ const activities = [
         subRuns: [
             {
                 id: "3-1",
-                started: "Oct 13, 2025\n03:51 PM",
+                started: "Oct 13, 2025\n03:31 PM",
                 agent: { name: "Research Agent", handle: "@research", type: "agent", version: "v1.5.0", mode: "Autonomous" },
                 triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
                 status: "Completed",
@@ -168,7 +168,7 @@ const activities = [
             },
             {
                 id: "3-2",
-                started: "Oct 13, 2025\n03:55 PM",
+                started: "Oct 13, 2025\n03:35 PM",
                 agent: { name: "Planning Agent", handle: "@planning", type: "agent", version: "v2.0.1", mode: "Collaborative" },
                 triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
                 status: "Completed",
@@ -182,7 +182,7 @@ const activities = [
     },
     {
         id: "4",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n03:15 PM",
         agent: {
             name: "Success Plan Generator",
             handle: "@success_plan_generator",
@@ -202,7 +202,7 @@ const activities = [
     },
     {
         id: "5",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n02:50 PM",
         agent: {
             name: "Summarize meeting",
             handle: "@summarize-meeting",
@@ -221,7 +221,7 @@ const activities = [
         subRuns: [
             {
                 id: "5-1",
-                started: "Oct 13, 2025\n03:51 PM",
+                started: "Oct 13, 2025\n02:51 PM",
                 agent: { name: "Transcription Agent", handle: "@transcribe", type: "agent", version: "v1.4.0", mode: "Autonomous" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
@@ -233,7 +233,7 @@ const activities = [
             },
             {
                 id: "5-2",
-                started: "Oct 13, 2025\n03:56 PM",
+                started: "Oct 13, 2025\n02:56 PM",
                 agent: { name: "Summary Generator", handle: "@summarize", type: "agent", version: "v2.0.0", mode: "Autonomous" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "In Progress",
@@ -247,7 +247,7 @@ const activities = [
     },
     {
         id: "6",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n02:10 PM",
         agent: {
             name: "Asset creation",
             handle: "Description",
@@ -266,7 +266,7 @@ const activities = [
         subRuns: [
             {
                 id: "6-1",
-                started: "Oct 13, 2025\n03:51 PM",
+                started: "Oct 13, 2025\n02:11 PM",
                 agent: { name: "Image Generator", handle: "@image_gen", type: "agent", version: "v1.2.0", mode: "Autonomous" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
@@ -278,7 +278,7 @@ const activities = [
             },
             {
                 id: "6-2",
-                started: "Oct 13, 2025\n03:55 PM",
+                started: "Oct 13, 2025\n02:15 PM",
                 agent: { name: "Asset Optimizer", handle: "@optimize", type: "agent", version: "v1.0.0", mode: "Autonomous" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Terminated",
@@ -292,7 +292,7 @@ const activities = [
     },
     {
         id: "7",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n01:50 PM",
         agent: {
             name: "Heatmap Agent",
             handle: "Description",
@@ -312,7 +312,7 @@ const activities = [
     },
     {
         id: "8",
-        started: "Oct 13, 2025\n03:50 PM",
+        started: "Oct 13, 2025\n12:50 PM",
         agent: {
             name: "WCAG Workflow",
             handle: "@wcagworkflow",
@@ -331,7 +331,7 @@ const activities = [
         subRuns: [
             {
                 id: "8-1",
-                started: "Oct 13, 2025\n03:51 PM",
+                started: "Oct 13, 2025\n12:51 PM",
                 agent: { name: "Accessibility Scanner", handle: "@a11y_scan", type: "agent", version: "v2.0.0", mode: "Autonomous" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
@@ -343,7 +343,7 @@ const activities = [
             },
             {
                 id: "8-2",
-                started: "Oct 13, 2025\n03:54 PM",
+                started: "Oct 13, 2025\n12:54 PM",
                 agent: { name: "Compliance Validator", handle: "@validate", type: "agent", version: "v1.5.0", mode: "Autonomous" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Failed",
@@ -545,9 +545,17 @@ export default function ActivitiesPage() {
                                             );
                                         }
                                         if (col.id === "started") {
+                                            const [date, time] = activity.started.split("\n");
                                             return (
                                                 <Td key={col.id}>
-                                                    <Text>{activity.started}</Text>
+                                                    <Box>
+                                                        <Text>{date}</Text>
+                                                        {time && (
+                                                            <Text fontSize="sm" color="fg.secondary">
+                                                                {time}
+                                                            </Text>
+                                                        )}
+                                                    </Box>
                                                 </Td>
                                             );
                                         }
@@ -666,10 +674,16 @@ export default function ActivitiesPage() {
                                                 );
                                             }
                                             if (col.id === "started") {
+                                                const [date, time] = subRun.started.split("\n");
                                                 return (
                                                     <Td key={col.id}>
                                                         <Box pl="32">
-                                                            <Text>{subRun.started}</Text>
+                                                            <Text>{date}</Text>
+                                                            {time && (
+                                                                <Text fontSize="sm" color="fg.secondary">
+                                                                    {time}
+                                                                </Text>
+                                                            )}
                                                         </Box>
                                                     </Td>
                                                 );
