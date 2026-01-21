@@ -45,6 +45,7 @@ yarn install
 choice /m "Start the dev server now"
 if errorlevel 2 goto done
 
+start "" http://localhost:3000
 yarn dev
 goto end
 
