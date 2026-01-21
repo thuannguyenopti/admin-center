@@ -1,15 +1,3 @@
-# Quick Install
-
-## macOS / Linux / WSL
-- From the project folder run: `./axiomplay install`
-- The installer will: install/upgrade Node (via nvm), enable Corepack (Yarn 4), prompt for `.env` secrets if missing, install dependencies, and optionally start `yarn dev`.
-
-## Windows
-- Open PowerShell/CMD in the project folder and run: `axiomplay install` (or `./axiomplay install`).
-- If Node LTS is missing, install it first (e.g., `winget install OpenJS.NodeJS.LTS`), then rerun.
-
----
-
 # Installation Guide for Axiom Play (VS Code/Cursor)
 
 This guide provides step-by-step instructions for installing the axiom-play project on a new machine using VS Code or Cursor IDE.
