@@ -27,6 +27,7 @@ export function HydrationErrorSuppressor() {
                 errorString.includes("radix-") ||
                 errorString.includes("radix_") ||
                 errorString.includes("radix__") ||
+                errorString.includes("radix-r_") ||
                 errorString.includes("tree hydrated but some attributes") ||
                 errorString.includes("server rendered html") ||
                 errorString.includes("client properties") ||

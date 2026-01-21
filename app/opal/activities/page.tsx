@@ -56,7 +56,7 @@ const StatusIcon = ({ status, agentName }: { status: string; agentName?: string 
         case "Completed":
             return <IconCircleCheck {...iconProps} color="#17B26A" />;
         case "In Progress":
-            return <Spinner size="md" />;
+            return <Spinner style={{ width: 16, height: 16 }} />;
         case "Failed":
             return <IconCircleExclamation {...iconProps} color="#D92D20" />;
         case "Terminated":
@@ -97,7 +97,7 @@ const activities = [
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
-                duration: "3 minutes",
+                duration: "3m",
                 qualityScore: "87%",
                 guardrails: "Passed"
             },
@@ -130,7 +130,7 @@ const activities = [
         status: "Completed",
         variables: "Variables when",
         output: "View Output",
-        duration: "6 minutes",
+        duration: "6m",
         qualityScore: "85%",
         guardrails: "Passed",
         subRuns: []
@@ -150,7 +150,7 @@ const activities = [
         status: "Completed",
         variables: "Variables",
         output: "View Output",
-        duration: "12 minutes",
+        duration: "12m",
         qualityScore: "92%",
         guardrails: "Passed",
         subRuns: [
@@ -162,7 +162,7 @@ const activities = [
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
-                duration: "4 minutes",
+                duration: "4m",
                 qualityScore: "88%",
                 guardrails: "Passed"
             },
@@ -174,7 +174,7 @@ const activities = [
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
-                duration: "8 minutes",
+                duration: "8m",
                 qualityScore: "95%",
                 guardrails: "Review Needed"
             }
@@ -195,7 +195,7 @@ const activities = [
         status: "Completed",
         variables: "Variables",
         output: "View Output",
-        duration: "6 minutes",
+        duration: "6m",
         qualityScore: "79%",
         guardrails: "Review Needed",
         subRuns: []
@@ -227,7 +227,7 @@ const activities = [
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
-                duration: "5 minutes",
+                duration: "5m",
                 qualityScore: "91%",
                 guardrails: "Passed"
             },
@@ -272,7 +272,7 @@ const activities = [
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
-                duration: "4 minutes",
+                duration: "4m",
                 qualityScore: "75%",
                 guardrails: "Passed"
             },
@@ -305,7 +305,7 @@ const activities = [
         status: "Completed",
         variables: "Variables",
         output: "Foo",
-        duration: "6 minutes",
+        duration: "6m",
         qualityScore: "82%",
         guardrails: "Passed",
         subRuns: []
@@ -325,7 +325,7 @@ const activities = [
         status: "Failed",
         variables: "Variables",
         output: "Foo",
-        duration: "6 minutes",
+        duration: "6m",
         qualityScore: "41%",
         guardrails: "Failed",
         subRuns: [
@@ -337,7 +337,7 @@ const activities = [
                 status: "Completed",
                 variables: "Variables",
                 output: "View Output",
-                duration: "3 minutes",
+                duration: "3m",
                 qualityScore: "80%",
                 guardrails: "Passed"
             },
@@ -349,7 +349,7 @@ const activities = [
                 status: "Failed",
                 variables: "Variables",
                 output: "View execution log",
-                duration: "3 minutes",
+                duration: "3m",
                 qualityScore: "25%",
                 guardrails: "Failed"
             }
@@ -365,13 +365,13 @@ const allColumns: ColumnConfig[] = [
     { id: "trigger", label: "Trigger", visible: true, movable: true },
     { id: "triggeredBy", label: "Triggered by", visible: true, movable: true },
     { id: "status", label: "Status", visible: true, movable: true },
-    { id: "variables", label: "Variables", visible: true, movable: true },
     { id: "output", label: "Output", visible: true, movable: true },
-    { id: "duration", label: "Duration", visible: true, movable: true },
-    { id: "agentVersion", label: "Agent Version", visible: false, movable: true },
-    { id: "agentMode", label: "Agent Mode", visible: false, movable: true },
     { id: "qualityScore", label: "Output Quality Score", visible: true, movable: true },
     { id: "guardrails", label: "Execution Guardrails", visible: true, movable: true },
+    { id: "duration", label: "Duration", visible: true, movable: true },
+    { id: "variables", label: "Variables", visible: false, movable: true },
+    { id: "agentVersion", label: "Agent Version", visible: false, movable: true },
+    { id: "agentMode", label: "Agent Mode", visible: false, movable: true },
 ];
 
 export default function ActivitiesPage() {
@@ -480,14 +480,14 @@ export default function ActivitiesPage() {
                         </Menu>
                     </Box>
 
-                    <Box display="flex" gap="8">
+                    <Box display="flex" gap="8" suppressHydrationWarning>
                         <TableColumnConfig
                             columns={columns}
                             onColumnsChange={setColumns}
                             icon={<IconColumns3 />}
                             renderColumnExtra={(columnId: string) =>
                                 columnId === "qualityScore" && (
-                                    <Box pl="32" pb="4" style={{ marginTop: "-4px" }}>
+                                    <Box pl="48" pr="12" pb="12" suppressHydrationWarning>
                                         <Checkbox
                                             checked={showQualityBadges}
                                             onCheckedChange={setShowQualityBadges}
