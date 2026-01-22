@@ -267,7 +267,7 @@ export default function PreviewCanvas({
                     <div className={hasBgImage ? "relative z-10 w-full p-12 md:p-20" : `w-full ${isAside ? "p-8" : "p-8 md:p-12"}`}>
                         {(section.children || []).map((row: any, rIndex: number) => (
                             <section
-                                className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"}`}
+                                className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"} ${row.id === "row-landing-hero-stats" ? "mt-4" : ""}`}
                                 key={row.id ?? rIndex}
                             >
                                 {(row.children || []).map((col: any, cIndex: number) => {
@@ -385,7 +385,10 @@ export default function PreviewCanvas({
                                                                                 return <IconHeading size={12} />;
                                                                             case "Text":
                                                                             case "ct-text":
+                                                                            case "ct-rich-text":
                                                                                 return <IconPilcrow size={12} />;
+                                                                            case "ct-product":
+                                                                                return <IconRectangle size={12} />;
                                                                             case "Input":
                                                                             case "ct-input":
                                                                                 return <IconForms size={12} />;

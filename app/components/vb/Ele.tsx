@@ -56,7 +56,10 @@ const Ele: React.FC<{
                                     return <IconHeading size={16} />;
                                 case "Text":
                                 case "ct-text":
+                                case "ct-rich-text":
                                     return <IconPilcrow size={16} />;
+                                case "ct-product":
+                                    return <IconRectangle size={16} />;
                                 case "Input":
                                 case "ct-input":
                                     return <IconForms size={16} />;
