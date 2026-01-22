@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Fragment, useEffect, useRef } from "react";
-import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading } from "@optiaxiom/react";
+import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea } from "@optiaxiom/react";
 import { BLOCK_SCHEMAS } from "./blocks/schemas";
 
 type Props = {
@@ -26,6 +26,91 @@ const Input: React.FC<{ label: string; placeholder?: string; value: any; onChang
           placeholder={placeholder || ""}
           value={value || ""}
           onChange={(e: any) => onChange(e.currentTarget.value)}
+        />
+      </Field>
+    </div>
+  );
+};
+
+const renderMarkdown = (val: string) => {
+  const escaped = (val || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
+    .replace(/\n/g, "<br/>");
+};
+
+const isTipTapDoc = (val: any) => val && typeof val === "object" && val.type === "doc";
+
+const tiptapToMarkdown = (val: any): string => {
+  if (!isTipTapDoc(val)) return typeof val === "string" ? val : "";
+  const paragraphs = (val.content || []).map((p: any) => {
+    if (!p || p.type !== "paragraph") return "";
+    return (p.content || []).map((node: any) => {
+      if (!node || node.type !== "text") return "";
+      let text = node.text || "";
+      const marks = node.marks || [];
+      marks.forEach((m: any) => {
+        if (!m || !m.type) return;
+        if (m.type === "bold" || m.type === "strong") text = `**${text}**`;
+        if (m.type === "italic" || m.type === "em") text = `*${text}*`;
+        if (m.type === "link" && m.attrs?.href) text = `[${text}](${m.attrs.href})`;
+      });
+      return text;
+    }).join("");
+  }).join("\n");
+  return paragraphs;
+};
+
+const markdownToTipTap = (text: string) => {
+  const lines = (text || "").split(/\n/);
+  const paragraphFromLine = (line: string) => {
+    const tokens = line.split(/(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^\)]+\))/g).filter(Boolean);
+    const content = tokens.map((tok) => {
+      // link
+      const linkMatch = tok.match(/^\[(.+)\]\((.+)\)$/);
+      if (linkMatch) {
+        return {
+          type: "text",
+          text: linkMatch[1],
+          marks: [{ type: "link", attrs: { href: linkMatch[2] } }],
+        };
+      }
+      // bold
+      const boldMatch = tok.match(/^\*\*(.+)\*\*$/);
+      if (boldMatch) {
+        return { type: "text", text: boldMatch[1], marks: [{ type: "bold" }] };
+      }
+      // italic
+      const italicMatch = tok.match(/^\*(.+)\*$/);
+      if (italicMatch) {
+        return { type: "text", text: italicMatch[1], marks: [{ type: "italic" }] };
+      }
+      // plain
+      return { type: "text", text: tok };
+    });
+    return { type: "paragraph", content };
+  };
+
+  return {
+    type: "doc",
+    content: lines.map(paragraphFromLine),
+  };
+};
+
+const RichTextInput: React.FC<{ label: string; value: any; onChange: any }> = ({ label, value, onChange }) => {
+  const markdownValue = isTipTapDoc(value) ? tiptapToMarkdown(value) : (value || "");
+  return (
+    <div className="pr-1 py-2">
+      <Field label={label}>
+        <Textarea
+          value={markdownValue}
+          onChange={(e: any) => onChange(markdownToTipTap(e.currentTarget.value))}
+          rows={4}
         />
       </Field>
     </div>
@@ -110,8 +195,15 @@ export default function ElementEditor({
 
           return (
             <Fragment key={key}>
-              {(def.type === "text" || def.type === "richtext" || def.type === "textarea") && (
+              {(def.type === "text" || def.type === "textarea") && (
                 <Input
+                  label={def.label}
+                  value={value}
+                  onChange={(val: any) => onInputChange(val, key)}
+                />
+              )}
+              {def.type === "richtext" && (
+                <RichTextInput
                   label={def.label}
                   value={value}
                   onChange={(val: any) => onInputChange(val, key)}
@@ -144,6 +236,13 @@ export default function ElementEditor({
                 <Input
                   label={key.charAt(0).toUpperCase() + key.slice(1)}
                   placeholder={prop.placeholder}
+                  value={prop.value}
+                  onChange={(val: any) => onInputChange(val, key)}
+                />
+              )}
+              {prop.type === "richtext" && (
+                <RichTextInput
+                  label={key.charAt(0).toUpperCase() + key.slice(1)}
                   value={prop.value}
                   onChange={(val: any) => onInputChange(val, key)}
                 />
