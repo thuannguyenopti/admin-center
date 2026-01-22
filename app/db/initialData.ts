@@ -244,7 +244,7 @@ export const initialContentTypes: ContentType[] = [
 		description: "A standard product",
 		properties: [
 			{ id: "name", name: "Name", type: "text", required: true },
-			{ id: "description", name: "Description", type: "richtext" },
+			{ id: "description", name: "Description", type: "text" },
 			{ id: "price", name: "Price", type: "text" },
 		],
 	},
@@ -316,7 +316,7 @@ export type EleProp = {
 };
 
 export type EleDef = {
-	type: "ct-heading" | "ct-text" | "ct-rich-text" | "ct-input" | "ct-button" | "ct-image" | string;
+	type: "ct-heading" | "ct-text" | "ct-rich-text" | "ct-input" | "ct-button" | "ct-image" | "ct-product" | string;
 	properties: Record<string, { value: any }>;
 };
 
@@ -1083,103 +1083,115 @@ export const initialPages: Page[] = [
 					"ele-feat-1": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "GPS Tracking: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Accurate route mapping and distance tracking for all your outdoor activities." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "GPS Tracking: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Accurate route mapping and distance tracking for all your outdoor activities." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-feat-2": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Heart Rate Monitoring: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Real-time heart rate tracking to optimize your workout intensity." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Heart Rate Monitoring: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Real-time heart rate tracking to optimize your workout intensity." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-feat-3": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Performance Analytics: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Detailed insights and progress tracking to help you improve over time." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Performance Analytics: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Detailed insights and progress tracking to help you improve over time." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-feat-4": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Achievement System: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Unlock badges and celebrate milestones as you reach your fitness goals." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Achievement System: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Unlock badges and celebrate milestones as you reach your fitness goals." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-feat-5": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Social Features: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Share your achievements and connect with a community of fitness enthusiasts." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Social Features: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Share your achievements and connect with a community of fitness enthusiasts." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-feat-6": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Cross-Platform Sync: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Seamlessly sync your data across all your devices and platforms." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Cross-Platform Sync: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Seamlessly sync your data across all your devices and platforms." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-landing-testimonials-heading": {
@@ -1197,35 +1209,39 @@ export const initialPages: Page[] = [
 					"ele-test-1": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Sarah M.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Amazing run through Central Park this morning! The GPS tracking was spot-on and I love seeing my progress over time. 🏃‍♀️✨" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Sarah M.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Amazing run through Central Park this morning! The GPS tracking was spot-on and I love seeing my progress over time. 🏃‍♀️✨" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-test-2": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Mike R.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Crushed my half-marathon goal! The community challenges really pushed me to go further than I thought possible. 💪🏆" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Mike R.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Crushed my half-marathon goal! The community challenges really pushed me to go further than I thought possible. 💪🏆" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-landing-cta-heading": {
@@ -1261,52 +1277,58 @@ export const initialPages: Page[] = [
 					"ele-chal-1": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "October Run Streak: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Run at least 1 mile every day this month. Progress: 65%" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "October Run Streak: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Run at least 1 mile every day this month. Progress: 65%" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-chal-2": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "100 Mile Challenge: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Complete 100 miles in 30 days. Progress: 42%" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "100 Mile Challenge: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Complete 100 miles in 30 days. Progress: 42%" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-chal-3": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Weekend Warrior: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "Double your weekend mileage. Progress: 0%" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Weekend Warrior: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "Double your weekend mileage. Progress: 0%" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-landing-pricing-heading": {
@@ -1360,52 +1382,58 @@ export const initialPages: Page[] = [
 					"ele-story-1": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Jessica T.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "STRIDE helped me train for my first marathon. The personalized plans kept me motivated!" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Jessica T.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "STRIDE helped me train for my first marathon. The personalized plans kept me motivated!" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-story-2": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Marcus R.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "The analytics features are incredible. Being able to track my performance has helped me identify areas for improvement." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Marcus R.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "The analytics features are incredible. Being able to track my performance has helped me identify areas for improvement." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-story-3": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Amanda K.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "I love the social aspect of STRIDE. Connecting with other fitness enthusiasts has completely transformed my workout routine." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Amanda K.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "I love the social aspect of STRIDE. Connecting with other fitness enthusiasts has completely transformed my workout routine." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-landing-footer-cta-heading": {
@@ -2135,35 +2163,39 @@ export const initialPages: Page[] = [
 					"ele-story-1": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Jessica T.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "STRIDE helped me train for my first marathon. The personalized plans kept me motivated!" },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Jessica T.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "STRIDE helped me train for my first marathon. The personalized plans kept me motivated!" },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 					"ele-story-2": {
 						type: "ct-rich-text",
 						properties: {
-							richtext: { value: {
-								type: "doc",
-								content: [
-									{
-										type: "paragraph",
-										content: [
-											{ type: "text", text: "Marcus R.: ", marks: [{ type: "bold" }] },
-											{ type: "text", text: "The analytics features are incredible. Being able to track my performance across swimming, cycling, and running has helped me identify areas for improvement." },
-										],
-									},
-								],
-							} }
+							richtext: {
+								value: {
+									type: "doc",
+									content: [
+										{
+											type: "paragraph",
+											content: [
+												{ type: "text", text: "Marcus R.: ", marks: [{ type: "bold" }] },
+												{ type: "text", text: "The analytics features are incredible. Being able to track my performance across swimming, cycling, and running has helped me identify areas for improvement." },
+											],
+										},
+									],
+								}
+							}
 						},
 					},
 				},
