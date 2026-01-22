@@ -14,12 +14,4 @@ export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-button": ButtonBlock,
     "ct-input": InputBlock,
     "ct-image": ImageBlock,
-    // Add aliases for legacy support during migration
-    Heading: HeadingBlock,
-    Text: TextBlock,
-    Product: ProductBlock,
-    "Rich Text": RichTextBlock,
-    Button: ButtonBlock,
-    Input: InputBlock,
-    Image: ImageBlock,
 };
