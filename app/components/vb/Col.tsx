@@ -27,22 +27,17 @@ const Col: React.FC<{
 
     const iconForType = (type: string) => {
         switch (type) {
-            case "Heading":
             case "ct-heading":
                 return <IconHeading size={16} />;
-            case "Text":
             case "ct-text":
             case "ct-rich-text":
                 return <IconPilcrow size={16} />;
             case "ct-product":
                 return <IconRectangle size={16} />;
-            case "Input":
             case "ct-input":
                 return <IconForms size={16} />;
-            case "Button":
             case "ct-button":
                 return <IconRectangle size={16} />;
-            case "Image":
             case "ct-image":
                 return <IconPhoto size={16} />;
             default:

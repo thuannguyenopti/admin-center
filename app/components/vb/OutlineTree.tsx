@@ -260,8 +260,8 @@ export default function OutlineTree({
                             props[key] = { value: def.default ?? "" };
                         });
 
-                        // Special case for image if we have pending data
-                        if ((type === "ct-image" || type === "Image") && imageUrl) {
+                            // Special case for image if we have pending data
+                            if (type === "ct-image" && imageUrl) {
                             if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
                             if (props["altText"]) props["altText"].value = imageAlt;
                             if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
