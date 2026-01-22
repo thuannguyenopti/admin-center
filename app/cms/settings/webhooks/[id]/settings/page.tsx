@@ -13,56 +13,60 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 	const {id} = use(params);
 	const [webhooks] = usePersistentState("webhooks", initialWebhooks) as [
 		typeof initialWebhooks,
-		any
+		any,
 	];
 	const webhook = webhooks.find((w) => w.id === id);
 
 	if (!webhook) return null;
 
 	return (
-		<Box maxW="lg">
-			<Box display="flex" flexDirection="column" gap="24">
-				<Field label="Name">
-					<Input defaultValue={webhook.name} />
-				</Field>
+		<>
+			<Box maxW="lg">
+				<Box display="flex" flexDirection="column" gap="24">
+					<Field label="Name">
+						<Input defaultValue={webhook.name} />
+					</Field>
 
-				<Field label="Description">
-					<Input defaultValue={webhook.description} />
-				</Field>
+					<Field label="Description">
+						<Input defaultValue={webhook.description} />
+					</Field>
 
-				<Field>
-					<Checkbox
-						defaultChecked={webhook.status === "Active"}
-						description="Webhook calls will be performed for the configured events."
-					>
-						Active
-					</Checkbox>
-				</Field>
+					<Field>
+						<Checkbox
+							defaultChecked={webhook.status === "Active"}
+							description="Webhook calls will be performed for the configured events."
+						>
+							Active
+						</Checkbox>
+					</Field>
 
-				<Box>
-					<Heading level="4" mb="16" color="fg.tertiary">
-						URL & Authentication
-					</Heading>
-					<Box display="flex" flexDirection="column" gap="16">
-						<Field label="URL">
-							<Input defaultValue={webhook.url} readOnly />
-						</Field>
+					<Box>
+						<Heading level="4" mb="16">
+							URL & Authentication
+						</Heading>
+						<Box display="flex" flexDirection="column" gap="16">
+							<Field label="URL">
+								<Input defaultValue={webhook.url} readOnly />
+							</Field>
 
-						<Field label="Authentication token">
-							<Input defaultValue="************************" readOnly />
-						</Field>
+							<Field label="Authentication token">
+								<Input defaultValue="************************" readOnly />
+							</Field>
 
-						<Text fontSize="sm" color="fg.secondary">
-							Changing URL requires a new authentication token.
-						</Text>
-						<Box>
-							<Button>Edit</Button>
+							<Text fontSize="sm" color="fg.secondary">
+								Changing URL requires a new authentication token.
+							</Text>
+							<Box>
+								<Button>Edit</Button>
+							</Box>
 						</Box>
 					</Box>
 				</Box>
+			</Box>
 
+			<Box className="max-w-[1024px]">
 				<Box>
-					<Heading level="4" mb="16" color="fg.tertiary">
+					<Heading level="4" mb="16">
 						Events
 					</Heading>
 					<Text mb="16">Select which events to subscribe to.</Text>
@@ -97,7 +101,7 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 				</Box>
 
 				<Box>
-					<Heading level="4" mb="16" color="fg.tertiary">
+					<Heading level="4" mb="16">
 						Delete Webhook
 					</Heading>
 					<Text mb="16">
@@ -118,6 +122,6 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 				<Button appearance="subtle">Cancel</Button>
 				<Button appearance="primary">Save</Button>
 			</Box>
-		</Box>
+		</>
 	);
 }
