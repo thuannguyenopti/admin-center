@@ -51,6 +51,11 @@ body {
 	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
 }
 
+.extension-icon > svg {
+	width: 16px;
+	height: 16px;
+}
+
 @keyframes slide {
 	0% {
 		transform: translateX(0px);
@@ -129,7 +134,7 @@ body {
 	visibility: visible;
 }
 .menu-label-button {
-  height: auto !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
+	height: auto !important;
+	padding-top: 4px !important;
+	padding-bottom: 4px !important;
 }
