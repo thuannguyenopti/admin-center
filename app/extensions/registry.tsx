@@ -25,10 +25,15 @@ const SvgIcon = ({svgString}: {svgString: string}) => (
 	/>
 );
 
+const empty = () => <div>Nothing here yet</div>;
+
 // Map for Panels (Components + Manifests)
 const panelMap: Record<string, {component: React.ComponentType<any>}> = {
 	folders: {component: ImageSelectorPanel},
 	google: {component: GoogleAnalyticsPanel},
+	smile: {component: empty},
+	stride: {component: empty},
+	teams: {component: empty},
 };
 
 // Merged Registry
