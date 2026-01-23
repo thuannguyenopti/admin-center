@@ -14,13 +14,32 @@ import {
 	TabsList,
 	TabsTrigger,
 	TabsContent,
+	FieldLabel,
 } from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {useState, useMemo} from "react";
 import {Flex} from "@/app/components/Flex";
 import MetricCard from "@/app/components/MetricCard";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 
 type TimeRange = "7d" | "28d" | "90d";
+
+const formatNumber = (val: number) => {
+	if (val >= 10000) {
+		return new Intl.NumberFormat("en-US", {
+			notation: "compact",
+			maximumFractionDigits: 1,
+		}).format(val);
+	}
+	return val.toLocaleString();
+};
+
+const Property = ({label, value}: {label: string; value: React.ReactNode}) => (
+	<Flex justifyContent="space-between">
+		<Text color="fg.secondary">{label}</Text>
+		<Text fontWeight="600">{value}</Text>
+	</Flex>
+);
 
 // ----------------------------------------------------------------------
 // Mock Data Helpers
@@ -47,10 +66,10 @@ const DATA_SETS: Record<
 	}
 > = {
 	"7d": {
-		users: generateSeries(7, 2400, 300),
-		sessions: generateSeries(7, 3100, 400),
-		views: generateSeries(7, 12000, 2000),
-		conversions: generateSeries(7, 85, 20),
+		users: generateSeries(7, 1200, 150),
+		sessions: generateSeries(7, 1600, 200),
+		views: generateSeries(7, 5200, 800),
+		conversions: generateSeries(7, 45, 10),
 		interval: "day",
 	},
 	"28d": {
@@ -69,7 +88,7 @@ const DATA_SETS: Record<
 	},
 };
 
-const MOCK_TRAFFIC_DATA = [
+const BASE_TRAFFIC_DATA = [
 	{channel: "Organic Search", source: "google", users: 12450, sessions: 15200, conversions: 320},
 	{channel: "Direct", source: "(direct)", users: 8200, sessions: 9100, conversions: 150},
 	{channel: "Referral", source: "linkedin.com", users: 4100, sessions: 4300, conversions: 90},
@@ -79,6 +98,12 @@ const MOCK_TRAFFIC_DATA = [
 	{channel: "Display", source: "google", users: 800, sessions: 850, conversions: 10},
 	{channel: "Affiliates", source: "partner-a", users: 400, sessions: 420, conversions: 5},
 ];
+
+const TRAFFIC_RATIOS: Record<TimeRange, number> = {
+	"7d": 0.25,
+	"28d": 1,
+	"90d": 3.2,
+};
 
 const MOCK_REALTIME_EVENTS = [
 	{name: "view_item", count: 145},
@@ -100,14 +125,38 @@ export default function GoogleAnalyticsPanel() {
 
 	const currentData = DATA_SETS[range];
 
+	// Calculate pseudo-previous values for "sum" aggregation to ensure realistic change %
+	// comparisons (since default MetricCard behavior compares Sum vs Last Day otherwise)
+	const previousValues = useMemo(() => {
+		const getPrev = (arr: number[], growth: number) => {
+			const total = arr.reduce((a, b) => a + b, 0);
+			return Math.round(total / (1 + growth));
+		};
+		return {
+			users: getPrev(currentData.users, 0.12), // 12% growth
+			sessions: getPrev(currentData.sessions, 0.08), // 8% growth
+			views: getPrev(currentData.views, 0.15), // 15% growth
+			conversions: getPrev(currentData.conversions, -0.05), // 5% drop
+		};
+	}, [currentData]);
+
 	// Traffic Sources filtering
 	const filteredTraffic = useMemo(() => {
-		return MOCK_TRAFFIC_DATA.filter(
-			(row) =>
-				row.channel.toLowerCase().includes(filterText.toLowerCase()) ||
-				row.source.toLowerCase().includes(filterText.toLowerCase())
-		).sort((a, b) => b.users - a.users);
-	}, [filterText]);
+		const ratio = TRAFFIC_RATIOS[range];
+		const scaledData = BASE_TRAFFIC_DATA.map((row) => ({
+			...row,
+			users: Math.round(row.users * ratio),
+			sessions: Math.round(row.sessions * ratio),
+			conversions: Math.round(row.conversions * ratio),
+		}));
+		return scaledData
+			.filter(
+				(row) =>
+					row.channel.toLowerCase().includes(filterText.toLowerCase()) ||
+					row.source.toLowerCase().includes(filterText.toLowerCase())
+			)
+			.sort((a, b) => b.users - a.users);
+	}, [filterText, range]);
 
 	const realtimeData = useMemo(() => {
 		return [
@@ -119,59 +168,86 @@ export default function GoogleAnalyticsPanel() {
 	const graphHeight = 40;
 
 	return (
-		<Box flex="1" display="flex" flexDirection="column" gap="8">
-			{/* RANGE SELECTOR */}
-			<SegmentedControl
-				defaultValue={range}
-				onValueChange={(value: string) => setRange(value as TimeRange)}
-			>
-				<Tooltip content="Last 7 days">
-					<SegmentedControlItem value="7d">7d</SegmentedControlItem>
-				</Tooltip>
-				<Tooltip content="Last 28 days">
-					<SegmentedControlItem value="28d">28d</SegmentedControlItem>
-				</Tooltip>
-				<Tooltip content="Last 90 days">
-					<SegmentedControlItem value="90d">90d</SegmentedControlItem>
-				</Tooltip>
-			</SegmentedControl>
-			<Tabs onValueChange={setValue} value={value}>
-				<TabsList>
+		<Tabs
+			onValueChange={setValue}
+			value={value}
+			display="flex"
+			flexDirection="column"
+			flex="1"
+			maxH="full"
+		>
+			<Box>
+				<TabsList mb="16">
 					<TabsTrigger value="performance">Performance</TabsTrigger>
 					<TabsTrigger value="traffic">Traffic</TabsTrigger>
 					<TabsTrigger value="realtime">Realtime</TabsTrigger>
 				</TabsList>
-
+			</Box>
+			<Box flex="1" overflow="auto" style={{margin: "0 -24px", padding: "0 24px"}}>
 				<TabsContent value="performance">
+					{/* RANGE SELECTOR */}
+					<Card
+						mb="8"
+						display="flex"
+						py="8"
+						pr="8"
+						justifyContent="space-between"
+						alignItems="center"
+						flexDirection="row"
+						gap="16"
+					>
+						<FieldLabel>Time Range</FieldLabel>
+						<SegmentedControl
+							defaultValue={range}
+							onValueChange={(value: string) => setRange(value as TimeRange)}
+						>
+							<Tooltip content="Last 7 days">
+								<SegmentedControlItem value="7d">7d</SegmentedControlItem>
+							</Tooltip>
+							<Tooltip content="Last 28 days">
+								<SegmentedControlItem value="28d">28d</SegmentedControlItem>
+							</Tooltip>
+							<Tooltip content="Last 90 days">
+								<SegmentedControlItem value="90d">90d</SegmentedControlItem>
+							</Tooltip>
+						</SegmentedControl>
+					</Card>
 					{/* 1) KPI CARDS */}
-					<Grid gridTemplateColumns="1" gap="16">
+					<Grid gridTemplateColumns="1" gap="8">
 						<MetricCard
 							label="Active Users"
 							data={currentData.users}
 							interval={currentData.interval}
 							height={graphHeight}
+							aggregation="sum"
+							previousValue={previousValues.users}
 						/>
 						<MetricCard
 							label="Sessions"
 							data={currentData.sessions}
 							interval={currentData.interval}
 							height={graphHeight}
+							aggregation="sum"
+							previousValue={previousValues.sessions}
 						/>
 						<MetricCard
 							label="Page Views"
 							data={currentData.views}
 							interval={currentData.interval}
 							height={graphHeight}
+							aggregation="sum"
+							previousValue={previousValues.views}
 						/>
 						<MetricCard
 							label="Conversions"
 							data={currentData.conversions}
 							interval={currentData.interval}
 							height={graphHeight}
+							aggregation="sum"
+							previousValue={previousValues.conversions}
 						/>
 					</Grid>
 				</TabsContent>
-
 				<TabsContent value="traffic">
 					{/* 2) TRAFFIC SOURCES */}
 					<Box>
@@ -180,51 +256,31 @@ export default function GoogleAnalyticsPanel() {
 								value={filterText}
 								onChange={(e) => setFilterText(e.target.value)}
 								placeholder="Filter channel or source..."
-								size="md"
+								size="lg"
 							/>
 						</Box>
-						<Box
-							border="1"
-							borderColor="border.tertiary"
-							rounded="md"
-							overflow="hidden"
-						>
-							<div className="overflow-x-auto">
-								<table className="w-full text-sm text-left">
-									<thead className="bg-[#f5f5f5] border-b border-[#e5e5e5]">
-										<tr>
-											<th className="p-2 font-medium">Channel</th>
-											<th className="p-2 font-medium text-right">Users</th>
-											<th className="p-2 font-medium text-right">Conv.</th>
-										</tr>
-									</thead>
-									<tbody>
-										{filteredTraffic.map((row, i) => (
-											<tr
-												key={i}
-												className="border-b border-[#e5e5e5] last:border-0 hover:bg-[#fafafa]"
-											>
-												<td className="p-2">
-													<div className="font-medium">{row.channel}</div>
-													<div className="text-xs text-gray-500">
-														{row.source}
-													</div>
-												</td>
-												<td className="p-2 text-right">
-													{row.users.toLocaleString()}
-												</td>
-												<td className="p-2 text-right">
-													{row.conversions}
-												</td>
-											</tr>
-										))}
-									</tbody>
-								</table>
-							</div>
-						</Box>
+						<Table>
+							<thead>
+								<Tr>
+									<Th>Channel</Th>
+									<Th align="right">Users</Th>
+									<Th align="right">Conv.</Th>
+								</Tr>
+							</thead>
+							<tbody>
+								{filteredTraffic.map((row, i) => (
+									<Tr key={i}>
+										<Td type="header" description={row.source}>
+											{row.channel}
+										</Td>
+										<Td type="numeric">{formatNumber(row.users)}</Td>
+										<Td type="numeric">{formatNumber(row.conversions)}</Td>
+									</Tr>
+								))}
+							</tbody>
+						</Table>
 					</Box>
 				</TabsContent>
-
 				<TabsContent value="realtime">
 					{/* 3) REALTIME */}
 					<Box>
@@ -237,15 +293,10 @@ export default function GoogleAnalyticsPanel() {
 								Live
 							</Badge>
 						</Flex>
-
 						<Flex gap="16" mb="16" alignItems="end">
-							<Box>
-								<Text color="fg.secondary">Active Users</Text>
-								<Heading level="1">53</Heading>
-							</Box>
 							<Box flex="1" pb="4">
 								<MetricCard
-									label=""
+									label="Active Users"
 									data={realtimeData}
 									interval="hour"
 									smooth
@@ -253,7 +304,6 @@ export default function GoogleAnalyticsPanel() {
 								/>
 							</Box>
 						</Flex>
-
 						<div className="grid grid-cols-2 gap-4">
 							<Box>
 								<Text fontWeight="600" mb="8">
@@ -261,10 +311,11 @@ export default function GoogleAnalyticsPanel() {
 								</Text>
 								<Flex flexDirection="column" gap="4">
 									{MOCK_REALTIME_EVENTS.map((evt) => (
-										<Flex key={evt.name} justifyContent="space-between">
-											<Text color="fg.secondary">{evt.name}</Text>
-											<Text fontWeight="600">{evt.count}</Text>
-										</Flex>
+										<Property
+											key={evt.name}
+											label={evt.name}
+											value={formatNumber(evt.count)}
+										/>
 									))}
 								</Flex>
 							</Box>
@@ -274,17 +325,18 @@ export default function GoogleAnalyticsPanel() {
 								</Text>
 								<Flex flexDirection="column" gap="4">
 									{MOCK_COUNTRIES.map((c) => (
-										<Flex key={c.name} justifyContent="space-between">
-											<Text color="fg.secondary">{c.name}</Text>
-											<Text fontWeight="600">{c.count}</Text>
-										</Flex>
+										<Property
+											key={c.name}
+											label={c.name}
+											value={formatNumber(c.count)}
+										/>
 									))}
 								</Flex>
 							</Box>
 						</div>
 					</Box>
 				</TabsContent>
-			</Tabs>
-		</Box>
+			</Box>
+		</Tabs>
 	);
 }

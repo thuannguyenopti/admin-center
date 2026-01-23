@@ -49,6 +49,14 @@ export default function MetricCard({
 
 	// Format value with unit
 	const formatValue = (val: number) => {
+		if (val >= 10000) {
+			return (
+				new Intl.NumberFormat("en-US", {
+					notation: "compact",
+					maximumFractionDigits: 1,
+				}).format(val) + unit
+			);
+		}
 		return (
 			val.toLocaleString(undefined, {
 				maximumFractionDigits: 1,
@@ -165,7 +173,7 @@ export default function MetricCard({
 
 	return (
 		<Card
-			p="20"
+			p="16"
 			color="fg.disabled"
 			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
 		>
