@@ -10,7 +10,7 @@ import {
 	MenuTrigger,
 	MenuContent,
 } from "@optiaxiom/react";
-import React, { useEffect, useRef, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
 	IconPlus,
 	IconArrowBarBoth,
@@ -24,23 +24,28 @@ import {
 	IconCopy,
 } from "@tabler/icons-react";
 
-import { EleMap } from "./vb/Ele";
+import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
-import RightToolbar from "./RightToolbar";
+import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
-import { PreviewSettings } from "./vb/PreviewSettings";
-import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
+import {PreviewSettings} from "./vb/PreviewSettings";
+
+import {getExtensionById} from "@/app/extensions/registry";
+
 import styles from "./VBPrototype.module.css";
-import PropertiesPanel, { PageProperties } from "./vb/PropertiesPanel";
+import PropertiesPanel, {PageProperties} from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
+import ExtensionPanel from "./ExtensionPanel";
+// @ts-ignore
+import usePersistentState from "@/app/usePersistentState";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
  * ------------------------------*/
 
-type NormalizeResult = { data: any[]; theEles: EleMap };
-type SplitPayload = { data: any[]; theEles: EleMap };
+type NormalizeResult = {data: any[]; theEles: EleMap};
+type SplitPayload = {data: any[]; theEles: EleMap};
 
 const isEleNode = (n: any) =>
 	n &&
@@ -64,7 +69,7 @@ const ensureOpen = (nodes: any[]): any[] => {
 // only strips truly transient flags (keep `open`)
 const stripTransientFlags = (nodes: any[]): any[] => {
 	return nodes.map((n) => {
-		const { isNew, ...rest } = n;
+		const {isNew, ...rest} = n;
 		return {
 			...rest,
 			children: Array.isArray(n.children)
@@ -91,7 +96,7 @@ const normalizePage = (input: any): NormalizeResult => {
 	}
 
 	// Case B: merged tree array
-	if (!Array.isArray(input)) return { data: [], theEles: {} };
+	if (!Array.isArray(input)) return {data: [], theEles: {}};
 
 	const theEles: EleMap = {};
 
@@ -103,22 +108,26 @@ const normalizePage = (input: any): NormalizeResult => {
 				properties = {};
 				node.props.forEach((p: any) => {
 					// Use label-based mapping for legacy support
-					const key = p.label.toLowerCase().includes("text") ? "text" :
-						p.label.toLowerCase().includes("heading") ? "text" :
-							p.label.toLowerCase().includes("label") ? "label" :
-								p.label.toLowerCase().includes("image") ? "imageUrl" :
-									p.label.toLowerCase().replace(/\s+/g, "");
-					properties[key] = { value: p.value };
+					const key = p.label.toLowerCase().includes("text")
+						? "text"
+						: p.label.toLowerCase().includes("heading")
+							? "text"
+							: p.label.toLowerCase().includes("label")
+								? "label"
+								: p.label.toLowerCase().includes("image")
+									? "imageUrl"
+									: p.label.toLowerCase().replace(/\s+/g, "");
+					properties[key] = {value: p.value};
 				});
 			}
 			theEles[node.id] = {
 				type: node.type,
 				properties: properties || {},
 			};
-			return { id: node.id };
+			return {id: node.id};
 		}
 
-		const out: any = { ...node };
+		const out: any = {...node};
 		if (Array.isArray(node.elements)) {
 			out.elements = node.elements.map(strip);
 		} else if (Array.isArray(node.children)) {
@@ -165,10 +174,7 @@ const pruneEles = (data: any[], theEles: EleMap): EleMap => {
  * AnimatedText (kept; optional)
  * ------------------------------*/
 
-const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
-	texts,
-	interval = 2000,
-}) => {
+const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -216,7 +222,7 @@ type PageInput = {
 
 const mergeData = (structure: any[], elements: EleMap) => {
 	return structure.map((node) => {
-		const newNode = { ...node };
+		const newNode = {...node};
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
 			newNode.properties = elements[node.id].properties;
@@ -260,7 +266,7 @@ export default function VBPrototype({
 	});
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
-		setPreview((p) => ({ ...p, ...patch }));
+		setPreview((p) => ({...p, ...patch}));
 	};
 
 	const defaultProps: PageProperties = {
@@ -273,7 +279,7 @@ export default function VBPrototype({
 	};
 
 	const [properties, setProperties] = useState<PageProperties>(() => {
-		return { ...defaultProps, ...(initialData?.properties ?? {}) };
+		return {...defaultProps, ...(initialData?.properties ?? {})};
 	});
 
 	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
@@ -292,7 +298,7 @@ export default function VBPrototype({
 		}
 
 		const norm = normalizePage(raw);
-		return [{ id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles }];
+		return [{id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles}];
 	});
 
 	const hasChanged = useRef(false);
@@ -304,7 +310,7 @@ export default function VBPrototype({
 
 	const setPropertiesPatch = (patch: Partial<PageProperties>) => {
 		hasChanged.current = true;
-		setProperties((p) => ({ ...p, ...patch }));
+		setProperties((p) => ({...p, ...patch}));
 	};
 
 	const isFirstRender = useRef(true);
@@ -364,7 +370,9 @@ export default function VBPrototype({
 	const isMulti = outlines.length > 1; // View 1/2
 	const isEditingElement = currentEle !== "none";
 
-	const activeOutline = activeOutlineId ? outlines.find((o) => o.id === activeOutlineId) ?? null : null;
+	const activeOutline = activeOutlineId
+		? (outlines.find((o) => o.id === activeOutlineId) ?? null)
+		: null;
 
 	const data = activeOutline?.tree ?? [];
 	const theEles = activeOutline?.elements ?? {};
@@ -373,7 +381,9 @@ export default function VBPrototype({
 		hasChanged.current = true;
 		setOutlines((prev) =>
 			prev.map((o) =>
-				o.id === activeOutlineId ? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg } : o
+				o.id === activeOutlineId
+					? {...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg}
+					: o
 			)
 		);
 	};
@@ -383,7 +393,7 @@ export default function VBPrototype({
 		setOutlines((prev) =>
 			prev.map((o) =>
 				o.id === activeOutlineId
-					? { ...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg }
+					? {...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg}
 					: o
 			)
 		);
@@ -418,7 +428,7 @@ export default function VBPrototype({
 		// ✅ Always drill down from View 1 -> View 2 when multi-outline
 		// (even if the element belongs to the currently active outline)
 		if (isMulti) {
-			setSidebarTab("outlines");  // keep your View 2 layout expectations
+			setSidebarTab("outlines"); // keep your View 2 layout expectations
 			setOutlineView("tree");
 		}
 
@@ -438,8 +448,8 @@ export default function VBPrototype({
 		try {
 			const res = await fetch("/api/chat", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ userMessage: message }),
+				headers: {"Content-Type": "application/json"},
+				body: JSON.stringify({userMessage: message}),
 			});
 
 			const payload = await res.json();
@@ -507,16 +517,16 @@ export default function VBPrototype({
 	};
 
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
-	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
+	const [activeRightTool, setActiveRightTool] = usePersistentState("active-right-tool", null);
 
 	const onInputChange = (value: any, keyOrIndex: string | number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev) => {
 				const ele = prev[currentEle];
-				const properties = { ...(ele.properties || {}) };
+				const properties = {...(ele.properties || {})};
 
 				if (typeof keyOrIndex === "string") {
-					properties[keyOrIndex] = { ...properties[keyOrIndex], value };
+					properties[keyOrIndex] = {...properties[keyOrIndex], value};
 				}
 
 				return {
@@ -620,7 +630,11 @@ export default function VBPrototype({
 						onChange={(e: any) => setAiPrompt(e.target.value)}
 					/>
 					<div className="mt-2 flex gap-2">
-						<Button size="sm" onClick={() => sendMessage(aiPrompt)} disabled={loadingAI}>
+						<Button
+							size="sm"
+							onClick={() => sendMessage(aiPrompt)}
+							disabled={loadingAI}
+						>
 							Run
 						</Button>
 						<Button
@@ -677,14 +691,21 @@ export default function VBPrototype({
 	const isColId = (id: string) => id.startsWith("col-");
 	const isEleId = (id: string) => !isSectionId(id) && !isRowId(id) && !isColId(id);
 
-	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last") || id === "section-last" || id.startsWith("section-last");
+	const isSectionLast = (id: string) =>
+		id === "sec-last" ||
+		id.startsWith("sec-last") ||
+		id === "section-last" ||
+		id.startsWith("section-last");
 	const isRowLast = (id: string) => id.startsWith("row-last-");
 	const isColLast = (id: string) => id.startsWith("col-last-");
 	const isLastEle = (id: string) => id.startsWith("last-ele-");
 
 	const mkId = (base: string) => `${base}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-	function cloneSectionWithRemap(section: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
+	function cloneSectionWithRemap(
+		section: any,
+		theEles: EleMap
+	): {cloned: any; elesPatch: EleMap} {
 		const elesPatch: EleMap = {};
 
 		const clonedSectionId = mkId(section.id);
@@ -707,8 +728,8 @@ export default function VBPrototype({
 								if (!oldEleId) return ref;
 
 								const newEleId = mkId(oldEleId);
-								if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
-								return { id: newEleId };
+								if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
+								return {id: newEleId};
 							}),
 						};
 					}),
@@ -716,10 +737,10 @@ export default function VBPrototype({
 			}),
 		};
 
-		return { cloned, elesPatch };
+		return {cloned, elesPatch};
 	}
 
-	function cloneRowWithRemap(row: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
+	function cloneRowWithRemap(row: any, theEles: EleMap): {cloned: any; elesPatch: EleMap} {
 		const elesPatch: EleMap = {};
 
 		const newRowId = mkId(row.id);
@@ -737,14 +758,14 @@ export default function VBPrototype({
 						if (!oldEleId) return ref;
 
 						const newEleId = mkId(oldEleId);
-						if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
-						return { id: newEleId };
+						if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
+						return {id: newEleId};
 					}),
 				};
 			}),
 		};
 
-		return { cloned, elesPatch };
+		return {cloned, elesPatch};
 	}
 
 	function applySectionDrag(
@@ -774,14 +795,14 @@ export default function VBPrototype({
 
 		if (isSectionLast(hoverId)) {
 			next.push(dragged);
-			return { nextData: next, elesPatch };
+			return {nextData: next, elesPatch};
 		}
 
 		const hoverIdx = next.findIndex((s) => s.id === hoverId);
 		if (hoverIdx === -1) return null;
 
 		next.splice(hoverIdx, 0, dragged);
-		return { nextData: next, elesPatch };
+		return {nextData: next, elesPatch};
 	}
 
 	function applyRowDrag(
@@ -846,13 +867,18 @@ export default function VBPrototype({
 				children.splice(insertAt, 0, rowToInsert);
 			}
 
-			return { ...sec, children };
+			return {...sec, children};
 		});
 
-		return { nextData: next, elesPatch };
+		return {nextData: next, elesPatch};
 	}
 
-	function applyColDrag(data: any[], draggingId: string, hoverId: string, cloning: boolean): DragApplyResult | null {
+	function applyColDrag(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean
+	): DragApplyResult | null {
 		let fromS = -1,
 			fromR = -1,
 			fromC = -1;
@@ -922,13 +948,13 @@ export default function VBPrototype({
 					cols.splice(insertAt, 0, draggedCol);
 				}
 
-				return { ...row, children: cols };
+				return {...row, children: cols};
 			});
 
-			return { ...sec, children: rows };
+			return {...sec, children: rows};
 		});
 
-		return { nextData: next };
+		return {nextData: next};
 	}
 
 	function applyElementDrag(
@@ -939,7 +965,8 @@ export default function VBPrototype({
 		theEles: EleMap
 	): DragApplyResult | null {
 		const newEleId = cloning ? mkId(draggingId) : draggingId;
-		const elesPatch = cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
+		const elesPatch =
+			cloning && theEles[draggingId] ? {[newEleId]: {...theEles[draggingId]}} : undefined;
 
 		let draggedRef: any = null;
 
@@ -951,12 +978,12 @@ export default function VBPrototype({
 					const colChildren = col.elements || col.children || [];
 					const nextChildren = colChildren.filter((ref: any) => {
 						if (ref?.id === draggingId) {
-							draggedRef = cloning ? { id: newEleId } : ref;
+							draggedRef = cloning ? {id: newEleId} : ref;
 							return cloning;
 						}
 						return true;
 					});
-					return { ...col, elements: nextChildren };
+					return {...col, elements: nextChildren};
 				}),
 			})),
 		}));
@@ -973,12 +1000,12 @@ export default function VBPrototype({
 						if (col.id !== targetColId) return col;
 						const colChildren = col.elements || col.children || [];
 						if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
-						return { ...col, elements: [...colChildren, draggedRef] };
+						return {...col, elements: [...colChildren, draggedRef]};
 					}),
 				})),
 			}));
 
-			return { nextData: next, elesPatch };
+			return {nextData: next, elesPatch};
 		}
 
 		const next = removed.map((sec: any) => ({
@@ -994,12 +1021,12 @@ export default function VBPrototype({
 
 					const copy = [...colChildren];
 					copy.splice(idx, 0, draggedRef);
-					return { ...col, elements: copy };
+					return {...col, elements: copy};
 				}),
 			})),
 		}));
 
-		return { nextData: next, elesPatch };
+		return {nextData: next, elesPatch};
 	}
 
 	function applyDragDrop(
@@ -1049,7 +1076,7 @@ export default function VBPrototype({
 			if (res) {
 				setData(res.nextData);
 				if (res.elesPatch) {
-					setTheEles((prev) => ({ ...prev, ...res.elesPatch! }));
+					setTheEles((prev) => ({...prev, ...res.elesPatch!}));
 				}
 				setCurrentHoverEle("none");
 			}
@@ -1092,12 +1119,12 @@ export default function VBPrototype({
 	 * ------------------------------*/
 	if (isZero) {
 		return (
-			<div className="select-none" style={{ height: "100%" }}>
+			<div className="select-none" style={{height: "100%"}}>
 				<Box
 					bg="bg.page"
 					w="full"
 					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-					style={{ height: "100%", overflow: "hidden" }}
+					style={{height: "100%", overflow: "hidden"}}
 				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
@@ -1115,7 +1142,7 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
+						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 					>
 						{/* Resizable handle (kept consistent) */}
 						<div
@@ -1127,7 +1154,10 @@ export default function VBPrototype({
 								const startWidth = outlineBox.offsetWidth;
 
 								const onMouseMove = (moveEvent: MouseEvent) => {
-									const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
+									const newWidth = Math.max(
+										180,
+										Math.min(600, startWidth + (moveEvent.clientX - startX))
+									);
 									outlineBox.style.width = newWidth + "px";
 								};
 
@@ -1147,7 +1177,7 @@ export default function VBPrototype({
 							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 						</div>
 
-						<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
+						<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
 							<div className="pl-6 pt-4 pb-2">
 								<Heading level="4">Properties</Heading>
 							</div>
@@ -1161,11 +1191,11 @@ export default function VBPrototype({
 					{/* RIGHT / CANVAS (still visible even with 0 outlines) */}
 					<div
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
-						style={{ height: "100%", overflow: "hidden" }}
+						style={{height: "100%", overflow: "hidden"}}
 					>
 						<PreviewCanvas
 							outlines={outlines as any} // will be []
-							theEles={{}}              // no active outline
+							theEles={{}} // no active outline
 							currentEle={currentEle}
 							currentHoverEle={currentHoverEle}
 							setCurrentEle={setCurrentEleSmart}
@@ -1173,13 +1203,12 @@ export default function VBPrototype({
 							setOutlines={setOutlines as any}
 							preview={preview}
 						/>
-
-						{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
-
 						<Box borderL="1" borderColor="border.tertiary">
 							<RightToolbar
-								onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
-								isFolderActive={isImageSelectorOpen}
+								activeTool={activeRightTool}
+								onToggleTool={(tool) =>
+									setActiveRightTool(activeRightTool === tool ? null : tool)
+								}
 							/>
 						</Box>
 					</div>
@@ -1192,12 +1221,12 @@ export default function VBPrototype({
 	 * Main layout
 	 * ------------------------------*/
 	return (
-		<div className="select-none" style={{ height: "100%" }}>
+		<div className="select-none" style={{height: "100%"}}>
 			<Box
 				bg="bg.page"
 				w="full"
 				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-				style={{ height: "100%", overflow: "hidden" }}
+				style={{height: "100%", overflow: "hidden"}}
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
@@ -1216,7 +1245,7 @@ export default function VBPrototype({
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
-					style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
+					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 				>
 					{/* Resizable handle */}
 					<div
@@ -1228,7 +1257,10 @@ export default function VBPrototype({
 							const startWidth = outlineBox.offsetWidth;
 
 							const onMouseMove = (moveEvent: MouseEvent) => {
-								const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
+								const newWidth = Math.max(
+									180,
+									Math.min(600, startWidth + (moveEvent.clientX - startX))
+								);
 								outlineBox.style.width = newWidth + "px";
 							};
 
@@ -1248,7 +1280,7 @@ export default function VBPrototype({
 						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 					</div>
 
-					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
+					<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
 						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
 						{isMulti ? (
 							<div className="h-full overflow-hidden">
@@ -1340,7 +1372,9 @@ export default function VBPrototype({
 													</Text>
 
 													<div className="flex items-center gap-2">
-														<Heading level="4">{activeOutline.title}</Heading>
+														<Heading level="4">
+															{activeOutline.title}
+														</Heading>
 														<div className="flex-1" />
 														<div className="flex items-center gap-1">
 															{HeaderActions}
@@ -1416,14 +1450,20 @@ export default function VBPrototype({
 													>
 														← {activeOutline?.title || "Page"}
 													</Text>
-													<Heading level="4" mb="16">Section Properties</Heading>
+													<Heading level="4" mb="16">
+														Section Properties
+													</Heading>
 													<Text fontSize="sm" color="fg.secondary">
-														Editing properties for section: {editingSectionId}
+														Editing properties for section:{" "}
+														{editingSectionId}
 													</Text>
 													{/* Add section specific fields here later */}
 												</Box>
 											) : (
-												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+												<PropertiesPanel
+													value={properties}
+													onChange={setPropertiesPatch}
+												/>
 											)}
 										</div>
 									</div>
@@ -1433,7 +1473,11 @@ export default function VBPrototype({
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
 												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+												elementType={
+													currentEle !== "none"
+														? theEles[currentEle]?.type || ""
+														: ""
+												}
 												currentEle={currentEle}
 												properties={theEles[currentEle]?.properties}
 												onBack={() => {
@@ -1463,9 +1507,7 @@ export default function VBPrototype({
 									}}
 								>
 									{/* PANE 1: Outline Tree */}
-									<div
-										className="min-w-[33.333%] w-[33.333%] h-full flex flex-col"
-									>
+									<div className="min-w-[33.333%] w-[33.333%] h-full flex flex-col">
 										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
 												<Heading level="4">{activeOutline.title}</Heading>
@@ -1496,9 +1538,7 @@ export default function VBPrototype({
 									</div>
 
 									{/* PANE 2: Properties (Page or Section) */}
-									<div
-										className="min-w-[33.333%] w-[33.333%] h-full flex flex-col"
-									>
+									<div className="min-w-[33.333%] w-[33.333%] h-full flex flex-col">
 										{!editingSectionId && (
 											<div className="pl-6 pr-6 pt-4 pb-2">
 												<Text
@@ -1537,14 +1577,20 @@ export default function VBPrototype({
 													>
 														← {activeOutline?.title || "Page"}
 													</Text>
-													<Heading level="4" mb="16">Section Properties</Heading>
+													<Heading level="4" mb="16">
+														Section Properties
+													</Heading>
 													<Text fontSize="sm" color="fg.secondary">
-														Editing properties for section: {editingSectionId}
+														Editing properties for section:{" "}
+														{editingSectionId}
 													</Text>
 													{/* Add section specific fields here later */}
 												</Box>
 											) : (
-												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+												<PropertiesPanel
+													value={properties}
+													onChange={setPropertiesPatch}
+												/>
 											)}
 										</div>
 									</div>
@@ -1554,7 +1600,11 @@ export default function VBPrototype({
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
 												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+												elementType={
+													currentEle !== "none"
+														? theEles[currentEle]?.type || ""
+														: ""
+												}
 												currentEle={currentEle}
 												properties={theEles[currentEle]?.properties}
 												onBack={() => {
@@ -1573,7 +1623,10 @@ export default function VBPrototype({
 				</Box>
 
 				{/* RIGHT / CANVAS */}
-				<div className=" pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1" style={{ height: "100%", overflow: "hidden" }}>
+				<div
+					className="relative pr-0 pt-0 gap-0 flex items-stretch z-10 min-h-0 flex-1"
+					style={{height: "100%"}}
+				>
 					<PreviewCanvas
 						outlines={outlines as any}
 						theEles={theEles}
@@ -1585,12 +1638,32 @@ export default function VBPrototype({
 						preview={preview}
 					/>
 
-					{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
+					{(() => {
+						const activeExtension = activeRightTool
+							? getExtensionById(activeRightTool)
+							: null;
+						const ActivePanel = activeExtension?.component;
+
+						if (ActivePanel) {
+							return (
+								<ExtensionPanel
+									title={activeExtension?.label}
+									width={activeExtension?.width}
+									onClose={() => setActiveRightTool(null)}
+								>
+									<ActivePanel />
+								</ExtensionPanel>
+							);
+						}
+						return null;
+					})()}
 
 					<Box borderL="1" borderColor="border.tertiary">
 						<RightToolbar
-							onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
-							isFolderActive={isImageSelectorOpen}
+							activeTool={activeRightTool}
+							onToggleTool={(tool) =>
+								setActiveRightTool(activeRightTool === tool ? null : tool)
+							}
 						/>
 					</Box>
 				</div>
