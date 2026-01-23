@@ -177,7 +177,7 @@ export default function MetricCard({
 			color="fg.disabled"
 			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
 		>
-			<Text fontSize="md" fontWeight="600" mb="16" color="fg.default">
+			<Text fontSize="md" fontWeight="600" color="fg.default">
 				{label}
 			</Text>
 

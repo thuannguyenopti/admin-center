@@ -159,7 +159,7 @@ export default function GoogleAnalyticsPanel() {
 		];
 	}, []);
 
-	const graphHeight = 40;
+	const graphHeight = 32;
 
 	return (
 		<Tabs
