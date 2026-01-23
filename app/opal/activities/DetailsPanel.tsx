@@ -14,7 +14,13 @@ import {
     TabsTrigger,
     TabsContent,
     Tooltip,
+    Link,
 } from "@optiaxiom/react";
+import {
+    HoverCard,
+    HoverCardTrigger,
+    HoverCardContent,
+} from "@optiaxiom/react/unstable";
 import { IconCopy } from "@tabler/icons-react";
 import { useState, useRef, useEffect } from "react";
 import AgentIcon from "@/app/assets/agent-icon.svg";
@@ -48,6 +54,59 @@ const GuardrailTooltipContent = ({ status }: { status: string }) => {
         </Box>
     );
 };
+
+const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPassedProp }: { score?: string, baseScore?: string, isHelp?: boolean, isPassed?: boolean }) => {
+    if (isHelp) {
+        return (
+            <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" flexDirection="column" gap="4">
+                    <Text fontSize="md" fontWeight="600">Output Quality Score</Text>
+                    <Text fontSize="sm" color="fg.secondary">
+                        An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.
+                    </Text>
+                </Box>
+                <Link
+                    href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents#h_01KACEGNBW103Q3S521AN6YA5R"
+                    target="_blank"
+                    fontSize="sm"
+                    color="fg.accent"
+                >
+                    Learn more
+                </Link>
+            </Box>
+        );
+    }
+
+    const isPassed = isPassedProp ?? (score === "95%");
+    const status = isPassed ? "Passed" : "Failed";
+
+    return (
+        <Box display="flex" flexDirection="column" gap="8">
+            <Box display="flex" flexDirection="column" gap="4">
+                <Text fontSize="md" fontWeight="600">Output Quality: {status}</Text>
+                <Text fontSize="sm" color="fg.secondary">
+                    {isPassed
+                        ? "This output met the agent builder’s quality threshold based on LLM evaluation."
+                        : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
+                </Text>
+                {baseScore && (
+                    <Text fontSize="sm" color="fg.secondary">
+                        Minimum base score: <strong>{baseScore}</strong>
+                    </Text>
+                )}
+            </Box>
+            <Link
+                href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents#h_01KACEGNBW103Q3S521AN6YA5R"
+                target="_blank"
+                fontSize="sm"
+                color="fg.accent"
+            >
+                Learn more
+            </Link>
+        </Box>
+    );
+};
+
 
 export default function DetailsPanel({ activity, onClose, focusOutput }: DetailsPanelProps) {
     const [panelWidth, setPanelWidth] = useState(360);
@@ -207,33 +266,48 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                             <Text fontSize="md" fontWeight="400">{activity.triggeredBy.name}</Text>
                                         </Box>
                                     </MetricRow>
-                                    <MetricRow label="Output Quality Score" borderT helpText="An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.">
-                                        <Box display="flex" alignItems="center" gap="8">
-                                            <Text fontSize="md" fontWeight="400" style={{ color: activity.qualityScore === "95%" ? "#24663E" : "#911D1D" }}>
-                                                {activity.qualityScore}
-                                            </Text>
-                                            <Tooltip
-                                                delayDuration={100}
-                                                content={
-                                                    <Box display="flex" flexDirection="column" gap="4">
-                                                        <Text fontSize="sm" fontWeight="600">{activity.qualityScore === "95%" ? "Passed" : "Failed"}</Text>
-                                                        <Text fontSize="sm">
-                                                            {activity.qualityScore === "95%"
-                                                                ? "This output met the agent builder’s quality threshold based on LLM evaluation."
-                                                                : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
-                                                        </Text>
-                                                        {(activity.agent as any).baseQualityScore && (
-                                                            <Text fontSize="sm" color="fg.default.inverse">Minimum base score: {(activity.agent as any).baseQualityScore}</Text>
-                                                        )}
-                                                    </Box>
+                                    {(() => {
+                                        const scoreValue = parseInt(activity.qualityScore);
+                                        const isPassed = !isNaN(scoreValue) && scoreValue >= 85;
+                                        return (
+                                            <MetricRow
+                                                label="Output Quality Score"
+                                                borderT
+                                                helpContent={
+                                                    <HoverCard openDelay={200}>
+                                                        <HoverCardTrigger asChild>
+                                                            <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: "help" }} />
+                                                        </HoverCardTrigger>
+                                                        <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                            <QualityScoreHoverCardContent isHelp />
+                                                        </HoverCardContent>
+                                                    </HoverCard>
                                                 }
                                             >
-                                                <Badge intent={activity.qualityScore === "95%" ? "success" : "danger"}>
-                                                    {activity.qualityScore === "95%" ? "Passed" : "Failed"}
-                                                </Badge>
-                                            </Tooltip>
-                                        </Box>
-                                    </MetricRow>
+                                                <Box display="flex" alignItems="center" gap="8">
+                                                    <Text fontSize="md" fontWeight="400" style={{ color: isPassed ? "#24663E" : "#911D1D" }}>
+                                                        {activity.qualityScore}
+                                                    </Text>
+                                                    <HoverCard openDelay={200}>
+                                                        <HoverCardTrigger asChild>
+                                                            <Box display="inline-block">
+                                                                <Badge intent={isPassed ? "success" : "danger"}>
+                                                                    {isPassed ? "Passed" : "Failed"}
+                                                                </Badge>
+                                                            </Box>
+                                                        </HoverCardTrigger>
+                                                        <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                            <QualityScoreHoverCardContent
+                                                                score={activity.qualityScore}
+                                                                baseScore={(activity.agent as any).baseQualityScore}
+                                                                isPassed={isPassed}
+                                                            />
+                                                        </HoverCardContent>
+                                                    </HoverCard>
+                                                </Box>
+                                            </MetricRow>
+                                        );
+                                    })()}
                                     <MetricRow label="Guardrail Status" borderT helpText="Execution status based on the agent’s guardrails.">
                                         <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={guardrailStatus} />}>
                                             <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
@@ -269,29 +343,36 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                         <Box p="12" display="flex" flexDirection="column" gap="8">
                                             <Box display="flex" alignItems="center" gap="8">
                                                 <Text fontSize="md" fontWeight="500">Output Quality Score: {activity.qualityScore}</Text>
-                                                <Tooltip
-                                                    delayDuration={100}
-                                                    content={
-                                                        <Box display="flex" flexDirection="column" gap="4">
-                                                            <Text fontSize="sm" fontWeight="600">{activity.qualityScore === "95%" ? "Passed" : "Failed"}</Text>
-                                                            <Text fontSize="sm">
-                                                                {activity.qualityScore === "95%"
-                                                                    ? "This output met the agent builder’s quality threshold based on LLM evaluation."
-                                                                    : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
-                                                            </Text>
-                                                            {(activity.agent as any).baseQualityScore && (
-                                                                <Text fontSize="sm" color="fg.default.inverse">Minimum base score: {(activity.agent as any).baseQualityScore}</Text>
-                                                            )}
-                                                        </Box>
-                                                    }
-                                                >
-                                                    <Badge intent={activity.qualityScore === "95%" ? "success" : "danger"}>
-                                                        {activity.qualityScore === "95%" ? "Passed" : "Failed"}
-                                                    </Badge>
-                                                </Tooltip>
-                                                <Tooltip delayDuration={100} content="An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.">
-                                                    <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: 'help' }} />
-                                                </Tooltip>
+                                                {(() => {
+                                                    const scoreValue = parseInt(activity.qualityScore);
+                                                    const isPassed = !isNaN(scoreValue) && scoreValue >= 85;
+                                                    return (
+                                                        <HoverCard openDelay={200}>
+                                                            <HoverCardTrigger asChild>
+                                                                <Box display="inline-block">
+                                                                    <Badge intent={isPassed ? "success" : "danger"}>
+                                                                        {isPassed ? "Passed" : "Failed"}
+                                                                    </Badge>
+                                                                </Box>
+                                                            </HoverCardTrigger>
+                                                            <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                                <QualityScoreHoverCardContent
+                                                                    score={activity.qualityScore}
+                                                                    baseScore={(activity.agent as any).baseQualityScore}
+                                                                    isPassed={isPassed}
+                                                                />
+                                                            </HoverCardContent>
+                                                        </HoverCard>
+                                                    );
+                                                })()}
+                                                <HoverCard openDelay={200}>
+                                                    <HoverCardTrigger asChild>
+                                                        <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: 'help' }} />
+                                                    </HoverCardTrigger>
+                                                    <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                        <QualityScoreHoverCardContent isHelp />
+                                                    </HoverCardContent>
+                                                </HoverCard>
                                             </Box>
 
                                             <Box display="flex" flexDirection="column" gap="4" pl="24">
@@ -353,16 +434,16 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
     );
 }
 
-function MetricRow({ label, children, borderT, helpText }: { label: string; children: React.ReactNode; borderT?: boolean; helpText?: string }) {
+function MetricRow({ label, children, borderT, helpText, helpContent }: { label: string; children: React.ReactNode; borderT?: boolean; helpText?: string; helpContent?: React.ReactNode }) {
     return (
         <Box display="flex" p="16" borderT={borderT ? "1" : "0"} borderColor="border.tertiary" bg="bg.default">
             <Box display="flex" alignItems="center" gap="4" style={{ width: '128px' }}>
                 <Text fontSize="md" fontWeight="500" color="fg.default">{label}</Text>
-                {helpText && (
+                {helpContent ? helpContent : (helpText && (
                     <Tooltip content={helpText}>
                         <HelpIcon width={16} height={16} color="#4F576E" />
                     </Tooltip>
-                )}
+                ))}
             </Box>
             <Box flex="1">
                 {children}
