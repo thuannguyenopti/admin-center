@@ -1,7 +1,6 @@
 "use client";
 
-import { Box, Button } from "@optiaxiom/react";
-import { Input } from "../Input";
+import { Box, Button, Textarea } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
 import { KeyboardEvent } from "react";
@@ -17,7 +16,7 @@ type OpalInputProps = {
 };
 
 export function OpalInput({ value, onChange, onSend, disabled, error }: OpalInputProps) {
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend();
@@ -47,8 +46,9 @@ export function OpalInput({ value, onChange, onSend, disabled, error }: OpalInpu
       )}
       <Box
         display="flex"
-        flexDirection="column"
-        gap="12"
+        flexDirection="row"
+        alignItems="end"
+        gap="8"
         p="12"
         border="1"
         style={{
@@ -57,15 +57,20 @@ export function OpalInput({ value, onChange, onSend, disabled, error }: OpalInpu
           borderRadius: '8px',
         }}
       >
-        <Input
+        <Textarea
           placeholder="Ask Opal anything—like 'What is CMAB?' or 'How do I set up an A/B test?'"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
+          rows={3}
           style={{
+            flex: 1,
             border: 'none',
             padding: 0,
+            resize: 'none',
+            minHeight: '68px',
+            overflowY: 'hidden',
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.21px',
@@ -73,44 +78,41 @@ export function OpalInput({ value, onChange, onSend, disabled, error }: OpalInpu
             fontFamily: 'Inter, sans-serif',
             color: disabled ? 'var(--opal-text-placeholder)' : 'var(--opal-text-body)',
             backgroundColor: 'transparent',
+            boxShadow: 'none',
+            outline: 'none',
           }}
         />
-        <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Box display="flex" alignItems="center" gap="4">
-            {/* Placeholder for additional actions */}
-          </Box>
-          <Box display="flex" alignItems="center" gap="4">
-            <Button
-              appearance="subtle"
-              size="sm"
-              icon={<IconMicrophone size={16} />}
-              aria-label="Voice input"
-              disabled={disabled}
-            />
-            <Button
-              appearance="default"
-              size="sm"
-              aria-label="Send message"
-              onClick={onSend}
-              disabled={disabled || !value.trim()}
-              className="opal-send-btn"
-              style={{
-                width: '24px',
-                height: '24px',
-                padding: 0,
-                borderRadius: '6px',
-                backgroundColor: disabled || !value.trim() ? 'var(--opal-button-disabled)' : 'var(--opal-send-btn-bg)',
-                color: disabled || !value.trim() ? 'var(--opal-text-placeholder)' : 'var(--opal-send-btn-text)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-                cursor: disabled || !value.trim() ? 'not-allowed' : 'pointer',
-              }}
-            >
-              <IconSend style={{ width: '16px', height: '14px' }} />
-            </Button>
-          </Box>
+        <Box display="flex" alignItems="center" gap="4">
+          <Button
+            appearance="subtle"
+            size="sm"
+            icon={<IconMicrophone size={16} />}
+            aria-label="Voice input"
+            disabled={disabled}
+          />
+          <Button
+            appearance="default"
+            size="sm"
+            aria-label="Send message"
+            onClick={onSend}
+            disabled={disabled || !value.trim()}
+            className="opal-send-btn"
+            style={{
+              width: '24px',
+              height: '24px',
+              padding: 0,
+              borderRadius: '6px',
+              backgroundColor: disabled || !value.trim() ? 'var(--opal-button-disabled)' : 'var(--opal-send-btn-bg)',
+              color: disabled || !value.trim() ? 'var(--opal-text-placeholder)' : 'var(--opal-send-btn-text)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              cursor: disabled || !value.trim() ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <IconSend style={{ width: '16px', height: '14px' }} />
+          </Button>
         </Box>
       </Box>
       <Text
