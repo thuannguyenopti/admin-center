@@ -244,6 +244,33 @@ export default function GoogleAnalyticsPanel() {
 				</TabsContent>
 				<TabsContent value="traffic">
 					{/* 2) TRAFFIC SOURCES */}
+					{/* RANGE SELECTOR */}
+					<Card
+						mb="8"
+						display="flex"
+						py="8"
+						pr="8"
+						justifyContent="space-between"
+						alignItems="center"
+						flexDirection="row"
+						gap="16"
+					>
+						<FieldLabel>Time Range</FieldLabel>
+						<SegmentedControl
+							defaultValue={range}
+							onValueChange={(value: string) => setRange(value as TimeRange)}
+						>
+							<Tooltip content="Last 7 days">
+								<SegmentedControlItem value="7d">7d</SegmentedControlItem>
+							</Tooltip>
+							<Tooltip content="Last 28 days">
+								<SegmentedControlItem value="28d">28d</SegmentedControlItem>
+							</Tooltip>
+							<Tooltip content="Last 90 days">
+								<SegmentedControlItem value="90d">90d</SegmentedControlItem>
+							</Tooltip>
+						</SegmentedControl>
+					</Card>
 					<Box>
 						<Box mb="12">
 							<SearchInput
