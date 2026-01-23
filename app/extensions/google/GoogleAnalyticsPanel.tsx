@@ -21,6 +21,7 @@ import {useState, useMemo} from "react";
 import {Flex} from "@/app/components/Flex";
 import MetricCard from "@/app/components/MetricCard";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
+import Property from "@/app/components/Property";
 
 type TimeRange = "7d" | "28d" | "90d";
 
@@ -33,13 +34,6 @@ const formatNumber = (val: number) => {
 	}
 	return val.toLocaleString();
 };
-
-const Property = ({label, value}: {label: string; value: React.ReactNode}) => (
-	<Flex justifyContent="space-between">
-		<Text color="fg.secondary">{label}</Text>
-		<Text fontWeight="600">{value}</Text>
-	</Flex>
-);
 
 // ----------------------------------------------------------------------
 // Mock Data Helpers
@@ -284,14 +278,9 @@ export default function GoogleAnalyticsPanel() {
 				<TabsContent value="realtime">
 					{/* 3) REALTIME */}
 					<Box>
-						<Flex justifyContent="space-between" alignItems="start" mb="16">
-							<Box>
-								<Heading level="4">Realtime</Heading>
-								<Text color="fg.secondary">Last 30 minutes</Text>
-							</Box>
-							<Badge intent="information" variant="strong" size="lg">
-								Live
-							</Badge>
+						<Flex alignItems="start" mb="16">
+							<Text>Last 30 minutes</Text>
+							<Badge intent="success">Live</Badge>
 						</Flex>
 						<Flex gap="16" mb="16" alignItems="end">
 							<Box flex="1" pb="4">
@@ -309,12 +298,12 @@ export default function GoogleAnalyticsPanel() {
 								<Text fontWeight="600" mb="8">
 									Top Events
 								</Text>
-								<Flex flexDirection="column" gap="4">
+								<Flex flexDirection="column" gap="12">
 									{MOCK_REALTIME_EVENTS.map((evt) => (
 										<Property
 											key={evt.name}
-											label={evt.name}
-											value={formatNumber(evt.count)}
+											title={evt.name}
+											description={formatNumber(evt.count)}
 										/>
 									))}
 								</Flex>
@@ -323,12 +312,12 @@ export default function GoogleAnalyticsPanel() {
 								<Text fontWeight="600" mb="8">
 									Top Countries
 								</Text>
-								<Flex flexDirection="column" gap="4">
+								<Flex flexDirection="column" gap="12">
 									{MOCK_COUNTRIES.map((c) => (
 										<Property
 											key={c.name}
-											label={c.name}
-											value={formatNumber(c.count)}
+											title={c.name}
+											description={formatNumber(c.count)}
 										/>
 									))}
 								</Flex>
