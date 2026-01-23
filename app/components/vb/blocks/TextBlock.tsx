@@ -5,6 +5,8 @@ import { getProperty } from "./utils";
 
 export function TextBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const textValue = getProperty(properties, "text", "Text") || "";
+    const variant = getProperty(properties, "variant", "Variant");
+    const isStat = variant === "stat";
 
     // Special handling for Hero Badge
     if (textValue.includes("●")) {
@@ -49,7 +51,7 @@ export function TextBlock({ properties, hasBgImage }: { properties: any, hasBgIm
     }
 
     return (
-        <p className={`leading-relaxed ${hasBgImage ? "text-lg text-white/90 mb-8 max-w-2xl" : "text-base text-gray-500 mb-4 text-center max-w-3xl mx-auto"}`}>
+        <p className={`leading-relaxed ${isStat ? "mt-0 mb-0 text-white/80" : hasBgImage ? "text-lg text-white/90 mb-8 max-w-2xl" : "text-base text-gray-500 mb-4 text-center max-w-3xl mx-auto"}`}>
             {textValue || <>&nbsp;</>}
         </p>
     );

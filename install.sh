@@ -90,6 +90,25 @@ install_dependencies() {
 	(cd "$REPO_ROOT" && export $(cat .env | grep -v '^#' | xargs) && yarn install)
 }
 
+ensure_missing_packages() {
+	# Add new deps here to keep installer idempotent
+	local packages=("@tabler/icons-react" "nanoid")
+	local missing=()
+
+	for pkg in "${packages[@]}"; do
+		if ! node -e "const pkg=require('./package.json');const deps={...pkg.dependencies,...pkg.devDependencies};if(!deps['${pkg}'])process.exit(1);" >/dev/null 2>&1; then
+			missing+=("${pkg}")
+		fi
+	done
+
+	if [ ${#missing[@]} -gt 0 ]; then
+		log "Adding missing dependencies: ${missing[*]}"
+		(cd "$REPO_ROOT" && export $(cat .env | grep -v '^#' | xargs) && yarn add "${missing[@]}")
+	else
+		log "All required dependencies already present."
+	fi
+}
+
 open_browser() {
 	local url="http://localhost:3000"
 	if command -v open >/dev/null 2>&1; then
@@ -117,6 +136,7 @@ main() {
 	ensure_node
 	ensure_corepack
 	ensure_env
+	ensure_missing_packages
 	install_dependencies
 	log "Done."
 	maybe_start_dev_server

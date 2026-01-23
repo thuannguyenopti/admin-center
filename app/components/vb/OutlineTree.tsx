@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Box, Button } from "@optiaxiom/react";
 import { IconPlus } from "@tabler/icons-react";
 
@@ -10,6 +10,7 @@ import Col from "./Col";
 import Ele, { EleMap } from "./Ele";
 import { getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME } from "./blocks/utils";
 import { BLOCK_SCHEMAS } from "./blocks/schemas";
+import { initialPages } from "@/app/db/initialData";
 
 interface OutlineProps {
     cloning?: boolean;
@@ -75,6 +76,32 @@ export default function OutlineTree({
     const isLastEle = (id: string) => id.startsWith("last-ele-");
 
     const isAnyInternalDragging = !!dragging && dragging !== ASSET_DRAG_ID;
+
+    const toTitle = (type: string) => {
+        const base = type.replace(/^ct-/, "").replace(/-/g, " ");
+        return base.charAt(0).toUpperCase() + base.slice(1);
+    };
+
+    const elementOptions = useMemo(() => {
+        const types = new Set<string>();
+
+        initialPages.forEach((page) => {
+            (page.outlines || []).forEach((outline) => {
+                Object.values(outline.elements || {}).forEach((ele: any) => {
+                    if (ele?.type) types.add(ele.type);
+                });
+            });
+        });
+
+        const source = types.size ? Array.from(types) : Object.keys(BLOCK_SCHEMAS);
+
+        return source
+            .map((type) => ({
+                type,
+                label: BLOCK_SCHEMAS[type]?.displayName ?? toTitle(type),
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, []);
 
     const [assetOverCol, setAssetOverCol] = useState<string | null>(null);
     const [assetDrop, setAssetDrop] = useState<AssetDropPosition>(null);
@@ -234,7 +261,7 @@ export default function OutlineTree({
                         });
 
                         // Special case for image if we have pending data
-                        if ((type === "ct-image" || type === "Image") && imageUrl) {
+                        if (type === "ct-image" && imageUrl) {
                             if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
                             if (props["altText"]) props["altText"].value = imageAlt;
                             if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
@@ -510,6 +537,7 @@ export default function OutlineTree({
                                                                 onDragStart={(e: any) => onDragStart(e, col.id)}
                                                                 removeCol={() => removeCol(col.id)}
                                                                 addElement={(type: string) => addElement(type, cIndex, rIndex, sindex)}
+                                                                elementOptions={elementOptions}
                                                             >
                                                                 <div
                                                                     className={assetOverCol === col.id ? "relative" : ""}
