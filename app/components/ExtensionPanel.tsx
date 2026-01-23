@@ -1,6 +1,6 @@
 "use client";
 
-import {Box, Button} from "@optiaxiom/react";
+import {Box, Button, Tooltip} from "@optiaxiom/react";
 import {IconDots, IconPhotoPin, IconPinEnd, IconPinInvoke, IconX} from "@tabler/icons-react";
 import {useState, useRef, useEffect} from "react";
 import {IconPopOut} from "@optimizely/axiom-icons";
@@ -76,7 +76,7 @@ export default function ExtensionPanel({
 				//opacity: isPoppedOut ? 0.5 : 1,
 				//top: isPoppedOut ? "8px" : undefined,
 				maxHeight: isPoppedOut ? "calc(100vh - 159px - 0px)" : "100%",
-				transition: isResizing ? "none" : "transform 0.1s",
+				transition: isResizing ? "none" : "transform cubic-bezier(0, 1, 0, 1) .5s",
 				//right: isPoppedOut ? "64px" : undefined,
 				// Ensure it doesn't overshoot the page, leaving 8px gap at bottom
 				zIndex: 50,
@@ -133,27 +133,34 @@ export default function ExtensionPanel({
 					{title}
 				</Box>
 				<Box display="flex" gap="4">
-					<Button
-						appearance="subtle"
-						size="sm"
-						aria-label="More options"
-						style={{borderRadius: "6px"}}
-						icon={<IconDots />}
-					/>
-					<Button
-						appearance="subtle"
-						size="sm"
-						aria-label={isPoppedOut ? "Dock" : "Pop out"}
-						onClick={() => setIsPoppedOut(!isPoppedOut)}
-						icon={isPoppedOut ? <IconPinInvoke /> : <IconPinEnd />}
-					/>
-					<Button
-						icon={<IconX />}
-						appearance="subtle"
-						size="sm"
-						aria-label="Close"
-						onClick={onClose}
-					/>
+					<Tooltip content="TBD: More options">
+						<Button
+							disabled
+							appearance="subtle"
+							size="sm"
+							aria-label="More options"
+							style={{borderRadius: "6px"}}
+							icon={<IconDots />}
+						/>
+					</Tooltip>
+					<Tooltip content="Pin/Unpin">
+						<Button
+							appearance="subtle"
+							size="sm"
+							aria-label={isPoppedOut ? "Dock" : "Pop out"}
+							onClick={() => setIsPoppedOut(!isPoppedOut)}
+							icon={isPoppedOut ? <IconPinInvoke /> : <IconPinEnd />}
+						/>
+					</Tooltip>
+					<Tooltip content="Close">
+						<Button
+							icon={<IconX />}
+							appearance="subtle"
+							size="sm"
+							aria-label="Close"
+							onClick={onClose}
+						/>
+					</Tooltip>
 				</Box>
 			</Box>
 
