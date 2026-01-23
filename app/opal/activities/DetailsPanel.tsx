@@ -32,6 +32,23 @@ interface DetailsPanelProps {
     focusOutput?: boolean;
 }
 
+const GuardrailTooltipContent = ({ status }: { status: string }) => {
+    let content = "";
+    if (status === "Passed") content = "This execution operated within the current guardrails for this agent.";
+    if (status === "Failed") content = "The agent did not complete its execution due to a system or runtime failure.";
+    if (status === "Terminated") content = "The execution was automatically stopped after anomalous tool call behavior was detected.";
+    if (status === "Review Needed") content = "Anomalous tool call behavior was detected in Observer mode and flagged for review.";
+
+    if (!content) return null;
+
+    return (
+        <Box display="flex" flexDirection="column" gap="4">
+            <Text fontSize="sm" fontWeight="600">{status}</Text>
+            <Text fontSize="sm">{content}</Text>
+        </Box>
+    );
+};
+
 export default function DetailsPanel({ activity, onClose, focusOutput }: DetailsPanelProps) {
     const [panelWidth, setPanelWidth] = useState(360);
     const [isResizing, setIsResizing] = useState(false);
@@ -83,6 +100,15 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
         activity.status === "Completed" ? "success" :
             activity.status === "Review Needed" ? "warning" :
                 activity.status === "Failed" ? "danger" : "neutral";
+
+    const guardrailStatus = activity.guardrails && activity.guardrails !== "--"
+        ? activity.guardrails
+        : (activity.status === "Completed" ? "Passed" : activity.status);
+
+    const guardrailIntent =
+        guardrailStatus === "Passed" ? "success" :
+            (guardrailStatus === "Failed" || guardrailStatus === "Terminated") ? "danger" :
+                guardrailStatus === "Review Needed" ? "warning" : "neutral";
 
     return (
         <Box
@@ -181,18 +207,37 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                             <Text fontSize="md" fontWeight="400">{activity.triggeredBy.name}</Text>
                                         </Box>
                                     </MetricRow>
-                                    <MetricRow label="Output Quality Score" borderT helpText="Quality assessment score">
+                                    <MetricRow label="Output Quality Score" borderT helpText="An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.">
                                         <Box display="flex" alignItems="center" gap="8">
                                             <Text fontSize="md" fontWeight="400" style={{ color: activity.qualityScore === "95%" ? "#24663E" : "#911D1D" }}>
                                                 {activity.qualityScore}
                                             </Text>
-                                            <Badge intent={activity.qualityScore === "95%" ? "success" : "danger"}>
-                                                {activity.qualityScore === "95%" ? "Passed" : "Failed"}
-                                            </Badge>
+                                            <Tooltip
+                                                delayDuration={100}
+                                                content={
+                                                    <Box display="flex" flexDirection="column" gap="4">
+                                                        <Text fontSize="sm" fontWeight="600">{activity.qualityScore === "95%" ? "Passed" : "Failed"}</Text>
+                                                        <Text fontSize="sm">
+                                                            {activity.qualityScore === "95%"
+                                                                ? "This output met the agent builder’s quality threshold based on LLM evaluation."
+                                                                : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
+                                                        </Text>
+                                                        {(activity.agent as any).baseQualityScore && (
+                                                            <Text fontSize="sm" color="fg.default.inverse">Minimum base score: {(activity.agent as any).baseQualityScore}</Text>
+                                                        )}
+                                                    </Box>
+                                                }
+                                            >
+                                                <Badge intent={activity.qualityScore === "95%" ? "success" : "danger"}>
+                                                    {activity.qualityScore === "95%" ? "Passed" : "Failed"}
+                                                </Badge>
+                                            </Tooltip>
                                         </Box>
                                     </MetricRow>
-                                    <MetricRow label="Guardrail Status" borderT helpText="Safety and policy check status">
-                                        <Badge intent={statusIntent as any}>{activity.status === "Completed" ? "Passed" : activity.status}</Badge>
+                                    <MetricRow label="Guardrail Status" borderT helpText="Execution status based on the agent’s guardrails.">
+                                        <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={guardrailStatus} />}>
+                                            <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
+                                        </Tooltip>
                                     </MetricRow>
                                     <MetricRow label="Credits" borderT>
                                         <Text fontSize="md" fontWeight="400">20 credits</Text>
@@ -224,14 +269,33 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                         <Box p="12" display="flex" flexDirection="column" gap="8">
                                             <Box display="flex" alignItems="center" gap="8">
                                                 <Text fontSize="md" fontWeight="500">Output Quality Score: {activity.qualityScore}</Text>
-                                                <Badge intent={activity.qualityScore === "95%" ? "success" : "danger"}>
-                                                    {activity.qualityScore === "95%" ? "Passed" : "Failed"}
-                                                </Badge>
-                                                <HelpIcon width={16} height={16} color="#4F576E" />
+                                                <Tooltip
+                                                    delayDuration={100}
+                                                    content={
+                                                        <Box display="flex" flexDirection="column" gap="4">
+                                                            <Text fontSize="sm" fontWeight="600">{activity.qualityScore === "95%" ? "Passed" : "Failed"}</Text>
+                                                            <Text fontSize="sm">
+                                                                {activity.qualityScore === "95%"
+                                                                    ? "This output met the agent builder’s quality threshold based on LLM evaluation."
+                                                                    : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
+                                                            </Text>
+                                                            {(activity.agent as any).baseQualityScore && (
+                                                                <Text fontSize="sm" color="fg.default.inverse">Minimum base score: {(activity.agent as any).baseQualityScore}</Text>
+                                                            )}
+                                                        </Box>
+                                                    }
+                                                >
+                                                    <Badge intent={activity.qualityScore === "95%" ? "success" : "danger"}>
+                                                        {activity.qualityScore === "95%" ? "Passed" : "Failed"}
+                                                    </Badge>
+                                                </Tooltip>
+                                                <Tooltip delayDuration={100} content="An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.">
+                                                    <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: 'help' }} />
+                                                </Tooltip>
                                             </Box>
 
                                             <Box display="flex" flexDirection="column" gap="4" pl="24">
-                                                <Text fontSize="md" color="fg.default">Baseline Quality : 80%</Text>
+                                                <Text fontSize="md" color="fg.default">Minimum base score : 80%</Text>
                                                 <Text fontSize="md" color="fg.default" style={{ lineHeight: '20px' }}>
                                                     Evaluation Feedback: Exceptional output. The agent provided a highly structured, comprehensive, and strategically insightful keyword analysis with a strong rationale, exceeding implicit expectations.
                                                 </Text>
@@ -239,8 +303,12 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
 
                                             <Box display="flex" alignItems="center" gap="8" mt="8">
                                                 <Text fontSize="md" fontWeight="500">Guardrail Status : </Text>
-                                                <Badge intent={statusIntent as any}>{activity.status === "Completed" ? "Passed" : activity.status}</Badge>
-                                                <HelpIcon width={16} height={16} color="#4F576E" />
+                                                <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={guardrailStatus} />}>
+                                                    <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
+                                                </Tooltip>
+                                                <Tooltip delayDuration={100} content="Execution status based on the agent’s guardrails.">
+                                                    <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: 'help' }} />
+                                                </Tooltip>
                                             </Box>
 
                                             <Box pl="24" mt="4">

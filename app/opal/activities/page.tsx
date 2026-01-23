@@ -21,6 +21,7 @@ import {
     MenuContent,
     Checkbox,
     Spinner,
+    Tooltip,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { PageTitle } from "@/app/components/PageTitle";
@@ -29,6 +30,7 @@ import {
     IconChevronRight,
     IconDownload,
     IconRefresh,
+    IconHelp,
 } from "@tabler/icons-react";
 import {
     IconCircleCheck,
@@ -69,6 +71,23 @@ const StatusIcon = ({ status, agentName }: { status: string; agentName?: string 
     }
 };
 
+const GuardrailTooltipContent = ({ status }: { status: string }) => {
+    let content = "";
+    if (status === "Passed") content = "This execution operated within the current guardrails for this agent.";
+    if (status === "Failed") content = "The agent did not complete its execution due to a system or runtime failure.";
+    if (status === "Terminated") content = "The execution was automatically stopped after anomalous tool call behavior was detected.";
+    if (status === "Review Needed") content = "Anomalous tool call behavior was detected in Observer mode and flagged for review.";
+
+    if (!content) return null;
+
+    return (
+        <Box display="flex" flexDirection="column" gap="4">
+            <Text fontSize="sm" fontWeight="600">{status}</Text>
+            <Text fontSize="sm">{content}</Text>
+        </Box>
+    );
+};
+
 // Mock data for activities
 const activities = [
     {
@@ -79,7 +98,8 @@ const activities = [
             handle: "@abm_workflow",
             type: "workflow",
             version: "v1.2.0",
-            mode: "Autonomous"
+            mode: "Autonomous",
+            baseQualityScore: "85%"
         },
         trigger: "Chat",
         triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -93,7 +113,7 @@ const activities = [
             {
                 id: "1-1",
                 started: "Oct 13, 2025\n03:51 PM",
-                agent: { name: "Target Research Agent", handle: "@target_research", type: "agent", version: "v1.0.0", mode: "Autonomous" },
+                agent: { name: "Target Research Agent", handle: "@target_research", type: "agent", version: "v1.0.0", mode: "Autonomous", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -105,7 +125,7 @@ const activities = [
             {
                 id: "1-2",
                 started: "Oct 13, 2025\n03:54 PM",
-                agent: { name: "Campaign Builder", handle: "@campaign_builder", type: "agent", version: "v2.1.0", mode: "Collaborative" },
+                agent: { name: "Campaign Builder", handle: "@campaign_builder", type: "agent", version: "v2.1.0", mode: "Collaborative", baseQualityScore: "88%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "In Progress",
                 variables: "Variables",
@@ -124,7 +144,8 @@ const activities = [
             handle: "@segment-research",
             type: "agent",
             version: "v2.1.3",
-            mode: "Collaborative"
+            mode: "Collaborative",
+            baseQualityScore: "85%"
         },
         trigger: "--",
         triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -144,7 +165,8 @@ const activities = [
             handle: "@experiment_plan",
             type: "workflow",
             version: "v1.0.0",
-            mode: "Autonomous"
+            mode: "Autonomous",
+            baseQualityScore: "90%"
         },
         trigger: "Webhook",
         triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
@@ -158,7 +180,7 @@ const activities = [
             {
                 id: "3-1",
                 started: "Oct 13, 2025\n03:31 PM",
-                agent: { name: "Research Agent", handle: "@research", type: "agent", version: "v1.5.0", mode: "Autonomous" },
+                agent: { name: "Research Agent", handle: "@research", type: "agent", version: "v1.5.0", mode: "Autonomous", baseQualityScore: "85%" },
                 triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -170,7 +192,7 @@ const activities = [
             {
                 id: "3-2",
                 started: "Oct 13, 2025\n03:35 PM",
-                agent: { name: "Planning Agent", handle: "@planning", type: "agent", version: "v2.0.1", mode: "Collaborative" },
+                agent: { name: "Planning Agent", handle: "@planning", type: "agent", version: "v2.0.1", mode: "Collaborative", baseQualityScore: "90%" },
                 triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -189,7 +211,8 @@ const activities = [
             handle: "@success_plan_generator",
             type: "agent",
             version: "v1.8.2",
-            mode: "Autonomous"
+            mode: "Autonomous",
+            baseQualityScore: "85%"
         },
         trigger: "--",
         triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
@@ -209,7 +232,8 @@ const activities = [
             handle: "@summarize-meeting",
             type: "workflow",
             version: "v1.3.0",
-            mode: "Collaborative"
+            mode: "Collaborative",
+            baseQualityScore: "85%"
         },
         trigger: "Scheduler",
         triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -223,7 +247,7 @@ const activities = [
             {
                 id: "5-1",
                 started: "Oct 13, 2025\n02:51 PM",
-                agent: { name: "Transcription Agent", handle: "@transcribe", type: "agent", version: "v1.4.0", mode: "Autonomous" },
+                agent: { name: "Transcription Agent", handle: "@transcribe", type: "agent", version: "v1.4.0", mode: "Autonomous", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -254,7 +278,8 @@ const activities = [
             handle: "Description",
             type: "workflow",
             version: "v2.0.0",
-            mode: "Autonomous"
+            mode: "Autonomous",
+            baseQualityScore: "85%"
         },
         trigger: "Scheduler",
         triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -268,7 +293,7 @@ const activities = [
             {
                 id: "6-1",
                 started: "Oct 13, 2025\n02:11 PM",
-                agent: { name: "Image Generator", handle: "@image_gen", type: "agent", version: "v1.2.0", mode: "Autonomous" },
+                agent: { name: "Image Generator", handle: "@image_gen", type: "agent", version: "v1.2.0", mode: "Autonomous", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -299,7 +324,8 @@ const activities = [
             handle: "Description",
             type: "agent",
             version: "v1.1.0",
-            mode: "Collaborative"
+            mode: "Collaborative",
+            baseQualityScore: "85%"
         },
         trigger: "--",
         triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
@@ -319,7 +345,8 @@ const activities = [
             handle: "@wcagworkflow",
             type: "workflow",
             version: "v1.0.5",
-            mode: "Autonomous"
+            mode: "Autonomous",
+            baseQualityScore: "85%"
         },
         trigger: "--",
         triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -333,7 +360,7 @@ const activities = [
             {
                 id: "8-1",
                 started: "Oct 13, 2025\n12:51 PM",
-                agent: { name: "Accessibility Scanner", handle: "@a11y_scan", type: "agent", version: "v2.0.0", mode: "Autonomous" },
+                agent: { name: "Accessibility Scanner", handle: "@a11y_scan", type: "agent", version: "v2.0.0", mode: "Autonomous", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -625,7 +652,25 @@ export default function ActivitiesPage() {
                         <thead>
                             <Tr>
                                 {visibleColumns.map(col => (
-                                    <Th key={col.id}>{col.label}</Th>
+                                    <Th key={col.id} style={(col.id === "qualityScore" || col.id === "guardrails") ? { padding: 0 } : {}}>
+                                        {col.id === "qualityScore" ? (
+                                            <Tooltip delayDuration={100} content="An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.">
+                                                <Box display="flex" alignItems="start" gap="4" px="16" py="12" w="full" style={{ cursor: "help" }}>
+                                                    {col.label}
+                                                    <IconHelp size={14} style={{ marginTop: '2px' }} />
+                                                </Box>
+                                            </Tooltip>
+                                        ) : col.id === "guardrails" ? (
+                                            <Tooltip delayDuration={100} content="Execution status based on the agent’s guardrails.">
+                                                <Box display="flex" alignItems="start" gap="4" px="16" py="12" w="full" style={{ cursor: "help" }}>
+                                                    {col.label}
+                                                    <IconHelp size={14} style={{ marginTop: '2px' }} />
+                                                </Box>
+                                            </Tooltip>
+                                        ) : (
+                                            col.label
+                                        )}
+                                    </Th>
                                 ))}
                                 <Th></Th>
                             </Tr>
@@ -761,9 +806,26 @@ export default function ActivitiesPage() {
                                                         <Box display="flex" alignItems="center" gap="8">
                                                             <Text>{activity.qualityScore}</Text>
                                                             {!isNaN(score) && showQualityBadges && (
-                                                                <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
-                                                                    {isPassed ? "Passed" : "Failed"}
-                                                                </Badge>
+                                                                <Tooltip
+                                                                    delayDuration={100}
+                                                                    content={
+                                                                        <Box display="flex" flexDirection="column" gap="4">
+                                                                            <Text fontSize="sm" fontWeight="600">{isPassed ? "Passed" : "Failed"}</Text>
+                                                                            <Text fontSize="sm">
+                                                                                {isPassed
+                                                                                    ? "This output met the agent builder’s quality threshold based on LLM evaluation."
+                                                                                    : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
+                                                                            </Text>
+                                                                            {(activity.agent as any).baseQualityScore && (
+                                                                                <Text fontSize="sm" color="fg.default.inverse">Minimum base score: {(activity.agent as any).baseQualityScore}</Text>
+                                                                            )}
+                                                                        </Box>
+                                                                    }
+                                                                >
+                                                                    <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
+                                                                        {isPassed ? "Passed" : "Failed"}
+                                                                    </Badge>
+                                                                </Tooltip>
                                                             )}
                                                         </Box>
                                                     </Td>
@@ -779,7 +841,9 @@ export default function ActivitiesPage() {
                                                 return (
                                                     <Td key={col.id}>
                                                         {status && status !== "--" ? (
-                                                            <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                            <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={status} />}>
+                                                                <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                            </Tooltip>
                                                         ) : "--"}
                                                     </Td>
                                                 );
@@ -890,9 +954,26 @@ export default function ActivitiesPage() {
                                                             <Box display="flex" alignItems="center" gap="8">
                                                                 <Text>{subRun.qualityScore}</Text>
                                                                 {!isNaN(score) && showQualityBadges && (
-                                                                    <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
-                                                                        {isPassed ? "Passed" : "Failed"}
-                                                                    </Badge>
+                                                                    <Tooltip
+                                                                        delayDuration={100}
+                                                                        content={
+                                                                            <Box display="flex" flexDirection="column" gap="4">
+                                                                                <Text fontSize="sm" fontWeight="600">{isPassed ? "Passed" : "Failed"}</Text>
+                                                                                <Text fontSize="sm">
+                                                                                    {isPassed
+                                                                                        ? "This output met the agent builder’s quality threshold based on LLM evaluation."
+                                                                                        : "This output fell below the agent builder’s quality threshold based on LLM evaluation."}
+                                                                                </Text>
+                                                                                {(subRun.agent as any).baseQualityScore && (
+                                                                                    <Text fontSize="sm" color="fg.default.inverse">Minimum base score: {(subRun.agent as any).baseQualityScore}</Text>
+                                                                                )}
+                                                                            </Box>
+                                                                        }
+                                                                    >
+                                                                        <Badge intent={isPassed ? "success" : "danger"} style={{ whiteSpace: "nowrap" }}>
+                                                                            {isPassed ? "Passed" : "Failed"}
+                                                                        </Badge>
+                                                                    </Tooltip>
                                                                 )}
                                                             </Box>
                                                         </Td>
@@ -908,7 +989,9 @@ export default function ActivitiesPage() {
                                                     return (
                                                         <Td key={col.id}>
                                                             {status && status !== "--" ? (
-                                                                <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                                <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={status} />}>
+                                                                    <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                                </Tooltip>
                                                             ) : "--"}
                                                         </Td>
                                                     );
