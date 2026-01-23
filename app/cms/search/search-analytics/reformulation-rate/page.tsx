@@ -26,7 +26,9 @@ export default function ReformulationRatePage() {
 		let data = allData;
 
 		// Filter by Time Range
-		const now = new Date();
+		const dates = data.map((d) => new Date(d.lastSeen).getTime());
+		const latestDate = dates.length > 0 ? Math.max(...dates) : Date.now();
+		const now = new Date(latestDate);
 		data = data
 			.filter((item) => {
 				const itemDate = new Date(item.lastSeen);
@@ -70,10 +72,7 @@ export default function ReformulationRatePage() {
 				gap="16"
 				mb="24"
 			>
-				<Flex
-					gap="8"
-					flexDirection="row"
-				>
+				<Flex gap="8" flexDirection="row">
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."

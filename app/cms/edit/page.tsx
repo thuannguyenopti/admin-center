@@ -152,7 +152,7 @@ export default function EditPage() {
 	}
 
 	return (
-		<Box p="24">
+		<Box p="24" h="full" overflow="auto">
 			<Heading
 				level="3"
 				mb="16"

@@ -4,10 +4,6 @@ import {
 	Box,
 	Button,
 	Text,
-	Tabs,
-	TabsList,
-	TabsTrigger,
-	TabsContent,
 	Textarea,
 	Heading,
 	Menu,
@@ -22,6 +18,10 @@ import {
 	IconSparkles,
 	IconSquare,
 	IconSection,
+	IconDots,
+	IconSettings,
+	IconChevronLeft,
+	IconCopy,
 } from "@tabler/icons-react";
 
 import { EleMap } from "./vb/Ele";
@@ -47,13 +47,17 @@ const isEleNode = (n: any) =>
 	typeof n === "object" &&
 	typeof n.id === "string" &&
 	typeof n.type === "string" &&
-	Array.isArray(n.props);
+	(n.properties || Array.isArray(n.props));
 
 const ensureOpen = (nodes: any[]): any[] => {
 	return nodes.map((node) => ({
 		...node,
 		open: node.open ?? true,
-		children: Array.isArray(node.children) ? ensureOpen(node.children) : node.children,
+		children: Array.isArray(node.children)
+			? ensureOpen(node.children)
+			: Array.isArray(node.elements)
+				? ensureOpen(node.elements)
+				: node.children,
 	}));
 };
 
@@ -63,7 +67,11 @@ const stripTransientFlags = (nodes: any[]): any[] => {
 		const { isNew, ...rest } = n;
 		return {
 			...rest,
-			children: Array.isArray(n.children) ? stripTransientFlags(n.children) : n.children,
+			children: Array.isArray(n.children)
+				? stripTransientFlags(n.children)
+				: Array.isArray(n.elements)
+					? stripTransientFlags(n.elements)
+					: n.children,
 		};
 	});
 };
@@ -89,16 +97,39 @@ const normalizePage = (input: any): NormalizeResult => {
 
 	const strip = (node: any): any => {
 		if (isEleNode(node)) {
-			theEles[node.id] = { type: node.type, props: node.props };
-			const out: any = { id: node.id };
-			if (Array.isArray(node.children)) {
-				out.children = node.children.map(strip);
+			let properties = node.properties;
+			if (!properties && Array.isArray(node.props)) {
+				// Normalize legacy props array to properties map
+				properties = {};
+				node.props.forEach((p: any) => {
+					// Use label-based mapping for legacy support
+					const key = p.label.toLowerCase().includes("text") ? "text" :
+						p.label.toLowerCase().includes("heading") ? "text" :
+							p.label.toLowerCase().includes("label") ? "label" :
+								p.label.toLowerCase().includes("image") ? "imageUrl" :
+									p.label.toLowerCase().replace(/\s+/g, "");
+					properties[key] = { value: p.value };
+				});
 			}
-			return out;
+			theEles[node.id] = {
+				type: node.type,
+				properties: properties || {},
+			};
+			return { id: node.id };
 		}
 
 		const out: any = { ...node };
-		if (Array.isArray(node.children)) out.children = node.children.map(strip);
+		if (Array.isArray(node.elements)) {
+			out.elements = node.elements.map(strip);
+		} else if (Array.isArray(node.children)) {
+			// If it's likely a column but using 'children', normalize to 'elements'
+			if (node.id && (node.id.startsWith("col-") || node.id.startsWith("c-"))) {
+				out.elements = node.children.map(strip);
+				delete out.children;
+			} else {
+				out.children = node.children.map(strip);
+			}
+		}
 		return out;
 	};
 
@@ -110,17 +141,16 @@ const normalizePage = (input: any): NormalizeResult => {
 
 const collectElementIds = (data: any[]): Set<string> => {
 	const ids = new Set<string>();
-	const traverse = (nodes: any[]) => {
-		for (const node of nodes) {
-			if (node.id && !node.id.startsWith("section-") && !node.id.startsWith("sec-") && !node.id.startsWith("row-") && !node.id.startsWith("col-")) {
-				ids.add(node.id);
-			}
-			if (Array.isArray(node.children)) {
-				traverse(node.children);
+	for (const section of data) {
+		for (const row of section.children || []) {
+			for (const col of row.children || []) {
+				const children = col.elements || col.children || [];
+				for (const ref of children) {
+					if (ref?.id) ids.add(ref.id);
+				}
 			}
 		}
-	};
-	traverse(data);
+	}
 	return ids;
 };
 
@@ -184,15 +214,16 @@ type PageInput = {
  * Existing mergeData (kept)
  * ------------------------------*/
 
-const mergeData = (structure: any[], elements: EleMap): any[] => {
+const mergeData = (structure: any[], elements: EleMap) => {
 	return structure.map((node) => {
 		const newNode = { ...node };
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
-			newNode.props = elements[node.id].props;
+			newNode.properties = elements[node.id].properties;
 		}
-		if (node.children) {
-			newNode.children = mergeData(node.children, elements);
+		const children = node.elements || node.children;
+		if (Array.isArray(children)) {
+			newNode.children = mergeData(children, elements);
 		}
 		return newNode;
 	});
@@ -288,6 +319,7 @@ export default function VBPrototype({
 		return outlines.length ? outlines[0].id : null;
 	});
 
+	const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 
@@ -355,6 +387,18 @@ export default function VBPrototype({
 					: o
 			)
 		);
+	};
+
+	const duplicateActiveOutline = () => {
+		if (!activeOutline) return;
+		const newId = `outline-${Date.now()}`;
+		const newOutline: OutlineType = {
+			...activeOutline,
+			id: newId,
+			title: `${activeOutline.title} (Copy)`,
+		};
+		setOutlines((prev) => [...prev, newOutline]);
+		setActiveOutlineId(newId);
 	};
 
 	const findOutlineIdForElement = (eleId: string) => {
@@ -465,13 +509,23 @@ export default function VBPrototype({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
 
-	const onInputChange = (value: any, propIndex: number) => {
+	const onInputChange = (value: any, keyOrIndex: string | number) => {
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev) => {
-				const oldProps = prev[currentEle].props;
-				const newProps = [...oldProps];
-				newProps[propIndex] = { ...oldProps[propIndex], value };
-				return { ...prev, [currentEle]: { ...prev[currentEle], props: newProps } };
+				const ele = prev[currentEle];
+				const properties = { ...(ele.properties || {}) };
+
+				if (typeof keyOrIndex === "string") {
+					properties[keyOrIndex] = { ...properties[keyOrIndex], value };
+				}
+
+				return {
+					...prev,
+					[currentEle]: {
+						...ele,
+						properties,
+					},
+				};
 			});
 		}
 	};
@@ -511,6 +565,35 @@ export default function VBPrototype({
 				/>
 				<MenuContent />
 			</Menu>
+
+			{!isMulti && (
+				<Menu
+					options={[
+						{
+							addon: <IconSettings size={16} />,
+							label: "Properties",
+							execute: () => {
+								setSidebarTab("properties");
+								setEditingSectionId(null);
+							},
+						},
+						{
+							addon: <IconCopy size={16} />,
+							label: "Duplicate",
+							execute: duplicateActiveOutline,
+						},
+					]}
+				>
+					<MenuTrigger
+						icon={<IconDots size={16} />}
+						aria-label="more"
+						appearance="subtle"
+						size="sm"
+						iconPosition="start"
+					/>
+					<MenuContent />
+				</Menu>
+			)}
 
 			<div
 				className={`absolute -right-[10px] top-[32px] opacity-0 invisible z-10 p-2 rounded-md ${styles.popupMenu} w-[200px] max-w-[80vw] mr-12`}
@@ -594,7 +677,7 @@ export default function VBPrototype({
 	const isColId = (id: string) => id.startsWith("col-");
 	const isEleId = (id: string) => !isSectionId(id) && !isRowId(id) && !isColId(id);
 
-	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last");
+	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last") || id === "section-last" || id.startsWith("section-last");
 	const isRowLast = (id: string) => id.startsWith("row-last-");
 	const isColLast = (id: string) => id.startsWith("col-last-");
 	const isLastEle = (id: string) => id.startsWith("last-ele-");
@@ -615,10 +698,11 @@ export default function VBPrototype({
 					id: newRowId,
 					children: (row.children || []).map((col: any) => {
 						const newColId = mkId(col.id);
+						const colChildren = col.elements || col.children || [];
 						return {
 							...col,
 							id: newColId,
-							children: (col.children || []).map((ref: any) => {
+							elements: colChildren.map((ref: any) => {
 								const oldEleId = ref?.id;
 								if (!oldEleId) return ref;
 
@@ -644,10 +728,11 @@ export default function VBPrototype({
 			id: newRowId,
 			children: (row.children || []).map((col: any) => {
 				const newColId = mkId(col.id);
+				const colChildren = col.elements || col.children || [];
 				return {
 					...col,
 					id: newColId,
-					children: (col.children || []).map((ref: any) => {
+					elements: colChildren.map((ref: any) => {
 						const oldEleId = ref?.id;
 						if (!oldEleId) return ref;
 
@@ -858,57 +943,63 @@ export default function VBPrototype({
 
 		let draggedRef: any = null;
 
-		const removeElement = (nodes: any[]): any[] => {
-			return nodes.filter((node) => {
-				if (node.id === draggingId) {
-					draggedRef = cloning ? { ...node, id: newEleId } : node;
-					return cloning; // Keep if cloning, remove if moving
-				}
-				return true;
-			}).map((node) => {
-				if (Array.isArray(node.children)) {
-					return { ...node, children: removeElement(node.children) };
-				}
-				return node;
-			});
-		};
-
-		const dataWithRemoved = removeElement(data);
+		const removed = data.map((sec: any) => ({
+			...sec,
+			children: (sec.children || []).map((row: any) => ({
+				...row,
+				children: (row.children || []).map((col: any) => {
+					const colChildren = col.elements || col.children || [];
+					const nextChildren = colChildren.filter((ref: any) => {
+						if (ref?.id === draggingId) {
+							draggedRef = cloning ? { id: newEleId } : ref;
+							return cloning;
+						}
+						return true;
+					});
+					return { ...col, elements: nextChildren };
+				}),
+			})),
+		}));
 
 		if (!draggedRef) return null;
 
-		const insertElement = (nodes: any[]): any[] => {
-			if (isLastEle(hoverId)) {
-				const targetParentId = hoverId.replace("last-ele-", "");
-				return nodes.map((node) => {
-					if (node.id === targetParentId) {
-						if ((node.children || []).some((r: any) => r?.id === draggedRef.id)) return node;
-						return { ...node, children: [...(node.children || []), draggedRef] };
-					}
-					if (Array.isArray(node.children)) {
-						return { ...node, children: insertElement(node.children) };
-					}
-					return node;
-				});
-			}
+		if (isLastEle(hoverId)) {
+			const targetColId = hoverId.replace("last-ele-", "");
+			const next = removed.map((sec: any) => ({
+				...sec,
+				children: (sec.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						if (col.id !== targetColId) return col;
+						const colChildren = col.elements || col.children || [];
+						if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
+						return { ...col, elements: [...colChildren, draggedRef] };
+					}),
+				})),
+			}));
 
-			return nodes.map((node) => {
-				if (Array.isArray(node.children)) {
-					const idx = node.children.findIndex((r: any) => r?.id === hoverId);
-					if (idx !== -1) {
-						if (node.children.some((r: any) => r?.id === draggedRef.id)) return node;
-						const copy = [...node.children];
-						copy.splice(idx, 0, draggedRef);
-						return { ...node, children: copy };
-					}
-					return { ...node, children: insertElement(node.children) };
-				}
-				return node;
-			});
-		};
+			return { nextData: next, elesPatch };
+		}
 
-		const nextData = insertElement(dataWithRemoved);
-		return { nextData, elesPatch };
+		const next = removed.map((sec: any) => ({
+			...sec,
+			children: (sec.children || []).map((row: any) => ({
+				...row,
+				children: (row.children || []).map((col: any) => {
+					const colChildren = col.elements || col.children || [];
+					const idx = colChildren.findIndex((r: any) => r?.id === hoverId);
+					if (idx === -1) return col;
+
+					if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
+
+					const copy = [...colChildren];
+					copy.splice(idx, 0, draggedRef);
+					return { ...col, elements: copy };
+				}),
+			})),
+		}));
+
+		return { nextData: next, elesPatch };
 	}
 
 	function applyDragDrop(
@@ -1158,217 +1249,314 @@ export default function VBPrototype({
 					</div>
 
 					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
-						{/* MULTI: View 1 <-> View 2 full-sidebar slide */}
+						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
 						{isMulti ? (
-							<div className=" h-full overflow-hidden">
+							<div className="h-full overflow-hidden">
 								<div
-									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									className="flex w-[400%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
-										transform: outlineView === "tree" ? "translateX(-50%)" : "translateX(0%)",
+										transform: isEditingElement
+											? "translateX(-75%)"
+											: sidebarTab === "properties"
+												? "translateX(-50%)"
+												: outlineView === "tree"
+													? "translateX(-25%)"
+													: "translateX(0%)",
 									}}
 								>
-									{/* PANE 1 = View 1 */}
-									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
-											}`}
-									>
-										<div className="pl-6 pr-6 pt-4 pb-2">
-											<div className="flex items-center gap-2">
+									{/* PANE 1: Outlines List */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										<Box px="24" pt="16" mb="16">
+											<Box display="flex" alignItems="center" gap="8">
 												<Heading level="4">Page</Heading>
-												<div className="flex-1" />
+												<Box flex="1" />
+												<Box display="flex" alignItems="center" gap="4">
+													<Menu
+														options={[
+															{
+																addon: <IconSettings size={16} />,
+																label: "Properties",
+																execute: () => {
+																	setSidebarTab("properties");
+																	setEditingSectionId(null);
+																},
+															},
+														]}
+													>
+														<MenuTrigger
+															icon={<IconDots size={16} />}
+															aria-label="more"
+															appearance="subtle"
+															size="sm"
+															iconPosition="start"
+														/>
+														<MenuContent />
+													</Menu>
+												</Box>
+											</Box>
+										</Box>
+										<div className="flex-1 overflow-y-auto pl-3 pr-3 pb-4">
+											<div className="flex flex-col gap-1">
+												{outlines.map((o) => (
+													<Button
+														key={o.id}
+														appearance="subtle"
+														w="full"
+														justifyContent="flex-start"
+														onClick={() => {
+															setActiveOutlineId(o.id);
+															setSidebarTab("outlines");
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+															setAI(false);
+															setOutlineView("tree");
+														}}
+													>
+														{o.title}
+													</Button>
+												))}
 											</div>
-										</div>
-
-										<div className=" flex-1 overflow-y-auto">
-											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pr-6 pt-2 pb-2">
-													<TabsList>
-														<TabsTrigger value="outlines">Outlines</TabsTrigger>
-														<TabsTrigger value="properties">Properties</TabsTrigger>
-													</TabsList>
-												</div>
-
-												<TabsContent value="outlines">
-													<div className="pl-3 pr-3 pb-4">
-														<div className="flex flex-col gap-2">
-															{outlines.map((o) => (
-																<Button
-																	key={o.id}
-																	appearance="subtle"
-																	onClick={() => {
-																		setActiveOutlineId(o.id);
-																		setSidebarTab("outlines");
-																		setCurrentEle("none");
-																		setCurrentHoverEle("none");
-																		setAI(false);
-																		setOutlineView("tree");
-																	}}
-																>
-																	{o.title}
-																</Button>
-															))}
-														</div>
-													</div>
-												</TabsContent>
-
-												<TabsContent value="properties">
-													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-												</TabsContent>
-											</Tabs>
 										</div>
 									</div>
 
-									{/* PANE 2 = View 2 (tree) <-> ElementEditor */}
-									<div
-										className={`min-w-[50%] w-[50%] h-full overflow-hidden min-h-0 ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
-											}`}
-									>
-										<div
-											className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
-											style={{
-												transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
-											}}
-										>
-											{/* VIEW 2 */}
-											<div
-												className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
-													}`}
-											>
-												<div className="pt-4 pb-2">
-													{activeOutline ? (
-														<div className="pl-6 pr-6 flex flex-col gap-1">
-															<Text
-																fontSize="sm"
-																fontWeight="400"
-																color="fg.accent"
-																className="cursor-pointer"
-																onClick={() => {
-																	setOutlineView("list");
-																	setCurrentEle("none");
-																	setCurrentHoverEle("none");
-																	setAI(false);
-																}}
-															>
-																← Page
-															</Text>
-
-															<div className="flex items-center gap-2">
-																<Heading level="4">{activeOutline.title}</Heading>
-																<div className="flex-1" />
-																{HeaderActions}
-															</div>
-														</div>
-													) : (
-														<div className="pl-6 pr-6 flex items-center gap-2">
-															<Heading level="4">Outline</Heading>
-															<div className="flex-1" />
-															{HeaderActions}
-														</div>
-													)}
-												</div>
-
-												<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
-													{activeOutline ? (
-														<OutlineTree
-															cloning={cloning}
-															dragging={dragging}
-															setDragging={setDragging}
-															currentHoverEle={currentHoverEle}
-															setCurrentEle={setCurrentEle}
-															data={data}
-															setTheEles={setTheEles}
-															setData={setData}
-															theEles={theEles}
-															setCurrentHoverEle={setCurrentHoverEle}
-														/>
-													) : null}
-												</div>
-											</div>
-
-											{/* ELEMENT EDITOR */}
-											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
-												<div className="h-full overflow-y-auto">
-													<ElementEditor
-														outlineTitle={activeOutline?.title || "Outline"}
-														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
-														currentEle={currentEle}
-														propsList={theEles[currentEle]?.props}
-														onBack={() => {
+									{/* PANE 2: Outline Tree */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										<div className="pt-4 pb-2">
+											{activeOutline ? (
+												<div className="pl-6 pr-6 flex flex-col gap-1">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer"
+														onClick={() => {
+															setOutlineView("list");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
 															setAI(false);
 														}}
-														onInputChange={onInputChange}
-													/>
+													>
+														← Page
+													</Text>
+
+													<div className="flex items-center gap-2">
+														<Heading level="4">{activeOutline.title}</Heading>
+														<div className="flex-1" />
+														<div className="flex items-center gap-1">
+															{HeaderActions}
+														</div>
+													</div>
+												</div>
+											) : (
+												<div className="pl-6 pr-6 flex items-center gap-2">
+													<Heading level="4">Outline</Heading>
+													<div className="flex-1" />
+													{HeaderActions}
+												</div>
+											)}
+										</div>
+										<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
+											{activeOutline ? (
+												<OutlineTree
+													cloning={cloning}
+													dragging={dragging}
+													setDragging={setDragging}
+													currentHoverEle={currentHoverEle}
+													setCurrentEle={setCurrentEle}
+													data={data}
+													setTheEles={setTheEles}
+													setData={setData}
+													theEles={theEles}
+													setCurrentHoverEle={setCurrentHoverEle}
+													onEditProperties={(id) => {
+														setSidebarTab("properties");
+														setEditingSectionId(id);
+													}}
+												/>
+											) : null}
+										</div>
+									</div>
+
+									{/* PANE 3: Properties */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										{!editingSectionId && (
+											<div className="pl-6 pr-6 pt-4 pb-2">
+												<Text
+													fontSize="sm"
+													fontWeight="400"
+													color="fg.accent"
+													className="cursor-pointer mb-1"
+													onClick={() => {
+														setSidebarTab("outlines");
+														setOutlineView("list");
+														setEditingSectionId(null);
+													}}
+												>
+													← Page
+												</Text>
+												<div className="flex items-center gap-2">
+													<Heading level="4">Properties</Heading>
+													<div className="flex-1" />
 												</div>
 											</div>
+										)}
+										<div className="flex-1 overflow-y-auto">
+											{editingSectionId ? (
+												<Box p="24">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer mb-1"
+														onClick={() => {
+															setSidebarTab("outlines");
+															setOutlineView("tree");
+															setEditingSectionId(null);
+														}}
+													>
+														← {activeOutline?.title || "Page"}
+													</Text>
+													<Heading level="4" mb="16">Section Properties</Heading>
+													<Text fontSize="sm" color="fg.secondary">
+														Editing properties for section: {editingSectionId}
+													</Text>
+													{/* Add section specific fields here later */}
+												</Box>
+											) : (
+												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+											)}
+										</div>
+									</div>
+
+									{/* PANE 4: Element Editor */}
+									<div className="min-w-[25%] w-[25%] h-full">
+										<div className="h-full overflow-y-auto">
+											<ElementEditor
+												outlineTitle={activeOutline?.title || "Outline"}
+												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+												currentEle={currentEle}
+												properties={theEles[currentEle]?.properties}
+												onBack={() => {
+													setCurrentEle("none");
+													setCurrentHoverEle("none");
+													setAI(false);
+												}}
+												onInputChange={onInputChange}
+											/>
 										</div>
 									</div>
 								</div>
 							</div>
 						) : null}
 
-						{/* SINGLE: tree/properties (left) <-> ElementEditor (right) slide */}
+						{/* SINGLE: tree/properties/ElementEditor drill-down slide */}
 						{isSingle && activeOutline ? (
 							<div className="h-full overflow-hidden">
 								<div
-									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									className="flex w-[300%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
-										transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+										transform: isEditingElement
+											? "translateX(-66.666%)"
+											: sidebarTab === "properties"
+												? "translateX(-33.333%)"
+												: "translateX(0%)",
 									}}
 								>
+									{/* PANE 1: Outline Tree */}
 									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
-											}`}
+										className="min-w-[33.333%] w-[33.333%] h-full flex flex-col"
 									>
 										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
-												<Heading level="4">Page</Heading>
+												<Heading level="4">{activeOutline.title}</Heading>
 												<div className="flex-1" />
-												{HeaderActions}
+												<div className="flex items-center gap-1">
+													{HeaderActions}
+												</div>
 											</div>
 										</div>
-
-										<div className="flex-1 overflow-y-auto">
-											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pr-6 pt-2 pb-2">
-													<TabsList>
-														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
-														<TabsTrigger value="properties">Properties</TabsTrigger>
-													</TabsList>
-												</div>
-
-												<TabsContent value="outline">
-													<div className="pb-4 pr-3">
-														<OutlineTree
-															cloning={cloning}
-															dragging={dragging}
-															setDragging={setDragging}
-															currentHoverEle={currentHoverEle}
-															setCurrentEle={setCurrentEle}
-															data={data}
-															setTheEles={setTheEles}
-															setData={setData}
-															theEles={theEles}
-															setCurrentHoverEle={setCurrentHoverEle}
-														/>
-													</div>
-												</TabsContent>
-
-												<TabsContent value="properties">
-													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-												</TabsContent>
-											</Tabs>
+										<div className="flex-1 overflow-y-auto pb-4 pr-3">
+											<OutlineTree
+												cloning={cloning}
+												dragging={dragging}
+												setDragging={setDragging}
+												currentHoverEle={currentHoverEle}
+												setCurrentEle={setCurrentEle}
+												data={data}
+												setTheEles={setTheEles}
+												setData={setData}
+												theEles={theEles}
+												setCurrentHoverEle={setCurrentHoverEle}
+												onEditProperties={(id) => {
+													setSidebarTab("properties");
+													setEditingSectionId(id);
+												}}
+											/>
 										</div>
 									</div>
 
-									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+									{/* PANE 2: Properties (Page or Section) */}
+									<div
+										className="min-w-[33.333%] w-[33.333%] h-full flex flex-col"
+									>
+										{!editingSectionId && (
+											<div className="pl-6 pr-6 pt-4 pb-2">
+												<Text
+													fontSize="sm"
+													fontWeight="400"
+													color="fg.accent"
+													className="cursor-pointer mb-1"
+													onClick={() => {
+														setSidebarTab("outline");
+														setEditingSectionId(null);
+													}}
+												>
+													← {activeOutline?.title || "Page"}
+												</Text>
+												<div className="flex items-center gap-2">
+													<Heading level="4">Properties</Heading>
+													<div className="flex-1" />
+													<div className="flex items-center gap-1">
+														{HeaderActions}
+													</div>
+												</div>
+											</div>
+										)}
+										<div className="flex-1 overflow-y-auto">
+											{editingSectionId ? (
+												<Box p="24">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer mb-1"
+														onClick={() => {
+															setSidebarTab("outline");
+															setEditingSectionId(null);
+														}}
+													>
+														← {activeOutline?.title || "Page"}
+													</Text>
+													<Heading level="4" mb="16">Section Properties</Heading>
+													<Text fontSize="sm" color="fg.secondary">
+														Editing properties for section: {editingSectionId}
+													</Text>
+													{/* Add section specific fields here later */}
+												</Box>
+											) : (
+												<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+											)}
+										</div>
+									</div>
+
+									{/* PANE 3: Element Editor */}
+									<div className="min-w-[33.333%] w-[33.333%] h-full">
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
 												outlineTitle={activeOutline?.title || "Outline"}
 												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
 												currentEle={currentEle}
-												propsList={theEles[currentEle]?.props}
+												properties={theEles[currentEle]?.properties}
 												onBack={() => {
 													setCurrentEle("none");
 													setCurrentHoverEle("none");

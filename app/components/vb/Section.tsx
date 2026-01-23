@@ -6,6 +6,7 @@ import {
   IconDots,
   IconTrash,
   IconPencil,
+  IconSettings,
   IconRowInsertTop,
   IconRowInsertBottom,
   IconSquare,
@@ -19,7 +20,8 @@ const Section: React.FC<{
   addRow: any;
   removeSection: any;
   onDragStart: any;
-}> = ({ addSection, setOpen, section, children, addRow, removeSection, onDragStart }) => {
+  onEditProperties?: () => void;
+}> = ({ addSection, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties }) => {
   if (section.label) {
     return (
       <div className="p-0.5 pl-6 -mr-0.5">
@@ -44,7 +46,14 @@ const Section: React.FC<{
                     addon: <IconPencil size={16} />,
                     label: "Edit",
                     execute: () => {
-                      removeSection();
+                      // removeSection();
+                    },
+                  },
+                  {
+                    addon: <IconSettings size={16} />,
+                    label: "Properties",
+                    execute: () => {
+                      onEditProperties?.();
                     },
                   },
                   {
@@ -110,6 +119,13 @@ const Section: React.FC<{
                   addRow();
                 },
                 selected: false,
+              },
+              {
+                addon: <IconSettings size={16} />,
+                label: "Properties",
+                execute: () => {
+                  onEditProperties?.();
+                },
               },
               {
                 addon: <IconRowInsertTop size={16} />,

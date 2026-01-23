@@ -16,8 +16,10 @@ import {
 } from "@tabler/icons-react";
 
 import styles from "../VBPrototype.module.css";
+import { BlockRegistry } from "./blocks";
+import { isImageDrag, isInternalDrag, isValidVBDrag, VB_INTERNAL_MIME } from "./blocks/utils";
 
-export type EleMap = Record<string, { type: string; props: any[] }>;
+export type EleMap = Record<string, { type: string; properties: any }>;
 
 export type Outline = {
     id: string;
@@ -27,16 +29,6 @@ export type Outline = {
 };
 
 type DropPosition = { outlineId: string; colId: string; position: number } | null;
-
-const isImageDrag = (dt: DataTransfer) => {
-    const types = Array.from(dt?.types || []);
-    return (
-        types.includes("image/url") || // your custom type (if browser exposes it)
-        types.includes("text/uri-list") || // common for URL drags
-        types.includes("text/plain") || // common fallback
-        types.includes("Files") // if dragging files
-    );
-};
 
 const getDraggedImageUrl = (dt: DataTransfer) => {
     const url =
@@ -76,8 +68,8 @@ export default function PreviewCanvas({
     // ✅ This MUST be the scroll container div inside PreviewWrapper
     const scrollRef = useRef<HTMLDivElement | null>(null);
 
-    // "mobile only" breakpoint (tweak as you like)
-    const MOBILE_BP = 480;
+    // "tablet/mobile" breakpoint
+    const MOBILE_BP = 1024;
 
     const [viewportW, setViewportW] = useState<number>(() => {
         // fixed/scale should behave like that device width immediately
@@ -134,6 +126,73 @@ export default function PreviewCanvas({
         root.scrollTo({ top: root.scrollTop + delta, behavior: "smooth" });
     }, [currentEle]);
 
+    const moveElementInOutlines = (eleId: string, dp: DropPosition) => {
+        if (!dp) return;
+
+        setOutlines((prev) => {
+            let movedEleNode: any = null;
+            let movedEleData: any = null;
+
+            // Step 1: Remove from everywhere
+            const nextOutlines = prev.map((outline: any) => {
+                let foundInThisOutline = false;
+                const nextTree = outline.tree.map((section: any) => ({
+                    ...section,
+                    children: (section.children || []).map((row: any) => ({
+                        ...row,
+                        children: (row.children || []).map((col: any) => {
+                            const colChildren = col.elements || col.children || [];
+                            const found = colChildren.find((e: any) => e.id === eleId);
+                            if (found) {
+                                movedEleNode = found;
+                                movedEleData = outline.elements[eleId];
+                                foundInThisOutline = true;
+                            }
+                            const nextChildren = colChildren.filter((e: any) => e.id !== eleId);
+                            return { ...col, elements: nextChildren };
+                        }),
+                    })),
+                }));
+
+                if (foundInThisOutline) {
+                    const nextElements = { ...outline.elements };
+                    delete nextElements[eleId];
+                    return { ...outline, tree: nextTree, elements: nextElements };
+                }
+                return { ...outline, tree: nextTree };
+            });
+
+            if (!movedEleNode) return prev;
+
+            // Step 2: Insert into target
+            return nextOutlines.map((outline: any) => {
+                if (outline.id !== dp.outlineId) return outline;
+
+                const nextElements = {
+                    ...outline.elements,
+                    [eleId]: movedEleData,
+                };
+
+                const nextTree = outline.tree.map((section: any) => ({
+                    ...section,
+                    children: (section.children || []).map((row: any) => ({
+                        ...row,
+                        children: (row.children || []).map((col: any) => {
+                            if (col.id !== dp.colId) return col;
+                            const colChildren = col.elements || col.children || [];
+                            const nextChildren = [...colChildren];
+                            const safePos = Math.max(0, Math.min(nextChildren.length, dp.position));
+                            nextChildren.splice(safePos, 0, movedEleNode);
+                            return { ...col, elements: nextChildren, open: true };
+                        }),
+                    })),
+                }));
+
+                return { ...outline, tree: nextTree, elements: nextElements };
+            });
+        });
+    };
+
     const insertImageIntoOutline = (
         dp: NonNullable<DropPosition>,
         imageUrl: string,
@@ -148,14 +207,13 @@ export default function PreviewCanvas({
                 const nextElements: EleMap = {
                     ...o.elements,
                     [uKey]: {
-                        type: "Image",
-                        props: [
-                            { type: "text", label: "Image URL", value: imageUrl },
-                            { type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-                            { type: "text", label: "Alt Text", value: imageAlt },
-                            { type: "text", label: "Width", value: "auto" },
-                            { type: "text", label: "Height", value: "auto" },
-                        ],
+                        type: "ct-image",
+                        properties: {
+                            imageUrl: { value: imageUrl },
+                            altText: { value: imageAlt || "Untitled Image" },
+                            width: { value: "auto" },
+                            height: { value: "auto" },
+                        },
                     },
                 };
 
@@ -165,9 +223,13 @@ export default function PreviewCanvas({
                         ...row,
                         children: (row.children || []).map((col: any) => {
                             if (col.id !== dp.colId) return col;
-                            const nextChildren = [...(col.children || [])];
-                            nextChildren.splice(dp.position, 0, { id: uKey });
-                            return { ...col, children: nextChildren };
+                            const currentChildren = col.elements || col.children || [];
+                            const nextChildren = [...currentChildren];
+                            const safePos = Math.max(0, Math.min(nextChildren.length, dp.position));
+                            nextChildren.splice(safePos, 0, { id: uKey });
+                            // normalize to elements
+                            const { children: _old, ...rest } = col;
+                            return { ...rest, elements: nextChildren };
                         }),
                     })),
                 }));
@@ -187,394 +249,198 @@ export default function PreviewCanvas({
     };
 
     const renderOutlineTree = (outline: Outline) => {
-        const renderElement = (node: any, eleIndex: number) => {
-            const ele = outline.elements[node.id];
-            const type = ele?.type;
+        const isAside = isAsideOutline(outline);
+        return outline.tree.map((section: any, sindex: number) => {
+            const hasBgImage = !!section.bgImage;
+            const isFooterCTA = section.name === "Footer CTA";
 
             return (
-                <React.Fragment key={node.id ?? eleIndex}>
-                    <div className="relative group" data-element-id={node.id}>
-                        {/* selection outline */}
-                        <div
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setCurrentEle(node.id);
-                                setCurrentHoverEle("none");
-                            }}
-                            style={{
-                                visibility:
-                                    currentEle === node.id || currentHoverEle === node.id
-                                        ? "visible"
-                                        : undefined,
-                                opacity:
-                                    currentEle === node.id || currentHoverEle === node.id
-                                        ? currentEle === node.id
-                                            ? 1
-                                            : 0.5
-                                        : undefined,
-                                top:
-                                    currentEle === node.id || currentHoverEle === node.id
-                                        ? "-8px"
-                                        : undefined,
-                                left:
-                                    currentEle === node.id || currentHoverEle === node.id
-                                        ? "-8px"
-                                        : undefined,
-                                right:
-                                    currentEle === node.id || currentHoverEle === node.id
-                                        ? "-8px"
-                                        : undefined,
-                                bottom:
-                                    currentEle === node.id || currentHoverEle === node.id
-                                        ? "-8px"
-                                        : undefined,
-                            }}
-                            className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
-                        >
-                            <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
-                                {(() => {
-                                    switch (type) {
-                                        case "Heading":
-                                            return <IconHeading size={12} />;
-                                        case "Text":
-                                            return <IconPilcrow size={12} />;
-                                        case "Input":
-                                            return <IconForms size={12} />;
-                                        case "Button":
-                                            return <IconRectangle size={12} />;
-                                        case "Image":
-                                            return <IconPhoto size={12} />;
-                                        default:
-                                            return <IconBrackets size={12} />;
-                                    }
-                                })()}
-                                {type || "Unknown"}
-                            </div>
-                        </div>
+                <section
+                    key={section.id ?? sindex}
+                    className={`mb-6 last:mb-0 overflow-hidden rounded-[10px] ${hasBgImage ? "relative min-h-[500px] flex items-center" : "bg-white shadow-sm"}`}
+                    style={hasBgImage ? {
+                        backgroundImage: `linear-gradient(rgba(25, 75, 255, 0.8), rgba(25, 75, 255, 0.8)), url(${section.bgImage})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    } : {}}
+                >
+                    <div className={hasBgImage ? "relative z-10 w-full p-12 md:p-20" : `w-full ${isAside ? "p-8" : "p-8 md:p-12"}`}>
+                        {(section.children || []).map((row: any, rIndex: number) => (
+                            <section
+                                className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"} ${row.id === "row-landing-hero-stats" ? "mt-4" : ""}`}
+                                key={row.id ?? rIndex}
+                            >
+                                {(row.children || []).map((col: any, cIndex: number) => {
+                                    const colChildren = col.elements || col.children || [];
+                                    const isActiveDropCol =
+                                        dragOverColumn === col.id &&
+                                        dropPosition &&
+                                        dropPosition.outlineId === outline.id &&
+                                        dropPosition.colId === col.id;
 
-                        {/* element render */}
-                        {(() => {
-                            switch (type) {
-                                case "Heading":
                                     return (
-                                        <h1 className="text-3xl mb-5 font-bold">
-                                            {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                <>&nbsp;</>
-                                            )}
-                                        </h1>
-                                    );
+                                        <div
+                                            key={col.id ?? cIndex}
+                                            onDragOver={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
 
-                                case "Text":
-                                    return (
-                                        <p className="mb-2">
-                                            {ele?.props.find((p: any) => p.label === "Text")?.value || (
-                                                <>&nbsp;</>
-                                            )}
-                                        </p>
-                                    );
+                                                // ✅ IMPORTANT: do NOT rely on only "image/url"
+                                                if (!isValidVBDrag(e.dataTransfer)) return;
 
-                                case "Input": {
-                                    const inputType = ele?.props.find((p: any) => p.label === "Type")?.value || "text";
-                                    return (
-                                        <div className="group relative mt-4">
-                                            {ele?.props.find((p: any) => p.label === "Tooltip")?.value && (
-                                                <div className="text-sm group-hover:opacity-100 group-hover:scale-100 group-hover:delay-1000 delay-0 group-hover:visible group-hover:-translate-y-2 opacity-0 text-center invisible absolute left-1/2 -translate-x-1/2 bottom-10 scale-90 shadow-lg transition-[.3s] px-2 py-1 rounded-md bg-[#000] text-white">
-                                                    {ele?.props.find((p: any) => p.label === "Tooltip")?.value}
-                                                </div>
-                                            )}
-                                            <label className="block text-sm font-medium mb-1">
-                                                {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                    <>&nbsp;</>
-                                                )}
-                                            </label>
-                                            <input
-                                                type={inputType}
-                                                placeholder={
-                                                    ele?.props.find((p: any) => p.label === "Placeholder")?.value ||
-                                                    undefined
+                                                setDragOverColumn(col.id);
+
+                                                const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
+                                                const mouseY = e.clientY;
+
+                                                let insertPosition = colChildren.length;
+
+                                                for (let i = 0; i < elementDivs.length; i++) {
+                                                    const rect = (elementDivs[i] as HTMLElement).getBoundingClientRect();
+                                                    const middle = rect.top + rect.height / 2;
+                                                    if (mouseY < middle) {
+                                                        insertPosition = i;
+                                                        break;
+                                                    }
                                                 }
-                                                className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66]"
-                                            />
-                                        </div>
-                                    );
-                                }
 
-                                case "Textarea":
-                                    return (
-                                        <div className="mt-4">
-                                            <label className="block text-sm font-medium mb-1">
-                                                {ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}
-                                            </label>
-                                            <textarea
-                                                placeholder={ele?.props.find((p: any) => p.label === "Placeholder")?.value || undefined}
-                                                className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] placeholder:text-[#ffffff66] min-h-[100px]"
-                                            />
-                                        </div>
-                                    );
+                                                setDropPosition({
+                                                    outlineId: outline.id,
+                                                    colId: col.id,
+                                                    position: insertPosition,
+                                                });
+                                            }}
+                                            onDragLeave={(e) => {
+                                                e.stopPropagation();
+                                                if (e.currentTarget === e.target) {
+                                                    setDragOverColumn(null);
+                                                    setDropPosition(null);
+                                                }
+                                            }}
+                                            className={dragOverColumn === col.id ? "relative" : ""}
+                                        >
+                                            {/* list */}
+                                            {colChildren.map((element: any, eleIndex: number) => {
+                                                const ele = outline.elements[element.id];
+                                                const type = ele?.type;
 
-                                case "Dropdown": {
-                                    const options = (ele?.props.find((p: any) => p.label === "Options")?.value || "").split(",").map((s: string) => s.trim());
-                                    return (
-                                        <div className="mt-4">
-                                            <label className="block text-sm font-medium mb-1">
-                                                {ele?.props.find((p: any) => p.label === "Label")?.value || <>&nbsp;</>}
-                                            </label>
-                                            <select className="border border-[#ffffff22] rounded-[6px] p-2 w-full bg-[#ffffff11] text-white">
-                                                {options.map((opt: string, i: number) => (
-                                                    <option key={i} value={opt}>{opt}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    );
-                                }
+                                                return (
+                                                    <React.Fragment key={element.id ?? eleIndex}>
+                                                        {/* ✅ insert line BEFORE the element (middle positions now visible/usable) */}
+                                                        {isActiveDropCol && dropPosition!.position === eleIndex && (
+                                                            <div
+                                                                style={{
+                                                                    height: "2px",
+                                                                    backgroundColor: "#0037FF",
+                                                                    borderRadius: "2px",
+                                                                    margin: "6px 0",
+                                                                    pointerEvents: "none",
+                                                                }}
+                                                            />
+                                                        )}
 
-                                case "Radio": {
-                                    const options = (ele?.props.find((p: any) => p.label === "Options")?.value || "").split(",").map((s: string) => s.trim());
-                                    const label = ele?.props.find((p: any) => p.label === "Label")?.value;
-                                    return (
-                                        <div className="mt-4">
-                                            <label className="block text-sm font-medium mb-2">{label || <>&nbsp;</>}</label>
-                                            <div className="flex flex-col gap-2">
-                                                {options.map((opt: string, i: number) => (
-                                                    <label key={i} className="flex items-center gap-2 cursor-pointer">
-                                                        <input type="radio" name={node.id} value={opt} className="w-4 h-4" />
-                                                        <span>{opt}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                }
+                                                        <div className="relative group" data-element-id={element.id}>
+                                                            {/* selection outline */}
+                                                            <div
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setCurrentEle(element.id);
+                                                                    setCurrentHoverEle("none");
+                                                                }}
+                                                                style={{
+                                                                    visibility:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "visible"
+                                                                            : undefined,
+                                                                    opacity:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? currentEle === element.id
+                                                                                ? 1
+                                                                                : 0.5
+                                                                            : undefined,
+                                                                    top:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                    left:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                    right:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                    bottom:
+                                                                        currentEle === element.id || currentHoverEle === element.id
+                                                                            ? "-8px"
+                                                                            : undefined,
+                                                                }}
+                                                                className="cursor-pointer group-hover:visible group-hover:-left-2 group-hover:-top-2 group-hover:-right-2 group-hover:-bottom-2 group-hover:opacity-50 transition-all duration-100 invisible opacity-0 absolute border-2 -left-1 -top-1 -right-1 -bottom-1 z-10 border-[#0037FF] rounded-[4px] rounded-tl-none"
+                                                            >
+                                                                <div className="bg-[#0037FF] flex gap-1 items-center text-white text-[9px] absolute px-2 py-[3px] rounded-[4px] -top-7 -left-[2px] rounded-b-none">
+                                                                    {(() => {
+                                                                        switch (type) {
+                                                                            case "Heading":
+                                                                            case "ct-heading":
+                                                                                return <IconHeading size={12} />;
+                                                                            case "Text":
+                                                                            case "ct-text":
+                                                                            case "ct-rich-text":
+                                                                                return <IconPilcrow size={12} />;
+                                                                            case "ct-product":
+                                                                                return <IconRectangle size={12} />;
+                                                                            case "Input":
+                                                                            case "ct-input":
+                                                                                return <IconForms size={12} />;
+                                                                            case "Button":
+                                                                            case "ct-button":
+                                                                                return <IconRectangle size={12} />;
+                                                                            case "Image":
+                                                                            case "ct-image":
+                                                                                return <IconPhoto size={12} />;
+                                                                            default:
+                                                                                return <IconBrackets size={12} />;
+                                                                        }
+                                                                    })()}
+                                                                    {type || "Unknown"}
+                                                                </div>
+                                                            </div>
 
-                                case "Checkbox": {
-                                    const label = ele?.props.find((p: any) => p.label === "Label")?.value;
-                                    const checked = ele?.props.find((p: any) => p.label === "Default Checked")?.value === "true";
-                                    return (
-                                        <div className="mt-4 flex items-center gap-2">
-                                            <input type="checkbox" defaultChecked={checked} className="w-4 h-4" />
-                                            <label className="text-sm font-medium cursor-pointer">{label || <>&nbsp;</>}</label>
-                                        </div>
-                                    );
-                                }
+                                                            {/* element render */}
+                                                            {(() => {
+                                                                const BlockComponent = BlockRegistry[type];
+                                                                if (BlockComponent) {
+                                                                    return <BlockComponent properties={ele.properties} hasBgImage={hasBgImage} />;
+                                                                }
+                                                                return null;
+                                                            })()}
+                                                        </div>
+                                                    </React.Fragment>
+                                                );
+                                            })}
 
-                                case "Slider": {
-                                    const label = ele?.props.find((p: any) => p.label === "Label")?.value;
-                                    const min = ele?.props.find((p: any) => p.label === "Min")?.value || "0";
-                                    const max = ele?.props.find((p: any) => p.label === "Max")?.value || "100";
-                                    const step = ele?.props.find((p: any) => p.label === "Step")?.value || "1";
-                                    return (
-                                        <div className="mt-4">
-                                            <label className="block text-sm font-medium mb-2">{label || <>&nbsp;</>}</label>
-                                            <input type="range" min={min} max={max} step={step} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-                                            <div className="flex justify-between text-xs mt-1 opacity-60">
-                                                <span>{min}</span>
-                                                <span>{max}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                case "Button":
-                                    return (
-                                        <div className="text-right mt-4">
-                                            <button className="rounded bg-[#6846FF] px-5 py-3 text-center text-white font-bold inline-block hover:bg-[#5836FF] transition-colors">
-                                                {ele?.props.find((p: any) => p.label === "Label")?.value || (
-                                                    <>&nbsp;</>
-                                                )}
-                                            </button>
-                                        </div>
-                                    );
-
-                                case "Form": {
-                                    const formName = ele?.props.find((p: any) => p.label === "Form Name")?.value || "Form";
-                                    const action = ele?.props.find((p: any) => p.label === "Submit URL")?.value || "#";
-                                    return (
-                                        <div className="border border-[#ffffff22] rounded-lg p-6 bg-[#ffffff05] mt-6">
-                                            <h2 className="text-xl font-semibold mb-4 opacity-80">{formName}</h2>
-                                            <form action={action} onSubmit={(e) => e.preventDefault()}>
-                                                {(node.children || []).map((child: any, i: number) => renderElement(child, i))}
-                                            </form>
-                                        </div>
-                                    );
-                                }
-
-                                case "Image": {
-                                    const imageUrlRaw =
-                                        ele?.props.find((p: any) => p.label === "Image URL")?.value;
-                                    const imageUrl =
-                                        typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-
-                                    const imageAlt = ele?.props.find((p: any) => p.label === "Alt Text")?.value;
-                                    const imageWidth = ele?.props.find((p: any) => p.label === "Width")?.value;
-                                    const imageHeight = ele?.props.find((p: any) => p.label === "Height")?.value;
-
-                                    return (
-                                        <div className="mb-4">
-                                            {imageUrl ? (
-                                                <img
-                                                    src={imageUrl}
-                                                    alt={imageAlt || "Image"}
+                                            {/* ✅ insert line at END of column */}
+                                            {isActiveDropCol && dropPosition!.position === colChildren.length && (
+                                                <div
                                                     style={{
-                                                        width: imageWidth === "auto" ? "100%" : imageWidth,
-                                                        height: imageHeight === "auto" ? "auto" : imageHeight,
-                                                        borderRadius: "8px",
-                                                        objectFit: "cover",
+                                                        height: "2px",
+                                                        backgroundColor: "#0037FF",
+                                                        borderRadius: "2px",
+                                                        margin: "6px 0",
+                                                        pointerEvents: "none",
                                                     }}
                                                 />
-                                            ) : (
-                                                <div className="border border-[#ffffff33] bg-[#ffffff0d] text-center text-white/80 rounded-[8px] p-6 text-sm">
-                                                    No image selected
-                                                </div>
                                             )}
                                         </div>
                                     );
-                                }
-
-                                default:
-                                    return null;
-                            }
-                        })()}
+                                })}
+                            </section>
+                        ))}
                     </div>
-                </React.Fragment>
+                </section>
             );
-        };
-
-        return outline.tree.map((section: any, sindex: number) => (
-            <section key={section.id ?? sindex}>
-                {(section.children || []).map((row: any, rIndex: number) => (
-                    <section
-                        className="grid grid-flow-col auto-cols-fr gap-4 text-white"
-                        key={row.id ?? rIndex}
-                    >
-                        {(row.children || []).map((col: any, cIndex: number) => {
-                            const colChildren = col.children || [];
-                            const isActiveDropCol =
-                                dragOverColumn === col.id &&
-                                dropPosition &&
-                                dropPosition.outlineId === outline.id &&
-                                dropPosition.colId === col.id;
-
-                            return (
-                                <div
-                                    key={col.id ?? cIndex}
-                                    onDragOver={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-
-                                        // ✅ IMPORTANT: do NOT rely on only "image/url"
-                                        if (!isImageDrag(e.dataTransfer)) return;
-
-                                        setDragOverColumn(col.id);
-
-                                        const elementDivs = e.currentTarget.querySelectorAll("[data-element-id]");
-                                        const mouseY = e.clientY;
-
-                                        let insertPosition = colChildren.length;
-
-                                        for (let i = 0; i < elementDivs.length; i++) {
-                                            const rect = (elementDivs[i] as HTMLElement).getBoundingClientRect();
-                                            const middle = rect.top + rect.height / 2;
-                                            if (mouseY < middle) {
-                                                insertPosition = i;
-                                                break;
-                                            }
-                                        }
-
-                                        setDropPosition({
-                                            outlineId: outline.id,
-                                            colId: col.id,
-                                            position: insertPosition,
-                                        });
-                                    }}
-                                    onDragLeave={(e) => {
-                                        e.stopPropagation();
-                                        if (e.currentTarget === e.target) {
-                                            setDragOverColumn(null);
-                                            setDropPosition(null);
-                                        }
-                                    }}
-                                    className={dragOverColumn === col.id ? "relative" : ""}
-                                >
-                                    {/* empty drop */}
-                                    {colChildren.length === 0 && dragOverColumn === col.id && (
-                                        <div
-                                            style={{
-                                                border: "2px dashed #0037FF",
-                                                borderRadius: "8px",
-                                                padding: "20px",
-                                                textAlign: "center",
-                                                color: "#0037FF",
-                                                fontSize: "14px",
-                                                backgroundColor: "rgba(0, 55, 255, 0.05)",
-                                            }}
-                                        >
-                                            Drop image here
-                                        </div>
-                                    )}
-
-                                    {/* list */}
-                                    {colChildren.map((element: any, eleIndex: number) => {
-                                        const isActiveDropEle = isActiveDropCol && dropPosition!.position === eleIndex;
-                                        return (
-                                            <React.Fragment key={element.id ?? eleIndex}>
-                                                {/* ✅ insert line BEFORE the element (middle positions now visible/usable) */}
-                                                {isActiveDropEle && (
-                                                    <div
-                                                        style={{
-                                                            height: "2px",
-                                                            backgroundColor: "#0037FF",
-                                                            borderRadius: "2px",
-                                                            margin: "6px 0",
-                                                            pointerEvents: "none",
-                                                        }}
-                                                    />
-                                                )}
-                                                {renderElement(element, eleIndex)}
-                                            </React.Fragment>
-                                        );
-                                    })}
-
-                                    {/* ✅ insert line at END of column */}
-                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
-                                        <div
-                                            style={{
-                                                height: "2px",
-                                                backgroundColor: "#0037FF",
-                                                borderRadius: "2px",
-                                                margin: "6px 0",
-                                                pointerEvents: "none",
-                                            }}
-                                        />
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </section>
-                ))}
-            </section>
-        ));
+        });
     };
-
-//                                    {/* ✅ insert line at END of column */}
-//                                    {isActiveDropCol && dropPosition!.position === colChildren.length && (
-//                                        <div
-//                                            style={{
-//                                                height: "2px",
-//                                                backgroundColor: "#0037FF",
-//                                                borderRadius: "2px",
-//                                                margin: "6px 0",
-//                                                pointerEvents: "none",
-//                                            }}
-//                                        />
-//                                    )}
-//                                </div>
-//                            );
-//                        })}
-//                    </section>
-//                ))}
-//            </section>
-//        ));
-//    };
 
     const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
     const asideOutlines = outlines.filter((o) => isAsideOutline(o));
@@ -585,9 +451,9 @@ export default function PreviewCanvas({
 
     return (
         <div
-            className={`rounded-lg grow w-full mt-3 min-h-0 min-w-0 ${styles.canvas}`}
+            className={`rounded-[10px] grow w-full mt-3 min-h-0 min-w-0 ${styles.canvas}`}
             style={{
-                background: "darkgray",
+                background: "#F3F4F6",
                 height: "100%",
                 minHeight: 0,
                 overflow: "hidden",
@@ -603,7 +469,7 @@ export default function PreviewCanvas({
                 onClick={() => setCurrentEle("none")}
                 onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
                     e.preventDefault();
-                    if (isImageDrag(e.dataTransfer)) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
+                    if (isValidVBDrag(e.dataTransfer)) (e.currentTarget as HTMLDivElement).style.opacity = "0.8";
                 }}
                 onDragLeave={(e: React.DragEvent<HTMLDivElement>) => {
                     (e.currentTarget as HTMLDivElement).style.opacity = "1";
@@ -616,12 +482,14 @@ export default function PreviewCanvas({
 
                     const imageUrl = getDraggedImageUrl(e.dataTransfer);
                     const imageAlt = getDraggedAlt(e.dataTransfer);
+                    const internalId = e.dataTransfer.getData(VB_INTERNAL_MIME);
 
                     const dp = dropPosition;
                     setDragOverColumn(null);
                     setDropPosition(null);
 
                     if (imageUrl && dp) insertImageIntoOutline(dp, imageUrl, imageAlt);
+                    if (internalId && dp) moveElementInOutlines(internalId, dp);
                 }}
                 style={{ transition: "opacity 0.2s" }}
             >
@@ -679,7 +547,7 @@ export default function PreviewCanvas({
                                 >
                                     {siteConfig.header.auth.signIn}
                                 </a>
-                                <button className="bg-[#05051F] text-white px-5 py-2.5 rounded-lg text-[15px] font-semibold hover:bg-black transition-colors">
+                                <button className="bg-[#05051F] text-white px-5 py-2.5 rounded-[10px] text-[15px] font-semibold hover:bg-black transition-colors">
                                     {siteConfig.header.auth.cta}
                                 </button>
                             </>
@@ -714,7 +582,7 @@ export default function PreviewCanvas({
                                 {siteConfig.header.auth.signIn}
                             </a>
                             <button
-                                className="bg-[#05051F] text-white px-5 py-3 rounded-lg text-[16px] font-semibold hover:bg-black transition-colors w-full mt-2"
+                                className="bg-[#05051F] text-white px-5 py-3 rounded-[10px] text-[16px] font-semibold hover:bg-black transition-colors w-full mt-2"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {siteConfig.header.auth.cta}
@@ -723,34 +591,31 @@ export default function PreviewCanvas({
                     )}
                 </div>
 
-                <div className="w-full p-4 px-6 md:px-24 pt-8 md:pt-12 flex-1" style={{
-                    background: "radial-gradient(112.7% 105.9% at 2.27% 5.46%, rgba(255, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.00) 100%), linear-gradient(180deg, #360041 0%, #002A3A 100%)"
+                <div className="w-full p-6 md:p-6 flex-1" style={{
+                    background: "#F3F4F6"
                 }}>
                     {useTwoCol ? (
-                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-8 items-start">
-                            <div className="space-y-10">
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 items-start">
+                            <div className="space-y-6">
                                 {mainOutlines.map((outline) => (
                                     <div key={outline.id}>
-                                        <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                         {renderOutlineTree(outline)}
                                     </div>
                                 ))}
                             </div>
 
-                            <aside className="space-y-10">
+                            <aside className="space-y-6">
                                 {asideOutlines.map((outline) => (
                                     <div key={outline.id}>
-                                        <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                         {renderOutlineTree(outline)}
                                     </div>
                                 ))}
                             </aside>
                         </div>
                     ) : (
-                        <div className="space-y-10">
+                        <div className="space-y-6">
                             {[...mainOutlines, ...asideOutlines].map((outline) => (
                                 <div key={outline.id}>
-                                    <div className="text-white/60 text-xs mb-3">{outline.title}</div>
                                     {renderOutlineTree(outline)}
                                 </div>
                             ))}
