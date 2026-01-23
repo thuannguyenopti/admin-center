@@ -12,6 +12,12 @@
 		"@optiaxiom/react": "^1.7.13",
 		"@tabler/icons-react": "^3.35.0",
 		"@tanstack/react-table": "^8.21.3",
+<<<<<<< Updated upstream
+=======
+		"@xyflow/react": "^12.10.0",
+		"elkjs": "^0.11.0",
+		"nanoid": "^5.1.6",
+>>>>>>> Stashed changes
 		"next": "^16.0.7",
 		"openai": "^6.10.0",
 		"react": "^19.2.1",
