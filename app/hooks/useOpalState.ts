@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from 'react';
+import { OpalContextType } from '@/app/context/OpalContext';
 
 export type ChatMessage = {
   id: string;
@@ -23,6 +24,7 @@ const PANEL_STATE_KEY = 'opal_panel_state';
 type UseOpalStateProps = {
   activeChatId?: string | null;
   onMessageSent?: (content: string) => void;
+  opalContext?: OpalContextType;
 };
 
 const MOCK_CHAT_IDS = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
@@ -105,7 +107,7 @@ function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null 
   }
 }
 
-export function useOpalState({ activeChatId, onMessageSent }: UseOpalStateProps = {}) {
+export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOpalStateProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -255,7 +257,7 @@ export function useOpalState({ activeChatId, onMessageSent }: UseOpalStateProps 
     });
 
     try {
-      // Call API
+      // Call API with context
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -263,6 +265,11 @@ export function useOpalState({ activeChatId, onMessageSent }: UseOpalStateProps 
         },
         body: JSON.stringify({
           userMessage: content.trim(),
+          context: opalContext ? {
+            currentPage: opalContext.currentPage,
+            availableFeatures: opalContext.availableFeatures,
+            opalCapabilities: opalContext.opalCapabilities,
+          } : undefined,
         }),
       });
 
@@ -286,7 +293,7 @@ export function useOpalState({ activeChatId, onMessageSent }: UseOpalStateProps 
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, addMessage, updateMessage]);
+  }, [isLoading, addMessage, updateMessage, opalContext]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
