@@ -1,6 +1,16 @@
 "use client";
 
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button} from "@optiaxiom/react";
+import {
+	Box,
+	Sidebar,
+	NavBody,
+	NavItem,
+	Nav,
+	Heading,
+	SubNav,
+	Button,
+	Indicator,
+} from "@optiaxiom/react";
 import {Text} from "./Text";
 import Link from "next/link";
 import {useEffect, useState} from "react";
@@ -12,9 +22,6 @@ import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import ContentSubNav from "../cms/content/components/ContentSubNav";
-import { OpalPanel } from "./OpalPanel";
-import { useOpalState } from "@/app/hooks/useOpalState";
-import { useOpalHistory } from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -26,8 +33,7 @@ function TemplateContent({
 	const {asideContent} = useLayout();
 	const router = useRouter();
 	const path = usePathname();
-	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", true);
-	// Opal is global + contextual: keep its state at the template level so it persists across pages.
+	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -35,7 +41,9 @@ function TemplateContent({
 
 	const menuItems = structure;
 
-	const highlight1 = menuItems.find((item: any) => path.includes(item.highlight));
+	const highlight1 = menuItems
+		.filter((item: any) => path.includes(item.highlight))
+		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
 	const lvl2 = highlight1?.children
 		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
@@ -48,121 +56,96 @@ function TemplateContent({
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
 	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
-	
+
 	// Check if we're on the Content Manager page
-	const isContentManager = path.includes('/cms/content');
-	
+	const isContentManager = path.includes("/cms/content");
+
 	const showVT =
 		highlight1?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
-	
+
 	// Show secondary sidebar for Content Manager or hierarchical navigation
 	const showSecondarySidebar = isContentManager || showVT;
 
 	const customLayout = highlight1?.customLayout;
 
-	const {
-		groupedHistory,
-		allChatHistory,
-		activeChat,
-		searchQuery,
-		isHistoryVisible,
-		mode,
-		setSearchQuery,
-		toggleHistory,
-		toggleMode,
-		createNewChat,
-		deleteChat,
-		selectChat,
-		updateChat,
-	} = useOpalHistory();
+	// Check if we're on the Workflow Builder page
+	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
-	// Ensure there is always an active chat. If history is empty, create one by default.
-	useEffect(() => {
-		if (activeChat) return;
-		if (allChatHistory.length > 0) {
-			selectChat(allChatHistory[0].id);
-			return;
-		}
-		createNewChat();
-	}, [activeChat, allChatHistory, selectChat, createNewChat]);
+	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
 
-	const handleMessageSent = (content: string) => {
-		if (!activeChat) return;
-		// If this is the first message in a new chat, use it as the title
-		updateChat(activeChat, {
-			title: content,
-			date: new Date(),
-		});
-	};
-
-	const {
-		isOpen,
-		messages,
-		inputValue,
-		isLoading,
-		error,
-		togglePanel,
-		closePanel,
-		setInputValue,
-		sendMessage,
-	} = useOpalState({ activeChatId: activeChat, onMessageSent: handleMessageSent });
+	if (isWorkflowBuilder) {
+		return (
+			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
+				{children}
+			</Box>
+		);
+	}
 
 	return (
-		<Box
-			className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
-			bg="bg.page"
-		>
-			<GlobalBar onOpalClick={togglePanel} />
-			<OpalPanel
-				isOpen={isOpen}
-				onClose={closePanel}
-				messages={messages}
-				inputValue={inputValue}
-				isLoading={isLoading}
-				error={error}
-				setInputValue={setInputValue}
-				sendMessage={sendMessage}
-				groupedHistory={groupedHistory}
-				activeChat={activeChat}
-				searchQuery={searchQuery}
-				isHistoryVisible={isHistoryVisible}
-				mode={mode}
-				setSearchQuery={setSearchQuery}
-				toggleHistory={toggleHistory}
-				toggleMode={toggleMode}
-				createNewChat={createNewChat}
-				deleteChat={deleteChat}
-				selectChat={selectChat}
-			/>
-			<Box
-				display="flex"
-				z="10"
-			>
-				<Sidebar
-					className="h-full z-10 relative"
-					expanded={isExpanded}
-				>
+		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]" bg="bg.page">
+			<GlobalBar />
+			<Box display="flex" z="10">
+				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
 						<NavBody>
-							{menuItems.map((menuItem: any) => (
-								<NavItem
-									onClick={() => menuClick(menuItem.url)}
-									active={path.includes(menuItem.highlight)}
-									key={menuItem.label}
-									aria-label={menuItem.label}
-									icon={menuItem.icon}
-								>
-									{menuItem.label}
-								</NavItem>
-							))}
+							{menuItems.map((menuItem: any) =>
+								menuItem.url ? (
+									<NavItem
+										onClick={() => menuClick(menuItem.url)}
+										active={
+											menuItem.exact
+												? path === menuItem.highlight
+												: path.includes(menuItem.highlight)
+										}
+										key={menuItem.label}
+										aria-label={menuItem.label}
+										icon={
+											menuItem.label === "Notifications" &&
+											!path.startsWith("/opal/notifications") ? (
+												<Box style={{position: "relative"}}>
+													{menuItem.icon}
+													<Box
+														style={{
+															position: "absolute",
+															top: "-2px",
+															right: "-2px",
+															height: "8px",
+															width: "8px",
+															border: "1.5px solid #FFFFFF",
+														}}
+														bg="bg.error"
+														rounded="full"
+													/>
+												</Box>
+											) : (
+												menuItem.icon
+											)
+										}
+									>
+										{menuItem.label}
+									</NavItem>
+								) : (
+									<Box
+										key={menuItem.label}
+										px="16"
+										py="8"
+										mt="4"
+										borderT="1"
+										borderColor="border.tertiary"
+									>
+										{isExpanded && (
+											<Text fontSize="sm" color="fg.tertiary" mt="2">
+												{menuItem.label}
+											</Text>
+										)}
+									</Box>
+								)
+							)}
 						</NavBody>
 					</Nav>
-					<Box
-						className="absolute bottom-0 left-0 right-0"
-						p="8"
-					>
+					<Box className="absolute bottom-0 left-0 right-0" p="8">
 						<Button
 							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
 							icon={!isExpanded ? <IconChevronRight /> : <IconChevronLeft />}
@@ -188,10 +171,7 @@ function TemplateContent({
 					{isContentManager ? (
 						<ContentSubNav />
 					) : showVT ? (
-						<Sidebar
-							className="flex"
-							h="full"
-						>
+						<Sidebar className="flex" h="full">
 							<SubNav>
 								<div
 									className="flex w-[500%]"
@@ -249,7 +229,9 @@ function TemplateContent({
 								marginLeft: "224px",
 								marginRight: "-224px",
 								width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
-								transform: showSecondarySidebar ? "translatex(0px)" : "translatex(-224px)",
+								transform: showSecondarySidebar
+									? "translatex(0px)"
+									: "translatex(-224px)",
 								transition: ".7s cubic-bezier(0, 1, 0, 1)",
 							}}
 							color="fg.default"
@@ -259,11 +241,7 @@ function TemplateContent({
 							<>
 								<Heading level="3">{heading || highlight1?.label}</Heading>
 								{desc && <Text mt="4">{desc}</Text>}
-								<Box
-									mt="16"
-									z="10"
-									className="relative"
-								>
+								<Box mt="16" z="10" className="relative">
 									{children}
 								</Box>
 							</>

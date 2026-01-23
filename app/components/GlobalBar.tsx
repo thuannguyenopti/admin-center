@@ -1,10 +1,10 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
-import {Text} from "./Text";
-import {ReactNode} from "react";
-import {useRouter, usePathname} from "next/navigation";
-import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
+import { Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator } from "@optiaxiom/react";
+import { Text } from "./Text";
+import { ReactNode } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { IconSearch, IconBell, IconHelp, IconUser } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -21,7 +21,7 @@ export default function GlobalBar({ onOpalClick }: GlobalBarProps) {
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
-		return "Prototype";
+		return "Opal";
 	};
 
 	return (
@@ -100,7 +100,7 @@ export default function GlobalBar({ onOpalClick }: GlobalBarProps) {
 					options={[
 						{
 							label: "Opal",
-							disabledReason: "TBD",
+							execute: () => router.push("/opal"),
 						},
 						{
 							label: "Content Management System",
@@ -134,7 +134,7 @@ export default function GlobalBar({ onOpalClick }: GlobalBarProps) {
 							display="flex"
 							alignItems={"center"}
 							gap="8"
-							style={{cursor: "pointer"}}
+							style={{ cursor: "pointer" }}
 						>
 							<Text
 								fontSize="md"
@@ -184,12 +184,26 @@ export default function GlobalBar({ onOpalClick }: GlobalBarProps) {
 						height={20}
 					/>
 				</Button>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconBell size={20} />}
-					aria-label="Notifications"
-				/>
+				<Box style={{ position: 'relative' }}>
+					<Button
+						appearance="subtle"
+						size="md"
+						icon={<IconBell size={20} />}
+						aria-label="Notifications"
+					/>
+					<Box
+						style={{
+							position: 'absolute',
+							top: '4px',
+							right: '4px',
+							height: '8px',
+							width: '8px',
+							border: '1.5px solid #FFFFFF'
+						}}
+						bg="bg.error"
+						rounded="full"
+					/>
+				</Box>
 				<Button
 					appearance="subtle"
 					size="md"

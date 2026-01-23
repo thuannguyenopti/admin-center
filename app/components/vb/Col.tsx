@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ReactNode } from "react";
 import { Box, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
 import {
@@ -10,6 +10,7 @@ import {
     IconForms,
     IconRectangle,
     IconPhoto,
+    IconBrackets,
 } from "@tabler/icons-react";
 
 const indentDistance = 8;
@@ -21,46 +22,41 @@ const Col: React.FC<{
     addElement: any;
     removeCol: any;
     onDragStart: any;
-}> = ({ setOpen, col, children, addElement, removeCol, onDragStart }) => {
-    const [isDragOver, setIsDragOver] = useState(false);
+    elementOptions: { type: string; label: string }[];
+}> = ({ setOpen, col, children, addElement, removeCol, onDragStart, elementOptions }) => {
 
-    const handleDragOver = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const hasImageData = Array.from(e.dataTransfer.types).includes("image/url");
-        if (hasImageData) {
-            setIsDragOver(true);
+    const iconForType = (type: string) => {
+        switch (type) {
+            case "ct-heading":
+                return <IconHeading size={16} />;
+            case "ct-text":
+            case "ct-rich-text":
+                return <IconPilcrow size={16} />;
+            case "ct-product":
+                return <IconRectangle size={16} />;
+            case "ct-input":
+                return <IconForms size={16} />;
+            case "ct-button":
+                return <IconRectangle size={16} />;
+            case "ct-image":
+                return <IconPhoto size={16} />;
+            default:
+                return <IconBrackets size={16} />;
         }
     };
 
-    const handleDragLeave = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
-    };
+    const fallbackOptions = [
+        { type: "ct-heading", label: "Heading" },
+        { type: "ct-text", label: "Text" },
+        { type: "ct-input", label: "Input" },
+        { type: "ct-button", label: "Button" },
+        { type: "ct-image", label: "Image" },
+    ];
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
-
-        const imageUrl = e.dataTransfer.getData("image/url");
-        const imageAlt = e.dataTransfer.getData("image/alt");
-
-        if (imageUrl) {
-            (window as any).__pendingImageData = { url: imageUrl, alt: imageAlt };
-            addElement("Image");
-            delete (window as any).__pendingImageData;
-        }
-    };
-
+    const optionsSource = (elementOptions && elementOptions.length > 0) ? elementOptions : fallbackOptions;
     return (
         <Box
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
             style={{
-                backgroundColor: isDragOver ? "#0037FF10" : "transparent",
                 transition: "background-color 0.2s",
             }}
         >
@@ -116,43 +112,12 @@ const Col: React.FC<{
                         <MenuContent />
                     </Menu>
                     <Menu
-                        options={[
-                            {
-                                group: { label: "Add Element" },
-                                addon: <IconHeading size={16} />,
-                                label: "Heading",
-                                execute: () => {
-                                    addElement("Heading");
-                                },
-                            },
-                            {
-                                addon: <IconPilcrow size={16} />,
-                                label: "Text",
-                                execute: () => {
-                                    addElement("Text");
-                                },
-                            },
-                            {
-                                addon: <IconForms size={16} />,
-                                label: "Input",
-                                execute: () => addElement("Input"),
-                            },
-                            {
-                                addon: <IconRectangle size={16} />,
-                                label: "Button",
-                                execute: () => addElement("Button"),
-                            },
-                            {
-                                addon: <IconForms size={16} />,
-                                label: "Form",
-                                execute: () => addElement("Form"),
-                            },
-                            {
-                                addon: <IconPhoto size={16} />,
-                                label: "Image",
-                                execute: () => addElement("Image"),
-                            },
-                        ]}
+                        options={optionsSource.map((opt, idx) => ({
+                            group: idx === 0 ? { label: "Add Element" } : undefined,
+                            addon: iconForType(opt.type),
+                            label: opt.label,
+                            execute: () => addElement(opt.type),
+                        }))}
                     >
                         <MenuTrigger
                             icon={<IconPlus />}

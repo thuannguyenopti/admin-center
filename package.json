@@ -10,8 +10,11 @@
 	},
 	"dependencies": {
 		"@optiaxiom/react": "^1.7.13",
+		"@optimizely/axiom-icons": "^1.13.2",
 		"@tabler/icons-react": "^3.35.0",
 		"@tanstack/react-table": "^8.21.3",
+		"@xyflow/react": "^12.10.0",
+		"elkjs": "^0.11.0",
 		"next": "^16.0.7",
 		"openai": "^6.10.0",
 		"react": "^19.2.1",
