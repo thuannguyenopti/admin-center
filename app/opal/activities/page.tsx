@@ -47,28 +47,54 @@ import { TableColumnConfig, ColumnConfig } from "@/app/components/TableColumnCon
 import DetailsPanel from "./DetailsPanel";
 
 // Status icon mapping
-const StatusIcon = ({ status, agentName }: { status: string; agentName?: string }) => {
+const StatusIcon = ({ status, agentName, guardrailStatus }: { status: string; agentName?: string; guardrailStatus?: string }) => {
     const iconProps = { size: 20 };
 
-    // Special case: Success Plan Generator shows warning icon but keeps Completed status
-    if (agentName === "Success Plan Generator" && status === "Completed") {
-        return <IconTriangleExclamation {...iconProps} color="#F79009" />;
+    // Determine the status to use for the tooltip description
+    const tooltipStatus = (guardrailStatus && (guardrailStatus === "Failed" || guardrailStatus === "Terminated" || guardrailStatus === "Review Needed"))
+        ? guardrailStatus
+        : (status === "Failed" || status === "Terminated" || status === "Review Needed" ? status : null);
+
+    let icon = null;
+
+    // Show warning icon if the agent is marked for review or specifically for Success Plan Generator
+    if ((agentName === "Success Plan Generator" && status === "Completed") || guardrailStatus === "Review Needed") {
+        icon = <IconTriangleExclamation {...iconProps} color="#F79009" />;
+    } else {
+        switch (status) {
+            case "Completed":
+                icon = <IconCircleCheck {...iconProps} color="#17B26A" />;
+                break;
+            case "In Progress":
+                icon = <Spinner style={{ width: 16, height: 16 }} />;
+                break;
+            case "Failed":
+                icon = <IconCircleExclamation {...iconProps} color="#D92D20" />;
+                break;
+            case "Terminated":
+                icon = <IconCirclePause {...iconProps} color="#D92D20" />;
+                break;
+            case "Paused":
+                icon = <IconCirclePause {...iconProps} color="#667085" />;
+                break;
+            default:
+                break;
+        }
     }
 
-    switch (status) {
-        case "Completed":
-            return <IconCircleCheck {...iconProps} color="#17B26A" />;
-        case "In Progress":
-            return <Spinner style={{ width: 16, height: 16 }} />;
-        case "Failed":
-            return <IconCircleExclamation {...iconProps} color="#D92D20" />;
-        case "Terminated":
-            return <IconCirclePause {...iconProps} color="#D92D20" />;
-        case "Paused":
-            return <IconCirclePause {...iconProps} color="#667085" />;
-        default:
-            return null;
+    if (!icon) return null;
+
+    if (tooltipStatus) {
+        return (
+            <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={tooltipStatus} />}>
+                <Box display="flex" style={{ cursor: 'help' }}>
+                    {icon}
+                </Box>
+            </Tooltip>
+        );
     }
+
+    return icon;
 };
 
 const GuardrailTooltipContent = ({ status }: { status: string }) => {
@@ -687,7 +713,7 @@ export default function ActivitiesPage() {
                                                 return (
                                                     <Td key={col.id} width="80px">
                                                         <Box display="flex" alignItems="center" gap="8">
-                                                            <StatusIcon status={activity.status} agentName={activity.agent.name} />
+                                                            <StatusIcon status={activity.status} agentName={activity.agent.name} guardrailStatus={activity.guardrails} />
                                                             {activity.subRuns.length > 0 && (
                                                                 <Box
                                                                     cursor="pointer"
@@ -861,7 +887,7 @@ export default function ActivitiesPage() {
                                                     return (
                                                         <Td key={col.id} width="80px">
                                                             <Box pl="32">
-                                                                <StatusIcon status={subRun.status} agentName={subRun.agent.name} />
+                                                                <StatusIcon status={subRun.status} agentName={subRun.agent.name} guardrailStatus={subRun.guardrails} />
                                                             </Box>
                                                         </Td>
                                                     );
