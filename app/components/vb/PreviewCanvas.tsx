@@ -515,6 +515,8 @@ export default function PreviewCanvas({
 			mr="8"
 			rounded="xl"
 			className={`grow ${styles.canvas}`}
+			border="1"
+			borderColor="border.tertiary"
 			style={{
 				background: "#F3F4F6",
 				height: "100%",
