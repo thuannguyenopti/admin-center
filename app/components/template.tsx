@@ -19,6 +19,7 @@ import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
+import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import ContentSubNav from "../cms/content/components/ContentSubNav";
@@ -34,6 +35,7 @@ function TemplateContent({
 	structure: any;
 }>) {
 	const {asideContent} = useLayout();
+	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
@@ -63,7 +65,7 @@ function TemplateContent({
 		closePanel: closeOpal,
 		setInputValue,
 		sendMessage,
-	} = useOpalState({ activeChatId: activeChat });
+	} = useOpalState({ activeChatId: activeChat, opalContext });
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -318,7 +320,9 @@ function TemplateContent({
 export default function Template(props: any) {
 	return (
 		<LayoutProvider>
-			<TemplateContent {...props} />
+			<OpalContextProvider navigationStructure={props.structure}>
+				<TemplateContent {...props} />
+			</OpalContextProvider>
 		</LayoutProvider>
 	);
 }

@@ -6,15 +6,11 @@
 	@tailwind utilities;
 }
 
-html {
-	color-scheme: light;
-}
-
-/* Light mode as default */
+/* Light mode as default, but defer to OS preference */
 :root {
 	--background: #ffffff;
 	--foreground: #000000;
-	color-scheme: light;
+	color-scheme: light dark;
 }
 
 /* Dark mode support based on OS preference */
