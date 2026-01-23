@@ -10,6 +10,7 @@ import {
     IconForms,
     IconRectangle,
     IconPhoto,
+    IconBrackets,
 } from "@tabler/icons-react";
 
 const indentDistance = 8;
@@ -21,7 +22,38 @@ const Col: React.FC<{
     addElement: any;
     removeCol: any;
     onDragStart: any;
-}> = ({ setOpen, col, children, addElement, removeCol, onDragStart }) => {
+    elementOptions: { type: string; label: string }[];
+}> = ({ setOpen, col, children, addElement, removeCol, onDragStart, elementOptions }) => {
+
+    const iconForType = (type: string) => {
+        switch (type) {
+            case "ct-heading":
+                return <IconHeading size={16} />;
+            case "ct-text":
+            case "ct-rich-text":
+                return <IconPilcrow size={16} />;
+            case "ct-product":
+                return <IconRectangle size={16} />;
+            case "ct-input":
+                return <IconForms size={16} />;
+            case "ct-button":
+                return <IconRectangle size={16} />;
+            case "ct-image":
+                return <IconPhoto size={16} />;
+            default:
+                return <IconBrackets size={16} />;
+        }
+    };
+
+    const fallbackOptions = [
+        { type: "ct-heading", label: "Heading" },
+        { type: "ct-text", label: "Text" },
+        { type: "ct-input", label: "Input" },
+        { type: "ct-button", label: "Button" },
+        { type: "ct-image", label: "Image" },
+    ];
+
+    const optionsSource = (elementOptions && elementOptions.length > 0) ? elementOptions : fallbackOptions;
     return (
         <Box
             style={{
@@ -80,38 +112,12 @@ const Col: React.FC<{
                         <MenuContent />
                     </Menu>
                     <Menu
-                        options={[
-                            {
-                                group: { label: "Add Element" },
-                                addon: <IconHeading size={16} />,
-                                label: "Heading",
-                                execute: () => {
-                                    addElement("ct-heading");
-                                },
-                            },
-                            {
-                                addon: <IconPilcrow size={16} />,
-                                label: "Text",
-                                execute: () => {
-                                    addElement("ct-text");
-                                },
-                            },
-                            {
-                                addon: <IconForms size={16} />,
-                                label: "Input",
-                                execute: () => addElement("ct-input"),
-                            },
-                            {
-                                addon: <IconRectangle size={16} />,
-                                label: "Button",
-                                execute: () => addElement("ct-button"),
-                            },
-                            {
-                                addon: <IconPhoto size={16} />,
-                                label: "Image",
-                                execute: () => addElement("ct-image"),
-                            },
-                        ]}
+                        options={optionsSource.map((opt, idx) => ({
+                            group: idx === 0 ? { label: "Add Element" } : undefined,
+                            addon: iconForType(opt.type),
+                            label: opt.label,
+                            execute: () => addElement(opt.type),
+                        }))}
                     >
                         <MenuTrigger
                             icon={<IconPlus />}
