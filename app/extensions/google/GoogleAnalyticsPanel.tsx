@@ -193,7 +193,9 @@ export default function GoogleAnalyticsPanel() {
 						<FieldLabel>Time Range</FieldLabel>
 						<SegmentedControl
 							defaultValue={range}
-							onValueChange={(value: string) => setRange(value as TimeRange)}
+							onValueChange={(value: string) => {
+								if (value) setRange(value as TimeRange);
+							}}
 						>
 							<Tooltip content="Last 7 days">
 								<SegmentedControlItem value="7d">7d</SegmentedControlItem>
@@ -258,7 +260,9 @@ export default function GoogleAnalyticsPanel() {
 						<FieldLabel>Time Range</FieldLabel>
 						<SegmentedControl
 							defaultValue={range}
-							onValueChange={(value: string) => setRange(value as TimeRange)}
+							onValueChange={(value: string) => {
+								if (value) setRange(value as TimeRange);
+							}}
 						>
 							<Tooltip content="Last 7 days">
 								<SegmentedControlItem value="7d">7d</SegmentedControlItem>
