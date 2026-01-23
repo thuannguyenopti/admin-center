@@ -22,31 +22,32 @@ if %NODE_MAJOR% lss %MIN_NODE_MAJOR% (
   exit /b 1
 )
 
-echo [axiom-play] Enabling Corepack (if this fails, re-run from an admin PowerShell window)...
-corepack enable 2>nul
+echo [axiom-play] Enabling Corepack
+call corepack enable
 
 if not exist "%REPO_ROOT%.env" (
-  echo [axiom-play] Creating .env (stored locally only)...
+  echo [axiom-play] Creating .env
   set /p OPENAI_API_KEY=Enter OPENAI_API_KEY: 
   set /p OPTIMIZELY_AUTH_IDENT=Enter OPTIMIZELY_AUTH_IDENT: 
   set /p OPTIMIZELY_USERNAME=Enter OPTIMIZELY_USERNAME: 
   set /p OPTIMIZELY_PASSWORD=Enter OPTIMIZELY_PASSWORD: 
-  > "%REPO_ROOT%.env" echo OPENAI_API_KEY=%OPENAI_API_KEY%
-  >> "%REPO_ROOT%.env" echo OPTIMIZELY_AUTH_IDENT=%OPTIMIZELY_AUTH_IDENT%
-  >> "%REPO_ROOT%.env" echo OPTIMIZELY_USERNAME=%OPTIMIZELY_USERNAME%
-  >> "%REPO_ROOT%.env" echo OPTIMIZELY_PASSWORD=%OPTIMIZELY_PASSWORD%
+  > "%REPO_ROOT%.env" echo OPENAI_API_KEY=!OPENAI_API_KEY!
+  >> "%REPO_ROOT%.env" echo OPTIMIZELY_AUTH_IDENT=!OPTIMIZELY_AUTH_IDENT!
+  >> "%REPO_ROOT%.env" echo OPTIMIZELY_USERNAME=!OPTIMIZELY_USERNAME!
+  >> "%REPO_ROOT%.env" echo OPTIMIZELY_PASSWORD=!OPTIMIZELY_PASSWORD!
 )
 
+echo [axiom-play] Loading env vars
 for /f "usebackq tokens=1 delims=" %%a in ("%REPO_ROOT%.env") do set %%a
 
-echo [axiom-play] Installing dependencies with Yarn...
-yarn install
+echo [axiom-play] Installing dependencies with Yarn
+call yarn install
 
 choice /m "Start the dev server now"
 if errorlevel 2 goto done
 
 start "" http://localhost:3000
-yarn dev
+call yarn dev
 goto end
 
 :done
