@@ -22,6 +22,9 @@ import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import ContentSubNav from "../cms/content/components/ContentSubNav";
+import {OpalPanel} from "./OpalPanel";
+import {useOpalState} from "@/app/hooks/useOpalState";
+import {useOpalHistory} from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -34,6 +37,33 @@ function TemplateContent({
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
+
+	// Opal panel state
+	const {
+		groupedHistory,
+		activeChat,
+		searchQuery,
+		isHistoryVisible,
+		mode,
+		setSearchQuery,
+		toggleHistory,
+		toggleMode,
+		createNewChat,
+		deleteChat,
+		selectChat,
+	} = useOpalHistory();
+
+	const {
+		isOpen: isOpalOpen,
+		messages,
+		inputValue,
+		isLoading,
+		error,
+		togglePanel: toggleOpal,
+		closePanel: closeOpal,
+		setInputValue,
+		sendMessage,
+	} = useOpalState({ activeChatId: activeChat });
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -85,7 +115,7 @@ function TemplateContent({
 
 	return (
 		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]" bg="bg.page">
-			<GlobalBar />
+			<GlobalBar onOpalClick={toggleOpal} />
 			<Box display="flex" z="10">
 				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
@@ -260,6 +290,27 @@ function TemplateContent({
 					</Box>
 				)}
 			</Box>
+			<OpalPanel
+				isOpen={isOpalOpen}
+				onClose={closeOpal}
+				messages={messages}
+				inputValue={inputValue}
+				isLoading={isLoading}
+				error={error}
+				setInputValue={setInputValue}
+				sendMessage={sendMessage}
+				groupedHistory={groupedHistory}
+				activeChat={activeChat}
+				searchQuery={searchQuery}
+				isHistoryVisible={isHistoryVisible}
+				mode={mode}
+				setSearchQuery={setSearchQuery}
+				toggleHistory={toggleHistory}
+				toggleMode={toggleMode}
+				createNewChat={createNewChat}
+				deleteChat={deleteChat}
+				selectChat={selectChat}
+			/>
 		</Box>
 	);
 }
