@@ -14,10 +14,10 @@ export function useTheme() {
 
     // Check for saved theme preference first
     const savedTheme = localStorage.getItem('theme') as Theme | null;
-    
+
     // Determine theme based on preference
     let currentTheme: Theme = 'light';
-    
+
     if (savedTheme) {
       currentTheme = savedTheme;
     } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -49,7 +49,7 @@ export function useTheme() {
   const applyTheme = (newTheme: Theme) => {
     const html = document.documentElement;
     const body = document.body;
-    
+
     if (newTheme === 'dark') {
       html.setAttribute('data-theme', 'dark');
       html.classList.add('dark');
