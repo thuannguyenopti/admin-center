@@ -1,12 +1,12 @@
 "use client";
 
 import VBPrototype from "@/app/components/VBPrototype";
-import { useParams } from "next/navigation";
-import { use } from "react";
+import {useParams} from "next/navigation";
+import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import { initialPages, Page } from "@/app/db/initialData";
-import { useEffect, useState } from "react";
-import { Box, Heading } from "@optiaxiom/react";
+import {initialPages, Page} from "@/app/db/initialData";
+import {useEffect, useState} from "react";
+import {Box, Heading} from "@optiaxiom/react";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -15,7 +15,7 @@ export default function EditPageDetail() {
 	const [pages, setPages, isHydrated] = usePersistentState("pages", initialPages) as [
 		Page[],
 		any,
-		boolean
+		boolean,
 	];
 	const [page, setPage] = useState<Page | null>(null);
 
@@ -26,7 +26,7 @@ export default function EditPageDetail() {
 		}
 	}, [id, pages, isHydrated]);
 
-	type PagePatch = { outlines?: any; properties?: any };
+	type PagePatch = {outlines?: any; properties?: any};
 
 	const handleSave = (patch: PagePatch) => {
 		if (!page) return;
@@ -39,9 +39,7 @@ export default function EditPageDetail() {
 			status: "Changed" as const, // keep union literal type
 		};
 
-		setPages((prev: any[]) =>
-			prev.map((p) => (p.id === id ? nextPage : p))
-		);
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
 
 		setPage(nextPage);
 	};
@@ -50,7 +48,7 @@ export default function EditPageDetail() {
 		if (!page) return;
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
-				return { ...p, status: "Published" };
+				return {...p, status: "Published"};
 			}
 			return p;
 		});
@@ -62,7 +60,6 @@ export default function EditPageDetail() {
 	}
 
 	return (
-
 		<VBPrototype
 			initialData={page}
 			onSave={handleSave}
