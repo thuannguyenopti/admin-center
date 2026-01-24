@@ -38,7 +38,28 @@ interface DetailsPanelProps {
     focusOutput?: boolean;
 }
 
-const GuardrailTooltipContent = ({ status }: { status: string }) => {
+const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, mode?: string, isHelp?: boolean }) => {
+    if (isHelp) {
+        return (
+            <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" flexDirection="column" gap="4">
+                    <Text fontSize="md" fontWeight="600">Execution Guardrails</Text>
+                    <Text fontSize="sm" color="fg.secondary">
+                        Execution status based on the agent’s guardrails.
+                    </Text>
+                </Box>
+                <Link
+                    href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
+                    target="_blank"
+                    fontSize="sm"
+                    color="fg.accent"
+                >
+                    Learn more
+                </Link>
+            </Box>
+        );
+    }
+
     let content = "";
     if (status === "Passed") content = "This execution operated within the current guardrails for this agent.";
     if (status === "Failed") content = "The agent did not complete its execution due to a system or runtime failure.";
@@ -48,12 +69,29 @@ const GuardrailTooltipContent = ({ status }: { status: string }) => {
     if (!content) return null;
 
     return (
-        <Box display="flex" flexDirection="column" gap="4">
-            <Text fontSize="sm" fontWeight="600">{status}</Text>
-            <Text fontSize="sm">{content}</Text>
+        <Box display="flex" flexDirection="column" gap="8">
+            <Box display="flex" flexDirection="column" gap="4">
+                <Text fontSize="md" fontWeight="600">Execution Guardrails: {status}</Text>
+                <Text fontSize="sm" color="fg.secondary">{content}</Text>
+                {mode && (
+                    <Text fontSize="sm" color="fg.secondary" mt="4">
+                        Agent Mode: <strong>{mode}</strong>
+                    </Text>
+                )}
+            </Box>
+            <Link
+                href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
+                target="_blank"
+                fontSize="sm"
+                color="fg.accent"
+            >
+                Learn more
+            </Link>
         </Box>
     );
 };
+
+
 
 const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPassedProp }: { score?: string, baseScore?: string, isHelp?: boolean, isPassed?: boolean }) => {
     if (isHelp) {
@@ -112,7 +150,12 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
     const [panelWidth, setPanelWidth] = useState(360);
     const [isResizing, setIsResizing] = useState(false);
     const [openSections, setOpenSections] = useState<string[]>([]);
+    const [isMounted, setIsMounted] = useState(false);
     const outputRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     useEffect(() => {
         if (focusOutput) {
@@ -168,6 +211,8 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
         guardrailStatus === "Passed" ? "success" :
             (guardrailStatus === "Failed" || guardrailStatus === "Terminated") ? "danger" :
                 guardrailStatus === "Review Needed" ? "warning" : "neutral";
+
+    if (!isMounted) return null;
 
     return (
         <Box
@@ -308,10 +353,30 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                             </MetricRow>
                                         );
                                     })()}
-                                    <MetricRow label="Guardrail Status" borderT helpText="Execution status based on the agent’s guardrails.">
-                                        <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={guardrailStatus} />}>
-                                            <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
-                                        </Tooltip>
+                                    <MetricRow
+                                        label="Guardrail Status"
+                                        borderT
+                                        helpContent={
+                                            <HoverCard openDelay={200}>
+                                                <HoverCardTrigger asChild>
+                                                    <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: "help" }} />
+                                                </HoverCardTrigger>
+                                                <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                    <GuardrailHoverCardContent isHelp />
+                                                </HoverCardContent>
+                                            </HoverCard>
+                                        }
+                                    >
+                                        <HoverCard openDelay={200}>
+                                            <HoverCardTrigger asChild>
+                                                <Box display="inline-block">
+                                                    <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
+                                                </Box>
+                                            </HoverCardTrigger>
+                                            <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                <GuardrailHoverCardContent status={guardrailStatus} />
+                                            </HoverCardContent>
+                                        </HoverCard>
                                     </MetricRow>
                                     <MetricRow label="Credits" borderT>
                                         <Text fontSize="md" fontWeight="400">20 credits</Text>
@@ -384,12 +449,24 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
 
                                             <Box display="flex" alignItems="center" gap="8" mt="8">
                                                 <Text fontSize="md" fontWeight="500">Guardrail Status : </Text>
-                                                <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={guardrailStatus} />}>
-                                                    <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
-                                                </Tooltip>
-                                                <Tooltip delayDuration={100} content="Execution status based on the agent’s guardrails.">
-                                                    <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: 'help' }} />
-                                                </Tooltip>
+                                                <HoverCard openDelay={200}>
+                                                    <HoverCardTrigger asChild>
+                                                        <Box display="inline-block">
+                                                            <Badge intent={guardrailIntent as any}>{guardrailStatus}</Badge>
+                                                        </Box>
+                                                    </HoverCardTrigger>
+                                                    <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                        <GuardrailHoverCardContent status={guardrailStatus} mode={activity.agent.mode} />
+                                                    </HoverCardContent>
+                                                </HoverCard>
+                                                <HoverCard openDelay={200}>
+                                                    <HoverCardTrigger asChild>
+                                                        <HelpIcon width={16} height={16} color="#4F576E" style={{ cursor: 'help' }} />
+                                                    </HoverCardTrigger>
+                                                    <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                        <GuardrailHoverCardContent isHelp />
+                                                    </HoverCardContent>
+                                                </HoverCard>
                                             </Box>
 
                                             <Box pl="24" mt="4">

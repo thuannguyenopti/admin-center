@@ -52,7 +52,7 @@ import { TableColumnConfig, ColumnConfig } from "@/app/components/TableColumnCon
 import DetailsPanel from "./DetailsPanel";
 
 // Status icon mapping
-const StatusIcon = ({ status, agentName, guardrailStatus }: { status: string; agentName?: string; guardrailStatus?: string }) => {
+const StatusIcon = ({ status, agentName, guardrailStatus, mode }: { status: string; agentName?: string; guardrailStatus?: string; mode?: string }) => {
     const iconProps = { size: 20 };
 
     // Determine the status to use for the tooltip description
@@ -91,18 +91,45 @@ const StatusIcon = ({ status, agentName, guardrailStatus }: { status: string; ag
 
     if (tooltipStatus) {
         return (
-            <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={tooltipStatus} />}>
-                <Box display="flex" style={{ cursor: 'help' }}>
-                    {icon}
-                </Box>
-            </Tooltip>
+            <HoverCard openDelay={200}>
+                <HoverCardTrigger asChild>
+                    <Box display="flex" style={{ cursor: 'help' }}>
+                        {icon}
+                    </Box>
+                </HoverCardTrigger>
+                <HoverCardContent style={{ maxWidth: "280px" }}>
+                    <GuardrailHoverCardContent status={tooltipStatus} mode={mode} />
+                </HoverCardContent>
+            </HoverCard>
         );
     }
 
     return icon;
 };
 
-const GuardrailTooltipContent = ({ status }: { status: string }) => {
+
+const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, mode?: string, isHelp?: boolean }) => {
+    if (isHelp) {
+        return (
+            <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" flexDirection="column" gap="4">
+                    <Text fontSize="md" fontWeight="600">Execution Guardrails</Text>
+                    <Text fontSize="sm" color="fg.secondary">
+                        Execution status based on the agent’s guardrails.
+                    </Text>
+                </Box>
+                <Link
+                    href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
+                    target="_blank"
+                    fontSize="sm"
+                    color="fg.accent"
+                >
+                    Learn more
+                </Link>
+            </Box>
+        );
+    }
+
     let content = "";
     if (status === "Passed") content = "This execution operated within the current guardrails for this agent.";
     if (status === "Failed") content = "The agent did not complete its execution due to a system or runtime failure.";
@@ -112,12 +139,29 @@ const GuardrailTooltipContent = ({ status }: { status: string }) => {
     if (!content) return null;
 
     return (
-        <Box display="flex" flexDirection="column" gap="4">
-            <Text fontSize="sm" fontWeight="600">{status}</Text>
-            <Text fontSize="sm">{content}</Text>
+        <Box display="flex" flexDirection="column" gap="8">
+            <Box display="flex" flexDirection="column" gap="4">
+                <Text fontSize="md" fontWeight="600">Execution Guardrails: {status}</Text>
+                <Text fontSize="sm" color="fg.secondary">{content}</Text>
+                {mode && (
+                    <Text fontSize="sm" color="fg.secondary" mt="4">
+                        Agent Mode: <strong>{mode}</strong>
+                    </Text>
+                )}
+            </Box>
+            <Link
+                href="https://support.optimizely.com/hc/en-us/articles/39333562134413-Create-specialized-agents"
+                target="_blank"
+                fontSize="sm"
+                color="fg.accent"
+            >
+                Learn more
+            </Link>
         </Box>
     );
 };
+
+
 const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPassedProp }: { score?: string, baseScore?: string, isHelp?: boolean, isPassed?: boolean }) => {
     if (isHelp) {
         return (
@@ -179,7 +223,7 @@ const activities = [
             handle: "@abm_workflow",
             type: "workflow",
             version: "v1.2.0",
-            mode: "Autonomous",
+            mode: "Observer",
             baseQualityScore: "85%"
         },
         trigger: "Chat",
@@ -194,7 +238,7 @@ const activities = [
             {
                 id: "1-1",
                 started: "Oct 13, 2025\n03:51 PM",
-                agent: { name: "Target Research Agent", handle: "@target_research", type: "agent", version: "v1.0.0", mode: "Autonomous", baseQualityScore: "85%" },
+                agent: { name: "Target Research Agent", handle: "@target_research", type: "agent", version: "v1.0.0", mode: "Enforcer", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -206,7 +250,7 @@ const activities = [
             {
                 id: "1-2",
                 started: "Oct 13, 2025\n03:54 PM",
-                agent: { name: "Campaign Builder", handle: "@campaign_builder", type: "agent", version: "v2.1.0", mode: "Collaborative", baseQualityScore: "88%" },
+                agent: { name: "Campaign Builder", handle: "@campaign_builder", type: "agent", version: "v2.1.0", mode: "Learner", baseQualityScore: "88%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "In Progress",
                 variables: "Variables",
@@ -225,7 +269,7 @@ const activities = [
             handle: "@segment-research",
             type: "agent",
             version: "v2.1.3",
-            mode: "Collaborative",
+            mode: "Enforcer",
             baseQualityScore: "85%"
         },
         trigger: "--",
@@ -246,7 +290,7 @@ const activities = [
             handle: "@experiment_plan",
             type: "workflow",
             version: "v1.0.0",
-            mode: "Autonomous",
+            mode: "Learner",
             baseQualityScore: "90%"
         },
         trigger: "Webhook",
@@ -261,7 +305,7 @@ const activities = [
             {
                 id: "3-1",
                 started: "Oct 13, 2025\n03:31 PM",
-                agent: { name: "Research Agent", handle: "@research", type: "agent", version: "v1.5.0", mode: "Autonomous", baseQualityScore: "85%" },
+                agent: { name: "Research Agent", handle: "@research", type: "agent", version: "v1.5.0", mode: "Learner", baseQualityScore: "85%" },
                 triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -273,7 +317,7 @@ const activities = [
             {
                 id: "3-2",
                 started: "Oct 13, 2025\n03:35 PM",
-                agent: { name: "Planning Agent", handle: "@planning", type: "agent", version: "v2.0.1", mode: "Collaborative", baseQualityScore: "90%" },
+                agent: { name: "Planning Agent", handle: "@planning", type: "agent", version: "v2.0.1", mode: "Observer", baseQualityScore: "90%" },
                 triggeredBy: { name: "William Mo...", avatar: "/avatars/user2.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -292,7 +336,7 @@ const activities = [
             handle: "@success_plan_generator",
             type: "agent",
             version: "v1.8.2",
-            mode: "Autonomous",
+            mode: "Observer",
             baseQualityScore: "85%"
         },
         trigger: "--",
@@ -313,7 +357,7 @@ const activities = [
             handle: "@summarize-meeting",
             type: "workflow",
             version: "v1.3.0",
-            mode: "Collaborative",
+            mode: "Enforcer",
             baseQualityScore: "85%"
         },
         trigger: "Scheduler",
@@ -328,7 +372,7 @@ const activities = [
             {
                 id: "5-1",
                 started: "Oct 13, 2025\n02:51 PM",
-                agent: { name: "Transcription Agent", handle: "@transcribe", type: "agent", version: "v1.4.0", mode: "Autonomous", baseQualityScore: "85%" },
+                agent: { name: "Transcription Agent", handle: "@transcribe", type: "agent", version: "v1.4.0", mode: "Learner", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -340,7 +384,7 @@ const activities = [
             {
                 id: "5-2",
                 started: "Oct 13, 2025\n02:56 PM",
-                agent: { name: "Summary Generator", handle: "@summarize", type: "agent", version: "v2.0.0", mode: "Autonomous" },
+                agent: { name: "Summary Generator", handle: "@summarize", type: "agent", version: "v2.0.0", mode: "Learner" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "In Progress",
                 variables: "Variables",
@@ -359,7 +403,7 @@ const activities = [
             handle: "Description",
             type: "workflow",
             version: "v2.0.0",
-            mode: "Autonomous",
+            mode: "Enforcer",
             baseQualityScore: "85%"
         },
         trigger: "Scheduler",
@@ -374,7 +418,7 @@ const activities = [
             {
                 id: "6-1",
                 started: "Oct 13, 2025\n02:11 PM",
-                agent: { name: "Image Generator", handle: "@image_gen", type: "agent", version: "v1.2.0", mode: "Autonomous", baseQualityScore: "85%" },
+                agent: { name: "Image Generator", handle: "@image_gen", type: "agent", version: "v1.2.0", mode: "Enforcer", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -386,7 +430,7 @@ const activities = [
             {
                 id: "6-2",
                 started: "Oct 13, 2025\n02:15 PM",
-                agent: { name: "Asset Optimizer", handle: "@optimize", type: "agent", version: "v1.0.0", mode: "Autonomous" },
+                agent: { name: "Asset Optimizer", handle: "@optimize", type: "agent", version: "v1.0.0", mode: "Enforcer" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Terminated",
                 variables: "Variables",
@@ -405,7 +449,7 @@ const activities = [
             handle: "Description",
             type: "agent",
             version: "v1.1.0",
-            mode: "Collaborative",
+            mode: "Enforcer",
             baseQualityScore: "85%"
         },
         trigger: "--",
@@ -426,7 +470,7 @@ const activities = [
             handle: "@wcagworkflow",
             type: "workflow",
             version: "v1.0.5",
-            mode: "Autonomous",
+            mode: "Observer",
             baseQualityScore: "85%"
         },
         trigger: "--",
@@ -441,7 +485,7 @@ const activities = [
             {
                 id: "8-1",
                 started: "Oct 13, 2025\n12:51 PM",
-                agent: { name: "Accessibility Scanner", handle: "@a11y_scan", type: "agent", version: "v2.0.0", mode: "Autonomous", baseQualityScore: "85%" },
+                agent: { name: "Accessibility Scanner", handle: "@a11y_scan", type: "agent", version: "v2.0.0", mode: "Enforcer", baseQualityScore: "85%" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Completed",
                 variables: "Variables",
@@ -453,7 +497,7 @@ const activities = [
             {
                 id: "8-2",
                 started: "Oct 13, 2025\n12:54 PM",
-                agent: { name: "Compliance Validator", handle: "@validate", type: "agent", version: "v1.5.0", mode: "Autonomous" },
+                agent: { name: "Compliance Validator", handle: "@validate", type: "agent", version: "v1.5.0", mode: "Enforcer" },
                 triggeredBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
                 status: "Failed",
                 variables: "Variables",
@@ -494,7 +538,12 @@ export default function ActivitiesPage() {
     const [agentFilter, setAgentFilter] = useState<string[]>([]);
     const [agentSearchTerm, setAgentSearchTerm] = useState("");
     const [showQualityBadges, setShowQualityBadges] = useState(true);
+    const [isMounted, setIsMounted] = useState(false);
     const tableContainerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     const users = [
         { name: "Mary Anne", avatar: "/avatars/user.png" },
@@ -540,6 +589,8 @@ export default function ActivitiesPage() {
 
         return matchesAgentType && matchesStatus && matchesTriggeredBy && matchesAgent;
     });
+
+    if (!isMounted) return null;
 
     return (
         <div suppressHydrationWarning className="flex h-screen overflow-hidden">
@@ -747,12 +798,17 @@ export default function ActivitiesPage() {
                                                 </HoverCardContent>
                                             </HoverCard>
                                         ) : col.id === "guardrails" ? (
-                                            <Tooltip delayDuration={100} content="Execution status based on the agent’s guardrails.">
-                                                <Box display="flex" alignItems="start" gap="4" px="16" py="12" w="full" style={{ cursor: "help" }}>
-                                                    {col.label}
-                                                    <IconHelp size={14} style={{ marginTop: '2px' }} />
-                                                </Box>
-                                            </Tooltip>
+                                            <HoverCard openDelay={200}>
+                                                <HoverCardTrigger asChild>
+                                                    <Box display="flex" alignItems="start" gap="4" px="16" py="12" w="full" style={{ cursor: "help" }}>
+                                                        {col.label}
+                                                        <IconHelp size={14} style={{ marginTop: '2px' }} />
+                                                    </Box>
+                                                </HoverCardTrigger>
+                                                <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                    <GuardrailHoverCardContent isHelp />
+                                                </HoverCardContent>
+                                            </HoverCard>
                                         ) : (
                                             col.label
                                         )}
@@ -773,7 +829,7 @@ export default function ActivitiesPage() {
                                                 return (
                                                     <Td key={col.id} width="80px">
                                                         <Box display="flex" alignItems="center" gap="8">
-                                                            <StatusIcon status={activity.status} agentName={activity.agent.name} guardrailStatus={activity.guardrails} />
+                                                            <StatusIcon status={activity.status} agentName={activity.agent.name} guardrailStatus={activity.guardrails === "--" ? undefined : activity.guardrails} mode={activity.agent.mode} />
                                                             {activity.subRuns.length > 0 && (
                                                                 <Box
                                                                     cursor="pointer"
@@ -923,9 +979,16 @@ export default function ActivitiesPage() {
                                                 return (
                                                     <Td key={col.id}>
                                                         {status && status !== "--" ? (
-                                                            <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={status} />}>
-                                                                <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
-                                                            </Tooltip>
+                                                            <HoverCard openDelay={200}>
+                                                                <HoverCardTrigger asChild>
+                                                                    <Box display="inline-block">
+                                                                        <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                                    </Box>
+                                                                </HoverCardTrigger>
+                                                                <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                                    <GuardrailHoverCardContent status={status} mode={activity.agent.mode} />
+                                                                </HoverCardContent>
+                                                            </HoverCard>
                                                         ) : "--"}
                                                     </Td>
                                                 );
@@ -943,7 +1006,7 @@ export default function ActivitiesPage() {
                                                     return (
                                                         <Td key={col.id} width="80px">
                                                             <Box pl="32">
-                                                                <StatusIcon status={subRun.status} agentName={subRun.agent.name} guardrailStatus={subRun.guardrails} />
+                                                                <StatusIcon status={subRun.status} agentName={subRun.agent.name} guardrailStatus={subRun.guardrails} mode={subRun.agent.mode} />
                                                             </Box>
                                                         </Td>
                                                     );
@@ -1067,9 +1130,16 @@ export default function ActivitiesPage() {
                                                     return (
                                                         <Td key={col.id}>
                                                             {status && status !== "--" ? (
-                                                                <Tooltip delayDuration={100} content={<GuardrailTooltipContent status={status} />}>
-                                                                    <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
-                                                                </Tooltip>
+                                                                <HoverCard openDelay={200}>
+                                                                    <HoverCardTrigger asChild>
+                                                                        <Box display="inline-block">
+                                                                            <Badge intent={intent} style={{ whiteSpace: "nowrap" }}>{status}</Badge>
+                                                                        </Box>
+                                                                    </HoverCardTrigger>
+                                                                    <HoverCardContent style={{ maxWidth: "280px" }}>
+                                                                        <GuardrailHoverCardContent status={status} mode={subRun.agent.mode} />
+                                                                    </HoverCardContent>
+                                                                </HoverCard>
                                                             ) : "--"}
                                                         </Td>
                                                     );
