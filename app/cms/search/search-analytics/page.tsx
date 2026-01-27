@@ -63,10 +63,7 @@ export default function SearchAnalytics() {
 		<Box>
 			{/* Filters */}
 
-			<Flex
-				mb="24"
-				justifyContent="space-between"
-			>
+			<Flex mb="24" justifyContent="space-between">
 				<Flex gap="8">
 					<Menu
 						options={[
@@ -96,69 +93,54 @@ export default function SearchAnalytics() {
 						<MenuContent />
 					</Menu>
 				</Flex>
-				<Button
-					icon={<IconSparkles />}
-					appearance="primary-opal"
-				>
+				<Button icon={<IconSparkles />} appearance="primary-opal">
 					Suggest Optimization
 				</Button>
 			</Flex>
 
 			{/* Metric Cards */}
-			<Box
-				display="grid"
-				style={{gridTemplateColumns: "repeat(4, 1fr)"}}
-				gap="16"
-				mb="32"
-			>
-				<Link href="/cms/search/search-analytics/total-queries">
-					<MetricCard
-						label="Total Queries"
-						unit=""
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.totalQueries}
-						aggregation="sum"
-						previousValue={prevTotalQueries}
-					/>
-				</Link>
-				<Link href="/cms/search/search-analytics/click-through-rate">
-					<MetricCard
-						label="Click-Through Rate"
-						unit="%"
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.ctr}
-						aggregation="average"
-						previousValue={prevCtr}
-					/>
-				</Link>
-				<Link href="/cms/search/search-analytics/zero-result">
-					<MetricCard
-						label="Zero-Result Rate"
-						unit="%"
-						desiredDirection="down"
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.zeroResult}
-						aggregation="average"
-						previousValue={prevZeroResult}
-					/>
-				</Link>
-				<Link href="/cms/search/search-analytics/reformulation-rate">
-					<MetricCard
-						label="Reformulation Rate"
-						unit="%"
-						desiredDirection="down"
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.reformulation}
-						aggregation="average"
-						previousValue={prevReformulation}
-					/>
-				</Link>
+			<Box display="grid" style={{gridTemplateColumns: "repeat(4, 1fr)"}} gap="16" mb="32">
+				<MetricCard
+					href="/cms/search/search-analytics/total-queries"
+					label="Total Queries"
+					unit=""
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.totalQueries}
+					aggregation="sum"
+					previousValue={prevTotalQueries}
+				/>
+				<MetricCard
+					href="/cms/search/search-analytics/click-through-rate"
+					label="Click-Through Rate"
+					unit="%"
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.ctr}
+					aggregation="average"
+					previousValue={prevCtr}
+				/>
+				<MetricCard
+					href="/cms/search/search-analytics/zero-result"
+					label="Zero-Result Rate"
+					unit="%"
+					desiredDirection="down"
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.zeroResult}
+					aggregation="average"
+					previousValue={prevZeroResult}
+				/>
+				<MetricCard
+					href="/cms/search/search-analytics/reformulation-rate"
+					label="Reformulation Rate"
+					unit="%"
+					desiredDirection="down"
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.reformulation}
+					aggregation="average"
+					previousValue={prevReformulation}
+				/>
 			</Box>
 			{/* Problematic Queries Table */}
-			<Heading
-				level="4"
-				mb="16"
-			>
+			<Heading level="4" mb="16">
 				Problematic Queries
 			</Heading>
 			<Table>
