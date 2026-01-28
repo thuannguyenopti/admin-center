@@ -1,16 +1,21 @@
 "use client";
 
-import { SearchInput, Checkbox, Pagination } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { Button } from "@/app/components/Button";
-import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto } from "@tabler/icons-react";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
+import {SearchInput, Checkbox, Pagination} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto} from "@tabler/icons-react";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import { Flex } from "@/app/components/Flex";
-import { Aside } from "@/app/context/LayoutContext";
+import {Flex} from "@/app/components/Flex";
+import {Aside} from "@/app/context/LayoutContext";
 import DetailsPane from "./DetailsPane";
-import { useState } from "react";
-import { getAllContentItems, type UnifiedContentItem, initialPages, Page } from "@/app/db/initialData";
+import {useState} from "react";
+import {
+	getAllContentItems,
+	type UnifiedContentItem,
+	initialPages,
+	Page,
+} from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
 
 export type ContentItem = UnifiedContentItem & {
@@ -36,12 +41,14 @@ function getStatusIntent(status: ContentItem["status"]) {
 }
 
 export default function ContentPage() {
-	const [pages] = usePersistentState("pages", initialPages) as [Page[], any, boolean];
+	const [pages] = usePersistentState("pages_v3", initialPages) as [Page[], any, boolean];
 	const allContentItems = getAllContentItems(pages || initialPages);
-	const contentItems: ContentItem[] = allContentItems.map(item => ({
-		...item,
-		status: item.publishStatus
-	})).sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+	const contentItems: ContentItem[] = allContentItems
+		.map((item) => ({
+			...item,
+			status: item.publishStatus,
+		}))
+		.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
@@ -52,7 +59,7 @@ export default function ContentPage() {
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
-	const selectedContent = contentItems.find(item => item.id === selectedContentId);
+	const selectedContent = contentItems.find((item) => item.id === selectedContentId);
 
 	const handleSelectAll = (checked: boolean) => {
 		const newSet = new Set(selectedRows);
@@ -89,8 +96,7 @@ export default function ContentPage() {
 	};
 
 	const isAllSelected =
-		paginatedItems.length > 0 &&
-		paginatedItems.every((item) => selectedRows.has(item.id));
+		paginatedItems.length > 0 && paginatedItems.every((item) => selectedRows.has(item.id));
 	const isSomeSelected =
 		paginatedItems.some((item) => selectedRows.has(item.id)) && !isAllSelected;
 
@@ -106,7 +112,7 @@ export default function ContentPage() {
 			<Table>
 				<thead>
 					<Tr>
-						<Th style={{ width: "40px" }}>
+						<Th style={{width: "40px"}}>
 							<Checkbox
 								checked={isAllSelected}
 								indeterminate={isSomeSelected}
@@ -119,7 +125,7 @@ export default function ContentPage() {
 						<Th>Modified by</Th>
 						<Th>Language</Th>
 						<Th>Last Modified</Th>
-						<Th style={{ width: "56px" }} />
+						<Th style={{width: "56px"}} />
 					</Tr>
 				</thead>
 				<tbody>
@@ -133,9 +139,9 @@ export default function ContentPage() {
 									setSelectedContentId(item.id);
 								}
 							}}
-							style={{ cursor: "pointer" }}
+							style={{cursor: "pointer"}}
 						>
-							<Td type="raw" style={{ width: "40px" }}>
+							<Td type="raw" style={{width: "40px"}}>
 								<Checkbox
 									checked={selectedRows.has(item.id)}
 									onCheckedChange={(checked) => {

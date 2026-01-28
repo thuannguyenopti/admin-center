@@ -39,6 +39,8 @@ import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
 // @ts-ignore
 import usePersistentState from "@/app/usePersistentState";
+import AbstractDialog from "@/app/components/AbstractDialog";
+import {Input} from "@/app/components/Input";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -213,7 +215,9 @@ const isOutlineArray = (v: any): v is OutlineType[] => {
 
 type PageInput = {
 	outlines?: OutlineType[] | any[] | SplitPayload; // allow legacy too
-	properties?: PageProperties;
+	properties?: PageProperties; // allow both
+	data?: Record<string, any>;
+	variationId?: string;
 };
 
 /** -----------------------------
@@ -248,16 +252,135 @@ export default function VBPrototype({
 	onPublish,
 	pageName,
 	pageStatus,
+	variations,
+	onAddVariation,
+	onDeleteVariation,
+	onRenameVariation,
+	onTrash,
+	onRenamePage,
 }: {
 	initialData?: PageInput;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
+	onTrash?: () => void;
 	pageName?: string;
 	pageStatus?: string;
+	variations?: {
+		id: string;
+		name: string;
+		status: string;
+		outlines?: any[];
+		data?: Record<string, any>;
+	}[];
+	onAddVariation?: (
+		payload: string | {name: string; outlines?: any[]; data?: Record<string, any>}
+	) => string | void;
+	onDeleteVariation?: (id: string) => void;
+	onRenameVariation?: (id: string, newName: string) => void;
+	onRenamePage?: (newName: string) => void;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
+	const [selectedVariation, setSelectedVariation] = useState("original");
+	const [isVariationDialogOpen, setIsVariationDialogOpen] = useState(false);
+	const [isDeleteVariationDialogOpen, setIsDeleteVariationDialogOpen] = useState(false);
+	const [isRenameVariationDialogOpen, setIsRenameVariationDialogOpen] = useState(false);
+	const [isTrashDialogOpen, setIsTrashDialogOpen] = useState(false);
+	const [newVariationName, setNewVariationName] = useState("");
+	const [renameVariationName, setRenameVariationName] = useState("");
+
+	const [isRenamePageDialogOpen, setIsRenamePageDialogOpen] = useState(false);
+	const [newPageName, setNewPageName] = useState("");
+
+	const handleCreateVariation = () => {
+		if (newVariationName && onAddVariation) {
+			onAddVariation(newVariationName);
+			setIsVariationDialogOpen(false);
+			setNewVariationName("");
+		}
+	};
+
+	const handleDeleteVariation = () => {
+		if (onDeleteVariation && selectedVariation !== "original") {
+			onDeleteVariation(selectedVariation);
+			setSelectedVariation("original");
+			setIsDeleteVariationDialogOpen(false);
+		}
+	};
+
+	const handleRenameVariation = () => {
+		if (onRenameVariation && renameVariationName && selectedVariation !== "original") {
+			onRenameVariation(selectedVariation, renameVariationName);
+			setIsRenameVariationDialogOpen(false);
+		}
+	};
+
+	const openRenameDialog = () => {
+		if (!variations) return;
+		const v = variations.find((varItem) => varItem.id === selectedVariation);
+		if (v) {
+			setRenameVariationName(v.name);
+			setIsRenameVariationDialogOpen(true);
+		}
+	};
+
+	// Update outlines when variation changes
+	// We use refs to access the latest data without triggering re-renders on every save/edit loop
+	const latestData = useRef({initialData, variations});
+	useEffect(() => {
+		latestData.current = {initialData, variations};
+	}, [initialData, variations]);
+
+	useEffect(() => {
+		const {variations, initialData} = latestData.current;
+
+		const target = variations?.find((v) => v.id === selectedVariation);
+		if (target) {
+			// Restore properties
+			if (target.data) {
+				setProperties({...defaultProps, ...target.data});
+			}
+
+			const raw = target.outlines ?? [];
+			// Allow empty array for new variations
+			if (isOutlineArray(raw) || Array.isArray(raw)) {
+				_setOutlines(
+					(raw ?? []).map((o: any) => ({
+						...o,
+						tree: ensureOpen(stripTransientFlags(o.tree ?? [])),
+						elements: o.elements ?? {},
+					}))
+				);
+			}
+		} else if (selectedVariation === "original") {
+			// Restore properties
+			const originalProps = initialData?.properties ?? initialData?.data ?? {};
+			setProperties({...defaultProps, ...originalProps});
+
+			// Fallback for when "Original" is not explicitly in variations array (backward compat)
+			const raw = initialData?.outlines;
+			if (isOutlineArray(raw)) {
+				_setOutlines(
+					(raw ?? []).map((o) => ({
+						...o,
+						tree: ensureOpen(stripTransientFlags(o.tree ?? [])),
+						elements: o.elements ?? {},
+					}))
+				);
+			}
+		}
+	}, [selectedVariation]);
+
+	const variationOptions = React.useMemo(() => {
+		if (!variations) return [{label: "Original", value: "original"}];
+		// If variations includes "original", just map them all. Check by ID.
+		const hasOriginal = variations.some((v) => v.id === "original");
+		const mapped = variations.map((v) => ({label: v.name, value: v.id}));
+
+		if (hasOriginal) return mapped;
+		return [{label: "Original", value: "original"}, ...mapped];
+	}, [variations]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
 		mode: "responsive",
@@ -279,11 +402,16 @@ export default function VBPrototype({
 	};
 
 	const [properties, setProperties] = useState<PageProperties>(() => {
-		return {...defaultProps, ...(initialData?.properties ?? {})};
+		return {
+			...defaultProps,
+			...(initialData?.properties ?? initialData?.data ?? {}),
+		};
 	});
 
 	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
-		const raw = initialData?.outlines;
+		// Try to find "original" variation first
+		const originalVar = variations?.find((v) => v.id === "original");
+		let raw = originalVar?.outlines || initialData?.outlines;
 
 		if (isOutlineArray(raw)) {
 			return (raw ?? []).map((o) => ({
@@ -363,7 +491,7 @@ export default function VBPrototype({
 			if (sidebarTab === "outline") setSidebarTab("outlines");
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [outlines.length]);
+	}, [outlines]);
 
 	const isZero = outlines.length === 0; // View 4
 	const isSingle = outlines.length === 1; // View 3
@@ -672,9 +800,11 @@ export default function VBPrototype({
 		onSaveRef.current?.({
 			outlines: nextOutlines,
 			properties,
+			variationId: selectedVariation,
 		});
 
 		setLastSaved(new Date());
+		hasChanged.current = false;
 	}, [outlines, properties]);
 
 	/** -----------------------------
@@ -1134,6 +1264,14 @@ export default function VBPrototype({
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
+						variationOptions={variationOptions}
+						selectedVariation={selectedVariation}
+						onVariationChange={setSelectedVariation}
+						onAddVariation={() => setIsVariationDialogOpen(true)}
+						onRenamePage={() => {
+							setNewPageName(pageName || "");
+							setIsRenamePageDialogOpen(true);
+						}}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1213,6 +1351,27 @@ export default function VBPrototype({
 						</Box>
 					</div>
 				</Box>
+				<AbstractDialog
+					title="Create Variation"
+					description="Enter a name for the new variation."
+					open={isVariationDialogOpen}
+					setOpen={setIsVariationDialogOpen}
+					footerPrimaryText="Create"
+					footerPrimaryAction={handleCreateVariation}
+					size="sm"
+				>
+					<Box pt="4">
+						<Input
+							autoFocus
+							placeholder="Variation Name"
+							value={newVariationName}
+							onChange={(e: any) => setNewVariationName(e.target.value)}
+							onKeyDown={(e: any) => {
+								if (e.key === "Enter") handleCreateVariation();
+							}}
+						/>
+					</Box>
+				</AbstractDialog>
 			</div>
 		);
 	}
@@ -1236,6 +1395,17 @@ export default function VBPrototype({
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
+					variationOptions={variationOptions}
+					selectedVariation={selectedVariation}
+					onVariationChange={setSelectedVariation}
+					onAddVariation={() => setIsVariationDialogOpen(true)}
+					onDeleteVariationRequest={() => setIsDeleteVariationDialogOpen(true)}
+					onRenameVariation={() => openRenameDialog()}
+					onTrash={() => setIsTrashDialogOpen(true)}
+					onRenamePage={() => {
+						setNewPageName(pageName || "");
+						setIsRenamePageDialogOpen(true);
+					}}
 				/>
 
 				{/* LEFT SIDEBAR */}
@@ -1643,15 +1813,42 @@ export default function VBPrototype({
 							? getExtensionById(activeRightTool)
 							: null;
 						const ActivePanel = activeExtension?.component;
+						const activeManifest =
+							activeExtension && "manifest" in activeExtension
+								? (activeExtension as any).manifest
+								: activeExtension;
+
+						// Ensure "original" exists in variations for extensions
+						const safeVariations = [...(variations || [])];
+						if (!safeVariations.find((v) => v.id === "original")) {
+							// fallback: construct "original" from top-level legacy outlines
+							safeVariations.unshift({
+								id: "original",
+								name: "Original",
+								status: pageStatus || "Published",
+								outlines: initialData?.outlines as any[],
+								data: initialData?.data || initialData?.properties,
+							});
+						}
+
+						const extensionContext = {
+							pageName,
+							pageStatus,
+							variations: safeVariations,
+							selectedVariation,
+							// mutation hooks
+							onSelectVariation: setSelectedVariation,
+							onAddVariation,
+						};
 
 						if (ActivePanel) {
 							return (
 								<ExtensionPanel
-									title={activeExtension?.label}
-									width={activeExtension?.width}
+									title={activeManifest?.title || activeExtension?.label}
+									width={activeManifest?.width}
 									onClose={() => setActiveRightTool(null)}
 								>
-									<ActivePanel />
+									<ActivePanel {...extensionContext} />
 								</ExtensionPanel>
 							);
 						}
@@ -1668,6 +1865,117 @@ export default function VBPrototype({
 					</Box>
 				</div>
 			</Box>
+			<AbstractDialog
+				title="Create Variation"
+				description="Enter a name for the new variation."
+				open={isVariationDialogOpen}
+				setOpen={setIsVariationDialogOpen}
+				footerPrimaryText="Create"
+				footerPrimaryAction={handleCreateVariation}
+				footerAppearance="primary"
+				size="sm"
+			>
+				<Box pt="4">
+					<Input
+						autoFocus
+						placeholder="Variation Name"
+						value={newVariationName}
+						onChange={(e: any) => setNewVariationName(e.target.value)}
+						onKeyDown={(e: any) => {
+							if (e.key === "Enter") handleCreateVariation();
+						}}
+					/>
+				</Box>
+			</AbstractDialog>
+
+			<AbstractDialog
+				isAlert
+				title="Delete Variation"
+				description={`Are you sure you want to delete this variation? This action cannot be undone.`}
+				open={isDeleteVariationDialogOpen}
+				setOpen={setIsDeleteVariationDialogOpen}
+				footerPrimaryText="Delete"
+				footerPrimaryAction={handleDeleteVariation}
+				footerSecondaryText="Cancel"
+				size="sm"
+			>
+				<Text>
+					You are about to delete "
+					{variations?.find((v) => v.id === selectedVariation)?.name}".
+				</Text>
+			</AbstractDialog>
+
+			<AbstractDialog
+				title="Rename Variation"
+				description="Enter a new name for the variation."
+				open={isRenameVariationDialogOpen}
+				setOpen={setIsRenameVariationDialogOpen}
+				footerPrimaryText="Rename"
+				footerPrimaryAction={handleRenameVariation}
+				size="sm"
+			>
+				<Box pt="4">
+					<Input
+						autoFocus
+						placeholder="Variation Name"
+						value={renameVariationName}
+						onChange={(e: any) => setRenameVariationName(e.target.value)}
+						onKeyDown={(e: any) => {
+							if (e.key === "Enter") handleRenameVariation();
+						}}
+					/>
+				</Box>
+			</AbstractDialog>
+
+			<AbstractDialog
+				title="Rename Page"
+				description="Enter a new name for the page."
+				open={isRenamePageDialogOpen}
+				setOpen={setIsRenamePageDialogOpen}
+				footerPrimaryText="Rename"
+				footerAppearance="primary"
+				blockPrimaryAction={!newPageName.trim()}
+				footerPrimaryAction={() => {
+					if (newPageName.trim()) {
+						onRenamePage?.(newPageName);
+					}
+				}}
+				size="sm"
+			>
+				<Box pt="4">
+					<Input
+						autoFocus
+						placeholder="Page Name"
+						value={newPageName}
+						onChange={(e: any) => setNewPageName(e.target.value)}
+						onKeyDown={(e: any) => {
+							if (e.key === "Enter") {
+								if (newPageName.trim()) {
+									onRenamePage?.(newPageName);
+									setIsRenamePageDialogOpen(false);
+								}
+							}
+						}}
+					/>
+				</Box>
+			</AbstractDialog>
+
+			<AbstractDialog
+				isAlert
+				title="Move Page to Trash"
+				description="Are you sure you want to move this page to trash?"
+				open={isTrashDialogOpen}
+				setOpen={setIsTrashDialogOpen}
+				footerPrimaryText="Move to Trash"
+				footerPrimaryAction={() => {
+					if (onTrash) onTrash();
+					setIsTrashDialogOpen(false);
+				}}
+				footerSecondaryText="Cancel"
+				size="sm"
+			>
+				<Text>This action will unpublish the page and move it to the trash.</Text>
+			</AbstractDialog>
 		</div>
 	);
 }
