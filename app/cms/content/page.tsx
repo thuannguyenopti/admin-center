@@ -9,9 +9,10 @@ import Item from "@/app/components/Item";
 import { Flex } from "@/app/components/Flex";
 import { Aside } from "@/app/context/LayoutContext";
 import DetailsPane from "./DetailsPane";
-import { useState } from "react";
-import { getAllContentItems, type UnifiedContentItem, initialPages, Page } from "@/app/db/initialData";
-import usePersistentState from "@/app/usePersistentState";
+import { useState, useEffect } from "react";
+import { type UnifiedContentItem } from "@/app/db/initialData";
+import FilterPills from "./components/FilterPills";
+import { useFilterPanel } from "./context/FilterPanelContext";
 
 export type ContentItem = UnifiedContentItem & {
 	status: "Draft" | "Published";
@@ -36,23 +37,36 @@ function getStatusIntent(status: ContentItem["status"]) {
 }
 
 export default function ContentPage() {
-	const [pages] = usePersistentState("pages", initialPages) as [Page[], any, boolean];
-	const allContentItems = getAllContentItems(pages || initialPages);
-	const contentItems: ContentItem[] = allContentItems.map(item => ({
-		...item,
-		status: item.publishStatus
-	})).sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+	// Filter management - now from context (single source of truth)
+	const {
+		isFilterPanelOpen,
+		setIsFilterPanelOpen,
+		filters,
+		filteredContent,
+		activePills,
+		hasActiveFilters,
+		removeFilter,
+		clearAllFilters,
+	} = useFilterPanel();
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
 	const itemsPerPage = 10;
-	const totalPages = Math.ceil(contentItems.length / itemsPerPage);
-	const paginatedItems = contentItems.slice(
+
+	// Use filtered content instead of all content
+	const displayContent = filteredContent;
+	const totalPages = Math.ceil(displayContent.length / itemsPerPage);
+	const paginatedItems = displayContent.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
-	const selectedContent = contentItems.find(item => item.id === selectedContentId);
+	const selectedContent = displayContent.find(item => item.id === selectedContentId);
+
+	// Reset pagination when filters change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filters]);
 
 	const handleSelectAll = (checked: boolean) => {
 		const newSet = new Set(selectedRows);
@@ -101,8 +115,26 @@ export default function ContentPage() {
 			</Text>
 			<Flex mb="24" gap="8">
 				<SearchInput size="lg" placeholder="Search content..." />
-				<Button aria-label="Filter content" icon={<IconFilter />} />
+				<Button
+					aria-label="Filter content"
+					icon={<IconFilter />}
+					onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+					style={{
+						backgroundColor: isFilterPanelOpen ? "#0037ff" : undefined,
+						borderColor: isFilterPanelOpen ? "#0037ff" : undefined,
+						color: isFilterPanelOpen ? "#ffffff" : undefined,
+					}}
+				/>
 			</Flex>
+			{hasActiveFilters && (
+				<Flex mb="16" gap="8">
+					<FilterPills
+						pills={activePills}
+						onRemoveFilter={removeFilter}
+						onClearAll={clearAllFilters}
+					/>
+				</Flex>
+			)}
 			<Table>
 				<thead>
 					<Tr>

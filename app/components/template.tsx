@@ -11,17 +11,18 @@ import {
 	Button,
 	Indicator,
 } from "@optiaxiom/react";
-import {Text} from "./Text";
+import { Text } from "./Text";
 import Link from "next/link";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
-import {useRouter, usePathname} from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
-import {LayoutProvider, useLayout} from "../context/LayoutContext";
-import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
+import { LayoutProvider, useLayout } from "../context/LayoutContext";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
-import ContentSubNav from "../cms/content/components/ContentSubNav";
+import { FilterPanelProvider } from "../cms/content/context/FilterPanelContext";
+import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
 
 function TemplateContent({
 	children,
@@ -30,7 +31,7 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent} = useLayout();
+	const { asideContent } = useLayout();
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
@@ -73,20 +74,20 @@ function TemplateContent({
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
-	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
+	if (!isHydrated) return <Box style={{ height: "100vh" }} bg="bg.page" />;
 
 	if (isWorkflowBuilder) {
 		return (
-			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
+			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
 				{children}
 			</Box>
 		);
 	}
 
 	return (
-		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]" bg="bg.page">
+		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
 			<GlobalBar />
-			<Box display="flex" z="10">
+			<Box display="flex" z="10" style={{ minHeight: 0 }}>
 				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
 						<NavBody>
@@ -103,8 +104,8 @@ function TemplateContent({
 										aria-label={menuItem.label}
 										icon={
 											menuItem.label === "Notifications" &&
-											!path.startsWith("/opal/notifications") ? (
-												<Box style={{position: "relative"}}>
+												!path.startsWith("/opal/notifications") ? (
+												<Box style={{ position: "relative" }}>
 													{menuItem.icon}
 													<Box
 														style={{
@@ -169,16 +170,15 @@ function TemplateContent({
 					bg="bg.default"
 				>
 					{isContentManager ? (
-						<ContentSubNav />
+						<ContentManagerSidebar />
 					) : showVT ? (
 						<Sidebar className="flex" h="full">
 							<SubNav>
 								<div
 									className="flex w-[500%]"
 									style={{
-										transform: `translateX(-${
-											224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
-										}px)`,
+										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
+											}px)`,
 										transition: ".7s cubic-bezier(0, 1, 0, 1)",
 									}}
 								>
@@ -215,11 +215,14 @@ function TemplateContent({
 				flexDirection="row"
 				fontSize="md"
 				color="fg.default"
+				h="full"
+				style={{ minHeight: 0 }}
 			>
 				<Box
 					flex="1"
 					className="min-w-0 relative"
 					overflow={customLayout ? "hidden" : "auto"}
+					h="full"
 				>
 					{customLayout ? (
 						children
@@ -264,10 +267,25 @@ function TemplateContent({
 	);
 }
 
+function TemplateWrapper(props: any) {
+	const pathname = usePathname();
+	const isContentManager = pathname.includes("/cms/content");
+
+	if (isContentManager) {
+		return (
+			<FilterPanelProvider>
+				<TemplateContent {...props} />
+			</FilterPanelProvider>
+		);
+	}
+
+	return <TemplateContent {...props} />;
+}
+
 export default function Template(props: any) {
 	return (
 		<LayoutProvider>
-			<TemplateContent {...props} />
+			<TemplateWrapper {...props} />
 		</LayoutProvider>
 	);
 }
