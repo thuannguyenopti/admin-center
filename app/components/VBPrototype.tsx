@@ -1,4 +1,6 @@
-"use client";
+"use client";// --- SEO Block Types (from initialData) ---
+
+import type { SEOBlock } from "@/app/db/initialData";
 
 import {
 	Box,
@@ -10,7 +12,7 @@ import {
 	MenuTrigger,
 	MenuContent,
 } from "@optiaxiom/react";
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	IconPlus,
 	IconArrowBarBoth,
@@ -24,30 +26,30 @@ import {
 	IconCopy,
 } from "@tabler/icons-react";
 
-import {EleMap} from "./vb/Ele";
+import { EleMap } from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
-import RightToolbar, {RightToolbarTool} from "./RightToolbar";
+import RightToolbar, { RightToolbarTool } from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
-import {PreviewSettings} from "./vb/PreviewSettings";
+import { PreviewSettings } from "./vb/PreviewSettings";
 
-import {getExtensionById} from "@/app/extensions/registry";
+import { getExtensionById } from "@/app/extensions/registry";
 
 import styles from "./VBPrototype.module.css";
-import PropertiesPanel, {PageProperties} from "./vb/PropertiesPanel";
+import PropertiesPanel, { PageProperties } from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
 // @ts-ignore
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {Input} from "@/app/components/Input";
+import { Input } from "@/app/components/Input";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
  * ------------------------------*/
 
-type NormalizeResult = {data: any[]; theEles: EleMap};
-type SplitPayload = {data: any[]; theEles: EleMap};
+type NormalizeResult = { data: any[]; theEles: EleMap };
+type SplitPayload = { data: any[]; theEles: EleMap };
 
 const isEleNode = (n: any) =>
 	n &&
@@ -71,7 +73,7 @@ const ensureOpen = (nodes: any[]): any[] => {
 // only strips truly transient flags (keep `open`)
 const stripTransientFlags = (nodes: any[]): any[] => {
 	return nodes.map((n) => {
-		const {isNew, ...rest} = n;
+		const { isNew, ...rest } = n;
 		return {
 			...rest,
 			children: Array.isArray(n.children)
@@ -98,7 +100,7 @@ const normalizePage = (input: any): NormalizeResult => {
 	}
 
 	// Case B: merged tree array
-	if (!Array.isArray(input)) return {data: [], theEles: {}};
+	if (!Array.isArray(input)) return { data: [], theEles: {} };
 
 	const theEles: EleMap = {};
 
@@ -119,17 +121,17 @@ const normalizePage = (input: any): NormalizeResult => {
 								: p.label.toLowerCase().includes("image")
 									? "imageUrl"
 									: p.label.toLowerCase().replace(/\s+/g, "");
-					properties[key] = {value: p.value};
+					properties[key] = { value: p.value };
 				});
 			}
 			theEles[node.id] = {
 				type: node.type,
 				properties: properties || {},
 			};
-			return {id: node.id};
+			return { id: node.id };
 		}
 
-		const out: any = {...node};
+		const out: any = { ...node };
 		if (Array.isArray(node.elements)) {
 			out.elements = node.elements.map(strip);
 		} else if (Array.isArray(node.children)) {
@@ -176,7 +178,7 @@ const pruneEles = (data: any[], theEles: EleMap): EleMap => {
  * AnimatedText (kept; optional)
  * ------------------------------*/
 
-const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
+const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({ texts, interval = 2000 }) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -226,7 +228,7 @@ type PageInput = {
 
 const mergeData = (structure: any[], elements: EleMap) => {
 	return structure.map((node) => {
-		const newNode = {...node};
+		const newNode = { ...node };
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
 			newNode.properties = elements[node.id].properties;
@@ -273,7 +275,7 @@ export default function VBPrototype({
 		data?: Record<string, any>;
 	}[];
 	onAddVariation?: (
-		payload: string | {name: string; outlines?: any[]; data?: Record<string, any>}
+		payload: string | { name: string; outlines?: any[]; data?: Record<string, any> }
 	) => string | void;
 	onDeleteVariation?: (id: string) => void;
 	onRenameVariation?: (id: string, newName: string) => void;
@@ -327,19 +329,19 @@ export default function VBPrototype({
 
 	// Update outlines when variation changes
 	// We use refs to access the latest data without triggering re-renders on every save/edit loop
-	const latestData = useRef({initialData, variations});
+	const latestData = useRef({ initialData, variations });
 	useEffect(() => {
-		latestData.current = {initialData, variations};
+		latestData.current = { initialData, variations };
 	}, [initialData, variations]);
 
 	useEffect(() => {
-		const {variations, initialData} = latestData.current;
+		const { variations, initialData } = latestData.current;
 
 		const target = variations?.find((v) => v.id === selectedVariation);
 		if (target) {
 			// Restore properties
 			if (target.data) {
-				setProperties({...defaultProps, ...target.data});
+				setProperties({ ...defaultProps, ...target.data });
 			}
 
 			const raw = target.outlines ?? [];
@@ -356,7 +358,7 @@ export default function VBPrototype({
 		} else if (selectedVariation === "original") {
 			// Restore properties
 			const originalProps = initialData?.properties ?? initialData?.data ?? {};
-			setProperties({...defaultProps, ...originalProps});
+			setProperties({ ...defaultProps, ...originalProps });
 
 			// Fallback for when "Original" is not explicitly in variations array (backward compat)
 			const raw = initialData?.outlines;
@@ -373,13 +375,13 @@ export default function VBPrototype({
 	}, [selectedVariation]);
 
 	const variationOptions = React.useMemo(() => {
-		if (!variations) return [{label: "Original", value: "original"}];
+		if (!variations) return [{ label: "Original", value: "original" }];
 		// If variations includes "original", just map them all. Check by ID.
 		const hasOriginal = variations.some((v) => v.id === "original");
-		const mapped = variations.map((v) => ({label: v.name, value: v.id}));
+		const mapped = variations.map((v) => ({ label: v.name, value: v.id }));
 
 		if (hasOriginal) return mapped;
-		return [{label: "Original", value: "original"}, ...mapped];
+		return [{ label: "Original", value: "original" }, ...mapped];
 	}, [variations]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
@@ -389,14 +391,10 @@ export default function VBPrototype({
 	});
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
-		setPreview((p) => ({...p, ...patch}));
+		setPreview((p) => ({ ...p, ...patch }));
 	};
 
 	const defaultProps: PageProperties = {
-		seoTitle: "",
-		keywords: "",
-		description: "",
-		meta: "",
 		campaignMode: "no",
 		someOtherSetting: "setting1",
 	};
@@ -407,6 +405,32 @@ export default function VBPrototype({
 			...(initialData?.properties ?? initialData?.data ?? {}),
 		};
 	});
+
+	// --- SEO Block Extraction ---
+	const getSEO = (seo: SEOBlock | undefined, locale: string, variant: string) => {
+		if (!seo) return {};
+		return seo[locale]?.[variant] || seo[locale]?.original || {};
+	};
+
+	const currentLocale = "en"; // TODO: wire to actual locale
+	const currentVariant = selectedVariation || "original";
+
+	const seoBlock: SEOBlock | undefined = (() => {
+		if (selectedVariation === "original") {
+			return (initialData?.data as any)?.seo;
+		}
+		const v = variations?.find((v) => v.id === selectedVariation);
+		return v?.data?.seo;
+	})();
+
+	const seo = getSEO(seoBlock, currentLocale, currentVariant);
+
+	// Example usage: Render meta tags using the dynamic SEO block
+	// <title>{seo.title}</title>
+	// <meta name="description" content={seo.description} />
+	// {seo.meta && Object.entries(seo.meta).map(([k, v]) => (
+	//   <meta name={k} content={v} key={k} />
+	// ))}
 
 	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
 		// Try to find "original" variation first
@@ -426,7 +450,7 @@ export default function VBPrototype({
 		}
 
 		const norm = normalizePage(raw);
-		return [{id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles}];
+		return [{ id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles }];
 	});
 
 	const hasChanged = useRef(false);
@@ -438,7 +462,7 @@ export default function VBPrototype({
 
 	const setPropertiesPatch = (patch: Partial<PageProperties>) => {
 		hasChanged.current = true;
-		setProperties((p) => ({...p, ...patch}));
+		setProperties((p) => ({ ...p, ...patch }));
 	};
 
 	const isFirstRender = useRef(true);
@@ -510,7 +534,7 @@ export default function VBPrototype({
 		setOutlines((prev) =>
 			prev.map((o) =>
 				o.id === activeOutlineId
-					? {...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg}
+					? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg }
 					: o
 			)
 		);
@@ -521,7 +545,7 @@ export default function VBPrototype({
 		setOutlines((prev) =>
 			prev.map((o) =>
 				o.id === activeOutlineId
-					? {...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg}
+					? { ...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg }
 					: o
 			)
 		);
@@ -576,8 +600,8 @@ export default function VBPrototype({
 		try {
 			const res = await fetch("/api/chat", {
 				method: "POST",
-				headers: {"Content-Type": "application/json"},
-				body: JSON.stringify({userMessage: message}),
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ userMessage: message }),
 			});
 
 			const payload = await res.json();
@@ -651,10 +675,10 @@ export default function VBPrototype({
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev) => {
 				const ele = prev[currentEle];
-				const properties = {...(ele.properties || {})};
+				const properties = { ...(ele.properties || {}) };
 
 				if (typeof keyOrIndex === "string") {
-					properties[keyOrIndex] = {...properties[keyOrIndex], value};
+					properties[keyOrIndex] = { ...properties[keyOrIndex], value };
 				}
 
 				return {
@@ -835,7 +859,7 @@ export default function VBPrototype({
 	function cloneSectionWithRemap(
 		section: any,
 		theEles: EleMap
-	): {cloned: any; elesPatch: EleMap} {
+	): { cloned: any; elesPatch: EleMap } {
 		const elesPatch: EleMap = {};
 
 		const clonedSectionId = mkId(section.id);
@@ -858,8 +882,8 @@ export default function VBPrototype({
 								if (!oldEleId) return ref;
 
 								const newEleId = mkId(oldEleId);
-								if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
-								return {id: newEleId};
+								if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
+								return { id: newEleId };
 							}),
 						};
 					}),
@@ -867,10 +891,10 @@ export default function VBPrototype({
 			}),
 		};
 
-		return {cloned, elesPatch};
+		return { cloned, elesPatch };
 	}
 
-	function cloneRowWithRemap(row: any, theEles: EleMap): {cloned: any; elesPatch: EleMap} {
+	function cloneRowWithRemap(row: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
 		const elesPatch: EleMap = {};
 
 		const newRowId = mkId(row.id);
@@ -888,14 +912,14 @@ export default function VBPrototype({
 						if (!oldEleId) return ref;
 
 						const newEleId = mkId(oldEleId);
-						if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
-						return {id: newEleId};
+						if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
+						return { id: newEleId };
 					}),
 				};
 			}),
 		};
 
-		return {cloned, elesPatch};
+		return { cloned, elesPatch };
 	}
 
 	function applySectionDrag(
@@ -925,14 +949,14 @@ export default function VBPrototype({
 
 		if (isSectionLast(hoverId)) {
 			next.push(dragged);
-			return {nextData: next, elesPatch};
+			return { nextData: next, elesPatch };
 		}
 
 		const hoverIdx = next.findIndex((s) => s.id === hoverId);
 		if (hoverIdx === -1) return null;
 
 		next.splice(hoverIdx, 0, dragged);
-		return {nextData: next, elesPatch};
+		return { nextData: next, elesPatch };
 	}
 
 	function applyRowDrag(
@@ -997,10 +1021,10 @@ export default function VBPrototype({
 				children.splice(insertAt, 0, rowToInsert);
 			}
 
-			return {...sec, children};
+			return { ...sec, children };
 		});
 
-		return {nextData: next, elesPatch};
+		return { nextData: next, elesPatch };
 	}
 
 	function applyColDrag(
@@ -1078,13 +1102,13 @@ export default function VBPrototype({
 					cols.splice(insertAt, 0, draggedCol);
 				}
 
-				return {...row, children: cols};
+				return { ...row, children: cols };
 			});
 
-			return {...sec, children: rows};
+			return { ...sec, children: rows };
 		});
 
-		return {nextData: next};
+		return { nextData: next };
 	}
 
 	function applyElementDrag(
@@ -1096,7 +1120,7 @@ export default function VBPrototype({
 	): DragApplyResult | null {
 		const newEleId = cloning ? mkId(draggingId) : draggingId;
 		const elesPatch =
-			cloning && theEles[draggingId] ? {[newEleId]: {...theEles[draggingId]}} : undefined;
+			cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
 
 		let draggedRef: any = null;
 
@@ -1108,12 +1132,12 @@ export default function VBPrototype({
 					const colChildren = col.elements || col.children || [];
 					const nextChildren = colChildren.filter((ref: any) => {
 						if (ref?.id === draggingId) {
-							draggedRef = cloning ? {id: newEleId} : ref;
+							draggedRef = cloning ? { id: newEleId } : ref;
 							return cloning;
 						}
 						return true;
 					});
-					return {...col, elements: nextChildren};
+					return { ...col, elements: nextChildren };
 				}),
 			})),
 		}));
@@ -1130,12 +1154,12 @@ export default function VBPrototype({
 						if (col.id !== targetColId) return col;
 						const colChildren = col.elements || col.children || [];
 						if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
-						return {...col, elements: [...colChildren, draggedRef]};
+						return { ...col, elements: [...colChildren, draggedRef] };
 					}),
 				})),
 			}));
 
-			return {nextData: next, elesPatch};
+			return { nextData: next, elesPatch };
 		}
 
 		const next = removed.map((sec: any) => ({
@@ -1151,12 +1175,12 @@ export default function VBPrototype({
 
 					const copy = [...colChildren];
 					copy.splice(idx, 0, draggedRef);
-					return {...col, elements: copy};
+					return { ...col, elements: copy };
 				}),
 			})),
 		}));
 
-		return {nextData: next, elesPatch};
+		return { nextData: next, elesPatch };
 	}
 
 	function applyDragDrop(
@@ -1206,7 +1230,7 @@ export default function VBPrototype({
 			if (res) {
 				setData(res.nextData);
 				if (res.elesPatch) {
-					setTheEles((prev) => ({...prev, ...res.elesPatch!}));
+					setTheEles((prev) => ({ ...prev, ...res.elesPatch! }));
 				}
 				setCurrentHoverEle("none");
 			}
@@ -1249,12 +1273,12 @@ export default function VBPrototype({
 	 * ------------------------------*/
 	if (isZero) {
 		return (
-			<div className="select-none" style={{height: "100%"}}>
+			<div className="select-none" style={{ height: "100%" }}>
 				<Box
 					bg="bg.page"
 					w="full"
 					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-					style={{height: "100%", overflow: "hidden"}}
+					style={{ height: "100%", overflow: "hidden" }}
 				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
@@ -1280,7 +1304,7 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+						style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
 					>
 						{/* Resizable handle (kept consistent) */}
 						<div
@@ -1315,13 +1339,13 @@ export default function VBPrototype({
 							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 						</div>
 
-						<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
+						<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
 							<div className="pl-6 pt-4 pb-2">
 								<Heading level="4">Properties</Heading>
 							</div>
 
 							<div className="flex-1 overflow-y-auto">
-								<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+								<PropertiesPanel value={properties} onChange={setPropertiesPatch} contentTypeId={initialData?.contentTypeId} />
 							</div>
 						</div>
 					</Box>
@@ -1329,7 +1353,7 @@ export default function VBPrototype({
 					{/* RIGHT / CANVAS (still visible even with 0 outlines) */}
 					<div
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
-						style={{height: "100%", overflow: "hidden"}}
+						style={{ height: "100%", overflow: "hidden" }}
 					>
 						<PreviewCanvas
 							outlines={outlines as any} // will be []
@@ -1380,12 +1404,12 @@ export default function VBPrototype({
 	 * Main layout
 	 * ------------------------------*/
 	return (
-		<div className="select-none" style={{height: "100%"}}>
+		<div className="select-none" style={{ height: "100%" }}>
 			<Box
 				bg="bg.page"
 				w="full"
 				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-				style={{height: "100%", overflow: "hidden"}}
+				style={{ height: "100%", overflow: "hidden" }}
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
@@ -1415,7 +1439,7 @@ export default function VBPrototype({
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
-					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+					style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
 				>
 					{/* Resizable handle */}
 					<div
@@ -1450,7 +1474,7 @@ export default function VBPrototype({
 						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 					</div>
 
-					<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
+					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
 						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
 						{isMulti ? (
 							<div className="h-full overflow-hidden">
@@ -1633,6 +1657,7 @@ export default function VBPrototype({
 												<PropertiesPanel
 													value={properties}
 													onChange={setPropertiesPatch}
+													contentTypeId={initialData?.contentTypeId}
 												/>
 											)}
 										</div>
@@ -1760,6 +1785,7 @@ export default function VBPrototype({
 												<PropertiesPanel
 													value={properties}
 													onChange={setPropertiesPatch}
+													contentTypeId={initialData?.contentTypeId}
 												/>
 											)}
 										</div>
@@ -1795,7 +1821,7 @@ export default function VBPrototype({
 				{/* RIGHT / CANVAS */}
 				<div
 					className="relative pr-0 pt-0 gap-0 flex items-stretch z-10 min-h-0 flex-1"
-					style={{height: "100%"}}
+					style={{ height: "100%" }}
 				>
 					<PreviewCanvas
 						outlines={outlines as any}
