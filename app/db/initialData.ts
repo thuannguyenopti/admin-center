@@ -1,3 +1,25 @@
+// --- SEO Block Type ---
+export type SEOBlockLocale = {
+	title: string;
+	description: string;
+	canonicalUrl?: string;
+	robots?: string;
+	image?: string;
+	meta?: Record<string, string>;
+	ogTitle?: string;
+	ogDescription?: string;
+	ogImage?: string;
+	twitterTitle?: string;
+	twitterDescription?: string;
+	twitterImage?: string;
+};
+
+export type SEOBlockVariants = Record<string, SEOBlockLocale>; // variant key (e.g. "original", "vip")
+
+export type SEOBlock = {
+	[locale: string]: SEOBlockVariants; // locale key (e.g. "en", "sv")
+};
+
 export type Algorithm = {
 	id: string;
 	name: string;
@@ -178,7 +200,7 @@ export const initialUsers: User[] = [
 export type Property = {
 	id: string;
 	name: string;
-	type: "text" | "textarea" | "richtext" | "reference" | "address" | "outline" | "checkbox";
+	type: "text" | "textarea" | "richtext" | "reference" | "address" | "outline" | "checkbox" | "seo";
 	required?: boolean;
 	/** when type is reference this points to a collection like 'users' */
 	of?: string;
@@ -199,8 +221,9 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Experience",
 		description: "Standard page (uses outlines)",
 		properties: [
-			{id: "title", name: "Title", type: "text", required: true},
-			{id: "mainOutline", name: "Main", type: "outline"},
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "mainOutline", name: "Main", type: "outline" },
+			{ id: "seo", name: "SEO", type: "seo" },
 		],
 	},
 	{
@@ -209,10 +232,11 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Page",
 		description: "A standard blog/article page",
 		properties: [
-			{id: "title", name: "Title", type: "text", required: true},
-			{id: "subtitle", name: "Subtitle", type: "text"},
-			{id: "body", name: "Body", type: "richtext", required: true},
-			{id: "author", name: "Author", type: "reference", of: "users", required: true},
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "subtitle", name: "Subtitle", type: "text" },
+			{ id: "body", name: "Body", type: "richtext", required: true },
+			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
+			{ id: "seo", name: "SEO", type: "seo" },
 		],
 	},
 	{
@@ -221,10 +245,11 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Page",
 		description: "Company about page",
 		properties: [
-			{id: "title", name: "Title", type: "text", required: true},
-			{id: "about", name: "About (Stride)", type: "richtext"},
-			{id: "history", name: "History", type: "textarea"},
-			{id: "orgAddress", name: "Org address", type: "address"},
+			{ id: "title", name: "Title", type: "text", required: true },
+			{ id: "about", name: "About (Stride)", type: "richtext" },
+			{ id: "history", name: "History", type: "textarea" },
+			{ id: "orgAddress", name: "Org address", type: "address" },
+			{ id: "seo", name: "SEO", type: "seo" },
 		],
 	},
 	{
@@ -233,8 +258,9 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Experience",
 		description: "Landing page experience with main and aside outlines",
 		properties: [
-			{id: "mainOutline", name: "Main", type: "outline"},
-			{id: "asideOutline", name: "Aside", type: "outline"},
+			{ id: "mainOutline", name: "Main", type: "outline" },
+			{ id: "asideOutline", name: "Aside", type: "outline" },
+			{ id: "seo", name: "SEO", type: "seo" },
 		],
 	},
 	{
@@ -243,9 +269,9 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Product",
 		description: "A standard product",
 		properties: [
-			{id: "name", name: "Name", type: "text", required: true},
-			{id: "description", name: "Description", type: "text"},
-			{id: "price", name: "Price", type: "text"},
+			{ id: "name", name: "Name", type: "text", required: true },
+			{ id: "description", name: "Description", type: "text" },
+			{ id: "price", name: "Price", type: "text" },
 		],
 	},
 	{
@@ -253,7 +279,7 @@ export const initialContentTypes: ContentType[] = [
 		name: "Block",
 		baseType: "Block",
 		description: "A reusable content block",
-		properties: [{id: "title", name: "Title", type: "text", required: true}],
+		properties: [{ id: "title", name: "Title", type: "text", required: true }],
 	},
 	{
 		id: "ct-image",
@@ -261,10 +287,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{id: "imageUrl", name: "Image URL", type: "text", required: true},
-			{id: "altText", name: "Alt Text", type: "text"},
-			{id: "width", name: "Width", type: "text"},
-			{id: "height", name: "Height", type: "text"},
+			{ id: "imageUrl", name: "Image URL", type: "text", required: true },
+			{ id: "altText", name: "Alt Text", type: "text" },
+			{ id: "width", name: "Width", type: "text" },
+			{ id: "height", name: "Height", type: "text" },
 		],
 	},
 	{
@@ -272,28 +298,28 @@ export const initialContentTypes: ContentType[] = [
 		name: "Heading",
 		baseType: "Block",
 		description: "A heading block",
-		properties: [{id: "text", name: "Text", type: "text", required: true}],
+		properties: [{ id: "text", name: "Text", type: "text", required: true }],
 	},
 	{
 		id: "ct-text",
 		name: "Text",
 		baseType: "Block",
 		description: "A text block",
-		properties: [{id: "text", name: "Text", type: "text", required: true}],
+		properties: [{ id: "text", name: "Text", type: "text", required: true }],
 	},
 	{
 		id: "ct-rich-text",
 		name: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
-		properties: [{id: "richtext", name: "Rich Text", type: "richtext", required: true}],
+		properties: [{ id: "richtext", name: "Rich Text", type: "richtext", required: true }],
 	},
 	{
 		id: "ct-button",
 		name: "Button",
 		baseType: "Block",
 		description: "A button block",
-		properties: [{id: "label", name: "Label", type: "text", required: true}],
+		properties: [{ id: "label", name: "Label", type: "text", required: true }],
 	},
 	{
 		id: "ct-input",
@@ -301,10 +327,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "An input block",
 		properties: [
-			{id: "label", name: "Label", type: "text", required: true},
-			{id: "placeholder", name: "Placeholder", type: "text"},
-			{id: "tooltip", name: "Tooltip", type: "text"},
-			{id: "required", name: "Required", type: "checkbox"},
+			{ id: "label", name: "Label", type: "text", required: true },
+			{ id: "placeholder", name: "Placeholder", type: "text" },
+			{ id: "tooltip", name: "Tooltip", type: "text" },
+			{ id: "required", name: "Required", type: "checkbox" },
 		],
 	},
 ];
@@ -317,30 +343,30 @@ export type EleProp = {
 
 export type EleDef = {
 	type:
-		| "ct-heading"
-		| "ct-text"
-		| "ct-rich-text"
-		| "ct-input"
-		| "ct-button"
-		| "ct-image"
-		| "ct-product"
-		| string;
-	properties: Record<string, {value: any}>;
+	| "ct-heading"
+	| "ct-text"
+	| "ct-rich-text"
+	| "ct-input"
+	| "ct-button"
+	| "ct-image"
+	| "ct-product"
+	| string;
+	properties: Record<string, { value: any }>;
 };
 
 export type EleMap = Record<string, EleDef>;
 
 export type OutlineNode =
 	| {
-			id: string;
-			name?: string;
-			open?: boolean;
-			children?: OutlineNode[]; // section/row nodes
-			elements?: {id: string}[]; // column nodes
-	  }
+		id: string;
+		name?: string;
+		open?: boolean;
+		children?: OutlineNode[]; // section/row nodes
+		elements?: { id: string }[]; // column nodes
+	}
 	| {
-			id: string; // element ref node (ele id)
-	  };
+		id: string; // element ref node (ele id)
+	};
 
 export type OutlineId = string;
 
@@ -378,7 +404,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-27",
 		contentTypeId: "ct-page",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "Homepage | Stride",
+						   description: "Unleash your potential with Stride. Up to 50% off everything.",
+						   canonicalUrl: "https://stride.com/",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-home.jpg",
+						   ogTitle: "Unleash Your Potential | Stride",
+						   ogDescription: "Up to 50% off everything.",
+						   ogImage: "https://stride.com/og-home.jpg",
+						   twitterTitle: "Unleash Your Potential | Stride",
+						   twitterDescription: "Up to 50% off everything.",
+						   twitterImage: "https://stride.com/og-home.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -402,8 +446,8 @@ export const initialPages: Page[] = [
 												id: "col-home-hero",
 												open: true,
 												elements: [
-													{id: "ele-home-hero-heading"},
-													{id: "ele-home-hero-subtext"},
+													{ id: "ele-home-hero-heading" },
+													{ id: "ele-home-hero-subtext" },
 												],
 											},
 										],
@@ -414,11 +458,11 @@ export const initialPages: Page[] = [
 						elements: {
 							"ele-home-hero-heading": {
 								type: "ct-heading",
-								properties: {text: {value: "Unleash Your Potential"}},
+								properties: { text: { value: "Unleash Your Potential" } },
 							},
 							"ele-home-hero-subtext": {
 								type: "ct-text",
-								properties: {text: {value: "Up to 50% off everything."}},
+								properties: { text: { value: "Up to 50% off everything." } },
 							},
 						},
 					},
@@ -446,8 +490,8 @@ export const initialPages: Page[] = [
 												id: "col-home-hero",
 												open: true,
 												elements: [
-													{id: "ele-home-hero-heading"},
-													{id: "ele-home-hero-subtext"},
+													{ id: "ele-home-hero-heading" },
+													{ id: "ele-home-hero-subtext" },
 												],
 											},
 										],
@@ -458,11 +502,11 @@ export const initialPages: Page[] = [
 						elements: {
 							"ele-home-hero-heading": {
 								type: "ct-heading",
-								properties: {text: {value: "Winter Clearance"}},
+								properties: { text: { value: "Winter Clearance" } },
 							},
 							"ele-home-hero-subtext": {
 								type: "ct-text",
-								properties: {text: {value: "Up to 50% off everything."}},
+								properties: { text: { value: "Up to 50% off everything." } },
 							},
 						},
 					},
@@ -489,7 +533,7 @@ export const initialPages: Page[] = [
 											{
 												id: "col-home-hero",
 												open: true,
-												elements: [{id: "ele-home-hero-heading"}],
+												elements: [{ id: "ele-home-hero-heading" }],
 											},
 										],
 									},
@@ -499,7 +543,7 @@ export const initialPages: Page[] = [
 						elements: {
 							"ele-home-hero-heading": {
 								type: "ct-heading",
-								properties: {text: {value: "Welcome Back, VIP!"}},
+								properties: { text: { value: "Welcome Back, VIP!" } },
 							},
 						},
 					},
@@ -515,7 +559,25 @@ export const initialPages: Page[] = [
 		status: "Draft",
 		lastModified: "2023-10-26",
 		contentTypeId: "ct-page",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "About Us | Stride",
+						   description: "Born on the track, designed for the street. Stride empowers athletes everywhere.",
+						   canonicalUrl: "https://stride.com/about",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-about.jpg",
+						   ogTitle: "About Stride",
+						   ogDescription: "Born on the track, designed for the street.",
+						   ogImage: "https://stride.com/og-about.jpg",
+						   twitterTitle: "About Stride",
+						   twitterDescription: "Born on the track, designed for the street.",
+						   twitterImage: "https://stride.com/og-about.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -539,8 +601,8 @@ export const initialPages: Page[] = [
 												id: "col-about-story",
 												open: true,
 												children: [
-													{id: "ele-about-heading"},
-													{id: "ele-about-body"},
+													{ id: "ele-about-heading" },
+													{ id: "ele-about-body" },
 												],
 											},
 										],
@@ -552,7 +614,7 @@ export const initialPages: Page[] = [
 							"ele-about-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Our Story"},
+									text: { value: "Our Story" },
 								},
 							},
 							"ele-about-body": {
@@ -586,8 +648,8 @@ export const initialPages: Page[] = [
 										id: "col-about-story",
 										open: true,
 										elements: [
-											{id: "ele-about-heading"},
-											{id: "ele-about-body"},
+											{ id: "ele-about-heading" },
+											{ id: "ele-about-body" },
 										],
 									},
 								],
@@ -599,7 +661,7 @@ export const initialPages: Page[] = [
 					"ele-about-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Our Story"},
+							text: { value: "Our Story" },
 						},
 					},
 					"ele-about-body": {
@@ -622,7 +684,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-25",
 		contentTypeId: "ct-page",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "Contact | Stride",
+						   description: "Questions about your order? We're here to help.",
+						   canonicalUrl: "https://stride.com/contact",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-contact.jpg",
+						   ogTitle: "Contact Stride",
+						   ogDescription: "Questions about your order? We're here to help.",
+						   ogImage: "https://stride.com/og-contact.jpg",
+						   twitterTitle: "Contact Stride",
+						   twitterDescription: "Questions about your order? We're here to help.",
+						   twitterImage: "https://stride.com/og-contact.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -646,11 +726,11 @@ export const initialPages: Page[] = [
 												id: "col-contact-form",
 												open: true,
 												elements: [
-													{id: "ele-contact-heading"},
-													{id: "ele-contact-subtext"},
-													{id: "ele-contact-name"},
-													{id: "ele-contact-email"},
-													{id: "ele-contact-submit"},
+													{ id: "ele-contact-heading" },
+													{ id: "ele-contact-subtext" },
+													{ id: "ele-contact-name" },
+													{ id: "ele-contact-email" },
+													{ id: "ele-contact-submit" },
 												],
 											},
 										],
@@ -662,7 +742,7 @@ export const initialPages: Page[] = [
 							"ele-contact-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Get in Touch"},
+									text: { value: "Get in Touch" },
 								},
 							},
 							"ele-contact-subtext": {
@@ -676,21 +756,21 @@ export const initialPages: Page[] = [
 							"ele-contact-name": {
 								type: "ct-input",
 								properties: {
-									label: {value: "Name"},
-									placeholder: {value: "Your Name"},
+									label: { value: "Name" },
+									placeholder: { value: "Your Name" },
 								},
 							},
 							"ele-contact-email": {
 								type: "ct-input",
 								properties: {
-									label: {value: "Email"},
-									placeholder: {value: "you@example.com"},
+									label: { value: "Email" },
+									placeholder: { value: "you@example.com" },
 								},
 							},
 							"ele-contact-submit": {
 								type: "ct-button",
 								properties: {
-									label: {value: "Send Message"},
+									label: { value: "Send Message" },
 								},
 							},
 						},
@@ -716,11 +796,11 @@ export const initialPages: Page[] = [
 										id: "col-contact-form",
 										open: true,
 										elements: [
-											{id: "ele-contact-heading"},
-											{id: "ele-contact-subtext"},
-											{id: "ele-contact-name"},
-											{id: "ele-contact-email"},
-											{id: "ele-contact-submit"},
+											{ id: "ele-contact-heading" },
+											{ id: "ele-contact-subtext" },
+											{ id: "ele-contact-name" },
+											{ id: "ele-contact-email" },
+											{ id: "ele-contact-submit" },
 										],
 									},
 								],
@@ -732,33 +812,33 @@ export const initialPages: Page[] = [
 					"ele-contact-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Get in Touch"},
+							text: { value: "Get in Touch" },
 						},
 					},
 					"ele-contact-subtext": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Questions about your order? We're here to help."},
+							text: { value: "Questions about your order? We're here to help." },
 						},
 					},
 					"ele-contact-name": {
 						type: "ct-input",
 						properties: {
-							label: {value: "Name"},
-							placeholder: {value: "Your Name"},
+							label: { value: "Name" },
+							placeholder: { value: "Your Name" },
 						},
 					},
 					"ele-contact-email": {
 						type: "ct-input",
 						properties: {
-							label: {value: "Email"},
-							placeholder: {value: "you@example.com"},
+							label: { value: "Email" },
+							placeholder: { value: "you@example.com" },
 						},
 					},
 					"ele-contact-submit": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Send Message"},
+							label: { value: "Send Message" },
 						},
 					},
 				},
@@ -773,7 +853,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-24",
 		contentTypeId: "ct-page",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "Blog | Stride",
+						   description: "Tips, training guides, and gear reviews from Stride.",
+						   canonicalUrl: "https://stride.com/blog",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-blog.jpg",
+						   ogTitle: "Stride Blog",
+						   ogDescription: "Tips, training guides, and gear reviews.",
+						   ogImage: "https://stride.com/og-blog.jpg",
+						   twitterTitle: "Stride Blog",
+						   twitterDescription: "Tips, training guides, and gear reviews.",
+						   twitterImage: "https://stride.com/og-blog.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -797,8 +895,8 @@ export const initialPages: Page[] = [
 												id: "col-blog-header",
 												open: true,
 												elements: [
-													{id: "ele-blog-heading"},
-													{id: "ele-blog-subtext"},
+													{ id: "ele-blog-heading" },
+													{ id: "ele-blog-subtext" },
 												],
 											},
 										],
@@ -810,13 +908,13 @@ export const initialPages: Page[] = [
 							"ele-blog-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "The Stride Blog"},
+									text: { value: "The Stride Blog" },
 								},
 							},
 							"ele-blog-subtext": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Tips, training guides, and gear reviews."},
+									text: { value: "Tips, training guides, and gear reviews." },
 								},
 							},
 						},
@@ -842,8 +940,8 @@ export const initialPages: Page[] = [
 										id: "col-blog-header",
 										open: true,
 										elements: [
-											{id: "ele-blog-heading"},
-											{id: "ele-blog-subtext"},
+											{ id: "ele-blog-heading" },
+											{ id: "ele-blog-subtext" },
 										],
 									},
 								],
@@ -855,13 +953,13 @@ export const initialPages: Page[] = [
 					"ele-blog-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "The Stride Blog"},
+							text: { value: "The Stride Blog" },
 						},
 					},
 					"ele-blog-subtext": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Tips, training guides, and gear reviews."},
+							text: { value: "Tips, training guides, and gear reviews." },
 						},
 					},
 				},
@@ -876,7 +974,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "Products | Stride",
+						   description: "Check out the latest gear for this season at Stride.",
+						   canonicalUrl: "https://stride.com/products",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-products.jpg",
+						   ogTitle: "Stride Products",
+						   ogDescription: "Check out the latest gear for this season.",
+						   ogImage: "https://stride.com/og-products.jpg",
+						   twitterTitle: "Stride Products",
+						   twitterDescription: "Check out the latest gear for this season.",
+						   twitterImage: "https://stride.com/og-products.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -900,8 +1016,8 @@ export const initialPages: Page[] = [
 												id: "col-products-arrivals",
 												open: true,
 												elements: [
-													{id: "ele-products-heading"},
-													{id: "ele-products-subtext"},
+													{ id: "ele-products-heading" },
+													{ id: "ele-products-subtext" },
 												],
 											},
 										],
@@ -913,13 +1029,13 @@ export const initialPages: Page[] = [
 							"ele-products-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "New Arrivals"},
+									text: { value: "New Arrivals" },
 								},
 							},
 							"ele-products-subtext": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Check out the latest gear for this season."},
+									text: { value: "Check out the latest gear for this season." },
 								},
 							},
 						},
@@ -945,8 +1061,8 @@ export const initialPages: Page[] = [
 										id: "col-products-arrivals",
 										open: true,
 										elements: [
-											{id: "ele-products-heading"},
-											{id: "ele-products-subtext"},
+											{ id: "ele-products-heading" },
+											{ id: "ele-products-subtext" },
 										],
 									},
 								],
@@ -958,13 +1074,13 @@ export const initialPages: Page[] = [
 					"ele-products-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "New Arrivals"},
+							text: { value: "New Arrivals" },
 						},
 					},
 					"ele-products-subtext": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Check out the latest gear for this season."},
+							text: { value: "Check out the latest gear for this season." },
 						},
 					},
 				},
@@ -979,7 +1095,25 @@ export const initialPages: Page[] = [
 		status: "Review",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "Stride Elite Runner | Stride",
+						   description: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
+						   canonicalUrl: "https://stride.com/products/elite-runner",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-elite-runner.jpg",
+						   ogTitle: "Stride Elite Runner",
+						   ogDescription: "Our most advanced running shoe yet.",
+						   ogImage: "https://stride.com/og-elite-runner.jpg",
+						   twitterTitle: "Stride Elite Runner",
+						   twitterDescription: "Our most advanced running shoe yet.",
+						   twitterImage: "https://stride.com/og-elite-runner.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -1003,9 +1137,9 @@ export const initialPages: Page[] = [
 												id: "col-product-a-hero",
 												open: true,
 												elements: [
-													{id: "ele-product-a-heading"},
-													{id: "ele-product-a-body"},
-													{id: "ele-product-a-cta"},
+													{ id: "ele-product-a-heading" },
+													{ id: "ele-product-a-body" },
+													{ id: "ele-product-a-cta" },
 												],
 											},
 										],
@@ -1017,7 +1151,7 @@ export const initialPages: Page[] = [
 							"ele-product-a-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Stride Elite Runner"},
+									text: { value: "Stride Elite Runner" },
 								},
 							},
 							"ele-product-a-body": {
@@ -1031,7 +1165,7 @@ export const initialPages: Page[] = [
 							"ele-product-a-cta": {
 								type: "ct-button",
 								properties: {
-									label: {value: "Add to Cart"},
+									label: { value: "Add to Cart" },
 								},
 							},
 						},
@@ -1057,9 +1191,9 @@ export const initialPages: Page[] = [
 										id: "col-product-a-hero",
 										open: true,
 										elements: [
-											{id: "ele-product-a-heading"},
-											{id: "ele-product-a-body"},
-											{id: "ele-product-a-cta"},
+											{ id: "ele-product-a-heading" },
+											{ id: "ele-product-a-body" },
+											{ id: "ele-product-a-cta" },
 										],
 									},
 								],
@@ -1071,7 +1205,7 @@ export const initialPages: Page[] = [
 					"ele-product-a-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Stride Elite Runner"},
+							text: { value: "Stride Elite Runner" },
 						},
 					},
 					"ele-product-a-body": {
@@ -1085,7 +1219,7 @@ export const initialPages: Page[] = [
 					"ele-product-a-cta": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -1100,7 +1234,25 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-27",
-		data: {},
+		   data: {
+			   seo: {
+				   en: {
+					   original: {
+						   title: "Default Landing | Stride",
+						   description: "Join thousands of runners in the most iconic triathlon of the year.",
+						   canonicalUrl: "https://stride.com/landing",
+						   robots: "index,follow",
+						   image: "https://stride.com/og-landing.jpg",
+						   ogTitle: "Stride Landing Page",
+						   ogDescription: "Join thousands of runners in the most iconic triathlon of the year.",
+						   ogImage: "https://stride.com/og-landing.jpg",
+						   twitterTitle: "Stride Landing Page",
+						   twitterDescription: "Join thousands of runners in the most iconic triathlon of the year.",
+						   twitterImage: "https://stride.com/og-landing.jpg",
+					   },
+				   },
+			   },
+		   },
 		variations: [
 			{
 				id: "original",
@@ -1125,9 +1277,9 @@ export const initialPages: Page[] = [
 												id: "col-landing-hero",
 												open: true,
 												elements: [
-													{id: "ele-landing-hero-badge"},
-													{id: "ele-landing-hero-sub"},
-													{id: "ele-landing-hero-heading"},
+													{ id: "ele-landing-hero-badge" },
+													{ id: "ele-landing-hero-sub" },
+													{ id: "ele-landing-hero-heading" },
 												],
 											},
 										],
@@ -1139,12 +1291,12 @@ export const initialPages: Page[] = [
 											{
 												id: "col-landing-hero-cta-1",
 												open: true,
-												elements: [{id: "ele-landing-hero-cta-primary"}],
+												elements: [{ id: "ele-landing-hero-cta-primary" }],
 											},
 											{
 												id: "col-landing-hero-cta-2",
 												open: true,
-												elements: [{id: "ele-landing-hero-cta-secondary"}],
+												elements: [{ id: "ele-landing-hero-cta-secondary" }],
 											},
 										],
 									},
@@ -1156,24 +1308,24 @@ export const initialPages: Page[] = [
 												id: "col-landing-hero-stat-1",
 												open: true,
 												elements: [
-													{id: "ele-landing-hero-stat-1-heading"},
-													{id: "ele-landing-hero-stat-1-text"},
+													{ id: "ele-landing-hero-stat-1-heading" },
+													{ id: "ele-landing-hero-stat-1-text" },
 												],
 											},
 											{
 												id: "col-landing-hero-stat-2",
 												open: true,
 												elements: [
-													{id: "ele-landing-hero-stat-2-heading"},
-													{id: "ele-landing-hero-stat-2-text"},
+													{ id: "ele-landing-hero-stat-2-heading" },
+													{ id: "ele-landing-hero-stat-2-text" },
 												],
 											},
 											{
 												id: "col-landing-hero-stat-3",
 												open: true,
 												elements: [
-													{id: "ele-landing-hero-stat-3-heading"},
-													{id: "ele-landing-hero-stat-3-text"},
+													{ id: "ele-landing-hero-stat-3-heading" },
+													{ id: "ele-landing-hero-stat-3-text" },
 												],
 											},
 										],
@@ -1193,8 +1345,8 @@ export const initialPages: Page[] = [
 												id: "col-landing-features-intro",
 												open: true,
 												elements: [
-													{id: "ele-landing-features-heading"},
-													{id: "ele-landing-features-sub"},
+													{ id: "ele-landing-features-heading" },
+													{ id: "ele-landing-features-sub" },
 												],
 											},
 										],
@@ -1213,17 +1365,17 @@ export const initialPages: Page[] = [
 											{
 												id: "col-feat-1",
 												open: true,
-												elements: [{id: "ele-feat-1"}],
+												elements: [{ id: "ele-feat-1" }],
 											},
 											{
 												id: "col-feat-2",
 												open: true,
-												elements: [{id: "ele-feat-2"}],
+												elements: [{ id: "ele-feat-2" }],
 											},
 											{
 												id: "col-feat-3",
 												open: true,
-												elements: [{id: "ele-feat-3"}],
+												elements: [{ id: "ele-feat-3" }],
 											},
 										],
 									},
@@ -1234,17 +1386,17 @@ export const initialPages: Page[] = [
 											{
 												id: "col-feat-4",
 												open: true,
-												elements: [{id: "ele-feat-4"}],
+												elements: [{ id: "ele-feat-4" }],
 											},
 											{
 												id: "col-feat-5",
 												open: true,
-												elements: [{id: "ele-feat-5"}],
+												elements: [{ id: "ele-feat-5" }],
 											},
 											{
 												id: "col-feat-6",
 												open: true,
-												elements: [{id: "ele-feat-6"}],
+												elements: [{ id: "ele-feat-6" }],
 											},
 										],
 									},
@@ -1263,8 +1415,8 @@ export const initialPages: Page[] = [
 												id: "col-landing-testimonials-intro",
 												open: true,
 												elements: [
-													{id: "ele-landing-testimonials-heading"},
-													{id: "ele-landing-testimonials-sub"},
+													{ id: "ele-landing-testimonials-heading" },
+													{ id: "ele-landing-testimonials-sub" },
 												],
 											},
 										],
@@ -1276,12 +1428,12 @@ export const initialPages: Page[] = [
 											{
 												id: "col-test-1",
 												open: true,
-												elements: [{id: "ele-test-1"}],
+												elements: [{ id: "ele-test-1" }],
 											},
 											{
 												id: "col-test-2",
 												open: true,
-												elements: [{id: "ele-test-2"}],
+												elements: [{ id: "ele-test-2" }],
 											},
 										],
 									},
@@ -1300,9 +1452,9 @@ export const initialPages: Page[] = [
 												id: "col-landing-cta",
 												open: true,
 												elements: [
-													{id: "ele-landing-cta-heading"},
-													{id: "ele-landing-cta-sub"},
-													{id: "ele-landing-cta-button"},
+													{ id: "ele-landing-cta-heading" },
+													{ id: "ele-landing-cta-sub" },
+													{ id: "ele-landing-cta-button" },
 												],
 											},
 										],
@@ -1322,8 +1474,8 @@ export const initialPages: Page[] = [
 												id: "col-landing-challenges-intro",
 												open: true,
 												elements: [
-													{id: "ele-landing-challenges-heading"},
-													{id: "ele-landing-challenges-sub"},
+													{ id: "ele-landing-challenges-heading" },
+													{ id: "ele-landing-challenges-sub" },
 												],
 											},
 										],
@@ -1335,17 +1487,17 @@ export const initialPages: Page[] = [
 											{
 												id: "col-chal-1",
 												open: true,
-												elements: [{id: "ele-chal-1"}],
+												elements: [{ id: "ele-chal-1" }],
 											},
 											{
 												id: "col-chal-2",
 												open: true,
-												elements: [{id: "ele-chal-2"}],
+												elements: [{ id: "ele-chal-2" }],
 											},
 											{
 												id: "col-chal-3",
 												open: true,
-												elements: [{id: "ele-chal-3"}],
+												elements: [{ id: "ele-chal-3" }],
 											},
 										],
 									},
@@ -1364,8 +1516,8 @@ export const initialPages: Page[] = [
 												id: "col-landing-pricing-intro",
 												open: true,
 												elements: [
-													{id: "ele-landing-pricing-heading"},
-													{id: "ele-landing-pricing-sub"},
+													{ id: "ele-landing-pricing-heading" },
+													{ id: "ele-landing-pricing-sub" },
 												],
 											},
 										],
@@ -1377,17 +1529,17 @@ export const initialPages: Page[] = [
 											{
 												id: "col-price-1",
 												open: true,
-												elements: [{id: "ele-price-1"}],
+												elements: [{ id: "ele-price-1" }],
 											},
 											{
 												id: "col-price-2",
 												open: true,
-												elements: [{id: "ele-price-2"}],
+												elements: [{ id: "ele-price-2" }],
 											},
 											{
 												id: "col-price-3",
 												open: true,
-												elements: [{id: "ele-price-3"}],
+												elements: [{ id: "ele-price-3" }],
 											},
 										],
 									},
@@ -1406,8 +1558,8 @@ export const initialPages: Page[] = [
 												id: "col-landing-stories-intro",
 												open: true,
 												elements: [
-													{id: "ele-landing-stories-heading"},
-													{id: "ele-landing-stories-sub"},
+													{ id: "ele-landing-stories-heading" },
+													{ id: "ele-landing-stories-sub" },
 												],
 											},
 										],
@@ -1419,17 +1571,17 @@ export const initialPages: Page[] = [
 											{
 												id: "col-story-1",
 												open: true,
-												elements: [{id: "ele-story-1"}],
+												elements: [{ id: "ele-story-1" }],
 											},
 											{
 												id: "col-story-2",
 												open: true,
-												elements: [{id: "ele-story-2"}],
+												elements: [{ id: "ele-story-2" }],
 											},
 											{
 												id: "col-story-3",
 												open: true,
-												elements: [{id: "ele-story-3"}],
+												elements: [{ id: "ele-story-3" }],
 											},
 										],
 									},
@@ -1448,9 +1600,9 @@ export const initialPages: Page[] = [
 												id: "col-landing-footer-cta",
 												open: true,
 												elements: [
-													{id: "ele-landing-footer-cta-heading"},
-													{id: "ele-landing-footer-cta-sub"},
-													{id: "ele-landing-footer-cta-stats"},
+													{ id: "ele-landing-footer-cta-heading" },
+													{ id: "ele-landing-footer-cta-sub" },
+													{ id: "ele-landing-footer-cta-stats" },
 												],
 											},
 										],
@@ -1462,13 +1614,13 @@ export const initialPages: Page[] = [
 							"ele-landing-hero-badge": {
 								type: "ct-text",
 								properties: {
-									text: {value: "● Join 2M+ active users worldwide"},
+									text: { value: "● Join 2M+ active users worldwide" },
 								},
 							},
 							"ele-landing-hero-sub": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Ready. Set. Go."},
+									text: { value: "Ready. Set. Go." },
 								},
 							},
 							"ele-landing-hero-heading": {
@@ -1482,61 +1634,61 @@ export const initialPages: Page[] = [
 							"ele-landing-hero-cta-primary": {
 								type: "ct-button",
 								properties: {
-									label: {value: "Register for your bib"},
+									label: { value: "Register for your bib" },
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
-									label: {value: "Learn More"},
+									label: { value: "Learn More" },
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "500K+"},
-									variant: {value: "stat"},
+									text: { value: "500K+" },
+									variant: { value: "stat" },
 								},
 							},
 							"ele-landing-hero-stat-1-text": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Annual participants"},
-									variant: {value: "stat"},
+									text: { value: "Annual participants" },
+									variant: { value: "stat" },
 								},
 							},
 							"ele-landing-hero-stat-2-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "45+"},
-									variant: {value: "stat"},
+									text: { value: "45+" },
+									variant: { value: "stat" },
 								},
 							},
 							"ele-landing-hero-stat-2-text": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Countries represented"},
-									variant: {value: "stat"},
+									text: { value: "Countries represented" },
+									variant: { value: "stat" },
 								},
 							},
 							"ele-landing-hero-stat-3-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "4.9/5"},
-									variant: {value: "stat"},
+									text: { value: "4.9/5" },
+									variant: { value: "stat" },
 								},
 							},
 							"ele-landing-hero-stat-3-text": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Average rating"},
-									variant: {value: "stat"},
+									text: { value: "Average rating" },
+									variant: { value: "stat" },
 								},
 							},
 							"ele-landing-features-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Everything you need to stay motivated"},
+									text: { value: "Everything you need to stay motivated" },
 								},
 							},
 							"ele-landing-features-sub": {
@@ -1560,7 +1712,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "GPS Tracking: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1586,7 +1738,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Heart Rate Monitoring: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1612,7 +1764,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Performance Analytics: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1638,7 +1790,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Achievement System: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1664,7 +1816,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Social Features: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1690,7 +1842,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Cross-Platform Sync: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1706,7 +1858,7 @@ export const initialPages: Page[] = [
 							"ele-landing-testimonials-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Join millions of active users"},
+									text: { value: "Join millions of active users" },
 								},
 							},
 							"ele-landing-testimonials-sub": {
@@ -1730,7 +1882,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Sarah M.: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1756,7 +1908,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Mike R.: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1772,7 +1924,7 @@ export const initialPages: Page[] = [
 							"ele-landing-cta-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Ready to join the community?"},
+									text: { value: "Ready to join the community?" },
 								},
 							},
 							"ele-landing-cta-sub": {
@@ -1786,13 +1938,13 @@ export const initialPages: Page[] = [
 							"ele-landing-cta-button": {
 								type: "ct-button",
 								properties: {
-									label: {value: "Join Now"},
+									label: { value: "Join Now" },
 								},
 							},
 							"ele-landing-challenges-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Push your limits"},
+									text: { value: "Push your limits" },
 								},
 							},
 							"ele-landing-challenges-sub": {
@@ -1816,7 +1968,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "October Run Streak: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1842,7 +1994,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "100 Mile Challenge: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1868,7 +2020,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Weekend Warrior: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1884,7 +2036,7 @@ export const initialPages: Page[] = [
 							"ele-landing-pricing-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Choose your plan"},
+									text: { value: "Choose your plan" },
 								},
 							},
 							"ele-landing-pricing-sub": {
@@ -1898,8 +2050,8 @@ export const initialPages: Page[] = [
 							"ele-price-1": {
 								type: "ct-product",
 								properties: {
-									name: {value: "Free"},
-									price: {value: "$0/mo"},
+									name: { value: "Free" },
+									price: { value: "$0/mo" },
 									description: {
 										value: "Basic activity tracking, Community access, 5 challenges per month.",
 									},
@@ -1908,8 +2060,8 @@ export const initialPages: Page[] = [
 							"ele-price-2": {
 								type: "ct-product",
 								properties: {
-									name: {value: "Pro"},
-									price: {value: "$9.99/mo"},
+									name: { value: "Pro" },
+									price: { value: "$9.99/mo" },
 									description: {
 										value: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
 									},
@@ -1918,8 +2070,8 @@ export const initialPages: Page[] = [
 							"ele-price-3": {
 								type: "ct-product",
 								properties: {
-									name: {value: "Team"},
-									price: {value: "$24.99/mo"},
+									name: { value: "Team" },
+									price: { value: "$24.99/mo" },
 									description: {
 										value: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
 									},
@@ -1928,7 +2080,7 @@ export const initialPages: Page[] = [
 							"ele-landing-stories-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Real results from real people"},
+									text: { value: "Real results from real people" },
 								},
 							},
 							"ele-landing-stories-sub": {
@@ -1952,7 +2104,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Jessica T.: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -1978,7 +2130,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Marcus R.: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -2004,7 +2156,7 @@ export const initialPages: Page[] = [
 														{
 															type: "text",
 															text: "Amanda K.: ",
-															marks: [{type: "bold"}],
+															marks: [{ type: "bold" }],
 														},
 														{
 															type: "text",
@@ -2061,10 +2213,10 @@ export const initialPages: Page[] = [
 												id: "col-aside-blog",
 												open: true,
 												elements: [
-													{id: "ele-aside-blog-heading"},
-													{id: "ele-aside-blog-1"},
-													{id: "ele-aside-blog-2"},
-													{id: "ele-aside-blog-3"},
+													{ id: "ele-aside-blog-heading" },
+													{ id: "ele-aside-blog-1" },
+													{ id: "ele-aside-blog-2" },
+													{ id: "ele-aside-blog-3" },
 												],
 											},
 										],
@@ -2084,13 +2236,13 @@ export const initialPages: Page[] = [
 												id: "col-aside-signup",
 												open: true,
 												elements: [
-													{id: "ele-aside-signup-heading"},
-													{id: "ele-aside-signup-sub"},
-													{id: "ele-aside-signup-name"},
-													{id: "ele-aside-signup-email"},
-													{id: "ele-aside-signup-pass"},
-													{id: "ele-aside-signup-btn"},
-													{id: "ele-aside-signup-footer"},
+													{ id: "ele-aside-signup-heading" },
+													{ id: "ele-aside-signup-sub" },
+													{ id: "ele-aside-signup-name" },
+													{ id: "ele-aside-signup-email" },
+													{ id: "ele-aside-signup-pass" },
+													{ id: "ele-aside-signup-btn" },
+													{ id: "ele-aside-signup-footer" },
 												],
 											},
 										],
@@ -2102,61 +2254,61 @@ export const initialPages: Page[] = [
 							"ele-aside-blog-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Latest Blog Posts"},
+									text: { value: "Latest Blog Posts" },
 								},
 							},
 							"ele-aside-blog-1": {
 								type: "ct-text",
 								properties: {
-									text: {value: "10 Tips For Your First Marathon (2 days ago)"},
+									text: { value: "10 Tips For Your First Marathon (2 days ago)" },
 								},
 							},
 							"ele-aside-blog-2": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Cycling Workouts for Beginners (5 days ago)"},
+									text: { value: "Cycling Workouts for Beginners (5 days ago)" },
 								},
 							},
 							"ele-aside-blog-3": {
 								type: "ct-text",
 								properties: {
-									text: {value: "The Science of Running Form (1 week ago)"},
+									text: { value: "The Science of Running Form (1 week ago)" },
 								},
 							},
 							"ele-aside-signup-heading": {
 								type: "ct-heading",
 								properties: {
-									text: {value: "Join STRIDE Today"},
+									text: { value: "Join STRIDE Today" },
 								},
 							},
 							"ele-aside-signup-sub": {
 								type: "ct-text",
 								properties: {
-									text: {value: "Start your fitness journey with our community"},
+									text: { value: "Start your fitness journey with our community" },
 								},
 							},
 							"ele-aside-signup-name": {
 								type: "ct-input",
 								properties: {
-									placeholder: {value: "Full Name"},
+									placeholder: { value: "Full Name" },
 								},
 							},
 							"ele-aside-signup-email": {
 								type: "ct-input",
 								properties: {
-									placeholder: {value: "Email Address"},
+									placeholder: { value: "Email Address" },
 								},
 							},
 							"ele-aside-signup-pass": {
 								type: "ct-input",
 								properties: {
-									placeholder: {value: "Password"},
+									placeholder: { value: "Password" },
 								},
 							},
 							"ele-aside-signup-btn": {
 								type: "ct-button",
 								properties: {
-									label: {value: "Create Account"},
+									label: { value: "Create Account" },
 								},
 							},
 							"ele-aside-signup-footer": {
@@ -2191,9 +2343,9 @@ export const initialPages: Page[] = [
 										id: "col-landing-hero",
 										open: true,
 										elements: [
-											{id: "ele-landing-hero-badge"},
-											{id: "ele-landing-hero-sub"},
-											{id: "ele-landing-hero-heading"},
+											{ id: "ele-landing-hero-badge" },
+											{ id: "ele-landing-hero-sub" },
+											{ id: "ele-landing-hero-heading" },
 										],
 									},
 								],
@@ -2205,12 +2357,12 @@ export const initialPages: Page[] = [
 									{
 										id: "col-landing-hero-cta-1",
 										open: true,
-										elements: [{id: "ele-landing-hero-cta-primary"}],
+										elements: [{ id: "ele-landing-hero-cta-primary" }],
 									},
 									{
 										id: "col-landing-hero-cta-2",
 										open: true,
-										elements: [{id: "ele-landing-hero-cta-secondary"}],
+										elements: [{ id: "ele-landing-hero-cta-secondary" }],
 									},
 								],
 							},
@@ -2222,24 +2374,24 @@ export const initialPages: Page[] = [
 										id: "col-landing-hero-stat-1",
 										open: true,
 										elements: [
-											{id: "ele-landing-hero-stat-1-heading"},
-											{id: "ele-landing-hero-stat-1-text"},
+											{ id: "ele-landing-hero-stat-1-heading" },
+											{ id: "ele-landing-hero-stat-1-text" },
 										],
 									},
 									{
 										id: "col-landing-hero-stat-2",
 										open: true,
 										elements: [
-											{id: "ele-landing-hero-stat-2-heading"},
-											{id: "ele-landing-hero-stat-2-text"},
+											{ id: "ele-landing-hero-stat-2-heading" },
+											{ id: "ele-landing-hero-stat-2-text" },
 										],
 									},
 									{
 										id: "col-landing-hero-stat-3",
 										open: true,
 										elements: [
-											{id: "ele-landing-hero-stat-3-heading"},
-											{id: "ele-landing-hero-stat-3-text"},
+											{ id: "ele-landing-hero-stat-3-heading" },
+											{ id: "ele-landing-hero-stat-3-text" },
 										],
 									},
 								],
@@ -2259,8 +2411,8 @@ export const initialPages: Page[] = [
 										id: "col-landing-features-intro",
 										open: true,
 										elements: [
-											{id: "ele-landing-features-heading"},
-											{id: "ele-landing-features-sub"},
+											{ id: "ele-landing-features-heading" },
+											{ id: "ele-landing-features-sub" },
 										],
 									},
 								],
@@ -2276,18 +2428,18 @@ export const initialPages: Page[] = [
 								id: "row-landing-features-1",
 								open: true,
 								children: [
-									{id: "col-feat-1", open: true, elements: [{id: "ele-feat-1"}]},
-									{id: "col-feat-2", open: true, elements: [{id: "ele-feat-2"}]},
-									{id: "col-feat-3", open: true, elements: [{id: "ele-feat-3"}]},
+									{ id: "col-feat-1", open: true, elements: [{ id: "ele-feat-1" }] },
+									{ id: "col-feat-2", open: true, elements: [{ id: "ele-feat-2" }] },
+									{ id: "col-feat-3", open: true, elements: [{ id: "ele-feat-3" }] },
 								],
 							},
 							{
 								id: "row-landing-features-2",
 								open: true,
 								children: [
-									{id: "col-feat-4", open: true, elements: [{id: "ele-feat-4"}]},
-									{id: "col-feat-5", open: true, elements: [{id: "ele-feat-5"}]},
-									{id: "col-feat-6", open: true, elements: [{id: "ele-feat-6"}]},
+									{ id: "col-feat-4", open: true, elements: [{ id: "ele-feat-4" }] },
+									{ id: "col-feat-5", open: true, elements: [{ id: "ele-feat-5" }] },
+									{ id: "col-feat-6", open: true, elements: [{ id: "ele-feat-6" }] },
 								],
 							},
 						],
@@ -2305,8 +2457,8 @@ export const initialPages: Page[] = [
 										id: "col-landing-testimonials-intro",
 										open: true,
 										elements: [
-											{id: "ele-landing-testimonials-heading"},
-											{id: "ele-landing-testimonials-sub"},
+											{ id: "ele-landing-testimonials-heading" },
+											{ id: "ele-landing-testimonials-sub" },
 										],
 									},
 								],
@@ -2315,8 +2467,8 @@ export const initialPages: Page[] = [
 								id: "row-landing-testimonials-cards",
 								open: true,
 								children: [
-									{id: "col-test-1", open: true, elements: [{id: "ele-test-1"}]},
-									{id: "col-test-2", open: true, elements: [{id: "ele-test-2"}]},
+									{ id: "col-test-1", open: true, elements: [{ id: "ele-test-1" }] },
+									{ id: "col-test-2", open: true, elements: [{ id: "ele-test-2" }] },
 								],
 							},
 						],
@@ -2334,9 +2486,9 @@ export const initialPages: Page[] = [
 										id: "col-landing-cta",
 										open: true,
 										elements: [
-											{id: "ele-landing-cta-heading"},
-											{id: "ele-landing-cta-sub"},
-											{id: "ele-landing-cta-button"},
+											{ id: "ele-landing-cta-heading" },
+											{ id: "ele-landing-cta-sub" },
+											{ id: "ele-landing-cta-button" },
 										],
 									},
 								],
@@ -2356,8 +2508,8 @@ export const initialPages: Page[] = [
 										id: "col-landing-challenges-intro",
 										open: true,
 										elements: [
-											{id: "ele-landing-challenges-heading"},
-											{id: "ele-landing-challenges-sub"},
+											{ id: "ele-landing-challenges-heading" },
+											{ id: "ele-landing-challenges-sub" },
 										],
 									},
 								],
@@ -2366,9 +2518,9 @@ export const initialPages: Page[] = [
 								id: "row-landing-challenges-cards",
 								open: true,
 								children: [
-									{id: "col-chal-1", open: true, elements: [{id: "ele-chal-1"}]},
-									{id: "col-chal-2", open: true, elements: [{id: "ele-chal-2"}]},
-									{id: "col-chal-3", open: true, elements: [{id: "ele-chal-3"}]},
+									{ id: "col-chal-1", open: true, elements: [{ id: "ele-chal-1" }] },
+									{ id: "col-chal-2", open: true, elements: [{ id: "ele-chal-2" }] },
+									{ id: "col-chal-3", open: true, elements: [{ id: "ele-chal-3" }] },
 								],
 							},
 						],
@@ -2386,8 +2538,8 @@ export const initialPages: Page[] = [
 										id: "col-landing-pricing-intro",
 										open: true,
 										elements: [
-											{id: "ele-landing-pricing-heading"},
-											{id: "ele-landing-pricing-sub"},
+											{ id: "ele-landing-pricing-heading" },
+											{ id: "ele-landing-pricing-sub" },
 										],
 									},
 								],
@@ -2399,17 +2551,17 @@ export const initialPages: Page[] = [
 									{
 										id: "col-price-1",
 										open: true,
-										elements: [{id: "ele-price-1"}],
+										elements: [{ id: "ele-price-1" }],
 									},
 									{
 										id: "col-price-2",
 										open: true,
-										elements: [{id: "ele-price-2"}],
+										elements: [{ id: "ele-price-2" }],
 									},
 									{
 										id: "col-price-3",
 										open: true,
-										elements: [{id: "ele-price-3"}],
+										elements: [{ id: "ele-price-3" }],
 									},
 								],
 							},
@@ -2428,8 +2580,8 @@ export const initialPages: Page[] = [
 										id: "col-landing-stories-intro",
 										open: true,
 										elements: [
-											{id: "ele-landing-stories-heading"},
-											{id: "ele-landing-stories-sub"},
+											{ id: "ele-landing-stories-heading" },
+											{ id: "ele-landing-stories-sub" },
 										],
 									},
 								],
@@ -2441,17 +2593,17 @@ export const initialPages: Page[] = [
 									{
 										id: "col-story-1",
 										open: true,
-										elements: [{id: "ele-story-1"}],
+										elements: [{ id: "ele-story-1" }],
 									},
 									{
 										id: "col-story-2",
 										open: true,
-										elements: [{id: "ele-story-2"}],
+										elements: [{ id: "ele-story-2" }],
 									},
 									{
 										id: "col-story-3",
 										open: true,
-										elements: [{id: "ele-story-3"}],
+										elements: [{ id: "ele-story-3" }],
 									},
 								],
 							},
@@ -2470,9 +2622,9 @@ export const initialPages: Page[] = [
 										id: "col-landing-footer-cta",
 										open: true,
 										elements: [
-											{id: "ele-landing-footer-cta-heading"},
-											{id: "ele-landing-footer-cta-sub"},
-											{id: "ele-landing-footer-cta-stats"},
+											{ id: "ele-landing-footer-cta-heading" },
+											{ id: "ele-landing-footer-cta-sub" },
+											{ id: "ele-landing-footer-cta-stats" },
 										],
 									},
 								],
@@ -2484,13 +2636,13 @@ export const initialPages: Page[] = [
 					"ele-landing-hero-badge": {
 						type: "ct-text",
 						properties: {
-							text: {value: "● Join 2M+ active users worldwide"},
+							text: { value: "● Join 2M+ active users worldwide" },
 						},
 					},
 					"ele-landing-hero-sub": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Ready. Set. Go."},
+							text: { value: "Ready. Set. Go." },
 						},
 					},
 					"ele-landing-hero-heading": {
@@ -2504,61 +2656,61 @@ export const initialPages: Page[] = [
 					"ele-landing-hero-cta-primary": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Register for your bib"},
+							label: { value: "Register for your bib" },
 						},
 					},
 					"ele-landing-hero-cta-secondary": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Learn More"},
+							label: { value: "Learn More" },
 						},
 					},
 					"ele-landing-hero-stat-1-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "500K+"},
-							variant: {value: "stat"},
+							text: { value: "500K+" },
+							variant: { value: "stat" },
 						},
 					},
 					"ele-landing-hero-stat-1-text": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Annual participants"},
-							variant: {value: "stat"},
+							text: { value: "Annual participants" },
+							variant: { value: "stat" },
 						},
 					},
 					"ele-landing-hero-stat-2-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "45+"},
-							variant: {value: "stat"},
+							text: { value: "45+" },
+							variant: { value: "stat" },
 						},
 					},
 					"ele-landing-hero-stat-2-text": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Countries represented"},
-							variant: {value: "stat"},
+							text: { value: "Countries represented" },
+							variant: { value: "stat" },
 						},
 					},
 					"ele-landing-hero-stat-3-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "4.9/5"},
-							variant: {value: "stat"},
+							text: { value: "4.9/5" },
+							variant: { value: "stat" },
 						},
 					},
 					"ele-landing-hero-stat-3-text": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Average rating"},
-							variant: {value: "stat"},
+							text: { value: "Average rating" },
+							variant: { value: "stat" },
 						},
 					},
 					"ele-landing-features-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Everything you need to stay motivated"},
+							text: { value: "Everything you need to stay motivated" },
 						},
 					},
 					"ele-landing-features-sub": {
@@ -2582,7 +2734,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "GPS Tracking: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2608,7 +2760,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Heart Rate Monitoring: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2634,7 +2786,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Performance Analytics: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2660,7 +2812,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Achievement System: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2686,7 +2838,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Social Features: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2712,7 +2864,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Cross-Platform Sync: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2728,7 +2880,7 @@ export const initialPages: Page[] = [
 					"ele-landing-testimonials-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Join millions of active users"},
+							text: { value: "Join millions of active users" },
 						},
 					},
 					"ele-landing-testimonials-sub": {
@@ -2752,7 +2904,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Sarah M.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2778,7 +2930,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Mike R.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2794,7 +2946,7 @@ export const initialPages: Page[] = [
 					"ele-landing-cta-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Ready to join the community?"},
+							text: { value: "Ready to join the community?" },
 						},
 					},
 					"ele-landing-cta-sub": {
@@ -2808,13 +2960,13 @@ export const initialPages: Page[] = [
 					"ele-landing-cta-button": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Join Now"},
+							label: { value: "Join Now" },
 						},
 					},
 					"ele-landing-challenges-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Push your limits"},
+							text: { value: "Push your limits" },
 						},
 					},
 					"ele-landing-challenges-sub": {
@@ -2838,7 +2990,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "October Run Streak: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2864,7 +3016,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "100 Mile Challenge: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2890,7 +3042,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Weekend Warrior: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -2906,7 +3058,7 @@ export const initialPages: Page[] = [
 					"ele-landing-pricing-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Choose your plan"},
+							text: { value: "Choose your plan" },
 						},
 					},
 					"ele-landing-pricing-sub": {
@@ -2920,8 +3072,8 @@ export const initialPages: Page[] = [
 					"ele-price-1": {
 						type: "ct-product",
 						properties: {
-							name: {value: "Free"},
-							price: {value: "$0/mo"},
+							name: { value: "Free" },
+							price: { value: "$0/mo" },
 							description: {
 								value: "Basic activity tracking, Community access, 5 challenges per month.",
 							},
@@ -2930,8 +3082,8 @@ export const initialPages: Page[] = [
 					"ele-price-2": {
 						type: "ct-product",
 						properties: {
-							name: {value: "Pro"},
-							price: {value: "$9.99/mo"},
+							name: { value: "Pro" },
+							price: { value: "$9.99/mo" },
 							description: {
 								value: "Everything in Free, Unlimited challenges, Advanced analytics, Heart rate monitoring.",
 							},
@@ -2940,8 +3092,8 @@ export const initialPages: Page[] = [
 					"ele-price-3": {
 						type: "ct-product",
 						properties: {
-							name: {value: "Team"},
-							price: {value: "$24.99/mo"},
+							name: { value: "Team" },
+							price: { value: "$24.99/mo" },
 							description: {
 								value: "Everything in Pro, Up to 10 team members, Team challenges, Admin dashboard.",
 							},
@@ -2950,7 +3102,7 @@ export const initialPages: Page[] = [
 					"ele-landing-stories-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Real results from real people"},
+							text: { value: "Real results from real people" },
 						},
 					},
 					"ele-landing-stories-sub": {
@@ -2974,7 +3126,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Jessica T.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -3000,7 +3152,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Marcus R.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -3026,7 +3178,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Amanda K.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -3042,7 +3194,7 @@ export const initialPages: Page[] = [
 					"ele-landing-footer-cta-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Join over 2 million users achieving their goals"},
+							text: { value: "Join over 2 million users achieving their goals" },
 						},
 					},
 					"ele-landing-footer-cta-sub": {
@@ -3081,10 +3233,10 @@ export const initialPages: Page[] = [
 										id: "col-aside-blog",
 										open: true,
 										elements: [
-											{id: "ele-aside-blog-heading"},
-											{id: "ele-aside-blog-1"},
-											{id: "ele-aside-blog-2"},
-											{id: "ele-aside-blog-3"},
+											{ id: "ele-aside-blog-heading" },
+											{ id: "ele-aside-blog-1" },
+											{ id: "ele-aside-blog-2" },
+											{ id: "ele-aside-blog-3" },
 										],
 									},
 								],
@@ -3104,13 +3256,13 @@ export const initialPages: Page[] = [
 										id: "col-aside-signup",
 										open: true,
 										elements: [
-											{id: "ele-aside-signup-heading"},
-											{id: "ele-aside-signup-sub"},
-											{id: "ele-aside-signup-name"},
-											{id: "ele-aside-signup-email"},
-											{id: "ele-aside-signup-pass"},
-											{id: "ele-aside-signup-btn"},
-											{id: "ele-aside-signup-footer"},
+											{ id: "ele-aside-signup-heading" },
+											{ id: "ele-aside-signup-sub" },
+											{ id: "ele-aside-signup-name" },
+											{ id: "ele-aside-signup-email" },
+											{ id: "ele-aside-signup-pass" },
+											{ id: "ele-aside-signup-btn" },
+											{ id: "ele-aside-signup-footer" },
 										],
 									},
 								],
@@ -3122,61 +3274,61 @@ export const initialPages: Page[] = [
 					"ele-aside-blog-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Latest Blog Posts"},
+							text: { value: "Latest Blog Posts" },
 						},
 					},
 					"ele-aside-blog-1": {
 						type: "ct-text",
 						properties: {
-							text: {value: "10 Tips For Your First Marathon (2 days ago)"},
+							text: { value: "10 Tips For Your First Marathon (2 days ago)" },
 						},
 					},
 					"ele-aside-blog-2": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Cycling Workouts for Beginners (5 days ago)"},
+							text: { value: "Cycling Workouts for Beginners (5 days ago)" },
 						},
 					},
 					"ele-aside-blog-3": {
 						type: "ct-text",
 						properties: {
-							text: {value: "The Science of Running Form (1 week ago)"},
+							text: { value: "The Science of Running Form (1 week ago)" },
 						},
 					},
 					"ele-aside-signup-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Join STRIDE Today"},
+							text: { value: "Join STRIDE Today" },
 						},
 					},
 					"ele-aside-signup-sub": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Start your fitness journey with our community"},
+							text: { value: "Start your fitness journey with our community" },
 						},
 					},
 					"ele-aside-signup-name": {
 						type: "ct-input",
 						properties: {
-							placeholder: {value: "Full Name"},
+							placeholder: { value: "Full Name" },
 						},
 					},
 					"ele-aside-signup-email": {
 						type: "ct-input",
 						properties: {
-							placeholder: {value: "Email Address"},
+							placeholder: { value: "Email Address" },
 						},
 					},
 					"ele-aside-signup-pass": {
 						type: "ct-input",
 						properties: {
-							placeholder: {value: "Password"},
+							placeholder: { value: "Password" },
 						},
 					},
 					"ele-aside-signup-btn": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Create Account"},
+							label: { value: "Create Account" },
 						},
 					},
 					"ele-aside-signup-footer": {
@@ -3332,10 +3484,10 @@ export const initialPages: Page[] = [
 										id: "col-activities-hero",
 										open: true,
 										elements: [
-											{id: "ele-activities-hero-badge"},
-											{id: "ele-activities-hero-heading"},
-											{id: "ele-activities-hero-sub"},
-											{id: "ele-activities-hero-cta"},
+											{ id: "ele-activities-hero-badge" },
+											{ id: "ele-activities-hero-heading" },
+											{ id: "ele-activities-hero-sub" },
+											{ id: "ele-activities-hero-cta" },
 										],
 									},
 								],
@@ -3354,17 +3506,17 @@ export const initialPages: Page[] = [
 									{
 										id: "col-activities-stats-1",
 										open: true,
-										elements: [{id: "ele-activities-stat-1"}],
+										elements: [{ id: "ele-activities-stat-1" }],
 									},
 									{
 										id: "col-activities-stats-2",
 										open: true,
-										elements: [{id: "ele-activities-stat-2"}],
+										elements: [{ id: "ele-activities-stat-2" }],
 									},
 									{
 										id: "col-activities-stats-3",
 										open: true,
-										elements: [{id: "ele-activities-stat-3"}],
+										elements: [{ id: "ele-activities-stat-3" }],
 									},
 								],
 							},
@@ -3375,13 +3527,13 @@ export const initialPages: Page[] = [
 					"ele-activities-hero-badge": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Join 2M+ active users worldwide"},
+							text: { value: "Join 2M+ active users worldwide" },
 						},
 					},
 					"ele-activities-hero-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Ready. Set. Go."},
+							text: { value: "Ready. Set. Go." },
 						},
 					},
 					"ele-activities-hero-sub": {
@@ -3395,25 +3547,25 @@ export const initialPages: Page[] = [
 					"ele-activities-hero-cta": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Register for your bib"},
+							label: { value: "Register for your bib" },
 						},
 					},
 					"ele-activities-stat-1": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "500K+ Annual participants"},
+							text: { value: "500K+ Annual participants" },
 						},
 					},
 					"ele-activities-stat-2": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "45+ Countries represented"},
+							text: { value: "45+ Countries represented" },
 						},
 					},
 					"ele-activities-stat-3": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "4.9/5 Average rating"},
+							text: { value: "4.9/5 Average rating" },
 						},
 					},
 				},
@@ -3448,8 +3600,8 @@ export const initialPages: Page[] = [
 										id: "col-community-hero",
 										open: true,
 										elements: [
-											{id: "ele-community-hero-heading"},
-											{id: "ele-community-hero-sub"},
+											{ id: "ele-community-hero-heading" },
+											{ id: "ele-community-hero-sub" },
 										],
 									},
 								],
@@ -3468,12 +3620,12 @@ export const initialPages: Page[] = [
 									{
 										id: "col-community-test-1",
 										open: true,
-										elements: [{id: "ele-community-test-1"}],
+										elements: [{ id: "ele-community-test-1" }],
 									},
 									{
 										id: "col-community-test-2",
 										open: true,
-										elements: [{id: "ele-community-test-2"}],
+										elements: [{ id: "ele-community-test-2" }],
 									},
 								],
 							},
@@ -3484,7 +3636,7 @@ export const initialPages: Page[] = [
 					"ele-community-hero-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Join millions of active users"},
+							text: { value: "Join millions of active users" },
 						},
 					},
 					"ele-community-hero-sub": {
@@ -3543,8 +3695,8 @@ export const initialPages: Page[] = [
 										id: "col-challenges-hero",
 										open: true,
 										elements: [
-											{id: "ele-challenges-hero-heading"},
-											{id: "ele-challenges-hero-sub"},
+											{ id: "ele-challenges-hero-heading" },
+											{ id: "ele-challenges-hero-sub" },
 										],
 									},
 								],
@@ -3563,12 +3715,12 @@ export const initialPages: Page[] = [
 									{
 										id: "col-challenge-1",
 										open: true,
-										elements: [{id: "ele-challenge-1"}],
+										elements: [{ id: "ele-challenge-1" }],
 									},
 									{
 										id: "col-challenge-2",
 										open: true,
-										elements: [{id: "ele-challenge-2"}],
+										elements: [{ id: "ele-challenge-2" }],
 									},
 								],
 							},
@@ -3579,7 +3731,7 @@ export const initialPages: Page[] = [
 					"ele-challenges-hero-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Push your limits"},
+							text: { value: "Push your limits" },
 						},
 					},
 					"ele-challenges-hero-sub": {
@@ -3593,13 +3745,13 @@ export const initialPages: Page[] = [
 					"ele-challenge-1": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "October Run Streak"},
+							text: { value: "October Run Streak" },
 						},
 					},
 					"ele-challenge-2": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "100 Mile Challenge"},
+							text: { value: "100 Mile Challenge" },
 						},
 					},
 				},
@@ -3634,8 +3786,8 @@ export const initialPages: Page[] = [
 										id: "col-pricing-hero",
 										open: true,
 										elements: [
-											{id: "ele-pricing-hero-heading"},
-											{id: "ele-pricing-hero-sub"},
+											{ id: "ele-pricing-hero-heading" },
+											{ id: "ele-pricing-hero-sub" },
 										],
 									},
 								],
@@ -3654,17 +3806,17 @@ export const initialPages: Page[] = [
 									{
 										id: "col-plan-free",
 										open: true,
-										elements: [{id: "ele-plan-free"}],
+										elements: [{ id: "ele-plan-free" }],
 									},
 									{
 										id: "col-plan-pro",
 										open: true,
-										elements: [{id: "ele-plan-pro"}],
+										elements: [{ id: "ele-plan-pro" }],
 									},
 									{
 										id: "col-plan-team",
 										open: true,
-										elements: [{id: "ele-plan-team"}],
+										elements: [{ id: "ele-plan-team" }],
 									},
 								],
 							},
@@ -3675,7 +3827,7 @@ export const initialPages: Page[] = [
 					"ele-pricing-hero-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Choose your plan"},
+							text: { value: "Choose your plan" },
 						},
 					},
 					"ele-pricing-hero-sub": {
@@ -3689,19 +3841,19 @@ export const initialPages: Page[] = [
 					"ele-plan-free": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Free - $0"},
+							text: { value: "Free - $0" },
 						},
 					},
 					"ele-plan-pro": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Pro - $9.99/mo"},
+							text: { value: "Pro - $9.99/mo" },
 						},
 					},
 					"ele-plan-team": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Team - $24.99/mo"},
+							text: { value: "Team - $24.99/mo" },
 						},
 					},
 				},
@@ -3736,8 +3888,8 @@ export const initialPages: Page[] = [
 										id: "col-stories-hero",
 										open: true,
 										elements: [
-											{id: "ele-stories-hero-heading"},
-											{id: "ele-stories-hero-sub"},
+											{ id: "ele-stories-hero-heading" },
+											{ id: "ele-stories-hero-sub" },
 										],
 									},
 								],
@@ -3756,12 +3908,12 @@ export const initialPages: Page[] = [
 									{
 										id: "col-story-1",
 										open: true,
-										elements: [{id: "ele-story-1"}],
+										elements: [{ id: "ele-story-1" }],
 									},
 									{
 										id: "col-story-2",
 										open: true,
-										elements: [{id: "ele-story-2"}],
+										elements: [{ id: "ele-story-2" }],
 									},
 								],
 							},
@@ -3772,7 +3924,7 @@ export const initialPages: Page[] = [
 					"ele-stories-hero-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Real results from real people"},
+							text: { value: "Real results from real people" },
 						},
 					},
 					"ele-stories-hero-sub": {
@@ -3796,7 +3948,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Jessica T.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -3822,7 +3974,7 @@ export const initialPages: Page[] = [
 												{
 													type: "text",
 													text: "Marcus R.: ",
-													marks: [{type: "bold"}],
+													marks: [{ type: "bold" }],
 												},
 												{
 													type: "text",
@@ -3867,11 +4019,11 @@ export const initialPages: Page[] = [
 										id: "col-prod-31-hero",
 										open: true,
 										elements: [
-											{id: "ele-prod-31-img"},
-											{id: "ele-prod-31-heading"},
-											{id: "ele-prod-31-price"},
-											{id: "ele-prod-31-desc"},
-											{id: "ele-prod-31-buy"},
+											{ id: "ele-prod-31-img" },
+											{ id: "ele-prod-31-heading" },
+											{ id: "ele-prod-31-price" },
+											{ id: "ele-prod-31-desc" },
+											{ id: "ele-prod-31-buy" },
 										],
 									},
 								],
@@ -3883,20 +4035,20 @@ export const initialPages: Page[] = [
 					"ele-prod-31-img": {
 						type: "ct-image",
 						properties: {
-							src: {value: "https://picsum.photos/seed/cycling1/400/300"},
-							alt: {value: "Cycle Computer Pro"},
+							src: { value: "https://picsum.photos/seed/cycling1/400/300" },
+							alt: { value: "Cycle Computer Pro" },
 						},
 					},
 					"ele-prod-31-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Cycle Computer Pro"},
+							text: { value: "Cycle Computer Pro" },
 						},
 					},
 					"ele-prod-31-price": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "$199.00"},
+							text: { value: "$199.00" },
 						},
 					},
 					"ele-prod-31-desc": {
@@ -3910,7 +4062,7 @@ export const initialPages: Page[] = [
 					"ele-prod-31-buy": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -3945,11 +4097,11 @@ export const initialPages: Page[] = [
 										id: "col-prod-32-hero",
 										open: true,
 										elements: [
-											{id: "ele-prod-32-img"},
-											{id: "ele-prod-32-heading"},
-											{id: "ele-prod-32-price"},
-											{id: "ele-prod-32-desc"},
-											{id: "ele-prod-32-buy"},
+											{ id: "ele-prod-32-img" },
+											{ id: "ele-prod-32-heading" },
+											{ id: "ele-prod-32-price" },
+											{ id: "ele-prod-32-desc" },
+											{ id: "ele-prod-32-buy" },
 										],
 									},
 								],
@@ -3961,20 +4113,20 @@ export const initialPages: Page[] = [
 					"ele-prod-32-img": {
 						type: "ct-image",
 						properties: {
-							src: {value: "https://picsum.photos/seed/cycling3/400/300"},
-							alt: {value: "HR Monitor Band"},
+							src: { value: "https://picsum.photos/seed/cycling3/400/300" },
+							alt: { value: "HR Monitor Band" },
 						},
 					},
 					"ele-prod-32-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "HR Monitor Band"},
+							text: { value: "HR Monitor Band" },
 						},
 					},
 					"ele-prod-32-price": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "$79.00"},
+							text: { value: "$79.00" },
 						},
 					},
 					"ele-prod-32-desc": {
@@ -3988,7 +4140,7 @@ export const initialPages: Page[] = [
 					"ele-prod-32-buy": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -4023,11 +4175,11 @@ export const initialPages: Page[] = [
 										id: "col-prod-33-hero",
 										open: true,
 										elements: [
-											{id: "ele-prod-33-img"},
-											{id: "ele-prod-33-heading"},
-											{id: "ele-prod-33-price"},
-											{id: "ele-prod-33-desc"},
-											{id: "ele-prod-33-buy"},
+											{ id: "ele-prod-33-img" },
+											{ id: "ele-prod-33-heading" },
+											{ id: "ele-prod-33-price" },
+											{ id: "ele-prod-33-desc" },
+											{ id: "ele-prod-33-buy" },
 										],
 									},
 								],
@@ -4039,20 +4191,20 @@ export const initialPages: Page[] = [
 					"ele-prod-33-img": {
 						type: "ct-image",
 						properties: {
-							src: {value: "https://picsum.photos/seed/cycling2/400/300"},
-							alt: {value: "Smart Bike Trainer"},
+							src: { value: "https://picsum.photos/seed/cycling2/400/300" },
+							alt: { value: "Smart Bike Trainer" },
 						},
 					},
 					"ele-prod-33-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Smart Bike Trainer"},
+							text: { value: "Smart Bike Trainer" },
 						},
 					},
 					"ele-prod-33-price": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "$599.00"},
+							text: { value: "$599.00" },
 						},
 					},
 					"ele-prod-33-desc": {
@@ -4066,7 +4218,7 @@ export const initialPages: Page[] = [
 					"ele-prod-33-buy": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -4101,11 +4253,11 @@ export const initialPages: Page[] = [
 										id: "col-prod-34-hero",
 										open: true,
 										elements: [
-											{id: "ele-prod-34-img"},
-											{id: "ele-prod-34-heading"},
-											{id: "ele-prod-34-price"},
-											{id: "ele-prod-34-desc"},
-											{id: "ele-prod-34-buy"},
+											{ id: "ele-prod-34-img" },
+											{ id: "ele-prod-34-heading" },
+											{ id: "ele-prod-34-price" },
+											{ id: "ele-prod-34-desc" },
+											{ id: "ele-prod-34-buy" },
 										],
 									},
 								],
@@ -4117,32 +4269,32 @@ export const initialPages: Page[] = [
 					"ele-prod-34-img": {
 						type: "ct-image",
 						properties: {
-							src: {value: "https://picsum.photos/seed/cycling4/400/300"},
-							alt: {value: "Cadence Sensor"},
+							src: { value: "https://picsum.photos/seed/cycling4/400/300" },
+							alt: { value: "Cadence Sensor" },
 						},
 					},
 					"ele-prod-34-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Cadence Sensor"},
+							text: { value: "Cadence Sensor" },
 						},
 					},
 					"ele-prod-34-price": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "$39.00"},
+							text: { value: "$39.00" },
 						},
 					},
 					"ele-prod-34-desc": {
 						type: "ct-text",
 						properties: {
-							text: {value: "Track your pedaling cadence with precision and ease."},
+							text: { value: "Track your pedaling cadence with precision and ease." },
 						},
 					},
 					"ele-prod-34-buy": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -4177,11 +4329,11 @@ export const initialPages: Page[] = [
 										id: "col-prod-35-hero",
 										open: true,
 										elements: [
-											{id: "ele-prod-35-img"},
-											{id: "ele-prod-35-heading"},
-											{id: "ele-prod-35-price"},
-											{id: "ele-prod-35-desc"},
-											{id: "ele-prod-35-buy"},
+											{ id: "ele-prod-35-img" },
+											{ id: "ele-prod-35-heading" },
+											{ id: "ele-prod-35-price" },
+											{ id: "ele-prod-35-desc" },
+											{ id: "ele-prod-35-buy" },
 										],
 									},
 								],
@@ -4193,20 +4345,20 @@ export const initialPages: Page[] = [
 					"ele-prod-35-img": {
 						type: "ct-image",
 						properties: {
-							src: {value: "https://picsum.photos/seed/cycling8/400/300"},
-							alt: {value: "Power Meter"},
+							src: { value: "https://picsum.photos/seed/cycling8/400/300" },
+							alt: { value: "Power Meter" },
 						},
 					},
 					"ele-prod-35-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Power Meter"},
+							text: { value: "Power Meter" },
 						},
 					},
 					"ele-prod-35-price": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "$449.00"},
+							text: { value: "$449.00" },
 						},
 					},
 					"ele-prod-35-desc": {
@@ -4220,7 +4372,7 @@ export const initialPages: Page[] = [
 					"ele-prod-35-buy": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -4255,11 +4407,11 @@ export const initialPages: Page[] = [
 										id: "col-prod-36-hero",
 										open: true,
 										elements: [
-											{id: "ele-prod-36-img"},
-											{id: "ele-prod-36-heading"},
-											{id: "ele-prod-36-price"},
-											{id: "ele-prod-36-desc"},
-											{id: "ele-prod-36-buy"},
+											{ id: "ele-prod-36-img" },
+											{ id: "ele-prod-36-heading" },
+											{ id: "ele-prod-36-price" },
+											{ id: "ele-prod-36-desc" },
+											{ id: "ele-prod-36-buy" },
 										],
 									},
 								],
@@ -4271,20 +4423,20 @@ export const initialPages: Page[] = [
 					"ele-prod-36-img": {
 						type: "ct-image",
 						properties: {
-							src: {value: "https://picsum.photos/seed/cycling9/400/300"},
-							alt: {value: "Speed Sensor"},
+							src: { value: "https://picsum.photos/seed/cycling9/400/300" },
+							alt: { value: "Speed Sensor" },
 						},
 					},
 					"ele-prod-36-heading": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "Speed Sensor"},
+							text: { value: "Speed Sensor" },
 						},
 					},
 					"ele-prod-36-price": {
 						type: "ct-heading",
 						properties: {
-							text: {value: "$39.00"},
+							text: { value: "$39.00" },
 						},
 					},
 					"ele-prod-36-desc": {
@@ -4298,7 +4450,7 @@ export const initialPages: Page[] = [
 					"ele-prod-36-buy": {
 						type: "ct-button",
 						properties: {
-							label: {value: "Add to Cart"},
+							label: { value: "Add to Cart" },
 						},
 					},
 				},
@@ -4661,11 +4813,11 @@ export const siteConfig = {
 	header: {
 		logo: "STRIDE",
 		links: [
-			{label: "Activities", href: "/activities"},
-			{label: "Community", href: "/community"},
-			{label: "Challenges", href: "/challenges"},
-			{label: "Pricing", href: "/pricing"},
-			{label: "Stories", href: "/stories"},
+			{ label: "Activities", href: "/activities" },
+			{ label: "Community", href: "/community" },
+			{ label: "Challenges", href: "/challenges" },
+			{ label: "Pricing", href: "/pricing" },
+			{ label: "Stories", href: "/stories" },
 		],
 		auth: {
 			signIn: "Sign In",
