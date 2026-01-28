@@ -220,6 +220,7 @@ type PageInput = {
 	properties?: PageProperties; // allow both
 	data?: Record<string, any>;
 	variationId?: string;
+	contentTypeId?: string;
 };
 
 /** -----------------------------
