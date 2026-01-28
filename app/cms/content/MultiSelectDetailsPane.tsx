@@ -7,20 +7,7 @@ import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
 import Image from "next/image";
 import { useState } from "react";
-
-// Mock cycling/exercise tags
-const AVAILABLE_TAGS = [
-  "Cycling Training",
-  "Cycling Performance",
-  "Exercise Routine",
-  "Cardio Workout",
-  "Mountain Biking",
-  "Road Cycling",
-  "Indoor Training",
-  "Fitness Tracking",
-  "Endurance Training",
-  "Sprint Training"
-];
+import { useGlobalTags } from "../hooks/useGlobalTags";
 
 interface MultiSelectDetailsPaneProps {
   items: ContentItem[];
@@ -29,6 +16,10 @@ interface MultiSelectDetailsPaneProps {
 
 export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDetailsPaneProps) {
   const metadata = useMultiSelectMetadata(items);
+  
+  // Get global tags from centralized repository
+  const { tagNames: availableTags, addTag: addGlobalTag, tagExists } = useGlobalTags();
+  
   const [tags, setTags] = useState<string[]>(metadata.tags);
   const [newTag, setNewTag] = useState("");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -39,13 +30,18 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
 
   const handleAddTag = (tagValue: string) => {
     if (tagValue.trim() && !tags.includes(tagValue)) {
+      // If tag doesn't exist in global repository, add it
+      if (!tagExists(tagValue)) {
+        addGlobalTag(tagValue);
+      }
+      // Add to current items' tags
       setTags([...tags, tagValue]);
       setNewTag("");
     }
   };
 
   // Filter available tags based on input
-  const filteredTags = AVAILABLE_TAGS
+  const filteredTags = availableTags
     .filter(tag => !newTag || tag.toLowerCase().includes(newTag.toLowerCase()));
 
   // Create options for autocomplete dropdown
@@ -56,7 +52,7 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
   }));
 
   // Add custom tag option if input doesn't match any available tag
-  if (newTag.trim() && !AVAILABLE_TAGS.includes(newTag)) {
+  if (newTag.trim() && !availableTags.includes(newTag)) {
     autocompleteOptions.push({
       label: `+ Add "${newTag}" tag`,
       value: newTag,

@@ -4,12 +4,17 @@
 	@tailwind utilities;
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
+:root {
+	--background: #ffffff;
+	--foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0a0a0a;
+		--foreground: #ededed;
+	}
+}
 
 body {
 	background: var(--background);
@@ -51,7 +56,7 @@ body {
 	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
 }
 
-.extension-icon > svg {
+.extension-icon>svg {
 	width: 16px;
 	height: 16px;
 }
@@ -91,7 +96,8 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #dadfeb; /* axiom light gray */
+	background: #dadfeb;
+	/* axiom light gray */
 	border-radius: 4px;
 }
 
@@ -151,6 +157,7 @@ body {
 .vb-outline:hover .chevron {
 	visibility: visible;
 }
+
 .menu-label-button {
 	height: auto !important;
 	padding-top: 4px !important;
