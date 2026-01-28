@@ -221,7 +221,6 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Experience",
 		description: "Standard page (uses outlines)",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
 			{ id: "mainOutline", name: "Main", type: "outline" },
 			{ id: "seo", name: "SEO", type: "seo" },
 		],
@@ -404,25 +403,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-27",
 		contentTypeId: "ct-page",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "Homepage | Stride",
-						   description: "Unleash your potential with Stride. Up to 50% off everything.",
-						   canonicalUrl: "https://stride.com/",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-home.jpg",
-						   ogTitle: "Unleash Your Potential | Stride",
-						   ogDescription: "Up to 50% off everything.",
-						   ogImage: "https://stride.com/og-home.jpg",
-						   twitterTitle: "Unleash Your Potential | Stride",
-						   twitterDescription: "Up to 50% off everything.",
-						   twitterImage: "https://stride.com/og-home.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Homepage | Stride",
+						description: "Unleash your potential with Stride. Up to 50% off everything.",
+						canonicalUrl: "https://stride.com/",
+						robots: "index,follow",
+						image: "https://stride.com/og-home.jpg",
+						ogTitle: "Unleash Your Potential | Stride",
+						ogDescription: "Up to 50% off everything.",
+						ogImage: "https://stride.com/og-home.jpg",
+						twitterTitle: "Unleash Your Potential | Stride",
+						twitterDescription: "Up to 50% off everything.",
+						twitterImage: "https://stride.com/og-home.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",
@@ -559,25 +558,25 @@ export const initialPages: Page[] = [
 		status: "Draft",
 		lastModified: "2023-10-26",
 		contentTypeId: "ct-page",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "About Us | Stride",
-						   description: "Born on the track, designed for the street. Stride empowers athletes everywhere.",
-						   canonicalUrl: "https://stride.com/about",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-about.jpg",
-						   ogTitle: "About Stride",
-						   ogDescription: "Born on the track, designed for the street.",
-						   ogImage: "https://stride.com/og-about.jpg",
-						   twitterTitle: "About Stride",
-						   twitterDescription: "Born on the track, designed for the street.",
-						   twitterImage: "https://stride.com/og-about.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "About Us | Stride",
+						description: "Born on the track, designed for the street. Stride empowers athletes everywhere.",
+						canonicalUrl: "https://stride.com/about",
+						robots: "index,follow",
+						image: "https://stride.com/og-about.jpg",
+						ogTitle: "About Stride",
+						ogDescription: "Born on the track, designed for the street.",
+						ogImage: "https://stride.com/og-about.jpg",
+						twitterTitle: "About Stride",
+						twitterDescription: "Born on the track, designed for the street.",
+						twitterImage: "https://stride.com/og-about.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",
@@ -684,25 +683,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-25",
 		contentTypeId: "ct-page",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "Contact | Stride",
-						   description: "Questions about your order? We're here to help.",
-						   canonicalUrl: "https://stride.com/contact",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-contact.jpg",
-						   ogTitle: "Contact Stride",
-						   ogDescription: "Questions about your order? We're here to help.",
-						   ogImage: "https://stride.com/og-contact.jpg",
-						   twitterTitle: "Contact Stride",
-						   twitterDescription: "Questions about your order? We're here to help.",
-						   twitterImage: "https://stride.com/og-contact.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Contact | Stride",
+						description: "Questions about your order? We're here to help.",
+						canonicalUrl: "https://stride.com/contact",
+						robots: "index,follow",
+						image: "https://stride.com/og-contact.jpg",
+						ogTitle: "Contact Stride",
+						ogDescription: "Questions about your order? We're here to help.",
+						ogImage: "https://stride.com/og-contact.jpg",
+						twitterTitle: "Contact Stride",
+						twitterDescription: "Questions about your order? We're here to help.",
+						twitterImage: "https://stride.com/og-contact.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",
@@ -853,25 +852,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-24",
 		contentTypeId: "ct-page",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "Blog | Stride",
-						   description: "Tips, training guides, and gear reviews from Stride.",
-						   canonicalUrl: "https://stride.com/blog",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-blog.jpg",
-						   ogTitle: "Stride Blog",
-						   ogDescription: "Tips, training guides, and gear reviews.",
-						   ogImage: "https://stride.com/og-blog.jpg",
-						   twitterTitle: "Stride Blog",
-						   twitterDescription: "Tips, training guides, and gear reviews.",
-						   twitterImage: "https://stride.com/og-blog.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Blog | Stride",
+						description: "Tips, training guides, and gear reviews from Stride.",
+						canonicalUrl: "https://stride.com/blog",
+						robots: "index,follow",
+						image: "https://stride.com/og-blog.jpg",
+						ogTitle: "Stride Blog",
+						ogDescription: "Tips, training guides, and gear reviews.",
+						ogImage: "https://stride.com/og-blog.jpg",
+						twitterTitle: "Stride Blog",
+						twitterDescription: "Tips, training guides, and gear reviews.",
+						twitterImage: "https://stride.com/og-blog.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",
@@ -974,25 +973,25 @@ export const initialPages: Page[] = [
 		status: "Published",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "Products | Stride",
-						   description: "Check out the latest gear for this season at Stride.",
-						   canonicalUrl: "https://stride.com/products",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-products.jpg",
-						   ogTitle: "Stride Products",
-						   ogDescription: "Check out the latest gear for this season.",
-						   ogImage: "https://stride.com/og-products.jpg",
-						   twitterTitle: "Stride Products",
-						   twitterDescription: "Check out the latest gear for this season.",
-						   twitterImage: "https://stride.com/og-products.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Products | Stride",
+						description: "Check out the latest gear for this season at Stride.",
+						canonicalUrl: "https://stride.com/products",
+						robots: "index,follow",
+						image: "https://stride.com/og-products.jpg",
+						ogTitle: "Stride Products",
+						ogDescription: "Check out the latest gear for this season.",
+						ogImage: "https://stride.com/og-products.jpg",
+						twitterTitle: "Stride Products",
+						twitterDescription: "Check out the latest gear for this season.",
+						twitterImage: "https://stride.com/og-products.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",
@@ -1095,25 +1094,25 @@ export const initialPages: Page[] = [
 		status: "Review",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "Stride Elite Runner | Stride",
-						   description: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
-						   canonicalUrl: "https://stride.com/products/elite-runner",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-elite-runner.jpg",
-						   ogTitle: "Stride Elite Runner",
-						   ogDescription: "Our most advanced running shoe yet.",
-						   ogImage: "https://stride.com/og-elite-runner.jpg",
-						   twitterTitle: "Stride Elite Runner",
-						   twitterDescription: "Our most advanced running shoe yet.",
-						   twitterImage: "https://stride.com/og-elite-runner.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Stride Elite Runner | Stride",
+						description: "Our most advanced running shoe yet. Lightweight, responsive, and durable.",
+						canonicalUrl: "https://stride.com/products/elite-runner",
+						robots: "index,follow",
+						image: "https://stride.com/og-elite-runner.jpg",
+						ogTitle: "Stride Elite Runner",
+						ogDescription: "Our most advanced running shoe yet.",
+						ogImage: "https://stride.com/og-elite-runner.jpg",
+						twitterTitle: "Stride Elite Runner",
+						twitterDescription: "Our most advanced running shoe yet.",
+						twitterImage: "https://stride.com/og-elite-runner.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",
@@ -1234,25 +1233,25 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-27",
-		   data: {
-			   seo: {
-				   en: {
-					   original: {
-						   title: "Default Landing | Stride",
-						   description: "Join thousands of runners in the most iconic triathlon of the year.",
-						   canonicalUrl: "https://stride.com/landing",
-						   robots: "index,follow",
-						   image: "https://stride.com/og-landing.jpg",
-						   ogTitle: "Stride Landing Page",
-						   ogDescription: "Join thousands of runners in the most iconic triathlon of the year.",
-						   ogImage: "https://stride.com/og-landing.jpg",
-						   twitterTitle: "Stride Landing Page",
-						   twitterDescription: "Join thousands of runners in the most iconic triathlon of the year.",
-						   twitterImage: "https://stride.com/og-landing.jpg",
-					   },
-				   },
-			   },
-		   },
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Default Landing | Stride",
+						description: "Join thousands of runners in the most iconic triathlon of the year.",
+						canonicalUrl: "https://stride.com/landing",
+						robots: "index,follow",
+						image: "https://stride.com/og-landing.jpg",
+						ogTitle: "Stride Landing Page",
+						ogDescription: "Join thousands of runners in the most iconic triathlon of the year.",
+						ogImage: "https://stride.com/og-landing.jpg",
+						twitterTitle: "Stride Landing Page",
+						twitterDescription: "Join thousands of runners in the most iconic triathlon of the year.",
+						twitterImage: "https://stride.com/og-landing.jpg",
+					},
+				},
+			},
+		},
 		variations: [
 			{
 				id: "original",

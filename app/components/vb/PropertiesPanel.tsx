@@ -86,7 +86,7 @@ export default function PropertiesPanel({ value, onChange, contentTypeId }: Prop
                                 });
                             };
                             return (
-                                <Box key={prop.id} display="flex" flexDirection="column" gap="8" p="8" border="1" borderColor="border.tertiary">
+                                <Box key={prop.id} display="flex" flexDirection="column" gap="16" p="8" border="1" borderColor="border.tertiary">
                                     <Text fontWeight="600" mb="4">SEO</Text>
                                     <Field label="Title">
                                         <Input2 value={seoValue.title || ""} onChange={e => setSeoField("title", e.target.value)} />
