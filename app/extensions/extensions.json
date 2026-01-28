@@ -13,6 +13,11 @@
 		"icon": "<svg viewBox=\"0 0 15.25 15.5\" x=\"0\" y=\"0\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"><path id=\"ï \" d=\"M15.25,7.938c0,4.437 -3.0312,7.562 -7.5,7.562c-4.3125,0 -7.75,-3.438 -7.75,-7.75c0,-4.281 3.4375,-7.75 7.75,-7.75c2.0625,0 3.8438,0.781 5.1875,2.031l-2.125,2.031c-2.75,-2.656 -7.875,-0.656 -7.875,3.688c0,2.719 2.1563,4.906 4.8125,4.906c3.0625,0 4.2188,-2.187 4.375,-3.344h-4.375v-2.656h7.375c0.0625,0.406 0.125,0.782 0.125,1.282z\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\"/></svg>"
 	},
 	{
+		"id": "variations",
+		"label": "AI Variations",
+		"icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon icon-tabler icons-tabler-outline icon-tabler-stack-3\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M12 2l-8 4l8 4l8 -4l-8 -4\"/><path d=\"M4 10l8 4l8 -4\"/><path d=\"M4 18l8 4l8 -4\"/><path d=\"M4 14l8 4l8 -4\"/></svg>"
+	},
+	{
 		"id": "smile",
 		"label": "Smile",
 		"icon": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"icon icon-tabler icons-tabler-outline icon-tabler-mood-smile\"><path stroke=\"none\" d=\"M0 0h24v24H0z\" fill=\"none\"/><path d=\"M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0\" /><path d=\"M9 10l.01 0\" /><path d=\"M15 10l.01 0\" /><path d=\"M9.5 15a3.5 3.5 0 0 0 5 0\" /></svg>"
