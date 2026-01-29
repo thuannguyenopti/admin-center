@@ -1,6 +1,5 @@
 import {Box, Card, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
-import Link from "next/link";
 import {useMemo} from "react";
 
 type MetricCardProps = {
@@ -12,6 +11,7 @@ type MetricCardProps = {
 	interval?: "hour" | "day" | "week" | "month";
 	aggregation?: "sum" | "average" | "last";
 	previousValue?: number;
+	height?: number;
 };
 
 export default function MetricCard({
@@ -22,6 +22,7 @@ export default function MetricCard({
 	desiredDirection = "up",
 	interval,
 	aggregation = "last",
+	height = 60,
 	previousValue: explicitPreviousValue,
 }: MetricCardProps) {
 	// Get current value based on aggregation type
@@ -42,11 +43,19 @@ export default function MetricCard({
 		explicitPreviousValue !== undefined
 			? explicitPreviousValue
 			: data.length > 1
-			? data[data.length - 2]
-			: undefined;
+				? data[data.length - 2]
+				: undefined;
 
 	// Format value with unit
 	const formatValue = (val: number) => {
+		if (val >= 10000) {
+			return (
+				new Intl.NumberFormat("en-US", {
+					notation: "compact",
+					maximumFractionDigits: 1,
+				}).format(val) + unit
+			);
+		}
 		return (
 			val.toLocaleString(undefined, {
 				maximumFractionDigits: 1,
@@ -163,11 +172,11 @@ export default function MetricCard({
 
 	return (
 		<Card
-			p="20"
+			p="16"
 			color="fg.disabled"
 			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
 		>
-			<Text fontSize="md" fontWeight="600" mb="16" color="fg.default">
+			<Text fontSize="md" fontWeight="600" color="fg.default">
 				{label}
 			</Text>
 
@@ -175,7 +184,7 @@ export default function MetricCard({
 				<Box style={{flex: 1, minWidth: 0, position: "relative"}} color="fg.disabled">
 					<svg
 						width="100%"
-						height="60"
+						height={height}
 						viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
 						preserveAspectRatio="none"
 						style={{display: "block"}}
@@ -184,7 +193,8 @@ export default function MetricCard({
 							d={pathData}
 							fill="none"
 							stroke="currentColor"
-							strokeWidth="1"
+							vectorEffect="non-scaling-stroke"
+							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round"
 						/>
@@ -218,8 +228,8 @@ export default function MetricCard({
 									left: `${(point.x / viewBoxWidth) * 100}%`,
 									top: `${(point.y / viewBoxHeight) * 100}%`,
 									borderRadius: "50%",
-									width: index === points.length - 1 ? "8px" : "4px",
-									height: index === points.length - 1 ? "8px" : "4px",
+									width: index === points.length - 1 ? "8px" : "6px",
+									height: index === points.length - 1 ? "8px" : "6px",
 									backgroundColor: "currentcolor",
 									transform: "translate(-50%, -50%)",
 									cursor: "pointer",

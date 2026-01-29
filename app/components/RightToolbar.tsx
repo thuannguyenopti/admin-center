@@ -1,75 +1,32 @@
 "use client";
 
 import {Box, Sidebar, NavBody, NavItem, Nav, Separator} from "@optiaxiom/react";
-import {IconFolders, IconMoodSmile, IconPlus} from "@tabler/icons-react";
-import StrideLogo from "@/app/assets/stride-logo.svg";
-import TeamsLogo from "@/app/assets/teams-logo.svg";
-import GoogleLogo from "@/app/assets/google-logo.svg";
+import {extensions} from "@/app/extensions/registry";
+
+export type RightToolbarTool = string;
 
 interface RightToolbarProps {
-	onFolderClick?: () => void;
-	isFolderActive?: boolean;
+	activeTool?: RightToolbarTool | null;
+	onToggleTool?: (tool: RightToolbarTool) => void;
 }
 
-export default function RightToolbar({ onFolderClick, isFolderActive }: RightToolbarProps) {
-	const toolbarItems = [
-		{
-			label: "Folders",
-			icon: <IconFolders size={16} />,
-			action: onFolderClick || (() => console.log("Folders clicked")),
-			isActive: isFolderActive,
-		},
-		{type: "separator"},
-		{
-			label: "Smile",
-			icon: <IconMoodSmile size={16} />,
-			action: () => console.log("Smile clicked"),
-		},
-		{
-			label: "Stride",
-			icon: <StrideLogo width={16} height={16} />,
-			action: () => console.log("Stride clicked"),
-		},
-		{
-			label: "Teams",
-			icon: <TeamsLogo width={20} height={16} />,
-			action: () => console.log("Teams clicked"),
-		},
-		{
-			label: "Google",
-			icon: <GoogleLogo width={15} height={16} />,
-			action: () => console.log("Google clicked"),
-		},
-		{
-			label: "Add",
-			icon: <IconPlus size={16} />,
-			action: () => console.log("Add clicked"),
-		},
-	];
-
+export default function RightToolbar({activeTool, onToggleTool}: RightToolbarProps) {
 	return (
-		<Sidebar
-			className="h-full"
-			expanded={false}
-		>
+		<Sidebar className="h-full" expanded={false}>
 			<Nav>
-				<NavBody>
-					{toolbarItems.map((item: any, index: number) =>
+				<NavBody pt="0" className="!-mt-2">
+					{extensions.map((item, index) =>
 						item.type === "separator" ? (
-							<Box
-								key={`separator-${index}`}
-								px="12"
-								py="4"
-							>
+							<Box key={`separator-${index}`} px="12" py="4">
 								<Separator />
 							</Box>
 						) : (
 							<NavItem
-								key={item.label}
-								onClick={item.action}
-								aria-label={item.label}
+								key={item.id}
+								onClick={() => item.id && onToggleTool?.(item.id)}
+								aria-label={item.label || ""}
 								icon={item.icon}
-								active={item.isActive}
+								active={activeTool === item.id}
 							>
 								{item.label}
 							</NavItem>

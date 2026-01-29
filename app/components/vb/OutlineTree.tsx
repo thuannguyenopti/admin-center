@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Box, Button } from "@optiaxiom/react";
 import { IconPlus } from "@tabler/icons-react";
 
@@ -8,6 +8,9 @@ import Section from "./Section";
 import Row from "./Row";
 import Col from "./Col";
 import Ele, { EleMap } from "./Ele";
+import { getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME } from "./blocks/utils";
+import { BLOCK_SCHEMAS } from "./blocks/schemas";
+import { initialPages } from "@/app/db/initialData";
 
 interface OutlineProps {
     cloning?: boolean;
@@ -20,21 +23,12 @@ interface OutlineProps {
     setData: React.Dispatch<React.SetStateAction<any[]>>;
     setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
     setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
+    onEditProperties?: (id: string) => void;
 
     data: any[];
 }
 
 type AssetDropPosition = { colId: string; position: number } | null;
-
-// Mark internal drags so we can ignore them in "asset image" handlers.
-const INTERNAL_DND_MIME = "application/x-vb-internal";
-
-const isImageDrag = (dt: DataTransfer) => {
-    const types = Array.from(dt?.types || []);
-    // NOTE: do NOT include "text/plain" here — internal drags can surface it and will
-    // incorrectly enter asset-drag mode.
-    return types.includes("image/url") || types.includes("text/uri-list") || types.includes("Files");
-};
 
 const getDraggedImageUrl = (dt: DataTransfer) => {
     const url = dt.getData("image/url") || dt.getData("text/uri-list") || dt.getData("text/plain");
@@ -65,6 +59,7 @@ export default function OutlineTree({
     setData,
     setTheEles,
     dragging,
+    onEditProperties,
 }: OutlineProps) {
     const ASSET_DRAG_ID = "__asset:image__";
 
@@ -80,7 +75,33 @@ export default function OutlineTree({
     const isColLast = (id: string) => id.startsWith("col-last-");
     const isLastEle = (id: string) => id.startsWith("last-ele-");
 
-    const isInternalDrag = !!dragging && dragging !== ASSET_DRAG_ID;
+    const isAnyInternalDragging = !!dragging && dragging !== ASSET_DRAG_ID;
+
+    const toTitle = (type: string) => {
+        const base = type.replace(/^ct-/, "").replace(/-/g, " ");
+        return base.charAt(0).toUpperCase() + base.slice(1);
+    };
+
+    const elementOptions = useMemo(() => {
+        const types = new Set<string>();
+
+        initialPages.forEach((page) => {
+            (page.outlines || []).forEach((outline) => {
+                Object.values(outline.elements || {}).forEach((ele: any) => {
+                    if (ele?.type) types.add(ele.type);
+                });
+            });
+        });
+
+        const source = types.size ? Array.from(types) : Object.keys(BLOCK_SCHEMAS);
+
+        return source
+            .map((type) => ({
+                type,
+                label: BLOCK_SCHEMAS[type]?.displayName ?? toTitle(type),
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, []);
 
     const [assetOverCol, setAssetOverCol] = useState<string | null>(null);
     const [assetDrop, setAssetDrop] = useState<AssetDropPosition>(null);
@@ -126,6 +147,8 @@ export default function OutlineTree({
         );
     };
 
+    const getColChildren = (col: any) => col.elements || col.children || [];
+
     const addSection = (id: string) => {
         setData((prev) => {
             const idx = prev.findIndex((section) => section.id === id);
@@ -142,7 +165,7 @@ export default function OutlineTree({
                                 {
                                     id: "col-" + t,
                                     open: true,
-                                    children: [],
+                                    elements: [],
                                 },
                             ],
                         },
@@ -165,7 +188,7 @@ export default function OutlineTree({
                     if (idx === row) {
                         const newCol = {
                             label: "Column",
-                            children: [],
+                            elements: [],
                             isNew: true,
                             open: true,
                             id: "col-" + Date.now(),
@@ -194,7 +217,7 @@ export default function OutlineTree({
                 children: [
                     {
                         label: "Column",
-                        children: [],
+                        elements: [],
                         open: true,
                         isNew: true,
                         id: "col-" + Date.now(),
@@ -229,32 +252,25 @@ export default function OutlineTree({
             ...prev,
             [uKey]: {
                 type,
-                props: (() => {
-                    switch (type) {
-                        case "Heading":
-                            return [{ type: "text", label: "Text" }];
-                        case "Text":
-                            return [{ type: "text", label: "Text" }];
-                        case "Input":
-                            return [
-                                { type: "text", label: "Label" },
-                                { type: "text", label: "Placeholder" },
-                                { type: "text", label: "Tooltip" },
-                                { type: "checkbox", label: "Required", value: false },
-                            ];
-                        case "Button":
-                            return [{ type: "text", label: "Label" }];
-                        case "Image":
-                            return [
-                                { type: "text", label: "Image URL", value: imageUrl },
-                                { type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-                                { type: "text", label: "Alt Text", value: imageAlt },
-                                { type: "text", label: "Width", value: "auto" },
-                                { type: "text", label: "Height", value: "auto" },
-                            ];
-                        default:
-                            return [];
+                properties: (() => {
+                    const schema = BLOCK_SCHEMAS[type];
+                    if (schema) {
+                        const props: Record<string, { value: any }> = {};
+                        Object.entries(schema.properties).forEach(([key, def]) => {
+                            props[key] = { value: def.default ?? "" };
+                        });
+
+                        // Special case for image if we have pending data
+                        if (type === "ct-image" && imageUrl) {
+                            if (props["title"]) props["title"].value = imageAlt || "Untitled Image";
+                            if (props["altText"]) props["altText"].value = imageAlt;
+                            if (props["imageUrl"]) props["imageUrl"].value = imageUrl;
+                        }
+
+                        return props;
                     }
+
+                    return {};
                 })(),
             },
         }));
@@ -271,7 +287,7 @@ export default function OutlineTree({
                             children: row.children.map((col: any, cIdx: number) => {
                                 if (cIdx !== colIndex) return col;
 
-                                const nextChildren = [...(col.children ?? [])];
+                                const nextChildren = [...(getColChildren(col) ?? [])];
                                 let insertAt = nextChildren.length;
 
                                 if (typeof currentHoverEle === "string" && currentHoverEle.startsWith("last-ele-")) {
@@ -283,7 +299,9 @@ export default function OutlineTree({
                                 }
 
                                 nextChildren.splice(insertAt, 0, { id: uKey });
-                                return { ...col, open: true, children: nextChildren };
+                                // Normalizing to use 'elements' for columns
+                                const { children: _old, ...rest } = col;
+                                return { ...rest, open: true, elements: nextChildren };
                             }),
                         };
                     }),
@@ -323,30 +341,71 @@ export default function OutlineTree({
                 ...section,
                 children: (section.children || []).map((row: any) => ({
                     ...row,
-                    children: (row.children || []).map((col: any) => ({
-                        ...col,
-                        children: (col.children || []).filter((ele: any) => ele.id !== id),
-                    })),
+                    children: (row.children || []).map((col: any) => {
+                        const nextElements = (getColChildren(col) || []).filter((ele: any) => ele.id !== id);
+                        const { children: _old, ...rest } = col;
+                        return { ...rest, elements: nextElements };
+                    }),
                 })),
             }))
         );
+    };
+
+    const onDragHover = (e: any, id: string) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setCurrentHoverEle(id);
     };
 
     const onDragStart = (e: any, id: string) => {
         e.stopPropagation();
         try {
             if (e?.dataTransfer) {
-                e.dataTransfer.setData(INTERNAL_DND_MIME, id);
+                e.dataTransfer.setData(VB_INTERNAL_MIME, id);
                 e.dataTransfer.effectAllowed = cloning ? "copy" : "move";
             }
         } catch { }
         setDragging(id);
     };
 
-    const onDragHover = (e: any, id: string) => {
-        e.stopPropagation();
-        e.preventDefault();
-        if (dragging && dragging !== ASSET_DRAG_ID) setCurrentHoverEle(String(id));
+    const moveEle = (eleId: string, targetColId: string, position: number) => {
+        setData((prev) => {
+            let movedEleNode: any = null;
+
+            // Step 1: Remove the element from its current position
+            const dataWithoutEle = prev.map((section: any) => ({
+                ...section,
+                children: (section.children || []).map((row: any) => ({
+                    ...row,
+                    children: (row.children || []).map((col: any) => {
+                        const colChildren = getColChildren(col);
+                        const found = colChildren.find((e: any) => e.id === eleId);
+                        if (found) movedEleNode = found;
+                        const nextChildren = colChildren.filter((e: any) => e.id !== eleId);
+                        // Normalize to use elements
+                        const { children: _old, ...rest } = col;
+                        return { ...rest, elements: nextChildren };
+                    }),
+                })),
+            }));
+
+            if (!movedEleNode) return prev;
+
+            // Step 2: Insert into the target column
+            return dataWithoutEle.map((section: any) => ({
+                ...section,
+                children: (section.children || []).map((row: any) => ({
+                    ...row,
+                    children: (row.children || []).map((col: any) => {
+                        if (col.id !== targetColId) return col;
+                        const nextChildren = [...getColChildren(col)];
+                        const safePos = Math.max(0, Math.min(nextChildren.length, position));
+                        nextChildren.splice(safePos, 0, movedEleNode);
+                        return { ...col, elements: nextChildren, open: true };
+                    }),
+                })),
+            }));
+        });
     };
 
     const insertImageIntoTree = (colId: string, position: number, imageUrl: string, imageAlt: string) => {
@@ -355,14 +414,13 @@ export default function OutlineTree({
         setTheEles((prev) => ({
             ...prev,
             [uKey]: {
-                type: "Image",
-                props: [
-                    { type: "text", label: "Image URL", value: imageUrl },
-                    { type: "text", label: "Title", value: imageAlt || "Untitled Image" },
-                    { type: "text", label: "Alt Text", value: imageAlt },
-                    { type: "text", label: "Width", value: "auto" },
-                    { type: "text", label: "Height", value: "auto" },
-                ],
+                type: "ct-image",
+                properties: {
+                    imageUrl: { value: imageUrl },
+                    altText: { value: imageAlt || "Untitled Image" },
+                    width: { value: "auto" },
+                    height: { value: "auto" },
+                },
             },
         }));
 
@@ -373,10 +431,11 @@ export default function OutlineTree({
                     ...row,
                     children: (row.children || []).map((col: any) => {
                         if (col.id !== colId) return col;
-                        const nextChildren = [...(col.children || [])];
+                        const nextChildren = [...(getColChildren(col) || [])];
                         const safePos = Math.max(0, Math.min(nextChildren.length, position));
                         nextChildren.splice(safePos, 0, { id: uKey });
-                        return { ...col, open: true, children: nextChildren };
+                        const { children: _old, ...rest } = col;
+                        return { ...rest, elements: nextChildren, open: true };
                     }),
                 })),
             }))
@@ -393,7 +452,7 @@ export default function OutlineTree({
             <Box fontSize="sm" color="fg.secondary">
                 {data.map((section: any, sindex: number) => {
                     const showSectionBarAbove =
-                        isInternalDrag && dragging && isSectionId(dragging) && currentHoverEle === section.id;
+                        isAnyInternalDragging && dragging && isSectionId(dragging) && currentHoverEle === section.id;
 
                     return (
                         <div
@@ -433,12 +492,13 @@ export default function OutlineTree({
                                 section={section}
                                 onDragStart={(e: any) => onDragStart(e, section.id)}
                                 removeSection={() => removeSection(sindex)}
+                                onEditProperties={() => onEditProperties?.(section.id)}
                                 addSection={() => addSection(section.id)}
                                 addRow={(e: any) => addRow(e, sindex, null)}
                             >
                                 {(section.children ?? []).map((row: any, rIndex: number) => {
                                     const showRowBarAbove =
-                                        isInternalDrag && dragging && isRowId(dragging) && currentHoverEle === row.id;
+                                        isAnyInternalDragging && dragging && isRowId(dragging) && currentHoverEle === row.id;
 
                                     return (
                                         <div
@@ -460,7 +520,7 @@ export default function OutlineTree({
                                             >
                                                 {(row.children ?? []).map((col: any, cIndex: number) => {
                                                     const showColBarAbove =
-                                                        isInternalDrag && dragging && isColId(dragging) && currentHoverEle === col.id;
+                                                        isAnyInternalDragging && dragging && isColId(dragging) && currentHoverEle === col.id;
 
                                                     return (
                                                         <div
@@ -477,9 +537,11 @@ export default function OutlineTree({
                                                                 onDragStart={(e: any) => onDragStart(e, col.id)}
                                                                 removeCol={() => removeCol(col.id)}
                                                                 addElement={(type: string) => addElement(type, cIndex, rIndex, sindex)}
+                                                                elementOptions={elementOptions}
                                                             >
                                                                 <div
                                                                     className={assetOverCol === col.id ? "relative" : ""}
+                                                                    style={{ minHeight: (getColChildren(col) || []).length === 0 ? "32px" : "8px" }}
                                                                     onDragEnter={(e) => {
                                                                         if (isImageDrag(e.dataTransfer)) {
                                                                             e.preventDefault();
@@ -505,7 +567,7 @@ export default function OutlineTree({
                                                                                 e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
                                                                             const mouseY = e.clientY;
 
-                                                                            let insertPosition = (col.children || []).length;
+                                                                            let insertPosition = (getColChildren(col) || []).length;
                                                                             for (let k = 0; k < wrappers.length; k++) {
                                                                                 const rect = wrappers[k].getBoundingClientRect();
                                                                                 const middle = rect.top + rect.height / 2;
@@ -527,7 +589,7 @@ export default function OutlineTree({
                                                                                 e.currentTarget.querySelectorAll<HTMLElement>("[data-tree-ele-id]");
                                                                             const mouseY = e.clientY;
 
-                                                                            let insertPosition = (col.children || []).length;
+                                                                            let insertPosition = (getColChildren(col) || []).length;
                                                                             for (let k = 0; k < wrappers.length; k++) {
                                                                                 const rect = wrappers[k].getBoundingClientRect();
                                                                                 const middle = rect.top + rect.height / 2;
@@ -539,7 +601,7 @@ export default function OutlineTree({
 
                                                                             setInternalDrop({ colId: col.id, position: insertPosition });
 
-                                                                            const colChildren = col.children || [];
+                                                                            const colChildren = getColChildren(col) || [];
                                                                             const hoverId =
                                                                                 insertPosition >= colChildren.length
                                                                                     ? `last-ele-${col.id}`
@@ -573,28 +635,19 @@ export default function OutlineTree({
                                                                         }
 
                                                                         if (isInternalEleDrag(dragging)) {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            if (internalDrop && internalDrop.colId === col.id) {
+                                                                                moveEle(dragging as string, internalDrop.colId, internalDrop.position);
+                                                                            }
                                                                             setInternalDrop(null);
+                                                                            setDragging(null);
                                                                         }
                                                                     }}
                                                                 >
-                                                                    {(col.children ?? []).length === 0 && assetOverCol === col.id && (
-                                                                        <div
-                                                                            style={{
-                                                                                border: "2px dashed #0037FF",
-                                                                                borderRadius: "8px",
-                                                                                padding: "16px",
-                                                                                textAlign: "center",
-                                                                                color: "#0037FF",
-                                                                                fontSize: "12px",
-                                                                                backgroundColor: "rgba(0, 55, 255, 0.05)",
-                                                                                margin: "6px 0",
-                                                                            }}
-                                                                        >
-                                                                            Drop image here
-                                                                        </div>
-                                                                    )}
+                                                                    {/* Removed the dashed "Drop here" box per user request */}
 
-                                                                    {(col.children ?? []).map((element: any, j: number) => {
+                                                                    {(getColChildren(col) ?? []).map((element: any, j: number) => {
                                                                         const isAssetActive = assetOverCol === col.id && assetDrop?.colId === col.id;
                                                                         const isInternalActive =
                                                                             isInternalEleDrag(dragging) && internalDrop?.colId === col.id;
@@ -610,7 +663,7 @@ export default function OutlineTree({
                                                                                         onDragStart={(ev: any) => onDragStart(ev, element.id)}
                                                                                         type={theEles[element.id]?.type}
                                                                                         element={element}
-                                                                                        label={theEles[element.id]?.props?.[0]?.value || undefined}
+                                                                                        label={getProperty(theEles[element.id]?.properties, "text", "Text") || getProperty(theEles[element.id]?.properties, "label", "Label") || undefined}
                                                                                         setCurrentEle={setCurrentEle}
                                                                                         setCurrentHoverEle={setCurrentHoverEle}
                                                                                     />
@@ -621,11 +674,11 @@ export default function OutlineTree({
 
                                                                     {isInternalEleDrag(dragging) &&
                                                                         internalDrop?.colId === col.id &&
-                                                                        internalDrop?.position === (col.children ?? []).length && <div style={INSERT_BAR_STYLE} />}
+                                                                        internalDrop?.position === (getColChildren(col) ?? []).length && <div style={INSERT_BAR_STYLE} />}
 
                                                                     {assetOverCol === col.id &&
                                                                         assetDrop?.colId === col.id &&
-                                                                        assetDrop?.position === (col.children ?? []).length && <div style={INSERT_BAR_STYLE} />}
+                                                                        assetDrop?.position === (getColChildren(col) ?? []).length && <div style={INSERT_BAR_STYLE} />}
                                                                 </div>
                                                             </Col>
 
@@ -635,7 +688,7 @@ export default function OutlineTree({
                                                                         if (dragging && isColId(dragging)) onDragHover(e, `col-last-${row.id}`);
                                                                     }}
                                                                 >
-                                                                    {isInternalDrag &&
+                                                                    {isAnyInternalDragging &&
                                                                         dragging &&
                                                                         isColId(dragging) &&
                                                                         currentHoverEle === `col-last-${row.id}` && <div style={INSERT_BAR_STYLE} />}
@@ -651,7 +704,7 @@ export default function OutlineTree({
                                                             if (dragging && isColId(dragging)) onDragHover(e, `col-last-${row.id}`);
                                                         }}
                                                     >
-                                                        {isInternalDrag &&
+                                                        {isAnyInternalDragging &&
                                                             dragging &&
                                                             isColId(dragging) &&
                                                             currentHoverEle === `col-last-${row.id}` && <div style={INSERT_BAR_STYLE} />}
@@ -665,7 +718,7 @@ export default function OutlineTree({
                                                         if (dragging && isRowId(dragging)) onDragHover(e, `row-last-${section.id}`);
                                                     }}
                                                 >
-                                                    {isInternalDrag &&
+                                                    {isAnyInternalDragging &&
                                                         dragging &&
                                                         isRowId(dragging) &&
                                                         currentHoverEle === `row-last-${section.id}` && <div style={INSERT_BAR_STYLE} />}
@@ -682,7 +735,7 @@ export default function OutlineTree({
                                         }}
                                         style={{ height: 10 }}
                                     >
-                                        {isInternalDrag &&
+                                        {isAnyInternalDragging &&
                                             dragging &&
                                             isRowId(dragging) &&
                                             currentHoverEle === `row-last-${section.id}` && <div style={INSERT_BAR_STYLE} />}
@@ -697,7 +750,7 @@ export default function OutlineTree({
                                     }}
                                     style={{ height: 10 }}
                                 >
-                                    {isInternalDrag &&
+                                    {isAnyInternalDragging &&
                                         dragging &&
                                         isSectionId(dragging) &&
                                         currentHoverEle === "section-last" && <div style={INSERT_BAR_STYLE} />}
@@ -714,7 +767,7 @@ export default function OutlineTree({
                         }}
                         style={{ height: 10 }}
                     >
-                        {isInternalDrag &&
+                        {isAnyInternalDragging &&
                             dragging &&
                             isSectionId(dragging) &&
                             currentHoverEle === "section-last" && <div style={INSERT_BAR_STYLE} />}
