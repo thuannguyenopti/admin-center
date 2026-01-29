@@ -1,6 +1,5 @@
 import {Box, Card, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
-import Link from "next/link";
 import {useMemo} from "react";
 
 type MetricCardProps = {
