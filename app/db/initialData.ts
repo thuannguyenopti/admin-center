@@ -184,12 +184,19 @@ export type Property = {
 	of?: string;
 };
 
+export type VariantDimension = {
+	id: string;
+	name: string;
+	values: string[];
+};
+
 export type ContentType = {
 	id: string;
 	name: string;
 	baseType: "Page" | "Experience" | "Media" | "Product" | "Block";
 	description?: string;
 	properties: Property[];
+	variantDimensions?: VariantDimension[];
 };
 
 export const initialContentTypes: ContentType[] = [
@@ -236,6 +243,10 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "mainOutline", name: "Main", type: "outline" },
 			{ id: "asideOutline", name: "Aside", type: "outline" },
 		],
+		variantDimensions: [
+			{ id: "experiment", name: "A/B Test", values: ["Control", "Variant A", "Variant B"] },
+			{ id: "audience", name: "Audience", values: ["All Users", "New Users", "Returning Users", "VIP"] },
+		],
 	},
 	{
 		id: "ct-product",
@@ -246,6 +257,10 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "name", name: "Name", type: "text", required: true },
 			{ id: "description", name: "Description", type: "text" },
 			{ id: "price", name: "Price", type: "text" },
+		],
+		variantDimensions: [
+			{ id: "size", name: "Size", values: ["Small", "Medium", "Large", "XL"] },
+			{ id: "color", name: "Color", values: ["Black", "White", "Blue", "Red"] },
 		],
 	},
 	{
@@ -265,6 +280,11 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "altText", name: "Alt Text", type: "text" },
 			{ id: "width", name: "Width", type: "text" },
 			{ id: "height", name: "Height", type: "text" },
+		],
+		variantDimensions: [
+			{ id: "size", name: "Size", values: ["Original", "Large (1920px)", "Medium (800px)", "Thumbnail (200px)"] },
+			{ id: "format", name: "Format", values: ["JPEG", "WebP", "PNG", "AVIF"] },
+			{ id: "crop", name: "Crop", values: ["Original", "1:1 Square", "16:9 Landscape", "4:3 Standard"] },
 		],
 	},
 	{
