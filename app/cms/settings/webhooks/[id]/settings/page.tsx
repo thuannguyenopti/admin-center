@@ -1,127 +1,208 @@
 "use client";
 
-import {Box, Field, Checkbox} from "@optiaxiom/react";
+import {Box, Field, Checkbox, Select, SelectTrigger, SelectContent, Grid} from "@optiaxiom/react";
 import {Input} from "@/app/components/Input";
 import {Button} from "@/app/components/Button";
 import {Text} from "@/app/components/Text";
 import {Heading} from "@optiaxiom/react";
 import {webhooks as initialWebhooks} from "../../mockData";
-import {use} from "react";
+import {use, useState, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
+import {Flex} from "@/app/components/Flex";
+import Stack from "@/app/components/Stack";
+
+const eventTypes = [
+	{
+		label: "Content",
+		value: "content",
+		events: [
+			{label: "Save", value: "save", description: "A content item was saved"},
+			{label: "Publish", value: "publish", description: "A content item was published"},
+			{label: "Unpublish", value: "unpublish", description: "A content item was unpublished"},
+			{label: "Archived", value: "archived", description: "A content item was archived"},
+		],
+	},
+	{
+		label: "Content Types",
+		value: "content-types",
+		events: [
+			{label: "Created", value: "created", description: "A content type was created"},
+			{label: "Updated", value: "updated", description: "A content type was updated"},
+			{label: "Deleted", value: "deleted", description: "A content type was deleted"},
+		],
+	},
+	{
+		label: "Workflow",
+		value: "workflow",
+		events: [
+			{label: "Approved", value: "approved", description: "Content was approved"},
+			{
+				label: "Ready for Review",
+				value: "ready-for-review",
+				description: "Content is ready for review",
+			},
+			{label: "Rejected", value: "rejected", description: "Content was rejected"},
+		],
+	},
+];
+
+const selectOptions = eventTypes.map((type) => ({label: type.label, value: type.value}));
 
 export default function WebhookSettings({params}: {params: Promise<{id: string}>}) {
 	const {id} = use(params);
-	const [webhooks] = usePersistentState("webhooks", initialWebhooks) as [
+	const [webhooks, setWebhooks] = usePersistentState("webhooks", initialWebhooks) as [
 		typeof initialWebhooks,
 		any,
 	];
 	const webhook = webhooks.find((w) => w.id === id);
+	const [selectedType, setSelectedType] = useState(eventTypes[0].value);
+
+	const [formData, setFormData] = useState({
+		name: "",
+		description: "",
+		status: "Inactive",
+		events: [] as string[],
+	});
+
+	// Initialize form data when webhook loads
+	useEffect(() => {
+		if (webhook) {
+			setFormData({
+				name: webhook.name,
+				description: webhook.description || "",
+				status: webhook.status || "Inactive",
+				events: (webhook as any).events || [],
+			});
+		}
+	}, [webhook]);
 
 	if (!webhook) return null;
 
+	const handleSave = () => {
+		const updatedWebhooks = webhooks.map((w) => (w.id === id ? {...w, ...formData} : w));
+		setWebhooks(updatedWebhooks);
+	};
+
+	const toggleEvent = (eventValue: string) => {
+		const currentEvents = formData.events;
+		if (currentEvents.includes(eventValue)) {
+			setFormData({
+				...formData,
+				events: currentEvents.filter((e) => e !== eventValue),
+			});
+		} else {
+			setFormData({
+				...formData,
+				events: [...currentEvents, eventValue],
+			});
+		}
+	};
+
+	const hasChanges = webhook
+		? formData.name !== webhook.name ||
+			(formData.description || "") !== (webhook.description || "") ||
+			formData.status !== (webhook.status || "Inactive") ||
+			JSON.stringify(formData.events.sort()) !==
+				JSON.stringify(((webhook as any).events || []).sort())
+		: false;
+
 	return (
 		<>
-			<Box maxW="lg">
-				<Box display="flex" flexDirection="column" gap="24">
+			<Flex maxW="lg" flexDirection="column" gap="32">
+				<Stack>
 					<Field label="Name">
-						<Input defaultValue={webhook.name} />
+						<Input
+							value={formData.name}
+							onChange={(e) => setFormData({...formData, name: e.target.value})}
+						/>
 					</Field>
-
 					<Field label="Description">
-						<Input defaultValue={webhook.description} />
+						<Input
+							value={formData.description}
+							onChange={(e) =>
+								setFormData({...formData, description: e.target.value})
+							}
+						/>
 					</Field>
-
 					<Field>
 						<Checkbox
-							defaultChecked={webhook.status === "Active"}
+							checked={formData.status === "Active"}
+							onCheckedChange={(checked) =>
+								setFormData({...formData, status: checked ? "Active" : "Inactive"})
+							}
 							description="Webhook calls will be performed for the configured events."
 						>
 							Active
 						</Checkbox>
 					</Field>
+				</Stack>
+				<Stack>
+					<Heading level="4">URL & Authentication</Heading>
+					<Field label="URL">
+						<Input defaultValue={webhook.url} readOnly />
+					</Field>
 
-					<Box>
-						<Heading level="4" mb="16">
-							URL & Authentication
-						</Heading>
-						<Box display="flex" flexDirection="column" gap="16">
-							<Field label="URL">
-								<Input defaultValue={webhook.url} readOnly />
-							</Field>
+					<Field label="Authentication token">
+						<Input defaultValue="************************" readOnly />
+					</Field>
 
-							<Field label="Authentication token">
-								<Input defaultValue="************************" readOnly />
-							</Field>
+					<Flex flexDirection="column" gap="8" alignItems="start">
+						<Text fontSize="sm" color="fg.secondary">
+							Changing URL requires a new authentication token.
+						</Text>
+						<Button>Edit</Button>
+					</Flex>
+				</Stack>
+				<Stack>
+					<Heading level="4">Events</Heading>
+					<Text>Select which events to subscribe to.</Text>
 
-							<Text fontSize="sm" color="fg.secondary">
-								Changing URL requires a new authentication token.
-							</Text>
-							<Box>
-								<Button>Edit</Button>
+					<Field label="Event Type">
+						<Select
+							options={selectOptions}
+							value={selectedType}
+							onChange={(e: any) => setSelectedType(e.target.value)}
+						>
+							<SelectTrigger size="lg" />
+							<SelectContent />
+						</Select>
+					</Field>
+
+					{eventTypes
+						.find((t) => t.value === selectedType)
+						?.events.map((event) => (
+							<Box key={event.value}>
+								<Checkbox
+									checked={formData.events.includes(event.value)}
+									onCheckedChange={() => toggleEvent(event.value)}
+									description={event.description}
+								>
+									{event.label}
+								</Checkbox>
 							</Box>
-						</Box>
-					</Box>
-				</Box>
-			</Box>
-
-			<Box className="max-w-[1024px]">
-				<Box>
-					<Heading level="4" mb="16">
-						Events
-					</Heading>
-					<Text mb="16">Select which events to subscribe to.</Text>
-
-					<Box className="grid grid-cols-3 gap-8">
-						<Box display="flex" flexDirection="column" gap="8">
-							<Text mb="4">Content</Text>
-							<Checkbox description="A content item was saved">Save</Checkbox>
-							<Checkbox description="A content item was published">Publish</Checkbox>
-							<Checkbox description="A content item was unpublished">
-								Unpublish
-							</Checkbox>
-							<Checkbox description="A content item was archived">Archived</Checkbox>
-						</Box>
-
-						<Box display="flex" flexDirection="column" gap="8">
-							<Text mb="4">Content Types</Text>
-							<Checkbox description="A content type was created">Created</Checkbox>
-							<Checkbox description="A content type was updated">Updated</Checkbox>
-							<Checkbox description="A content type was deleted">Deleted</Checkbox>
-						</Box>
-
-						<Box display="flex" flexDirection="column" gap="8">
-							<Text mb="4">Workflow</Text>
-							<Checkbox description="Content was approved">Approved</Checkbox>
-							<Checkbox description="Content is ready for review">
-								Ready for Review
-							</Checkbox>
-							<Checkbox description="Content was rejected">Rejected</Checkbox>
-						</Box>
-					</Box>
-				</Box>
-
-				<Box>
-					<Heading level="4" mb="16">
-						Delete Webhook
-					</Heading>
-					<Text mb="16">
-						This will permanently remove this Webhook and cannot be undone.
-					</Text>
+						))}
+				</Stack>
+				<Stack>
+					<Heading level="4">Delete Webhook</Heading>
+					<Text>This will permanently remove this Webhook and cannot be undone.</Text>
 					<Button appearance="danger-outline">Delete Webhook</Button>
-				</Box>
-			</Box>
-			<Box
+				</Stack>
+			</Flex>
+
+			<Flex
 				borderT="1"
 				borderColor="border.tertiary"
-				p="16"
-				display="flex"
+				py="16"
+				mt="32"
 				justifyContent="flex-end"
 				gap="16"
-				style={{zIndex: 100}}
+				maxW="lg"
 			>
 				<Button appearance="subtle">Cancel</Button>
-				<Button appearance="primary">Save</Button>
-			</Box>
+				<Button appearance="primary" onClick={handleSave} disabled={!hasChanges}>
+					Save
+				</Button>
+			</Flex>
 		</>
 	);
 }
