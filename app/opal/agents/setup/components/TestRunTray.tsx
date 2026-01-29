@@ -116,7 +116,7 @@ export function TestRunTray({
                         gap="16"
                     >
                         {/* Input Section */}
-                        <Disclosure defaultOpen onOpenChange={setIsInputOpen} bg="bg.secondary" rounded="md" p="12">
+                        <Disclosure defaultOpen onOpenChange={setIsInputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" pr="8">
                             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                                 <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
@@ -173,7 +173,7 @@ export function TestRunTray({
                         </Disclosure>
 
                         {/* Output Section */}
-                        <Disclosure defaultOpen bg="bg.secondary" rounded="md" p="12">
+                        <Disclosure defaultOpen bg="bg.secondary" rounded="md" pl="8" py="4" pr="8">
                             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                                 <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
