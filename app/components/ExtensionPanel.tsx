@@ -164,7 +164,7 @@ export default function ExtensionPanel({
 				</Box>
 			</Box>
 
-			{/* Content */}
+			{/* Content  */}
 			<Box
 				flex={isPoppedOut ? undefined : "1"}
 				px="24"
