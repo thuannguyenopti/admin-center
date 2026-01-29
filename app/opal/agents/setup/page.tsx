@@ -33,16 +33,14 @@ import {
     SelectTrigger,
     SelectContent,
     Progress,
+    Input,
 } from "@optiaxiom/react";
 import {
     HoverCard,
     HoverCardTrigger,
     HoverCardContent,
 } from "@optiaxiom/react/unstable";
-import { Input } from "@/app/components/Input";
 import {
-    IconTrash,
-    IconPlus,
     IconHelp,
     IconSparkles,
     IconDots,
@@ -70,6 +68,8 @@ import {
     IconChevronLeft,
     IconLink,
     IconPen,
+    IconPlus,
+    IconTrashCan,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -1353,7 +1353,7 @@ function SpecializedAgentSetupContent() {
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem>
                                                                             <Box display="flex" alignItems="center" gap="8" color="fg.error">
-                                                                                <IconTrash size={16} />
+                                                                                <IconTrashCan size={16} />
                                                                                 <Text>Delete</Text>
                                                                             </Box>
                                                                         </DropdownMenuItem>
