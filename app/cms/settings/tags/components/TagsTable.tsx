@@ -2,6 +2,7 @@ import { Checkbox } from '@optiaxiom/react';
 import { Tag } from '../types';
 import { Table, Tr, Th } from '@/app/components/Table';
 import { TagRow } from './TagRow';
+import { IconChevronUp, IconChevronDown } from '@tabler/icons-react';
 
 interface TagsTableProps {
   tags: Tag[];
@@ -10,6 +11,9 @@ interface TagsTableProps {
   onToggleAll: () => void;
   onEdit: (tag: Tag) => void;
   onDelete: (tag: Tag) => void;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (column: string) => void;
 }
 
 export function TagsTable({
@@ -19,9 +23,42 @@ export function TagsTable({
   onToggleAll,
   onEdit,
   onDelete,
+  sortColumn,
+  sortDirection,
+  onSort,
 }: TagsTableProps) {
   const allSelected = tags.length > 0 && selectedIds.size === tags.length;
   const someSelected = selectedIds.size > 0 && selectedIds.size < tags.length;
+
+  const renderSortIcon = (column: string) => {
+    const isActive = sortColumn === column;
+    return (
+      <span
+        style={{
+          visibility: isActive ? 'visible' : 'hidden',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginLeft: '4px',
+          width: '14px',
+          height: '14px',
+          verticalAlign: 'middle',
+        }}
+      >
+        {sortDirection === 'asc' ? (
+          <IconChevronUp size={14} />
+        ) : (
+          <IconChevronDown size={14} />
+        )}
+      </span>
+    );
+  };
+
+  const handleHeaderClick = (column: string) => {
+    if (onSort) {
+      onSort(column);
+    }
+  };
 
   return (
     <Table>
@@ -34,12 +71,42 @@ export function TagsTable({
               onCheckedChange={onToggleAll}
             />
           </Th>
-          <Th>Name</Th>
-          <Th>Slug</Th>
-          <Th>Visibility</Th>
-          <Th>Modified by</Th>
-          <Th>Usage</Th>
-          <Th>Last Modified</Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('name')}
+          >
+            Name{renderSortIcon('name')}
+          </Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('slug')}
+          >
+            Slug{renderSortIcon('slug')}
+          </Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('visibility')}
+          >
+            Visibility{renderSortIcon('visibility')}
+          </Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('modifiedBy')}
+          >
+            Modified by{renderSortIcon('modifiedBy')}
+          </Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('usage')}
+          >
+            Usage{renderSortIcon('usage')}
+          </Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('lastModified')}
+          >
+            Last Modified{renderSortIcon('lastModified')}
+          </Th>
           <Th style={{ width: '56px' }}></Th>
         </Tr>
       </thead>

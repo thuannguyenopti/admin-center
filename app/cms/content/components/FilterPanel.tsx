@@ -21,10 +21,28 @@ export default function FilterPanel({
 }: FilterPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllModifiedBy, setShowAllModifiedBy] = useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   const displayedModifiedBy = showAllModifiedBy
     ? filterOptions.modifiedBy
     : filterOptions.modifiedBy.slice(0, 4);
+
+  const displayedTags = showAllTags
+    ? filterOptions.tags
+    : filterOptions.tags.slice(0, 4);
+
+  const displayedCategories = showAllCategories
+    ? filterOptions.categories
+    : filterOptions.categories.slice(0, 4);
+
+  // Helper to format slug to display name
+  const formatSlugToName = (slug: string) => {
+    return slug
+      .split("-")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   return (
     <Sidebar className="h-full" expanded={true}>
@@ -157,6 +175,72 @@ export default function FilterPanel({
                   onChange={() => onToggleFilter("languages", language)}
                 />
               ))}
+            </Box>
+          )}
+
+          {/* Tags filter */}
+          {filterOptions.tags.length > 0 && (
+            <Box display="flex" flexDirection="column" gap="8">
+              <Text fontSize="xs" color="fg.tertiary">
+                Tags
+              </Text>
+              {displayedTags.map((tag) => (
+                <CheckboxRow
+                  key={tag}
+                  label={formatSlugToName(tag)}
+                  checked={(filters.tags || []).includes(tag)}
+                  onChange={() => onToggleFilter("tags", tag)}
+                />
+              ))}
+              {filterOptions.tags.length > 4 && !showAllTags && (
+                <button
+                  onClick={() => setShowAllTags(true)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    textAlign: "left",
+                  }}
+                >
+                  <Text fontSize="xs" color="fg.accent">
+                    Show all ({filterOptions.tags.length})
+                  </Text>
+                </button>
+              )}
+            </Box>
+          )}
+
+          {/* Categories filter */}
+          {filterOptions.categories.length > 0 && (
+            <Box display="flex" flexDirection="column" gap="8">
+              <Text fontSize="xs" color="fg.tertiary">
+                Categories
+              </Text>
+              {displayedCategories.map((category) => (
+                <CheckboxRow
+                  key={category}
+                  label={formatSlugToName(category)}
+                  checked={(filters.categories || []).includes(category)}
+                  onChange={() => onToggleFilter("categories", category)}
+                />
+              ))}
+              {filterOptions.categories.length > 4 && !showAllCategories && (
+                <button
+                  onClick={() => setShowAllCategories(true)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    textAlign: "left",
+                  }}
+                >
+                  <Text fontSize="xs" color="fg.accent">
+                    Show all ({filterOptions.categories.length})
+                  </Text>
+                </button>
+              )}
             </Box>
           )}
         </Box>

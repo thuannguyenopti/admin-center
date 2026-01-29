@@ -15,6 +15,7 @@ import { Button } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import usePersistentState from '@/app/usePersistentState';
 import { Category, CategoryFormRow } from './types';
+import { initialCategories, getAllContentItems, initialPages, type Page } from '@/app/db/initialData';
 import { CategoriesTable } from './components/CategoriesTable';
 import { CategoryModal } from './components/CategoryModal';
 import { useSelection } from './hooks/useSelection';
@@ -24,12 +25,36 @@ import { IconCheck } from '@tabler/icons-react';
 import EmptyStateIllustration from './empty-state.svg';
 
 export default function CategoriesSettings() {
-  const [categories, setCategories] = usePersistentState('categories', []);
+  const [categories, setCategories] = usePersistentState('categories', initialCategories);
+  const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingCategories, setEditingCategories] = useState<Category[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Calculate actual category usage from content items
+  const contentItems = useMemo(() => getAllContentItems(pages || initialPages), [pages]);
+  
+  const categoryUsageCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    contentItems.forEach(item => {
+      (item.categories || []).forEach(catSlug => {
+        counts[catSlug] = (counts[catSlug] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [contentItems]);
+
+  // Merge calculated usage into categories
+  const categoriesWithUsage = useMemo(() => {
+    return categories.map((cat: Category) => ({
+      ...cat,
+      usage: categoryUsageCounts[cat.slug] || 0,
+    }));
+  }, [categories, categoryUsageCounts]);
 
   const {
     selectedIds,
@@ -39,25 +64,68 @@ export default function CategoriesSettings() {
     deselectAll,
     selectedCategories,
     selectedCount,
-  } = useSelection(categories);
+  } = useSelection(categoriesWithUsage);
 
   const { createCategories, updateCategories, deleteCategories, toggleExpanded } =
     useCategoryActions(categories, setCategories);
 
   // Filter categories based on search
   const filteredCategories = useMemo(() => {
-    return filterCategoriesWithHierarchy(categories, searchQuery);
-  }, [categories, searchQuery]);
+    return filterCategoriesWithHierarchy(categoriesWithUsage, searchQuery);
+  }, [categoriesWithUsage, searchQuery]);
+
+  // Sort categories
+  const sortedCategories = useMemo(() => {
+    const sorted = [...filteredCategories];
+    sorted.sort((a: Category, b: Category) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortColumn) {
+        case 'name':
+          aValue = a.name?.toLowerCase() || '';
+          bValue = b.name?.toLowerCase() || '';
+          break;
+        case 'slug':
+          aValue = a.slug?.toLowerCase() || '';
+          bValue = b.slug?.toLowerCase() || '';
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        case 'modifiedBy':
+          aValue = a.modifiedBy?.toLowerCase() || '';
+          bValue = b.modifiedBy?.toLowerCase() || '';
+          break;
+        case 'usage':
+          aValue = a.usage || 0;
+          bValue = b.usage || 0;
+          break;
+        case 'lastModified':
+          aValue = new Date(a.lastModified || 0).getTime();
+          bValue = new Date(b.lastModified || 0).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredCategories, sortColumn, sortDirection]);
 
   // Pagination
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedCategories.length / itemsPerPage);
   const paginatedCategories = useMemo(() => {
-    return filteredCategories.slice(
+    return sortedCategories.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
     );
-  }, [filteredCategories, currentPage]);
+  }, [sortedCategories, currentPage]);
 
   // Reset to page 1 when search changes
   useMemo(() => {
@@ -106,8 +174,19 @@ export default function CategoriesSettings() {
     deselectAll();
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column with ascending as default
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   // Show empty state if no categories
-  if (categories.length === 0 && !isModalOpen) {
+  if (categoriesWithUsage.length === 0 && !isModalOpen) {
     return (
       <>
         <Box
@@ -189,7 +268,7 @@ export default function CategoriesSettings() {
           onOpenChange={setIsModalOpen}
           mode={modalMode}
           initialCategories={editingCategories}
-          allCategories={categories}
+          allCategories={categoriesWithUsage}
           onSave={handleSave}
         />
       </>
@@ -295,6 +374,9 @@ export default function CategoriesSettings() {
         onToggleExpand={toggleExpanded}
         onEdit={handleEditCategory}
         onDelete={handleDeleteCategory}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        onSort={handleSort}
       />
 
       {/* Pagination */}
@@ -313,7 +395,7 @@ export default function CategoriesSettings() {
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         initialCategories={editingCategories}
-        allCategories={categories}
+        allCategories={categoriesWithUsage}
         onSave={handleSave}
       />
     </>

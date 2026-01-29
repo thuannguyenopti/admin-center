@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuContent,
 } from '@optiaxiom/react';
+import { useRouter } from 'next/navigation';
 import { Category } from '../types';
 import { Tr, Td } from '@/app/components/Table';
 import { getChildren } from '../utils';
@@ -32,6 +33,7 @@ export function CategoryRow({
   onEdit,
   onDelete,
 }: CategoryRowProps) {
+  const router = useRouter();
   const children = getChildren(category.id, allCategories);
   const hasChildren = children.length > 0;
   const indent = depth * 32; // 32px per level
@@ -40,6 +42,13 @@ export function CategoryRow({
     draft: 'neutral',
     published: 'success',
     'in-review': 'warning',
+  };
+
+  const handleUsageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (category.usage > 0) {
+      router.push(`/cms/content?category=${category.slug}`);
+    }
   };
 
   return (
@@ -97,7 +106,16 @@ export function CategoryRow({
         </Td>
         <Td>{category.modifiedBy}</Td>
         <Td>
-          <span style={{ color: '#0037ff' }}>{category.usage}</span>
+          <span
+            onClick={category.usage > 0 ? handleUsageClick : undefined}
+            className={category.usage > 0 ? 'cursor-pointer hover:underline' : ''}
+            style={{
+              color: category.usage > 0 ? '#0037ff' : '#080736',
+            }}
+            title={category.usage > 0 ? `View ${category.usage} content items in this category` : undefined}
+          >
+            {category.usage}
+          </span>
         </Td>
         <Td>{category.lastModified}</Td>
         <Td type="button">

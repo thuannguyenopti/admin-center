@@ -2674,6 +2674,8 @@ export interface UnifiedContentItem {
 	modifiedBy: string;
 	language: string;
 	lastModified: string;
+	tags: string[];      // array of tag slugs
+	categories: string[]; // array of category slugs
 }
 
 const reportNames = [
@@ -2718,6 +2720,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("3"),
 		language: "en",
 		lastModified: "Jan 11, 2025",
+		tags: ["fitness-tracking", "cardio-workout"],
+		categories: ["equipment"],
 	},
 	{
 		id: "5",
@@ -2729,6 +2733,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("5"),
 		language: "en",
 		lastModified: "Jan 11, 2025",
+		tags: [],
+		categories: ["marketing"],
 	},
 	{
 		id: "9",
@@ -2740,6 +2746,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("9"),
 		language: "en",
 		lastModified: "Jan 11, 2025",
+		tags: ["cycling-training", "road-cycling"],
+		categories: ["media"],
 	},
 	{
 		id: "13",
@@ -2751,6 +2759,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("13"),
 		language: "en",
 		lastModified: "Jan 8, 2025",
+		tags: ["outdoor-training", "cycling-training"],
+		categories: ["features"],
 	},
 	{
 		id: "26",
@@ -2762,6 +2772,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("26"),
 		language: "en",
 		lastModified: "Dec 26, 2024",
+		tags: ["fitness-tracking"],
+		categories: ["features"],
 	},
 	{
 		id: "31",
@@ -2773,6 +2785,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("31"),
 		language: "en",
 		lastModified: "Dec 21, 2024",
+		tags: ["cycling-training", "cycling-performance", "fitness-tracking"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "32",
@@ -2784,6 +2798,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("32"),
 		language: "en",
 		lastModified: "Dec 20, 2024",
+		tags: ["fitness-tracking", "cardio-workout"],
+		categories: ["equipment"],
 	},
 	{
 		id: "33",
@@ -2795,6 +2811,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("33"),
 		language: "en",
 		lastModified: "Dec 19, 2024",
+		tags: ["indoor-training", "cycling-training", "cycling-performance"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "34",
@@ -2806,6 +2824,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("34"),
 		language: "en",
 		lastModified: "Dec 18, 2024",
+		tags: ["cycling-training", "cycling-performance"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "35",
@@ -2817,6 +2837,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("35"),
 		language: "en",
 		lastModified: "Dec 17, 2024",
+		tags: ["cycling-training", "cycling-performance", "endurance-training"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "36",
@@ -2828,6 +2850,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("36"),
 		language: "en",
 		lastModified: "Dec 16, 2024",
+		tags: ["cycling-training", "fitness-tracking"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "37",
@@ -2839,6 +2863,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("37"),
 		language: "en",
 		lastModified: "Dec 15, 2024",
+		tags: ["road-cycling", "cycling-performance"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "38",
@@ -2850,6 +2876,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("38"),
 		language: "en",
 		lastModified: "Dec 14, 2024",
+		tags: ["road-cycling", "mountain-biking"],
+		categories: ["equipment", "cycling"],
 	},
 	{
 		id: "39",
@@ -2861,6 +2889,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("39"),
 		language: "en",
 		lastModified: "Dec 13, 2024",
+		tags: ["cycling-training"],
+		categories: ["equipment"],
 	},
 	{
 		id: "40",
@@ -2872,6 +2902,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("40"),
 		language: "en",
 		lastModified: "Dec 12, 2024",
+		tags: ["road-cycling", "mountain-biking"],
+		categories: ["equipment"],
 	},
 	{
 		id: "41",
@@ -2883,6 +2915,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("41"),
 		language: "en",
 		lastModified: "Dec 11, 2024",
+		tags: ["fitness-tracking", "exercise-routine"],
+		categories: ["features"],
 	},
 	{
 		id: "42",
@@ -2894,6 +2928,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("42"),
 		language: "en",
 		lastModified: "Dec 10, 2024",
+		tags: ["fitness-tracking"],
+		categories: ["features"],
 	},
 	{
 		id: "43",
@@ -2905,6 +2941,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("43"),
 		language: "en",
 		lastModified: "Dec 9, 2024",
+		tags: [],
+		categories: ["features"],
 	},
 	{
 		id: "44",
@@ -2916,6 +2954,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("44"),
 		language: "en",
 		lastModified: "Dec 8, 2024",
+		tags: ["fitness-tracking"],
+		categories: ["features"],
 	},
 	{
 		id: "45",
@@ -2927,6 +2967,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("45"),
 		language: "en",
 		lastModified: "Dec 7, 2024",
+		tags: ["fitness-tracking"],
+		categories: ["features"],
 	},
 	{
 		id: "46",
@@ -2938,6 +2980,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("46"),
 		language: "en",
 		lastModified: "Dec 6, 2024",
+		tags: [],
+		categories: ["features"],
 	},
 	{
 		id: "47",
@@ -2949,6 +2993,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("47"),
 		language: "en",
 		lastModified: "Dec 5, 2024",
+		tags: [],
+		categories: ["marketing"],
 	},
 	{
 		id: "48",
@@ -2960,6 +3006,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("48"),
 		language: "en",
 		lastModified: "Dec 4, 2024",
+		tags: [],
+		categories: ["marketing"],
 	},
 	{
 		id: "49",
@@ -2971,6 +3019,8 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("49"),
 		language: "en",
 		lastModified: "Dec 3, 2024",
+		tags: ["mountain-biking", "outdoor-training"],
+		categories: ["media"],
 	},
 	{
 		id: "50",
@@ -2982,8 +3032,69 @@ export const initialOtherContent: UnifiedContentItem[] = [
 		modifiedBy: getRandomName("50"),
 		language: "en",
 		lastModified: "Dec 2, 2024",
+		tags: ["road-cycling", "cycling-performance"],
+		categories: ["media"],
 	},
 ];
+
+// Sample tag/category assignments for pages based on content type
+const getPageTagsAndCategories = (pageId: string, contentTypeId: string): { tags: string[], categories: string[] } => {
+	// Map some pages to specific tags for demo purposes
+	const pageTagMap: Record<string, string[]> = {
+		"page-site-home": ["spring-reset", "fitness-tracking"],
+		"page-site-about": [],
+		"page-site-contact": [],
+		"page-site-blog": ["exercise-routine"],
+		"page-site-products": ["cycling-training"],
+		"page-site-product-a": ["cycling-performance", "road-cycling"],
+		"page-exp-landing-default": ["spring-reset", "summer-shred", "fitness-tracking"],
+		"page-site-blog-post-1": ["exercise-routine", "endurance-training"],
+		"page-site-blog-post-2": ["sprint-training", "exercise-routine"],
+		"page-site-blog-post-3": ["outdoor-training"],
+		"page-site-blog-post-4": ["road-cycling", "cycling-training"],
+		"page-activities": ["outdoor-training", "fitness-tracking"],
+		"page-community": ["fitness-tracking"],
+		"page-challenges": ["exercise-routine", "fitness-tracking"],
+		"page-pricing": [],
+		"page-stories": ["fitness-tracking"],
+		"page-product-31": ["cycling-training", "cycling-performance", "fitness-tracking"],
+		"page-product-32": ["fitness-tracking", "cardio-workout"],
+		"page-product-33": ["indoor-training", "cycling-training"],
+		"page-product-34": ["cycling-training", "cycling-performance"],
+		"page-product-35": ["cycling-training", "endurance-training"],
+		"page-product-36": ["cycling-training", "fitness-tracking"],
+	};
+
+	const pageCategoryMap: Record<string, string[]> = {
+		"page-site-home": ["marketing"],
+		"page-site-about": ["company"],
+		"page-site-contact": ["company"],
+		"page-site-blog": ["content"],
+		"page-site-products": ["products"],
+		"page-site-product-a": ["products"],
+		"page-exp-landing-default": ["marketing"],
+		"page-site-blog-post-1": ["content", "training"],
+		"page-site-blog-post-2": ["content", "training"],
+		"page-site-blog-post-3": ["content"],
+		"page-site-blog-post-4": ["content", "products"],
+		"page-activities": ["features"],
+		"page-community": ["features"],
+		"page-challenges": ["features"],
+		"page-pricing": ["marketing"],
+		"page-stories": ["marketing"],
+		"page-product-31": ["products", "cycling"],
+		"page-product-32": ["products"],
+		"page-product-33": ["products", "cycling"],
+		"page-product-34": ["products", "cycling"],
+		"page-product-35": ["products", "cycling"],
+		"page-product-36": ["products", "cycling"],
+	};
+
+	return {
+		tags: pageTagMap[pageId] || [],
+		categories: pageCategoryMap[pageId] || [],
+	};
+};
 
 export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContentItem[] => {
 	const pageItems: UnifiedContentItem[] = pages.map((p) => {
@@ -2994,6 +3105,7 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 			day: "numeric",
 			year: "numeric",
 		});
+		const { tags, categories } = getPageTagsAndCategories(p.id, p.contentTypeId);
 
 		return {
 			id: p.id,
@@ -3005,6 +3117,8 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 			modifiedBy: getRandomName(p.id),
 			language: "en",
 			lastModified: formattedDate,
+			tags,
+			categories,
 		};
 	});
 	return [...pageItems, ...initialOtherContent];
@@ -3220,5 +3334,117 @@ export const initialTags = [
 		modifiedBy: 'Current User',
 		usage: 11,
 		lastModified: 'Jan 28, 2026',
+	},
+];
+
+// Initial Categories
+export const initialCategories = [
+	{
+		id: 'cat-1',
+		name: 'Equipment',
+		slug: 'equipment',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Alice Johnson',
+		usage: 18,
+		lastModified: 'Jan 15, 2025',
+		parentId: null,
+		isExpanded: true,
+	},
+	{
+		id: 'cat-2',
+		name: 'Cycling',
+		slug: 'cycling',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Bob Smith',
+		usage: 14,
+		lastModified: 'Jan 14, 2025',
+		parentId: null,
+		isExpanded: true,
+	},
+	{
+		id: 'cat-3',
+		name: 'Features',
+		slug: 'features',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Carol Williams',
+		usage: 12,
+		lastModified: 'Jan 13, 2025',
+		parentId: null,
+		isExpanded: false,
+	},
+	{
+		id: 'cat-4',
+		name: 'Marketing',
+		slug: 'marketing',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'David Brown',
+		usage: 8,
+		lastModified: 'Jan 12, 2025',
+		parentId: null,
+		isExpanded: false,
+	},
+	{
+		id: 'cat-5',
+		name: 'Content',
+		slug: 'content',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Emma Wilson',
+		usage: 6,
+		lastModified: 'Jan 11, 2025',
+		parentId: null,
+		isExpanded: false,
+	},
+	{
+		id: 'cat-6',
+		name: 'Training',
+		slug: 'training',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Frank Miller',
+		usage: 4,
+		lastModified: 'Jan 10, 2025',
+		parentId: null,
+		isExpanded: false,
+	},
+	{
+		id: 'cat-7',
+		name: 'Products',
+		slug: 'products',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Grace Lee',
+		usage: 10,
+		lastModified: 'Jan 9, 2025',
+		parentId: null,
+		isExpanded: false,
+	},
+	{
+		id: 'cat-8',
+		name: 'Media',
+		slug: 'media',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Henry Chen',
+		usage: 5,
+		lastModified: 'Jan 8, 2025',
+		parentId: null,
+		isExpanded: false,
+	},
+	{
+		id: 'cat-9',
+		name: 'Company',
+		slug: 'company',
+		status: 'published' as const,
+		visibility: 'public' as const,
+		modifiedBy: 'Ivy Park',
+		usage: 2,
+		lastModified: 'Jan 7, 2025',
+		parentId: null,
+		isExpanded: false,
 	},
 ];
