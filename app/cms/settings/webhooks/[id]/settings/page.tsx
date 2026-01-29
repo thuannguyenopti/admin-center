@@ -61,16 +61,20 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 		name: "",
 		description: "",
 		status: "Inactive",
+		eventType: eventTypes[0].value,
 		events: [] as string[],
 	});
 
 	// Initialize form data when webhook loads
 	useEffect(() => {
 		if (webhook) {
+			const savedEventType = (webhook as any).eventType || eventTypes[0].value;
+			setSelectedType(savedEventType);
 			setFormData({
 				name: webhook.name,
 				description: webhook.description || "",
 				status: webhook.status || "Inactive",
+				eventType: savedEventType,
 				events: (webhook as any).events || [],
 			});
 		}
@@ -81,6 +85,15 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 	const handleSave = () => {
 		const updatedWebhooks = webhooks.map((w) => (w.id === id ? {...w, ...formData} : w));
 		setWebhooks(updatedWebhooks);
+	};
+
+	const handleTypeChange = (newType: string) => {
+		setSelectedType(newType);
+		setFormData({
+			...formData,
+			eventType: newType,
+			events: [], // Uncheck all hidden options by clearing events when switching type
+		});
 	};
 
 	const toggleEvent = (eventValue: string) => {
@@ -102,6 +115,7 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 		? formData.name !== webhook.name ||
 			(formData.description || "") !== (webhook.description || "") ||
 			formData.status !== (webhook.status || "Inactive") ||
+			formData.eventType !== ((webhook as any).eventType || eventTypes[0].value) ||
 			JSON.stringify(formData.events.sort()) !==
 				JSON.stringify(((webhook as any).events || []).sort())
 		: false;
@@ -161,7 +175,7 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 						<Select
 							options={selectOptions}
 							value={selectedType}
-							onChange={(e: any) => setSelectedType(e.target.value)}
+							onChange={(e: any) => handleTypeChange(e.target.value)}
 						>
 							<SelectTrigger size="lg" />
 							<SelectContent />

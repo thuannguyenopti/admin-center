@@ -6,7 +6,7 @@ import {usePathname} from "next/navigation";
 import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
-import {webhooks} from "@/app/cms/settings/webhooks/mockData";
+import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
@@ -41,6 +41,10 @@ export default function RootLayout({
 	const webhookId = webhookMatch ? webhookMatch[1] : null;
 
 	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
+	const [webhooks] = usePersistentState("webhooks", initialWebhooks) as [
+		typeof initialWebhooks,
+		any,
+	];
 	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
 	const currentWebhook = webhooks.find((w) => w.id === webhookId);
 
@@ -123,7 +127,7 @@ export default function RootLayout({
 											label: "Error Log",
 											url: `/cms/settings/webhooks/${webhookId}/logs`,
 										},
-								  ]
+									]
 								: [],
 						},
 					},
@@ -187,7 +191,7 @@ export default function RootLayout({
 														label: "Optimizations",
 														url: `/cms/search/algorithms/${algorithmId}/optimizations`,
 													},
-											  ]
+												]
 											: []),
 										{
 											label: "Filter",
@@ -201,7 +205,7 @@ export default function RootLayout({
 											label: "Settings",
 											url: `/cms/search/algorithms/${algorithmId}/settings`,
 										},
-								  ]
+									]
 								: [],
 						},
 					},
