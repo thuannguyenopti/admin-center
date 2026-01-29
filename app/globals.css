@@ -51,6 +51,11 @@ body {
 	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
 }
 
+.extension-icon > svg {
+	width: 16px;
+	height: 16px;
+}
+
 @keyframes slide {
 	0% {
 		transform: translateX(0px);
@@ -86,12 +91,30 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #888;
+	background: #dadfeb; /* axiom light gray */
 	border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: #555;
+	background: #cacfdc;
+}
+
+.axiom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+
+.axiom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.axiom-scrollbar::-webkit-scrollbar-thumb {
+	background: #dadfeb;
+	border-radius: 10px;
+}
+
+.axiom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #cacfdc;
 }
 
 /* 
@@ -129,7 +152,7 @@ body {
 	visibility: visible;
 }
 .menu-label-button {
-  height: auto !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
+	height: auto !important;
+	padding-top: 4px !important;
+	padding-bottom: 4px !important;
 }

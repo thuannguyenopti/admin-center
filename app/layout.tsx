@@ -10,6 +10,7 @@ import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData"
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
+import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -40,10 +41,14 @@ export default function RootLayout({
 	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
 	const webhookId = webhookMatch ? webhookMatch[1] : null;
 
-	const [algorithms] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any];
 	const [webhooks] = usePersistentState("webhooks", initialWebhooks) as [
 		typeof initialWebhooks,
 		any,
+	];
+	const [algorithms, , isHydrated] = usePersistentState("algorithms", initialAlgorithms) as [
+		Algorithm[],
+		any,
+		boolean,
 	];
 	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
 	const currentWebhook = webhooks.find((w) => w.id === webhookId);
@@ -336,13 +341,9 @@ export default function RootLayout({
 				url: "/opal/activities",
 				highlight: "/opal/activities",
 				icon: (
-					<img
-						src="/nav_icons/clock-rotate-left.svg"
-						alt="Activities"
-						width={20}
-						height={20}
-					/>
+					<img src="/nav_icons/wave_pulse.svg" alt="Activities" width={20} height={20} />
 				),
+				customLayout: true,
 			},
 			{
 				label: "Configurations",
@@ -405,6 +406,7 @@ export default function RootLayout({
 		<html lang="en" suppressHydrationWarning>
 			<body suppressHydrationWarning>
 				<AxiomProvider>
+					<HydrationErrorSuppressor />
 					{menu ? <Template structure={menu}>{children}</Template> : children}
 					{activeEffect === "snow" && <SnowEffect />}
 					{activeEffect === "newyear" && <NewYearEffect />}
