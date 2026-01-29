@@ -14,7 +14,7 @@ import { Button } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import usePersistentState from '@/app/usePersistentState';
 import { Tag, TagFormRow } from './types';
-import { initialTags } from '@/app/db/initialData';
+import { initialTags, getAllContentItems, initialPages, type Page } from '@/app/db/initialData';
 import { TagsTable } from './components/TagsTable';
 import { TagModal } from './components/TagModal';
 import { DeleteTagModal } from './components/DeleteTagModal';
@@ -26,6 +26,7 @@ import EmptyStateIllustration from './empty-state.svg';
 
 export default function TagsSettings() {
   const [tags, setTags] = usePersistentState('tags', initialTags);
+  const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -33,6 +34,29 @@ export default function TagsSettings() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [tagsToDelete, setTagsToDelete] = useState<Tag[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<string>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Calculate actual tag usage from content items
+  const contentItems = useMemo(() => getAllContentItems(pages || initialPages), [pages]);
+  
+  const tagUsageCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    contentItems.forEach(item => {
+      (item.tags || []).forEach(tagSlug => {
+        counts[tagSlug] = (counts[tagSlug] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [contentItems]);
+
+  // Merge calculated usage into tags
+  const tagsWithUsage = useMemo(() => {
+    return tags.map((tag: Tag) => ({
+      ...tag,
+      usage: tagUsageCounts[tag.slug] || 0,
+    }));
+  }, [tags, tagUsageCounts]);
 
   const {
     selectedIds,
@@ -42,24 +66,67 @@ export default function TagsSettings() {
     deselectAll,
     selectedTags,
     selectedCount,
-  } = useSelection(tags);
+  } = useSelection(tagsWithUsage);
 
   const { createTags, updateTags, deleteTags } = useTagActions(tags, setTags);
 
   // Filter tags based on search
   const filteredTags = useMemo(() => {
-    return filterTags(tags, searchQuery);
-  }, [tags, searchQuery]);
+    return filterTags(tagsWithUsage, searchQuery);
+  }, [tagsWithUsage, searchQuery]);
+
+  // Sort tags
+  const sortedTags = useMemo(() => {
+    const sorted = [...filteredTags];
+    sorted.sort((a: Tag, b: Tag) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortColumn) {
+        case 'name':
+          aValue = a.name?.toLowerCase() || '';
+          bValue = b.name?.toLowerCase() || '';
+          break;
+        case 'slug':
+          aValue = a.slug?.toLowerCase() || '';
+          bValue = b.slug?.toLowerCase() || '';
+          break;
+        case 'visibility':
+          aValue = a.visibility || '';
+          bValue = b.visibility || '';
+          break;
+        case 'modifiedBy':
+          aValue = a.modifiedBy?.toLowerCase() || '';
+          bValue = b.modifiedBy?.toLowerCase() || '';
+          break;
+        case 'usage':
+          aValue = a.usage || 0;
+          bValue = b.usage || 0;
+          break;
+        case 'lastModified':
+          aValue = new Date(a.lastModified || 0).getTime();
+          bValue = new Date(b.lastModified || 0).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [filteredTags, sortColumn, sortDirection]);
 
   // Pagination
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredTags.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedTags.length / itemsPerPage);
   const paginatedTags = useMemo(() => {
-    return filteredTags.slice(
+    return sortedTags.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
     );
-  }, [filteredTags, currentPage]);
+  }, [sortedTags, currentPage]);
 
   // Reset to page 1 when search changes
   useMemo(() => {
@@ -112,8 +179,19 @@ export default function TagsSettings() {
     deselectAll();
   };
 
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column with ascending as default
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
   // Show empty state if no tags
-  if (tags.length === 0 && !isModalOpen) {
+  if (tagsWithUsage.length === 0 && !isModalOpen) {
     return (
       <>
         <Box
@@ -183,7 +261,7 @@ export default function TagsSettings() {
           onOpenChange={setIsModalOpen}
           mode={modalMode}
           initialTags={editingTags}
-          allTags={tags}
+          allTags={tagsWithUsage}
           onSave={handleSave}
         />
       </>
@@ -287,6 +365,9 @@ export default function TagsSettings() {
         onToggleAll={toggleAll}
         onEdit={handleEditTag}
         onDelete={handleDeleteTag}
+        sortColumn={sortColumn}
+        sortDirection={sortDirection}
+        onSort={handleSort}
       />
 
       {/* Pagination */}
@@ -305,7 +386,7 @@ export default function TagsSettings() {
         onOpenChange={setIsModalOpen}
         mode={modalMode}
         initialTags={editingTags}
-        allTags={tags}
+        allTags={tagsWithUsage}
         onSave={handleSave}
       />
 

@@ -1,4 +1,5 @@
 import { Checkbox, DropdownMenu, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuContent } from '@optiaxiom/react';
+import { useRouter } from 'next/navigation';
 import { Tag } from '../types';
 import { Tr, Td } from '@/app/components/Table';
 import { IconDots } from '@tabler/icons-react';
@@ -19,13 +20,22 @@ export function TagRow({
   onEdit,
   onDelete,
 }: TagRowProps) {
+  const router = useRouter();
+
+  const handleUsageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (tag.usage > 0) {
+      router.push(`/cms/content?tag=${tag.slug}`);
+    }
+  };
+
   return (
     <Tr
       style={
         isSelected
           ? {
-              backgroundColor: '#f0f3ff',
-            }
+            backgroundColor: '#f0f3ff',
+          }
           : undefined
       }
     >
@@ -96,12 +106,15 @@ export function TagRow({
       </Td>
       <Td>
         <span
+          onClick={tag.usage > 0 ? handleUsageClick : undefined}
+          className={tag.usage > 0 ? 'cursor-pointer hover:underline' : ''}
           style={{
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.15px',
-            color: '#0037ff',
+            color: tag.usage > 0 ? '#0037ff' : '#080736',
           }}
+          title={tag.usage > 0 ? `View ${tag.usage} content items with this tag` : undefined}
         >
           {tag.usage}
         </span>

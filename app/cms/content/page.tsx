@@ -3,13 +3,13 @@
 import { SearchInput, Checkbox, Pagination } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
-import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto } from "@tabler/icons-react";
+import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto, IconChevronUp, IconChevronDown } from "@tabler/icons-react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import { Flex } from "@/app/components/Flex";
 import { Aside } from "@/app/context/LayoutContext";
 import DetailsPane from "./DetailsPane";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { type UnifiedContentItem } from "@/app/db/initialData";
 import FilterPills from "./components/FilterPills";
 import { useFilterPanel } from "./context/FilterPanelContext";
@@ -52,10 +52,55 @@ export default function ContentPage() {
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
+	const [sortColumn, setSortColumn] = useState<string>('name');
+	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 	const itemsPerPage = 10;
 
-	// Use filtered content instead of all content
-	const displayContent = filteredContent;
+	// Sort filtered content
+	const sortedContent = useMemo(() => {
+		const sorted = [...filteredContent];
+		sorted.sort((a: ContentItem, b: ContentItem) => {
+			let aValue: any;
+			let bValue: any;
+
+			switch (sortColumn) {
+				case 'name':
+					aValue = a.name?.toLowerCase() || '';
+					bValue = b.name?.toLowerCase() || '';
+					break;
+				case 'type':
+					aValue = a.baseType?.toLowerCase() || '';
+					bValue = b.baseType?.toLowerCase() || '';
+					break;
+				case 'status':
+					aValue = a.status || '';
+					bValue = b.status || '';
+					break;
+				case 'modifiedBy':
+					aValue = a.modifiedBy?.toLowerCase() || '';
+					bValue = b.modifiedBy?.toLowerCase() || '';
+					break;
+				case 'language':
+					aValue = a.language?.toLowerCase() || '';
+					bValue = b.language?.toLowerCase() || '';
+					break;
+				case 'lastModified':
+					aValue = new Date(a.lastModified || 0).getTime();
+					bValue = new Date(b.lastModified || 0).getTime();
+					break;
+				default:
+					return 0;
+			}
+
+			if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+			if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+			return 0;
+		});
+		return sorted;
+	}, [filteredContent, sortColumn, sortDirection]);
+
+	// Use sorted content instead of filtered content
+	const displayContent = sortedContent;
 	const totalPages = Math.ceil(displayContent.length / itemsPerPage);
 	const paginatedItems = displayContent.slice(
 		(currentPage - 1) * itemsPerPage,
@@ -108,6 +153,41 @@ export default function ContentPage() {
 	const isSomeSelected =
 		paginatedItems.some((item) => selectedRows.has(item.id)) && !isAllSelected;
 
+	const handleSort = (column: string) => {
+		if (sortColumn === column) {
+			// Toggle direction if same column
+			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+		} else {
+			// Set new column with ascending as default
+			setSortColumn(column);
+			setSortDirection('asc');
+		}
+	};
+
+	const renderSortIcon = (column: string) => {
+		const isActive = sortColumn === column;
+		return (
+			<span
+				style={{
+					visibility: isActive ? 'visible' : 'hidden',
+					display: 'inline-flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					marginLeft: '4px',
+					width: '14px',
+					height: '14px',
+					verticalAlign: 'middle',
+				}}
+			>
+				{sortDirection === 'asc' ? (
+					<IconChevronUp size={14} />
+				) : (
+					<IconChevronDown size={14} />
+				)}
+			</span>
+		);
+	};
+
 	return (
 		<>
 			<Text mb="24" color="fg.secondary">
@@ -145,12 +225,42 @@ export default function ContentPage() {
 								onCheckedChange={handleSelectAll}
 							/>
 						</Th>
-						<Th>Name</Th>
-						<Th>Type</Th>
-						<Th>Status</Th>
-						<Th>Modified by</Th>
-						<Th>Language</Th>
-						<Th>Last Modified</Th>
+						<Th
+							style={{ cursor: 'pointer', userSelect: 'none' }}
+							onClick={() => handleSort('name')}
+						>
+							Name{renderSortIcon('name')}
+						</Th>
+						<Th
+							style={{ cursor: 'pointer', userSelect: 'none' }}
+							onClick={() => handleSort('type')}
+						>
+							Type{renderSortIcon('type')}
+						</Th>
+						<Th
+							style={{ cursor: 'pointer', userSelect: 'none' }}
+							onClick={() => handleSort('status')}
+						>
+							Status{renderSortIcon('status')}
+						</Th>
+						<Th
+							style={{ cursor: 'pointer', userSelect: 'none' }}
+							onClick={() => handleSort('modifiedBy')}
+						>
+							Modified by{renderSortIcon('modifiedBy')}
+						</Th>
+						<Th
+							style={{ cursor: 'pointer', userSelect: 'none' }}
+							onClick={() => handleSort('language')}
+						>
+							Language{renderSortIcon('language')}
+						</Th>
+						<Th
+							style={{ cursor: 'pointer', userSelect: 'none' }}
+							onClick={() => handleSort('lastModified')}
+						>
+							Last Modified{renderSortIcon('lastModified')}
+						</Th>
 						<Th style={{ width: "56px" }} />
 					</Tr>
 				</thead>

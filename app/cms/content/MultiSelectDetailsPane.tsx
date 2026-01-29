@@ -16,10 +16,10 @@ interface MultiSelectDetailsPaneProps {
 
 export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDetailsPaneProps) {
   const metadata = useMultiSelectMetadata(items);
-  
+
   // Get global tags from centralized repository
   const { tagNames: availableTags, addTag: addGlobalTag, tagExists } = useGlobalTags();
-  
+
   const [tags, setTags] = useState<string[]>(metadata.tags);
   const [newTag, setNewTag] = useState("");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -230,9 +230,9 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
               </Box>
 
               {/* Add Tag Input with Custom Autocomplete */}
-              <Popover 
+              <Popover
                 open={newTag.length > 0 && autocompleteOptions.length > 0}
-                onOpenChange={() => {}}
+                onOpenChange={() => { }}
               >
                 <PopoverTrigger asChild>
                   <Box>
@@ -249,8 +249,8 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
                     />
                   </Box>
                 </PopoverTrigger>
-                <PopoverContent 
-                  side="bottom" 
+                <PopoverContent
+                  side="bottom"
                   sideOffset={4}
                   align="start"
                   style={{ width: "var(--radix-popover-trigger-width)" }}
@@ -260,8 +260,8 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
                   <Box
                     display="flex"
                     flexDirection="column"
-                    gap="2"
-                    p="4"
+                    gap="0"
+                    py="2"
                     style={{ maxHeight: "200px" }}
                     overflow="auto"
                   >
@@ -271,8 +271,8 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
                         display="flex"
                         alignItems="center"
                         gap="8"
-                        px="12"
-                        py="8"
+                        px="8"
+                        py="6"
                         rounded="sm"
                         cursor="pointer"
                         transition="colors"
@@ -282,10 +282,9 @@ export default function MultiSelectDetailsPane({ items, onClose }: MultiSelectDe
                         onMouseLeave={() => setHoveredIndex(null)}
                       >
                         {option.isSelected && (
-                          <IconCheck size={16} color="var(--ax-colors-fg-secondary)" />
+                          <IconCheck size={14} style={{ flexShrink: 0 }} />
                         )}
-                        {!option.isSelected && <Box w="16" />}
-                        <Text fontSize="sm" color="fg.default">
+                        <Text fontSize="sm" color="fg.default" style={{ marginLeft: option.isSelected ? 0 : undefined }}>
                           {option.label}
                         </Text>
                       </Box>
