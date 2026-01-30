@@ -173,6 +173,7 @@ export default function OutlineTree({
                 };
             };
             if (at === null || at === undefined) return [...prev, mk()];
+            return [...prev.slice(0, at), mk(), ...prev.slice(at)];
         });
     };
 
