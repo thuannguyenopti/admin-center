@@ -19,10 +19,14 @@ import { useRouter, usePathname } from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import { LayoutProvider, useLayout } from "../context/LayoutContext";
+import { OpalContextProvider, useOpalContext } from "../context/OpalContext";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import { FilterPanelProvider } from "../cms/content/context/FilterPanelContext";
 import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
+import { OpalPanel } from "./OpalPanel";
+import { useOpalState } from "@/app/hooks/useOpalState";
+import { useOpalHistory } from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -32,9 +36,37 @@ function TemplateContent({
 	structure: any;
 }>) {
 	const { asideContent } = useLayout();
+	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
+
+	// Opal panel state
+	const {
+		groupedHistory,
+		activeChat,
+		searchQuery,
+		isHistoryVisible,
+		mode,
+		setSearchQuery,
+		toggleHistory,
+		toggleMode,
+		createNewChat,
+		deleteChat,
+		selectChat,
+	} = useOpalHistory();
+
+	const {
+		isOpen: isOpalOpen,
+		messages,
+		inputValue,
+		isLoading,
+		error,
+		togglePanel: toggleOpal,
+		closePanel: closeOpal,
+		setInputValue,
+		sendMessage,
+	} = useOpalState({ activeChatId: activeChat, opalContext });
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -86,7 +118,7 @@ function TemplateContent({
 
 	return (
 		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
-			<GlobalBar />
+			<GlobalBar onOpalClick={toggleOpal} />
 			<Box display="flex" z="10" style={{ minHeight: 0 }}>
 				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
@@ -263,6 +295,27 @@ function TemplateContent({
 					</Box>
 				)}
 			</Box>
+			<OpalPanel
+				isOpen={isOpalOpen}
+				onClose={closeOpal}
+				messages={messages}
+				inputValue={inputValue}
+				isLoading={isLoading}
+				error={error}
+				setInputValue={setInputValue}
+				sendMessage={sendMessage}
+				groupedHistory={groupedHistory}
+				activeChat={activeChat}
+				searchQuery={searchQuery}
+				isHistoryVisible={isHistoryVisible}
+				mode={mode}
+				setSearchQuery={setSearchQuery}
+				toggleHistory={toggleHistory}
+				toggleMode={toggleMode}
+				createNewChat={createNewChat}
+				deleteChat={deleteChat}
+				selectChat={selectChat}
+			/>
 		</Box>
 	);
 }
@@ -285,7 +338,9 @@ function TemplateWrapper(props: any) {
 export default function Template(props: any) {
 	return (
 		<LayoutProvider>
-			<TemplateWrapper {...props} />
+			<OpalContextProvider navigationStructure={props.structure}>
+				<TemplateWrapper {...props} />
+			</OpalContextProvider>
 		</LayoutProvider>
 	);
 }

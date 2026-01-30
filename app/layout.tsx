@@ -1,7 +1,7 @@
 "use client";
 import Template from "./components/template";
 import "./globals.css";
-import { AxiomProvider } from "@optiaxiom/react";
+import { ThemeProvider } from "@/app/providers/ThemeProvider";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import usePersistentState from "@/app/usePersistentState";
@@ -420,12 +420,12 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body suppressHydrationWarning>
-				<AxiomProvider>
+				<ThemeProvider>
 					<HydrationErrorSuppressor />
 					{menu ? <Template structure={menu}>{children}</Template> : children}
 					{activeEffect === "snow" && <SnowEffect />}
 					{activeEffect === "newyear" && <NewYearEffect />}
-				</AxiomProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

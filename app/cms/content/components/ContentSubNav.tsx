@@ -4,10 +4,17 @@ import { Box, Sidebar, Nav, NavBody, NavItem } from "@optiaxiom/react";
 import { IconChevronDown } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { contentSubNavData, SubNavSection } from "../subNavData";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function ContentSubNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleNavClick = (url: string) => {
+    // Use Next.js router instead of window.location.href to avoid full page reload
+    // This preserves the sidebar state and provides smooth navigation
+    router.push(url);
+  };
 
   return (
     <Sidebar className="h-full" expanded={true}>
@@ -26,7 +33,7 @@ export default function ContentSubNav() {
               {section.items.map((item) => (
                 <NavItem
                   key={item.label}
-                  onClick={() => item.url && (window.location.href = item.url)}
+                  onClick={() => item.url && handleNavClick(item.url)}
                   active={pathname === item.url}
                   aria-label={item.label}
                   icon={item.icon}

@@ -98,7 +98,7 @@ export default function SearchAnalytics() {
 				</Flex>
 				<Button
 					icon={<IconSparkles />}
-					appearance="primary-opal"
+					appearance="primary"
 				>
 					Suggest Optimization
 				</Button>

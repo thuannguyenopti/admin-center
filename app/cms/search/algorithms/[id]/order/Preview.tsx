@@ -591,6 +591,7 @@ export default function Preview({
 												<Button
 													size="lg"
 													icon={<IconPlus />}
+													appearance="primary"
 													onClick={() =>
 														onCreatePinnedResult(debouncedQuery)
 													}

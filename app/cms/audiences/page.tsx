@@ -24,15 +24,7 @@ export default function AudiencesPage() {
 
         {/* New Audience Button */}
         <Button 
-          appearance="primary" 
-          style={{ 
-            backgroundColor: "#0037ff", 
-            color: "#ffffff", 
-            borderRadius: "6px",
-            minWidth: "128px",
-            padding: "0 16px",
-            height: "40px"
-          }}
+          appearance="primary"
         >
           New Audience
         </Button>
