@@ -9,7 +9,7 @@ import {webhooks as initialWebhooks} from "../../mockData";
 import {use, useState, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Flex} from "@/app/components/Flex";
-import Stack from "@/app/components/Stack";
+import Flow from "@/app/components/Flow";
 
 const eventTypes = [
 	{
@@ -122,86 +122,81 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 
 	return (
 		<>
-			<Flex maxW="lg" flexDirection="column" gap="32">
-				<Stack>
-					<Field label="Name">
-						<Input
-							value={formData.name}
-							onChange={(e) => setFormData({...formData, name: e.target.value})}
-						/>
-					</Field>
-					<Field label="Description">
-						<Input
-							value={formData.description}
-							onChange={(e) =>
-								setFormData({...formData, description: e.target.value})
-							}
-						/>
-					</Field>
-					<Field>
-						<Checkbox
-							checked={formData.status === "Active"}
-							onCheckedChange={(checked) =>
-								setFormData({...formData, status: checked ? "Active" : "Inactive"})
-							}
-							description="Webhook calls will be performed for the configured events."
-						>
-							Active
-						</Checkbox>
-					</Field>
-				</Stack>
-				<Stack>
-					<Heading level="4">URL & Authentication</Heading>
-					<Field label="URL">
-						<Input defaultValue={webhook.url} readOnly />
-					</Field>
+			<Flow>
+				<Field label="Name">
+					<Input
+						value={formData.name}
+						onChange={(e) => setFormData({...formData, name: e.target.value})}
+					/>
+				</Field>
+				<Field label="Description">
+					<Input
+						value={formData.description}
+						onChange={(e) => setFormData({...formData, description: e.target.value})}
+					/>
+				</Field>
+				<Field>
+					<Checkbox
+						checked={formData.status === "Active"}
+						onCheckedChange={(checked) =>
+							setFormData({...formData, status: checked ? "Active" : "Inactive"})
+						}
+						description="Webhook calls will be performed for the configured events."
+					>
+						Active
+					</Checkbox>
+				</Field>
+				<Heading level="4">URL & Authentication</Heading>
+				<Field label="URL">
+					<Input defaultValue={webhook.url} readOnly />
+				</Field>
 
-					<Field label="Authentication token">
-						<Input defaultValue="************************" readOnly />
-					</Field>
+				<Field
+					label="Authentication token"
+					description="Changing URL requires a new authentication token."
+				>
+					<Input defaultValue="************************" readOnly />
+				</Field>
+				<Button>Edit</Button>
+				<Heading level="4">Events</Heading>
+				<Text>Select which events to subscribe to.</Text>
 
-					<Flex flexDirection="column" gap="8" alignItems="start">
-						<Text fontSize="sm" color="fg.secondary">
-							Changing URL requires a new authentication token.
-						</Text>
-						<Button>Edit</Button>
-					</Flex>
-				</Stack>
-				<Stack>
-					<Heading level="4">Events</Heading>
-					<Text>Select which events to subscribe to.</Text>
+				<Field label="Event Type" fontWeight="400">
+					<Select
+						options={selectOptions}
+						value={selectedType}
+						onChange={(e: any) => handleTypeChange(e.target.value)}
+					>
+						<SelectTrigger size="lg" />
+						<SelectContent />
+					</Select>
+				</Field>
 
-					<Field label="Event Type">
-						<Select
-							options={selectOptions}
-							value={selectedType}
-							onChange={(e: any) => handleTypeChange(e.target.value)}
-						>
-							<SelectTrigger size="lg" />
-							<SelectContent />
-						</Select>
-					</Field>
-
-					{eventTypes
-						.find((t) => t.value === selectedType)
-						?.events.map((event) => (
-							<Box key={event.value}>
-								<Checkbox
-									checked={formData.events.includes(event.value)}
-									onCheckedChange={() => toggleEvent(event.value)}
-									description={event.description}
-								>
-									{event.label}
-								</Checkbox>
-							</Box>
-						))}
-				</Stack>
-				<Stack>
-					<Heading level="4">Delete Webhook</Heading>
-					<Text>This will permanently remove this Webhook and cannot be undone.</Text>
-					<Button appearance="danger-outline">Delete Webhook</Button>
-				</Stack>
-			</Flex>
+				{eventTypes
+					.find((t) => t.value === selectedType)
+					?.events.map((event) => (
+						<Box key={event.value}>
+							<Checkbox
+								checked={formData.events.includes(event.value)}
+								onCheckedChange={() => toggleEvent(event.value)}
+								description={event.description}
+							>
+								{event.label}
+							</Checkbox>
+						</Box>
+					))}
+				<Heading level="4" fontWeight="400">
+					Filter
+				</Heading>
+				<Text>Optionally filter events to trigger the webhook.</Text>
+				<Heading level="4" fontWeight="400">
+					Payload
+				</Heading>
+				<Text>Optionally filter events to trigger the webhook.</Text>
+				<Heading level="4">Delete Webhook</Heading>
+				<Text>This will permanently remove this Webhook and cannot be undone.</Text>
+				<Button appearance="danger-outline">Delete Webhook</Button>
+			</Flow>
 
 			<Flex
 				borderT="1"
