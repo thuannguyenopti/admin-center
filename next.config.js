@@ -1,5 +1,16 @@
 module.exports = {
+  // Performance optimizations
+  reactStrictMode: false, // Disable for production to avoid double-rendering
+  swcMinify: true, // Use SWC for faster minification
+  compress: true, // Enable gzip compression
+  
+  // Vercel deployment optimization
+  output: 'standalone',
+  
+  // Transpile packages
   transpilePackages: ["@optiaxiom/react"],
+  
+  // Turbopack configuration (dev only)
   turbopack: {
     rules: {
       '*.svg': {
@@ -8,6 +19,8 @@ module.exports = {
       },
     },
   },
+  
+  // Image optimization
   images: {
     remotePatterns: [
       {
@@ -23,5 +36,10 @@ module.exports = {
         hostname: 'pixabay.com',
       },
     ],
+  },
+  
+  // Experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['@optiaxiom/react', '@tabler/icons-react'],
   },
 }
