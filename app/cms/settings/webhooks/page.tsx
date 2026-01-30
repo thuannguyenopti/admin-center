@@ -31,12 +31,13 @@ import {webhooks as initialWebhooks} from "./mockData";
 import {IconDots} from "@tabler/icons-react";
 import {useRouter} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
+import Link from "next/link";
 
 export default function WebhooksPage() {
 	const router = useRouter();
 	const [webhooks, setWebhooks] = usePersistentState("webhooks", initialWebhooks) as [
 		typeof initialWebhooks,
-		Dispatch<SetStateAction<typeof initialWebhooks>>
+		Dispatch<SetStateAction<typeof initialWebhooks>>,
 	];
 	const [statusFilter, setStatusFilter] = useState("All");
 	const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -73,6 +74,7 @@ export default function WebhooksPage() {
 
 	return (
 		<>
+			<Link href="/cms/settings/sample">Sample Content Flow Test</Link>
 			<Box display="flex" justifyContent="space-between" pb="24">
 				<Box display="flex" gap="8">
 					<Box style={{width: "300px"}}>
@@ -123,8 +125,8 @@ export default function WebhooksPage() {
 										webhook.successRate === 100
 											? "success"
 											: webhook.successRate === 0
-											? "danger"
-											: "warning"
+												? "danger"
+												: "warning"
 									}
 								>
 									{webhook.successRate}%

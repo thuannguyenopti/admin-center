@@ -163,15 +163,14 @@ function TemplateContent({
 					}}
 					borderR="1"
 					borderColor="border.tertiary"
-					className="slide w-[224px]"
-					h="full"
-					overflow="hidden"
 					bg="bg.default"
+					overflow="hidden"
+					className="slide w-[224px] h-[calc(100vh-58px)]"
 				>
 					{isContentManager ? (
 						<ContentSubNav />
 					) : showVT ? (
-						<Sidebar className="flex" h="full">
+						<Sidebar>
 							<SubNav>
 								<div
 									className="flex w-[500%]"
