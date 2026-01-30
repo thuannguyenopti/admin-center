@@ -149,9 +149,9 @@ export default function OutlineTree({
 
     const getColChildren = (col: any) => col.elements || col.children || [];
 
-    const addSection = (id: string) => {
+    // addSection: if 'at' is null/undefined, append; otherwise insert at index 'at'
+    const addSection = (at: number | null | undefined = null) => {
         setData((prev) => {
-            const idx = prev.findIndex((section) => section.id === id);
             const mk = () => {
                 const t = Date.now();
                 return {
@@ -172,9 +172,8 @@ export default function OutlineTree({
                     ],
                 };
             };
-
-            if (idx === -1) return [...prev, mk()];
-            return [...prev.slice(0, idx), mk(), ...prev.slice(idx)];
+            if (at === null || at === undefined) return [...prev, mk()];
+            return [...prev.slice(0, at), mk(), ...prev.slice(at)];
         });
     };
 
@@ -493,7 +492,10 @@ export default function OutlineTree({
                                 onDragStart={(e: any) => onDragStart(e, section.id)}
                                 removeSection={() => removeSection(sindex)}
                                 onEditProperties={() => onEditProperties?.(section.id)}
-                                addSection={() => addSection(section.id)}
+                                // Add Section Before
+                                addSection={() => addSection(sindex)}
+                                                                // Add Section After
+                                                                addSectionAfter={() => addSection(sindex + 1)}
                                 addRow={(e: any) => addRow(e, sindex, null)}
                             >
                                 {(section.children ?? []).map((row: any, rIndex: number) => {

@@ -14,6 +14,7 @@ import {
 
 const Section: React.FC<{
   addSection: any;
+  addSectionAfter?: any;
   setOpen: any;
   section: any;
   children: ReactNode;
@@ -21,7 +22,7 @@ const Section: React.FC<{
   removeSection: any;
   onDragStart: any;
   onEditProperties?: () => void;
-}> = ({ addSection, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties }) => {
+}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties }) => {
   if (section.label) {
     return (
       <div className="p-0.5 pl-6 -mr-0.5">
@@ -141,7 +142,7 @@ const Section: React.FC<{
                 group: group,
                 label: "Add Section After",
                 execute: () => {
-                  addSection();
+                  addSectionAfter?.();
                 },
               },
               {
