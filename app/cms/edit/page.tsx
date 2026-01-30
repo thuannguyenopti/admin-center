@@ -157,13 +157,13 @@ export default function EditPage() {
 				level="3"
 				mb="16"
 			>
-				Edit startpage
+				Edit pages
 			</Heading>
 			<Text
 				mb="24"
 				color="fg.secondary"
 			>
-				TBD how this page works.
+				Select pages from the content tree to view or modify their content.
 			</Text>
 			<Flex
 				mb="24"

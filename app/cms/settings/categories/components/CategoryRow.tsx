@@ -11,6 +11,7 @@ import { Category } from '../types';
 import { Tr, Td } from '@/app/components/Table';
 import { getChildren } from '../utils';
 import { IconDots } from '@tabler/icons-react';
+import ChevronDownIcon from '@/public/icons/chevron-down.svg';
 
 interface CategoryRowProps {
   category: Category;
@@ -54,7 +55,7 @@ export function CategoryRow({
   return (
     <>
       <Tr
-        className={`${isSelected ? 'bg-[#f0f3ff]' : ''} hover:bg-[var(--ax-colors-bg-default-hovered)]`}
+        className={`${isSelected ? 'bg-[var(--ax-colors-bg-accent-subtle)]' : ''} hover:bg-[var(--ax-colors-bg-default-hovered)]`}
       >
         <Td type="raw">
           <div className="flex items-center gap-2" style={{ paddingLeft: `${indent}px` }}>
@@ -65,18 +66,16 @@ export function CategoryRow({
             {hasChildren ? (
               <button
                 onClick={() => onToggleExpand(category.id)}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-[var(--ax-colors-bg-default-hovered)] rounded"
                 style={{ marginLeft: '8px' }}
               >
-                <img
-                  src="/icons/chevron-down.svg"
-                  alt="expand"
+                <ChevronDownIcon
                   style={{
                     width: '11px',
                     height: '5px',
                     transform: category.isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
                     transition: 'transform 0.2s',
-                    filter: 'brightness(0) saturate(100%)',
+                    color: 'var(--ax-colors-fg-default)',
                   }}
                 />
               </button>
@@ -88,7 +87,7 @@ export function CategoryRow({
         <Td>
           <span
             className="cursor-pointer hover:underline"
-            style={{ color: '#0037ff', fontWeight: 400 }}
+            style={{ color: 'var(--ax-colors-fg-accent-strong)', fontWeight: 400 }}
             onClick={() => onEdit(category)}
           >
             {category.name}
@@ -110,7 +109,7 @@ export function CategoryRow({
             onClick={category.usage > 0 ? handleUsageClick : undefined}
             className={category.usage > 0 ? 'cursor-pointer hover:underline' : ''}
             style={{
-              color: category.usage > 0 ? '#0037ff' : '#080736',
+              color: category.usage > 0 ? 'var(--ax-colors-fg-accent-strong)' : 'var(--ax-colors-fg-default)',
             }}
             title={category.usage > 0 ? `View ${category.usage} content items in this category` : undefined}
           >
@@ -121,8 +120,8 @@ export function CategoryRow({
         <Td type="button">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-1 hover:bg-gray-100 rounded">
-                <IconDots size={16} style={{ color: '#080736' }} />
+              <button className="p-1 hover:bg-[var(--ax-colors-bg-default-hovered)] rounded">
+                <IconDots size={16} style={{ color: 'var(--ax-colors-fg-default)' }} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

@@ -10,6 +10,7 @@ import { useSecretCode } from "@/app/hooks/useSecretCode";
 import { SnowEffect } from "@/app/components/effects/SnowEffect";
 import { NewYearEffect } from "@/app/components/effects/NewYearEffect";
 import { HydrationErrorSuppressor } from "@/app/components/HydrationErrorSuppressor";
+import Head from "next/head";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -76,9 +77,12 @@ export default function RootLayout({
 			{
 				label: "Settings",
 				highlight: "cms/settings",
-				url: "/cms/settings/content-types",
+				url: "/cms/settings",
 				icon: <IconSettings />,
 				children: [
+					{ label: "Taxonomy" },
+					{ label: "Categories", url: "/cms/settings/categories" },
+					{ label: "Tags", url: "/cms/settings/tags" },
 					{ label: "Configure" },
 					{
 						label: "Applications",
@@ -86,33 +90,40 @@ export default function RootLayout({
 						children: {
 							title: "Stride",
 							children: [
-								{
-									label: "Settings",
-									url: "/cms/settings/applications/mosey-bank/settings",
-								},
 								{ label: "Advanced" },
 								{
 									label: "Hostnames",
 									url: "/cms/settings/applications/mosey-bank/hostnames",
 								},
+								{
+									label: "Settings",
+									url: "/cms/settings/applications/mosey-bank/settings",
+								},
 							],
 						},
 					},
+					{ label: "Blueprints", url: "/cms/settings/blueprints" },
+					{ label: "Content Types", url: "/cms/settings/content-types" },
+					{ label: "Forms Settings", url: "/cms/settings/forms-settings" },
+					{ label: "Access Rights" },
 					{ label: "Access Rights", url: "/cms/settings/access-rights" },
 					{ label: "API Clients", url: "/cms/settings/api-clients" },
+					{ label: "API Keys", url: "/cms/settings/api-keys" },
+					{ label: "Set Access Rights", url: "/cms/settings/set-access-rights" },
+					{ label: "Data & Sync Management" },
+					{ label: "GraphiQL", url: "/cms/settings/graphiql" },
 					{ label: "Scheduled Jobs", url: "/cms/settings/scheduled-jobs" },
-					{ label: "Content Types", url: "/cms/settings/content-types" },
-					{ label: "Blueprints", url: "/cms/settings/blueprints" },
-					{ label: "Languages", url: "/cms/settings/languages" },
+					{ label: "Smooth Rebuild", url: "/cms/settings/smooth-rebuild" },
+					{ label: "Webhooks", url: "/cms/settings/webhooks" },
+					{ label: "Config" },
 					{ label: "Edit Tabs", url: "/cms/settings/edit-tabs" },
-					{ label: "Taxonomy" },
-					{ label: "Categories", url: "/cms/settings/categories" },
-					{ label: "Tags", url: "/cms/settings/tags" },
+					{ label: "Languages", url: "/cms/settings/languages" },
 					{ label: "Tools" },
-					{ label: "Import Data", url: "/cms/settings/import-data" },
-					{ label: "Export Data", url: "/cms/settings/export-data" },
-					{ label: "Convert Pages", url: "/cms/settings/convert-pages" },
 					{ label: "Change Log", url: "/cms/settings/change-log" },
+					{ label: "Convert Pages", url: "/cms/settings/convert-pages" },
+					{ label: "Export Data", url: "/cms/settings/export-data" },
+					{ label: "Import Data", url: "/cms/settings/import-data" },
+					{ label: "Search Configuration", url: "/cms/settings/search-configuration" },
 					{ label: "Add-ons" },
 					{ label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn" },
 				],
@@ -419,6 +430,12 @@ export default function RootLayout({
 
 	return (
 		<html lang="en" suppressHydrationWarning>
+			<head>
+				<link
+					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+					rel="stylesheet"
+				/>
+			</head>
 			<body suppressHydrationWarning>
 				<ThemeProvider>
 					<HydrationErrorSuppressor />
