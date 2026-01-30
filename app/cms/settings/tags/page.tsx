@@ -23,6 +23,7 @@ import { useTagActions } from './hooks/useTagActions';
 import { filterTags } from './utils';
 import { IconCheck } from '@tabler/icons-react';
 import EmptyStateIllustration from './empty-state.svg';
+import ChevronDownIcon from '@/public/icons/chevron-down.svg';
 
 export default function TagsSettings() {
   const [tags, setTags] = usePersistentState('tags', initialTags);
@@ -317,13 +318,11 @@ export default function TagsSettings() {
                     >
                       Actions
                     </span>
-                    <img
-                      src="/icons/chevron-down.svg"
-                      alt="dropdown"
+                    <ChevronDownIcon
                       style={{
                         width: '11px',
                         height: '5px',
-                        filter: 'brightness(0) saturate(100%)',
+                        color: 'var(--ax-colors-fg-default)',
                       }}
                     />
                   </Button>
@@ -332,7 +331,7 @@ export default function TagsSettings() {
                   <DropdownMenuItem onSelect={handleEditClick}>
                     <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                       <span>Edit</span>
-                      <IconCheck size={14} style={{ color: '#080736' }} />
+                      <IconCheck size={14} style={{ color: 'var(--ax-colors-fg-default)' }} />
                     </Box>
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={handleDeleteSelected}>Delete</DropdownMenuItem>

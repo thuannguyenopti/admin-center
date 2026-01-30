@@ -31,7 +31,7 @@ export default function VT({
 	};
 
 	return (
-		<NavBody style={{maxWidth: "224px"}}>
+		<NavBody style={{maxWidth: "224px", minHeight: "100%"}}>
 			<NavList className="appear">
 				{(backLink || title) && (
 					<Box
@@ -59,23 +59,23 @@ export default function VT({
 						)}
 					</Box>
 				)}
-				{items?.map((menuItem, i) =>
-					menuItem.url ? (
-						<NavItem
-							onClick={() => menuClick(menuItem.url || "")}
-							active={menuItem.url === path}
-							key={menuItem.label}
-							aria-label={menuItem.label}
-						>
-							{menuItem.label}
-						</NavItem>
-					) : (
-						<Fragment key={menuItem.label}>
-							{i !== 0 && <NavSeparator />}
-							<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
-						</Fragment>
-					)
-				)}
+			{items?.map((menuItem, i) =>
+				menuItem.url ? (
+					<NavItem
+						onClick={() => menuClick(menuItem.url || "")}
+						active={menuItem.url === path}
+						key={`${menuItem.label}-${menuItem.url}`}
+						aria-label={menuItem.label}
+					>
+						{menuItem.label}
+					</NavItem>
+				) : (
+					<Fragment key={`${menuItem.label}-group-${i}`}>
+						{i !== 0 && <NavSeparator />}
+						<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
+					</Fragment>
+				)
+			)}
 			</NavList>
 		</NavBody>
 	);

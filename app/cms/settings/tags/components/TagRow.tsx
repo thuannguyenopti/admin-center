@@ -31,13 +31,7 @@ export function TagRow({
 
   return (
     <Tr
-      style={
-        isSelected
-          ? {
-            backgroundColor: '#f0f3ff',
-          }
-          : undefined
-      }
+      className={isSelected ? 'bg-[var(--ax-colors-bg-accent-subtle)]' : ''}
     >
       <Td type="raw">
         <div className="flex items-center">
@@ -53,7 +47,7 @@ export function TagRow({
             style={{
               width: '14px',
               height: '14px',
-              color: '#080736',
+              color: 'var(--ax-colors-fg-default)',
             }}
           />
           <span
@@ -61,7 +55,7 @@ export function TagRow({
               fontSize: '14px',
               fontWeight: 400,
               letterSpacing: '-0.15px',
-              color: '#0037ff',
+              color: 'var(--ax-colors-fg-accent-strong)',
             }}
           >
             {tag.name}
@@ -74,7 +68,7 @@ export function TagRow({
             fontSize: '14px',
             fontWeight: 400,
             fontFamily: 'Hack, monospace',
-            color: '#707070',
+            color: 'var(--ax-colors-fg-secondary)',
           }}
         >
           /{tag.slug}
@@ -86,7 +80,7 @@ export function TagRow({
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.15px',
-            color: '#080736',
+            color: 'var(--ax-colors-fg-default)',
           }}
         >
           {tag.visibility.charAt(0).toUpperCase() + tag.visibility.slice(1)}
@@ -98,7 +92,7 @@ export function TagRow({
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.15px',
-            color: '#080736',
+            color: 'var(--ax-colors-fg-default)',
           }}
         >
           {tag.modifiedBy}
@@ -112,7 +106,7 @@ export function TagRow({
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.15px',
-            color: tag.usage > 0 ? '#0037ff' : '#080736',
+            color: tag.usage > 0 ? 'var(--ax-colors-fg-accent-strong)' : 'var(--ax-colors-fg-default)',
           }}
           title={tag.usage > 0 ? `View ${tag.usage} content items with this tag` : undefined}
         >
@@ -125,7 +119,7 @@ export function TagRow({
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.15px',
-            color: '#080736',
+            color: 'var(--ax-colors-fg-default)',
           }}
         >
           {tag.lastModified}
@@ -134,8 +128,8 @@ export function TagRow({
       <Td type="button">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="p-1 hover:bg-gray-100 rounded">
-              <IconDots size={16} style={{ color: '#080736' }} />
+            <button className="p-1 hover:bg-[var(--ax-colors-bg-default-hovered)] rounded">
+              <IconDots size={16} style={{ color: 'var(--ax-colors-fg-default)' }} />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>

@@ -13,7 +13,7 @@ import {
 } from "@optiaxiom/react";
 import { Text } from "./Text";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
 import { useRouter, usePathname } from "next/navigation";
 import VT from "./VT";
@@ -193,28 +193,30 @@ function TemplateContent({
 						marginLeft: "-224px",
 						transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
 						transition: ".7s cubic-bezier(0, 1, 0, 1)",
+						overflowX: "hidden",
 					}}
 					borderR="1"
 					borderColor="border.tertiary"
 					className="slide w-[224px]"
 					h="full"
-					overflow="hidden"
 					bg="bg.default"
 				>
 					{isContentManager ? (
 						<ContentManagerSidebar />
 					) : showVT ? (
-						<Sidebar className="flex" h="full">
-							<SubNav>
+						<Sidebar className="flex" h="full" style={{ overflowY: "auto", overflowX: "hidden" }}>
+							<SubNav style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
 								<div
 									className="flex w-[500%]"
 									style={{
 										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
 											}px)`,
 										transition: ".7s cubic-bezier(0, 1, 0, 1)",
+										minHeight: "100%",
+										overflowX: "hidden",
 									}}
 								>
-									{showVT && lvl2 && (
+									{showVT && highlight1?.children && (
 										<VT
 											backLink={undefined}
 											title={highlight1?.children?.title || highlight1?.label}
@@ -326,9 +328,11 @@ function TemplateWrapper(props: any) {
 
 	if (isContentManager) {
 		return (
-			<FilterPanelProvider>
-				<TemplateContent {...props} />
-			</FilterPanelProvider>
+			<Suspense fallback={<Box p="24">Loading...</Box>}>
+				<FilterPanelProvider>
+					<TemplateContent {...props} />
+				</FilterPanelProvider>
+			</Suspense>
 		);
 	}
 

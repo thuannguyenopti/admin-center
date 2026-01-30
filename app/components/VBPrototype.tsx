@@ -34,7 +34,7 @@ import {PreviewSettings} from "./vb/PreviewSettings";
 import {getExtensionById} from "@/app/extensions/registry";
 
 import styles from "./VBPrototype.module.css";
-import PropertiesPanel, {PageProperties} from "./vb/PropertiesPanel";
+import PropertiesPanel, {PageProperties, PropertySection, navigationItems} from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
 // @ts-ignore
@@ -281,6 +281,8 @@ export default function VBPrototype({
 	const [properties, setProperties] = useState<PageProperties>(() => {
 		return {...defaultProps, ...(initialData?.properties ?? {})};
 	});
+
+	const [activePropertiesSection, setActivePropertiesSection] = useState<PropertySection>("menu");
 
 	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
 		const raw = initialData?.outlines;
@@ -1415,21 +1417,46 @@ export default function VBPrototype({
 									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
 										{!editingSectionId && (
 											<div className="pl-6 pr-6 pt-4 pb-2">
-												<Text
-													fontSize="sm"
-													fontWeight="400"
-													color="fg.accent"
-													className="cursor-pointer mb-1"
-													onClick={() => {
-														setSidebarTab("outlines");
-														setOutlineView("list");
-														setEditingSectionId(null);
-													}}
-												>
-													← Page
-												</Text>
+												<div className="relative mb-1" style={{ height: '20px' }}>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setActivePropertiesSection("menu");
+														}}
+														style={{
+															visibility: activePropertiesSection === "menu" ? 'hidden' : 'visible',
+															pointerEvents: activePropertiesSection === "menu" ? 'none' : 'auto',
+														}}
+													>
+														← Properties
+													</Text>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setSidebarTab("outlines");
+															setOutlineView("list");
+															setEditingSectionId(null);
+														}}
+														style={{
+															visibility: activePropertiesSection !== "menu" ? 'hidden' : 'visible',
+															pointerEvents: activePropertiesSection !== "menu" ? 'none' : 'auto',
+														}}
+													>
+														← Main
+													</Text>
+												</div>
 												<div className="flex items-center gap-2">
-													<Heading level="4">Properties</Heading>
+													<Heading level="4">
+														{activePropertiesSection === "menu" 
+															? "Properties" 
+															: navigationItems.find(item => item.id === activePropertiesSection)?.label || "Properties"}
+													</Heading>
 													<div className="flex-1" />
 												</div>
 											</div>
@@ -1463,6 +1490,8 @@ export default function VBPrototype({
 												<PropertiesPanel
 													value={properties}
 													onChange={setPropertiesPatch}
+													activeSection={activePropertiesSection}
+													onSectionChange={setActivePropertiesSection}
 												/>
 											)}
 										</div>
@@ -1541,20 +1570,45 @@ export default function VBPrototype({
 									<div className="min-w-[33.333%] w-[33.333%] h-full flex flex-col">
 										{!editingSectionId && (
 											<div className="pl-6 pr-6 pt-4 pb-2">
-												<Text
-													fontSize="sm"
-													fontWeight="400"
-													color="fg.accent"
-													className="cursor-pointer mb-1"
-													onClick={() => {
-														setSidebarTab("outline");
-														setEditingSectionId(null);
-													}}
-												>
-													← {activeOutline?.title || "Page"}
-												</Text>
+												<div className="relative mb-1" style={{ height: '20px' }}>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setActivePropertiesSection("menu");
+														}}
+														style={{
+															visibility: activePropertiesSection === "menu" ? 'hidden' : 'visible',
+															pointerEvents: activePropertiesSection === "menu" ? 'none' : 'auto',
+														}}
+													>
+														← Properties
+													</Text>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setSidebarTab("outline");
+															setEditingSectionId(null);
+														}}
+														style={{
+															visibility: activePropertiesSection !== "menu" ? 'hidden' : 'visible',
+															pointerEvents: activePropertiesSection !== "menu" ? 'none' : 'auto',
+														}}
+													>
+														← Main
+													</Text>
+												</div>
 												<div className="flex items-center gap-2">
-													<Heading level="4">Properties</Heading>
+													<Heading level="4">
+														{activePropertiesSection === "menu" 
+															? "Properties" 
+															: navigationItems.find(item => item.id === activePropertiesSection)?.label || "Properties"}
+													</Heading>
 													<div className="flex-1" />
 													<div className="flex items-center gap-1">
 														{HeaderActions}
@@ -1590,6 +1644,8 @@ export default function VBPrototype({
 												<PropertiesPanel
 													value={properties}
 													onChange={setPropertiesPatch}
+													activeSection={activePropertiesSection}
+													onSectionChange={setActivePropertiesSection}
 												/>
 											)}
 										</div>
