@@ -37,11 +37,16 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
 
   // Get content for filter state (pages is read/write for Option A tag persistence)
   const [pages, setPages] = usePersistentState("pages", initialPages) as [Page[], (value: Page[] | ((prev: Page[]) => Page[])) => void, boolean];
-  const [contentTagOverrides] = usePersistentState("contentTagOverrides", {}) as [
+  const [contentTagOverrides, setContentTagOverrides] = usePersistentState("contentTagOverrides", {}) as [
     Record<string, string[]>,
-    unknown,
+    (value: Record<string, string[]> | ((prev: Record<string, string[]>) => Record<string, string[]>)) => void,
     boolean
   ];
+
+  const pageIds = useMemo(
+    () => new Set((pages || initialPages).map((p) => p.id)),
+    [pages]
+  );
 
   // Base content from pages; apply contentTagOverrides (e.g. after merge in Tags settings)
   const baseContentItems = useMemo(
@@ -86,8 +91,18 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
           return newTags !== undefined ? { ...p, tags: newTags } : p;
         });
       });
+      const nonPageUpdates = updates.filter((u) => !pageIds.has(u.id));
+      if (nonPageUpdates.length > 0) {
+        setContentTagOverrides((prev) => {
+          const next = { ...(prev && typeof prev === "object" && !Array.isArray(prev) ? prev : {}) };
+          nonPageUpdates.forEach(({ id, tags }) => {
+            next[id] = tags;
+          });
+          return next;
+        });
+      }
     },
-    [setPages]
+    [setPages, setContentTagOverrides, pageIds]
   );
 
   const contentItems: ContentItem[] = useMemo(

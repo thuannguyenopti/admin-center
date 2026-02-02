@@ -272,7 +272,7 @@ export function MergeTagsModal({
                     </Text>
                   </Box>
                   {/* Arrow */}
-                  <Box flexShrink={0} display="flex" alignItems="center">
+                  <Box style={{ flexShrink: 0 }} display="flex" alignItems="center">
                     <Text fontSize="lg" fontWeight="600" color="fg.secondary">
                       →
                     </Text>

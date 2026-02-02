@@ -6,7 +6,8 @@
 		"dev": "next dev",
 		"build": "next build",
 		"start": "next start",
-		"lint": "next lint"
+		"lint": "next lint",
+		"install:auth": "npx dotenv-cli -e .env -- npm install"
 	},
 	"dependencies": {
 		"@optiaxiom/react": "^1.7.13",

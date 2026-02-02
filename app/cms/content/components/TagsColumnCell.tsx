@@ -3,6 +3,7 @@
 import { useRef, useState, useLayoutEffect, useCallback } from "react";
 import { Box, Badge, Popover, PopoverTrigger, PopoverContent, Text } from "@optiaxiom/react";
 import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
+import type { Tag } from "@/app/cms/settings/tags/types";
 
 const TAGS_COLUMN_MAX_WIDTH = 180;
 /** Reserve space for the "+N" rollup badge so we don't overflow */
@@ -22,7 +23,7 @@ export default function TagsColumnCell({ tags }: TagsColumnCellProps) {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { tags: allTags } = useGlobalTags();
-  const slugToName = new Map(allTags.map((t) => [t.slug, t.name]));
+  const slugToName = new Map<string, string>(allTags.map((t: Tag) => [t.slug, t.name]));
 
   useLayoutEffect(() => {
     const el = measureRef.current;

@@ -19,11 +19,9 @@ interface DetailsPaneProps {
   allContent?: ContentItem[];
   detailsPaneTags: string[] | null;
   setDetailsPaneTags: (tags: string[] | null) => void;
-  stickyMultiSelect?: boolean;
   onTagsChange?: (contentId: string, tags: string[]) => void;
   onTagsChangeBatch?: (updates: Array<{ id: string; tags: string[] }>) => void;
   onClose: () => void;
-  onBackWhenSingle?: () => void;
 }
 
 const getIconForType = (type: ContentItem["baseType"], size: number = 16) => {
@@ -47,20 +45,12 @@ export default function DetailsPane({
   allContent,
   detailsPaneTags,
   setDetailsPaneTags,
-  stickyMultiSelect = false,
   onTagsChange,
   onTagsChangeBatch,
   onClose,
-  onBackWhenSingle,
 }: DetailsPaneProps) {
-  // Show multi-select view when 2+ selected, or when 1 selected but sticky (user had 2+ and deselected to 1)
-  const showMultiSelect =
-    selectedIds &&
-    selectedIds.size >= 1 &&
-    allContent &&
-    selectedItems.length >= 1 &&
-    (selectedIds.size > 1 || stickyMultiSelect);
-  if (showMultiSelect) {
+  // Show multi-select view when 2+ items selected
+  if (selectedIds && selectedIds.size > 1 && allContent) {
     const multiItems = allContent.filter((item) => selectedIds.has(item.id));
     return (
       <MultiSelectDetailsPane
@@ -70,7 +60,6 @@ export default function DetailsPane({
         onTagsChange={onTagsChange}
         onTagsChangeBatch={onTagsChangeBatch}
         onClose={onClose}
-        onBackWhenSingle={onBackWhenSingle}
       />
     );
   }
@@ -123,9 +112,19 @@ export default function DetailsPane({
     setNewTag("");
   };
 
-  const handleApplyTags = () => {
-    if (onTagsChange && content?.id) onTagsChange(content.id, tags);
-  };
+  // Persist tag changes (debounced) for single item
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!onTagsChange || !content?.id) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onTagsChange(content.id, tags);
+      debounceRef.current = null;
+    }, 400);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [tags, content?.id, onTagsChange]);
 
   // Filter global tags by input (by name)
   const filteredTags = globalTags.filter(
@@ -306,7 +305,7 @@ export default function DetailsPane({
           </Disclosure>
         ))}
 
-        {/* Tags (batch-edit style: same as multi-select so 1↔2 switch preserves edits) */}
+        {/* Tags */}
         <Disclosure defaultOpen>
           <DisclosureTrigger chevronPosition="start">
             <Text asChild fontSize="sm" fontWeight="600" color="fg.default">
@@ -317,7 +316,7 @@ export default function DetailsPane({
             <Box
               display="flex"
               flexDirection="column"
-              gap="12"
+              gap="8"
               mt="8"
               style={{ paddingLeft: "20px" }}
             >
@@ -423,69 +422,6 @@ export default function DetailsPane({
                   </Button>
                 )}
               </Box>
-
-              <Text fontSize="sm" fontWeight="600" color="fg.default">
-                Tags by item
-              </Text>
-              <Box
-                display="flex"
-                flexDirection="column"
-                gap="6"
-                px="12"
-                py="10"
-                rounded="sm"
-                style={{
-                  backgroundColor: "var(--ax-colors-bg-subtle)",
-                  border: "1px solid var(--ax-colors-border-tertiary)",
-                }}
-              >
-                <span
-                  title={String(content.name ?? content.id)}
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    lineHeight: 1.3,
-                    color: "var(--ax-colors-fg-default)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    display: "block",
-                    minWidth: 0,
-                  }}
-                >
-                  {content.name ?? content.id}
-                </span>
-                {(() => {
-                  const allSlugs = [...new Set([...(content.tags ?? []), ...tags])];
-                  return allSlugs.length > 0 ? (
-                    <Box display="flex" flexWrap="wrap" gap="6">
-                      {allSlugs.map((slug) => {
-                        const wasOnItem = (content.tags ?? []).includes(slug);
-                        const isInBatch = tags.includes(slug);
-                        const isRemoved = wasOnItem && !isInBatch;
-                        const isAdded = !wasOnItem && isInBatch;
-                        return (
-                          <Badge
-                            key={slug}
-                            intent={isAdded ? "success" : isRemoved ? "danger" : "neutral"}
-                            style={isRemoved ? { textDecoration: "line-through" } : undefined}
-                          >
-                            {getDisplayName(slug)}
-                          </Badge>
-                        );
-                      })}
-                    </Box>
-                  ) : (
-                    <Text fontSize="xs" color="fg.tertiary">
-                      No tags
-                    </Text>
-                  );
-                })()}
-              </Box>
-
-              <Button appearance="primary" size="md" onClick={handleApplyTags}>
-                Apply
-              </Button>
             </Box>
           </DisclosureContent>
         </Disclosure>
