@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Box, type BoxProps} from "@optiaxiom/react";
+import {Box, Menu, type BoxProps} from "@optiaxiom/react";
 
 // ---- DS PRIVATE RHYTHM (not exported) ----
 const DEFAULT_MT = 16;
