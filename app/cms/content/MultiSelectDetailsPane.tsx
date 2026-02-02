@@ -9,6 +9,8 @@ import { useState, useEffect, useRef } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
 import type { Tag } from "../settings/tags/types";
 
+type AutocompleteOption = { label: string; value: string; isSelected: boolean };
+
 interface MultiSelectDetailsPaneProps {
   items: ContentItem[];
   controlledTags?: string[] | null;
@@ -16,8 +18,6 @@ interface MultiSelectDetailsPaneProps {
   onTagsChange?: (contentId: string, tags: string[]) => void;
   onTagsChangeBatch?: (updates: Array<{ id: string; tags: string[] }>) => void;
   onClose: () => void;
-  /** When Back is clicked and only 1 item is selected, clear sticky so parent shows single-details view */
-  onBackWhenSingle?: () => void;
 }
 
 export default function MultiSelectDetailsPane({
@@ -27,7 +27,6 @@ export default function MultiSelectDetailsPane({
   onTagsChange,
   onTagsChangeBatch,
   onClose,
-  onBackWhenSingle,
 }: MultiSelectDetailsPaneProps) {
   const metadata = useMultiSelectMetadata(items);
   const isControlled = setControlledTags != null;
@@ -95,13 +94,11 @@ export default function MultiSelectDetailsPane({
   const enterBatchEdit = () => {
     initialTagsRef.current = [...tags];
     setIsBatchEditMode(true);
+    setIsPanelExpanded(true);
     setLastSummary(null);
   };
   const exitBatchEdit = (apply: boolean) => {
-    if (!apply) {
-      setTags(metadata.tags);
-      if (items.length === 1) onBackWhenSingle?.();
-    }
+    if (!apply) setTags(metadata.tags);
     setIsBatchEditMode(false);
     setIsPanelExpanded(false);
   };
@@ -244,11 +241,8 @@ export default function MultiSelectDetailsPane({
           px="24"
           py="24"
           overflow="hidden"
-          minH="0"
+          style={{ minHeight: 0 }}
         >
-          <Text fontSize="xs" color="fg.secondary" style={{ flexShrink: 0 }}>
-            Changes apply to all selected items.
-          </Text>
           {/* Tags on selection */}
           <Box display="flex" flexDirection="column" gap="8" style={{ flexShrink: 0 }}>
             <Text fontSize="sm" fontWeight="600" color="fg.default">
@@ -282,7 +276,7 @@ export default function MultiSelectDetailsPane({
                 onCloseAutoFocus={(e) => e.preventDefault()}
               >
                 <Box display="flex" flexDirection="column" gap="0" py="2" style={{ maxHeight: "200px" }} overflow="auto">
-                  {autocompleteOptions.map((option, index) => (
+                  {autocompleteOptions.map((option: AutocompleteOption, index: number) => (
                     <Box
                       key={option.value}
                       display="flex"
@@ -314,7 +308,7 @@ export default function MultiSelectDetailsPane({
                 const isAddedInBatch = addedTagsInBatch.includes(slug);
                 return (
                   <Box key={slug} display="flex" alignItems="center" gap="4">
-                    <Badge intent={isAddedInBatch ? "success" : "neutral"}>
+                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
                       <Box display="flex" alignItems="center" gap="4">
                         <span>{getDisplayName(slug)}</span>
                         <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
@@ -351,7 +345,7 @@ export default function MultiSelectDetailsPane({
             flexDirection="column"
             gap="12"
             flex="1"
-            minH="0"
+            style={{ minHeight: 0 }}
             overflow="hidden"
           >
             <Text fontSize="sm" fontWeight="600" color="fg.default" style={{ flexShrink: 0 }}>
@@ -362,7 +356,7 @@ export default function MultiSelectDetailsPane({
               flexDirection="column"
               gap="8"
               flex="1"
-              minH="0"
+              style={{ minHeight: 0 }}
               overflow="auto"
             >
               {items.slice(0, items.length > 20 ? 15 : items.length).map((item) => {
@@ -405,12 +399,17 @@ export default function MultiSelectDetailsPane({
                         {allSlugsForItem.map((slug) => {
                           const wasOnItem = itemTags.includes(slug);
                           const isInBatch = tags.includes(slug);
-                          const isRemoved = wasOnItem && !isInBatch;
-                          const isAdded = !wasOnItem && isInBatch;
+                          const isRemoved = wasOnItem && !isInBatch; // user removed this tag from batch → danger subtle + strikethrough
+                          const willBeAdded = !wasOnItem && isInBatch; // tag in batch but not on this item
+                          const isNewTag = willBeAdded && addedTagsInBatch.includes(slug); // added from autocomplete → success subtle
+                          const isMissingOnThisItem = willBeAdded && !isNewTag; // other items have it, this item doesn't → warning subtle
                           return (
                             <Badge
                               key={slug}
-                              intent={isAdded ? "success" : isRemoved ? "danger" : "neutral"}
+                              intent={
+                                isRemoved ? "danger" : isNewTag ? "success" : isMissingOnThisItem ? "warning" : "neutral"
+                              }
+                              variant={isRemoved || isNewTag || isMissingOnThisItem ? "subtle" : undefined}
                               style={isRemoved ? { textDecoration: "line-through" } : undefined}
                             >
                               {getDisplayName(slug)}
@@ -434,12 +433,21 @@ export default function MultiSelectDetailsPane({
             </Box>
           </Box>
           {/* Apply / Back */}
-          <Box display="flex" gap="8" mt="8" style={{ flexShrink: 0, paddingTop: "16px", borderTop: "1px solid var(--ax-colors-border-tertiary)" }}>
-            <Button appearance="primary" size="md" onClick={handleApply}>
-              Apply
-            </Button>
+          <Box
+            display="flex"
+            alignItems="center"
+            gap="8"
+            mt="8"
+            style={{ flexShrink: 0, paddingTop: "16px", borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
+          >
+            <Text fontSize="xs" color="fg.secondary" style={{ flex: 1 }}>
+              Changes apply to all selected items.
+            </Text>
             <Button appearance="subtle" size="md" onClick={() => exitBatchEdit(false)}>
               Back
+            </Button>
+            <Button appearance="primary" size="md" onClick={handleApply}>
+              Apply
             </Button>
           </Box>
         </Box>
@@ -620,7 +628,7 @@ export default function MultiSelectDetailsPane({
                       style={{ maxHeight: "200px" }}
                       overflow="auto"
                     >
-                      {autocompleteOptions.map((option, index) => (
+                      {autocompleteOptions.map((option: AutocompleteOption, index: number) => (
                         <Box
                           key={option.value}
                           display="flex"

@@ -1,6 +1,6 @@
 "use client";
 
-import { SearchInput, Checkbox, Pagination } from "@optiaxiom/react";
+import { SearchInput, Checkbox, Pagination, Box, Select, SelectTrigger, SelectContent, Text as AxiomText } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto, IconChevronUp, IconChevronDown } from "@tabler/icons-react";
@@ -57,7 +57,14 @@ export default function ContentPage() {
 	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
 	const [sortColumn, setSortColumn] = useState<string>('name');
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-	const itemsPerPage = 10;
+	const [itemsPerPage, setItemsPerPage] = useState(10);
+
+	const PAGE_SIZE_OPTIONS = [
+		{ label: "10", value: "10" },
+		{ label: "25", value: "25" },
+		{ label: "50", value: "50" },
+		{ label: "100", value: "100" },
+	];
 
 	// Sort filtered content
 	const sortedContent = useMemo(() => {
@@ -113,16 +120,7 @@ export default function ContentPage() {
 
 	// Lifted tag state for details pane so 1↔2 selection switch doesn't lose edits
 	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
-	const [stickyMultiSelect, setStickyMultiSelect] = useState(false);
 	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
-	// Keep batch-edit (multi) pane open when user deselects from 2+ down to 1 until they close
-	useEffect(() => {
-		if (selectedRows.size > 1) setStickyMultiSelect(true);
-	}, [selectedRows.size]);
-	// Clear sticky when pane is closed (0 selected) so next single-item open shows single-select + thumbnail
-	useEffect(() => {
-		if (selectedRows.size === 0) setStickyMultiSelect(false);
-	}, [selectedRows.size]);
 	const selectedItems = useMemo(
 		() => paginatedItems.filter((item) => selectedRows.has(item.id)),
 		[paginatedItems, selectedRows]
@@ -137,10 +135,10 @@ export default function ContentPage() {
 		}
 	}, [paneOpen, detailsPaneTags, selectedItems.length, selectedItemsTagUnion.join(",")]);
 
-	// Reset pagination when filters change
+	// Reset pagination when filters or page size change
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [filters]);
+	}, [filters, itemsPerPage]);
 
 	const handleSelectAll = (checked: boolean) => {
 		const newSet = new Set(selectedRows);
@@ -335,12 +333,35 @@ export default function ContentPage() {
 					))}
 				</tbody>
 			</Table>
-			<Pagination
-				total={totalPages}
-				page={currentPage}
-				onPageChange={setCurrentPage}
-				mt="24"
-			/>
+			<Box display="flex" alignItems="center" mt="24" flexWrap="wrap">
+				<Pagination
+					total={totalPages}
+					page={currentPage}
+					onPageChange={setCurrentPage}
+				/>
+				<Box flex="1" display="flex" justifyContent="center" alignItems="center" minW="0">
+					<AxiomText fontSize="sm" color="fg.secondary">
+						{displayContent.length === 0
+							? "0 items"
+							: `Showing ${(currentPage - 1) * itemsPerPage + 1}–${Math.min(currentPage * itemsPerPage, displayContent.length)} of ${displayContent.length}`}
+					</AxiomText>
+				</Box>
+				<Box display="flex" alignItems="center" gap="8">
+					<AxiomText fontSize="sm" color="fg.secondary">
+						Rows per page
+					</AxiomText>
+					<Select
+						value={String(itemsPerPage)}
+						onValueChange={(value) => setItemsPerPage(Number(value))}
+						options={PAGE_SIZE_OPTIONS}
+					>
+						<SelectTrigger w="80" size="sm">
+							{itemsPerPage}
+						</SelectTrigger>
+						<SelectContent />
+					</Select>
+				</Box>
+			</Box>
 
 			{(selectedContentId || selectedRows.size >= 1) && (
 				<Aside>
@@ -351,16 +372,13 @@ export default function ContentPage() {
 						allContent={paginatedItems}
 						detailsPaneTags={detailsPaneTags}
 						setDetailsPaneTags={setDetailsPaneTags}
-						stickyMultiSelect={stickyMultiSelect}
 						onTagsChange={onTagsChange}
 						onTagsChangeBatch={onTagsChangeBatch}
 						onClose={() => {
 							setSelectedContentId(null);
 							setSelectedRows(new Set());
 							setDetailsPaneTags(null);
-							setStickyMultiSelect(false);
 						}}
-						onBackWhenSingle={() => setStickyMultiSelect(false)}
 					/>
 				</Aside>
 			)}
