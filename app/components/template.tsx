@@ -72,10 +72,10 @@ function TemplateContent({
 		router.push(`${url}`);
 	};
 
-	const menuItems = structure;
+	const menuItems = Array.isArray(structure) ? structure : [];
 
 	const highlight1 = menuItems
-		.filter((item: any) => path.includes(item.highlight))
+		.filter((item: any) => item?.highlight != null && path.includes(item.highlight))
 		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
 	const lvl2 = highlight1?.children
 		?.filter((item: any) => (item.url ? path.includes(item.url) : false))

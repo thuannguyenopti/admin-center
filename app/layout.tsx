@@ -34,12 +34,13 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const path = usePathname();
+	const path = usePathname() ?? "";
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 
 	const [algorithms, , isHydrated] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any, boolean];
-	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
+	const safeAlgorithms = algorithms ?? initialAlgorithms ?? [];
+	const currentAlgorithm = safeAlgorithms.find((a) => a.id === algorithmId);
 
 	const structure = {
 		cms: [
@@ -422,8 +423,8 @@ export default function RootLayout({
 			},
 		],
 	};
-	const key: string = path.split("/")[1];
-	const menu = structure[key as keyof typeof structure];
+	const key: string = path.split("/")[1] ?? "";
+	const menu = key ? structure[key as keyof typeof structure] : undefined;
 
 	const [feHostingState, setFeHostingState] = useState({});
 	const { activeEffect } = useSecretCode();
