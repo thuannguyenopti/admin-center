@@ -1,9 +1,9 @@
 "use client";
 
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button} from "@optiaxiom/react";
+import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
 import {Text} from "./Text";
 import Link from "next/link";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
@@ -74,16 +74,38 @@ function TemplateContent({
 				>
 					<Nav>
 						<NavBody>
-							{menuItems.map((menuItem: any) => (
-								<NavItem
-									onClick={() => menuClick(menuItem.url)}
-									active={path.includes(menuItem.highlight)}
-									key={menuItem.label}
-									aria-label={menuItem.label}
-									icon={menuItem.icon}
-								>
-									{menuItem.label}
-								</NavItem>
+							{menuItems.map((menuItem: any, index: number) => (
+								<React.Fragment key={menuItem.label}>
+									{menuItem.isMenuTrigger ? (
+										<Menu
+											options={menuItem.menuOptions.map((opt: any) => ({
+												label: opt.label,
+												execute: () => menuClick(opt.url),
+											}))}
+										>
+											<MenuTrigger asChild>
+												<NavItem
+													aria-label={menuItem.label}
+													icon={menuItem.icon}
+													className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+												>
+													{menuItem.label}
+												</NavItem>
+											</MenuTrigger>
+											<MenuContent />
+										</Menu>
+									) : (
+										<NavItem
+											onClick={() => menuClick(menuItem.url)}
+											active={path.includes(menuItem.highlight)}
+											aria-label={menuItem.label}
+											icon={menuItem.icon}
+										>
+											{menuItem.label}
+										</NavItem>
+									)}
+									{menuItem.isMenuTrigger && <Box className="h-2" />}
+								</React.Fragment>
 							))}
 						</NavBody>
 					</Nav>
