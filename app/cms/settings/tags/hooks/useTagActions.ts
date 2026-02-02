@@ -59,9 +59,50 @@ export function useTagActions(
     [tags, setTags]
   );
 
+  const mergeTags = useCallback(
+    (sourceTagIds: string[], primaryTagFormRow: TagFormRow) => {
+      const primaryId = primaryTagFormRow.id ?? sourceTagIds[0];
+      const primaryTag = tags.find((t) => t.id === primaryId);
+      const otherIds = sourceTagIds.filter((id) => id !== primaryId);
+
+      const updatedPrimary: Tag = primaryTag
+        ? {
+          ...primaryTag,
+          name: primaryTagFormRow.name,
+          slug: primaryTagFormRow.slug,
+          visibility: primaryTagFormRow.visibility,
+          lastModified: new Date().toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        }
+        : {
+          id: primaryId,
+          name: primaryTagFormRow.name,
+          slug: primaryTagFormRow.slug,
+          visibility: primaryTagFormRow.visibility,
+          modifiedBy: 'Current User',
+          usage: 0,
+          lastModified: new Date().toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        };
+
+      const remaining = tags.filter(
+        (t) => !otherIds.includes(t.id) && t.id !== primaryId
+      );
+      setTags([...remaining, updatedPrimary]);
+    },
+    [tags, setTags]
+  );
+
   return {
     createTags,
     updateTags,
     deleteTags,
+    mergeTags,
   };
 }

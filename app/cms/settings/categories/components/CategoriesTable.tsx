@@ -95,6 +95,12 @@ export function CategoriesTable({
           </Th>
           <Th
             style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
+            onClick={() => handleHeaderClick('visibility')}
+          >
+            Visibility{renderSortIcon('visibility')}
+          </Th>
+          <Th
+            style={{ cursor: onSort ? 'pointer' : 'default', userSelect: 'none' }}
             onClick={() => handleHeaderClick('modifiedBy')}
           >
             Modified by{renderSortIcon('modifiedBy')}

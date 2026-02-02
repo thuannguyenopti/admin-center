@@ -4,6 +4,7 @@ import { Tag } from '../types';
 import { Tr, Td } from '@/app/components/Table';
 import { IconDots } from '@tabler/icons-react';
 import TagIcon from '../tag-icon.svg';
+import Item from '@/app/components/Item';
 
 interface TagRowProps {
   tag: Tag;
@@ -41,26 +42,19 @@ export function TagRow({
           />
         </div>
       </Td>
-      <Td>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <TagIcon
-            style={{
-              width: '14px',
-              height: '14px',
-              color: 'var(--ax-colors-fg-default)',
-            }}
-          />
-          <span
-            style={{
-              fontSize: '14px',
-              fontWeight: 400,
-              letterSpacing: '-0.15px',
-              color: 'var(--ax-colors-fg-accent-strong)',
-            }}
-          >
-            {tag.name}
-          </span>
-        </div>
+      <Td type="header">
+        <Item
+          icon={
+            <TagIcon
+              style={{
+                width: '16px',
+                height: '16px',
+                color: 'var(--ax-colors-fg-default)',
+              }}
+            />
+          }
+          title={tag.name}
+        />
       </Td>
       <Td>
         <span
@@ -106,7 +100,7 @@ export function TagRow({
             fontSize: '14px',
             fontWeight: 400,
             letterSpacing: '-0.15px',
-            color: tag.usage > 0 ? 'var(--ax-colors-fg-accent-strong)' : 'var(--ax-colors-fg-default)',
+            color: tag.usage > 0 ? 'var(--ax-colors-fg-accent)' : 'var(--ax-colors-fg-default)',
           }}
           title={tag.usage > 0 ? `View ${tag.usage} content items with this tag` : undefined}
         >

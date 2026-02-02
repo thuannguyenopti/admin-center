@@ -373,6 +373,10 @@ export type Page = {
 	slug?: string;
 	data?: Record<string, any>;
 	outlines?: Outline[]; // ALWAYS this for layouts
+	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
+	tags?: string[];
+	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
+	categories?: string[];
 };
 
 export const initialPages: Page[] = [
@@ -3125,7 +3129,9 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 			day: "numeric",
 			year: "numeric",
 		});
-		const { tags, categories } = getPageTagsAndCategories(p.id, p.contentTypeId);
+		const fallback = getPageTagsAndCategories(p.id, p.contentTypeId);
+		const tags = p.tags ?? fallback.tags;
+		const categories = p.categories ?? fallback.categories;
 
 		return {
 			id: p.id,
@@ -3357,7 +3363,8 @@ export const initialTags = [
 	},
 ];
 
-// Initial Categories
+// Initial Categories – must include every category slug used in content (pageCategoryMap + initialOtherContent)
+// so the categories table matches what appears in content manager filters.
 export const initialCategories = [
 	{
 		id: 'cat-1',
@@ -3366,7 +3373,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'Alice Johnson',
-		usage: 18,
+		usage: 10,
 		lastModified: 'Jan 15, 2025',
 		parentId: null,
 		isExpanded: true,
@@ -3378,7 +3385,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'Bob Smith',
-		usage: 14,
+		usage: 12,
 		lastModified: 'Jan 14, 2025',
 		parentId: null,
 		isExpanded: true,
@@ -3390,7 +3397,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'Carol Williams',
-		usage: 12,
+		usage: 11,
 		lastModified: 'Jan 13, 2025',
 		parentId: null,
 		isExpanded: false,
@@ -3402,7 +3409,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'David Brown',
-		usage: 8,
+		usage: 7,
 		lastModified: 'Jan 12, 2025',
 		parentId: null,
 		isExpanded: false,
@@ -3414,7 +3421,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'Emma Wilson',
-		usage: 6,
+		usage: 5,
 		lastModified: 'Jan 11, 2025',
 		parentId: null,
 		isExpanded: false,
@@ -3426,7 +3433,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'Frank Miller',
-		usage: 4,
+		usage: 2,
 		lastModified: 'Jan 10, 2025',
 		parentId: null,
 		isExpanded: false,
@@ -3450,7 +3457,7 @@ export const initialCategories = [
 		status: 'published' as const,
 		visibility: 'public' as const,
 		modifiedBy: 'Henry Chen',
-		usage: 5,
+		usage: 3,
 		lastModified: 'Jan 8, 2025',
 		parentId: null,
 		isExpanded: false,

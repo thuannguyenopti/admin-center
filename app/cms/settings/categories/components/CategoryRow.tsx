@@ -1,5 +1,6 @@
 import {
   Badge,
+  Button,
   Checkbox,
   DropdownMenu,
   DropdownMenuTrigger,
@@ -10,8 +11,9 @@ import { useRouter } from 'next/navigation';
 import { Category } from '../types';
 import { Tr, Td } from '@/app/components/Table';
 import { getChildren } from '../utils';
-import { IconDots } from '@tabler/icons-react';
+import { IconDots, IconFolder } from '@tabler/icons-react';
 import ChevronDownIcon from '@/public/icons/chevron-down.svg';
+import Item from '@/app/components/Item';
 
 interface CategoryRowProps {
   category: Category;
@@ -64,33 +66,46 @@ export function CategoryRow({
               onCheckedChange={() => onToggleSelection(category.id)}
             />
             {hasChildren ? (
-              <button
+              <Button
+                appearance="subtle"
+                size="sm"
                 onClick={() => onToggleExpand(category.id)}
-                className="p-1 hover:bg-[var(--ax-colors-bg-default-hovered)] rounded"
+                aria-label={category.isExpanded ? 'Collapse' : 'Expand'}
+                icon={
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transform: category.isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+                      transition: 'transform 0.2s',
+                    }}
+                  >
+                    <ChevronDownIcon
+                      style={{
+                        width: '11px',
+                        height: '5px',
+                        color: 'var(--ax-colors-fg-default)',
+                      }}
+                    />
+                  </span>
+                }
                 style={{ marginLeft: '8px' }}
-              >
-                <ChevronDownIcon
-                  style={{
-                    width: '11px',
-                    height: '5px',
-                    transform: category.isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-                    transition: 'transform 0.2s',
-                    color: 'var(--ax-colors-fg-default)',
-                  }}
-                />
-              </button>
+              />
             ) : (
               <div style={{ width: '27px' }} />
             )}
           </div>
         </Td>
-        <Td>
+        <Td type="header">
           <span
             className="cursor-pointer hover:underline"
-            style={{ color: 'var(--ax-colors-fg-accent-strong)', fontWeight: 400 }}
             onClick={() => onEdit(category)}
           >
-            {category.name}
+            <Item
+              icon={<IconFolder size={16} style={{ color: 'var(--ax-colors-fg-default)' }} />}
+              title={category.name}
+            />
           </span>
         </Td>
         <Td>
@@ -102,6 +117,9 @@ export function CategoryRow({
           <Badge intent={statusColors[category.status] || 'neutral'}>
             {category.status.charAt(0).toUpperCase() + category.status.slice(1)}
           </Badge>
+        </Td>
+        <Td>
+          {category.visibility.charAt(0).toUpperCase() + category.visibility.slice(1)}
         </Td>
         <Td>{category.modifiedBy}</Td>
         <Td>

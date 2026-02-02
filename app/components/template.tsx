@@ -181,9 +181,9 @@ function TemplateContent({
 					<Box className="absolute bottom-0 left-0 right-0" p="8">
 						<Button
 							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-							icon={!isExpanded ? <IconChevronRight /> : <IconChevronLeft />}
+							icon={!isExpanded ? <IconChevronRight size={16} /> : <IconChevronLeft size={16} />}
 							onClick={() => setIsExpanded(!isExpanded)}
-							size="lg"
+							size="sm"
 							appearance="subtle"
 						/>
 					</Box>
@@ -194,6 +194,8 @@ function TemplateContent({
 						transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
 						transition: ".7s cubic-bezier(0, 1, 0, 1)",
 						overflowX: "hidden",
+						overflowY: isContentManager ? "hidden" : undefined,
+						minHeight: isContentManager ? 0 : undefined,
 					}}
 					borderR="1"
 					borderColor="border.tertiary"
