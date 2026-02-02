@@ -96,13 +96,13 @@ export function useContentFilters(allContent: ContentItem[]) {
     });
   }, [safeContent, filters]);
 
-  // Convert filters to pills
+  // Convert filters to pills (Language first to match panel order)
   const activePills = useMemo<FilterPill[]>(() => {
     const pills: FilterPill[] = [];
+    filters.languages.forEach((value: string) => pills.push({ category: "Language", value }));
     filters.types.forEach((value: string) => pills.push({ category: "Type", value }));
     filters.statuses.forEach((value: string) => pills.push({ category: "Status", value }));
     filters.modifiedBy.forEach((value: string) => pills.push({ category: "Modified By", value }));
-    filters.languages.forEach((value: string) => pills.push({ category: "Language", value }));
     filters.tags.forEach((value: string) => pills.push({ category: "Tag", value }));
     filters.categories.forEach((value: string) => pills.push({ category: "Category", value }));
     return pills;
