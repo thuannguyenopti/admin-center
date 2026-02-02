@@ -14,6 +14,7 @@ export default function GlobalBar() {
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
+		if (pathname.startsWith("/cmp")) return "CMP";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
@@ -104,7 +105,7 @@ export default function GlobalBar() {
 						},
 						{
 							label: "Content Marketing Platform",
-							disabledReason: "TBD",
+							execute: () => router.push("/cmp/dashboard"),
 						},
 						{
 							label: "Connect Platform",
@@ -131,6 +132,7 @@ export default function GlobalBar() {
 							alignItems={"center"}
 							gap="8"
 							style={{cursor: "pointer"}}
+							suppressHydrationWarning
 						>
 							<Text
 								fontSize="md"
