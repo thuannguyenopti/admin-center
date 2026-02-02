@@ -66,9 +66,10 @@ export default function ContentPage() {
 		{ label: "100", value: "100" },
 	];
 
-	// Sort filtered content
+	// Sort filtered content (guard undefined from context/hydration)
 	const sortedContent = useMemo(() => {
-		const sorted = [...filteredContent];
+		const source = filteredContent ?? [];
+		const sorted = [...source];
 		sorted.sort((a: ContentItem, b: ContentItem) => {
 			let aValue: any;
 			let bValue: any;
@@ -109,8 +110,8 @@ export default function ContentPage() {
 		return sorted;
 	}, [filteredContent, sortColumn, sortDirection]);
 
-	// Use sorted content instead of filtered content
-	const displayContent = sortedContent;
+	// Use sorted content instead of filtered content (always array)
+	const displayContent = sortedContent ?? [];
 	const totalPages = Math.ceil(displayContent.length / itemsPerPage);
 	const paginatedItems = displayContent.slice(
 		(currentPage - 1) * itemsPerPage,
@@ -122,7 +123,7 @@ export default function ContentPage() {
 	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
 	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
 	const selectedItems = useMemo(
-		() => paginatedItems.filter((item) => selectedRows.has(item.id)),
+		() => (paginatedItems ?? []).filter((item) => selectedRows.has(item.id)),
 		[paginatedItems, selectedRows]
 	);
 	const selectedItemsTagUnion = useMemo(

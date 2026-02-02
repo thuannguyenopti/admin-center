@@ -41,6 +41,19 @@ export function useContentFilters(allContent: ContentItem[]) {
     defaultFilters
   ) as [ContentFilters, (filters: ContentFilters | ((prev: ContentFilters) => ContentFilters)) => void, boolean];
 
+  // Normalize filters so array keys are always arrays (handles old/corrupt localStorage)
+  const safeFilters: ContentFilters = useMemo(
+    () => ({
+      types: Array.isArray(filters?.types) ? filters.types : [],
+      statuses: Array.isArray(filters?.statuses) ? filters.statuses : [],
+      modifiedBy: Array.isArray(filters?.modifiedBy) ? filters.modifiedBy : [],
+      languages: Array.isArray(filters?.languages) ? filters.languages : [],
+      tags: Array.isArray(filters?.tags) ? filters.tags : [],
+      categories: Array.isArray(filters?.categories) ? filters.categories : [],
+    }),
+    [filters]
+  );
+
   // Extract unique filter options from content
   const filterOptions = useMemo<FilterOptions>(() => {
     const types = [...new Set(safeContent.map(item => item.baseType))];
@@ -64,49 +77,49 @@ export function useContentFilters(allContent: ContentItem[]) {
   // Apply filters to content
   const filteredContent = useMemo(() => {
     return safeContent.filter(item => {
-      if (filters.types.length > 0 && !filters.types.includes(item.baseType)) {
+      if (safeFilters.types.length > 0 && !safeFilters.types.includes(item.baseType)) {
         return false;
       }
-      if (filters.statuses.length > 0 && !filters.statuses.includes(item.status)) {
+      if (safeFilters.statuses.length > 0 && !safeFilters.statuses.includes(item.status)) {
         return false;
       }
-      if (filters.modifiedBy.length > 0 && !filters.modifiedBy.includes(item.modifiedBy)) {
+      if (safeFilters.modifiedBy.length > 0 && !safeFilters.modifiedBy.includes(item.modifiedBy)) {
         return false;
       }
-      if (filters.languages.length > 0 && !filters.languages.includes(item.language)) {
+      if (safeFilters.languages.length > 0 && !safeFilters.languages.includes(item.language)) {
         return false;
       }
       // Tag filtering: content must have at least one of the selected tags
-      if (filters.tags.length > 0) {
+      if (safeFilters.tags.length > 0) {
         const itemTags = item.tags || [];
-        const hasMatchingTag = filters.tags.some(tag => itemTags.includes(tag));
+        const hasMatchingTag = safeFilters.tags.some(tag => itemTags.includes(tag));
         if (!hasMatchingTag) {
           return false;
         }
       }
       // Category filtering: content must have at least one of the selected categories
-      if (filters.categories.length > 0) {
+      if (safeFilters.categories.length > 0) {
         const itemCategories = item.categories || [];
-        const hasMatchingCategory = filters.categories.some(cat => itemCategories.includes(cat));
+        const hasMatchingCategory = safeFilters.categories.some(cat => itemCategories.includes(cat));
         if (!hasMatchingCategory) {
           return false;
         }
       }
       return true;
     });
-  }, [safeContent, filters]);
+  }, [safeContent, safeFilters]);
 
   // Convert filters to pills (Language first to match panel order)
   const activePills = useMemo<FilterPill[]>(() => {
     const pills: FilterPill[] = [];
-    filters.languages.forEach((value: string) => pills.push({ category: "Language", value }));
-    filters.types.forEach((value: string) => pills.push({ category: "Type", value }));
-    filters.statuses.forEach((value: string) => pills.push({ category: "Status", value }));
-    filters.modifiedBy.forEach((value: string) => pills.push({ category: "Modified By", value }));
-    filters.tags.forEach((value: string) => pills.push({ category: "Tag", value }));
-    filters.categories.forEach((value: string) => pills.push({ category: "Category", value }));
+    safeFilters.languages.forEach((value: string) => pills.push({ category: "Language", value }));
+    safeFilters.types.forEach((value: string) => pills.push({ category: "Type", value }));
+    safeFilters.statuses.forEach((value: string) => pills.push({ category: "Status", value }));
+    safeFilters.modifiedBy.forEach((value: string) => pills.push({ category: "Modified By", value }));
+    safeFilters.tags.forEach((value: string) => pills.push({ category: "Tag", value }));
+    safeFilters.categories.forEach((value: string) => pills.push({ category: "Category", value }));
     return pills;
-  }, [filters]);
+  }, [safeFilters]);
 
   // Check if any filters are active
   const hasActiveFilters = activePills.length > 0;
@@ -156,7 +169,7 @@ export function useContentFilters(allContent: ContentItem[]) {
   }, [setFilters]);
 
   return {
-    filters,
+    filters: safeFilters,
     filterOptions,
     filteredContent,
     activePills,
