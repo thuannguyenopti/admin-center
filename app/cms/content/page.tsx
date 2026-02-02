@@ -339,7 +339,7 @@ export default function ContentPage() {
 					page={currentPage}
 					onPageChange={setCurrentPage}
 				/>
-				<Box flex="1" display="flex" justifyContent="center" alignItems="center" minW="0">
+				<Box flex="1" display="flex" justifyContent="center" alignItems="center" overflow="hidden">
 					<AxiomText fontSize="sm" color="fg.secondary">
 						{displayContent.length === 0
 							? "0 items"
