@@ -58,7 +58,7 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
       contentTagOverrides && typeof contentTagOverrides === "object" && !Array.isArray(contentTagOverrides)
         ? contentTagOverrides
         : {};
-    return baseContentItems.map((item) => {
+    return (baseContentItems ?? []).map((item) => {
       const override = overrides[item.id];
       if (Array.isArray(override)) {
         return { ...item, tags: override };
@@ -107,7 +107,7 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
 
   const contentItems: ContentItem[] = useMemo(
     () =>
-      allContentItems
+      (allContentItems ?? [])
         .map((item) => ({
           ...item,
           status: item.publishStatus

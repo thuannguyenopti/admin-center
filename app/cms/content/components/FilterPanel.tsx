@@ -102,6 +102,23 @@ export default function FilterPanel({
               padding: "0 24px 24px 24px",
             }}
           >
+            {/* Language filter */}
+            {filterOptions.languages.length > 0 && (
+              <Box display="flex" flexDirection="column" gap="8">
+                <Text fontSize="xs" color="fg.tertiary">
+                  Language
+                </Text>
+                {filterOptions.languages.map((language) => (
+                  <CheckboxRow
+                    key={language}
+                    label={language}
+                    checked={filters.languages.includes(language)}
+                    onChange={() => onToggleFilter("languages", language)}
+                  />
+                ))}
+              </Box>
+            )}
+
             {/* Type filter */}
             {filterOptions.types.length > 0 && (
               <Box display="flex" flexDirection="column" gap="8">
@@ -170,23 +187,6 @@ export default function FilterPanel({
                     </Text>
                   </button>
                 )}
-              </Box>
-            )}
-
-            {/* Language filter */}
-            {filterOptions.languages.length > 0 && (
-              <Box display="flex" flexDirection="column" gap="8">
-                <Text fontSize="xs" color="fg.tertiary">
-                  Language
-                </Text>
-                {filterOptions.languages.map((language) => (
-                  <CheckboxRow
-                    key={language}
-                    label={language}
-                    checked={filters.languages.includes(language)}
-                    onChange={() => onToggleFilter("languages", language)}
-                  />
-                ))}
               </Box>
             )}
 
