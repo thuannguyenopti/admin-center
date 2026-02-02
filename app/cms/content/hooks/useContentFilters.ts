@@ -35,6 +35,7 @@ const defaultFilters: ContentFilters = {
 };
 
 export function useContentFilters(allContent: ContentItem[]) {
+  const safeContent = allContent ?? [];
   const [filters, setFilters] = usePersistentState(
     "content-filters",
     defaultFilters
@@ -42,13 +43,13 @@ export function useContentFilters(allContent: ContentItem[]) {
 
   // Extract unique filter options from content
   const filterOptions = useMemo<FilterOptions>(() => {
-    const types = [...new Set(allContent.map(item => item.baseType))];
-    const statuses = [...new Set(allContent.map(item => item.status))];
-    const modifiedBy = [...new Set(allContent.map(item => item.modifiedBy))];
-    const languages = [...new Set(allContent.map(item => item.language))];
+    const types = [...new Set(safeContent.map(item => item.baseType))];
+    const statuses = [...new Set(safeContent.map(item => item.status))];
+    const modifiedBy = [...new Set(safeContent.map(item => item.modifiedBy))];
+    const languages = [...new Set(safeContent.map(item => item.language))];
     // Extract unique tags and categories from all content items
-    const tags = [...new Set(allContent.flatMap(item => item.tags || []))];
-    const categories = [...new Set(allContent.flatMap(item => item.categories || []))];
+    const tags = [...new Set(safeContent.flatMap(item => item.tags || []))];
+    const categories = [...new Set(safeContent.flatMap(item => item.categories || []))];
 
     return {
       types: types.sort(),
@@ -58,11 +59,11 @@ export function useContentFilters(allContent: ContentItem[]) {
       tags: tags.sort(),
       categories: categories.sort(),
     };
-  }, [allContent]);
+  }, [safeContent]);
 
   // Apply filters to content
   const filteredContent = useMemo(() => {
-    return allContent.filter(item => {
+    return safeContent.filter(item => {
       if (filters.types.length > 0 && !filters.types.includes(item.baseType)) {
         return false;
       }
@@ -93,7 +94,7 @@ export function useContentFilters(allContent: ContentItem[]) {
       }
       return true;
     });
-  }, [allContent, filters]);
+  }, [safeContent, filters]);
 
   // Convert filters to pills
   const activePills = useMemo<FilterPill[]>(() => {
