@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import {
     Box,
+    Button,
     Field,
     Text,
     Input as Input2,
@@ -12,7 +13,7 @@ import {
     Textarea,
     Badge,
     Popover,
-    PopoverTrigger,
+    PopoverAnchor,
     PopoverContent,
     Input,
 } from "@optiaxiom/react";
@@ -71,6 +72,12 @@ function AutocompleteMultiSelect({
     const [inputValue, setInputValue] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const [itemsExpanded, setItemsExpanded] = useState(false);
+
+    const INITIAL_VISIBLE = 10;
+    const visibleItems = itemsExpanded ? selectedItems : selectedItems.slice(0, INITIAL_VISIBLE);
+    const hasMoreItems = selectedItems.length > INITIAL_VISIBLE;
+    const hiddenCount = selectedItems.length - INITIAL_VISIBLE;
 
     // Filter available items based on input
     const filteredItems = availableItems.filter(
@@ -127,43 +134,59 @@ function AutocompleteMultiSelect({
                 {label}
             </Text>
 
-            {/* Selected Items Display */}
+            {/* Selected Items Display (Show more / Show less) */}
             {selectedItems.length > 0 && (
-                <Box display="flex" flexWrap="wrap" gap="6">
-                    {selectedItems.map((slug) => {
-                        const displayLabel = getItemLabel(slug) || slug;
-                        return (
-                            <Badge key={slug} intent="neutral">
-                                <Box display="flex" alignItems="center" gap="4">
-                                    <span>{displayLabel}</span>
-                                    <button
-                                        onClick={() => onRemove(slug)}
-                                        style={{
-                                            background: "none",
-                                            border: "none",
-                                            cursor: "pointer",
-                                            padding: "0",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            fontSize: "14px",
-                                            fontWeight: "500",
-                                            lineHeight: "1",
-                                            color: "inherit",
-                                        }}
-                                        aria-label={`Remove ${displayLabel}`}
-                                    >
-                                        <IconX size={12} />
-                                    </button>
-                                </Box>
-                            </Badge>
-                        );
-                    })}
+                <Box display="flex" flexDirection="column" gap="8">
+                    <Box display="flex" flexWrap="wrap" gap="6">
+                        {visibleItems.map((slug) => {
+                            const displayLabel = getItemLabel(slug) || slug;
+                            return (
+                                <Badge key={slug} intent="neutral">
+                                    <Box display="flex" alignItems="center" gap="4">
+                                        <span>{displayLabel}</span>
+                                        <button
+                                            onClick={() => onRemove(slug)}
+                                            style={{
+                                                background: "none",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                padding: "0",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                fontSize: "14px",
+                                                fontWeight: "500",
+                                                lineHeight: "1",
+                                                color: "inherit",
+                                            }}
+                                            aria-label={`Remove ${displayLabel}`}
+                                        >
+                                            <IconX size={12} />
+                                        </button>
+                                    </Box>
+                                </Badge>
+                            );
+                        })}
+                    </Box>
+                    {hasMoreItems && (
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            onClick={() => setItemsExpanded(!itemsExpanded)}
+                            aria-expanded={itemsExpanded}
+                        >
+                            {itemsExpanded ? "Show less" : `Show ${hiddenCount} more`}
+                        </Button>
+                    )}
                 </Box>
             )}
 
             {/* Autocomplete Input */}
-            <Popover open={isOpen && autocompleteOptions.length > 0} onOpenChange={setIsOpen}>
-                <PopoverTrigger asChild>
+            <Popover
+                modal={false}
+                open={isOpen && autocompleteOptions.length > 0}
+                onOpenChange={setIsOpen}
+            >
+                <PopoverAnchor asChild>
                     <Box>
                         <Input
                             value={inputValue}
@@ -177,7 +200,7 @@ function AutocompleteMultiSelect({
                             size="md"
                         />
                     </Box>
-                </PopoverTrigger>
+                </PopoverAnchor>
                 <PopoverContent
                     side="bottom"
                     sideOffset={4}
@@ -430,9 +453,9 @@ export default function PropertiesPanel({ value, onChange, activeSection = "menu
                                 }}
                             >
                                 <Text fontSize="sm">{item.label}</Text>
-                                <IconChevronRight 
-                                    size={16} 
-                                    style={{ 
+                                <IconChevronRight
+                                    size={16}
+                                    style={{
                                         opacity: 0.6,
                                         flexShrink: 0,
                                     }}

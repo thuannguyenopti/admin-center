@@ -3,16 +3,19 @@
 import { useState, useMemo } from 'react';
 import {
   Box,
+  Button,
   Heading,
   SearchInput,
+  Text,
+  AngleMenuButton,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuItem,
   DropdownMenuContent,
   Pagination,
 } from '@optiaxiom/react';
-import { Button } from '@/app/components/Button';
-import { Text } from '@/app/components/Text';
+import { Button as AppButton } from '@/app/components/Button';
+import { Text as AppText } from '@/app/components/Text';
 import usePersistentState from '@/app/usePersistentState';
 import { Category, CategoryFormRow } from './types';
 import { initialCategories, getAllContentItems, initialPages, type Page } from '@/app/db/initialData';
@@ -21,9 +24,7 @@ import { CategoryModal } from './components/CategoryModal';
 import { useSelection } from './hooks/useSelection';
 import { useCategoryActions } from './hooks/useCategoryActions';
 import { filterCategoriesWithHierarchy } from './utils';
-import { IconCheck } from '@tabler/icons-react';
 import EmptyStateIllustration from './empty-state.svg';
-import ChevronDownIcon from '@/public/icons/chevron-down.svg';
 
 export default function CategoriesSettings() {
   const [categories, setCategories] = usePersistentState('categories', initialCategories);
@@ -38,7 +39,7 @@ export default function CategoriesSettings() {
 
   // Calculate actual category usage from content items
   const contentItems = useMemo(() => getAllContentItems(pages || initialPages), [pages]);
-  
+
   const categoryUsageCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     contentItems.forEach(item => {
@@ -94,6 +95,10 @@ export default function CategoriesSettings() {
         case 'status':
           aValue = a.status || '';
           bValue = b.status || '';
+          break;
+        case 'visibility':
+          aValue = a.visibility?.toLowerCase() || '';
+          bValue = b.visibility?.toLowerCase() || '';
           break;
         case 'modifiedBy':
           aValue = a.modifiedBy?.toLowerCase() || '';
@@ -220,7 +225,7 @@ export default function CategoriesSettings() {
               No categories
             </Heading>
 
-            <Text
+            <AppText
               style={{
                 fontSize: '16px',
                 fontWeight: '400',
@@ -244,9 +249,9 @@ export default function CategoriesSettings() {
               >
                 Learn more
               </a>
-            </Text>
+            </AppText>
 
-            <Button
+            <AppButton
               appearance="primary"
               style={{
                 fontSize: '13px',
@@ -259,7 +264,7 @@ export default function CategoriesSettings() {
               onClick={handleCreateClick}
             >
               Create categories
-            </Button>
+            </AppButton>
           </Box>
         </Box>
 
@@ -281,7 +286,7 @@ export default function CategoriesSettings() {
     <>
       {/* Actions Bar */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb="24">
-        <Box display="flex" alignItems="center" gap="10">
+        <Box display="flex" alignItems="center">
           <SearchInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -292,76 +297,35 @@ export default function CategoriesSettings() {
               borderRadius: '4px',
             }}
           />
+        </Box>
+        <Box display="flex" alignItems="center" gap="10">
           {selectedCount > 0 && (
             <>
-              <Text
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  letterSpacing: '-0.08px',
-                  color: '#222222',
-                }}
-              >
+              <Text fontSize="sm" fontWeight="600" color="fg.secondary">
                 {selectedCount} items selected
               </Text>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    appearance="default"
-                    size="md"
-                    style={{
-                      gap: '4px',
-                      border: '1px solid #9e9e9e',
-                      borderRadius: '4px',
-                      boxShadow: 'inset 0px 0px 8px 2px rgba(0, 0, 0, 0.25)',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 400,
-                        letterSpacing: '-0.08px',
-                      }}
-                    >
-                      Actions
-                    </span>
-                    <ChevronDownIcon
-                      style={{
-                        width: '11px',
-                        height: '5px',
-                        color: 'var(--ax-colors-fg-default)',
-                      }}
-                    />
-                  </Button>
+                  <AngleMenuButton appearance="default" size="md">
+                    Actions
+                  </AngleMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem onSelect={handleEditClick}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
-                      <span>Edit</span>
-                      <IconCheck size={14} style={{ color: 'var(--ax-colors-fg-default)' }} />
-                    </Box>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => console.log('Merge')}>Merge</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleEditClick}>Edit</DropdownMenuItem>
+                  {selectedCount > 1 && (
+                    <DropdownMenuItem onSelect={() => console.log('Merge')}>
+                      Merge
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onSelect={handleDeleteSelected}>Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           )}
+          <Button appearance="primary" size="md" onClick={handleCreateClick}>
+            Create categories
+          </Button>
         </Box>
-        <Button
-          appearance="primary"
-          size="md"
-          onClick={handleCreateClick}
-          style={{
-            fontSize: '13px',
-            fontWeight: 400,
-            letterSpacing: '-0.08px',
-            backgroundColor: '#0037ff',
-            color: '#ffffff',
-          }}
-        >
-          Create Categories
-        </Button>
       </Box>
 
       {/* Table */}

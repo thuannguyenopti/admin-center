@@ -12,6 +12,7 @@ import DetailsPane from "./DetailsPane";
 import { useState, useEffect, useMemo } from "react";
 import { type UnifiedContentItem } from "@/app/db/initialData";
 import FilterPills from "./components/FilterPills";
+import TagsColumnCell from "./components/TagsColumnCell";
 import { useFilterPanel } from "./context/FilterPanelContext";
 
 export type ContentItem = UnifiedContentItem & {
@@ -47,6 +48,8 @@ export default function ContentPage() {
 		hasActiveFilters,
 		removeFilter,
 		clearAllFilters,
+		onTagsChange,
+		onTagsChangeBatch,
 	} = useFilterPanel();
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -107,6 +110,32 @@ export default function ContentPage() {
 		currentPage * itemsPerPage
 	);
 	const selectedContent = displayContent.find(item => item.id === selectedContentId);
+
+	// Lifted tag state for details pane so 1↔2 selection switch doesn't lose edits
+	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
+	const [stickyMultiSelect, setStickyMultiSelect] = useState(false);
+	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
+	// Keep batch-edit (multi) pane open when user deselects from 2+ down to 1 until they close
+	useEffect(() => {
+		if (selectedRows.size > 1) setStickyMultiSelect(true);
+	}, [selectedRows.size]);
+	// Clear sticky when pane is closed (0 selected) so next single-item open shows single-select + thumbnail
+	useEffect(() => {
+		if (selectedRows.size === 0) setStickyMultiSelect(false);
+	}, [selectedRows.size]);
+	const selectedItems = useMemo(
+		() => paginatedItems.filter((item) => selectedRows.has(item.id)),
+		[paginatedItems, selectedRows]
+	);
+	const selectedItemsTagUnion = useMemo(
+		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
+		[selectedItems]
+	);
+	useEffect(() => {
+		if (paneOpen && detailsPaneTags === null && selectedItems.length > 0) {
+			setDetailsPaneTags(selectedItemsTagUnion);
+		}
+	}, [paneOpen, detailsPaneTags, selectedItems.length, selectedItemsTagUnion.join(",")]);
 
 	// Reset pagination when filters change
 	useEffect(() => {
@@ -255,6 +284,9 @@ export default function ContentPage() {
 						>
 							Language{renderSortIcon('language')}
 						</Th>
+						<Th style={{ width: "180px", minWidth: "180px" }}>
+							Tags
+						</Th>
 						<Th
 							style={{ cursor: 'pointer', userSelect: 'none' }}
 							onClick={() => handleSort('lastModified')}
@@ -294,6 +326,9 @@ export default function ContentPage() {
 							</Td>
 							<Td>{item.modifiedBy}</Td>
 							<Td>{item.language}</Td>
+							<Td style={{ width: "180px", minWidth: "180px" }}>
+								<TagsColumnCell tags={item.tags ?? []} />
+							</Td>
 							<Td>{item.lastModified}</Td>
 							<Td type="button" />
 						</Tr>
@@ -307,16 +342,25 @@ export default function ContentPage() {
 				mt="24"
 			/>
 
-			{(selectedContentId || selectedRows.size > 1) && (
+			{(selectedContentId || selectedRows.size >= 1) && (
 				<Aside>
 					<DetailsPane
 						content={selectedContent}
 						selectedIds={selectedRows}
+						selectedItems={selectedItems}
 						allContent={paginatedItems}
+						detailsPaneTags={detailsPaneTags}
+						setDetailsPaneTags={setDetailsPaneTags}
+						stickyMultiSelect={stickyMultiSelect}
+						onTagsChange={onTagsChange}
+						onTagsChangeBatch={onTagsChangeBatch}
 						onClose={() => {
 							setSelectedContentId(null);
 							setSelectedRows(new Set());
+							setDetailsPaneTags(null);
+							setStickyMultiSelect(false);
 						}}
+						onBackWhenSingle={() => setStickyMultiSelect(false)}
 					/>
 				</Aside>
 			)}

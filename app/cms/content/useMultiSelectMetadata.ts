@@ -46,8 +46,8 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
     Media: items.filter(i => i.baseType === "Media").length,
   };
 
-  // Mock tags - in real implementation, these would come from data
-  const mockTags = ["Sky", "Man", "Outdoor", "Photo", "Mountain", "Nature"];
+  // Union of all selected items' tags (slugs) for display and edit
+  const tags = [...new Set(items.flatMap((i) => i.tags ?? []))];
 
   // Calculate total file size (mock)
   const totalFileSize = (items.length * 11.42).toFixed(1); // Mock calculation
@@ -60,7 +60,7 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
       latest: formatDate(latestDate),
     },
     totalFileSize: `${totalFileSize} MB`,
-    tags: mockTags,
+    tags,
     typeDistribution,
   };
 }
