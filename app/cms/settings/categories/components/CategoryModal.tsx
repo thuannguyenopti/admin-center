@@ -6,13 +6,15 @@ import {
   DialogFooter,
   DialogClose,
   Box,
+  Button,
 } from '@optiaxiom/react';
-import { Button } from '@/app/components/Button';
+import { Button as LegacyButton } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import { CategoryFormRow as FormRowType, Category } from '../types';
 import { CategoryFormRow } from './CategoryFormRow';
 import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique, isValidParent } from '../utils';
+import { IconSparkles } from '@optimizely/axiom-icons';
 
 interface CategoryModalProps {
   open: boolean;
@@ -33,6 +35,8 @@ export function CategoryModal({
 }: CategoryModalProps) {
   const [formRows, setFormRows] = useState<FormRowType[]>([]);
   const [errors, setErrors] = useState<Record<number, string>>({});
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -52,8 +56,59 @@ export function CategoryModal({
         );
       }
       setErrors({});
+      setGenerateError(null);
     }
   }, [open, mode, initialCategories]);
+
+  const toCategoryName = (str: string): string =>
+    str
+      .trim()
+      .replace(/-/g, ' ')
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+      .trim();
+
+  const handleGenerate = useCallback(async () => {
+    if (allCategories.length === 0) return;
+    setGenerateLoading(true);
+    setGenerateError(null);
+    try {
+      const res = await fetch('/api/categories/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          categoryTaxonomy: allCategories.map((c) => ({ name: c.name, slug: c.slug })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setGenerateError(data.error || 'Generate is not available');
+        return;
+      }
+      const newNames: string[] = data.suggestedNewNames ?? [];
+      if (newNames.length > 0) {
+        const rows: FormRowType[] = newNames.map((nameOrSlug) => {
+          const name = toCategoryName(nameOrSlug);
+          return {
+            name,
+            slug: generateSlug(name),
+            parentId: null,
+            visibility: 'public' as const,
+          };
+        });
+        setFormRows(rows);
+        setErrors({});
+      } else {
+        setGenerateError('No suggestions generated');
+      }
+    } catch {
+      setGenerateError('Generate is not available');
+    } finally {
+      setGenerateLoading(false);
+    }
+  }, [allCategories]);
 
   const handleChange = useCallback((
     index: number,
@@ -192,8 +247,8 @@ export function CategoryModal({
         >
           {title}
         </DialogHeader>
-        <DialogBody>
-          <Box display="flex" flexDirection="column" gap="16">
+        <DialogBody pt="0">
+          <Box display="flex" flexDirection="column" gap="8" pt="16">
             {/* Subtitle */}
             <Text
               style={{
@@ -205,10 +260,9 @@ export function CategoryModal({
             >
               Define categories to organise your content.
             </Text>
-
-            {/* Header Row */}
+            {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
-              <Box display="flex" gap="10" mb="8">
+              <Box display="flex" gap="10" mb="4">
                 <Box
                   flex="1"
                   style={{
@@ -261,7 +315,7 @@ export function CategoryModal({
                 <Box style={{ width: '30px', flexShrink: 0 }} />
               </Box>
 
-              {/* Form Rows */}
+              {/* Form Rows: shimmer only on input fields, one row per visible row */}
               {formRows.map((row, index) => (
                 <Box key={index} display="flex" flexDirection="column" gap="4">
                   <CategoryFormRow
@@ -274,6 +328,7 @@ export function CategoryModal({
                     onAdd={handleAddRow}
                     showDelete={formRows.length > 1}
                     showAdd={mode === 'create' && index === formRows.length - 1}
+                    loading={mode === 'create' && generateLoading}
                   />
                   {errors[index] && (
                     <Box
@@ -289,11 +344,36 @@ export function CategoryModal({
                 </Box>
               ))}
             </Box>
+            {mode === 'create' && (
+              <Box display="flex" justifyContent="flex-start" alignItems="center">
+                <Button
+                  appearance="primary-opal"
+                  size="sm"
+                  rounded="sm"
+                  px="8"
+                  icon={<IconSparkles size={16} />}
+                  iconPosition="start"
+                  onClick={handleGenerate}
+                  disabled={generateLoading || allCategories.length === 0}
+                  loading={generateLoading}
+                  aria-label="Generate category suggestions with Opal"
+                >
+                  Generate
+                </Button>
+              </Box>
+            )}
+            {mode === 'create' && generateError && (
+              <Box>
+                <Text fontSize="xs" color="fg.error">
+                  {generateError}
+                </Text>
+              </Box>
+            )}
           </Box>
         </DialogBody>
         <DialogFooter style={{ gap: '16px' }}>
           <DialogClose size="lg">Cancel</DialogClose>
-          <Button
+          <LegacyButton
             appearance="primary"
             size="lg"
             onClick={handleSave}
@@ -303,7 +383,7 @@ export function CategoryModal({
             }}
           >
             {buttonText}
-          </Button>
+          </LegacyButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

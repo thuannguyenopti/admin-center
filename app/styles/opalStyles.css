@@ -10,12 +10,12 @@
   --opal-bg-assistant: var(--ax-colors-bg-secondary, #f3f5f8);
   --opal-bg-user: var(--ax-colors-bg-accent-subtle, #e8f0fe);
   --opal-bg-history-active: var(--ax-colors-bg-secondary, #f3f5f8);
-  
+
   /* Border Colors - Using Axiom tokens */
   --opal-border-primary: var(--ax-colors-border-default, #d1d5db);
   --opal-border-secondary: var(--ax-colors-border-secondary, #e5e7eb);
   --opal-border-input: var(--ax-colors-border-control, #d1d5db);
-  
+
   /* Text Colors - Using Axiom tokens */
   --opal-text-primary: var(--ax-colors-fg-default, #1f2937);
   --opal-text-secondary: var(--ax-colors-fg-secondary, #4b5563);
@@ -25,7 +25,7 @@
   --opal-text-inverse: var(--ax-colors-fg-default-inverse, #ffffff);
   --opal-text-user: var(--ax-colors-fg-default, #1f2937);
   --opal-text-label: var(--ax-colors-fg-secondary, #4b5563);
-  
+
   /* Special Colors */
   --opal-spinner-border: var(--ax-colors-border-secondary, #e5e7eb);
   --opal-spinner-top: var(--ax-colors-fg-default, #1f2937);
@@ -60,6 +60,7 @@ body.dark {
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -70,6 +71,7 @@ body.dark {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -77,6 +79,40 @@ body.dark {
 
 .opal-loading-spinner {
   animation: spin 0.8s linear infinite;
+}
+
+/* Shimmer loading placeholder for Opal (tag suggest, generate) */
+@keyframes opal-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.opal-skeleton-shimmer {
+  background: linear-gradient(90deg,
+      var(--ax-colors-bg-avatar-neutral, #e9edf5) 0%,
+      var(--ax-colors-bg-secondary, #f5f6fa) 50%,
+      var(--ax-colors-bg-avatar-neutral, #e9edf5) 100%);
+  background-size: 200% 100%;
+  animation: opal-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Shimmer on the actual text (placeholder labels) */
+.opal-shimmer-text {
+  background: linear-gradient(90deg,
+      var(--ax-colors-fg-tertiary, #66708c) 0%,
+      var(--ax-colors-fg-secondary, #4f576e) 50%,
+      var(--ax-colors-fg-tertiary, #66708c) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: opal-shimmer 1.5s ease-in-out infinite;
 }
 
 /* Custom scrollbar for chat */
