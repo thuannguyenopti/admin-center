@@ -16,12 +16,14 @@
 		"@tanstack/react-table": "^8.21.3",
 		"@xyflow/react": "^12.10.0",
 		"classnames": "^2.5.1",
+		"clsx": "^2.1.1",
 		"elkjs": "^0.11.0",
 		"framer-motion": "^12.0.1",
 		"next": "^16.0.7",
 		"openai": "^6.10.0",
 		"react": "^19.2.1",
-		"react-dom": "^19.2.1"
+		"react-dom": "^19.2.1",
+		"tailwind-merge": "^2.5.4"
 	},
 	"devDependencies": {
 		"@svgr/webpack": "^8.1.0",
