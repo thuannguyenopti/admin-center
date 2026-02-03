@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip, Skeleton } from "@optiaxiom/react";
 import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, IconBox, IconLayoutGrid, IconCheck, IconArrowLeft, IconChevronLeft, IconChevronRight, IconSparkles } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
@@ -428,7 +428,24 @@ export default function MultiSelectDetailsPane({
                 No related tags found for this selection.
               </Text>
             )}
-            {suggestedSlugs.length > 0 && (
+            {suggestLoading && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                  Suggested
+                </Text>
+                <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton
+                      key={i}
+                      h="24"
+                      style={{ width: `${60 + i * 24}px`, borderRadius: '4px' }}
+                      className="opal-skeleton-shimmer"
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+            {!suggestLoading && suggestedSlugs.length > 0 && (
               <Box display="flex" flexDirection="column" gap="4">
                 <Text fontSize="xs" color="fg.secondary" fontWeight="600">
                   Suggested

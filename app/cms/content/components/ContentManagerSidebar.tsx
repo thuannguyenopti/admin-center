@@ -5,12 +5,13 @@ import ContentSubNav from "./ContentSubNav";
 import FilterPanel from "./FilterPanel";
 
 export default function ContentManagerSidebar() {
-  const { 
-    isFilterPanelOpen, 
+  const {
+    isFilterPanelOpen,
     setIsFilterPanelOpen,
     filters,
     filterOptions,
     toggleFilter,
+    getCategoryNameBySlug,
   } = useFilterPanel();
 
   if (isFilterPanelOpen) {
@@ -20,6 +21,7 @@ export default function ContentManagerSidebar() {
         filterOptions={filterOptions}
         onToggleFilter={toggleFilter}
         onClose={() => setIsFilterPanelOpen(false)}
+        getCategoryNameBySlug={getCategoryNameBySlug}
       />
     );
   }

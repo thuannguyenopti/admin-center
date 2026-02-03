@@ -6,13 +6,15 @@ import {
   DialogFooter,
   DialogClose,
   Box,
+  Button,
 } from '@optiaxiom/react';
-import { Button } from '@/app/components/Button';
+import { Button as LegacyButton } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import { TagFormRow as FormRowType, Tag } from '../types';
 import { TagFormRow } from './TagFormRow';
 import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique } from '../utils';
+import { IconSparkles } from '@optimizely/axiom-icons';
 
 interface TagModalProps {
   open: boolean;
@@ -33,6 +35,8 @@ export function TagModal({
 }: TagModalProps) {
   const [formRows, setFormRows] = useState<FormRowType[]>([]);
   const [errors, setErrors] = useState<Record<number, string>>({});
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -51,8 +55,61 @@ export function TagModal({
         );
       }
       setErrors({});
+      setGenerateError(null);
     }
   }, [open, mode, initialTags]);
+
+  const toTagName = (str: string): string =>
+    str
+      .trim()
+      .replace(/-/g, ' ')
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ')
+      .trim();
+
+  const handleGenerate = useCallback(async () => {
+    if (allTags.length === 0) return;
+    setGenerateLoading(true);
+    setGenerateError(null);
+    try {
+      const res = await fetch('/api/tags/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemName: 'Suggest new tag names that fit the existing taxonomy',
+          tagTaxonomy: allTags.map((t) => ({ name: t.name, slug: t.slug })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setGenerateError(data.error || 'Generate is not available');
+        return;
+      }
+      const existingSlugs: string[] = data.suggestedSlugs ?? [];
+      const newNames: string[] = data.suggestedNewNames ?? [];
+      const namesToUse = newNames.length > 0 ? newNames : existingSlugs;
+      if (namesToUse.length > 0) {
+        const rows: FormRowType[] = namesToUse.map((nameOrSlug) => {
+          const name = toTagName(nameOrSlug);
+          return {
+            name,
+            slug: generateSlug(name),
+            visibility: 'public' as const,
+          };
+        });
+        setFormRows(rows);
+        setErrors({});
+      } else {
+        setGenerateError('No suggestions generated');
+      }
+    } catch {
+      setGenerateError('Generate is not available');
+    } finally {
+      setGenerateLoading(false);
+    }
+  }, [allTags]);
 
   const handleChange = useCallback(
     (index: number, field: keyof FormRowType, value: string) => {
@@ -187,11 +244,22 @@ export function TagModal({
         >
           {title}
         </DialogHeader>
-        <DialogBody>
-          <Box display="flex" flexDirection="column" gap="16">
-            {/* Header Row */}
+        <DialogBody pt="0">
+          <Box display="flex" flexDirection="column" gap="8">
+            {/* Subtitle */}
+            <Text
+              style={{
+                fontSize: '14px',
+                fontWeight: 400,
+                letterSpacing: '-0.15px',
+                color: '#080736',
+              }}
+            >
+              Add and manage tags to label and filter your content.
+            </Text>
+            {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
-              <Box display="flex" gap="10" mb="8">
+              <Box display="flex" gap="10" mb="4">
                 <Box
                   flex="1"
                   style={{
@@ -228,11 +296,10 @@ export function TagModal({
                 >
                   Visibility
                 </Box>
-                {/* Spacer for icon column */}
                 <Box style={{ width: '30px', flexShrink: 0 }} />
               </Box>
 
-              {/* Form Rows */}
+              {/* Form Rows: shimmer only on input fields, one row per visible row */}
               {formRows.map((row, index) => (
                 <Box key={index} display="flex" flexDirection="column" gap="4">
                   <TagFormRow
@@ -244,6 +311,7 @@ export function TagModal({
                     onAdd={handleAddRow}
                     showDelete={formRows.length > 1}
                     showAdd={mode === 'create' && index === formRows.length - 1}
+                    loading={mode === 'create' && generateLoading}
                   />
                   {errors[index] && (
                     <Box
@@ -259,11 +327,36 @@ export function TagModal({
                 </Box>
               ))}
             </Box>
+            {mode === 'create' && (
+              <Box display="flex" justifyContent="flex-start" alignItems="center">
+                <Button
+                  appearance="primary-opal"
+                  size="sm"
+                  rounded="sm"
+                  px="8"
+                  icon={<IconSparkles size={16} />}
+                  iconPosition="start"
+                  onClick={handleGenerate}
+                  disabled={generateLoading || allTags.length === 0}
+                  loading={generateLoading}
+                  aria-label="Generate tag suggestions with Opal"
+                >
+                  Generate
+                </Button>
+              </Box>
+            )}
+            {mode === 'create' && generateError && (
+              <Box>
+                <Text fontSize="xs" color="fg.error">
+                  {generateError}
+                </Text>
+              </Box>
+            )}
           </Box>
         </DialogBody>
         <DialogFooter style={{ gap: '16px' }}>
           <DialogClose size="lg">Cancel</DialogClose>
-          <Button
+          <LegacyButton
             appearance="primary"
             size="lg"
             onClick={handleSave}
@@ -273,7 +366,7 @@ export function TagModal({
             }}
           >
             {buttonText}
-          </Button>
+          </LegacyButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

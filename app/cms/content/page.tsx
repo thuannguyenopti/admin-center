@@ -48,6 +48,7 @@ export default function ContentPage() {
 		hasActiveFilters,
 		removeFilter,
 		clearAllFilters,
+		getCategoryNameBySlug,
 		onTagsChange,
 		onTagsChangeBatch,
 	} = useFilterPanel();
@@ -241,6 +242,7 @@ export default function ContentPage() {
 						pills={activePills}
 						onRemoveFilter={removeFilter}
 						onClearAll={clearAllFilters}
+						getCategoryNameBySlug={getCategoryNameBySlug}
 					/>
 				</Flex>
 			)}

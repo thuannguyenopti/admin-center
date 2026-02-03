@@ -10,16 +10,24 @@ interface FilterPillsProps {
   pills: FilterPill[];
   onRemoveFilter: (category: string, value: string) => void;
   onClearAll: () => void;
+  /** Resolve category slug to display name (from categories repository). */
+  getCategoryNameBySlug?: (slug: string) => string | undefined;
 }
 
 export default function FilterPills({
   pills,
   onRemoveFilter,
   onClearAll,
+  getCategoryNameBySlug,
 }: FilterPillsProps) {
   if (pills.length === 0) {
     return null;
   }
+
+  const pillLabel = (pill: FilterPill) =>
+    pill.category === "Category" && getCategoryNameBySlug
+      ? getCategoryNameBySlug(pill.value) ?? pill.value
+      : pill.value;
 
   return (
     <Box
@@ -34,7 +42,7 @@ export default function FilterPills({
             key={`${pill.category}-${pill.value}-${index}`}
             onDismiss={() => onRemoveFilter(pill.category, pill.value)}
           >
-            {pill.value}
+            {pillLabel(pill)}
           </Pill>
         ))}
       </PillGroup>
