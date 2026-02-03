@@ -264,7 +264,10 @@ export function CategoryModal({
         size="lg"
         style={{
           maxWidth: '736px',
+          maxHeight: '90vh',
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <DialogHeader
@@ -277,7 +280,14 @@ export function CategoryModal({
         >
           {title}
         </DialogHeader>
-        <DialogBody pt="0">
+        <DialogBody
+          pt="0"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
           <Box display="flex" flexDirection="column" gap="8">
             {/* Subtitle */}
             <Text
