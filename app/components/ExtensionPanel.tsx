@@ -79,7 +79,7 @@ export default function ExtensionPanel({
 				transition: isResizing ? "none" : "transform cubic-bezier(0, 1, 0, 1) .5s",
 				//right: isPoppedOut ? "64px" : undefined,
 				// Ensure it doesn't overshoot the page, leaving 8px gap at bottom
-				zIndex: 50,
+				zIndex: isPoppedOut ? 50 : 40,
 			}}
 		>
 			{/* Resize Handle */}
@@ -164,7 +164,7 @@ export default function ExtensionPanel({
 				</Box>
 			</Box>
 
-			{/* Content */}
+			{/* Content  */}
 			<Box
 				flex={isPoppedOut ? undefined : "1"}
 				px="24"

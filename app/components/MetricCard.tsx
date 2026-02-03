@@ -1,7 +1,8 @@
 import {Box, Card, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
-import Link from "next/link";
 import {useMemo} from "react";
+import {cn} from "@/utils/cn";
+import Link from "next/link";
 
 type MetricCardProps = {
 	label: string;
@@ -13,6 +14,7 @@ type MetricCardProps = {
 	aggregation?: "sum" | "average" | "last";
 	previousValue?: number;
 	height?: number;
+	href?: string;
 };
 
 export default function MetricCard({
@@ -25,6 +27,7 @@ export default function MetricCard({
 	aggregation = "last",
 	height = 60,
 	previousValue: explicitPreviousValue,
+	href,
 }: MetricCardProps) {
 	// Get current value based on aggregation type
 	const value = (() => {
@@ -171,11 +174,13 @@ export default function MetricCard({
 		}
 	};
 
-	return (
+	const cardContent = (
 		<Card
 			p="16"
 			color="fg.disabled"
-			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
+			className={cn("transition-all duration-200", {
+				"cursor-pointer hover:shadow-[currentColor_0_0_0_2px]": !!href,
+			})}
 		>
 			<Text fontSize="md" fontWeight="600" color="fg.default">
 				{label}
@@ -269,4 +274,6 @@ export default function MetricCard({
 			)}
 		</Card>
 	);
+
+	return href ? <Link href={href}>{cardContent}</Link> : cardContent;
 }
