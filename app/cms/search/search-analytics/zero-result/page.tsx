@@ -108,9 +108,7 @@ export default function ZeroResultPage() {
 		let data = allData;
 
 		// Filter by Time Range
-		const dates = data.map((d) => new Date(d.lastSeen).getTime());
-		const latestDate = dates.length > 0 ? Math.max(...dates) : Date.now();
-		const now = new Date(latestDate);
+		const now = new Date();
 		data = data
 			.filter((item) => {
 				const itemDate = new Date(item.lastSeen);

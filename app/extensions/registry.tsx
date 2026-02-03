@@ -1,6 +1,7 @@
 import React from "react";
 import GoogleAnalyticsPanel from "@/app/extensions/google/GoogleAnalyticsPanel";
 import ImageSelectorPanel from "@/app/extensions/ImageSelector/ImageSelectorPanel";
+import VariationsPanel from "@/app/extensions/variations/VariationsPanel";
 import extensionConfig from "./extensions.json";
 
 // Types
@@ -31,6 +32,7 @@ const empty = () => <div>Nothing here yet</div>;
 const panelMap: Record<string, {component: React.ComponentType<any>}> = {
 	folders: {component: ImageSelectorPanel},
 	google: {component: GoogleAnalyticsPanel},
+	variations: {component: VariationsPanel},
 	smile: {component: empty},
 	stride: {component: empty},
 	teams: {component: empty},

@@ -522,6 +522,7 @@ export default function PreviewCanvas({
 				height: "100%",
 				minHeight: 0,
 				overflow: "hidden",
+				zIndex: 50,
 				boxShadow: "0 20px 70px 0px rgba(0,0,0,0.15), 0 1px 1px 0 rgba(0,0,0,0.1)",
 			}}
 		>

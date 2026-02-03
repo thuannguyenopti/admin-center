@@ -30,6 +30,7 @@ export default function AbstractDialog({
 	footerPrimaryAction = () => setOpen(false),
 	footerAppearance,
 	footerSecondaryText = "Cancel",
+	blockPrimaryAction = false,
 }: {
 	isAlert?: boolean;
 	size?: "sm" | "md" | "lg" | undefined;
@@ -49,14 +50,12 @@ export default function AbstractDialog({
 		| "danger-outline"
 		| undefined;
 	footerSecondaryText?: string;
+	blockPrimaryAction?: boolean;
 }) {
 	return (
 		<>
 			{isAlert ? (
-				<AlertDialog
-					open={open}
-					onOpenChange={setOpen}
-				>
+				<AlertDialog open={open} onOpenChange={setOpen}>
 					<AlertDialogContent size={size}>
 						<AlertDialogHeader>{title}</AlertDialogHeader>
 						<AlertDialogBody>{description}</AlertDialogBody>
@@ -69,10 +68,7 @@ export default function AbstractDialog({
 					</AlertDialogContent>
 				</AlertDialog>
 			) : (
-				<Dialog
-					open={open}
-					onOpenChange={setOpen}
-				>
+				<Dialog open={open} onOpenChange={setOpen}>
 					<DialogContent size={size}>
 						<DialogHeader description={description}>{title}</DialogHeader>
 						<DialogBody>{children}</DialogBody>
@@ -85,6 +81,7 @@ export default function AbstractDialog({
 									onClick={() => footerPrimaryAction()}
 									appearance={footerAppearance}
 									size="lg"
+									disabled={blockPrimaryAction}
 								>
 									{footerPrimaryText}
 								</DialogClose>
