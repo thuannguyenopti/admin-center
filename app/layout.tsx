@@ -1,7 +1,6 @@
 "use client";
 import Template from "./components/template";
 import "./globals.css";
-import "./theme/colorTokens.css";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
