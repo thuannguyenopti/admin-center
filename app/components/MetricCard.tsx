@@ -1,7 +1,8 @@
 import {Box, Card, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
 import {useMemo} from "react";
-import cn from "classnames";
+import {cn} from "@/utils/cn";
+import Link from "next/link";
 
 type MetricCardProps = {
 	label: string;
@@ -274,11 +275,5 @@ export default function MetricCard({
 		</Card>
 	);
 
-	return href ? (
-		<Link href={href} style={{textDecoration: "none"}}>
-			{cardContent}
-		</Link>
-	) : (
-		cardContent
-	);
+	return href ? <Link href={href}>{cardContent}</Link> : cardContent;
 }
