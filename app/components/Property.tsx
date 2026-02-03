@@ -9,7 +9,7 @@ type ItemProps = {
 	data?: any;
 };
 
-export default function Item({title, description, type = "text", data}: ItemProps) {
+export default function Property({title, description, type = "text", data}: ItemProps) {
 	const renderTypes = (label: string | undefined) => ({
 		text: () => <Text fontSize="md">{label}</Text>,
 		badge: () => <Badge intent={data.intent || "default"}>{label}</Badge>,

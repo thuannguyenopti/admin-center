@@ -31,51 +31,48 @@ export default function VT({
 	};
 
 	return (
-		<NavBody style={{maxWidth: "224px", minHeight: "100%"}}>
+		<NavBody
+			style={{
+				maxWidth: "224px",
+				minHeight: "100%",
+				overflow: "auto",
+				height: "calc(100vh - 80px)",
+			}}
+		>
 			<NavList className="appear">
 				{(backLink || title) && (
-					<Box
-						px="12"
-						py="16"
-					>
+					<Box px="12" py="16">
 						{backLink && (
 							<Link href={backLink.url as Url}>
-								<Text
-									color="fg.secondary"
-									fontSize="sm"
-								>
+								<Text color="fg.secondary" fontSize="sm">
 									← {backLink.label}
 								</Text>
 							</Link>
 						)}
 						{title && (
-							<Text
-								fontSize="lg"
-								fontWeight="600"
-								color="fg.default"
-							>
+							<Text fontSize="lg" fontWeight="600" color="fg.default">
 								{title}
 							</Text>
 						)}
 					</Box>
 				)}
-			{items?.map((menuItem, i) =>
-				menuItem.url ? (
-					<NavItem
-						onClick={() => menuClick(menuItem.url || "")}
-						active={menuItem.url === path}
-						key={`${menuItem.label}-${menuItem.url}`}
-						aria-label={menuItem.label}
-					>
-						{menuItem.label}
-					</NavItem>
-				) : (
-					<Fragment key={`${menuItem.label}-group-${i}`}>
-						{i !== 0 && <NavSeparator />}
-						<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
-					</Fragment>
-				)
-			)}
+				{items?.map((menuItem, i) =>
+					menuItem.url ? (
+						<NavItem
+							onClick={() => menuClick(menuItem.url || "")}
+							active={menuItem.url === path}
+							key={`${menuItem.label}-${menuItem.url}`}
+							aria-label={menuItem.label}
+						>
+							{menuItem.label}
+						</NavItem>
+					) : (
+						<Fragment key={`${menuItem.label}-group-${i}`}>
+							{i !== 0 && <NavSeparator />}
+							<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
+						</Fragment>
+					)
+				)}
 			</NavList>
 		</NavBody>
 	);
