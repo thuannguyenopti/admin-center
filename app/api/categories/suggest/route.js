@@ -3,38 +3,126 @@ import OpenAI from "openai";
 
 const openai = process.env.OPENAI_API_KEY
 	? new OpenAI({
-			apiKey: process.env.OPENAI_API_KEY,
-		})
+		apiKey: process.env.OPENAI_API_KEY,
+	})
 	: null;
 
-function buildPromptText(categoryTaxonomy) {
-	const taxonomyList = categoryTaxonomy
-		.map((t) => `  - "${t.name}" (slug: ${t.slug})`)
-		.join("\n");
-	return `You are a taxonomy assistant. Suggest new category names that fit the existing category taxonomy below. Categories are used to organise content (e.g. in a CMS). Suggest 4–8 new category names that are distinct from existing ones and would be useful for organising content. Return short, title-case names.
+const MAX_DEPTH = 4;
 
-Existing categories (name and slug):
-${taxonomyList}
-
-Return valid JSON only, no other text:
-{ "suggestedNewNames": ["Category One", "Category Two", "Category Three"] }
-- suggestedNewNames: 4–8 new category names (short, title-case), or [] if the taxonomy is already comprehensive.`;
+/**
+ * Build a tree description for the prompt (existing categories with depth/path).
+ */
+function describeTaxonomyTree(categoryTaxonomy) {
+	if (!categoryTaxonomy || categoryTaxonomy.length === 0) {
+		return "No existing categories (all suggestions should be root-level, parentSlug: null).";
+	}
+	const byId = new Map(categoryTaxonomy.map((c) => [c.id, c]));
+	const getPath = (cat) => {
+		const path = [cat.name];
+		let id = cat.parentId;
+		while (id) {
+			const p = byId.get(id);
+			if (!p) break;
+			path.unshift(p.name);
+			id = p.parentId;
+		}
+		return path.join(" > ");
+	};
+	const lines = categoryTaxonomy.map(
+		(c) => `  - "${c.name}" (slug: ${c.slug}) path: ${getPath(c)}`
+	);
+	return lines.join("\n");
 }
 
-function parseSuggestionsResponse(content) {
+/**
+ * Build content context description (content items and their category slugs).
+ */
+function describeContentContext(contentContext) {
+	if (!contentContext || contentContext.length === 0) {
+		return "No content context provided.";
+	}
+	const lines = contentContext.slice(0, 100).map((item) => {
+		const type = item.baseType ? ` [${item.baseType}]` : "";
+		const cats = (item.categorySlugs || []).length
+			? ` categories: ${item.categorySlugs.join(", ")}`
+			: " (uncategorised)";
+		return `  - "${item.name}"${type}${cats}`;
+	});
+	return lines.join("\n");
+}
+
+function buildPromptText(categoryTaxonomy, contentContext) {
+	const treeDesc = describeTaxonomyTree(categoryTaxonomy);
+	const contentDesc = describeContentContext(contentContext);
+	const existingSlugs =
+		categoryTaxonomy.length > 0
+			? categoryTaxonomy.map((c) => c.slug).join(", ")
+			: "none";
+
+	return `You are a taxonomy assistant for a CMS. Suggest new categories that fit the existing taxonomy and the content that will be organised under them.
+
+Rules:
+- Maximum depth is ${MAX_DEPTH} levels (root = level 1, then 2, 3, 4).
+- New categories must reference an existing category as parent using parentSlug, or be root-level (parentSlug: null).
+- parentSlug must be either null or one of the existing category slugs listed below. Do not invent new parent slugs.
+- Suggest a mix of root-level and child categories so the taxonomy is useful and covers the content themes.
+- Use short, title-case names. Slugs must be lowercase, hyphenated, no spaces.
+- Infer categories from: (1) existing taxonomy gaps, (2) content names and types, (3) how content is currently categorised. Suggest categories that would help organise the given content and extend the tree up to ${MAX_DEPTH} levels where it makes sense.
+
+Existing categories (name, slug, path):
+${treeDesc}
+
+Content to organise (name, type, current category slugs):
+${contentDesc}
+
+Existing category slugs (use only these for parentSlug, or null for root): ${existingSlugs}
+
+Return valid JSON only, no other text:
+{
+  "suggestedCategories": [
+    { "name": "Category Name", "slug": "category-slug", "parentSlug": null },
+    { "name": "Child Category", "slug": "child-category", "parentSlug": "category-slug" }
+  ]
+}
+- suggestedCategories: array of 6–20 new categories. Each has name (title-case), slug (lowercase-hyphenated), parentSlug (null for root, or an existing slug from the list above). Order can be any; parents may appear after children.`;
+}
+
+function parseSuggestionsResponse(content, allowedParentSlugs) {
+	const slugSet = new Set(allowedParentSlugs || []);
 	let text = (content || "").trim();
 	const codeMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
 	if (codeMatch) text = codeMatch[1].trim();
 	try {
 		const parsed = JSON.parse(text);
-		const newNames = Array.isArray(parsed.suggestedNewNames)
-			? parsed.suggestedNewNames.filter(
-					(s) => typeof s === "string" && s.trim().length > 0
-				)
+		const raw = Array.isArray(parsed.suggestedCategories)
+			? parsed.suggestedCategories
 			: [];
-		return { suggestedNewNames: [...new Set(newNames.map((s) => s.trim()))] };
+		const suggestedCategories = raw
+			.filter(
+				(item) =>
+					item &&
+					typeof item.name === "string" &&
+					typeof item.slug === "string" &&
+					item.name.trim().length > 0 &&
+					item.slug.trim().length > 0
+			)
+			.map((item) => ({
+				name: item.name.trim(),
+				slug: item.slug
+					.trim()
+					.toLowerCase()
+					.replace(/\s+/g, "-")
+					.replace(/[^a-z0-9-]/g, ""),
+				parentSlug:
+					item.parentSlug == null || item.parentSlug === ""
+						? null
+						: slugSet.has(String(item.parentSlug).trim())
+							? String(item.parentSlug).trim()
+							: null,
+			}));
+		return { suggestedCategories };
 	} catch {
-		return { suggestedNewNames: [] };
+		return { suggestedCategories: [] };
 	}
 }
 
@@ -48,38 +136,37 @@ export async function POST(request) {
 		}
 
 		const body = await request.json();
-		const { categoryTaxonomy } = body;
+		const { categoryTaxonomy, contentContext } = body;
 
-		if (!Array.isArray(categoryTaxonomy) || categoryTaxonomy.length === 0) {
-			return NextResponse.json(
-				{ error: "categoryTaxonomy must be a non-empty array of { name, slug }" },
-				{ status: 400 }
-			);
-		}
-		const validTaxonomy = categoryTaxonomy.filter(
-			(t) => t && typeof t.name === "string" && typeof t.slug === "string"
+		const taxonomy = Array.isArray(categoryTaxonomy) ? categoryTaxonomy : [];
+		const validTaxonomy = taxonomy.filter(
+			(t) =>
+				t &&
+				typeof t.name === "string" &&
+				typeof t.slug === "string" &&
+				typeof t.id === "string"
 		);
-		if (validTaxonomy.length === 0) {
-			return NextResponse.json(
-				{
-					error: "categoryTaxonomy must contain objects with name and slug",
-				},
-				{ status: 400 }
-			);
-		}
+		const content = Array.isArray(contentContext) ? contentContext : [];
+		const validContent = content.filter(
+			(c) => c && typeof c.name === "string" && Array.isArray(c.categorySlugs)
+		);
 
-		const promptText = buildPromptText(validTaxonomy);
+		const allowedParentSlugs = validTaxonomy.map((t) => t.slug);
+		const promptText = buildPromptText(validTaxonomy, validContent);
 
 		const completion = await openai.chat.completions.create({
 			model: "gpt-4o",
 			messages: [{ role: "user", content: promptText }],
 		});
 
-		const content = completion.choices[0]?.message?.content;
-		const { suggestedNewNames } = parseSuggestionsResponse(content);
+		const responseContent = completion.choices[0]?.message?.content;
+		const { suggestedCategories } = parseSuggestionsResponse(
+			responseContent,
+			allowedParentSlugs
+		);
 
 		return NextResponse.json({
-			suggestedNewNames: suggestedNewNames || [],
+			suggestedCategories: suggestedCategories || [],
 		});
 	} catch (error) {
 		console.error("Categories suggest API Error:", error);
