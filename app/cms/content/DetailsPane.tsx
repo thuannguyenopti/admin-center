@@ -539,7 +539,7 @@ export default function DetailsPane({
               )}
 
               <Box display="flex" flexDirection="column" gap="8">
-                {suggestedSlugs.length > 0 && (
+                {suggestedSlugs.length > 0 && tags.length > 0 && (
                   <Text fontSize="xs" color="fg.secondary" fontWeight="600">
                     Existing
                   </Text>
