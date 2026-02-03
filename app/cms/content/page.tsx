@@ -130,11 +130,12 @@ export default function ContentPage() {
 		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
 		[selectedItems]
 	);
+	// Sync batch tags to union when selection changes so adding an item with more tags adds those tags by default; removal (strikethrough) only when user explicitly removes from Tags on selection
 	useEffect(() => {
-		if (paneOpen && detailsPaneTags === null && selectedItems.length > 0) {
+		if (paneOpen && selectedItems.length > 0) {
 			setDetailsPaneTags(selectedItemsTagUnion);
 		}
-	}, [paneOpen, detailsPaneTags, selectedItems.length, selectedItemsTagUnion.join(",")]);
+	}, [paneOpen, selectedItems.length, selectedItemsTagUnion.join(",")]);
 
 	// Reset pagination when filters or page size change
 	useEffect(() => {
