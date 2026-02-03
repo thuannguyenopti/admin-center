@@ -58,6 +58,17 @@ export default function CategoriesSettings() {
     }));
   }, [categories, categoryUsageCounts]);
 
+  // Content context for category generation (name, type, category slugs)
+  const contentContext = useMemo(
+    () =>
+      contentItems.map((item) => ({
+        name: item.name,
+        baseType: item.baseType,
+        categorySlugs: item.categories || [],
+      })),
+    [contentItems]
+  );
+
   const {
     selectedIds,
     isSelected,
@@ -275,6 +286,7 @@ export default function CategoriesSettings() {
           mode={modalMode}
           initialCategories={editingCategories}
           allCategories={categoriesWithUsage}
+          contentContext={contentContext}
           onSave={handleSave}
         />
       </>
@@ -359,6 +371,7 @@ export default function CategoriesSettings() {
         mode={modalMode}
         initialCategories={editingCategories}
         allCategories={categoriesWithUsage}
+        contentContext={contentContext}
         onSave={handleSave}
       />
     </>
