@@ -11,6 +11,8 @@ interface FilterPanelProps {
   filterOptions: FilterOptions;
   onToggleFilter: (category: keyof ContentFilters, value: string) => void;
   onClose: () => void;
+  /** Resolve category slug to display name (from categories repository). */
+  getCategoryNameBySlug?: (slug: string) => string | undefined;
 }
 
 export default function FilterPanel({
@@ -18,6 +20,7 @@ export default function FilterPanel({
   filterOptions,
   onToggleFilter,
   onClose,
+  getCategoryNameBySlug,
 }: FilterPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAllModifiedBy, setShowAllModifiedBy] = useState(false);
@@ -236,7 +239,7 @@ export default function FilterPanel({
                 {displayedCategories.map((category) => (
                   <CheckboxRow
                     key={category}
-                    label={formatSlugToName(category)}
+                    label={getCategoryNameBySlug?.(category) ?? formatSlugToName(category)}
                     checked={(filters.categories || []).includes(category)}
                     onChange={() => onToggleFilter("categories", category)}
                   />

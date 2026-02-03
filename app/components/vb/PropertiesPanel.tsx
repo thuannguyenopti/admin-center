@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useState} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
 	Box,
 	Button,
@@ -17,9 +17,10 @@ import {
 	PopoverContent,
 	Input,
 } from "@optiaxiom/react";
-import {IconChevronRight, IconCheck, IconX} from "@tabler/icons-react";
-import {useGlobalTags} from "@/app/cms/hooks/useGlobalTags";
-import {useGlobalCategories} from "@/app/cms/hooks/useGlobalCategories";
+import { IconChevronRight, IconCheck, IconX } from "@tabler/icons-react";
+import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
+import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
+import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
 
 export type PageProperties = {
 	seoTitle?: string;
@@ -39,13 +40,50 @@ type Props = {
 	onChange: (patch: Partial<PageProperties>) => void;
 	activeSection?: PropertySection;
 	onSectionChange?: (section: PropertySection) => void;
+	/** Page context for Generate (tags suggest); when provided, Generate uses page name and optional thumbnail. */
+	pageName?: string;
+	pageId?: string;
+	contentTypeId?: string;
+	/** Register with parent so header sparkles can trigger generate. Call with null on unmount. */
+	onRegisterGenerateTrigger?: (trigger: (() => void) | null) => void;
+	/** Notify parent when generate is loading (for header button spinner). */
+	onGenerateLoadingChange?: (loading: boolean) => void;
 };
 
 export const navigationItems = [
-	{id: "content-settings" as const, label: "Content settings"},
-	{id: "geo-seo" as const, label: "GEO & SEO"},
-	{id: "categories-tags" as const, label: "Categories & Tags"},
+	{ id: "content-settings" as const, label: "Content settings" },
+	{ id: "geo-seo" as const, label: "GEO & SEO" },
+	{ id: "categories-tags" as const, label: "Categories & Tags" },
 ];
+
+const SHIMMER_INSET = 2;
+
+function ShimmerFieldWrapper({
+	children,
+	loading,
+}: {
+	children: React.ReactNode;
+	loading: boolean;
+}) {
+	if (!loading) return <>{children}</>;
+	return (
+		<Box style={{ position: "relative", width: "100%" }}>
+			{children}
+			<Box
+				className="opal-skeleton-shimmer"
+				style={{
+					position: "absolute",
+					top: SHIMMER_INSET,
+					left: SHIMMER_INSET,
+					right: SHIMMER_INSET,
+					bottom: SHIMMER_INSET,
+					pointerEvents: "none",
+					borderRadius: "4px",
+				}}
+			/>
+		</Box>
+	);
+}
 
 // Autocomplete input component for categories/tags
 function AutocompleteMultiSelect({
@@ -58,16 +96,18 @@ function AutocompleteMultiSelect({
 	onCreateNew,
 	itemExists,
 	getItemLabel,
+	loading = false,
 }: {
 	label: string;
 	placeholder: string;
 	selectedItems: string[];
-	availableItems: {name: string; slug: string}[];
+	availableItems: { name: string; slug: string }[];
 	onAdd: (slug: string) => void;
 	onRemove: (slug: string) => void;
 	onCreateNew?: (name: string) => void;
 	itemExists: (name: string) => boolean;
 	getItemLabel: (slug: string) => string | undefined;
+	loading?: boolean;
 }) {
 	const [inputValue, setInputValue] = useState("");
 	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -103,7 +143,7 @@ function AutocompleteMultiSelect({
 		});
 	}
 
-	const handleSelect = (option: {value: string; label: string}) => {
+	const handleSelect = (option: { value: string; label: string }) => {
 		if (option.value.startsWith("__new__")) {
 			const newName = option.value.replace("__new__", "");
 			onCreateNew?.(newName);
@@ -185,25 +225,27 @@ function AutocompleteMultiSelect({
 				onOpenChange={setIsOpen}
 			>
 				<PopoverAnchor asChild>
-					<Box>
-						<Input
-							value={inputValue}
-							onChange={(e) => {
-								setInputValue(e.target.value);
-								setIsOpen(true);
-							}}
-							onFocus={() => setIsOpen(true)}
-							onKeyPress={handleKeyPress}
-							placeholder={placeholder}
-							size="md"
-						/>
+					<Box style={{ width: "100%" }}>
+						<ShimmerFieldWrapper loading={loading}>
+							<Input
+								value={inputValue}
+								onChange={(e) => {
+									setInputValue(e.target.value);
+									setIsOpen(true);
+								}}
+								onFocus={() => setIsOpen(true)}
+								onKeyPress={handleKeyPress}
+								placeholder={placeholder}
+								size="md"
+							/>
+						</ShimmerFieldWrapper>
 					</Box>
 				</PopoverAnchor>
 				<PopoverContent
 					side="bottom"
 					sideOffset={4}
 					align="start"
-					style={{width: "var(--radix-popover-trigger-width)"}}
+					style={{ width: "var(--radix-popover-trigger-width)" }}
 					onOpenAutoFocus={(e) => e.preventDefault()}
 					onCloseAutoFocus={(e) => e.preventDefault()}
 				>
@@ -212,7 +254,7 @@ function AutocompleteMultiSelect({
 						flexDirection="column"
 						gap="0"
 						py="2"
-						style={{maxHeight: "200px"}}
+						style={{ maxHeight: "200px" }}
 						overflow="auto"
 					>
 						{autocompleteOptions.length === 0 ? (
@@ -239,7 +281,7 @@ function AutocompleteMultiSelect({
 									onMouseLeave={() => setHoveredIndex(null)}
 								>
 									{option.isSelected && (
-										<IconCheck size={14} style={{flexShrink: 0}} />
+										<IconCheck size={14} style={{ flexShrink: 0 }} />
 									)}
 									<Text
 										fontSize="sm"
@@ -248,7 +290,7 @@ function AutocompleteMultiSelect({
 												? "fg.accent"
 												: "fg.default"
 										}
-										style={{marginLeft: option.isSelected ? 0 : undefined}}
+										style={{ marginLeft: option.isSelected ? 0 : undefined }}
 									>
 										{option.label}
 									</Text>
@@ -262,14 +304,27 @@ function AutocompleteMultiSelect({
 	);
 }
 
+function nameToSlug(name: string): string {
+	return name
+		.toLowerCase()
+		.trim()
+		.replace(/\s+/g, "-")
+		.replace(/[^a-z0-9-]/g, "");
+}
+
 export default function PropertiesPanel({
 	value,
 	onChange,
 	activeSection = "menu",
 	onSectionChange,
+	pageName,
+	pageId,
+	contentTypeId,
+	onRegisterGenerateTrigger,
+	onGenerateLoadingChange,
 }: Props) {
 	// Get global tags and categories from CMS settings
-	const {tags: allTags, tagNames: availableTagNames, addTag, tagExists} = useGlobalTags();
+	const { tags: allTags, tagNames: availableTagNames, addTag, tagExists } = useGlobalTags();
 	const {
 		categories: allCategories,
 		categoryNames: availableCategoryNames,
@@ -278,23 +333,34 @@ export default function PropertiesPanel({
 		getCategoryNameBySlug,
 	} = useGlobalCategories();
 
-	// Component is now controlled by parent
+	// Generate (tags/categories suggest) state — only used in categories-tags section
+	const [suggestLoading, setSuggestLoading] = useState(false);
+	const [suggestError, setSuggestError] = useState<string | null>(null);
+	const [noTagSuggestions, setNoTagSuggestions] = useState(false);
+	const [noCategorySuggestions, setNoCategorySuggestions] = useState(false);
+
+	// When parent doesn't control section (no onSectionChange), keep local section so menu clicks work
+	const [localSection, setLocalSection] = useState<PropertySection>("menu");
+	const isControlled = onSectionChange != null;
+	const effectiveSection = isControlled ? (activeSection ?? "menu") : localSection;
+
 	const handleSectionChange = (section: PropertySection) => {
-		onSectionChange?.(section);
+		if (onSectionChange) onSectionChange(section);
+		else setLocalSection(section);
 	};
 
 	// Categories handlers
 	const selectedCategories = value.categories || [];
-	const categoriesWithSlugs = allCategories.map((cat: any) => ({name: cat.name, slug: cat.slug}));
+	const categoriesWithSlugs = allCategories.map((cat: any) => ({ name: cat.name, slug: cat.slug }));
 
 	const handleAddCategory = (slug: string) => {
 		if (!selectedCategories.includes(slug)) {
-			onChange({categories: [...selectedCategories, slug]});
+			onChange({ categories: [...selectedCategories, slug] });
 		}
 	};
 
 	const handleRemoveCategory = (slug: string) => {
-		onChange({categories: selectedCategories.filter((s) => s !== slug)});
+		onChange({ categories: selectedCategories.filter((s) => s !== slug) });
 	};
 
 	const handleCreateCategory = (name: string) => {
@@ -307,22 +373,22 @@ export default function PropertiesPanel({
 			.replace(/[^a-z0-9-]/g, "");
 		// Add to selected after a brief delay to allow state to update
 		setTimeout(() => {
-			onChange({categories: [...selectedCategories, slug]});
+			onChange({ categories: [...selectedCategories, slug] });
 		}, 50);
 	};
 
 	// Tags handlers
 	const selectedTags = value.tags || [];
-	const tagsWithSlugs = allTags.map((tag: any) => ({name: tag.name, slug: tag.slug}));
+	const tagsWithSlugs = allTags.map((tag: any) => ({ name: tag.name, slug: tag.slug }));
 
 	const handleAddTag = (slug: string) => {
 		if (!selectedTags.includes(slug)) {
-			onChange({tags: [...selectedTags, slug]});
+			onChange({ tags: [...selectedTags, slug] });
 		}
 	};
 
 	const handleRemoveTag = (slug: string) => {
-		onChange({tags: selectedTags.filter((s) => s !== slug)});
+		onChange({ tags: selectedTags.filter((s) => s !== slug) });
 	};
 
 	const handleCreateTag = (name: string) => {
@@ -335,7 +401,7 @@ export default function PropertiesPanel({
 			.replace(/[^a-z0-9-]/g, "");
 		// Add to selected after a brief delay to allow state to update
 		setTimeout(() => {
-			onChange({tags: [...selectedTags, slug]});
+			onChange({ tags: [...selectedTags, slug] });
 		}, 50);
 	};
 
@@ -344,9 +410,121 @@ export default function PropertiesPanel({
 		return tag?.name;
 	};
 
+	const handleGenerate = async () => {
+		const hasTags = allTags.length > 0;
+		const hasCategories = allCategories.length > 0;
+		if (!hasTags && !hasCategories) {
+			setSuggestError("Add tags or categories in Settings first to use Generate.");
+			return;
+		}
+		setSuggestLoading(true);
+		setSuggestError(null);
+		setNoTagSuggestions(false);
+		setNoCategorySuggestions(false);
+		const itemName = (pageName || "Page").trim();
+		const imageUrl =
+			pageId != null || pageName != null
+				? getThumbnailForContent({
+					id: pageId ?? "",
+					name: pageName ?? "Page",
+					baseType: "Page",
+				})
+				: undefined;
+		const categoryTaxonomy = allCategories.map((c: any) => ({
+			id: c.id,
+			name: c.name,
+			slug: c.slug,
+			parentId: c.parentId ?? null,
+		}));
+		try {
+			const [tagsRes, categoriesRes] = await Promise.all([
+				hasTags
+					? fetch("/api/tags/suggest", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							itemName,
+							contentTypeId: contentTypeId ?? undefined,
+							tagTaxonomy: allTags.map((t: any) => ({ name: t.name, slug: t.slug })),
+							imageUrl,
+						}),
+					})
+					: Promise.resolve(null),
+				hasCategories
+					? fetch("/api/categories/suggest-for-item", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ itemName, categoryTaxonomy }),
+					})
+					: Promise.resolve(null),
+			]);
+
+			let nextTags = value.tags || [];
+			let nextCategories = value.categories || [];
+			let errorMessage: string | null = null;
+			let emptyTagSuggestions = false;
+			let emptyCategorySuggestions = false;
+
+			if (hasTags && tagsRes) {
+				const data = await tagsRes.json().catch(() => ({}));
+				if (!tagsRes.ok) {
+					errorMessage = (data as { error?: string }).error || "Tag suggestion failed.";
+				} else {
+					const existingSlugs: string[] = (data as { suggestedSlugs?: string[] }).suggestedSlugs ?? [];
+					const newNames: string[] = (data as { suggestedNewNames?: string[] }).suggestedNewNames ?? [];
+					newNames.forEach((name: string) => {
+						if (name.trim() && !tagExists(name)) addTag(name.trim());
+					});
+					const newSlugs = newNames.map((n: string) => nameToSlug(n)).filter(Boolean);
+					const mergedSlugs = Array.from(new Set([...existingSlugs, ...newSlugs]));
+					emptyTagSuggestions = mergedSlugs.length === 0;
+					nextTags = Array.from(new Set([...nextTags, ...mergedSlugs]));
+				}
+			}
+
+			if (hasCategories && categoriesRes && !errorMessage) {
+				const data = await categoriesRes.json().catch(() => ({}));
+				if (!categoriesRes.ok) {
+					errorMessage = (data as { error?: string }).error || "Category suggestion failed.";
+				} else {
+					const suggestedSlugs: string[] = (data as { suggestedSlugs?: string[] }).suggestedSlugs ?? [];
+					emptyCategorySuggestions = suggestedSlugs.length === 0;
+					nextCategories = Array.from(new Set([...nextCategories, ...suggestedSlugs]));
+				}
+			}
+
+			if (errorMessage) {
+				setSuggestError(errorMessage);
+				return;
+			}
+
+			setNoTagSuggestions(hasTags && emptyTagSuggestions);
+			setNoCategorySuggestions(hasCategories && emptyCategorySuggestions);
+			onChange({ tags: nextTags, categories: nextCategories });
+		} catch (e) {
+			const message = e instanceof Error ? e.message : "Generate failed. Check the console.";
+			setSuggestError(message);
+			console.error("Properties Generate error:", e);
+		} finally {
+			setSuggestLoading(false);
+		}
+	};
+
+	// Expose generate to parent (e.g. header sparkles button)
+	const generateRef = useRef(handleGenerate);
+	generateRef.current = handleGenerate;
+	useEffect(() => {
+		onRegisterGenerateTrigger?.(() => generateRef.current());
+		return () => onRegisterGenerateTrigger?.(null);
+	}, [onRegisterGenerateTrigger]);
+
+	useEffect(() => {
+		onGenerateLoadingChange?.(suggestLoading);
+	}, [suggestLoading, onGenerateLoadingChange]);
+
 	// Render section-specific content
 	const renderSectionContent = () => {
-		switch (activeSection) {
+		switch (effectiveSection) {
 			case "content-settings":
 				return (
 					<Box display="flex" flexDirection="column" gap="8">
@@ -356,8 +534,8 @@ export default function PropertiesPanel({
 						<Field label="Status">
 							<Select
 								options={[
-									{label: "Draft", value: "draft"},
-									{label: "Published", value: "published"},
+									{ label: "Draft", value: "draft" },
+									{ label: "Published", value: "published" },
 								]}
 							>
 								<SelectTrigger>Draft</SelectTrigger>
@@ -374,14 +552,14 @@ export default function PropertiesPanel({
 							<Input2
 								placeholder="Enter page title"
 								value={value.seoTitle ?? ""}
-								onChange={(e: any) => onChange({seoTitle: e.target.value})}
+								onChange={(e: any) => onChange({ seoTitle: e.target.value })}
 							/>
 						</Field>
 						<Field label="Keywords">
 							<Input2
 								placeholder="Enter keywords"
 								value={value.keywords ?? ""}
-								onChange={(e: any) => onChange({keywords: e.target.value})}
+								onChange={(e: any) => onChange({ keywords: e.target.value })}
 							/>
 						</Field>
 						<Field label="Description">
@@ -389,7 +567,7 @@ export default function PropertiesPanel({
 								placeholder="Enter description"
 								rows={3}
 								value={value.description ?? ""}
-								onChange={(e: any) => onChange({description: e.target.value})}
+								onChange={(e: any) => onChange({ description: e.target.value })}
 							/>
 						</Field>
 						<Field label="Meta">
@@ -397,7 +575,7 @@ export default function PropertiesPanel({
 								placeholder="Enter meta information"
 								rows={3}
 								value={value.meta ?? ""}
-								onChange={(e: any) => onChange({meta: e.target.value})}
+								onChange={(e: any) => onChange({ meta: e.target.value })}
 							/>
 						</Field>
 					</Box>
@@ -406,6 +584,23 @@ export default function PropertiesPanel({
 			case "categories-tags":
 				return (
 					<Box display="flex" flexDirection="column" gap="20">
+						<Box display="flex" flexDirection="column" gap="8">
+							{suggestError && (
+								<Text fontSize="xs" color="fg.error">
+									{suggestError}
+								</Text>
+							)}
+							{!suggestError && noTagSuggestions && (
+								<Text fontSize="xs" color="fg.secondary">
+									No suggestions for tags.
+								</Text>
+							)}
+							{!suggestError && noCategorySuggestions && (
+								<Text fontSize="xs" color="fg.secondary">
+									No suggestions for categories.
+								</Text>
+							)}
+						</Box>
 						<AutocompleteMultiSelect
 							label="Categories"
 							placeholder="Search categories..."
@@ -416,6 +611,7 @@ export default function PropertiesPanel({
 							onCreateNew={handleCreateCategory}
 							itemExists={categoryExists}
 							getItemLabel={getCategoryNameBySlug}
+							loading={suggestLoading}
 						/>
 
 						<AutocompleteMultiSelect
@@ -428,6 +624,7 @@ export default function PropertiesPanel({
 							onCreateNew={handleCreateTag}
 							itemExists={tagExists}
 							getItemLabel={getTagNameBySlug}
+							loading={suggestLoading}
 						/>
 					</Box>
 				);
@@ -442,7 +639,7 @@ export default function PropertiesPanel({
 			<div
 				className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
 				style={{
-					transform: activeSection === "menu" ? "translateX(0%)" : "translateX(-50%)",
+					transform: effectiveSection === "menu" ? "translateX(0%)" : "translateX(-50%)",
 				}}
 			>
 				{/* PANE 1: Properties Menu */}
@@ -481,7 +678,7 @@ export default function PropertiesPanel({
 				{/* PANE 2: Property Subsection Detail */}
 				<div className="min-w-[50%] w-[50%] h-full flex flex-col">
 					{/* Section content */}
-					<Box px="24" py="16" style={{overflowY: "auto", flex: 1}}>
+					<Box px="24" py="16" style={{ overflowY: "auto", flex: 1 }}>
 						{renderSectionContent()}
 					</Box>
 				</div>
