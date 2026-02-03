@@ -1,18 +1,17 @@
 "use client"; // --- SEO Block Types (from initialData) ---
 
-import type {SEOBlock} from "@/app/db/initialData";
+import type { SEOBlock } from "@/app/db/initialData";
 
 import {
 	Box,
 	Button,
 	Text,
-	Textarea,
 	Heading,
 	Menu,
 	MenuTrigger,
 	MenuContent,
 } from "@optiaxiom/react";
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	IconPlus,
 	IconArrowBarBoth,
@@ -26,14 +25,14 @@ import {
 	IconCopy,
 } from "@tabler/icons-react";
 
-import {EleMap} from "./vb/Ele";
+import { EleMap } from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
-import RightToolbar, {RightToolbarTool} from "./RightToolbar";
+import RightToolbar, { RightToolbarTool } from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
-import {PreviewSettings} from "./vb/PreviewSettings";
+import { PreviewSettings } from "./vb/PreviewSettings";
 
-import {getExtensionById} from "@/app/extensions/registry";
+import { getExtensionById } from "@/app/extensions/registry";
 
 import styles from "./VBPrototype.module.css";
 import PropertiesPanel, {
@@ -46,14 +45,14 @@ import ExtensionPanel from "./ExtensionPanel";
 // @ts-ignore
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {Input} from "@/app/components/Input";
+import { Input } from "@/app/components/Input";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
  * ------------------------------*/
 
-type NormalizeResult = {data: any[]; theEles: EleMap};
-type SplitPayload = {data: any[]; theEles: EleMap};
+type NormalizeResult = { data: any[]; theEles: EleMap };
+type SplitPayload = { data: any[]; theEles: EleMap };
 
 const isEleNode = (n: any) =>
 	n &&
@@ -77,7 +76,7 @@ const ensureOpen = (nodes: any[]): any[] => {
 // only strips truly transient flags (keep `open`)
 const stripTransientFlags = (nodes: any[]): any[] => {
 	return nodes.map((n) => {
-		const {isNew, ...rest} = n;
+		const { isNew, ...rest } = n;
 		return {
 			...rest,
 			children: Array.isArray(n.children)
@@ -104,7 +103,7 @@ const normalizePage = (input: any): NormalizeResult => {
 	}
 
 	// Case B: merged tree array
-	if (!Array.isArray(input)) return {data: [], theEles: {}};
+	if (!Array.isArray(input)) return { data: [], theEles: {} };
 
 	const theEles: EleMap = {};
 
@@ -125,17 +124,17 @@ const normalizePage = (input: any): NormalizeResult => {
 								: p.label.toLowerCase().includes("image")
 									? "imageUrl"
 									: p.label.toLowerCase().replace(/\s+/g, "");
-					properties[key] = {value: p.value};
+					properties[key] = { value: p.value };
 				});
 			}
 			theEles[node.id] = {
 				type: node.type,
 				properties: properties || {},
 			};
-			return {id: node.id};
+			return { id: node.id };
 		}
 
-		const out: any = {...node};
+		const out: any = { ...node };
 		if (Array.isArray(node.elements)) {
 			out.elements = node.elements.map(strip);
 		} else if (Array.isArray(node.children)) {
@@ -182,7 +181,7 @@ const pruneEles = (data: any[], theEles: EleMap): EleMap => {
  * AnimatedText (kept; optional)
  * ------------------------------*/
 
-const AnimatedText: React.FC<{texts: string[]; interval?: number}> = ({texts, interval = 2000}) => {
+const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({ texts, interval = 2000 }) => {
 	const [index, setIndex] = useState(0);
 	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -233,7 +232,7 @@ type PageInput = {
 
 const mergeData = (structure: any[], elements: EleMap) => {
 	return structure.map((node) => {
-		const newNode = {...node};
+		const newNode = { ...node };
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
 			newNode.properties = elements[node.id].properties;
@@ -280,7 +279,7 @@ export default function VBPrototype({
 		data?: Record<string, any>;
 	}[];
 	onAddVariation?: (
-		payload: string | {name: string; outlines?: any[]; data?: Record<string, any>}
+		payload: string | { name: string; outlines?: any[]; data?: Record<string, any> }
 	) => string | void;
 	onDeleteVariation?: (id: string) => void;
 	onRenameVariation?: (id: string, newName: string) => void;
@@ -334,19 +333,19 @@ export default function VBPrototype({
 
 	// Update outlines when variation changes
 	// We use refs to access the latest data without triggering re-renders on every save/edit loop
-	const latestData = useRef({initialData, variations});
+	const latestData = useRef({ initialData, variations });
 	useEffect(() => {
-		latestData.current = {initialData, variations};
+		latestData.current = { initialData, variations };
 	}, [initialData, variations]);
 
 	useEffect(() => {
-		const {variations, initialData} = latestData.current;
+		const { variations, initialData } = latestData.current;
 
 		const target = variations?.find((v) => v.id === selectedVariation);
 		if (target) {
 			// Restore properties
 			if (target.data) {
-				setProperties({...defaultProps, ...target.data});
+				setProperties({ ...defaultProps, ...target.data });
 			}
 
 			const raw = target.outlines ?? [];
@@ -363,7 +362,7 @@ export default function VBPrototype({
 		} else if (selectedVariation === "original") {
 			// Restore properties
 			const originalProps = initialData?.properties ?? initialData?.data ?? {};
-			setProperties({...defaultProps, ...originalProps});
+			setProperties({ ...defaultProps, ...originalProps });
 
 			// Fallback for when "Original" is not explicitly in variations array (backward compat)
 			const raw = initialData?.outlines;
@@ -380,13 +379,13 @@ export default function VBPrototype({
 	}, [selectedVariation]);
 
 	const variationOptions = React.useMemo(() => {
-		if (!variations) return [{label: "Original", value: "original"}];
+		if (!variations) return [{ label: "Original", value: "original" }];
 		// If variations includes "original", just map them all. Check by ID.
 		const hasOriginal = variations.some((v) => v.id === "original");
-		const mapped = variations.map((v) => ({label: v.name, value: v.id}));
+		const mapped = variations.map((v) => ({ label: v.name, value: v.id }));
 
 		if (hasOriginal) return mapped;
-		return [{label: "Original", value: "original"}, ...mapped];
+		return [{ label: "Original", value: "original" }, ...mapped];
 	}, [variations]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
@@ -396,7 +395,7 @@ export default function VBPrototype({
 	});
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
-		setPreview((p) => ({...p, ...patch}));
+		setPreview((p) => ({ ...p, ...patch }));
 	};
 
 	const defaultProps: PageProperties = {
@@ -412,6 +411,8 @@ export default function VBPrototype({
 	});
 
 	const [activePropertiesSection, setActivePropertiesSection] = useState<PropertySection>("menu");
+	const generateTriggerRef = useRef<(() => void) | null>(null);
+	const [generateLoading, setGenerateLoading] = useState(false);
 
 	// --- SEO Block Extraction ---
 	const getSEO = (seo: SEOBlock | undefined, locale: string, variant: string) => {
@@ -457,7 +458,7 @@ export default function VBPrototype({
 		}
 
 		const norm = normalizePage(raw);
-		return [{id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles}];
+		return [{ id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles }];
 	});
 
 	const hasChanged = useRef(false);
@@ -469,7 +470,7 @@ export default function VBPrototype({
 
 	const setPropertiesPatch = (patch: Partial<PageProperties>) => {
 		hasChanged.current = true;
-		setProperties((p) => ({...p, ...patch}));
+		setProperties((p) => ({ ...p, ...patch }));
 	};
 
 	const isFirstRender = useRef(true);
@@ -541,7 +542,7 @@ export default function VBPrototype({
 		setOutlines((prev) =>
 			prev.map((o) =>
 				o.id === activeOutlineId
-					? {...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg}
+					? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg }
 					: o
 			)
 		);
@@ -552,7 +553,7 @@ export default function VBPrototype({
 		setOutlines((prev) =>
 			prev.map((o) =>
 				o.id === activeOutlineId
-					? {...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg}
+					? { ...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg }
 					: o
 			)
 		);
@@ -596,32 +597,6 @@ export default function VBPrototype({
 			setActiveOutlineId(owner);
 		}
 	};
-
-	const [AI, setAI] = useState(false);
-	const [loadingAI, setLoadingAI] = useState(false);
-	const [aiPrompt, setAiPrompt] = useState("");
-
-	async function sendMessage(message: string) {
-		if (!message.trim()) return;
-		setLoadingAI(true);
-		try {
-			const res = await fetch("/api/chat", {
-				method: "POST",
-				headers: {"Content-Type": "application/json"},
-				body: JSON.stringify({userMessage: message}),
-			});
-
-			const payload = await res.json();
-
-			const parsed = JSON.parse(payload.response);
-
-			const norm = normalizePage(parsed);
-			setData(norm.data);
-			setTheEles(norm.theEles);
-		} finally {
-			setLoadingAI(false);
-		}
-	}
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
@@ -682,10 +657,10 @@ export default function VBPrototype({
 		if (currentEle !== "none" && currentEle in theEles) {
 			setTheEles((prev) => {
 				const ele = prev[currentEle];
-				const properties = {...(ele.properties || {})};
+				const properties = { ...(ele.properties || {}) };
 
 				if (typeof keyOrIndex === "string") {
-					properties[keyOrIndex] = {...properties[keyOrIndex], value};
+					properties[keyOrIndex] = { ...properties[keyOrIndex], value };
 				}
 
 				return {
@@ -699,16 +674,21 @@ export default function VBPrototype({
 		}
 	};
 
-	// Header actions (AI + plus-menu)
+	// Header actions (Generate + plus-menu)
 	const HeaderActions = (
 		<Box display="flex" alignItems="center" gap="2" className="relative">
 			<Button
-				onClick={() => setAI((v) => !v)}
+				onClick={() => {
+					setSidebarTab("properties");
+					setActivePropertiesSection("categories-tags");
+					generateTriggerRef.current?.();
+				}}
 				appearance="subtle"
 				size="sm"
-				aria-label="AI"
+				aria-label="Generate tags and categories"
 				icon={<IconSparkles size={16} />}
-				disabled={loadingAI}
+				disabled={generateLoading}
+				loading={generateLoading}
 			/>
 
 			<Menu
@@ -763,52 +743,6 @@ export default function VBPrototype({
 					<MenuContent />
 				</Menu>
 			)}
-
-			<div
-				className={`absolute -right-[10px] top-[32px] opacity-0 invisible z-10 p-2 rounded-md ${styles.popupMenu} w-[200px] max-w-[80vw] mr-12`}
-				style={{
-					visibility: AI ? "visible" : undefined,
-					opacity: AI ? 1 : 0,
-					transform: AI ? "scale(1)" : "scale(0.9)",
-					transformOrigin: "top center",
-					transition: "0.3s",
-				}}
-			>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						sendMessage(aiPrompt);
-					}}
-				>
-					<Textarea
-						name="prompt"
-						rows={3}
-						className="w-full border rounded p-2 focus:outline-none focus:ring-2"
-						placeholder="What do you want to build today?"
-						value={aiPrompt}
-						onChange={(e: any) => setAiPrompt(e.target.value)}
-					/>
-					<div className="mt-2 flex gap-2">
-						<Button
-							size="sm"
-							onClick={() => sendMessage(aiPrompt)}
-							disabled={loadingAI}
-						>
-							Run
-						</Button>
-						<Button
-							size="sm"
-							appearance="subtle"
-							onClick={() => {
-								setAI(false);
-								setAiPrompt("");
-							}}
-						>
-							Close
-						</Button>
-					</div>
-				</form>
-			</div>
 		</Box>
 	);
 
@@ -866,7 +800,7 @@ export default function VBPrototype({
 	function cloneSectionWithRemap(
 		section: any,
 		theEles: EleMap
-	): {cloned: any; elesPatch: EleMap} {
+	): { cloned: any; elesPatch: EleMap } {
 		const elesPatch: EleMap = {};
 
 		const clonedSectionId = mkId(section.id);
@@ -889,8 +823,8 @@ export default function VBPrototype({
 								if (!oldEleId) return ref;
 
 								const newEleId = mkId(oldEleId);
-								if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
-								return {id: newEleId};
+								if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
+								return { id: newEleId };
 							}),
 						};
 					}),
@@ -898,10 +832,10 @@ export default function VBPrototype({
 			}),
 		};
 
-		return {cloned, elesPatch};
+		return { cloned, elesPatch };
 	}
 
-	function cloneRowWithRemap(row: any, theEles: EleMap): {cloned: any; elesPatch: EleMap} {
+	function cloneRowWithRemap(row: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
 		const elesPatch: EleMap = {};
 
 		const newRowId = mkId(row.id);
@@ -919,14 +853,14 @@ export default function VBPrototype({
 						if (!oldEleId) return ref;
 
 						const newEleId = mkId(oldEleId);
-						if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
-						return {id: newEleId};
+						if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
+						return { id: newEleId };
 					}),
 				};
 			}),
 		};
 
-		return {cloned, elesPatch};
+		return { cloned, elesPatch };
 	}
 
 	function applySectionDrag(
@@ -956,14 +890,14 @@ export default function VBPrototype({
 
 		if (isSectionLast(hoverId)) {
 			next.push(dragged);
-			return {nextData: next, elesPatch};
+			return { nextData: next, elesPatch };
 		}
 
 		const hoverIdx = next.findIndex((s) => s.id === hoverId);
 		if (hoverIdx === -1) return null;
 
 		next.splice(hoverIdx, 0, dragged);
-		return {nextData: next, elesPatch};
+		return { nextData: next, elesPatch };
 	}
 
 	function applyRowDrag(
@@ -1028,10 +962,10 @@ export default function VBPrototype({
 				children.splice(insertAt, 0, rowToInsert);
 			}
 
-			return {...sec, children};
+			return { ...sec, children };
 		});
 
-		return {nextData: next, elesPatch};
+		return { nextData: next, elesPatch };
 	}
 
 	function applyColDrag(
@@ -1109,13 +1043,13 @@ export default function VBPrototype({
 					cols.splice(insertAt, 0, draggedCol);
 				}
 
-				return {...row, children: cols};
+				return { ...row, children: cols };
 			});
 
-			return {...sec, children: rows};
+			return { ...sec, children: rows };
 		});
 
-		return {nextData: next};
+		return { nextData: next };
 	}
 
 	function applyElementDrag(
@@ -1127,7 +1061,7 @@ export default function VBPrototype({
 	): DragApplyResult | null {
 		const newEleId = cloning ? mkId(draggingId) : draggingId;
 		const elesPatch =
-			cloning && theEles[draggingId] ? {[newEleId]: {...theEles[draggingId]}} : undefined;
+			cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
 
 		let draggedRef: any = null;
 
@@ -1139,12 +1073,12 @@ export default function VBPrototype({
 					const colChildren = col.elements || col.children || [];
 					const nextChildren = colChildren.filter((ref: any) => {
 						if (ref?.id === draggingId) {
-							draggedRef = cloning ? {id: newEleId} : ref;
+							draggedRef = cloning ? { id: newEleId } : ref;
 							return cloning;
 						}
 						return true;
 					});
-					return {...col, elements: nextChildren};
+					return { ...col, elements: nextChildren };
 				}),
 			})),
 		}));
@@ -1161,12 +1095,12 @@ export default function VBPrototype({
 						if (col.id !== targetColId) return col;
 						const colChildren = col.elements || col.children || [];
 						if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
-						return {...col, elements: [...colChildren, draggedRef]};
+						return { ...col, elements: [...colChildren, draggedRef] };
 					}),
 				})),
 			}));
 
-			return {nextData: next, elesPatch};
+			return { nextData: next, elesPatch };
 		}
 
 		const next = removed.map((sec: any) => ({
@@ -1182,12 +1116,12 @@ export default function VBPrototype({
 
 					const copy = [...colChildren];
 					copy.splice(idx, 0, draggedRef);
-					return {...col, elements: copy};
+					return { ...col, elements: copy };
 				}),
 			})),
 		}));
 
-		return {nextData: next, elesPatch};
+		return { nextData: next, elesPatch };
 	}
 
 	function applyDragDrop(
@@ -1237,7 +1171,7 @@ export default function VBPrototype({
 			if (res) {
 				setData(res.nextData);
 				if (res.elesPatch) {
-					setTheEles((prev) => ({...prev, ...res.elesPatch!}));
+					setTheEles((prev) => ({ ...prev, ...res.elesPatch! }));
 				}
 				setCurrentHoverEle("none");
 			}
@@ -1257,7 +1191,6 @@ export default function VBPrototype({
 			if (event.key === "Escape") {
 				setCurrentEle("none");
 				setCurrentHoverEle("none");
-				setAI(false);
 			} else if (event.key === "Alt" && event.location === 1) {
 				setCloning(true);
 			}
@@ -1280,12 +1213,12 @@ export default function VBPrototype({
 	 * ------------------------------*/
 	if (isZero) {
 		return (
-			<div className="select-none" style={{height: "100%"}}>
+			<div className="select-none" style={{ height: "100%" }}>
 				<Box
 					bg="bg.page"
 					w="full"
 					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-					style={{height: "100%", overflow: "hidden"}}
+					style={{ height: "100%", overflow: "hidden" }}
 				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
@@ -1311,7 +1244,7 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+						style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
 					>
 						{/* Resizable handle (kept consistent) */}
 						<div
@@ -1346,13 +1279,22 @@ export default function VBPrototype({
 							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 						</div>
 
-						<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
+						<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
 							<div className="pl-6 pt-4 pb-2">
 								<Heading level="4">Properties</Heading>
 							</div>
 
 							<div className="flex-1 overflow-y-auto">
-								<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+								<PropertiesPanel
+									value={properties}
+									onChange={setPropertiesPatch}
+									pageName={pageName ?? undefined}
+									pageId={initialData?.id}
+									onRegisterGenerateTrigger={(fn) => {
+										generateTriggerRef.current = fn;
+									}}
+									onGenerateLoadingChange={setGenerateLoading}
+								/>
 							</div>
 						</div>
 					</Box>
@@ -1360,7 +1302,7 @@ export default function VBPrototype({
 					{/* RIGHT / CANVAS (still visible even with 0 outlines) */}
 					<div
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
-						style={{height: "100%", overflow: "hidden"}}
+						style={{ height: "100%", overflow: "hidden" }}
 					>
 						<PreviewCanvas
 							outlines={outlines as any} // will be []
@@ -1411,12 +1353,12 @@ export default function VBPrototype({
 	 * Main layout
 	 * ------------------------------*/
 	return (
-		<div className="select-none" style={{height: "100%"}}>
+		<div className="select-none" style={{ height: "100%" }}>
 			<Box
 				bg="bg.page"
 				w="full"
 				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-				style={{height: "100%", overflow: "hidden"}}
+				style={{ height: "100%", overflow: "hidden" }}
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
@@ -1446,7 +1388,7 @@ export default function VBPrototype({
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
-					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+					style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
 				>
 					{/* Resizable handle */}
 					<div
@@ -1481,7 +1423,7 @@ export default function VBPrototype({
 						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
 					</div>
 
-					<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
+					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
 						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
 						{isMulti ? (
 							<div className="h-full overflow-hidden">
@@ -1541,7 +1483,6 @@ export default function VBPrototype({
 															setSidebarTab("outlines");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
-															setAI(false);
 															setOutlineView("tree");
 														}}
 													>
@@ -1566,7 +1507,6 @@ export default function VBPrototype({
 															setOutlineView("list");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
-															setAI(false);
 														}}
 													>
 														← Page
@@ -1618,7 +1558,7 @@ export default function VBPrototype({
 											<div className="pl-6 pr-6 pt-4 pb-2">
 												<div
 													className="relative mb-1"
-													style={{height: "20px"}}
+													style={{ height: "20px" }}
 												>
 													<Text
 														fontSize="sm"
@@ -1670,10 +1610,10 @@ export default function VBPrototype({
 														{activePropertiesSection === "menu"
 															? "Properties"
 															: navigationItems.find(
-																	(item) =>
-																		item.id ===
-																		activePropertiesSection
-																)?.label || "Properties"}
+																(item) =>
+																	item.id ===
+																	activePropertiesSection
+															)?.label || "Properties"}
 													</Heading>
 													<div className="flex-1" />
 												</div>
@@ -1710,6 +1650,12 @@ export default function VBPrototype({
 													onChange={setPropertiesPatch}
 													activeSection={activePropertiesSection}
 													onSectionChange={setActivePropertiesSection}
+													pageName={pageName ?? undefined}
+													pageId={initialData?.id}
+													onRegisterGenerateTrigger={(fn) => {
+														generateTriggerRef.current = fn;
+													}}
+													onGenerateLoadingChange={setGenerateLoading}
 												/>
 											)}
 										</div>
@@ -1730,7 +1676,6 @@ export default function VBPrototype({
 												onBack={() => {
 													setCurrentEle("none");
 													setCurrentHoverEle("none");
-													setAI(false);
 												}}
 												onInputChange={onInputChange}
 											/>
@@ -1790,7 +1735,7 @@ export default function VBPrototype({
 											<div className="pl-6 pr-6 pt-4 pb-2">
 												<div
 													className="relative mb-1"
-													style={{height: "20px"}}
+													style={{ height: "20px" }}
 												>
 													<Text
 														fontSize="sm"
@@ -1841,10 +1786,10 @@ export default function VBPrototype({
 														{activePropertiesSection === "menu"
 															? "Properties"
 															: navigationItems.find(
-																	(item) =>
-																		item.id ===
-																		activePropertiesSection
-																)?.label || "Properties"}
+																(item) =>
+																	item.id ===
+																	activePropertiesSection
+															)?.label || "Properties"}
 													</Heading>
 													<div className="flex-1" />
 													<div className="flex items-center gap-1">
@@ -1883,6 +1828,12 @@ export default function VBPrototype({
 													onChange={setPropertiesPatch}
 													activeSection={activePropertiesSection}
 													onSectionChange={setActivePropertiesSection}
+													pageName={pageName ?? undefined}
+													pageId={initialData?.id}
+													onRegisterGenerateTrigger={(fn) => {
+														generateTriggerRef.current = fn;
+													}}
+													onGenerateLoadingChange={setGenerateLoading}
 												/>
 											)}
 										</div>
@@ -1903,7 +1854,6 @@ export default function VBPrototype({
 												onBack={() => {
 													setCurrentEle("none");
 													setCurrentHoverEle("none");
-													setAI(false);
 												}}
 												onInputChange={onInputChange}
 											/>
@@ -1918,7 +1868,7 @@ export default function VBPrototype({
 				{/* RIGHT / CANVAS */}
 				<div
 					className="relative pr-0 pt-0 gap-0 flex items-stretch z-10 min-h-0 flex-1"
-					style={{height: "100%"}}
+					style={{ height: "100%" }}
 				>
 					<PreviewCanvas
 						outlines={outlines as any}

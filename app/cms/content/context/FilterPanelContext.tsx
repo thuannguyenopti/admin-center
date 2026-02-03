@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useContentFilters } from "../hooks/useContentFilters";
+import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getAllContentItems, initialPages, type Page } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
 import type { ContentItem } from "../page";
@@ -20,6 +21,8 @@ type FilterPanelContextType = {
   removeFilter: (category: string, value: string) => void;
   clearAllFilters: () => void;
   setFiltersDirectly: (newFilters: Partial<ContentFilters>) => void;
+  /** Resolve category slug to display name (from categories repository). */
+  getCategoryNameBySlug: (slug: string) => string | undefined;
   /** Persist tag changes for page-derived content (Option A: update page.tags in pages store) */
   onTagsChange: (contentId: string, tags: string[]) => void;
   /** Batch persist tag changes for multiple items in one state update (avoids batching bug) */
@@ -69,15 +72,23 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
 
   const onTagsChange = useCallback(
     (contentId: string, tags: string[]) => {
-      setPages((prev) => {
-        const page = prev?.find((p) => p.id === contentId);
-        if (!page) return prev ?? initialPages;
-        return (prev ?? initialPages).map((p) =>
-          p.id === contentId ? { ...p, tags } : p
-        );
-      });
+      if (pageIds.has(contentId)) {
+        setPages((prev) => {
+          const page = prev?.find((p) => p.id === contentId);
+          if (!page) return prev ?? initialPages;
+          return (prev ?? initialPages).map((p) =>
+            p.id === contentId ? { ...p, tags } : p
+          );
+        });
+      } else {
+        setContentTagOverrides((prev) => {
+          const next = { ...(prev && typeof prev === "object" && !Array.isArray(prev) ? prev : {}) };
+          next[contentId] = tags;
+          return next;
+        });
+      }
     },
-    [setPages]
+    [setPages, setContentTagOverrides, pageIds]
   );
 
   const onTagsChangeBatch = useCallback(
@@ -119,8 +130,15 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
     [allContentItems]
   );
 
-  // Single source of truth for filter state
-  const filterState = useContentFilters(contentItems);
+  // Categories from the same repository as the Categories settings page
+  const { categoriesWithSlugs, getCategoryNameBySlug } = useGlobalCategories();
+  const categorySlugsFromRepo = useMemo(
+    () => categoriesWithSlugs.map((c) => c.slug),
+    [categoriesWithSlugs]
+  );
+
+  // Single source of truth for filter state (category options from repo)
+  const filterState = useContentFilters(contentItems, { categorySlugsFromRepo });
 
   // Apply URL params on mount and when URL changes
   useEffect(() => {
@@ -170,6 +188,7 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
       isFilterPanelOpen,
       setIsFilterPanelOpen,
       ...filterState,
+      getCategoryNameBySlug,
       onTagsChange,
       onTagsChangeBatch,
     }}>

@@ -34,7 +34,12 @@ const defaultFilters: ContentFilters = {
   categories: [],
 };
 
-export function useContentFilters(allContent: ContentItem[]) {
+export interface UseContentFiltersOptions {
+  /** Category slugs from the categories repository (same as Categories settings page). When provided, filter options use this list instead of deriving from content. */
+  categorySlugsFromRepo?: string[];
+}
+
+export function useContentFilters(allContent: ContentItem[], options?: UseContentFiltersOptions) {
   const safeContent = allContent ?? [];
   const [filters, setFilters] = usePersistentState(
     "content-filters",
@@ -54,15 +59,17 @@ export function useContentFilters(allContent: ContentItem[]) {
     [filters]
   );
 
-  // Extract unique filter options from content
+  // Extract unique filter options from content; categories come from repo when provided
   const filterOptions = useMemo<FilterOptions>(() => {
     const types = [...new Set(safeContent.map(item => item.baseType))];
     const statuses = [...new Set(safeContent.map(item => item.status))];
     const modifiedBy = [...new Set(safeContent.map(item => item.modifiedBy))];
     const languages = [...new Set(safeContent.map(item => item.language))];
-    // Extract unique tags and categories from all content items
     const tags = [...new Set(safeContent.flatMap(item => item.tags || []))];
-    const categories = [...new Set(safeContent.flatMap(item => item.categories || []))];
+    const categories =
+      options?.categorySlugsFromRepo && options.categorySlugsFromRepo.length > 0
+        ? [...options.categorySlugsFromRepo].sort()
+        : [...new Set(safeContent.flatMap(item => item.categories || []))].sort();
 
     return {
       types: types.sort(),
@@ -70,9 +77,9 @@ export function useContentFilters(allContent: ContentItem[]) {
       modifiedBy: modifiedBy.sort(),
       languages: languages.sort(),
       tags: tags.sort(),
-      categories: categories.sort(),
+      categories,
     };
-  }, [safeContent]);
+  }, [safeContent, options?.categorySlugsFromRepo]);
 
   // Apply filters to content
   const filteredContent = useMemo(() => {
