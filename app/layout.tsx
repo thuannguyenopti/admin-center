@@ -1,33 +1,28 @@
 "use client";
 import Template from "./components/template";
 import "./globals.css";
-import { ThemeProvider } from "@/app/providers/ThemeProvider";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import {ThemeProvider} from "@/app/providers/ThemeProvider";
+import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import { Algorithm, initialAlgorithms } from "@/app/db/initialData";
-import { useSecretCode } from "@/app/hooks/useSecretCode";
-import { SnowEffect } from "@/app/components/effects/SnowEffect";
-import { NewYearEffect } from "@/app/components/effects/NewYearEffect";
-import { HydrationErrorSuppressor } from "@/app/components/HydrationErrorSuppressor";
-import Head from "next/head";
+import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData";
+import {useSecretCode} from "@/app/hooks/useSecretCode";
+import {SnowEffect} from "@/app/components/effects/SnowEffect";
+import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
+import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
 import {
 	IconChartBar,
 	IconDashboard,
 	IconPencil,
-	IconPlayerPlay,
 	IconHierarchy3,
-	IconLogs,
 	IconSettings,
 	IconSearch,
 	IconList,
-	IconFile,
 	IconUsers,
 	IconPuzzle,
 	IconFolders,
 	IconBuildingStore,
 } from "@tabler/icons-react";
-import { IconAlignRight } from "@optimizely/axiom-icons";
 
 export default function RootLayout({
 	children,
@@ -37,10 +32,25 @@ export default function RootLayout({
 	const path = usePathname() ?? "";
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
+	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
+	const webhookId = webhookMatch ? webhookMatch[1] : null;
 
-	const [algorithms, , isHydrated] = usePersistentState("algorithms", initialAlgorithms) as [Algorithm[], any, boolean];
-	const safeAlgorithms = algorithms ?? initialAlgorithms ?? [];
+	const [algorithmsState] = usePersistentState("algorithms", initialAlgorithms) as [
+		Algorithm[] | undefined,
+	];
+	const [webhooksState] = usePersistentState("webhooks", initialWebhooks) as [
+		typeof initialWebhooks | undefined,
+	];
+
+	const safeAlgorithms =
+		Array.isArray(algorithmsState) && algorithmsState.length > 0
+			? algorithmsState
+			: initialAlgorithms;
+	const safeWebhooks =
+		Array.isArray(webhooksState) && webhooksState.length > 0 ? webhooksState : initialWebhooks;
+
 	const currentAlgorithm = safeAlgorithms.find((a) => a.id === algorithmId);
+	const currentWebhook = safeWebhooks.find((w) => w.id === webhookId);
 
 	const structure = {
 		cms: [
@@ -81,52 +91,69 @@ export default function RootLayout({
 				url: "/cms/settings",
 				icon: <IconSettings />,
 				children: [
-					{ label: "Taxonomy" },
-					{ label: "Categories", url: "/cms/settings/categories" },
-					{ label: "Tags", url: "/cms/settings/tags" },
-					{ label: "Configure" },
+					{label: "Taxonomy"},
+					{label: "Categories", url: "/cms/settings/categories"},
+					{label: "Tags", url: "/cms/settings/tags"},
+					{label: "Configure"},
 					{
 						label: "Applications",
 						url: "/cms/settings/applications",
 						children: {
 							title: "Stride",
 							children: [
-								{ label: "Advanced" },
-								{
-									label: "Hostnames",
-									url: "/cms/settings/applications/mosey-bank/hostnames",
-								},
 								{
 									label: "Settings",
 									url: "/cms/settings/applications/mosey-bank/settings",
 								},
+								{label: "Advanced"},
+								{
+									label: "Hostnames",
+									url: "/cms/settings/applications/mosey-bank/hostnames",
+								},
 							],
 						},
 					},
-					{ label: "Blueprints", url: "/cms/settings/blueprints" },
-					{ label: "Content Types", url: "/cms/settings/content-types" },
-					{ label: "Forms Settings", url: "/cms/settings/forms-settings" },
-					{ label: "Access Rights" },
-					{ label: "Access Rights", url: "/cms/settings/access-rights" },
-					{ label: "API Clients", url: "/cms/settings/api-clients" },
-					{ label: "API Keys", url: "/cms/settings/api-keys" },
-					{ label: "Set Access Rights", url: "/cms/settings/set-access-rights" },
-					{ label: "Data & Sync Management" },
-					{ label: "GraphiQL", url: "/cms/settings/graphiql" },
-					{ label: "Scheduled Jobs", url: "/cms/settings/scheduled-jobs" },
-					{ label: "Smooth Rebuild", url: "/cms/settings/smooth-rebuild" },
-					{ label: "Webhooks", url: "/cms/settings/webhooks" },
-					{ label: "Config" },
-					{ label: "Edit Tabs", url: "/cms/settings/edit-tabs" },
-					{ label: "Languages", url: "/cms/settings/languages" },
-					{ label: "Tools" },
-					{ label: "Change Log", url: "/cms/settings/change-log" },
-					{ label: "Convert Pages", url: "/cms/settings/convert-pages" },
-					{ label: "Export Data", url: "/cms/settings/export-data" },
-					{ label: "Import Data", url: "/cms/settings/import-data" },
-					{ label: "Search Configuration", url: "/cms/settings/search-configuration" },
-					{ label: "Add-ons" },
-					{ label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn" },
+					{label: "Blueprints", url: "/cms/settings/blueprints"},
+					{label: "Content Types", url: "/cms/settings/content-types"},
+					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
+					{label: "Access Rights", url: "/cms/settings/access-rights"},
+					{label: "API Clients", url: "/cms/settings/api-clients"},
+					{label: "API Keys", url: "/cms/settings/api-keys"},
+					{label: "Set Access Rights", url: "/cms/settings/set-access-rights"},
+					{label: "Data & Sync Management"},
+					{label: "GraphiQL", url: "/cms/settings/graphiql"},
+					{label: "Scheduled Jobs", url: "/cms/settings/scheduled-jobs"},
+					{label: "Smooth Rebuild", url: "/cms/settings/smooth-rebuild"},
+					{
+						label: "Webhooks",
+						url: "/cms/settings/webhooks",
+						children: {
+							title: currentWebhook ? currentWebhook.name : "Webhook details",
+							children: currentWebhook
+								? [
+										{
+											label: "Settings",
+											url: `/cms/settings/webhooks/${webhookId}/settings`,
+										},
+										{
+											label: "Error Log",
+											url: `/cms/settings/webhooks/${webhookId}/logs`,
+										},
+									]
+								: [],
+						},
+					},
+					{label: "Config"},
+					{label: "Languages", url: "/cms/settings/languages"},
+					{label: "Edit Tabs", url: "/cms/settings/edit-tabs"},
+					{label: "Tools"},
+					{label: "Change Log", url: "/cms/settings/change-log"},
+					{label: "Convert Pages", url: "/cms/settings/convert-pages"},
+					{label: "Export Data", url: "/cms/settings/export-data"},
+					{label: "Import Data", url: "/cms/settings/import-data"},
+					{label: "Search Configuration", url: "/cms/settings/search-configuration"},
+					{label: "Add-ons"},
+					{label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn"},
 				],
 			},
 			{
@@ -141,7 +168,7 @@ export default function RootLayout({
 				highlight: "/cms/search",
 				icon: <IconSearch />,
 				children: [
-					{ label: "Health & Monitoring" },
+					{label: "Health & Monitoring"},
 					{
 						label: "Overview",
 						url: "/cms/search/search-analytics",
@@ -168,8 +195,7 @@ export default function RootLayout({
 							],
 						},
 					},
-					{ label: "Manage" },
-
+					{label: "Manage"},
 					{
 						label: "Algorithms",
 						description: "Manage search algorithms",
@@ -178,31 +204,31 @@ export default function RootLayout({
 							title: currentAlgorithm ? currentAlgorithm.name : "Algorithm details",
 							children: currentAlgorithm
 								? [
-									...(currentAlgorithm?.type !== "Custom"
-										? [
-											{
-												label: "Optimizations",
-												url: `/cms/search/algorithms/${algorithmId}/optimizations`,
-											},
-										]
-										: []),
-									{
-										label: "Filter",
-										url: `/cms/search/algorithms/${algorithmId}/filter`,
-									},
-									{
-										label: "Order",
-										url: `/cms/search/algorithms/${algorithmId}/order`,
-									},
-									{
-										label: "Settings",
-										url: `/cms/search/algorithms/${algorithmId}/settings`,
-									},
-								]
+										...(currentAlgorithm?.type !== "Custom"
+											? [
+													{
+														label: "Optimizations",
+														url: `/cms/search/algorithms/${algorithmId}/optimizations`,
+													},
+												]
+											: []),
+										{
+											label: "Filter",
+											url: `/cms/search/algorithms/${algorithmId}/filter`,
+										},
+										{
+											label: "Order",
+											url: `/cms/search/algorithms/${algorithmId}/order`,
+										},
+										{
+											label: "Settings",
+											url: `/cms/search/algorithms/${algorithmId}/settings`,
+										},
+									]
 								: [],
 						},
 					},
-					{ label: "Search Tools" },
+					{label: "Search Tools"},
 					{
 						label: "Pinned Results",
 						description:
@@ -241,22 +267,10 @@ export default function RootLayout({
 				highlight: "/connect-platform/graph",
 				icon: <IconHierarchy3 />,
 				children: [
-					{
-						label: "Dashboard",
-						url: "/connect-platform/graph/dashboard",
-					},
-					{
-						label: "Browse",
-						url: "/connect-platform/graph/browse",
-					},
-					{
-						label: "Sync Log",
-						url: "/connect-platform/graph/sync-log",
-					},
-					{
-						label: "Settings",
-						url: "/connect-platform/graph/settings",
-					},
+					{label: "Dashboard", url: "/connect-platform/graph/dashboard"},
+					{label: "Browse", url: "/connect-platform/graph/browse"},
+					{label: "Sync Log", url: "/connect-platform/graph/sync-log"},
+					{label: "Settings", url: "/connect-platform/graph/settings"},
 				],
 			},
 		],
@@ -301,14 +315,7 @@ export default function RootLayout({
 				label: "Chat",
 				url: "/opal",
 				highlight: "/opal",
-				icon: (
-					<img
-						src="/nav_icons/comments.svg"
-						alt="Chat"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/comments.svg" alt="Chat" width={20} height={20} />,
 				exact: true,
 			},
 			{
@@ -328,14 +335,7 @@ export default function RootLayout({
 				label: "Notifications",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
-				icon: (
-					<img
-						src="/nav_icons/inbox.svg"
-						alt="Notifications"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/inbox.svg" alt="Notifications" width={20} height={20} />,
 				customLayout: true,
 			},
 			{
@@ -343,43 +343,22 @@ export default function RootLayout({
 				url: "/opal/activities",
 				highlight: "/opal/activities",
 				icon: (
-					<img
-						src="/nav_icons/wave_pulse.svg"
-						alt="Activities"
-						width={20}
-						height={20}
-					/>
+					<img src="/nav_icons/wave_pulse.svg" alt="Activities" width={20} height={20} />
 				),
 				customLayout: true,
 			},
-			{
-				label: "Configurations",
-			},
+			{label: "Configurations"},
 			{
 				label: "Instructions",
 				url: "/opal/instructions",
 				highlight: "/opal/instructions",
-				icon: (
-					<img
-						src="/nav_icons/book.svg"
-						alt="Instructions"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/book.svg" alt="Instructions" width={20} height={20} />,
 			},
 			{
 				label: "Agents",
 				url: "/opal/agents",
 				highlight: "/opal/agents",
-				icon: (
-					<img
-						src="/nav_icons/agent_nav.svg"
-						alt="Agents"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/agent_nav.svg" alt="Agents" width={20} height={20} />,
 				customLayout: true,
 			},
 			{
@@ -399,35 +378,28 @@ export default function RootLayout({
 				label: "RAG",
 				url: "/opal/rag",
 				highlight: "/opal/rag",
+				icon: <img src="/nav_icons/database.svg" alt="RAG" width={20} height={20} />,
+			},
+			{
+				label: "Connections",
+				url: "/opal/connections",
+				highlight: "/opal/connections",
 				icon: (
-					<img
-						src="/nav_icons/database.svg"
-						alt="RAG"
-						width={20}
-						height={20}
-					/>
+					<img src="/nav_icons/toggle-off.svg" alt="Connections" width={20} height={20} />
 				),
 			},
 			{
 				label: "Settings",
 				url: "/opal/settings",
 				highlight: "/opal/settings",
-				icon: (
-					<img
-						src="/nav_icons/gear.svg"
-						alt="Settings"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/gear.svg" alt="Settings" width={20} height={20} />,
 			},
 		],
 	};
+
 	const key: string = path.split("/")[1] ?? "";
 	const menu = key ? structure[key as keyof typeof structure] : undefined;
-
-	const [feHostingState, setFeHostingState] = useState({});
-	const { activeEffect } = useSecretCode();
+	const {activeEffect} = useSecretCode();
 
 	return (
 		<html lang="en" suppressHydrationWarning>

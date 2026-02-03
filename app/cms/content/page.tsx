@@ -1,19 +1,36 @@
 "use client";
 
-import { SearchInput, Checkbox, Pagination, Box, Select, SelectTrigger, SelectContent, Text as AxiomText } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { Button } from "@/app/components/Button";
-import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto, IconChevronUp, IconChevronDown } from "@tabler/icons-react";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
+import {
+	SearchInput,
+	Checkbox,
+	Pagination,
+	Box,
+	Select,
+	SelectTrigger,
+	SelectContent,
+	Text as AxiomText,
+} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {
+	IconFilter,
+	IconFile,
+	IconBox,
+	IconLayoutGrid,
+	IconPhoto,
+	IconChevronUp,
+	IconChevronDown,
+} from "@tabler/icons-react";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import { Flex } from "@/app/components/Flex";
-import { Aside } from "@/app/context/LayoutContext";
+import {Flex} from "@/app/components/Flex";
+import {Aside} from "@/app/context/LayoutContext";
 import DetailsPane from "./DetailsPane";
-import { useState, useEffect, useMemo } from "react";
-import { type UnifiedContentItem } from "@/app/db/initialData";
+import {useState, useEffect, useMemo} from "react";
+import {type UnifiedContentItem} from "@/app/db/initialData";
 import FilterPills from "./components/FilterPills";
 import TagsColumnCell from "./components/TagsColumnCell";
-import { useFilterPanel } from "./context/FilterPanelContext";
+import {useFilterPanel} from "./context/FilterPanelContext";
 
 export type ContentItem = UnifiedContentItem & {
 	status: "Draft" | "Published";
@@ -56,15 +73,15 @@ export default function ContentPage() {
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
-	const [sortColumn, setSortColumn] = useState<string>('name');
-	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+	const [sortColumn, setSortColumn] = useState<string>("name");
+	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 	const [itemsPerPage, setItemsPerPage] = useState(10);
 
 	const PAGE_SIZE_OPTIONS = [
-		{ label: "10", value: "10" },
-		{ label: "25", value: "25" },
-		{ label: "50", value: "50" },
-		{ label: "100", value: "100" },
+		{label: "10", value: "10"},
+		{label: "25", value: "25"},
+		{label: "50", value: "50"},
+		{label: "100", value: "100"},
 	];
 
 	// Sort filtered content (guard undefined from context/hydration)
@@ -76,27 +93,27 @@ export default function ContentPage() {
 			let bValue: any;
 
 			switch (sortColumn) {
-				case 'name':
-					aValue = a.name?.toLowerCase() || '';
-					bValue = b.name?.toLowerCase() || '';
+				case "name":
+					aValue = a.name?.toLowerCase() || "";
+					bValue = b.name?.toLowerCase() || "";
 					break;
-				case 'type':
-					aValue = a.baseType?.toLowerCase() || '';
-					bValue = b.baseType?.toLowerCase() || '';
+				case "type":
+					aValue = a.baseType?.toLowerCase() || "";
+					bValue = b.baseType?.toLowerCase() || "";
 					break;
-				case 'status':
-					aValue = a.status || '';
-					bValue = b.status || '';
+				case "status":
+					aValue = a.status || "";
+					bValue = b.status || "";
 					break;
-				case 'modifiedBy':
-					aValue = a.modifiedBy?.toLowerCase() || '';
-					bValue = b.modifiedBy?.toLowerCase() || '';
+				case "modifiedBy":
+					aValue = a.modifiedBy?.toLowerCase() || "";
+					bValue = b.modifiedBy?.toLowerCase() || "";
 					break;
-				case 'language':
-					aValue = a.language?.toLowerCase() || '';
-					bValue = b.language?.toLowerCase() || '';
+				case "language":
+					aValue = a.language?.toLowerCase() || "";
+					bValue = b.language?.toLowerCase() || "";
 					break;
-				case 'lastModified':
+				case "lastModified":
 					aValue = new Date(a.lastModified || 0).getTime();
 					bValue = new Date(b.lastModified || 0).getTime();
 					break;
@@ -104,8 +121,8 @@ export default function ContentPage() {
 					return 0;
 			}
 
-			if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-			if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+			if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+			if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
 			return 0;
 		});
 		return sorted;
@@ -118,7 +135,7 @@ export default function ContentPage() {
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage
 	);
-	const selectedContent = displayContent.find(item => item.id === selectedContentId);
+	const selectedContent = displayContent.find((item) => item.id === selectedContentId);
 
 	// Lifted tag state for details pane so 1↔2 selection switch doesn't lose edits
 	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
@@ -131,7 +148,6 @@ export default function ContentPage() {
 		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
 		[selectedItems]
 	);
-	// Sync batch tags to union when selection changes so adding an item with more tags adds those tags by default; removal (strikethrough) only when user explicitly removes from Tags on selection
 	useEffect(() => {
 		if (paneOpen && selectedItems.length > 0) {
 			setDetailsPaneTags(selectedItemsTagUnion);
@@ -178,19 +194,18 @@ export default function ContentPage() {
 	};
 
 	const isAllSelected =
-		paginatedItems.length > 0 &&
-		paginatedItems.every((item) => selectedRows.has(item.id));
+		paginatedItems.length > 0 && paginatedItems.every((item) => selectedRows.has(item.id));
 	const isSomeSelected =
 		paginatedItems.some((item) => selectedRows.has(item.id)) && !isAllSelected;
 
 	const handleSort = (column: string) => {
 		if (sortColumn === column) {
 			// Toggle direction if same column
-			setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+			setSortDirection(sortDirection === "asc" ? "desc" : "asc");
 		} else {
 			// Set new column with ascending as default
 			setSortColumn(column);
-			setSortDirection('asc');
+			setSortDirection("asc");
 		}
 	};
 
@@ -199,17 +214,17 @@ export default function ContentPage() {
 		return (
 			<span
 				style={{
-					visibility: isActive ? 'visible' : 'hidden',
-					display: 'inline-flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					marginLeft: '4px',
-					width: '14px',
-					height: '14px',
-					verticalAlign: 'middle',
+					visibility: isActive ? "visible" : "hidden",
+					display: "inline-flex",
+					alignItems: "center",
+					justifyContent: "center",
+					marginLeft: "4px",
+					width: "14px",
+					height: "14px",
+					verticalAlign: "middle",
 				}}
 			>
-				{sortDirection === 'asc' ? (
+				{sortDirection === "asc" ? (
 					<IconChevronUp size={14} />
 				) : (
 					<IconChevronDown size={14} />
@@ -249,7 +264,7 @@ export default function ContentPage() {
 			<Table>
 				<thead>
 					<Tr>
-						<Th style={{ width: "40px" }}>
+						<Th style={{width: "40px"}}>
 							<Checkbox
 								checked={isAllSelected}
 								indeterminate={isSomeSelected}
@@ -257,45 +272,43 @@ export default function ContentPage() {
 							/>
 						</Th>
 						<Th
-							style={{ cursor: 'pointer', userSelect: 'none' }}
-							onClick={() => handleSort('name')}
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("name")}
 						>
-							Name{renderSortIcon('name')}
+							Name{renderSortIcon("name")}
 						</Th>
 						<Th
-							style={{ cursor: 'pointer', userSelect: 'none' }}
-							onClick={() => handleSort('type')}
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("type")}
 						>
-							Type{renderSortIcon('type')}
+							Type{renderSortIcon("type")}
 						</Th>
 						<Th
-							style={{ cursor: 'pointer', userSelect: 'none' }}
-							onClick={() => handleSort('status')}
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("status")}
 						>
-							Status{renderSortIcon('status')}
+							Status{renderSortIcon("status")}
 						</Th>
 						<Th
-							style={{ cursor: 'pointer', userSelect: 'none' }}
-							onClick={() => handleSort('modifiedBy')}
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("modifiedBy")}
 						>
-							Modified by{renderSortIcon('modifiedBy')}
+							Modified by{renderSortIcon("modifiedBy")}
 						</Th>
 						<Th
-							style={{ cursor: 'pointer', userSelect: 'none' }}
-							onClick={() => handleSort('language')}
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("language")}
 						>
-							Language{renderSortIcon('language')}
+							Language{renderSortIcon("language")}
 						</Th>
-						<Th style={{ width: "180px", minWidth: "180px" }}>
-							Tags
-						</Th>
+						<Th style={{width: "180px", minWidth: "180px"}}>Tags</Th>
 						<Th
-							style={{ cursor: 'pointer', userSelect: 'none' }}
-							onClick={() => handleSort('lastModified')}
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("lastModified")}
 						>
-							Last Modified{renderSortIcon('lastModified')}
+							Last Modified{renderSortIcon("lastModified")}
 						</Th>
-						<Th style={{ width: "56px" }} />
+						<Th style={{width: "56px"}} />
 					</Tr>
 				</thead>
 				<tbody>
@@ -309,9 +322,9 @@ export default function ContentPage() {
 									setSelectedContentId(item.id);
 								}
 							}}
-							style={{ cursor: "pointer" }}
+							style={{cursor: "pointer"}}
 						>
-							<Td type="raw" style={{ width: "40px" }}>
+							<Td type="raw" style={{width: "40px"}}>
 								<Checkbox
 									checked={selectedRows.has(item.id)}
 									onCheckedChange={(checked) => {
@@ -328,7 +341,7 @@ export default function ContentPage() {
 							</Td>
 							<Td>{item.modifiedBy}</Td>
 							<Td>{item.language}</Td>
-							<Td style={{ width: "180px", minWidth: "180px" }}>
+							<Td style={{width: "180px", minWidth: "180px"}}>
 								<TagsColumnCell tags={item.tags ?? []} />
 							</Td>
 							<Td>{item.lastModified}</Td>
@@ -338,12 +351,14 @@ export default function ContentPage() {
 				</tbody>
 			</Table>
 			<Box display="flex" alignItems="center" mt="24" flexWrap="wrap">
-				<Pagination
-					total={totalPages}
-					page={currentPage}
-					onPageChange={setCurrentPage}
-				/>
-				<Box flex="1" display="flex" justifyContent="center" alignItems="center" overflow="hidden">
+				<Pagination total={totalPages} page={currentPage} onPageChange={setCurrentPage} />
+				<Box
+					flex="1"
+					display="flex"
+					justifyContent="center"
+					alignItems="center"
+					overflow="hidden"
+				>
 					<AxiomText fontSize="sm" color="fg.secondary">
 						{displayContent.length === 0
 							? "0 items"
