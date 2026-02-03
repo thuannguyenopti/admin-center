@@ -1,15 +1,30 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent } from "@optiaxiom/react";
-import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, IconCheck, IconArrowLeft, IconArrowsMaximize, IconArrowsMinimize } from "@tabler/icons-react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip } from "@optiaxiom/react";
+import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, IconBox, IconLayoutGrid, IconCheck, IconArrowLeft, IconChevronLeft, IconChevronRight, IconSparkles } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
 import { useState, useEffect, useRef } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
 import type { Tag } from "../settings/tags/types";
+import { getThumbnailForContent } from "./contentThumbnails";
 
 type AutocompleteOption = { label: string; value: string; isSelected: boolean };
+
+function getIconForType(type: ContentItem["baseType"]) {
+  switch (type) {
+    case "Page":
+    case "Experience":
+      return <IconFile size={16} />;
+    case "Product":
+      return <IconBox size={16} />;
+    case "Block":
+      return <IconLayoutGrid size={16} />;
+    case "Media":
+      return <IconPhoto size={16} />;
+  }
+}
 
 interface MultiSelectDetailsPaneProps {
   items: ContentItem[];
@@ -34,12 +49,25 @@ export default function MultiSelectDetailsPane({
   // Get global tags (full Tag[] for slug ↔ name mapping)
   const { tags: globalTags, addTag: addGlobalTag, tagExists } = useGlobalTags();
 
+  const nameToSlug = (name: string) =>
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
   const getTagBySlug = (slug: string): Tag | undefined =>
     globalTags.find((t: Tag) => t.slug === slug);
-  const getDisplayName = (slug: string): string => getTagBySlug(slug)?.name ?? slug;
+  const slugToDisplayName = (slug: string): string =>
+    slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  const getDisplayName = (slug: string): string =>
+    getTagBySlug(slug)?.name ?? slugToDisplayName(slug);
   const getSlugByName = (name: string): string => {
     const t = globalTags.find((tag: Tag) => tag.name.toLowerCase() === name.toLowerCase());
-    return t?.slug ?? name.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    return t?.slug ?? nameToSlug(name);
   };
 
   // Tags state: controlled from parent (Option 2) or local
@@ -58,6 +86,10 @@ export default function MultiSelectDetailsPane({
   const [isBatchEditMode, setIsBatchEditMode] = useState(false);
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [lastSummary, setLastSummary] = useState<string | null>(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestedSlugs, setSuggestedSlugs] = useState<string[]>([]);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [suggestEmpty, setSuggestEmpty] = useState(false);
   const initialTagsRef = useRef<string[]>([]);
   const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -82,9 +114,11 @@ export default function MultiSelectDetailsPane({
   }, [metadata.count]);
 
   const TAGS_INITIAL_VISIBLE = 10;
-  const visibleTags = tagsExpanded ? tags : tags.slice(0, TAGS_INITIAL_VISIBLE);
-  const hasMoreTags = tags.length > TAGS_INITIAL_VISIBLE;
-  const hiddenCount = tags.length - TAGS_INITIAL_VISIBLE;
+  // When not in batch edit, show only applied tags (union on items); when in batch edit, show draft tags
+  const displayTags = isBatchEditMode ? tags : metadata.tags;
+  const visibleTags = tagsExpanded ? displayTags : displayTags.slice(0, TAGS_INITIAL_VISIBLE);
+  const hasMoreTags = displayTags.length > TAGS_INITIAL_VISIBLE;
+  const hiddenCount = displayTags.length - TAGS_INITIAL_VISIBLE;
 
   // Tags added in this batch (not in initial set when batch edit started)
   const addedTagsInBatch = isBatchEditMode
@@ -96,11 +130,17 @@ export default function MultiSelectDetailsPane({
     setIsBatchEditMode(true);
     setIsPanelExpanded(true);
     setLastSummary(null);
+    setSuggestedSlugs([]);
+    setSuggestError(null);
+    setSuggestEmpty(false);
   };
   const exitBatchEdit = (apply: boolean) => {
     if (!apply) setTags(metadata.tags);
     setIsBatchEditMode(false);
     setIsPanelExpanded(false);
+    setSuggestedSlugs([]);
+    setSuggestError(null);
+    setSuggestEmpty(false);
   };
   const handleApply = () => {
     if (!onTagsChangeBatch || items.length === 0) return;
@@ -120,25 +160,7 @@ export default function MultiSelectDetailsPane({
     exitBatchEdit(true);
   };
 
-  // Persist tag set to all selected items in one batch (only when NOT in batch-edit mode and NOT controlled)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (isControlled || isBatchEditMode || items.length === 0) return;
-    const persist = onTagsChangeBatch ?? onTagsChange;
-    if (!persist) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      if (onTagsChangeBatch) {
-        onTagsChangeBatch(items.map((item) => ({ id: item.id, tags })));
-      } else if (onTagsChange) {
-        items.forEach((item) => onTagsChange(item.id, tags));
-      }
-      debounceRef.current = null;
-    }, 400);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [isControlled, tags, items, onTagsChange, onTagsChangeBatch, isBatchEditMode]);
+  // Tags are only persisted when user clicks Apply in batch edit (no auto-persist)
 
   const handleRemoveTag = (slugToRemove: string) => {
     setTags(tags.filter((slug) => slug !== slugToRemove));
@@ -155,6 +177,83 @@ export default function MultiSelectDetailsPane({
     if (!isSlug && !tagExists(value)) addGlobalTag(value);
     setTags([...tags, slug]);
     setNewTag("");
+  };
+
+  const handleSuggestTagsForSelected = async () => {
+    if (items.length === 0 || globalTags.length === 0) return;
+    setSuggestLoading(true);
+    setSuggestError(null);
+    setSuggestEmpty(false);
+    setSuggestedSlugs([]);
+    const taxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
+    try {
+      const settled = await Promise.allSettled(
+        items.map((item) => {
+          const imageUrl = getThumbnailForContent({
+            id: item.id,
+            name: item.name,
+            baseType: item.baseType,
+          });
+          return fetch("/api/tags/suggest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              itemName: item.name,
+              contentTypeId: item.contentTypeId,
+              tagTaxonomy: taxonomy,
+              imageUrl,
+            }),
+          }).then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Request failed");
+            return {
+              suggestedSlugs: data.suggestedSlugs ?? [],
+              suggestedNewNames: data.suggestedNewNames ?? [],
+            };
+          });
+        })
+      );
+      const allExisting = settled.flatMap((r) =>
+        r.status === "fulfilled" ? r.value.suggestedSlugs : []
+      );
+      const allNewNames = settled.flatMap((r) =>
+        r.status === "fulfilled" ? r.value.suggestedNewNames : []
+      );
+      const uniqueNewNames = Array.from(
+        new Set(allNewNames.filter((n) => typeof n === "string" && n.trim()))
+      );
+      uniqueNewNames.forEach((name) => {
+        const trimmed = name.trim();
+        if (trimmed && !tagExists(trimmed)) addGlobalTag(trimmed);
+      });
+      const newSlugs = uniqueNewNames.map((n) => nameToSlug(n)).filter(Boolean);
+      const merged = Array.from(new Set([...allExisting, ...newSlugs]));
+      const notAlreadyApplied = merged.filter((s) => !tags.includes(s));
+      setSuggestedSlugs(notAlreadyApplied);
+      setSuggestEmpty(notAlreadyApplied.length === 0 && settled.some((r) => r.status === "fulfilled"));
+      const allFailed = settled.every((r) => r.status === "rejected");
+      if (allFailed && settled.length > 0) {
+        setSuggestError("Tag suggestion isn't available");
+      }
+    } catch {
+      setSuggestError("Tag suggestion isn't available");
+    } finally {
+      setSuggestLoading(false);
+    }
+  };
+
+  const handleAddSuggestedTag = (slug: string) => {
+    handleAddTag(slug);
+    setSuggestedSlugs((prev) => prev.filter((s) => s !== slug));
+  };
+
+  const handleAddAllSuggested = () => {
+    const combined = [...tags];
+    suggestedSlugs.forEach((slug) => {
+      if (!combined.includes(slug)) combined.push(slug);
+    });
+    setTags(combined);
+    setSuggestedSlugs([]);
   };
 
   const filteredTags = globalTags.filter(
@@ -218,7 +317,7 @@ export default function MultiSelectDetailsPane({
               size="sm"
               onClick={() => setIsPanelExpanded(!isPanelExpanded)}
               aria-label={isPanelExpanded ? "Collapse panel" : "Expand panel"}
-              icon={isPanelExpanded ? <IconArrowsMinimize size={16} /> : <IconArrowsMaximize size={16} />}
+              icon={isPanelExpanded ? <IconChevronRight size={16} /> : <IconChevronLeft size={16} />}
             />
           )}
           <Button
@@ -243,10 +342,10 @@ export default function MultiSelectDetailsPane({
           overflow="hidden"
           style={{ minHeight: 0 }}
         >
-          {/* Tags on selection */}
+          {/* Tags */}
           <Box display="flex" flexDirection="column" gap="8" style={{ flexShrink: 0 }}>
             <Text fontSize="sm" fontWeight="600" color="fg.default">
-              Tags on selection
+              Tags
             </Text>
             <Popover
               open={newTag.length > 0 && autocompleteOptions.length > 0}
@@ -264,6 +363,24 @@ export default function MultiSelectDetailsPane({
                     }}
                     placeholder="Add tag..."
                     size="md"
+                    addonAfter={
+                      <Tooltip content="Generate tag suggestions for the selected items using Opal">
+                        <Button
+                          appearance="primary-opal"
+                          size="sm"
+                          rounded="sm"
+                          px="8"
+                          icon={<IconSparkles />}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSuggestTagsForSelected();
+                          }}
+                          disabled={suggestLoading || globalTags.length === 0}
+                          loading={suggestLoading}
+                          aria-label="Suggest tags for selected with Opal"
+                        />
+                      </Tooltip>
+                    }
                   />
                 </Box>
               </PopoverTrigger>
@@ -301,7 +418,72 @@ export default function MultiSelectDetailsPane({
                 </Box>
               </PopoverContent>
             </Popover>
+            {suggestError && (
+              <Text fontSize="xs" color="fg.error">
+                {suggestError}
+              </Text>
+            )}
+            {suggestEmpty && !suggestLoading && (
+              <Text fontSize="xs" color="fg.secondary">
+                No related tags found for this selection.
+              </Text>
+            )}
+            {suggestedSlugs.length > 0 && (
+              <Box display="flex" flexDirection="column" gap="4">
+                <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                  Suggested
+                </Text>
+                <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                  {suggestedSlugs.map((slug) => (
+                    <Badge
+                      key={slug}
+                      variant="subtle"
+                      style={{
+                        backgroundColor: "var(--ax-colors-bg-accent-subtle)",
+                        color: "var(--ax-colors-fg-accent)",
+                      }}
+                    >
+                      <Box display="flex" alignItems="center" gap="4">
+                        <span>{getDisplayName(slug)}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleAddSuggestedTag(slug)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            lineHeight: 1,
+                            color: "inherit",
+                          }}
+                          aria-label={`Add ${getDisplayName(slug)}`}
+                        >
+                          +
+                        </button>
+                      </Box>
+                    </Badge>
+                  ))}
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    onClick={handleAddAllSuggested}
+                    aria-label="Add all suggested tags to selected items"
+                  >
+                    Add all
+                  </Button>
+                </Box>
+              </Box>
+            )}
             <Box display="flex" flexDirection="column" gap="8">
+              {suggestedSlugs.length > 0 && (
+                <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                  Existing
+                </Text>
+              )}
               {tags.map((slug) => {
                 const itemsWithTag = items.filter((item) => (item.tags ?? []).includes(slug));
                 const count = itemsWithTag.length;
@@ -339,7 +521,7 @@ export default function MultiSelectDetailsPane({
               })}
             </Box>
           </Box>
-          {/* Tags by item (fills remaining height, scrolls within) */}
+          {/* Tag preview (fills remaining height, scrolls within) */}
           <Box
             display="flex"
             flexDirection="column"
@@ -349,7 +531,7 @@ export default function MultiSelectDetailsPane({
             overflow="hidden"
           >
             <Text fontSize="sm" fontWeight="600" color="fg.default" style={{ flexShrink: 0 }}>
-              Tags by item
+              Tag preview
             </Text>
             <Box
               display="flex"
@@ -378,22 +560,26 @@ export default function MultiSelectDetailsPane({
                       border: "1px solid var(--ax-colors-border-tertiary)",
                     }}
                   >
-                    <span
-                      title={String(item.name ?? item.id)}
-                      style={{
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        lineHeight: 1.3,
-                        color: "var(--ax-colors-fg-default)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        display: "block",
-                        minWidth: 0,
-                      }}
-                    >
-                      {item.name ?? item.id}
-                    </span>
+                    <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
+                      <Box flexShrink={0} style={{ color: "var(--ax-colors-fg-secondary)" }}>
+                        {getIconForType(item.baseType)}
+                      </Box>
+                      <span
+                        title={String(item.name ?? item.id)}
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                          color: "var(--ax-colors-fg-default)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          minWidth: 0,
+                        }}
+                      >
+                        {item.name ?? item.id}
+                      </span>
+                    </Box>
                     {hasAnyTags ? (
                       <Box display="flex" flexWrap="wrap" gap="6">
                         {allSlugsForItem.map((slug) => {
@@ -592,81 +778,9 @@ export default function MultiSelectDetailsPane({
                 mt="8"
                 style={{ paddingLeft: "20px" }}
               >
-                {/* Add Tag Input with Custom Autocomplete (above tags) */}
-                <Popover
-                  open={newTag.length > 0 && autocompleteOptions.length > 0}
-                  onOpenChange={() => { }}
-                >
-                  <PopoverTrigger asChild>
-                    <Box>
-                      <Input
-                        value={newTag}
-                        onChange={e => setNewTag(e.target.value)}
-                        onKeyPress={e => {
-                          if (e.key === "Enter" && autocompleteOptions.length > 0) {
-                            handleAddTag(autocompleteOptions[0].value);
-                          }
-                        }}
-                        placeholder="Add tag..."
-                        size="md"
-                      />
-                    </Box>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    sideOffset={4}
-                    align="start"
-                    style={{ width: "var(--radix-popover-trigger-width)" }}
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                    onCloseAutoFocus={(e) => e.preventDefault()}
-                  >
-                    <Box
-                      display="flex"
-                      flexDirection="column"
-                      gap="0"
-                      py="2"
-                      style={{ maxHeight: "200px" }}
-                      overflow="auto"
-                    >
-                      {autocompleteOptions.map((option: AutocompleteOption, index: number) => (
-                        <Box
-                          key={option.value}
-                          display="flex"
-                          alignItems="center"
-                          gap="8"
-                          px="8"
-                          py="6"
-                          rounded="sm"
-                          cursor="pointer"
-                          transition="colors"
-                          bg={hoveredIndex === index ? "bg.secondary" : "transparent"}
-                          onClick={() => handleAddTag(option.value)}
-                          onMouseEnter={() => setHoveredIndex(index)}
-                          onMouseLeave={() => setHoveredIndex(null)}
-                        >
-                          {option.isSelected && (
-                            <IconCheck size={14} style={{ flexShrink: 0 }} />
-                          )}
-                          <Text fontSize="sm" color="fg.default" style={{ marginLeft: option.isSelected ? 0 : undefined }}>
-                            {option.label}
-                          </Text>
-                        </Box>
-                      ))}
-                    </Box>
-                  </PopoverContent>
-                </Popover>
-
-                {/* Tags Display — "on N items" + hover popover on pill */}
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  gap="8"
-                >
-                  <Box
-                    display="flex"
-                    flexDirection="column"
-                    gap="8"
-                  >
+                {/* Applied tags only (read-only); edit via Batch edit */}
+                <Box display="flex" flexDirection="column" gap="8">
+                  <Box display="flex" flexDirection="column" gap="8">
                     {visibleTags.map((slug) => {
                       const itemsWithTag = items.filter((item) => (item.tags ?? []).includes(slug));
                       const count = itemsWithTag.length;
@@ -699,24 +813,26 @@ export default function MultiSelectDetailsPane({
                                     <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
                                       on {count} {count === 1 ? "item" : "items"}
                                     </Text>
-                                    <button
-                                      onClick={() => handleRemoveTag(slug)}
-                                      style={{
-                                        background: "none",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        padding: "0",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        fontSize: "14px",
-                                        fontWeight: "500",
-                                        lineHeight: "1",
-                                        color: "inherit",
-                                      }}
-                                      aria-label={`Remove tag ${getDisplayName(slug)}`}
-                                    >
-                                      ×
-                                    </button>
+                                    {isBatchEditMode && (
+                                      <button
+                                        onClick={() => handleRemoveTag(slug)}
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          cursor: "pointer",
+                                          padding: "0",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          fontSize: "14px",
+                                          fontWeight: "500",
+                                          lineHeight: "1",
+                                          color: "inherit",
+                                        }}
+                                        aria-label={`Remove tag ${getDisplayName(slug)}`}
+                                      >
+                                        ×
+                                      </button>
+                                    )}
                                   </Box>
                                 </Badge>
                               </Box>

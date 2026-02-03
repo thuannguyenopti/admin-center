@@ -5,6 +5,27 @@ import usePersistentState from '@/app/usePersistentState';
 import { Tag } from '../settings/tags/types';
 import { initialTags } from '@/app/db/initialData';
 
+/** Capitalize first letter of each word (title case); omit hyphens from name */
+function toTagName(str: string): string {
+  return str
+    .trim()
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
+    .trim();
+}
+
+/** Slug: lowercase, hyphens for spaces, alphanumeric only */
+function toTagSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+}
+
 /**
  * Hook to access and manage global tags from the centralized repository
  * Tags are stored in localStorage and shared across the application
@@ -21,27 +42,26 @@ export function useGlobalTags() {
 
   /**
    * Add a new tag to the centralized repository
-   * Creates a new tag with auto-generated ID and slug
+   * Creates a new tag with auto-generated ID and slug.
+   * Tag names use title case and no hyphens; slugs are lowercase with no hyphens.
    */
   const addTag = useCallback(
     (tagName: string) => {
+      const name = toTagName(tagName);
+      if (!name) return false;
+
       // Check if tag already exists (case-insensitive)
       const exists = tags.some(
-        (tag: Tag) => tag.name.toLowerCase() === tagName.toLowerCase()
+        (tag: Tag) => tag.name.toLowerCase() === name.toLowerCase()
       );
 
-      if (!exists && tagName.trim()) {
-        // Generate slug from name (lowercase, replace spaces with hyphens)
-        const slug = tagName
-          .toLowerCase()
-          .trim()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '');
+      if (!exists) {
+        const slug = toTagSlug(name);
 
         // Create new tag
         const newTag: Tag = {
           id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          name: tagName.trim(),
+          name,
           slug,
           visibility: 'private',
           modifiedBy: 'Current User', // In a real app, this would be the actual user

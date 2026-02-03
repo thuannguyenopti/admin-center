@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox, Input, Badge, Popover, PopoverTrigger, PopoverContent } from "@optiaxiom/react";
-import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto, IconEye, IconPencil, IconCheck } from "@tabler/icons-react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip } from "@optiaxiom/react";
+import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto, IconEye, IconPencil, IconCheck, IconSparkles } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useDetailsMetadata } from "./useDetailsMetadata";
@@ -75,10 +75,16 @@ export default function DetailsPane({
   // Helpers: slug ↔ display name (UnifiedContentItem uses slugs)
   const getTagBySlug = (slug: string): Tag | undefined =>
     globalTags.find((t: Tag) => t.slug === slug);
-  const getDisplayName = (slug: string): string => getTagBySlug(slug)?.name ?? slug;
+  const slugToDisplayName = (slug: string): string =>
+    slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  const getDisplayName = (slug: string): string =>
+    getTagBySlug(slug)?.name ?? slugToDisplayName(slug);
   const getSlugByName = (name: string): string => {
     const t = globalTags.find((tag: Tag) => tag.name.toLowerCase() === name.toLowerCase());
-    return t?.slug ?? name.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    return t?.slug ?? nameToSlug(name);
   };
 
   // Use lifted tag state (same as multi-select so 1↔2 switch preserves edits)
@@ -89,6 +95,10 @@ export default function DetailsPane({
   const [newTag, setNewTag] = useState("");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestedSlugs, setSuggestedSlugs] = useState<string[]>([]);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [suggestEmpty, setSuggestEmpty] = useState(false);
 
   const TAGS_INITIAL_VISIBLE = 10;
   const visibleTags = tagsExpanded ? tags : tags.slice(0, TAGS_INITIAL_VISIBLE);
@@ -110,6 +120,73 @@ export default function DetailsPane({
     if (!isSlug && !tagExists(value)) addGlobalTag(value);
     setTags([...tags, slug]);
     setNewTag("");
+  };
+
+  const nameToSlug = (name: string) =>
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+  const handleSuggestTags = async () => {
+    if (!content?.name || globalTags.length === 0) return;
+    setSuggestLoading(true);
+    setSuggestError(null);
+    setSuggestEmpty(false);
+    setSuggestedSlugs([]);
+    try {
+      const imageUrl = getThumbnailForContent({
+        id: content.id,
+        name: content.name,
+        baseType: content.baseType,
+      });
+      const res = await fetch("/api/tags/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemName: content.name,
+          contentTypeId: content.contentTypeId,
+          tagTaxonomy: globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug })),
+          imageUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSuggestError(data.error || "Tag suggestion isn't available");
+        return;
+      }
+      const existingSlugs: string[] = data.suggestedSlugs ?? [];
+      const newNames: string[] = data.suggestedNewNames ?? [];
+      newNames.forEach((name: string) => {
+        if (name.trim() && !tagExists(name)) addGlobalTag(name.trim());
+      });
+      const newSlugs = newNames.map((n: string) => nameToSlug(n)).filter(Boolean);
+      const merged = Array.from(
+        new Set([...existingSlugs, ...newSlugs])
+      );
+      const notAlreadyApplied = merged.filter((s: string) => !tags.includes(s));
+      setSuggestedSlugs(notAlreadyApplied);
+      setSuggestEmpty(notAlreadyApplied.length === 0);
+    } catch {
+      setSuggestError("Tag suggestion isn't available");
+    } finally {
+      setSuggestLoading(false);
+    }
+  };
+
+  const handleAddSuggestedTag = (slug: string) => {
+    handleAddTag(slug);
+    setSuggestedSlugs((prev) => prev.filter((s) => s !== slug));
+  };
+
+  const handleAddAllSuggested = () => {
+    const combined = [...tags];
+    suggestedSlugs.forEach((slug) => {
+      if (!combined.includes(slug)) combined.push(slug);
+    });
+    setTags(combined);
+    setSuggestedSlugs([]);
   };
 
   // Persist tag changes (debounced) for single item
@@ -336,6 +413,24 @@ export default function DetailsPane({
                       }}
                       placeholder="Add tag..."
                       size="md"
+                      addonAfter={
+                        <Tooltip content="Generate tag suggestions for this content using Opal">
+                          <Button
+                            appearance="primary-opal"
+                            size="sm"
+                            rounded="sm"
+                            px="8"
+                            icon={<IconSparkles />}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleSuggestTags();
+                            }}
+                            disabled={suggestLoading || globalTags.length === 0}
+                            loading={suggestLoading}
+                            aria-label="Suggest tags with Opal"
+                          />
+                        </Tooltip>
+                      }
                     />
                   </Box>
                 </PopoverTrigger>
@@ -382,8 +477,73 @@ export default function DetailsPane({
                   </Box>
                 </PopoverContent>
               </Popover>
+              {suggestError && (
+                <Text fontSize="xs" color="fg.error">
+                  {suggestError}
+                </Text>
+              )}
+              {suggestEmpty && !suggestLoading && (
+                <Text fontSize="xs" color="fg.secondary">
+                  No related tags found for this content.
+                </Text>
+              )}
+              {suggestedSlugs.length > 0 && (
+                <Box display="flex" flexDirection="column" gap="4">
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Suggested
+                  </Text>
+                  <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                    {suggestedSlugs.map((slug) => (
+                      <Badge
+                        key={slug}
+                        variant="subtle"
+                        style={{
+                          backgroundColor: "var(--ax-colors-bg-accent-subtle)",
+                          color: "var(--ax-colors-fg-accent)",
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap="4">
+                          <span>{getDisplayName(slug)}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddSuggestedTag(slug)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              lineHeight: 1,
+                              color: "inherit",
+                            }}
+                            aria-label={`Add ${getDisplayName(slug)}`}
+                          >
+                            +
+                          </button>
+                        </Box>
+                      </Badge>
+                    ))}
+                    <Button
+                      appearance="subtle"
+                      size="sm"
+                      onClick={handleAddAllSuggested}
+                      aria-label="Add all suggested tags"
+                    >
+                      Add all
+                    </Button>
+                  </Box>
+                </Box>
+              )}
 
               <Box display="flex" flexDirection="column" gap="8">
+                {suggestedSlugs.length > 0 && (
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Existing
+                  </Text>
+                )}
                 <Box display="flex" flexWrap="wrap" gap="8">
                   {visibleTags.map((slug) => (
                     <Badge key={slug} intent="neutral">
