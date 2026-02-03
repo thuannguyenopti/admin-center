@@ -1,16 +1,7 @@
 "use client";
 
-import {
-	Box,
-	Sidebar,
-	NavBody,
-	NavItem,
-	Nav,
-	Heading,
-	SubNav,
-	Button,
-	Indicator,
-} from "@optiaxiom/react";
+import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
+import {Button} from "./Button";
 import {Text} from "./Text";
 import Link from "next/link";
 import {useEffect, useState, Suspense} from "react";
@@ -189,7 +180,6 @@ function TemplateContent({
 								)
 							}
 							onClick={() => setIsExpanded(!isExpanded)}
-							size="sm"
 							appearance="subtle"
 						/>
 					</Box>
