@@ -28,6 +28,7 @@ import {
     Layout,
 } from "@optiaxiom/react/unstable";
 import { Input } from "@/app/components/Input";
+import { getSelectValueInOptions } from "@/utils/selectValue";
 import {
     IconX,
     IconDots,
@@ -335,16 +336,28 @@ export function ConditionPanel({ onClose, node }: PanelProps & { node: any }) {
                     <Box key={index} display="flex" flexDirection="column" gap="16">
                         <Text fontWeight="600" fontSize="md" color="fg.secondary">Condition {index + 1}</Text>
                         <Field label="Match type" required>
-                            <Select
-                                value={condition.matchType}
-                                onValueChange={(val) => updateCondition(index, { matchType: val })}
-                                options={MATCH_TYPES}
-                            >
-                                <SelectTrigger size="lg">
-                                    {MATCH_TYPES.find(m => m.value === condition.matchType)?.label}
-                                </SelectTrigger>
-                                <SelectContent />
-                            </Select>
+                            {(() => {
+                                const matchTypeValue = getSelectValueInOptions(
+                                    condition.matchType,
+                                    MATCH_TYPES,
+                                    "equals"
+                                );
+                                return (
+                                    <Select
+                                        value={matchTypeValue}
+                                        onValueChange={(val) =>
+                                            updateCondition(index, { matchType: val })
+                                        }
+                                        options={MATCH_TYPES}
+                                    >
+                                        <SelectTrigger size="lg">
+                                            {MATCH_TYPES.find((m) => m.value === matchTypeValue)
+                                                ?.label}
+                                        </SelectTrigger>
+                                        <SelectContent />
+                                    </Select>
+                                );
+                            })()}
                         </Field>
                         <Field label="Condition" required>
                             <Input
@@ -517,15 +530,33 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
                     <Field label="Trigger Time">
                         <Box display="flex" gap="4">
-                            <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startHour, [{ label: "9", value: "9" }], "9")}
+                                onValueChange={setStartHour}
+                                options={[{ label: "9", value: "9" }]}
+                            >
                                 <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                 <SelectContent />
                             </Select>
-                            <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startMinute, [{ label: "00", value: "00" }], "00")}
+                                onValueChange={setStartMinute}
+                                options={[{ label: "00", value: "00" }]}
+                            >
                                 <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                 <SelectContent />
                             </Select>
-                            <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startPeriod, [
+                                    { label: "AM", value: "AM" },
+                                    { label: "PM", value: "PM" },
+                                ], "AM")}
+                                onValueChange={setStartPeriod}
+                                options={[
+                                    { label: "AM", value: "AM" },
+                                    { label: "PM", value: "PM" },
+                                ]}
+                            >
                                 <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                 <SelectContent />
                             </Select>
@@ -571,9 +602,25 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             <Input value={recurValue} onChange={(e) => setRecurValue(e.target.value)} />
                                         </Box>
                                         <Box style={{ flex: 2 }}>
-                                            <Select value={recurUnit} onValueChange={setRecurUnit} options={recurUnitOptions}>
+                                            <Select
+                                                value={getSelectValueInOptions(
+                                                    recurUnit,
+                                                    recurUnitOptions,
+                                                    "week"
+                                                )}
+                                                onValueChange={setRecurUnit}
+                                                options={recurUnitOptions}
+                                            >
                                                 <SelectTrigger size="lg">
-                                                    {recurUnitOptions.find(o => o.value === recurUnit)?.label}
+                                                    {recurUnitOptions.find(
+                                                        (o) =>
+                                                            o.value ===
+                                                            getSelectValueInOptions(
+                                                                recurUnit,
+                                                                recurUnitOptions,
+                                                                "week"
+                                                            )
+                                                    )?.label}
                                                 </SelectTrigger>
                                                 <SelectContent />
                                             </Select>
@@ -608,15 +655,45 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
                                 <Field label="Start time">
                                     <Box display="flex" gap="4">
-                                        <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startHour,
+                                                [{ label: "9", value: "9" }],
+                                                "9"
+                                            )}
+                                            onValueChange={setStartHour}
+                                            options={[{ label: "9", value: "9" }]}
+                                        >
                                             <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
-                                        <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startMinute,
+                                                [{ label: "00", value: "00" }],
+                                                "00"
+                                            )}
+                                            onValueChange={setStartMinute}
+                                            options={[{ label: "00", value: "00" }]}
+                                        >
                                             <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
-                                        <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startPeriod,
+                                                [
+                                                    { label: "AM", value: "AM" },
+                                                    { label: "PM", value: "PM" },
+                                                ],
+                                                "AM"
+                                            )}
+                                            onValueChange={setStartPeriod}
+                                            options={[
+                                                { label: "AM", value: "AM" },
+                                                { label: "PM", value: "PM" },
+                                            ]}
+                                        >
                                             <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
