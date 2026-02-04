@@ -1,5 +1,6 @@
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {Field, Select, SelectTrigger, SelectContent, Textarea} from "@optiaxiom/react";
+import {getSelectValueInOptions} from "@/utils/selectValue";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {useState, useEffect} from "react";
@@ -95,7 +96,14 @@ export default function SynonymDialog({
 					required
 				>
 					<Select
-						value={type}
+						value={getSelectValueInOptions(
+							type,
+							[
+								{label: "Two-way (Equivalent)", value: "Two-way"},
+								{label: "One-way (Expansion)", value: "One-way"},
+							],
+							"Two-way"
+						)}
 						onValueChange={(val) => setType(val as "One-way" | "Two-way")}
 						options={[
 							{label: "Two-way (Equivalent)", value: "Two-way"},
