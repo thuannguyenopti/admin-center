@@ -36,6 +36,7 @@ import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
 import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
+import Link from "next/link";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -138,11 +139,13 @@ export default function CMSToolbar({
 		>
 			{/* Left Section */}
 			<Box display="flex" alignItems="center" gap="16">
-				<Button
-					appearance="default"
-					icon={<IconListTree size={16} />}
-					aria-label="Toggle tree view"
-				/>
+				<Link href="/cms/edit/">
+					<Button
+						appearance="default"
+						icon={<IconListTree size={16} />}
+						aria-label="Toggle tree view"
+					/>
+				</Link>
 				<Box gap="8" display="flex" alignItems="center" color="fg.default">
 					{contentTypeIcon || <IconFile size={16} />}
 					<Text

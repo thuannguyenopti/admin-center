@@ -1,9 +1,8 @@
 "use client";
 import Template from "./components/template";
 import "./globals.css";
-import {AxiomProvider} from "@optiaxiom/react";
+import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {usePathname} from "next/navigation";
-import {useState} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData";
@@ -15,43 +14,43 @@ import {
 	IconChartBar,
 	IconDashboard,
 	IconPencil,
-	IconPlayerPlay,
 	IconHierarchy3,
-	IconLogs,
 	IconSettings,
 	IconSearch,
 	IconList,
-	IconFile,
 	IconUsers,
 	IconPuzzle,
 	IconFolders,
 	IconBuildingStore,
 } from "@tabler/icons-react";
-import {IconAlignRight} from "@optimizely/axiom-icons";
 
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const path = usePathname();
+	const path = usePathname() ?? "";
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
-
 	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
 	const webhookId = webhookMatch ? webhookMatch[1] : null;
 
-	const [webhooks] = usePersistentState("webhooks", initialWebhooks) as [
-		typeof initialWebhooks,
-		any,
+	const [algorithmsState] = usePersistentState("algorithms", initialAlgorithms) as [
+		Algorithm[] | undefined,
 	];
-	const [algorithms, , isHydrated] = usePersistentState("algorithms", initialAlgorithms) as [
-		Algorithm[],
-		any,
-		boolean,
+	const [webhooksState] = usePersistentState("webhooks", initialWebhooks) as [
+		typeof initialWebhooks | undefined,
 	];
-	const currentAlgorithm = algorithms.find((a) => a.id === algorithmId);
-	const currentWebhook = webhooks.find((w) => w.id === webhookId);
+
+	const safeAlgorithms =
+		Array.isArray(algorithmsState) && algorithmsState.length > 0
+			? algorithmsState
+			: initialAlgorithms;
+	const safeWebhooks =
+		Array.isArray(webhooksState) && webhooksState.length > 0 ? webhooksState : initialWebhooks;
+
+	const currentAlgorithm = safeAlgorithms.find((a) => a.id === algorithmId);
+	const currentWebhook = safeWebhooks.find((w) => w.id === webhookId);
 
 	const structure = {
 		cms: [
@@ -89,11 +88,13 @@ export default function RootLayout({
 			{
 				label: "Settings",
 				highlight: "cms/settings",
-				url: "/cms/settings/content-types",
+				url: "/cms/settings",
 				icon: <IconSettings />,
 				children: [
-					{label: "Content Types", url: "/cms/settings/content-types"},
-					{label: "Blueprints", url: "/cms/settings/blueprints"},
+					{label: "Taxonomy"},
+					{label: "Categories", url: "/cms/settings/categories"},
+					{label: "Tags", url: "/cms/settings/tags"},
+					{label: "Configure"},
 					{
 						label: "Applications",
 						url: "/cms/settings/applications",
@@ -112,11 +113,17 @@ export default function RootLayout({
 							],
 						},
 					},
-					{label: "Access Rights"},
+					{label: "Blueprints", url: "/cms/settings/blueprints"},
+					{label: "Content Types", url: "/cms/settings/content-types"},
+					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
+					{label: "Access Rights", url: "/cms/settings/access-rights"},
 					{label: "API Clients", url: "/cms/settings/api-clients"},
-					{label: "Set Access Rights", url: "/cms/settings/access-rights"},
+					{label: "API Keys", url: "/cms/settings/api-keys"},
+					{label: "Set Access Rights", url: "/cms/settings/set-access-rights"},
 					{label: "Data & Sync Management"},
+					{label: "GraphiQL", url: "/cms/settings/graphiql"},
 					{label: "Scheduled Jobs", url: "/cms/settings/scheduled-jobs"},
+					{label: "Smooth Rebuild", url: "/cms/settings/smooth-rebuild"},
 					{
 						label: "Webhooks",
 						url: "/cms/settings/webhooks",
@@ -136,16 +143,24 @@ export default function RootLayout({
 								: [],
 						},
 					},
-
 					{label: "Config"},
 					{label: "Languages", url: "/cms/settings/languages"},
 					{label: "Edit Tabs", url: "/cms/settings/edit-tabs"},
 					{label: "Tools"},
-					{label: "Import Data", url: "/cms/settings/import-data"},
-					{label: "Export Data", url: "/cms/settings/export-data"},
-					{label: "Convert Pages", url: "/cms/settings/convert-pages"},
 					{label: "Change Log", url: "/cms/settings/change-log"},
+					{label: "Convert Pages", url: "/cms/settings/convert-pages"},
+					{label: "Export Data", url: "/cms/settings/export-data"},
+					{label: "Import Data", url: "/cms/settings/import-data"},
+					{label: "Search Configuration", url: "/cms/settings/search-configuration"},
+					{label: "Add-ons"},
+					{label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn"},
 				],
+			},
+			{
+				label: "Add-ons",
+				highlight: "cms/add-ons",
+				url: "/cms/add-ons",
+				icon: <IconPuzzle />,
 			},
 			{
 				label: "Search Management",
@@ -181,7 +196,6 @@ export default function RootLayout({
 						},
 					},
 					{label: "Manage"},
-
 					{
 						label: "Algorithms",
 						description: "Manage search algorithms",
@@ -253,22 +267,10 @@ export default function RootLayout({
 				highlight: "/connect-platform/graph",
 				icon: <IconHierarchy3 />,
 				children: [
-					{
-						label: "Dashboard",
-						url: "/connect-platform/graph/dashboard",
-					},
-					{
-						label: "Browse",
-						url: "/connect-platform/graph/browse",
-					},
-					{
-						label: "Sync Log",
-						url: "/connect-platform/graph/sync-log",
-					},
-					{
-						label: "Settings",
-						url: "/connect-platform/graph/settings",
-					},
+					{label: "Dashboard", url: "/connect-platform/graph/dashboard"},
+					{label: "Browse", url: "/connect-platform/graph/browse"},
+					{label: "Sync Log", url: "/connect-platform/graph/sync-log"},
+					{label: "Settings", url: "/connect-platform/graph/settings"},
 				],
 			},
 		],
@@ -345,9 +347,7 @@ export default function RootLayout({
 				),
 				customLayout: true,
 			},
-			{
-				label: "Configurations",
-			},
+			{label: "Configurations"},
 			{
 				label: "Instructions",
 				url: "/opal/instructions",
@@ -396,21 +396,26 @@ export default function RootLayout({
 			},
 		],
 	};
-	const key: string = path.split("/")[1];
-	const menu = structure[key as keyof typeof structure];
 
-	const [feHostingState, setFeHostingState] = useState({});
+	const key: string = path.split("/")[1] ?? "";
+	const menu = key ? structure[key as keyof typeof structure] : undefined;
 	const {activeEffect} = useSecretCode();
 
 	return (
 		<html lang="en" suppressHydrationWarning>
+			<head>
+				<link
+					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+					rel="stylesheet"
+				/>
+			</head>
 			<body suppressHydrationWarning>
-				<AxiomProvider>
+				<ThemeProvider>
 					<HydrationErrorSuppressor />
 					{menu ? <Template structure={menu}>{children}</Template> : children}
 					{activeEffect === "snow" && <SnowEffect />}
 					{activeEffect === "newyear" && <NewYearEffect />}
-				</AxiomProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);

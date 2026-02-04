@@ -2,14 +2,10 @@
 
 import {Box, Heading, SearchInput} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
-import Link from "next/link";
 import {Button} from "@/app/components/Button";
-import {IconFilter, IconWand, IconChevronRight, IconChevronDown} from "@tabler/icons-react";
-import {Aside} from "@/app/context/LayoutContext";
-import RightToolbar from "@/app/components/RightToolbar";
+import {IconFilter, IconChevronRight, IconChevronDown, IconFile} from "@tabler/icons-react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import {IconFile} from "@tabler/icons-react";
 import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page} from "@/app/db/initialData";
@@ -21,12 +17,10 @@ const buildTree = (pages: Page[]) => {
 	const map = new Map<string, PageNode>();
 	const roots: PageNode[] = [];
 
-	// First pass: create nodes
 	pages.forEach((page) => {
 		map.set(page.id, {...page, children: []});
 	});
 
-	// Second pass: link children
 	pages.forEach((page) => {
 		const node = map.get(page.id)!;
 		if (page.parentId) {
@@ -34,7 +28,6 @@ const buildTree = (pages: Page[]) => {
 			if (parent) {
 				parent.children.push(node);
 			} else {
-				// Parent not found, treat as root or handle error
 				roots.push(node);
 			}
 		} else {
@@ -133,10 +126,10 @@ export default function EditPage() {
 	return (
 		<Box p="24" h="full" overflow="auto">
 			<Heading level="3" mb="16">
-				Edit startpage
+				Edit pages
 			</Heading>
 			<Text mb="24" color="fg.secondary">
-				TBD how this page works.
+				Select pages from the content tree to view or modify their content.
 			</Text>
 			<Flex mb="24" gap="8">
 				<SearchInput size="lg" placeholder="Search content..." />
