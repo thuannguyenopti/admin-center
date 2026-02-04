@@ -1,4 +1,4 @@
-@import './styles/opalStyles.css';
+@import "./styles/opalStyles.css";
 
 @layer optiaxiom.base {
 	@tailwind base;
@@ -8,16 +8,12 @@
 
 /* Light mode as default, but defer to OS preference */
 :root {
-	--background: #ffffff;
-	--foreground: #000000;
 	color-scheme: light dark;
 }
 
 /* Dark mode support based on OS preference */
 @media (prefers-color-scheme: dark) {
 	:root {
-		--background: #0a0a0a;
-		--foreground: #ededed;
 		color-scheme: dark;
 	}
 
@@ -28,21 +24,15 @@
 
 /* Dark mode via data-theme attribute - takes precedence over OS preference */
 [data-theme="dark"] {
-	--background: #0a0a0a;
-	--foreground: #ededed;
 	color-scheme: dark;
 }
 
 html[data-theme="dark"],
 html.dark {
-	--background: #0a0a0a;
-	--foreground: #ededed;
 	color-scheme: dark;
 }
 
 body.dark {
-	--background: #0a0a0a;
-	--foreground: #ededed;
 	color-scheme: dark;
 }
 
@@ -58,8 +48,149 @@ body:not(.dark) {
 	color-scheme: light;
 }
 
+/* ============================================
+   Axiom Design Token Overrides
+   ============================================
+   Override Axiom's CSS variables here.
+   These values are extracted from @optiaxiom/globals tokens.
+   Dark mode values use [data-theme="dark"] selector.
+   
+   Palette reference:
+   neutral.00: #FFFFFF, neutral.50: #F9FAFC, neutral.75: #F5F6FA
+   neutral.100: #E9EDF5, neutral.150: #DADFEB, neutral.200: #CACFDC
+   neutral.300: #B8BECB, neutral.500: #838DA4, neutral.600: #66708C
+   neutral.700: #4F576E, neutral.800: #2E3442, neutral.900: #1C212B
+   neutral.1000: #1C2029, neutral.1100: #171A23
+   brand.50: #F0F3FF, brand.200: #B3C3FF, brand.300: #6A8FFC
+   brand.400: #2E66F7, brand.500: #0037FF, brand.600: #002CCC
+   brand.700: #002894, brand.800: #001666, brand.900: #000B33
+*/
+
+/* Dark Mode Overrides - aligned with Axiom's default dark theme */
+[data-theme="dark"],
+html.dark,
+.dark {
+	/* Background colors */
+	--ax-colors-bg-default: #1c2029; /* neutral.1000 */
+	--ax-colors-bg-page: #171a23; /* neutral.1100 */
+	--ax-colors-bg-secondary: #1c212b; /* neutral.900 */
+	--ax-colors-bg-secondary-hovered: rgba(249, 250, 252, 0.12); /* neutral.50/12 */
+	--ax-colors-bg-tertiary: #4f576e; /* neutral.700 */
+	--ax-colors-bg-tertiary-hovered: rgba(249, 250, 252, 0.18); /* neutral.50/18 */
+	--ax-colors-bg-default-hovered: rgba(249, 250, 252, 0.06); /* neutral.50/6 */
+	--ax-colors-bg-default-pressed: rgba(249, 250, 252, 0.12); /* neutral.50/12 */
+	--ax-colors-bg-default-inverse: #e9edf5; /* neutral.100 */
+	--ax-colors-bg-default-inverse-hovered: #cacfdc; /* neutral.200 */
+	--ax-colors-bg-default-inverse-pressed: #b8becb; /* neutral.300 */
+	--ax-colors-bg-overlay: rgba(249, 250, 252, 0.32); /* neutral.50/32 */
+
+	/* Accent backgrounds (brand colors) */
+	--ax-colors-bg-accent: #2e66f7; /* brand.400 */
+	--ax-colors-bg-accent-hovered: #2e66f7; /* brand.400 */
+	--ax-colors-bg-accent-subtle: #283254; /* brand.900 (EDITED) */
+	--ax-colors-bg-accent-light: #001666; /* brand.800 */
+
+	/* Status backgrounds - Error (red) */
+	--ax-colors-bg-error: #cc1616; /* red.500 */
+	--ax-colors-bg-error-hovered: #f64f4f; /* red.400 */
+	--ax-colors-bg-error-pressed: #b21313; /* red.600 */
+	--ax-colors-bg-error-subtle: #601313; /* red.800 */
+	--ax-colors-bg-error-subtlest: #300a0a; /* red.900 */
+	--ax-colors-bg-error-light: #911d1d; /* red.700 */
+
+	/* Status backgrounds - Success (green) */
+	--ax-colors-bg-success: #038047; /* green.600 */
+	--ax-colors-bg-success-hovered: #5ac58a; /* green.400 */
+	--ax-colors-bg-success-subtle: #082415; /* green.900 */
+	--ax-colors-bg-success-light: #17492b; /* green.800 */
+
+	/* Status backgrounds - Warning (yellow) */
+	--ax-colors-bg-warning: #f79008; /* yellow.500 */
+	--ax-colors-bg-warning-hovered: #fdb022; /* yellow.400 */
+	--ax-colors-bg-warning-subtle: #4e1d09; /* yellow.900 */
+	--ax-colors-bg-warning-light: #7a2e0d; /* yellow.800 */
+
+	/* Status backgrounds - Information (blue) */
+	--ax-colors-bg-information: #115dd4; /* blue.600 */
+	--ax-colors-bg-information-subtle: #051939; /* blue.900 */
+	--ax-colors-bg-information-light: #09306d; /* blue.800 */
+
+	/* Avatar backgrounds */
+	--ax-colors-bg-avatar-neutral: #2e3442; /* neutral.800 */
+	--ax-colors-bg-avatar-purple: #412470; /* purple.700 */
+
+	/* Spinner */
+	--ax-colors-bg-spinner-default: #f9fafc; /* neutral.50 */
+	--ax-colors-bg-spinner-inverse: #f9fafc; /* neutral.50 */
+
+	/* Foreground/text colors */
+	--ax-colors-fg-default: #f5f6fa; /* neutral.75 */
+	--ax-colors-fg-secondary: #cacfdc; /* neutral.200 */
+	--ax-colors-fg-tertiary: #838da4; /* neutral.500 */
+	--ax-colors-fg-disabled: rgba(249, 250, 252, 0.32); /* neutral.50/32 */
+	--ax-colors-fg-default-inverse: #2e3442; /* neutral.800 */
+	--ax-colors-fg-white: #ffffff; /* neutral.00 */
+
+	/* Foreground - Accent */
+	--ax-colors-fg-accent: #6a8ffc; /* brand.300 */
+	--ax-colors-fg-accent-hovered: #0037ff; /* brand.500 */
+	--ax-colors-fg-accent-strong: #2e66f7; /* brand.400 */
+
+	/* Foreground - Error */
+	--ax-colors-fg-error: #fc8b8b; /* red.300 */
+	--ax-colors-fg-error-hovered: #b21313; /* red.600 */
+	--ax-colors-fg-error-light: #cc1616; /* red.500 */
+	--ax-colors-fg-error-strong: #ffb4b4; /* red.200 */
+
+	/* Foreground - Success */
+	--ax-colors-fg-success: #7cd2a7; /* green.300 */
+	--ax-colors-fg-success-hovered: #038047; /* green.600 */
+	--ax-colors-fg-success-light: #03a65d; /* green.500 */
+	--ax-colors-fg-success-strong: #a5e1c3; /* green.200 */
+
+	/* Foreground - Warning */
+	--ax-colors-fg-warning: #ffc84b; /* yellow.300 */
+	--ax-colors-fg-warning-hovered: #dc6903; /* yellow.600 */
+	--ax-colors-fg-warning-light: #f79008; /* yellow.500 */
+	--ax-colors-fg-warning-strong: #fedf88; /* yellow.200 */
+	--ax-colors-fg-warning-inverse: #2e3442; /* neutral.800 */
+
+	/* Foreground - Information */
+	--ax-colors-fg-information: #7baaf4; /* blue.300 */
+	--ax-colors-fg-information-light: #2f7aee; /* blue.500 */
+	--ax-colors-fg-information-strong: #a1c2f7; /* blue.200 */
+
+	/* Foreground - Links */
+	--ax-colors-fg-link-default: #2e66f7; /* brand.400 */
+	--ax-colors-fg-link-default-hovered: #b3c3ff; /* brand.200 */
+	--ax-colors-fg-link-inverse: #2e3442; /* neutral.800 */
+	--ax-colors-fg-link-subtle: #f5f6fa; /* neutral.75 */
+	--ax-colors-fg-link-visited: #693ab6; /* purple.500 */
+
+	/* Foreground - Avatar */
+	--ax-colors-fg-avatar-neutral: #e9edf5; /* neutral.100 */
+	--ax-colors-fg-avatar-purple: #e5dcf4; /* purple.100 */
+
+	/* Foreground - Spinner */
+	--ax-colors-fg-spinner-default: #cacfdc; /* neutral.200 */
+	--ax-colors-fg-spinner-inverse: #2e3442; /* neutral.800 */
+
+	/* Border colors */
+	--ax-colors-border-default: #66708c; /* neutral.600 */
+	--ax-colors-border-secondary: #4f576e; /* neutral.700 */
+	--ax-colors-border-tertiary: #2e3442; /* neutral.800 */
+	--ax-colors-border-control: #4f576e; /* neutral.700 */
+	--ax-colors-border-control-hovered: #66708c; /* neutral.600 */
+	--ax-colors-border-disabled: #2e3442; /* neutral.800 */
+	--ax-colors-border-accent: #6a8ffc; /* brand.300 */
+	--ax-colors-border-focus: #6a8ffc; /* brand.300 */
+	--ax-colors-border-focus-error: #fc8b8b; /* red.300 */
+	--ax-colors-border-error: #ffb4b4; /* red.200 */
+	--ax-colors-border-success: #03a65d; /* green.500 */
+	--ax-colors-border-warning: #f79008; /* yellow.500 */
+}
+
 body {
-	background: var(--background);
 	font-family: Arial, Helvetica, sans-serif;
 	margin: 0;
 	height: 100%;
@@ -98,7 +229,7 @@ body {
 	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
 }
 
-.extension-icon>svg {
+.extension-icon > svg {
 	width: 16px;
 	height: 16px;
 }
