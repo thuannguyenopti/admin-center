@@ -1,9 +1,10 @@
 import { Select, SelectTrigger, SelectContent, Box } from '@optiaxiom/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Input } from '@/app/components/Input';
 import { CategoryFormRow as FormRowType, Category } from '../types';
 import { generateSlug, buildParentOptions, getParentPath } from '../utils';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { getSelectValueInOptions } from '@/utils/selectValue';
 
 const SHIMMER_INSET = 2;
 
@@ -73,31 +74,36 @@ export function CategoryFormRow({
   // Display slug with "/" prefix
   const displaySlug = formRow.slug ? `/${formRow.slug}` : '';
 
-  const parentOptions = buildParentOptions(
-    allCategories,
-    formRow.id ? [formRow.id] : []
-  );
+  const visibilityOptions = [
+    { label: 'Public', value: 'public' },
+    { label: 'Private', value: 'private' },
+  ];
+
+  // Normalize to plain { label, value } so Axiom/downshift never sees extra props (e.g. depth)
+  // and ensure options is never empty so getItemProps always has a valid item
+  const parentOptions = useMemo(() => {
+    const raw = buildParentOptions(
+      allCategories,
+      formRow.id ? [formRow.id] : []
+    );
+    const normalized = raw.length > 0 ? raw : [{ label: 'None (Root level)', value: '' }];
+    return normalized.map((o) => ({ label: o.label, value: o.value }));
+  }, [allCategories, formRow.id]);
 
   const parentPath = formRow.parentId
     ? getParentPath(formRow.parentId, allCategories)
     : 'None (Root level)';
 
-  // Ensure value is in options so downshift getItemProps receives a valid item
-  const parentValue = parentOptions.some(
-    (o) => o.value === (formRow.parentId || '')
-  )
-    ? formRow.parentId || ''
-    : '';
-
-  const visibilityOptions = [
-    { label: 'Public', value: 'public' },
-    { label: 'Private', value: 'private' },
-  ];
-  const visibilityValue = visibilityOptions.some(
-    (o) => o.value === formRow.visibility
-  )
-    ? formRow.visibility
-    : 'public';
+  const parentValue = getSelectValueInOptions(
+    formRow.parentId ?? '',
+    parentOptions,
+    ''
+  );
+  const visibilityValue = getSelectValueInOptions(
+    formRow.visibility,
+    visibilityOptions,
+    'public'
+  );
 
   return (
     <Box display="flex" gap="10" alignItems="center">
