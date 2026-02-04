@@ -247,7 +247,7 @@ export default function MetricCard({
 				<Text
 					fontSize="3xl"
 					fontWeight="600"
-					color="fg.accent.strong"
+					color="fg.information"
 					style={{lineHeight: 1}}
 				>
 					{formatValue(value)}
@@ -257,7 +257,7 @@ export default function MetricCard({
 			{(previousValue !== undefined || changeData) && (
 				<Box display="flex" gap="12" justifyContent="space-between" w="full">
 					{previousValue !== undefined && (
-						<Text fontSize="sm" color="fg.information.light">
+						<Text fontSize="sm" color="fg.information">
 							Prev: {formatValue(previousValue)}
 						</Text>
 					)}
