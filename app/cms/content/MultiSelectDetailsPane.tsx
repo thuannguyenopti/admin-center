@@ -174,6 +174,10 @@ export default function MultiSelectDetailsPane({
   const addedTagsInBatch = isBatchEditMode
     ? tags.filter((slug) => !initialTagsRef.current.includes(slug))
     : [];
+  // Categories added in this batch
+  const addedCategoriesInBatch = isCategoryBatchEditMode
+    ? categories.filter((slug) => !initialCategoriesRef.current.includes(slug))
+    : [];
 
   const enterBatchEdit = () => {
     initialTagsRef.current = [...tags];
@@ -775,6 +779,7 @@ export default function MultiSelectDetailsPane({
 
           {isCategoryBatchEditMode && (
           <>
+          {/* Categories */}
           <Box display="flex" flexDirection="column" gap="8" style={{ flexShrink: 0 }}>
             <Text fontSize="sm" fontWeight="600" color="fg.default">
               Categories
@@ -832,34 +837,141 @@ export default function MultiSelectDetailsPane({
                 </Box>
               </PopoverContent>
             </Popover>
-            <Box display="flex" flexWrap="wrap" gap="8">
-              {categories.map((slug) => (
-                <Badge key={slug} intent="neutral">
-                  <Box display="flex" alignItems="center" gap="4">
-                    <span>{getCategoryDisplayName(slug)}</span>
-                    <button
-                      onClick={() => handleRemoveCategory(slug)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "0",
-                        display: "flex",
-                        alignItems: "center",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                        lineHeight: "1",
-                        color: "inherit",
-                      }}
-                      aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
-                    >
-                      ×
-                    </button>
+            <Box display="flex" flexDirection="column" gap="8">
+              {categories.map((slug) => {
+                const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
+                const count = itemsWithCategory.length;
+                const isAddedInBatch = addedCategoriesInBatch.includes(slug);
+                return (
+                  <Box key={slug} display="flex" alignItems="center" gap="4">
+                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
+                      <Box display="flex" alignItems="center" gap="4">
+                        <span>{getCategoryDisplayName(slug)}</span>
+                        <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                          on {count} {count === 1 ? "item" : "items"}
+                        </Text>
+                        <button
+                          onClick={() => handleRemoveCategory(slug)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            lineHeight: "1",
+                            color: "inherit",
+                          }}
+                          aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
+                        >
+                          ×
+                        </button>
+                      </Box>
+                    </Badge>
                   </Box>
-                </Badge>
-              ))}
+                );
+              })}
             </Box>
           </Box>
+          {/* Category preview (fills remaining height, scrolls within) */}
+          <Box
+            display="flex"
+            flexDirection="column"
+            gap="12"
+            flex="1"
+            style={{ minHeight: 0 }}
+            overflow="hidden"
+          >
+            <Text fontSize="sm" fontWeight="600" color="fg.default" style={{ flexShrink: 0 }}>
+              Category preview
+            </Text>
+            <Box
+              display="flex"
+              flexDirection="column"
+              gap="8"
+              flex="1"
+              style={{ minHeight: 0 }}
+              overflow="auto"
+            >
+              {items.slice(0, items.length > 20 ? 15 : items.length).map((item) => {
+                const itemCategories = item.categories ?? [];
+                const allSlugsForItem = Array.from(new Set([...itemCategories, ...categories]));
+                const hasAnyCategories = allSlugsForItem.length > 0;
+                return (
+                  <Box
+                    key={item.id}
+                    display="flex"
+                    flexDirection="column"
+                    gap="6"
+                    px="12"
+                    py="10"
+                    rounded="sm"
+                    style={{
+                      backgroundColor: "var(--ax-colors-bg-subtle)",
+                      border: "1px solid var(--ax-colors-border-tertiary)",
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
+                      <Box style={{ flexShrink: 0, color: "var(--ax-colors-fg-secondary)" }}>
+                        {getIconForType(item.baseType)}
+                      </Box>
+                      <span
+                        title={String(item.name ?? item.id)}
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                          color: "var(--ax-colors-fg-default)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          minWidth: 0,
+                        }}
+                      >
+                        {item.name ?? item.id}
+                      </span>
+                    </Box>
+                    {hasAnyCategories ? (
+                      <Box display="flex" flexWrap="wrap" gap="6">
+                        {allSlugsForItem.map((slug) => {
+                          const wasOnItem = itemCategories.includes(slug);
+                          const isInBatch = categories.includes(slug);
+                          const isRemoved = wasOnItem && !isInBatch;
+                          const willBeAdded = !wasOnItem && isInBatch;
+                          const isNewCategory = willBeAdded && addedCategoriesInBatch.includes(slug);
+                          const isMissingOnThisItem = willBeAdded && !isNewCategory;
+                          return (
+                            <Badge
+                              key={slug}
+                              intent={
+                                isRemoved ? "danger" : isNewCategory ? "success" : isMissingOnThisItem ? "warning" : "neutral"
+                              }
+                              variant={isRemoved || isNewCategory || isMissingOnThisItem ? "subtle" : undefined}
+                              style={isRemoved ? { textDecoration: "line-through" } : undefined}
+                            >
+                              {getCategoryDisplayName(slug)}
+                            </Badge>
+                          );
+                        })}
+                      </Box>
+                    ) : (
+                      <Text fontSize="xs" color="fg.tertiary">
+                        No categories
+                      </Text>
+                    )}
+                  </Box>
+                );
+              })}
+              {items.length > 20 && (
+                <Text fontSize="xs" color="fg.tertiary" style={{ paddingLeft: "4px" }}>
+                  … and {items.length - 15} more items
+                </Text>
+              )}
+            </Box>
+          </Box>
+          {/* Apply / Back */}
           <Box
             display="flex"
             alignItems="center"
