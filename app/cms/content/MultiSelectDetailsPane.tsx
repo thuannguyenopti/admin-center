@@ -491,6 +491,7 @@ export default function MultiSelectDetailsPane({
                           size="sm"
                           rounded="sm"
                           px="8"
+                          className="opalGenerateButton"
                           icon={<IconSparkles />}
                           onClick={(e) => {
                             e.preventDefault();

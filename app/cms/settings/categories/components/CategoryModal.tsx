@@ -292,9 +292,23 @@ export function CategoryModal({
             fontWeight: 300,
             letterSpacing: '-0.44px',
             color: '#080736',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+            flexShrink: 0,
           }}
         >
           {title}
+          <Text
+            style={{
+              fontSize: '14px',
+              fontWeight: 400,
+              letterSpacing: '-0.15px',
+              color: '#080736',
+            }}
+          >
+            Define categories to organise your content.
+          </Text>
         </DialogHeader>
         <DialogBody
           pt="0"
@@ -305,17 +319,6 @@ export function CategoryModal({
           }}
         >
           <Box display="flex" flexDirection="column" gap="8">
-            {/* Subtitle */}
-            <Text
-              style={{
-                fontSize: '14px',
-                fontWeight: 400,
-                letterSpacing: '-0.15px',
-                color: '#080736',
-              }}
-            >
-              Define categories to organise your content.
-            </Text>
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
@@ -407,6 +410,7 @@ export function CategoryModal({
                   size="sm"
                   rounded="sm"
                   px="8"
+                  className="opalGenerateButton"
                   icon={<IconSparkles size={16} />}
                   iconPosition="start"
                   onClick={handleGenerate}

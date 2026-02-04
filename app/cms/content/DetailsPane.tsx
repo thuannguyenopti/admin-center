@@ -558,6 +558,7 @@ export default function DetailsPane({
                             size="sm"
                             rounded="sm"
                             px="8"
+                            className="opalGenerateButton"
                             icon={<IconSparkles />}
                             onClick={(e) => {
                               e.preventDefault();
@@ -779,6 +780,7 @@ export default function DetailsPane({
                             size="sm"
                             rounded="sm"
                             px="8"
+                            className="opalGenerateButton"
                             icon={<IconSparkles />}
                             onClick={(e) => {
                               e.preventDefault();
