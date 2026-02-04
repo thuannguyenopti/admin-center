@@ -9,6 +9,7 @@ export interface MultiSelectMetadata {
   };
   totalFileSize: string;
   tags: string[];
+  categories: string[];
   typeDistribution: {
     Page: number;
     Product: number;
@@ -25,6 +26,7 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
       dateRange: { earliest: "", latest: "" },
       totalFileSize: "0 MB",
       tags: [],
+      categories: [],
       typeDistribution: { Page: 0, Product: 0, Block: 0, Media: 0 },
     };
   }
@@ -48,6 +50,8 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
 
   // Union of all selected items' tags (slugs) for display and edit
   const tags = [...new Set(items.flatMap((i) => i.tags ?? []))];
+  // Union of all selected items' categories (slugs) for display and edit
+  const categories = [...new Set(items.flatMap((i) => i.categories ?? []))];
 
   // Calculate total file size (mock)
   const totalFileSize = (items.length * 11.42).toFixed(1); // Mock calculation
@@ -61,6 +65,7 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
     },
     totalFileSize: `${totalFileSize} MB`,
     tags,
+    categories,
     typeDistribution,
   };
 }

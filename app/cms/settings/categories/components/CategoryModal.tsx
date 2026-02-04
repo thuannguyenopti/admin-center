@@ -8,7 +8,6 @@ import {
   Box,
   Button,
 } from '@optiaxiom/react';
-import { Button as LegacyButton } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import { CategoryFormRow as FormRowType, Category } from '../types';
 import { CategoryFormRow } from './CategoryFormRow';
@@ -68,6 +67,16 @@ export function CategoryModal({
       setGenerateError(null);
     }
   }, [open, mode, initialCategories]);
+
+  // Lock page scroll when modal is open so only the modal body scrolls (single scrollbar)
+  useEffect(() => {
+    if (open) {
+      document.body.dataset.modalOpen = 'true';
+      return () => {
+        delete document.body.dataset.modalOpen;
+      };
+    }
+  }, [open]);
 
   const toCategoryName = (str: string): string =>
     str
@@ -258,16 +267,23 @@ export function CategoryModal({
   const title = mode === 'create' ? 'Create categories' : 'Edit categories';
   const buttonText = mode === 'create' ? 'Create' : 'Save';
 
+  const canSubmitCreate =
+    mode !== 'create' ||
+    formRows.some(
+      (row) => row.name.trim().length >= 2 && row.slug.trim().length > 0
+    );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         size="lg"
         style={{
           maxWidth: '736px',
-          maxHeight: '90vh',
+          maxHeight: '80vh',
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <DialogHeader
@@ -387,7 +403,7 @@ export function CategoryModal({
             {mode === 'create' && (
               <Box display="flex" justifyContent="flex-start" alignItems="center">
                 <Button
-                  appearance="primary-opal"
+                  appearance="default-opal"
                   size="sm"
                   rounded="sm"
                   px="8"
@@ -413,17 +429,14 @@ export function CategoryModal({
         </DialogBody>
         <DialogFooter style={{ gap: '16px' }}>
           <DialogClose size="lg">Cancel</DialogClose>
-          <LegacyButton
+          <Button
             appearance="primary"
             size="lg"
             onClick={handleSave}
-            style={{
-              backgroundColor: '#0037ff',
-              color: '#ffffff',
-            }}
+            disabled={mode === 'create' && !canSubmitCreate}
           >
             {buttonText}
-          </LegacyButton>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
