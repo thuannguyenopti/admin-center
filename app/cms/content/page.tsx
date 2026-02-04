@@ -84,6 +84,14 @@ export default function ContentPage() {
 		{label: "100", value: "100"},
 	];
 
+	// Ensure value is always in options so downshift getItemProps receives a valid item
+	const itemsPerPageValue = useMemo(() => {
+		const str = String(itemsPerPage);
+		return PAGE_SIZE_OPTIONS.some((o) => o.value === str)
+			? str
+			: PAGE_SIZE_OPTIONS[0].value;
+	}, [itemsPerPage]);
+
 	// Sort filtered content (guard undefined from context/hydration)
 	const sortedContent = useMemo(() => {
 		const source = filteredContent ?? [];
@@ -130,10 +138,11 @@ export default function ContentPage() {
 
 	// Use sorted content instead of filtered content (always array)
 	const displayContent = sortedContent ?? [];
-	const totalPages = Math.ceil(displayContent.length / itemsPerPage);
+	const effectiveItemsPerPage = Number(itemsPerPageValue);
+	const totalPages = Math.ceil(displayContent.length / effectiveItemsPerPage);
 	const paginatedItems = displayContent.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
+		(currentPage - 1) * effectiveItemsPerPage,
+		currentPage * effectiveItemsPerPage
 	);
 	const selectedContent = displayContent.find((item) => item.id === selectedContentId);
 
@@ -351,7 +360,13 @@ export default function ContentPage() {
 				</tbody>
 			</Table>
 			<Box display="flex" alignItems="center" mt="24" flexWrap="wrap">
-				<Pagination total={totalPages} page={currentPage} onPageChange={setCurrentPage} />
+				{totalPages > 0 && (
+					<Pagination
+						total={totalPages}
+						page={currentPage}
+						onPageChange={setCurrentPage}
+					/>
+				)}
 				<Box
 					flex="1"
 					display="flex"
@@ -362,7 +377,10 @@ export default function ContentPage() {
 					<AxiomText fontSize="sm" color="fg.secondary">
 						{displayContent.length === 0
 							? "0 items"
-							: `Showing ${(currentPage - 1) * itemsPerPage + 1}–${Math.min(currentPage * itemsPerPage, displayContent.length)} of ${displayContent.length}`}
+							: `Showing ${(currentPage - 1) * effectiveItemsPerPage + 1}–${Math.min(
+									currentPage * effectiveItemsPerPage,
+									displayContent.length
+							  )} of ${displayContent.length}`}
 					</AxiomText>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
@@ -370,12 +388,12 @@ export default function ContentPage() {
 						Rows per page
 					</AxiomText>
 					<Select
-						value={String(itemsPerPage)}
+						value={itemsPerPageValue}
 						onValueChange={(value) => setItemsPerPage(Number(value))}
 						options={PAGE_SIZE_OPTIONS}
 					>
 						<SelectTrigger w="80" size="sm">
-							{itemsPerPage}
+							{itemsPerPageValue}
 						</SelectTrigger>
 						<SelectContent />
 					</Select>
