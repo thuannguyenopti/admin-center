@@ -71,6 +71,17 @@ export function TagFormRow({
   // Display slug with "/" prefix
   const displaySlug = formRow.slug ? `/${formRow.slug}` : '';
 
+  // Ensure value is in options so downshift getItemProps receives a valid item
+  const visibilityOptions = [
+    { label: 'Public', value: 'public' },
+    { label: 'Private', value: 'private' },
+  ];
+  const visibilityValue = visibilityOptions.some(
+    (o) => o.value === formRow.visibility
+  )
+    ? formRow.visibility
+    : 'public';
+
   return (
     <Box display="flex" gap="10" alignItems="center">
       <Box flex="1" style={{ minWidth: 0 }}>
@@ -114,14 +125,11 @@ export function TagFormRow({
       <Box flex="1" style={{ minWidth: 0 }}>
         <ShimmerFieldWrapper loading={loading}>
           <Select
-            value={formRow.visibility}
+            value={visibilityValue}
             onValueChange={(value) =>
               onChange(index, 'visibility', value as 'public' | 'private')
             }
-            options={[
-              { label: 'Public', value: 'public' },
-              { label: 'Private', value: 'private' },
-            ]}
+            options={visibilityOptions}
           >
             <SelectTrigger
               size="lg"
@@ -136,7 +144,7 @@ export function TagFormRow({
                 color: '#080736',
               }}
             >
-              {formRow.visibility.charAt(0).toUpperCase() + formRow.visibility.slice(1)}
+              {visibilityValue.charAt(0).toUpperCase() + visibilityValue.slice(1)}
             </SelectTrigger>
             <SelectContent />
           </Select>
