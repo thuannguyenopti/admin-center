@@ -65,6 +65,14 @@ body {
 	height: 100%;
 }
 
+/* Prevent page scroll when a modal is open (single scrollbar inside modal only) */
+body[data-modal-open] {
+	overflow: hidden !important;
+}
+body[data-modal-open] .main-scroll-area {
+	overflow: hidden !important;
+}
+
 .parent {
 	display: grid;
 	grid-template-columns: 0fr 1fr;

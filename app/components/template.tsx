@@ -260,7 +260,7 @@ function TemplateContent({
 			>
 				<Box
 					flex="1"
-					className="min-w-0 relative"
+					className="min-w-0 relative main-scroll-area"
 					overflow={customLayout ? "hidden" : "auto"}
 					h="full"
 				>

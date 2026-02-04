@@ -74,6 +74,7 @@ export default function CategoriesSettings() {
     isSelected,
     toggleSelection,
     toggleAll,
+    toggleAllForCategories,
     deselectAll,
     selectedCategories,
     selectedCount,
@@ -345,7 +346,7 @@ export default function CategoriesSettings() {
         categories={paginatedCategories}
         selectedIds={selectedIds}
         onToggleSelection={toggleSelection}
-        onToggleAll={toggleAll}
+        onToggleAll={toggleAllForCategories}
         onToggleExpand={toggleExpanded}
         onEdit={handleEditCategory}
         onDelete={handleDeleteCategory}

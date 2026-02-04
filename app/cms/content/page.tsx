@@ -68,6 +68,8 @@ export default function ContentPage() {
 		getCategoryNameBySlug,
 		onTagsChange,
 		onTagsChangeBatch,
+		onCategoriesChange,
+		onCategoriesChangeBatch,
 	} = useFilterPanel();
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -146,8 +148,9 @@ export default function ContentPage() {
 	);
 	const selectedContent = displayContent.find((item) => item.id === selectedContentId);
 
-	// Lifted tag state for details pane so 1↔2 selection switch doesn't lose edits
+	// Lifted tag and category state for details pane so 1↔2 selection switch doesn't lose edits
 	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
+	const [detailsPaneCategories, setDetailsPaneCategories] = useState<string[] | null>(null);
 	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
 	const selectedItems = useMemo(
 		() => (paginatedItems ?? []).filter((item) => selectedRows.has(item.id)),
@@ -157,11 +160,16 @@ export default function ContentPage() {
 		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
 		[selectedItems]
 	);
+	const selectedItemsCategoryUnion = useMemo(
+		() => [...new Set(selectedItems.flatMap((i) => i.categories ?? []))],
+		[selectedItems]
+	);
 	useEffect(() => {
 		if (paneOpen && selectedItems.length > 0) {
 			setDetailsPaneTags(selectedItemsTagUnion);
+			setDetailsPaneCategories(selectedItemsCategoryUnion);
 		}
-	}, [paneOpen, selectedItems.length, selectedItemsTagUnion.join(",")]);
+	}, [paneOpen, selectedItems.length, selectedItemsTagUnion.join(","), selectedItemsCategoryUnion.join(",")]);
 
 	// Reset pagination when filters or page size change
 	useEffect(() => {
@@ -409,12 +417,17 @@ export default function ContentPage() {
 						allContent={paginatedItems}
 						detailsPaneTags={detailsPaneTags}
 						setDetailsPaneTags={setDetailsPaneTags}
+						detailsPaneCategories={detailsPaneCategories}
+						setDetailsPaneCategories={setDetailsPaneCategories}
 						onTagsChange={onTagsChange}
 						onTagsChangeBatch={onTagsChangeBatch}
+						onCategoriesChange={onCategoriesChange}
+						onCategoriesChangeBatch={onCategoriesChangeBatch}
 						onClose={() => {
 							setSelectedContentId(null);
 							setSelectedRows(new Set());
 							setDetailsPaneTags(null);
+							setDetailsPaneCategories(null);
 						}}
 					/>
 				</Aside>
