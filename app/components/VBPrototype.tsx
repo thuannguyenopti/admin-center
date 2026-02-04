@@ -2,7 +2,7 @@
 
 import type {SEOBlock} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
+import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState} from "react";
 import {
 	IconPlus,
@@ -647,22 +647,27 @@ export default function VBPrototype({
 		}
 	};
 
-	// Header actions (Generate + plus-menu)
+	// Header actions (Generate only in Categories & Tags + plus-menu)
+	const showGenerateInHeader =
+		sidebarTab === "properties" && activePropertiesSection === "categories-tags";
 	const HeaderActions = (
 		<Box display="flex" alignItems="center" gap="2" className="relative">
-			<Button
-				onClick={() => {
-					setSidebarTab("properties");
-					setActivePropertiesSection("categories-tags");
-					generateTriggerRef.current?.();
-				}}
-				appearance="subtle"
-				size="sm"
-				aria-label="Generate tags and categories"
-				icon={<IconSparkles size={16} />}
-				disabled={generateLoading}
-				loading={generateLoading}
-			/>
+			{showGenerateInHeader && (
+				<Tooltip content="Generate tag and category suggestions using Opal">
+					<Button
+						onClick={() => generateTriggerRef.current?.()}
+						appearance="default-opal"
+						size="sm"
+						rounded="sm"
+						px="8"
+						className="opalGenerateButton"
+						aria-label="Generate tags and categories"
+						icon={<IconSparkles size={16} />}
+						disabled={generateLoading}
+						loading={generateLoading}
+					/>
+				</Tooltip>
+			)}
 
 			<Menu
 				options={[

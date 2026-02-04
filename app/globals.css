@@ -247,3 +247,8 @@ body.dark ::-webkit-scrollbar-thumb:hover {
 	padding-top: 4px !important;
 	padding-bottom: 4px !important;
 }
+
+/* Opal Generate button: sparkle icon turns purple on hover (details panel + modals) */
+.opalGenerateButton:hover svg {
+	color: #7C3AED;
+}
