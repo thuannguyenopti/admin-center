@@ -4,6 +4,7 @@ import { Input } from '@/app/components/Input';
 import { TagFormRow as FormRowType } from '../types';
 import { generateSlug } from '../utils';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { getSelectValueInOptions } from '@/utils/selectValue';
 
 interface TagFormRowProps {
   formRow: FormRowType;
@@ -76,11 +77,11 @@ export function TagFormRow({
     { label: 'Public', value: 'public' },
     { label: 'Private', value: 'private' },
   ];
-  const visibilityValue = visibilityOptions.some(
-    (o) => o.value === formRow.visibility
-  )
-    ? formRow.visibility
-    : 'public';
+  const visibilityValue = getSelectValueInOptions(
+    formRow.visibility,
+    visibilityOptions,
+    'public'
+  );
 
   return (
     <Box display="flex" gap="10" alignItems="center">
