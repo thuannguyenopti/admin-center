@@ -159,22 +159,21 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				<Menu
 					options={[
 						{
-							group: {label: "Theme"},
 							label: "Light",
 							addon: <IconSunFilled size={16} />,
-							selected: themePreference === "light",
+							...(themePreference === "light" && {selected: true}),
 							execute: () => setThemePreference("light"),
 						},
 						{
 							label: "Dark",
 							addon: <IconMoon size={16} />,
-							selected: themePreference === "dark",
+							...(themePreference === "dark" && {selected: true}),
 							execute: () => setThemePreference("dark"),
 						},
 						{
 							label: "System",
 							addon: <IconDeviceDesktop size={16} />,
-							selected: themePreference === "system",
+							...(themePreference === "system" && {selected: true}),
 							execute: () => setThemePreference("system"),
 						},
 					]}
