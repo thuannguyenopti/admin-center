@@ -86,33 +86,33 @@ html.dark,
 
 	/* Accent backgrounds (brand colors) */
 	/*--ax-colors-bg-accent: #2e66f7; /* brand.400 */
-	/*--ax-colors-bg-accent-hovered: #2e66f7; /* brand.400 */
-	--ax-colors-bg-accent-subtle: #242c46; /* brand.900 (EDITED) */
+	--ax-colors-bg-accent-hovered: #4b7bf6; /* brand.400 */
+	--ax-colors-bg-accent-subtle: #21283f; /* brand.900 */
 	/*--ax-colors-bg-accent-light: #001666; /* brand.800 */
 
 	/* Status backgrounds - Error (red) */
 	/*--ax-colors-bg-error: #cc1616; /* red.500 */
 	/*--ax-colors-bg-error-hovered: #f64f4f; /* red.400 */
 	/*--ax-colors-bg-error-pressed: #b21313; /* red.600 */
-	--ax-colors-bg-error-subtle: #3c3131; /* red.800 */
+	--ax-colors-bg-error-subtle: #341f1f; /* red.800 */
 	--ax-colors-bg-error-subtlest: #2c2626; /* red.900 */
 	/*--ax-colors-bg-error-light: #911d1d; /* red.700 */
 
 	/* Status backgrounds - Success (green) */
 	/*--ax-colors-bg-success: #038047; /* green.600 */
 	/*--ax-colors-bg-success-hovered: #5ac58a; /* green.400 */
-	--ax-colors-bg-success-subtle: #28302c; /* green.900 */
+	--ax-colors-bg-success-subtle: #2e3833; /* green.900 */
 	/*--ax-colors-bg-success-light: #17492b; /* green.800 */
 
 	/* Status backgrounds - Warning (yellow) */
 	/*--ax-colors-bg-warning: #f79008; /* yellow.500 */
 	/*--ax-colors-bg-warning-hovered: #fdb022; /* yellow.400 */
-	--ax-colors-bg-warning-subtle: #392d28; /* yellow.900 */
+	--ax-colors-bg-warning-subtle: #393028; /* yellow.900 */
 	/*--ax-colors-bg-warning-light: #7a2e0d; /* yellow.800 */
 
 	/* Status backgrounds - Information (blue) */
 	--ax-colors-bg-information: #8fabff; /* blue.600 */
-	--ax-colors-bg-information-subtle: #212a48; /* blue.900 */
+	--ax-colors-bg-information-subtle: #242c46; /* blue.900 */
 	/*--ax-colors-bg-information-light: #09306d; /* blue.800 */
 
 	/* Avatar backgrounds */
@@ -139,8 +139,8 @@ html.dark,
 	/* Foreground - Error */
 	--ax-colors-fg-error: #ff8383; /* red.300 */
 	--ax-colors-fg-error-hovered: #fe9696; /* red.600 */
-	--ax-colors-fg-error-light: #ff0000; /* red.500 */
-	--ax-colors-fg-error-strong: #be5555; /* red.200 */
+	--ax-colors-fg-error-light: #ff8383; /* red.500 */
+	--ax-colors-fg-error-strong: #d35f5f; /* red.200 */
 
 	/* Foreground - Success */
 	/*--ax-colors-fg-success: #7cd2a7; /* green.300 */
@@ -152,7 +152,7 @@ html.dark,
 	/*--ax-colors-fg-warning: #ffc84b; /* yellow.300 */
 	/*--ax-colors-fg-warning-hovered: #dc6903; /* yellow.600 */
 	/*--ax-colors-fg-warning-light: #f79008; /* yellow.500 */
-	/*--ax-colors-fg-warning-strong: #fedf88; /* yellow.200 */
+	--ax-colors-fg-warning-strong: #e2ad5e; /* yellow.200 */
 	/*--ax-colors-fg-warning-inverse: #2e3442; /* neutral.800 */
 
 	/* Foreground - Information */
