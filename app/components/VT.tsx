@@ -31,7 +31,14 @@ export default function VT({
 	};
 
 	return (
-		<NavBody style={{maxWidth: "224px", overflow: "auto", height: "calc(100vh - 80px)"}}>
+		<NavBody
+			style={{
+				maxWidth: "224px",
+				minHeight: "100%",
+				overflow: "auto",
+				height: "calc(100vh - 80px)",
+			}}
+		>
 			<NavList className="appear">
 				{(backLink || title) && (
 					<Box px="12" py="16">
@@ -54,13 +61,13 @@ export default function VT({
 						<NavItem
 							onClick={() => menuClick(menuItem.url || "")}
 							active={menuItem.url === path}
-							key={menuItem.label}
+							key={`${menuItem.label}-${menuItem.url}`}
 							aria-label={menuItem.label}
 						>
 							{menuItem.label}
 						</NavItem>
 					) : (
-						<Fragment key={menuItem.label}>
+						<Fragment key={`${menuItem.label}-group-${i}`}>
 							{i !== 0 && <NavSeparator />}
 							<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
 						</Fragment>

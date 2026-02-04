@@ -33,7 +33,9 @@ export function HydrationErrorSuppressor() {
                 errorString.includes("client properties") ||
                 errorString.includes("server-rendered html") ||
                 errorString.includes("did not match") ||
-                errorString.includes("didn't match")
+                errorString.includes("didn't match") ||
+                errorString.includes("params are being enumerated") ||
+                errorString.includes("params is a promise")
             ) {
                 // Suppress these specific errors
                 return;

@@ -1,4 +1,5 @@
 import { ContentItem } from "./page";
+import { initialContentTypes } from "@/app/db/initialData";
 
 export interface PropertyField {
   label: string;
@@ -20,11 +21,37 @@ export interface DetailsPaneMetadata {
   sections: DisclosureSection[];
 }
 
+/**
+ * Build a Variants section from the content type's variantDimensions.
+ * Returns null if the content type has no variant dimensions defined.
+ */
+function buildVariantsSection(contentTypeId: string): DisclosureSection | null {
+  const contentType = initialContentTypes.find(ct => ct.id === contentTypeId);
+
+  if (!contentType?.variantDimensions || contentType.variantDimensions.length === 0) {
+    return null;
+  }
+
+  // Build items from variant dimensions
+  // Format: "Dimension: Value1, Value2, ..."
+  const items = contentType.variantDimensions.map(dimension => ({
+    label: `${dimension.name}: ${dimension.values.join(", ")}`,
+  }));
+
+  return {
+    title: "Variants",
+    items,
+  };
+}
+
 export function useDetailsMetadata(content: ContentItem): DetailsPaneMetadata {
   const baseMetadata: DetailsPaneMetadata = {
     previewImage: "/images/product-preview.png", // Default preview
     sections: [],
   };
+
+  // Get variants section if applicable for this content type
+  const variantsSection = buildVariantsSection(content.contentTypeId);
 
   switch (content.baseType) {
     case "Media":
@@ -40,6 +67,8 @@ export function useDetailsMetadata(content: ContentItem): DetailsPaneMetadata {
               { label: "File size", value: "4.32 MB" },
             ],
           },
+          // Add variants section if defined for this content type
+          ...(variantsSection ? [variantsSection] : []),
           {
             title: "Usage",
             items: [
@@ -65,6 +94,8 @@ export function useDetailsMetadata(content: ContentItem): DetailsPaneMetadata {
               { label: "Language", value: content.language },
             ],
           },
+          // Add variants section if defined for this content type (e.g., A/B tests)
+          ...(variantsSection ? [variantsSection] : []),
           {
             title: "Sections Used",
             items: [
@@ -89,14 +120,15 @@ export function useDetailsMetadata(content: ContentItem): DetailsPaneMetadata {
               { label: "Category", value: "Equipment" },
             ],
           },
-          {
+          // Use dynamic variants from content type, or fallback
+          ...(variantsSection ? [variantsSection] : [{
             title: "Variants",
             items: [
               { label: "Size: Small" },
               { label: "Size: Medium" },
               { label: "Size: Large" },
             ],
-          },
+          }]),
         ],
       };
 

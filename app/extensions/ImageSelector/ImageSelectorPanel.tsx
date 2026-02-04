@@ -1,15 +1,14 @@
 "use client";
 
-import {Box, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
-import {Button} from "@/app/components/Button";
-import {useState} from "react";
+import { Box, Menu, MenuTrigger, MenuContent, LabelMenuButton } from "@optiaxiom/react";
+import { Button } from "@/app/components/Button";
+import { useState } from "react";
 import ImageCard from "./ImageCard";
-import {mockImages} from "./mockImageData";
+import { mockImages } from "./mockImageData";
 import SearchIcon from "@/app/assets/search-icon.svg";
 import FilterIcon from "@/app/assets/filter-icon.svg";
 import ViewIcon from "@/app/assets/view-icon.svg";
-import {IconFilter, IconList, IconSearch} from "@optimizely/axiom-icons";
-import {Flex} from "@/app/components/Flex";
+import { Flex } from "@/app/components/Flex";
 
 export default function ImageSelectorPanel() {
 	const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
@@ -22,9 +21,9 @@ export default function ImageSelectorPanel() {
 				{/* Source Dropdown */}
 				<Menu
 					options={[
-						{label: "CMS", execute: () => setSourceFilter("CMS")},
-						{label: "Library", execute: () => setSourceFilter("Library")},
-						{label: "Uploads", execute: () => setSourceFilter("Uploads")},
+						{ label: "CMS", execute: () => setSourceFilter("CMS") },
+						{ label: "Library", execute: () => setSourceFilter("Library") },
+						{ label: "Uploads", execute: () => setSourceFilter("Uploads") },
 					]}
 				>
 					<MenuTrigger asChild>
@@ -37,9 +36,9 @@ export default function ImageSelectorPanel() {
 
 				{/* Action Buttons */}
 				<Box display="flex" gap="4">
-					<Button appearance="default" aria-label="Search" icon={<IconSearch />} />
-					<Button appearance="default" aria-label="Filter" icon={<IconFilter />} />
-					<Button appearance="default" aria-label="View options" icon={<IconList />} />
+					<Button appearance="default" aria-label="Search" icon={<SearchIcon />} />
+					<Button appearance="default" aria-label="Filter" icon={<FilterIcon />} />
+					<Button appearance="default" aria-label="View options" icon={<ViewIcon />} />
 				</Box>
 			</Box>
 			{/* Image Grid */}

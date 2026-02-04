@@ -1,16 +1,22 @@
 "use client";
 
-import { Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator } from "@optiaxiom/react";
-import { Text } from "./Text";
-import { ReactNode } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { IconSearch, IconBell, IconHelp, IconUser } from "@tabler/icons-react";
+import {Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator} from "@optiaxiom/react";
+import {Text} from "./Text";
+import {ReactNode} from "react";
+import {useRouter, usePathname} from "next/navigation";
+import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
+import {useTheme} from "@/app/hooks/useTheme";
 
-export default function GlobalBar() {
+type GlobalBarProps = {
+	onOpalClick?: () => void;
+};
+
+export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
+	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
@@ -33,10 +39,7 @@ export default function GlobalBar() {
 			alignItems="center"
 			justifyContent="space-between"
 		>
-			<Box
-				display="flex"
-				alignItems="center"
-			>
+			<Box display="flex" alignItems="center">
 				<Link href={"/"}>
 					<svg
 						width="24"
@@ -66,17 +69,8 @@ export default function GlobalBar() {
 						/>
 					</svg>
 				</Link>
-				<Box
-					ml="32"
-					display="flex"
-					alignItems={"center"}
-					gap="8"
-				>
-					<Text
-						fontSize="md"
-						fontWeight="500"
-						color="fg.default"
-					>
+				<Box ml="32" display="flex" alignItems={"center"} gap="8">
+					<Text fontSize="md" fontWeight="500" color="fg.default">
 						Stride
 					</Text>
 					<svg
@@ -130,13 +124,9 @@ export default function GlobalBar() {
 							display="flex"
 							alignItems={"center"}
 							gap="8"
-							style={{ cursor: "pointer" }}
+							style={{cursor: "pointer"}}
 						>
-							<Text
-								fontSize="md"
-								fontWeight="500"
-								color="fg.default"
-							>
+							<Text fontSize="md" fontWeight="500" color="fg.default">
 								{getCurrentProduct()}
 							</Text>
 							<svg
@@ -156,11 +146,66 @@ export default function GlobalBar() {
 					<MenuContent />
 				</Menu>
 			</Box>
-			<Box
-				display="flex"
-				alignItems="center"
-				gap="8"
-			>
+			<Box display="flex" alignItems="center" gap="8">
+				<Menu
+					options={[
+						{
+							label: "Light",
+							addon:
+								themePreference === "light" ? (
+									<Indicator intent="success" />
+								) : undefined,
+							execute: () => setThemePreference("light"),
+						},
+						{
+							label: "Dark",
+							addon:
+								themePreference === "dark" ? (
+									<Indicator intent="success" />
+								) : undefined,
+							execute: () => setThemePreference("dark"),
+						},
+						{
+							label: "System",
+							addon:
+								themePreference === "system" ? (
+									<Indicator intent="success" />
+								) : undefined,
+							execute: () => setThemePreference("system"),
+						},
+					]}
+				>
+					<MenuTrigger asChild>
+						<Button
+							appearance="subtle"
+							size="md"
+							icon={
+								<svg
+									width="20"
+									height="20"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<circle cx="12" cy="12" r="4" />
+									<path d="M12 2v2" />
+									<path d="M12 20v2" />
+									<path d="m4.93 4.93 1.41 1.41" />
+									<path d="m17.66 17.66 1.41 1.41" />
+									<path d="M2 12h2" />
+									<path d="M20 12h2" />
+									<path d="m6.34 17.66-1.41 1.41" />
+									<path d="m19.07 4.93-1.41 1.41" />
+								</svg>
+							}
+							aria-label="Theme"
+						/>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 				<Button
 					appearance="subtle"
 					size="md"
@@ -171,15 +216,11 @@ export default function GlobalBar() {
 					appearance="subtle"
 					size="md"
 					aria-label="Opal AI Assistant"
+					onClick={onOpalClick}
 				>
-					<Image
-						src="/opal-orb.png"
-						alt="Opal"
-						width={20}
-						height={20}
-					/>
+					<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
 				</Button>
-				<Box style={{ position: 'relative' }}>
+				<Box style={{position: "relative"}}>
 					<Button
 						appearance="subtle"
 						size="md"
@@ -188,12 +229,12 @@ export default function GlobalBar() {
 					/>
 					<Box
 						style={{
-							position: 'absolute',
-							top: '4px',
-							right: '4px',
-							height: '8px',
-							width: '8px',
-							border: '1.5px solid #FFFFFF'
+							position: "absolute",
+							top: "4px",
+							right: "4px",
+							height: "8px",
+							width: "8px",
+							border: "1.5px solid #FFFFFF",
 						}}
 						bg="bg.error"
 						rounded="full"

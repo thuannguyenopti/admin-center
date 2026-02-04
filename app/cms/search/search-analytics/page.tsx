@@ -1,20 +1,8 @@
 "use client";
 
-import {
-	Box,
-	Heading,
-	Menu,
-	MenuTrigger,
-	MenuContent,
-	LabelMenuButton,
-	Card,
-	Separator,
-} from "@optiaxiom/react";
-import {Text} from "@/app/components/Text";
-import {Input} from "@/app/components/Input";
+import {Box, Heading, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
 import {useState, useMemo} from "react";
 import MetricCard from "../../../components/MetricCard";
-import Link from "next/link";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import {metricsData, topQueries} from "@/app/db/analyticsData";
 import {Flex} from "@/app/components/Flex";

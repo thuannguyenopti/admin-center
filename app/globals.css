@@ -1,15 +1,62 @@
+@import './styles/opalStyles.css';
+
 @layer optiaxiom.base {
 	@tailwind base;
 	@tailwind components;
 	@tailwind utilities;
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
+/* Light mode as default, but defer to OS preference */
+:root {
+	--background: #ffffff;
+	--foreground: #000000;
+	color-scheme: light dark;
+}
+
+/* Dark mode support based on OS preference */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0a0a0a;
+		--foreground: #ededed;
+		color-scheme: dark;
+	}
+
+	html {
+		color-scheme: dark;
+	}
+}
+
+/* Dark mode via data-theme attribute - takes precedence over OS preference */
+[data-theme="dark"] {
+	--background: #0a0a0a;
+	--foreground: #ededed;
+	color-scheme: dark;
+}
+
+html[data-theme="dark"],
+html.dark {
+	--background: #0a0a0a;
+	--foreground: #ededed;
+	color-scheme: dark;
+}
+
+body.dark {
+	--background: #0a0a0a;
+	--foreground: #ededed;
+	color-scheme: dark;
+}
+
+/* Ensure AxiomProvider gets the correct color scheme */
+html[data-theme="dark"] body,
+html.dark body,
+body.dark {
+	color-scheme: dark;
+}
+
+html:not([data-theme="dark"]):not(.dark) body,
+body:not(.dark) {
+	color-scheme: light;
+}
 
 body {
 	background: var(--background);
@@ -51,7 +98,7 @@ body {
 	animation: slide 0.7s both cubic-bezier(0, 1, 0, 1);
 }
 
-.extension-icon > svg {
+.extension-icon>svg {
 	width: 16px;
 	height: 16px;
 }
@@ -80,7 +127,7 @@ body {
 	}
 }
 
-/* Custom scrollbar styles */
+/* Custom scrollbar styles - Light mode */
 ::-webkit-scrollbar {
 	width: 8px;
 	height: 8px;
@@ -91,7 +138,8 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: #dadfeb; /* axiom light gray */
+	background: #dadfeb;
+	/* axiom light gray */
 	border-radius: 4px;
 }
 
@@ -115,6 +163,40 @@ body {
 
 .axiom-scrollbar::-webkit-scrollbar-thumb:hover {
 	background: #cacfdc;
+}
+
+/* Custom scrollbar styles - Dark mode */
+@media (prefers-color-scheme: dark) {
+	::-webkit-scrollbar-track {
+		background: #1a1d2e;
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #404557;
+		border-radius: 4px;
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: #5a6578;
+	}
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track,
+html.dark ::-webkit-scrollbar-track,
+body.dark ::-webkit-scrollbar-track {
+	background: #1a1d2e;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb,
+html.dark ::-webkit-scrollbar-thumb,
+body.dark ::-webkit-scrollbar-thumb {
+	background: #404557;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+html.dark ::-webkit-scrollbar-thumb:hover,
+body.dark ::-webkit-scrollbar-thumb:hover {
+	background: #5a6578;
 }
 
 /* 
@@ -151,6 +233,7 @@ body {
 .vb-outline:hover .chevron {
 	visibility: visible;
 }
+
 .menu-label-button {
 	height: auto !important;
 	padding-top: 4px !important;

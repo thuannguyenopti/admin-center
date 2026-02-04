@@ -67,11 +67,13 @@ export const Th = ({
 	align,
 	style,
 	className,
+	onClick,
 }: {
 	children?: ReactNode;
 	align?: any;
 	style?: React.CSSProperties;
 	className?: string;
+	onClick?: () => void;
 }) => {
 	return (
 		<th
@@ -80,6 +82,7 @@ export const Th = ({
 				textAlign: align,
 				...style,
 			}}
+			onClick={onClick}
 		>
 			{children}
 		</th>
