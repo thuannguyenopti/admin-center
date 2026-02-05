@@ -7,13 +7,14 @@ import {
   DialogClose,
   Box,
   Button,
+  Tooltip,
 } from '@optiaxiom/react';
 import { Text } from '@/app/components/Text';
 import { CategoryFormRow as FormRowType, Category } from '../types';
 import { CategoryFormRow } from './CategoryFormRow';
 import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique, isValidParent } from '../utils';
-import { IconSparkles } from '@optimizely/axiom-icons';
+import { IconSparkles, IconCircleInfo } from '@optimizely/axiom-icons';
 
 export interface ContentContextItem {
   name: string;
@@ -316,7 +317,33 @@ export function CategoryModal({
                   Category parent
                 </Box>
                 <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
-                  Visibility
+                  <Box display="inline-flex" alignItems="center" gap="4">
+                    <span>Visibility</span>
+                    <Tooltip
+                      aria-label="Visibility help"
+                      content={
+                        <Box display="flex" flexDirection="column" gap="8" fontSize="sm" style={{ maxWidth: 280 }}>
+                          <Box as="p" m="0">
+                            Public categories appear in filters and APIs. Private categories are visible only in the CMS.
+                          </Box>
+                          <Box as="p" m="0" fontWeight="600">
+                            Examples:
+                          </Box>
+                          <Box as="p" m="0">
+                            Public: site navigation, product taxonomy.
+                          </Box>
+                          <Box as="p" m="0">
+                            Private: internal workflow, draft groupings.
+                          </Box>
+                        </Box>
+                      }
+                      delayDuration={300}
+                    >
+                      <span style={{ display: 'inline-flex', cursor: 'help' }}>
+                        <IconCircleInfo size={14} color="var(--ax-colors-fg-secondary)" />
+                      </span>
+                    </Tooltip>
+                  </Box>
                 </Box>
                 {/* Spacer for icon column */}
                 <Box style={{ width: '30px', flexShrink: 0 }} />
