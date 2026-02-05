@@ -12,6 +12,7 @@ import {
 	Badge,
 	Alert,
 	Card,
+	Banner,
 } from "@optiaxiom/react";
 import {Input} from "@/app/components/Input";
 import {Button} from "@/app/components/Button";
@@ -31,6 +32,19 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet,
 				consectetur adipiscing elit.
 			</Text>
+			<Banner intent="information" title="Sample Banner">
+				This is a sample banner to showcase the banner component styling.
+			</Banner>
+			<Banner intent="success" title="Sample Banner">
+				This is a sample banner to showcase the banner component styling.
+			</Banner>
+			<Banner intent="warning" title="Sample Banner">
+				This is a sample banner to showcase the banner component styling.
+			</Banner>
+			<Banner intent="danger" title="Sample Banner">
+				This is a sample banner to showcase the banner component styling.
+			</Banner>
+
 			<Alert intent="information">
 				This is a sample alert to showcase the alert component styling.
 			</Alert>
