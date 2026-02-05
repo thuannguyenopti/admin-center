@@ -1,23 +1,23 @@
 "use client";
 
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
-import {Button} from "./Button";
-import {Text} from "./Text";
+import { Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator } from "@optiaxiom/react";
+import { Button } from "./Button";
+import { Text } from "./Text";
 import Link from "next/link";
-import {useEffect, useState, Suspense} from "react";
+import { useEffect, useState, Suspense } from "react";
 
-import {useRouter, usePathname} from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
-import {LayoutProvider, useLayout} from "../context/LayoutContext";
-import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
-import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
+import { LayoutProvider, useLayout } from "../context/LayoutContext";
+import { OpalContextProvider, useOpalContext } from "../context/OpalContext";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
-import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
+import { FilterPanelProvider } from "../cms/content/context/FilterPanelContext";
 import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
-import {OpalPanel} from "./OpalPanel";
-import {useOpalState} from "@/app/hooks/useOpalState";
-import {useOpalHistory} from "@/app/hooks/useOpalHistory";
+import { OpalPanel } from "./OpalPanel";
+import { useOpalState } from "@/app/hooks/useOpalState";
+import { useOpalHistory } from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -26,13 +26,11 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent} = useLayout();
+	const { asideContent } = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
-	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
-
-	// Opal panel state
+	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false); const { history, chatState } = opalContext;
 	const {
 		groupedHistory,
 		activeChat,
@@ -45,7 +43,7 @@ function TemplateContent({
 		createNewChat,
 		deleteChat,
 		selectChat,
-	} = useOpalHistory();
+	} = history;
 
 	const {
 		isOpen: isOpalOpen,
@@ -57,7 +55,7 @@ function TemplateContent({
 		closePanel: closeOpal,
 		setInputValue,
 		sendMessage,
-	} = useOpalState({activeChatId: activeChat, opalContext});
+	} = chatState;
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -97,11 +95,11 @@ function TemplateContent({
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
-	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
+	if (!isHydrated) return <Box style={{ height: "100vh" }} bg="bg.page" />;
 
 	if (isWorkflowBuilder) {
 		return (
-			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
+			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
 				{children}
 			</Box>
 		);
@@ -110,7 +108,7 @@ function TemplateContent({
 	return (
 		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
 			<GlobalBar onOpalClick={toggleOpal} />
-			<Box display="flex" z="10" style={{minHeight: 0}}>
+			<Box display="flex" z="10" style={{ minHeight: 0 }}>
 				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
 						<NavBody>
@@ -127,8 +125,8 @@ function TemplateContent({
 										aria-label={menuItem.label}
 										icon={
 											menuItem.label === "Notifications" &&
-											!path.startsWith("/opal/notifications") ? (
-												<Box style={{position: "relative"}}>
+												!path.startsWith("/opal/notifications") ? (
+												<Box style={{ position: "relative" }}>
 													{menuItem.icon}
 													<Box
 														style={{
@@ -206,17 +204,16 @@ function TemplateContent({
 						<Sidebar
 							className="flex"
 							h="full"
-							style={{overflowY: "auto", overflowX: "hidden"}}
+							style={{ overflowY: "auto", overflowX: "hidden" }}
 						>
 							<SubNav
-								style={{height: "100%", overflowY: "auto", overflowX: "hidden"}}
+								style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}
 							>
 								<div
 									className="flex w-[500%]"
 									style={{
-										transform: `translateX(-${
-											224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
-										}px)`,
+										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
+											}px)`,
 										transition: ".7s cubic-bezier(0, 1, 0, 1)",
 										minHeight: "100%",
 										overflowX: "hidden",
@@ -256,7 +253,7 @@ function TemplateContent({
 				fontSize="md"
 				color="fg.default"
 				h="full"
-				style={{minHeight: 0}}
+				style={{ minHeight: 0 }}
 			>
 				<Box
 					flex="1"

@@ -115,20 +115,15 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
   const [error, setError] = useState<string | undefined>();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
 
-  // Load chat messages when activeChatId changes
-  useEffect(() => {
+  // Load chat messages when activeChatId changes or storage event triggers
+  const loadMessages = useCallback(() => {
     if (!activeChatId) {
       setMessages([]);
       setCurrentChatId(null);
       return;
     }
 
-    // If we're already on this chat, don't reload
-    // This prevents double-loading but allows switching to a new chat with same ID if needed (rare)
-    if (activeChatId === currentChatId) return;
-
     try {
-      // Use a versioned key for mock chats to force the new diversified data
       const isMockId = MOCK_CHAT_IDS.has(activeChatId);
       const storageKey = isMockId
         ? `opal_chat_messages_v2_${activeChatId}`
@@ -138,17 +133,13 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
 
       if (savedMessages) {
         const parsed = JSON.parse(savedMessages);
-        // If the built-in mock chats are empty, seed them once for the demo window.
-        if (Array.isArray(parsed) && parsed.length === 0 && MOCK_CHAT_IDS.has(activeChatId)) {
-          const seeded = getSeedMessagesForMockChat(activeChatId) ?? [];
-          setMessages(seeded);
+        if (Array.isArray(parsed) && parsed.length === 0 && isMockId) {
+          setMessages(getSeedMessagesForMockChat(activeChatId) ?? []);
         } else {
           setMessages(parsed);
         }
       } else {
-        // If there is no stored history yet and this is one of the built-in chats (1–9),
-        // seed it with mock messages. New chats (UUIDs) remain empty.
-        if (MOCK_CHAT_IDS.has(activeChatId)) {
+        if (isMockId) {
           setMessages(getSeedMessagesForMockChat(activeChatId) ?? []);
         } else {
           setMessages([]);
@@ -156,11 +147,33 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
       }
       setCurrentChatId(activeChatId);
     } catch (err) {
-      console.error('Failed to load chat messages from localStorage:', err);
+      console.error('Failed to load chat messages:', err);
       setMessages([]);
       setCurrentChatId(activeChatId);
     }
-  }, [activeChatId, currentChatId]);
+  }, [activeChatId]);
+
+  useEffect(() => {
+    loadMessages();
+  }, [loadMessages]);
+
+  // Listen for storage changes to sync across tabs/components
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!activeChatId) return;
+      const isMockId = MOCK_CHAT_IDS.has(activeChatId);
+      const storageKey = isMockId
+        ? `opal_chat_messages_v2_${activeChatId}`
+        : `opal_chat_messages_${activeChatId}`;
+
+      if (e.key === storageKey) {
+        loadMessages();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [activeChatId, loadMessages]);
 
   // Load panel state on mount
   useEffect(() => {

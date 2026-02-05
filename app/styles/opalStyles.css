@@ -4,18 +4,22 @@
   /* Light Mode - Background Colors */
   --opal-bg-primary: #f9fafc;
   --opal-bg-sidebar: #f2f4fa;
-  --opal-bg-suggest: linear-gradient(135deg, #ede9f5 0%, #dce8f5 100%);
-  --opal-bg-suggest-hover: linear-gradient(135deg, #dce0ed 0%, #cdd8ed 100%);
+  --opal-bg-suggest: linear-gradient(135deg, #f5f3ff 0%, #e5efff 100%);
+  --opal-bg-suggest-hover: linear-gradient(135deg, #ebe7ff 0%, #d6e6ff 100%);
   --opal-bg-input: #ffffff;
   --opal-bg-assistant: #f0f2f7;
   --opal-bg-user: #e8f0fe;
   --opal-bg-history-active: #e9edf5;
-  
+  --opal-bg-landing: #f9fafc;
+  --avatar-bg-neutral: #e5e7eb;
+  --opal-card-bg: #ffffff;
+  --opal-card-border: #e5e7eb;
+
   /* Light Mode - Border Colors */
   --opal-border-primary: #dadfeb;
   --opal-border-secondary: #e9edf5;
   --opal-border-input: #cacfdc;
-  
+
   /* Light Mode - Text Colors */
   --opal-text-primary: #262b37;
   --opal-text-secondary: #4f576e;
@@ -25,14 +29,17 @@
   --opal-text-inverse: #ffffff;
   --opal-text-user: #080736;
   --opal-text-label: #4f576e;
-  
+
   /* Light Mode - Special Colors */
   --opal-spinner-border: #e9edf5;
   --opal-spinner-top: #2e3442;
-  --opal-accent-red: #f45959;
-  --opal-icon-dark: #2e3442;
-  --opal-send-btn-bg: #7c5cff;
-  --opal-send-btn-text: #ffffff;
+  --opal-accent-red: var(--ax-colors-fg-error, #dc2626);
+  --opal-accent-purple: #7c3aed;
+  --opal-icon-dark: var(--ax-colors-fg-default, #1f2937);
+  --opal-send-btn-bg: var(--ax-colors-bg-accent, #7c5cff);
+  --opal-send-btn-text: var(--ax-colors-fg-default-inverse, #ffffff);
+  --opal-stop-btn-bg: #808080;
+  /* Gray for stop button */
 }
 
 /* Dark Mode - Apply based on OS preference or explicit theme setting */
@@ -41,18 +48,19 @@
     /* Dark Mode - Background Colors */
     --opal-bg-primary: #1a1d2e;
     --opal-bg-sidebar: #161921;
-    --opal-bg-suggest: linear-gradient(135deg, rgba(89,74,180,0.25) 0%, rgba(153,128,230,0.15) 100%);
-    --opal-bg-suggest-hover: linear-gradient(135deg, rgba(99,84,200,0.35) 0%, rgba(163,138,240,0.25) 100%);
+    --opal-bg-suggest: linear-gradient(135deg, rgba(245, 243, 255, 0.15) 0%, rgba(229, 239, 255, 0.1) 100%);
+    --opal-bg-suggest-hover: linear-gradient(135deg, rgba(245, 243, 255, 0.25) 0%, rgba(229, 239, 255, 0.2) 100%);
     --opal-bg-input: #2a2d3f;
     --opal-bg-assistant: #3a3d4f;
     --opal-bg-user: #2d3a6b;
+    --avatar-bg-neutral: #3a3d4f;
     --opal-bg-history-active: #3a3d4f;
-    
+
     /* Dark Mode - Border Colors */
     --opal-border-primary: #404557;
     --opal-border-secondary: #3a3d4f;
     --opal-border-input: #404557;
-    
+
     /* Dark Mode - Text Colors */
     --opal-text-primary: #e0e4eb;
     --opal-text-secondary: #a8afc1;
@@ -62,7 +70,7 @@
     --opal-text-inverse: #1a1d2e;
     --opal-text-user: #e8ecf5;
     --opal-text-label: #a8afc1;
-    
+
     /* Dark Mode - Special Colors */
     --opal-spinner-border: #404557;
     --opal-spinner-top: #7a8fb5;
@@ -81,18 +89,19 @@ body.dark {
   /* Dark Mode - Background Colors */
   --opal-bg-primary: #1a1d2e;
   --opal-bg-sidebar: #161921;
-  --opal-bg-suggest: linear-gradient(135deg, rgba(89,74,180,0.25) 0%, rgba(153,128,230,0.15) 100%);
-  --opal-bg-suggest-hover: linear-gradient(135deg, rgba(99,84,200,0.35) 0%, rgba(163,138,240,0.25) 100%);
+  --opal-bg-suggest: linear-gradient(135deg, #f5f3ff 0%, #e5efff 100%);
+  --opal-bg-suggest-hover: linear-gradient(135deg, #ebe7ff 0%, #d6e6ff 100%);
   --opal-bg-input: #2a2d3f;
   --opal-bg-assistant: #3a3d4f;
   --opal-bg-user: #2d3a6b;
+  --avatar-bg-neutral: #3a3d4f;
   --opal-bg-history-active: #3a3d4f;
-  
+
   /* Dark Mode - Border Colors */
   --opal-border-primary: #404557;
   --opal-border-secondary: #3a3d4f;
   --opal-border-input: #404557;
-  
+
   /* Dark Mode - Text Colors */
   --opal-text-primary: #e0e4eb;
   --opal-text-secondary: #a8afc1;
@@ -102,7 +111,7 @@ body.dark {
   --opal-text-inverse: #1a1d2e;
   --opal-text-user: #e8ecf5;
   --opal-text-label: #a8afc1;
-  
+
   /* Dark Mode - Special Colors */
   --opal-spinner-border: #404557;
   --opal-spinner-top: #7a8fb5;
@@ -122,6 +131,7 @@ body.dark {
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -132,6 +142,7 @@ body.dark {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -190,6 +201,25 @@ body.dark {
 .opal-suggestion-pill:hover {
   background: var(--opal-bg-suggest-hover);
   border-color: var(--opal-border-primary);
+}
+
+/* Landing Page Cards */
+.opal-landing-card {
+  background: var(--opal-card-bg);
+  border: 1px solid var(--opal-card-border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.opal-landing-card:hover {
+  border-color: var(--opal-accent-purple);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+  transform: translateY(-2px);
+}
+
+.opal-landing-page {
+  background: var(--opal-bg-landing);
+  min-height: 100vh;
 }
 
 /* History Item Styling */

@@ -76,20 +76,22 @@ export function useOpalHistory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [mode, setMode] = useState<OpalMode>('docked');
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage
-  useEffect(() => {
+  const loadHistory = useCallback(() => {
     try {
       const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
       const savedMode = localStorage.getItem(MODE_STORAGE_KEY);
       const savedHistoryVisible = localStorage.getItem(HISTORY_VISIBLE_KEY);
       const savedActiveChatId = localStorage.getItem(ACTIVE_CHAT_ID_KEY);
 
-      const loadedHistory: ChatHistoryItem[] = savedHistory
-        ? JSON.parse(savedHistory).map((item: any) => ({
-            ...item,
-            date: new Date(item.date),
-          }))
+      const parsed = savedHistory ? JSON.parse(savedHistory) : null;
+      const loadedHistory: ChatHistoryItem[] = (parsed && Array.isArray(parsed) && parsed.length > 0)
+        ? parsed.map((item: any) => ({
+          ...item,
+          date: new Date(item.date),
+        }))
         : mockChatHistory;
 
       setChatHistory(loadedHistory);
@@ -107,40 +109,61 @@ export function useOpalHistory() {
       if (savedHistoryVisible) {
         setIsHistoryVisible(JSON.parse(savedHistoryVisible));
       }
+      setIsLoaded(true);
     } catch (err) {
       console.error('Failed to load history from localStorage:', err);
       setChatHistory(mockChatHistory);
       setActiveChat(mockChatHistory.length > 0 ? mockChatHistory[0].id : null);
+      setIsLoaded(true);
     }
   }, []);
 
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  // Listen for storage changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === HISTORY_STORAGE_KEY || e.key === ACTIVE_CHAT_ID_KEY) {
+        loadHistory();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [loadHistory]);
+
   // Save to localStorage
   useEffect(() => {
+    if (!isLoaded) return;
     try {
       localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(chatHistory));
     } catch (err) {
       console.error('Failed to save history to localStorage:', err);
     }
-  }, [chatHistory]);
+  }, [chatHistory, isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     try {
       localStorage.setItem(MODE_STORAGE_KEY, mode);
     } catch (err) {
       console.error('Failed to save mode to localStorage:', err);
     }
-  }, [mode]);
+  }, [mode, isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     try {
       localStorage.setItem(HISTORY_VISIBLE_KEY, JSON.stringify(isHistoryVisible));
     } catch (err) {
       console.error('Failed to save history visibility to localStorage:', err);
     }
-  }, [isHistoryVisible]);
+  }, [isHistoryVisible, isLoaded]);
 
   // Persist active chat selection
   useEffect(() => {
+    if (!isLoaded) return;
     try {
       if (activeChat) {
         localStorage.setItem(ACTIVE_CHAT_ID_KEY, activeChat);
@@ -150,14 +173,14 @@ export function useOpalHistory() {
     } catch (err) {
       console.error('Failed to save active chat id to localStorage:', err);
     }
-  }, [activeChat]);
+  }, [activeChat, isLoaded]);
 
   // Filter and group chat history
   const filteredHistory = useMemo(() => {
     if (!searchQuery.trim()) return chatHistory;
-    
+
     const query = searchQuery.toLowerCase();
-    return chatHistory.filter(item => 
+    return chatHistory.filter(item =>
       item.title.toLowerCase().includes(query)
     );
   }, [chatHistory, searchQuery]);
@@ -170,7 +193,7 @@ export function useOpalHistory() {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -228,7 +251,7 @@ export function useOpalHistory() {
   }, []);
 
   const updateChat = useCallback((id: string, updates: Partial<ChatHistoryItem>) => {
-    setChatHistory(prev => prev.map(item => 
+    setChatHistory(prev => prev.map(item =>
       item.id === id ? { ...item, ...updates } : item
     ));
   }, []);
