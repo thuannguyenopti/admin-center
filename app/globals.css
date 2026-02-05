@@ -212,6 +212,14 @@ body {
 	height: 100%;
 }
 
+/* Prevent page scroll when a modal is open (single scrollbar inside modal only) */
+body[data-modal-open] {
+	overflow: hidden !important;
+}
+body[data-modal-open] .main-scroll-area {
+	overflow: hidden !important;
+}
+
 .parent {
 	display: grid;
 	grid-template-columns: 0fr 1fr;
@@ -369,4 +377,9 @@ body.dark ::-webkit-scrollbar-thumb:hover {
 	height: auto !important;
 	padding-top: 4px !important;
 	padding-bottom: 4px !important;
+}
+
+/* Opal Generate button: sparkle icon turns purple on hover (details panel + modals) */
+.opalGenerateButton:hover svg {
+	color: #7C3AED;
 }

@@ -9,7 +9,8 @@ interface CategoriesTableProps {
   categories: Category[];
   selectedIds: Set<string>;
   onToggleSelection: (id: string) => void;
-  onToggleAll: () => void;
+  /** Called with the visible (current-page) categories to toggle. */
+  onToggleAll: (categoriesToToggle: Category[]) => void;
   onToggleExpand: (id: string) => void;
   onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
@@ -31,8 +32,12 @@ export function CategoriesTable({
   onSort,
 }: CategoriesTableProps) {
   const rootCategories = getChildren(null, categories);
-  const allSelected = categories.length > 0 && selectedIds.size === categories.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < categories.length;
+  const allSelected =
+    rootCategories.length > 0 &&
+    rootCategories.every((category) => selectedIds.has(category.id));
+  const someSelected =
+    rootCategories.some((category) => selectedIds.has(category.id)) &&
+    !allSelected;
 
   const renderSortIcon = (column: string) => {
     const isActive = sortColumn === column;
@@ -72,7 +77,7 @@ export function CategoriesTable({
             <Checkbox
               checked={allSelected}
               indeterminate={someSelected}
-              onCheckedChange={onToggleAll}
+              onCheckedChange={() => onToggleAll(rootCategories)}
             />
           </Th>
           <Th

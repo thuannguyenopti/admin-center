@@ -83,6 +83,7 @@ export default function TagsSettings() {
     isSelected,
     toggleSelection,
     toggleAll,
+    toggleAllForTags,
     deselectAll,
     selectedTags,
     selectedCount,
@@ -380,7 +381,7 @@ export default function TagsSettings() {
         tags={paginatedTags}
         selectedIds={selectedIds}
         onToggleSelection={toggleSelection}
-        onToggleAll={toggleAll}
+        onToggleAll={() => toggleAllForTags(paginatedTags)}
         onEdit={handleEditTag}
         onDelete={handleDeleteTag}
         sortColumn={sortColumn}
