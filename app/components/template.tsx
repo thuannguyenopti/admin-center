@@ -282,9 +282,29 @@ function TemplateContent({
 							p="24"
 						>
 							<>
-								<Heading level="3">{heading || highlight1?.label}</Heading>
-								{desc && <Text mt="4">{desc}</Text>}
-								<Box mt="16" z="10" className="relative">
+								<Box w="full" className="min-w-0">
+									<Heading level="3" mb="16">
+										{heading || highlight1?.label}
+									</Heading>
+									{desc && (
+										<Text
+											mb="24"
+											color="fg.secondary"
+											display="block"
+											w="full"
+											style={{ width: "100%", maxWidth: "none" }}
+										>
+											{desc}
+										</Text>
+									)}
+								</Box>
+								<Box
+									mt={desc ? "0" : "24"}
+									z="10"
+									className="relative"
+									w="full"
+									style={{ width: "100%", maxWidth: "none" }}
+								>
 									{children}
 								</Box>
 							</>

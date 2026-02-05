@@ -113,14 +113,15 @@ export function CategoryFormRow({
             value={formRow.name}
             onChange={handleNameChange}
             placeholder="Category name"
+            color="fg.default"
+            border="1"
+            borderColor="border.control"
+            rounded="sm"
             style={{
               width: '100%',
-              border: '1px solid #9e9e9e',
-              borderRadius: '4px',
               fontSize: '14px',
               fontWeight: 400,
               letterSpacing: '-0.15px',
-              color: '#080736',
             }}
           />
         </ShimmerFieldWrapper>
@@ -132,14 +133,15 @@ export function CategoryFormRow({
             onChange={handleSlugChange}
             onBlur={() => onSlugBlur(index)}
             placeholder="/slug"
+            color="fg.secondary"
+            border="1"
+            borderColor="border.control"
+            rounded="sm"
             style={{
               width: '100%',
-              border: '1px solid #9e9e9e',
-              borderRadius: '4px',
               fontSize: '14px',
               fontWeight: 400,
               letterSpacing: '-0.15px',
-              color: '#707070',
               fontFamily: 'Hack, monospace',
             }}
           />
@@ -156,15 +158,16 @@ export function CategoryFormRow({
           >
             <SelectTrigger
               size="lg"
+              color="fg.default"
+              border="1"
+              borderColor="border.control"
+              rounded="sm"
               style={{
                 width: '100%',
                 minWidth: 0,
-                border: '1px solid #9e9e9e',
-                borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: 400,
                 letterSpacing: '-0.15px',
-                color: '#080736',
                 justifyContent: 'space-between',
               }}
             >
@@ -193,15 +196,16 @@ export function CategoryFormRow({
           >
             <SelectTrigger
               size="lg"
+              color="fg.default"
+              border="1"
+              borderColor="border.control"
+              rounded="sm"
               style={{
                 width: '100%',
                 minWidth: 0,
-                border: '1px solid #9e9e9e',
-                borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: 400,
                 letterSpacing: '-0.15px',
-                color: '#080736',
               }}
             >
               {visibilityValue.charAt(0).toUpperCase() + visibilityValue.slice(1)}
@@ -215,14 +219,14 @@ export function CategoryFormRow({
         {showDelete && (
           <IconTrash
             size={14}
-            style={{ color: '#0037ff', cursor: 'pointer' }}
+            style={{ color: 'var(--ax-colors-fg-accent)', cursor: 'pointer' }}
             onClick={onDelete}
           />
         )}
         {showAdd && (
           <IconPlus
             size={13}
-            style={{ color: '#0037ff', cursor: 'pointer' }}
+            style={{ color: 'var(--ax-colors-fg-accent)', cursor: 'pointer' }}
             onClick={onAdd}
           />
         )}
