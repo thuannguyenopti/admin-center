@@ -68,7 +68,7 @@ export function OpalHistorySidebar({
         >
           <IconSearch style={{ width: '16px', height: '16px' }} />
         </Button>
-        
+
         <Box
           onClick={onNewChat}
           style={{
@@ -113,7 +113,7 @@ export function OpalHistorySidebar({
       <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {Object.entries(groupedHistory).map(([dateLabel, items]) => {
           if (items.length === 0) return null;
-          
+
           return (
             <Box key={dateLabel} display="flex" flexDirection="column" gap="8">
               <Text

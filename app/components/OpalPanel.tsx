@@ -2,8 +2,7 @@
 
 import { Box } from "@optiaxiom/react";
 import { OpalHeader } from "./Opal/OpalHeader";
-import { OpalChat } from "./Opal/OpalChat";
-import { OpalInput } from "./Opal/OpalInput";
+import { OpalChatView } from "./Opal/OpalChatView";
 import { OpalHistorySidebar } from "./Opal/OpalHistorySidebar";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
@@ -69,7 +68,7 @@ export function OpalPanel({
   const historyWidth = mode === 'docked' ? 272 : 256;
   const totalWidth = isHistoryVisible ? baseWidth + historyWidth : baseWidth;
 
-  const boxShadow = mode === 'docked' 
+  const boxShadow = mode === 'docked'
     ? '-6px 6px 25px rgba(12, 16, 29, 0.08)'
     : '0px 6px 18px rgba(9, 30, 66, 0.04), 0px 6px 12px rgba(9, 30, 66, 0.08), 0px 4px 4px 1px rgba(9, 30, 66, 0.04)';
 
@@ -133,23 +132,22 @@ export function OpalPanel({
           overflow: 'hidden',
         }}
       >
-        <OpalHeader 
+        <OpalHeader
           onClose={onClose}
           mode={mode}
           isHistoryVisible={isHistoryVisible}
           onToggleHistory={toggleHistory}
           onToggleMode={toggleMode}
         />
-        <OpalChat 
-          messages={messages} 
-          onSuggestionClick={handleSuggestionClick}
-        />
-        <OpalInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSend={handleSend}
-          disabled={isLoading}
+        <OpalChatView
+          messages={messages}
+          inputValue={inputValue}
+          isLoading={isLoading}
           error={error}
+          setInputValue={setInputValue}
+          onSend={sendMessage}
+          onSuggestionClick={handleSuggestionClick}
+          variant="assistant"
         />
       </Box>
     </Box>

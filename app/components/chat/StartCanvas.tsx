@@ -60,15 +60,10 @@ export function StartCanvas({ onCardClick }: StartCanvasProps) {
                     <Box
                         key={index}
                         p="24"
-                        border="1"
-                        borderColor="border.tertiary"
-                        rounded="xl"
-                        bg="bg.default"
+                        className="opal-landing-card"
                         display="flex"
                         flexDirection="column"
                         gap="12"
-                        style={{ cursor: "pointer", transition: "all 0.2s ease" }}
-                        className="hover:shadow-md hover:border-purple-400"
                         onClick={() => onCardClick(card.prompt)}
                     >
                         <Box display="flex" justifyContent="flex-end" mb="8" style={{ color: opal_primary }}>

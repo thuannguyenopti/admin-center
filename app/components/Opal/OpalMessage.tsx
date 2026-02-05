@@ -30,18 +30,18 @@ export function OpalMessage({ message }: OpalMessageProps) {
         alignItems="start"
         gap="8"
         style={{
-          maxWidth: '80%',
+          maxWidth: isUser ? '80%' : '100%',
         }}
       >
         <Box
           p="12"
           style={{
             flex: 1,
-            backgroundColor: isUser ? 'var(--opal-bg-user)' : 'var(--opal-bg-assistant)',
+            backgroundColor: isUser ? 'var(--avatar-bg-neutral)' : 'transparent',
             color: isUser ? 'var(--opal-text-user)' : 'var(--opal-text-body)',
             borderRadius: '8px',
+            padding: isUser ? '12px' : '0px',
             borderTopRightRadius: isUser ? '4px' : undefined,
-            borderTopLeftRadius: !isUser ? '4px' : undefined,
           }}
         >
           {isLoading ? (
@@ -60,7 +60,7 @@ export function OpalMessage({ message }: OpalMessageProps) {
               />
               <Text
                 fontSize="sm"
-                style={{ 
+                style={{
                   margin: 0,
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
@@ -71,8 +71,8 @@ export function OpalMessage({ message }: OpalMessageProps) {
             </Box>
           ) : (
             <Text
-              fontSize="sm"
-              style={{ 
+              fontSize="md"
+              style={{
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -116,10 +116,10 @@ export function OpalMessage({ message }: OpalMessageProps) {
 function formatTimestamp(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
-  
+
   if (diff < 60000) return 'just now';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  
+
   return new Date(timestamp).toLocaleDateString();
 }

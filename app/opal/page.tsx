@@ -1,138 +1,171 @@
 "use client";
 
-import { Box, Heading, Text, SearchInput, Grid, Button, Paper, Textarea } from "@optiaxiom/react";
-import { IconMicrophone } from "@tabler/icons-react";
-import { IconAgent, IconFileArrowUp, IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
-import { useState, useRef, useEffect } from "react";
+import { Box, Heading, Text, Button } from "@optiaxiom/react";
+import { IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
+import { IconChevronRight } from "@tabler/icons-react";
+import { useOpalState } from "@/app/hooks/useOpalState";
+import { useOpalHistory } from "@/app/hooks/useOpalHistory";
+import { useOpalContext } from "../context/OpalContext";
+import { OpalChatView } from "../components/Opal/OpalChatView";
 
 const opal_primary = "#7C3AED";
 
 export default function OpalPage() {
-    const [inputValue, setInputValue] = useState("");
-    const [isFocused, setIsFocused] = useState(false);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, window.innerHeight / 3)}px`;
-        }
-    }, [inputValue]);
+    const opalContext = useOpalContext();
+    const { activeChat } = opalContext.history;
+    const {
+        messages,
+        inputValue,
+        isLoading,
+        error,
+        setInputValue,
+        sendMessage
+    } = opalContext.chatState;
 
     const cards = [
         {
             icon: <Box style={{ color: opal_primary }}><IconBrowser size={24} /></Box>,
             title: "Optimize webpage",
             description: "Refine the page Event - Triathlon NYC to meet the business goal.",
-            prompt: "Optimize the [page name] to improve [key metric] for [target audience]. Focus on [specific element] and ensure it aligns with our business goal of [goal]."
+            prompt: "Optimize the page to improve conversion."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconPen size={24} /></Box>,
             title: "Plan campaign",
             description: "Brainstorm and map out your next campaign with Opal.",
-            prompt: "Create a comprehensive campaign plan for [campaign name] targeting [audience]. Include [number] creative variations, timeline spanning [duration], and key messaging around [theme]."
+            prompt: "Plan a new digital marketing campaign."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconFile size={24} /></Box>,
             title: "Create landing page",
             description: "Turn your design into a high-converting landing page with structure.",
-            prompt: "Design a landing page for [product/service] that converts [target audience]. Include sections for [section 1], [section 2], and [section 3]. The primary CTA should be [call to action]."
+            prompt: "Design a high-converting landing page structure."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconUserGroup size={24} /></Box>,
             title: "Find the right audience",
             description: "Identify high-performing audience segments based on past experiments.",
-            prompt: "Analyze our customer data to identify audience segments for [product/campaign]. Focus on users who [behavior/characteristic] and have shown interest in [interest area]. Include demographic and psychographic insights."
+            prompt: "Analyze our segments for better targeting."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconChartLine size={24} /></Box>,
             title: "Analyze page performance",
             description: "Analyze traffic and bounce rate for the Home page.",
-            prompt: "Analyze the performance of [page name] focusing on [metric 1], [metric 2], and [metric 3]. Provide insights on [time period] data and suggest [number] actionable improvements."
+            prompt: "Analyze the home page performance metrics."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconImage size={24} /></Box>,
             title: "Repurpose your assets",
             description: "Find existing assets you can reuse —and put them to work faster.",
-            prompt: "Identify existing [asset type] that can be repurposed for [new channel/campaign]. Focus on content related to [topic/theme] and suggest [number] ways to adapt them for [platform/audience]."
+            prompt: "Suggest ways to repurpose our current brand assets."
         }
     ];
 
     const handleCardClick = (prompt: string) => {
-        setInputValue(prompt);
+        sendMessage(prompt);
     };
 
-    return (
-        <Box p="32" display="flex" flexDirection="column" gap="32" alignItems="center" style={{ maxWidth: "1200px" }} mx="auto">
-            <Box textAlign="center" my="16">
-                <Heading level="2" fontSize="3xl" color="fg.default">What are we working on today?</Heading>
-            </Box>
+    const landingHeader = (
+        <Box textAlign="center" mb="24" mt="64">
+            <Heading level="2" fontSize="4xl" color="fg.default" fontWeight="600" style={{ letterSpacing: '-0.02em' }}>What are we working on today?</Heading>
+        </Box>
+    );
 
+    const emptyState = (
+        <Box w="full" px="32" py="48" display="flex" flexDirection="column" alignItems="center">
             <Box
-                w="full"
+                display="grid"
                 style={{
-                    maxWidth: "800px",
-                    position: "relative",
-                    borderColor: isFocused ? opal_primary : undefined,
-                    transition: "border-color 0.2s ease-in-out"
+                    gridTemplateColumns: "repeat(3, 272px)",
+                    gap: "24px",
+                    justifyContent: "center"
                 }}
-                bg="bg.default"
-                px="16"
-                py="4"
-                rounded="lg"
-                border="1"
-                borderColor={isFocused ? undefined : "border.tertiary"}
-                shadow="sm"
+                w="full"
+                mb="48"
             >
-                <Textarea
-                    className="w-full text-md outline-none bg-transparent placeholder-gray-400 resize-none"
-                    placeholder='Ask Opal anything—like "Plan a new campaign" or "Suggest test ideas"'
-                    value={inputValue}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    ref={textareaRef}
-                    rows={1}
-                    style={{ minHeight: "22px", maxHeight: "33vh", border: "none", padding: 0, paddingBottom: "32px", overflowY: "auto", boxShadow: "none", outline: "none", backgroundColor: "transparent" }}
-                />
-                <Box display="flex" justifyContent="space-between" alignItems="end" style={{ position: "absolute", bottom: "4px", left: "16px", right: "16px", pointerEvents: "none", zIndex: 10 }}>
-                    <Box display="flex" gap="8" style={{ pointerEvents: "auto" }}>
-                        <Button appearance="subtle" icon={<IconAgent />} aria-label="Agent" />
-                        <Button appearance="subtle" icon={<IconFileArrowUp />} aria-label="File upload" />
-                    </Box>
-                    <Button appearance="primary" size="lg" icon={<IconMicrophone />} rounded="full" aria-label="Voice search" style={{ backgroundColor: opal_primary, pointerEvents: "auto" }} />
-                </Box>
-            </Box>
-
-            <Box display="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(268px, 268px))", gap: "24px", justifyContent: "center" }} w="full">
                 {cards.map((card, index) => (
                     <Box
                         key={index}
-                        p="24"
+                        p="12"
+                        bg="bg.default"
+                        rounded="xl"
                         border="1"
                         borderColor="border.tertiary"
-                        rounded="lg"
-                        bg="bg.default"
                         display="flex"
                         flexDirection="column"
                         gap="12"
-                        style={{ maxWidth: "268px" }}
                         w="full"
-                        className="hover:border-purple-500 cursor-pointer transition-colors"
+                        style={{
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            position: 'relative'
+                        }}
                         onClick={() => handleCardClick(card.prompt)}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--opal-accent-purple)';
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.08)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--axiom-border-tertiary, #e5e7eb)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                        }}
                     >
-                        <Box display="flex" justifyContent="flex-end" mb="4">
+                        <Box style={{ position: 'absolute', top: '24px', right: '24px' }}>
                             {card.icon}
                         </Box>
-                        <Heading level="4" fontSize="lg" fontWeight="600">{card.title}</Heading>
-                        <Text color="fg.secondary" fontSize="md">{card.description}</Text>
+                        <Box mt="32">
+                            <Heading level="4" fontSize="lg" fontWeight="600" mb="4">{card.title}</Heading>
+                            <Text color="fg.secondary" fontSize="md" style={{ lineHeight: '1.5' }}>{card.description}</Text>
+                        </Box>
                     </Box>
                 ))}
             </Box>
 
-            <Box w="full" style={{ maxWidth: "852px" }} display="flex" justifyContent="flex-end">
-                <Button appearance="subtle">See more &gt;</Button>
+            <Box w="full" style={{ maxWidth: "864px" }} display="flex" justifyContent="flex-end">
+                <Button appearance="subtle" style={{ color: 'fg.secondary' }}>See more <IconChevronRight size={16} style={{ marginLeft: '4px' }} /></Button>
             </Box>
+        </Box>
+    );
+
+    return (
+        <Box
+            className="opal-landing-page"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            w="full"
+            style={{
+                height: '100%',
+                backgroundColor: 'var(--opal-bg-page)',
+                paddingTop: '64px',
+            }}
+        >
+            <OpalChatView
+                variant="home"
+                messages={messages}
+                inputValue={inputValue}
+                isLoading={isLoading}
+                error={error}
+                setInputValue={setInputValue}
+                onSend={sendMessage}
+                onSuggestionClick={sendMessage}
+
+                onToggleHistory={opalContext.history.toggleHistory}
+                onNewChat={opalContext.history.createNewChat}
+                isHistoryVisible={opalContext.history.isHistoryVisible}
+                groupedHistory={opalContext.history.groupedHistory}
+                activeChat={opalContext.history.activeChat}
+                searchQuery={opalContext.history.searchQuery}
+                onSearchChange={opalContext.history.setSearchQuery}
+                onDeleteChat={opalContext.history.deleteChat}
+                onSelectChat={opalContext.history.selectChat}
+
+                landingHeader={landingHeader}
+                emptyState={emptyState}
+            />
         </Box>
     );
 }
