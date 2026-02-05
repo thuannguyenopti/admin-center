@@ -68,6 +68,8 @@ export default function ContentPage() {
 		getCategoryNameBySlug,
 		onTagsChange,
 		onTagsChangeBatch,
+		onCategoriesChange,
+		onCategoriesChangeBatch,
 	} = useFilterPanel();
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -83,6 +85,14 @@ export default function ContentPage() {
 		{label: "50", value: "50"},
 		{label: "100", value: "100"},
 	];
+
+	// Ensure value is always in options so downshift getItemProps receives a valid item
+	const itemsPerPageValue = useMemo(() => {
+		const str = String(itemsPerPage);
+		return PAGE_SIZE_OPTIONS.some((o) => o.value === str)
+			? str
+			: PAGE_SIZE_OPTIONS[0].value;
+	}, [itemsPerPage]);
 
 	// Sort filtered content (guard undefined from context/hydration)
 	const sortedContent = useMemo(() => {
@@ -130,15 +140,17 @@ export default function ContentPage() {
 
 	// Use sorted content instead of filtered content (always array)
 	const displayContent = sortedContent ?? [];
-	const totalPages = Math.ceil(displayContent.length / itemsPerPage);
+	const effectiveItemsPerPage = Number(itemsPerPageValue);
+	const totalPages = Math.ceil(displayContent.length / effectiveItemsPerPage);
 	const paginatedItems = displayContent.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
+		(currentPage - 1) * effectiveItemsPerPage,
+		currentPage * effectiveItemsPerPage
 	);
 	const selectedContent = displayContent.find((item) => item.id === selectedContentId);
 
-	// Lifted tag state for details pane so 1↔2 selection switch doesn't lose edits
+	// Lifted tag and category state for details pane so 1↔2 selection switch doesn't lose edits
 	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
+	const [detailsPaneCategories, setDetailsPaneCategories] = useState<string[] | null>(null);
 	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
 	const selectedItems = useMemo(
 		() => (paginatedItems ?? []).filter((item) => selectedRows.has(item.id)),
@@ -148,11 +160,16 @@ export default function ContentPage() {
 		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
 		[selectedItems]
 	);
+	const selectedItemsCategoryUnion = useMemo(
+		() => [...new Set(selectedItems.flatMap((i) => i.categories ?? []))],
+		[selectedItems]
+	);
 	useEffect(() => {
 		if (paneOpen && selectedItems.length > 0) {
 			setDetailsPaneTags(selectedItemsTagUnion);
+			setDetailsPaneCategories(selectedItemsCategoryUnion);
 		}
-	}, [paneOpen, selectedItems.length, selectedItemsTagUnion.join(",")]);
+	}, [paneOpen, selectedItems.length, selectedItemsTagUnion.join(","), selectedItemsCategoryUnion.join(",")]);
 
 	// Reset pagination when filters or page size change
 	useEffect(() => {
@@ -351,7 +368,13 @@ export default function ContentPage() {
 				</tbody>
 			</Table>
 			<Box display="flex" alignItems="center" mt="24" flexWrap="wrap">
-				<Pagination total={totalPages} page={currentPage} onPageChange={setCurrentPage} />
+				{totalPages > 0 && (
+					<Pagination
+						total={totalPages}
+						page={currentPage}
+						onPageChange={setCurrentPage}
+					/>
+				)}
 				<Box
 					flex="1"
 					display="flex"
@@ -362,7 +385,10 @@ export default function ContentPage() {
 					<AxiomText fontSize="sm" color="fg.secondary">
 						{displayContent.length === 0
 							? "0 items"
-							: `Showing ${(currentPage - 1) * itemsPerPage + 1}–${Math.min(currentPage * itemsPerPage, displayContent.length)} of ${displayContent.length}`}
+							: `Showing ${(currentPage - 1) * effectiveItemsPerPage + 1}–${Math.min(
+									currentPage * effectiveItemsPerPage,
+									displayContent.length
+							  )} of ${displayContent.length}`}
 					</AxiomText>
 				</Box>
 				<Box display="flex" alignItems="center" gap="8">
@@ -370,12 +396,12 @@ export default function ContentPage() {
 						Rows per page
 					</AxiomText>
 					<Select
-						value={String(itemsPerPage)}
+						value={itemsPerPageValue}
 						onValueChange={(value) => setItemsPerPage(Number(value))}
 						options={PAGE_SIZE_OPTIONS}
 					>
 						<SelectTrigger w="80" size="sm">
-							{itemsPerPage}
+							{itemsPerPageValue}
 						</SelectTrigger>
 						<SelectContent />
 					</Select>
@@ -391,12 +417,17 @@ export default function ContentPage() {
 						allContent={paginatedItems}
 						detailsPaneTags={detailsPaneTags}
 						setDetailsPaneTags={setDetailsPaneTags}
+						detailsPaneCategories={detailsPaneCategories}
+						setDetailsPaneCategories={setDetailsPaneCategories}
 						onTagsChange={onTagsChange}
 						onTagsChangeBatch={onTagsChangeBatch}
+						onCategoriesChange={onCategoriesChange}
+						onCategoriesChangeBatch={onCategoriesChangeBatch}
 						onClose={() => {
 							setSelectedContentId(null);
 							setSelectedRows(new Set());
 							setDetailsPaneTags(null);
+							setDetailsPaneCategories(null);
 						}}
 					/>
 				</Aside>

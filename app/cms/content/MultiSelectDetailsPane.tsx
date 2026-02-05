@@ -7,6 +7,7 @@ import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
 import { useState, useEffect, useRef } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
+import { useGlobalCategories } from "../hooks/useGlobalCategories";
 import type { Tag } from "../settings/tags/types";
 import { getThumbnailForContent } from "./contentThumbnails";
 
@@ -30,8 +31,12 @@ interface MultiSelectDetailsPaneProps {
   items: ContentItem[];
   controlledTags?: string[] | null;
   setControlledTags?: (tags: string[] | null) => void;
+  controlledCategories?: string[] | null;
+  setControlledCategories?: (categories: string[] | null) => void;
   onTagsChange?: (contentId: string, tags: string[]) => void;
   onTagsChangeBatch?: (updates: Array<{ id: string; tags: string[] }>) => void;
+  onCategoriesChange?: (contentId: string, categories: string[]) => void;
+  onCategoriesChangeBatch?: (updates: Array<{ id: string; categories: string[] }>) => void;
   onClose: () => void;
 }
 
@@ -39,15 +44,21 @@ export default function MultiSelectDetailsPane({
   items,
   controlledTags,
   setControlledTags,
+  controlledCategories,
+  setControlledCategories,
   onTagsChange,
   onTagsChangeBatch,
+  onCategoriesChange,
+  onCategoriesChangeBatch,
   onClose,
 }: MultiSelectDetailsPaneProps) {
   const metadata = useMultiSelectMetadata(items);
   const isControlled = setControlledTags != null;
+  const isCategoriesControlled = setControlledCategories != null;
 
-  // Get global tags (full Tag[] for slug ↔ name mapping)
+  // Get global tags and categories
   const { tags: globalTags, addTag: addGlobalTag, tagExists } = useGlobalTags();
+  const { categoriesWithSlugs: globalCategories, addCategory: addGlobalCategory, categoryExists } = useGlobalCategories();
 
   const nameToSlug = (name: string) =>
     name
@@ -79,11 +90,31 @@ export default function MultiSelectDetailsPane({
     else setLocalTags(value);
   };
 
+  const [localCategories, setLocalCategories] = useState<string[]>(metadata.categories);
+  const categories = isCategoriesControlled ? (controlledCategories ?? metadata.categories) : localCategories;
+  const setCategories = (next: string[] | ((prev: string[]) => string[])) => {
+    const value = typeof next === "function" ? next(categories) : next;
+    if (isCategoriesControlled) setControlledCategories(value);
+    else setLocalCategories(value);
+  };
+
+  const getCategoryDisplayName = (slug: string): string =>
+    globalCategories.find((c) => c.slug === slug)?.name ?? slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  const getCategorySlugByName = (name: string): string => {
+    const c = globalCategories.find((cat) => cat.name.toLowerCase() === name.toLowerCase());
+    return c?.slug ?? nameToSlug(name);
+  };
+
   const [newTag, setNewTag] = useState("");
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [hoveredTagSlug, setHoveredTagSlug] = useState<string | null>(null);
   const [isBatchEditMode, setIsBatchEditMode] = useState(false);
+  const [isCategoryBatchEditMode, setIsCategoryBatchEditMode] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
+  const [hoveredCategorySlug, setHoveredCategorySlug] = useState<string | null>(null);
+  const [categoriesHoveredIndex, setCategoriesHoveredIndex] = useState<number | null>(null);
+  const [newCategory, setNewCategory] = useState("");
   const [isPanelExpanded, setIsPanelExpanded] = useState(false);
   const [lastSummary, setLastSummary] = useState<string | null>(null);
   const [suggestLoading, setSuggestLoading] = useState(false);
@@ -91,9 +122,12 @@ export default function MultiSelectDetailsPane({
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestEmpty, setSuggestEmpty] = useState(false);
   const initialTagsRef = useRef<string[]>([]);
+  const initialCategoriesRef = useRef<string[]>([]);
   const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const categoryHoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
     if (hoverCloseTimeoutRef.current) clearTimeout(hoverCloseTimeoutRef.current);
+    if (categoryHoverCloseTimeoutRef.current) clearTimeout(categoryHoverCloseTimeoutRef.current);
   }, []);
 
   // When controlled and parent passes null, init from union
@@ -103,10 +137,20 @@ export default function MultiSelectDetailsPane({
     }
   }, [isControlled, controlledTags, setControlledTags, items.length, metadata.tags.join(",")]);
 
+  useEffect(() => {
+    if (isCategoriesControlled && controlledCategories === null && setControlledCategories && items.length > 0) {
+      setControlledCategories(metadata.categories);
+    }
+  }, [isCategoriesControlled, controlledCategories, setControlledCategories, items.length, metadata.categories.join(",")]);
+
   // Sync tags when selection changes (new union) — only when not controlled
   useEffect(() => {
     if (!isControlled) setLocalTags(metadata.tags);
   }, [isControlled, metadata.tags.join(","), metadata.count]);
+
+  useEffect(() => {
+    if (!isCategoriesControlled) setLocalCategories(metadata.categories);
+  }, [isCategoriesControlled, metadata.categories.join(","), metadata.count]);
 
   // Clear last summary when selection count changes
   useEffect(() => {
@@ -114,19 +158,30 @@ export default function MultiSelectDetailsPane({
   }, [metadata.count]);
 
   const TAGS_INITIAL_VISIBLE = 10;
+  const CATEGORIES_INITIAL_VISIBLE = 10;
   // When not in batch edit, show only applied tags (union on items); when in batch edit, show draft tags
   const displayTags = isBatchEditMode ? tags : metadata.tags;
   const visibleTags = tagsExpanded ? displayTags : displayTags.slice(0, TAGS_INITIAL_VISIBLE);
   const hasMoreTags = displayTags.length > TAGS_INITIAL_VISIBLE;
   const hiddenCount = displayTags.length - TAGS_INITIAL_VISIBLE;
 
+  const displayCategories = isCategoryBatchEditMode ? categories : metadata.categories;
+  const visibleCategories = categoriesExpanded ? displayCategories : displayCategories.slice(0, CATEGORIES_INITIAL_VISIBLE);
+  const hasMoreCategories = displayCategories.length > CATEGORIES_INITIAL_VISIBLE;
+  const hiddenCategoriesCount = displayCategories.length - CATEGORIES_INITIAL_VISIBLE;
+
   // Tags added in this batch (not in initial set when batch edit started)
   const addedTagsInBatch = isBatchEditMode
     ? tags.filter((slug) => !initialTagsRef.current.includes(slug))
     : [];
+  // Categories added in this batch
+  const addedCategoriesInBatch = isCategoryBatchEditMode
+    ? categories.filter((slug) => !initialCategoriesRef.current.includes(slug))
+    : [];
 
   const enterBatchEdit = () => {
     initialTagsRef.current = [...tags];
+    setIsCategoryBatchEditMode(false);
     setIsBatchEditMode(true);
     setIsPanelExpanded(true);
     setLastSummary(null);
@@ -142,6 +197,39 @@ export default function MultiSelectDetailsPane({
     setSuggestError(null);
     setSuggestEmpty(false);
   };
+
+  const enterCategoryBatchEdit = () => {
+    initialCategoriesRef.current = [...categories];
+    setIsBatchEditMode(false);
+    setIsCategoryBatchEditMode(true);
+    setIsPanelExpanded(true);
+  };
+  const exitCategoryBatchEdit = (apply: boolean) => {
+    if (!apply) setCategories(metadata.categories);
+    setIsCategoryBatchEditMode(false);
+  };
+  const handleApplyCategories = () => {
+    if (!onCategoriesChangeBatch || items.length === 0) return;
+    onCategoriesChangeBatch(items.map((item) => ({ id: item.id, categories })));
+    exitCategoryBatchEdit(true);
+  };
+
+  const handleRemoveCategory = (slugToRemove: string) => {
+    setCategories(categories.filter((slug) => slug !== slugToRemove));
+  };
+  const handleAddCategory = (value: string) => {
+    if (!value.trim()) return;
+    const isSlug = globalCategories.some((c) => c.slug === value);
+    const slug = isSlug ? value : getCategorySlugByName(value);
+    if (categories.includes(slug)) {
+      setNewCategory("");
+      return;
+    }
+    if (!isSlug && !categoryExists(value)) addGlobalCategory(value);
+    setCategories([...categories, slug]);
+    setNewCategory("");
+  };
+
   const handleApply = () => {
     if (!onTagsChangeBatch || items.length === 0) return;
     const initial = initialTagsRef.current;
@@ -277,6 +365,25 @@ export default function MultiSelectDetailsPane({
     });
   }
 
+  const filteredCategories = globalCategories.filter(
+    (c) => !newCategory || c.name.toLowerCase().includes(newCategory.toLowerCase())
+  );
+  const categoryAutocompleteOptions: AutocompleteOption[] = filteredCategories.map((c) => ({
+    label: c.name,
+    value: c.slug,
+    isSelected: categories.includes(c.slug),
+  }));
+  const customCategoryName = newCategory.trim();
+  const hasCustomCategoryOption =
+    customCategoryName && !globalCategories.some((c) => c.name.toLowerCase() === customCategoryName.toLowerCase());
+  if (hasCustomCategoryOption) {
+    categoryAutocompleteOptions.push({
+      label: `+ Add "${customCategoryName}" category`,
+      value: customCategoryName,
+      isSelected: categories.some((s) => getCategoryDisplayName(s) === customCategoryName),
+    });
+  }
+
   const paneWidth = isPanelExpanded ? "480px" : "316px";
 
   return (
@@ -297,11 +404,14 @@ export default function MultiSelectDetailsPane({
         style={{ flexShrink: 0, borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
       >
         <Box display="flex" alignItems="center" gap="8">
-          {isBatchEditMode && (
+          {(isBatchEditMode || isCategoryBatchEditMode) && (
             <Button
               appearance="subtle"
               size="sm"
-              onClick={() => exitBatchEdit(false)}
+              onClick={() => {
+                if (isBatchEditMode) exitBatchEdit(false);
+                else exitCategoryBatchEdit(false);
+              }}
               aria-label="Back to summary"
               icon={<IconArrowLeft size={16} />}
             />
@@ -312,6 +422,15 @@ export default function MultiSelectDetailsPane({
         </Box>
         <Box display="flex" alignItems="center" gap="4">
           {isBatchEditMode && (
+            <Button
+              appearance="subtle"
+              size="sm"
+              onClick={() => setIsPanelExpanded(!isPanelExpanded)}
+              aria-label={isPanelExpanded ? "Collapse panel" : "Expand panel"}
+              icon={isPanelExpanded ? <IconChevronRight size={16} /> : <IconChevronLeft size={16} />}
+            />
+          )}
+          {isCategoryBatchEditMode && (
             <Button
               appearance="subtle"
               size="sm"
@@ -331,7 +450,7 @@ export default function MultiSelectDetailsPane({
       </Box>
 
       {/* Batch-edit view (pane takeover) */}
-      {isBatchEditMode ? (
+      {isBatchEditMode || isCategoryBatchEditMode ? (
         <Box
           flex="1"
           display="flex"
@@ -342,6 +461,8 @@ export default function MultiSelectDetailsPane({
           overflow="hidden"
           style={{ minHeight: 0 }}
         >
+          {isBatchEditMode && (
+          <>
           {/* Tags */}
           <Box display="flex" flexDirection="column" gap="8" style={{ flexShrink: 0 }}>
             <Text fontSize="sm" fontWeight="600" color="fg.default">
@@ -361,15 +482,16 @@ export default function MultiSelectDetailsPane({
                         handleAddTag(autocompleteOptions[0].value);
                       }
                     }}
-                    placeholder="Add tag..."
+                    placeholder="Search..."
                     size="md"
                     addonAfter={
                       <Tooltip content="Generate tag suggestions for the selected items using Opal">
                         <Button
-                          appearance="primary-opal"
+                          appearance="default-opal"
                           size="sm"
                           rounded="sm"
                           px="8"
+                          className="opalGenerateButton"
                           icon={<IconSparkles />}
                           onClick={(e) => {
                             e.preventDefault();
@@ -653,6 +775,223 @@ export default function MultiSelectDetailsPane({
               Apply
             </Button>
           </Box>
+          </>
+          )}
+
+          {isCategoryBatchEditMode && (
+          <>
+          {/* Categories */}
+          <Box display="flex" flexDirection="column" gap="8" style={{ flexShrink: 0 }}>
+            <Text fontSize="sm" fontWeight="600" color="fg.default">
+              Categories
+            </Text>
+            <Popover
+              open={newCategory.length > 0 && categoryAutocompleteOptions.length > 0}
+              onOpenChange={() => {}}
+            >
+              <PopoverTrigger asChild>
+                <Box>
+                  <Input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter" && categoryAutocompleteOptions.length > 0) {
+                        handleAddCategory(categoryAutocompleteOptions[0].value);
+                      }
+                    }}
+                    placeholder="Search..."
+                    size="md"
+                  />
+                </Box>
+              </PopoverTrigger>
+              <PopoverContent
+                side="bottom"
+                sideOffset={4}
+                align="start"
+                style={{ width: "var(--radix-popover-trigger-width)" }}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
+                <Box display="flex" flexDirection="column" gap="0" py="2" style={{ maxHeight: "200px" }} overflow="auto">
+                  {categoryAutocompleteOptions.map((option: AutocompleteOption, index: number) => (
+                    <Box
+                      key={option.value}
+                      display="flex"
+                      alignItems="center"
+                      gap="8"
+                      px="8"
+                      py="6"
+                      rounded="sm"
+                      cursor="pointer"
+                      transition="colors"
+                      bg={categoriesHoveredIndex === index ? "bg.secondary" : "transparent"}
+                      onClick={() => handleAddCategory(option.value)}
+                      onMouseEnter={() => setCategoriesHoveredIndex(index)}
+                      onMouseLeave={() => setCategoriesHoveredIndex(null)}
+                    >
+                      {option.isSelected && <IconCheck size={14} style={{ flexShrink: 0 }} />}
+                      <Text fontSize="sm" color="fg.default" style={{ marginLeft: option.isSelected ? 0 : undefined }}>
+                        {option.label}
+                      </Text>
+                    </Box>
+                  ))}
+                </Box>
+              </PopoverContent>
+            </Popover>
+            <Box display="flex" flexDirection="column" gap="8">
+              {categories.map((slug) => {
+                const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
+                const count = itemsWithCategory.length;
+                const isAddedInBatch = addedCategoriesInBatch.includes(slug);
+                return (
+                  <Box key={slug} display="flex" alignItems="center" gap="4">
+                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
+                      <Box display="flex" alignItems="center" gap="4">
+                        <span>{getCategoryDisplayName(slug)}</span>
+                        <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                          on {count} {count === 1 ? "item" : "items"}
+                        </Text>
+                        <button
+                          onClick={() => handleRemoveCategory(slug)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            lineHeight: "1",
+                            color: "inherit",
+                          }}
+                          aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
+                        >
+                          ×
+                        </button>
+                      </Box>
+                    </Badge>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+          {/* Category preview (fills remaining height, scrolls within) */}
+          <Box
+            display="flex"
+            flexDirection="column"
+            gap="12"
+            flex="1"
+            style={{ minHeight: 0 }}
+            overflow="hidden"
+          >
+            <Text fontSize="sm" fontWeight="600" color="fg.default" style={{ flexShrink: 0 }}>
+              Category preview
+            </Text>
+            <Box
+              display="flex"
+              flexDirection="column"
+              gap="8"
+              flex="1"
+              style={{ minHeight: 0 }}
+              overflow="auto"
+            >
+              {items.slice(0, items.length > 20 ? 15 : items.length).map((item) => {
+                const itemCategories = item.categories ?? [];
+                const allSlugsForItem = Array.from(new Set([...itemCategories, ...categories]));
+                const hasAnyCategories = allSlugsForItem.length > 0;
+                return (
+                  <Box
+                    key={item.id}
+                    display="flex"
+                    flexDirection="column"
+                    gap="6"
+                    px="12"
+                    py="10"
+                    rounded="sm"
+                    style={{
+                      backgroundColor: "var(--ax-colors-bg-subtle)",
+                      border: "1px solid var(--ax-colors-border-tertiary)",
+                    }}
+                  >
+                    <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
+                      <Box style={{ flexShrink: 0, color: "var(--ax-colors-fg-secondary)" }}>
+                        {getIconForType(item.baseType)}
+                      </Box>
+                      <span
+                        title={String(item.name ?? item.id)}
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                          color: "var(--ax-colors-fg-default)",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          minWidth: 0,
+                        }}
+                      >
+                        {item.name ?? item.id}
+                      </span>
+                    </Box>
+                    {hasAnyCategories ? (
+                      <Box display="flex" flexWrap="wrap" gap="6">
+                        {allSlugsForItem.map((slug) => {
+                          const wasOnItem = itemCategories.includes(slug);
+                          const isInBatch = categories.includes(slug);
+                          const isRemoved = wasOnItem && !isInBatch;
+                          const willBeAdded = !wasOnItem && isInBatch;
+                          const isNewCategory = willBeAdded && addedCategoriesInBatch.includes(slug);
+                          const isMissingOnThisItem = willBeAdded && !isNewCategory;
+                          return (
+                            <Badge
+                              key={slug}
+                              intent={
+                                isRemoved ? "danger" : isNewCategory ? "success" : isMissingOnThisItem ? "warning" : "neutral"
+                              }
+                              variant={isRemoved || isNewCategory || isMissingOnThisItem ? "subtle" : undefined}
+                              style={isRemoved ? { textDecoration: "line-through" } : undefined}
+                            >
+                              {getCategoryDisplayName(slug)}
+                            </Badge>
+                          );
+                        })}
+                      </Box>
+                    ) : (
+                      <Text fontSize="xs" color="fg.tertiary">
+                        No categories
+                      </Text>
+                    )}
+                  </Box>
+                );
+              })}
+              {items.length > 20 && (
+                <Text fontSize="xs" color="fg.tertiary" style={{ paddingLeft: "4px" }}>
+                  … and {items.length - 15} more items
+                </Text>
+              )}
+            </Box>
+          </Box>
+          {/* Apply / Back */}
+          <Box
+            display="flex"
+            alignItems="center"
+            gap="8"
+            mt="8"
+            style={{ flexShrink: 0, paddingTop: "16px", borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
+          >
+            <Text fontSize="xs" color="fg.secondary" style={{ flex: 1 }}>
+              Changes apply to all selected items.
+            </Text>
+            <Button appearance="subtle" size="md" onClick={() => exitCategoryBatchEdit(false)}>
+              Back
+            </Button>
+            <Button appearance="primary" size="md" onClick={handleApplyCategories}>
+              Apply
+            </Button>
+          </Box>
+          </>
+          )}
         </Box>
       ) : (
         /* Summary view */
@@ -903,6 +1242,158 @@ export default function MultiSelectDetailsPane({
                       aria-expanded={tagsExpanded}
                     >
                       {tagsExpanded ? "Show less" : `Show ${hiddenCount} more`}
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            </DisclosureContent>
+          </Disclosure>
+
+          {/* Categories */}
+          <Disclosure defaultOpen>
+            <DisclosureTrigger
+              chevronPosition="start"
+              addonAfter={
+                items.length >= 2 ? (
+                  <Button
+                    appearance="default"
+                    size="sm"
+                    fontWeight="500"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      enterCategoryBatchEdit();
+                    }}
+                    aria-label="Batch edit categories"
+                  >
+                    Batch edit
+                  </Button>
+                ) : undefined
+              }
+            >
+              <Text asChild fontSize="sm" fontWeight="600" color="fg.default">
+                <span>Categories</span>
+              </Text>
+            </DisclosureTrigger>
+            <DisclosureContent asChild>
+              <Box
+                display="flex"
+                flexDirection="column"
+                gap="8"
+                mt="8"
+                style={{ paddingLeft: "20px" }}
+              >
+                <Box display="flex" flexDirection="column" gap="8">
+                  <Box display="flex" flexDirection="column" gap="8">
+                    {visibleCategories.length > 0 ? visibleCategories.map((slug) => {
+                      const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
+                      const count = itemsWithCategory.length;
+                      const isHoverOpen = hoveredCategorySlug === slug;
+                      const clearCloseTimeout = () => {
+                        if (categoryHoverCloseTimeoutRef.current) {
+                          clearTimeout(categoryHoverCloseTimeoutRef.current);
+                          categoryHoverCloseTimeoutRef.current = null;
+                        }
+                      };
+                      const scheduleClose = () => {
+                        clearCloseTimeout();
+                        categoryHoverCloseTimeoutRef.current = setTimeout(() => setHoveredCategorySlug(null), 150);
+                      };
+                      return (
+                        <Box key={slug} display="flex" alignItems="center" flexWrap="wrap">
+                          <Popover open={isHoverOpen} onOpenChange={(open) => !open && setHoveredCategorySlug(null)}>
+                            <PopoverTrigger asChild>
+                              <Box
+                                display="inline-flex"
+                                onMouseEnter={() => {
+                                  clearCloseTimeout();
+                                  setHoveredCategorySlug(slug);
+                                }}
+                                onMouseLeave={scheduleClose}
+                              >
+                                <Badge intent="neutral">
+                                  <Box display="flex" alignItems="center" gap="4">
+                                    <span>{getCategoryDisplayName(slug)}</span>
+                                    <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                                      on {count} {count === 1 ? "item" : "items"}
+                                    </Text>
+                                    {isCategoryBatchEditMode && (
+                                      <button
+                                        onClick={() => handleRemoveCategory(slug)}
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          cursor: "pointer",
+                                          padding: "0",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          fontSize: "14px",
+                                          fontWeight: "500",
+                                          lineHeight: "1",
+                                          color: "inherit",
+                                        }}
+                                        aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </Box>
+                                </Badge>
+                              </Box>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              side="bottom"
+                              sideOffset={4}
+                              align="start"
+                              style={{ width: "240px", maxHeight: "280px" }}
+                              onMouseEnter={clearCloseTimeout}
+                              onMouseLeave={scheduleClose}
+                            >
+                              <Box
+                                display="flex"
+                                flexDirection="column"
+                                py="2"
+                                px="2"
+                                style={{ maxHeight: "260px", overflow: "auto" }}
+                              >
+                                <Text fontSize="xs" color="fg.secondary" mb="2" style={{ paddingLeft: "4px" }}>
+                                  {count} {count === 1 ? "item" : "items"} with this category
+                                </Text>
+                                {itemsWithCategory.map((item) => (
+                                  <Text
+                                    key={item.id}
+                                    fontSize="sm"
+                                    color="fg.default"
+                                    style={{
+                                      padding: "6px 8px",
+                                      borderRadius: "4px",
+                                      whiteSpace: "nowrap",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                    }}
+                                  >
+                                    {item.name ?? item.id}
+                                  </Text>
+                                ))}
+                              </Box>
+                            </PopoverContent>
+                          </Popover>
+                        </Box>
+                      );
+                    }) : (
+                      <Text fontSize="xs" color="fg.tertiary">
+                        No categories
+                      </Text>
+                    )}
+                  </Box>
+                  {hasMoreCategories && (
+                    <Button
+                      appearance="subtle"
+                      size="sm"
+                      onClick={() => setCategoriesExpanded(!categoriesExpanded)}
+                      aria-expanded={categoriesExpanded}
+                    >
+                      {categoriesExpanded ? "Show less" : `Show ${hiddenCategoriesCount} more`}
                     </Button>
                   )}
                 </Box>
