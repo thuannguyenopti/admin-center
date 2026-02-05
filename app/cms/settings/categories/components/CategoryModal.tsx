@@ -287,28 +287,12 @@ export function CategoryModal({
         }}
       >
         <DialogHeader
-          style={{
-            fontSize: '22.99px',
-            fontWeight: 300,
-            letterSpacing: '-0.44px',
-            color: '#080736',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px',
-            flexShrink: 0,
-          }}
+          description="Define categories to organise your content."
+          fontSize="xl"
+          fontWeight="400"
+          color="fg.default"
         >
           {title}
-          <Text
-            style={{
-              fontSize: '14px',
-              fontWeight: 400,
-              letterSpacing: '-0.15px',
-              color: '#080736',
-            }}
-          >
-            Define categories to organise your content.
-          </Text>
         </DialogHeader>
         <DialogBody
           pt="0"
@@ -322,52 +306,16 @@ export function CategoryModal({
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Category
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Slug
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Category parent
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Visibility
                 </Box>
                 {/* Spacer for icon column */}
@@ -390,13 +338,7 @@ export function CategoryModal({
                     loading={mode === 'create' && generateLoading}
                   />
                   {errors[index] && (
-                    <Box
-                      style={{
-                        color: '#dc2626',
-                        fontSize: '12px',
-                        marginTop: '4px',
-                      }}
-                    >
+                    <Box color="fg.error" fontSize="xs" mt="2">
                       {errors[index]}
                     </Box>
                   )}
