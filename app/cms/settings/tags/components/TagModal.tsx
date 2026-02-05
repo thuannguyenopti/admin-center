@@ -7,13 +7,14 @@ import {
   DialogClose,
   Box,
   Button,
+  Tooltip,
 } from '@optiaxiom/react';
 import { Text } from '@/app/components/Text';
 import { TagFormRow as FormRowType, Tag } from '../types';
 import { TagFormRow } from './TagFormRow';
 import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique } from '../utils';
-import { IconSparkles } from '@optimizely/axiom-icons';
+import { IconSparkles, IconCircleInfo } from '@optimizely/axiom-icons';
 
 interface TagModalProps {
   open: boolean;
@@ -280,7 +281,33 @@ export function TagModal({
                   Slug
                 </Box>
                 <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
-                  Visibility
+                  <Box display="inline-flex" alignItems="center" gap="4">
+                    <span>Visibility</span>
+                    <Tooltip
+                      aria-label="Visibility help"
+                      content={
+                        <Box display="flex" flexDirection="column" gap="8" fontSize="sm" style={{ maxWidth: 280 }}>
+                          <Box as="p" m="0">
+                            Public tags appear in filters and APIs. Private tags are visible only in the CMS.
+                          </Box>
+                          <Box as="p" m="0" fontWeight="600">
+                            Examples:
+                          </Box>
+                          <Box as="p" m="0">
+                            Public: topic tags for search, faceted filters.
+                          </Box>
+                          <Box as="p" m="0">
+                            Private: internal labels, review status.
+                          </Box>
+                        </Box>
+                      }
+                      delayDuration={300}
+                    >
+                      <span style={{ display: 'inline-flex', cursor: 'help' }}>
+                        <IconCircleInfo size={14} color="var(--ax-colors-fg-secondary)" />
+                      </span>
+                    </Tooltip>
+                  </Box>
                 </Box>
                 <Box style={{ width: '30px', flexShrink: 0 }} />
               </Box>
