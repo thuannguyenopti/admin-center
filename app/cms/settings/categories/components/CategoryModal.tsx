@@ -323,18 +323,18 @@ export function CategoryModal({
                       aria-label="Visibility help"
                       content={
                         <Box display="flex" flexDirection="column" gap="8" fontSize="sm" style={{ maxWidth: 280 }}>
-                          <Box as="p" m="0">
+                          <Text m="0">
                             Public categories appear in filters and APIs. Private categories are visible only in the CMS.
-                          </Box>
-                          <Box as="p" m="0" fontWeight="600">
+                          </Text>
+                          <Text m="0" fontWeight="600">
                             Examples:
-                          </Box>
-                          <Box as="p" m="0">
+                          </Text>
+                          <Text m="0">
                             Public: site navigation, product taxonomy.
-                          </Box>
-                          <Box as="p" m="0">
+                          </Text>
+                          <Text m="0">
                             Private: internal workflow, draft groupings.
-                          </Box>
+                          </Text>
                         </Box>
                       }
                       delayDuration={300}
