@@ -11,6 +11,7 @@ import {
 	Separator,
 	Badge,
 	Alert,
+	Card,
 } from "@optiaxiom/react";
 import {Input} from "@/app/components/Input";
 import {Button} from "@/app/components/Button";
@@ -48,13 +49,34 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 				elit. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit
 				amet, consectetur adipiscing elit.
 			</Text>
-			<Flex gap="8">
-				<Badge>Status: Active</Badge>
-				<Badge intent="information">Success Rate: 95%</Badge>
-				<Badge intent="success">Successes: 150</Badge>
-				<Badge intent="warning">Failures: 5</Badge>
-				<Badge intent="danger">Errors: 2</Badge>
-			</Flex>
+			<Card>
+				<Flex gap="8">
+					<Badge>Status: Active</Badge>
+					<Badge intent="information">Success Rate: 95%</Badge>
+					<Badge intent="success">Successes: 150</Badge>
+					<Badge intent="warning">Failures: 5</Badge>
+					<Badge intent="danger">Errors: 2</Badge>
+					<Badge intent="primary">Hey!</Badge>
+				</Flex>
+				<Flex gap="8">
+					<Badge>Status: Active</Badge>
+					<Badge variant="strong" intent="information">
+						Success Rate: 95%
+					</Badge>
+					<Badge variant="strong" intent="success">
+						Successes: 150
+					</Badge>
+					<Badge variant="strong" intent="warning">
+						Failures: 5
+					</Badge>
+					<Badge variant="strong" intent="danger">
+						Errors: 2
+					</Badge>
+					<Badge variant="strong" intent="primary">
+						Hey!
+					</Badge>
+				</Flex>
+			</Card>
 			<Heading level="2">Heading 2</Heading>
 			<Field label="Sample Field">
 				<Input placeholder="Enter something..." />

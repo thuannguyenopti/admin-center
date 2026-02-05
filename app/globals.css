@@ -73,10 +73,10 @@ html.dark,
 	/* Background colors */
 	/*--ax-colors-bg-default: #1c2029; /* neutral.1000 */
 	/*--ax-colors-bg-page: #171a23; /* neutral.1100 */
-	--ax-colors-bg-secondary: #282f3c; /* neutral.900 */
+	--ax-colors-bg-secondary: #2e3442; /* CLOSE: neutral.800 */
 	/*--ax-colors-bg-secondary-hovered: rgba(249, 250, 252, 0.12); /* neutral.50/12 */
-	--ax-colors-bg-tertiary: #353e4d; /* neutral.700 */
-	--ax-colors-bg-tertiary-hovered: #414b5c; /* neutral.50/18 */
+	--ax-colors-bg-tertiary: #353e4d; /* neutral.750 */
+	--ax-colors-bg-tertiary-hovered: #4f576e; /* neutral.700 */
 	/*--ax-colors-bg-default-hovered: rgba(249, 250, 252, 0.06); /* neutral.50/6 */
 	/*--ax-colors-bg-default-pressed: rgba(249, 250, 252, 0.12); /* neutral.50/12 */
 	/*--ax-colors-bg-default-inverse: #e9edf5; /* neutral.100 */
@@ -86,33 +86,41 @@ html.dark,
 
 	/* Accent backgrounds (brand colors) */
 	/*--ax-colors-bg-accent: #2e66f7; /* brand.400 */
-	--ax-colors-bg-accent-hovered: #4b7bf6; /* brand.400 */
-	--ax-colors-bg-accent-subtle: #21283f; /* brand.900 */
+	--ax-colors-bg-accent-hovered: #4b7bf6; /* NEED: brand.350 */
+	--ax-colors-bg-accent-subtle: #21283f; /* NEED: brand.dark.950 (dark mode subtle bg) */
 	/*--ax-colors-bg-accent-light: #001666; /* brand.800 */
 
-	/* Status backgrounds - Error (red) */
+	/* Status backgrounds - Error (red)
+	   Dark mode needs a new "red.dark" stack for muted/tinted backgrounds:
+	   red.dark.800: #3d2222, red.dark.900: #2d1f1f */
 	/*--ax-colors-bg-error: #cc1616; /* red.500 */
 	/*--ax-colors-bg-error-hovered: #f64f4f; /* red.400 */
 	/*--ax-colors-bg-error-pressed: #b21313; /* red.600 */
-	--ax-colors-bg-error-subtle: #3d2222; /* darker red bg for AAA contrast */
-	--ax-colors-bg-error-subtlest: #2d1f1f; /* red.900 */
+	--ax-colors-bg-error-subtle: #3d2222; /* NEED: red.dark.800 */
+	--ax-colors-bg-error-subtlest: #2d1f1f; /* NEED: red.dark.900 */
 	/*--ax-colors-bg-error-light: #911d1d; /* red.700 */
 
-	/* Status backgrounds - Success (green) */
+	/* Status backgrounds - Success (green)
+	   Dark mode needs a new "green.dark" stack:
+	   green.dark.900: #1e3329 */
 	/*--ax-colors-bg-success: #038047; /* green.600 */
 	/*--ax-colors-bg-success-hovered: #5ac58a; /* green.400 */
-	--ax-colors-bg-success-subtle: #1e3329; /* darker green bg for AAA contrast */
+	--ax-colors-bg-success-subtle: #1e3329; /* NEED: green.dark.900 */
 	/*--ax-colors-bg-success-light: #17492b; /* green.800 */
 
-	/* Status backgrounds - Warning (yellow) */
+	/* Status backgrounds - Warning (yellow)
+	   Dark mode needs a new "yellow.dark" stack:
+	   yellow.dark.900: #3a2d1a */
 	/*--ax-colors-bg-warning: #f79008; /* yellow.500 */
 	/*--ax-colors-bg-warning-hovered: #fdb022; /* yellow.400 */
-	--ax-colors-bg-warning-subtle: #3a2d1a; /* darker yellow/brown bg for AAA contrast */
+	--ax-colors-bg-warning-subtle: #3a2d1a; /* NEED: yellow.dark.900 */
 	/*--ax-colors-bg-warning-light: #7a2e0d; /* yellow.800 */
 
-	/* Status backgrounds - Information (blue) */
-	--ax-colors-bg-information: #8fabff; /* blue.600 */
-	--ax-colors-bg-information-subtle: #1e2840; /* darker blue bg for AAA contrast */
+	/* Status backgrounds - Information (blue)
+	   Dark mode needs a new "blue.dark" stack:
+	   blue.dark.900: #1e2840 */
+	/*--ax-colors-bg-information: #8fabff; /* NEED: blue.pale.200 */
+	--ax-colors-bg-information-subtle: #1e2840; /* NEED: blue.dark.900 */
 	/*--ax-colors-bg-information-light: #09306d; /* blue.800 */
 
 	/* Avatar backgrounds */
@@ -124,47 +132,55 @@ html.dark,
 	/*--ax-colors-bg-spinner-inverse: #f9fafc; /* neutral.50 */
 
 	/* Foreground/text colors */
-	--ax-colors-fg-default: #d4d7e4; /* neutral.75 */
-	--ax-colors-fg-secondary: #b5bbd7; /* neutral.200 */
-	--ax-colors-fg-tertiary: rgb(133, 145, 173); /* neutral.500 */
-	/*--ax-colors-fg-disabled: rgba(249, 250, 252, 0.32); /* neutral.50/32 */
+	--ax-colors-fg-default: #d4d7e4; /* NEED: neutral.175 */
+	--ax-colors-fg-secondary: #b5bbd7; /* NEED: neutral.250 */
+	--ax-colors-fg-tertiary: #838da4; /* NEED: neutral.500 */
+	--ax-colors-fg-disabled: #8591ad; /* neutral.450 */
 	/*--ax-colors-fg-default-inverse: #2e3442; /* neutral.800 */
 	/*--ax-colors-fg-white: #ffffff; /* neutral.00 */
 
 	/* Foreground - Accent */
 	/*--ax-colors-fg-accent: #6a8ffc; /* brand.300 */
-	--ax-colors-fg-accent-hovered: #7998f6; /* brand.500 */
-	--ax-colors-fg-accent-strong: #87a2f1; /* brand.400 */
+	--ax-colors-fg-accent-hovered: #7998f6; /* NEED: brand.350 */
+	--ax-colors-fg-accent-strong: #87a2f1; /* NEED: brand.250 */
 
-	/* Foreground - Error - AAA contrast: #fca5a5 on #3d2222 = 7.2:1 */
-	--ax-colors-fg-error: #fca5a5; /* lighter red for AAA */
-	--ax-colors-fg-error-hovered: #fca5a5; /* red.600 */
-	--ax-colors-fg-error-light: #fca5a5; /* red.500 */
-	--ax-colors-fg-error-strong: #fca5a5; /* red.200 */
+	/* Foreground - Error - AAA contrast: #fca5a5 on #3d2222 = 7.2:1
+	   Dark mode needs a new "red.pale" stack for high-contrast text:
+	   red.pale.200: #fca5a5 (similar to Tailwind red-300) */
+	--ax-colors-fg-error: #fca5a5; /* NEED: red.pale.200 */
+	--ax-colors-fg-error-hovered: #fca5a5; /* NEED: red.pale.200 */
+	--ax-colors-fg-error-light: #fca5a5; /* NEED: red.pale.200 */
+	--ax-colors-fg-error-strong: #fca5a5; /* NEED: red.pale.200 */
 
-	/* Foreground - Success - AAA contrast: #86efac on #1e3329 = 9.5:1 */
-	--ax-colors-fg-success: #86efac; /* lighter green for AAA */
-	--ax-colors-fg-success-hovered: #86efac; /* green.600 */
-	--ax-colors-fg-success-light: #86efac; /* green.500 */
-	--ax-colors-fg-success-strong: #86efac; /* green.200 */
+	/* Foreground - Success - AAA contrast: #86efac on #1e3329 = 9.5:1
+	   Dark mode needs a new "green.pale" stack:
+	   green.pale.200: #86efac (similar to Tailwind green-300) */
+	--ax-colors-fg-success: #86efac; /* NEED: green.pale.200 */
+	--ax-colors-fg-success-hovered: #86efac; /* NEED: green.pale.200 */
+	--ax-colors-fg-success-light: #86efac; /* NEED: green.pale.200 */
+	--ax-colors-fg-success-strong: #86efac; /* NEED: green.pale.200 */
 
-	/* Foreground - Warning - AAA contrast: #fcd34d on #3a2d1a = 8.8:1 */
-	--ax-colors-fg-warning: #fcd34d; /* lighter yellow for AAA */
-	--ax-colors-fg-warning-hovered: #fcd34d; /* yellow.600 */
-	--ax-colors-fg-warning-light: #fcd34d; /* yellow.500 */
-	--ax-colors-fg-warning-strong: #fcd34d; /* yellow.200 */
+	/* Foreground - Warning - AAA contrast: #fcd34d on #3a2d1a = 8.8:1
+	   Dark mode needs a new "yellow.pale" stack:
+	   yellow.pale.300: #fcd34d (similar to Tailwind yellow-300) */
+	--ax-colors-fg-warning: #fcd34d; /* NEED: yellow.pale.300 */
+	--ax-colors-fg-warning-hovered: #fcd34d; /* NEED: yellow.pale.300 */
+	--ax-colors-fg-warning-light: #fcd34d; /* NEED: yellow.pale.300 */
+	--ax-colors-fg-warning-strong: #fcd34d; /* NEED: yellow.pale.300 */
 	/*--ax-colors-fg-warning-inverse: #2e3442; /* neutral.800 */
 
-	/* Foreground - Information - AAA contrast: #93c5fd on #1e2840 = 7.4:1 */
-	--ax-colors-fg-information: #93c5fd; /* lighter blue for AAA */
-	--ax-colors-fg-information-light: #93c5fd; /* blue.500 */
-	--ax-colors-fg-information-strong: #93c5fd; /* blue.200 */
+	/* Foreground - Information - AAA contrast: #93c5fd on #1e2840 = 7.4:1
+	   Dark mode needs a new "blue.pale" stack:
+	   blue.pale.200: #93c5fd (similar to Tailwind blue-300) */
+	--ax-colors-fg-information: #93c5fd; /* NEED: blue.pale.200 */
+	--ax-colors-fg-information-light: #93c5fd; /* NEED: blue.pale.200 */
+	--ax-colors-fg-information-strong: #93c5fd; /* NEED: blue.pale.200 */
 
 	/* Foreground - Links */
-	--ax-colors-fg-link-default: #8fabff; /* brand.400 */
-	/*--ax-colors-fg-link-default-hovered: #b3c3ff; /* brand.200 */
+	--ax-colors-fg-link-default: #87a2f1; /* NEED: brand.pale.200 */
+	--ax-colors-fg-link-default-hovered: #7998f6; /* brand.250 */
 	/*--ax-colors-fg-link-inverse: #2e3442; /* neutral.800 */
-	/*--ax-colors-fg-link-subtle: #f5f6fa; /* neutral.75 */
+	--ax-colors-fg-link-subtle: #dadfeb; /* neutral.175 */
 	/*--ax-colors-fg-link-visited: #693ab6; /* purple.500 */
 
 	/* Foreground - Avatar */
@@ -175,17 +191,17 @@ html.dark,
 	/*--ax-colors-fg-spinner-default: #cacfdc; /* neutral.200 */
 	/*--ax-colors-fg-spinner-inverse: #2e3442; /* neutral.800 */
 
-	/* Border colors: 1c2029 */
-	--ax-colors-border-default: #343b4b; /* neutral.600 */
-	--ax-colors-border-secondary: #2c3240; /* neutral.700 */
-	--ax-colors-border-tertiary: #242935; /* neutral.800 */
+	/* Border colors */
+	--ax-colors-border-default: #343b4b; /* NEED: neutral.750 */
+	--ax-colors-border-secondary: #2c3240; /* NEED: neutral.850 */
+	--ax-colors-border-tertiary: #242935; /* NEED: neutral.950 */
 	/*--ax-colors-border-control: #4f576e; /* neutral.700 */
 	/*--ax-colors-border-control-hovered: #66708c; /* neutral.600 */
 	/*--ax-colors-border-disabled: #2e3442; /* neutral.800 */
 	/*--ax-colors-border-accent: #6a8ffc; /* brand.300 */
 	/*--ax-colors-border-focus: #6a8ffc; /* brand.300 */
 	/*--ax-colors-border-focus-error: #fc8b8b; /* red.300 */
-	--ax-colors-border-error: #ff8383; /* red.200 */
+	--ax-colors-border-error: #ff8383; /* NEED: red.pale.300 */
 	/*--ax-colors-border-success: #03a65d; /* green.500 */
 	/*--ax-colors-border-warning: #f79008; /* yellow.500 */
 }
