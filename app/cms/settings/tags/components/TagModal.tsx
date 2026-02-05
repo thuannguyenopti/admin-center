@@ -287,18 +287,18 @@ export function TagModal({
                       aria-label="Visibility help"
                       content={
                         <Box display="flex" flexDirection="column" gap="8" fontSize="sm" style={{ maxWidth: 280 }}>
-                          <Box as="p" m="0">
+                          <Text m="0">
                             Public tags appear in filters and APIs. Private tags are visible only in the CMS.
-                          </Box>
-                          <Box as="p" m="0" fontWeight="600">
+                          </Text>
+                          <Text m="0" fontWeight="600">
                             Examples:
-                          </Box>
-                          <Box as="p" m="0">
+                          </Text>
+                          <Text m="0">
                             Public: topic tags for search, faceted filters.
-                          </Box>
-                          <Box as="p" m="0">
+                          </Text>
+                          <Text m="0">
                             Private: internal labels, review status.
-                          </Box>
+                          </Text>
                         </Box>
                       }
                       delayDuration={300}
