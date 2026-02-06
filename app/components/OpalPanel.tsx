@@ -138,6 +138,7 @@ export function OpalPanel({
       >
         <OpalHeader
           onClose={onClose}
+          onNewChat={createNewChat}
           mode={mode}
           isHistoryVisible={isHistoryVisible}
           onToggleHistory={toggleHistory}

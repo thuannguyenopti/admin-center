@@ -2,9 +2,8 @@
 
 import { Box, Button, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconXmark, IconBars } from "@optimizely/axiom-icons";
+import { IconXmark, IconBars, IconCirclePlus } from "@optimizely/axiom-icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
-import IconInfo from "@/app/assets/opal/icon-info.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import IconTrash from "@/app/assets/opal/icon-trash.svg";
 import IconPopOut from "@/app/assets/opal/icon-pop-out.svg";
@@ -13,6 +12,7 @@ import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHeaderProps = {
     onClose: () => void;
+    onNewChat: () => void;
     mode: 'docked' | 'popped-out';
     isHistoryVisible: boolean;
     onToggleHistory: () => void;
@@ -21,6 +21,7 @@ type OpalHeaderProps = {
 
 export function OpalHeader({
     onClose,
+    onNewChat,
     mode,
     isHistoryVisible,
     onToggleHistory,
@@ -57,10 +58,12 @@ export function OpalHeader({
                 >
                     <IconBars size={16} />
                 </Button>
+
                 <Button
                     appearance="subtle"
                     size="md"
-                    aria-label="Info"
+                    aria-label="New chat"
+                    onClick={onNewChat}
                     style={{
                         width: '40px',
                         height: '40px',
@@ -72,7 +75,7 @@ export function OpalHeader({
                         justifyContent: 'center',
                     }}
                 >
-                    <IconInfo style={{ width: '16px', height: '16px' }} />
+                    <IconCirclePlus size={20} />
                 </Button>
                 <Menu
                     options={[
