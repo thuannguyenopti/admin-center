@@ -18,9 +18,11 @@ export default function VT({
 	items,
 	backLink,
 	title,
+	description,
 }: Readonly<{
 	backLink?: {label: string; url?: string};
 	title?: string;
+	description?: string;
 	items: Array<{label: string; url?: string}> | undefined;
 }>) {
 	const router = useRouter();
@@ -52,6 +54,11 @@ export default function VT({
 						{title && (
 							<Text fontSize="lg" fontWeight="600" color="fg.default">
 								{title}
+							</Text>
+						)}
+						{description && (
+							<Text fontSize="sm" color="fg.tertiary" mt="4">
+								{description}
 							</Text>
 						)}
 					</Box>
