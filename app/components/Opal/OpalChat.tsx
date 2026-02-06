@@ -25,8 +25,7 @@ export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant
     // Context might not be available in some cases
   }
 
-  const isCMS = opalContext?.currentPage?.path?.startsWith('/cms') ||
-    opalContext?.currentPage?.productArea?.includes('CMS');
+
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -64,7 +63,7 @@ export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant
               <br /><br />
               What can I help you with?
             </Text>
-            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={isCMS ? 'cms' : 'default'} />
+            <OpalSuggestions onSuggestionClick={onSuggestionClick} />
           </>
         )
       ) : (

@@ -136,15 +136,115 @@ export function OpalInput({
 
   const hasValue = value.trim().length > 0 || selectedAgent !== null;
 
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Add a ref to track retry attempts
+  const retryCount = useRef(0);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+      // Reset retry count on manual stop
+      retryCount.current = 0;
+      return;
+    }
+
+    // Abort any existing recognition before starting a new one
+    recognitionRef.current?.abort();
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      // We don't reset retry count here to avoid infinite loops on immediate start/fail cycles,
+      // but we could reset it if we successfully get a result.
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+      // If we stopped but it wasn't a manual stop (and no error fired), we might want to stay stopped.
+    };
+
+    recognition.onerror = (event: any) => {
+      console.warn('Speech recognition warning:', event.error);
+      setIsRecording(false);
+
+      if (event.error === 'network') {
+        if (retryCount.current < 2) {
+          // Auto-retry silently for network errors
+          retryCount.current += 1;
+          console.log(`Speech recognition network error, retrying... (${retryCount.current}/2)`);
+          setTimeout(() => {
+            toggleRecording();
+          }, 500);
+        } else {
+          // Give up silently after retries fail
+          console.log('Voice input failed after retries. Stopping.');
+          retryCount.current = 0;
+        }
+      } else if (event.error === 'not-allowed') {
+        alert("Microphone access was denied. Please check your browser permissions.");
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      // Successful result, reset retry count
+      retryCount.current = 0;
+
+      let finalTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        onChange(value + (value && !value.endsWith(' ') ? ' ' : '') + finalTranscript);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const handleInputChange = (newValue: string) => {
+    if (isRecording) {
+      recognitionRef.current?.abort();
+      setIsRecording(false);
+    }
+    onChange(newValue);
+  };
+
+  const handleMainAction = () => {
+    if (isLoading) {
+      onSend();
+    } else if (hasValue) {
+      onSend();
+    } else {
+      toggleRecording();
+    }
+  };
+
   // Determine border color based on state
   let borderColor = 'var(--opal-border-input)';
-  if (isFocused || hasValue || isLoading) {
+  if (isFocused || hasValue || isLoading || isRecording) {
     borderColor = 'var(--opal-accent-purple)';
   }
 
   // CTA Icon state logic
   let ctaIcon = <IconMicrophone size={20} />;
-  if (isLoading) {
+  if (isLoading || isRecording) {
     ctaIcon = <IconCircleStop size={20} />;
   } else if (hasValue) {
     ctaIcon = <IconArrowUp size={20} />;
@@ -280,7 +380,7 @@ export function OpalInput({
           ref={textareaRef}
           placeholder={selectedAgent ? "Ask anything..." : "Ask Opal"}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -336,24 +436,25 @@ export function OpalInput({
           <Button
             appearance="default"
             size="md"
-            aria-label={isLoading ? "Stop generating" : (hasValue ? "Send message" : "Voice input")}
-            onClick={onSend}
-            disabled={!isLoading && !hasValue && false}
+            aria-label={isLoading ? "Stop generating" : (isRecording ? "Stop recording" : (hasValue ? "Send message" : "Voice input"))}
+            onClick={handleMainAction}
+            disabled={!isLoading && !hasValue && !isRecording && false}
             style={{
               width: '32px',
               height: '32px',
               padding: 0,
               borderRadius: '8px',
-              backgroundColor: isLoading
-                ? 'var(--opal-stop-btn-bg)'
+              backgroundColor: (isLoading || isRecording)
+                ? (isRecording ? '#E01E5A' : 'var(--opal-stop-btn-bg)')
                 : 'var(--opal-accent-purple)',
-              color: isLoading ? 'var(--opal-accent-purple)' : 'white',
+              color: (isLoading || isRecording) ? (isRecording ? 'white' : 'var(--opal-accent-purple)') : 'white',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              animation: isRecording ? 'opal-pulse 1.5s infinite' : 'none',
             }}
           >
             {ctaIcon}
@@ -381,22 +482,7 @@ export function OpalInput({
           Opal can make mistakes. Double-check its responses.
         </Text>
 
-        {/* Testing Toggle - Tiny & Minimal */}
-        <Box
-          display="flex"
-          alignItems="center"
-          style={{
-            transform: 'scale(0.7)',
-            transformOrigin: 'right center',
-          }}
-        >
-          <Switch
-            size="md"
-            checked={!!enableAI}
-            onCheckedChange={onEnableAIChange}
-            aria-label="Toggle AI Queries (Testing)"
-          />
-        </Box>
+
       </Box>
     </Box>
   );

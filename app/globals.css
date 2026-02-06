@@ -1,5 +1,19 @@
 @import "./styles/opalStyles.css";
 
+@keyframes opal-pulse {
+	0% {
+		box-shadow: 0 0 0 0 rgba(224, 30, 90, 0.4);
+	}
+
+	70% {
+		box-shadow: 0 0 0 10px rgba(224, 30, 90, 0);
+	}
+
+	100% {
+		box-shadow: 0 0 0 0 rgba(224, 30, 90, 0);
+	}
+}
+
 @layer optiaxiom.base {
 	@tailwind base;
 	@tailwind components;
