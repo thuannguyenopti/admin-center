@@ -5,7 +5,7 @@ import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, Ic
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
 import { useGlobalCategories } from "../hooks/useGlobalCategories";
 import type { Tag } from "../settings/tags/types";
@@ -38,6 +38,8 @@ interface MultiSelectDetailsPaneProps {
   onCategoriesChange?: (contentId: string, categories: string[]) => void;
   onCategoriesChangeBatch?: (updates: Array<{ id: string; categories: string[] }>) => void;
   onClose: () => void;
+  /** When provided, parent will not overwrite controlled tags/categories while batch edit is active. */
+  onBatchEditModeChange?: (mode: { tags: boolean; categories: boolean }) => void;
 }
 
 export default function MultiSelectDetailsPane({
@@ -51,6 +53,7 @@ export default function MultiSelectDetailsPane({
   onCategoriesChange,
   onCategoriesChangeBatch,
   onClose,
+  onBatchEditModeChange,
 }: MultiSelectDetailsPaneProps) {
   const metadata = useMultiSelectMetadata(items);
   const isControlled = setControlledTags != null;
@@ -143,19 +146,31 @@ export default function MultiSelectDetailsPane({
     }
   }, [isCategoriesControlled, controlledCategories, setControlledCategories, items.length, metadata.categories.join(",")]);
 
-  // Sync tags when selection changes (new union) — only when not controlled
+  // Sync tags when selection changes (new union) — only when not controlled and not in batch edit
   useEffect(() => {
-    if (!isControlled) setLocalTags(metadata.tags);
-  }, [isControlled, metadata.tags.join(","), metadata.count]);
+    if (!isControlled && !isBatchEditMode) setLocalTags(metadata.tags);
+  }, [isControlled, isBatchEditMode, metadata.tags.join(","), metadata.count]);
 
   useEffect(() => {
-    if (!isCategoriesControlled) setLocalCategories(metadata.categories);
-  }, [isCategoriesControlled, metadata.categories.join(","), metadata.count]);
+    if (!isCategoriesControlled && !isCategoryBatchEditMode) setLocalCategories(metadata.categories);
+  }, [isCategoriesControlled, isCategoryBatchEditMode, metadata.categories.join(","), metadata.count]);
 
   // Clear last summary when selection count changes
   useEffect(() => {
     setLastSummary(null);
   }, [metadata.count]);
+
+  // When selection changes during batch edit, merge the new union into the batch so "union" works with subsequent items (different tags)
+  const batchEditSelectionKeyRef = useRef<string>("");
+  const selectionKeyForBatch = useMemo(
+    () => (items.length > 0 ? [...items.map((i) => i.id)].sort().join(",") : ""),
+    [items]
+  );
+  useEffect(() => {
+    if (!isBatchEditMode || items.length === 0 || selectionKeyForBatch === batchEditSelectionKeyRef.current) return;
+    batchEditSelectionKeyRef.current = selectionKeyForBatch;
+    setTags((prev) => [...new Set([...prev, ...metadata.tags])]);
+  }, [isBatchEditMode, selectionKeyForBatch, metadata.tags, items.length]);
 
   const TAGS_INITIAL_VISIBLE = 10;
   const CATEGORIES_INITIAL_VISIBLE = 10;
@@ -188,6 +203,7 @@ export default function MultiSelectDetailsPane({
     setSuggestedSlugs([]);
     setSuggestError(null);
     setSuggestEmpty(false);
+    onBatchEditModeChange?.({ tags: true, categories: false });
   };
   const exitBatchEdit = (apply: boolean) => {
     if (!apply) setTags(metadata.tags);
@@ -196,6 +212,7 @@ export default function MultiSelectDetailsPane({
     setSuggestedSlugs([]);
     setSuggestError(null);
     setSuggestEmpty(false);
+    onBatchEditModeChange?.({ tags: false, categories: isCategoryBatchEditMode });
   };
 
   const enterCategoryBatchEdit = () => {
@@ -203,10 +220,12 @@ export default function MultiSelectDetailsPane({
     setIsBatchEditMode(false);
     setIsCategoryBatchEditMode(true);
     setIsPanelExpanded(true);
+    onBatchEditModeChange?.({ tags: false, categories: true });
   };
   const exitCategoryBatchEdit = (apply: boolean) => {
     if (!apply) setCategories(metadata.categories);
     setIsCategoryBatchEditMode(false);
+    onBatchEditModeChange?.({ tags: isBatchEditMode, categories: false });
   };
   const handleApplyCategories = () => {
     if (!onCategoriesChangeBatch || items.length === 0) return;
@@ -728,20 +747,48 @@ export default function MultiSelectDetailsPane({
                         {allSlugsForItem.map((slug) => {
                           const wasOnItem = itemTags.includes(slug);
                           const isInBatch = tags.includes(slug);
-                          const isRemoved = wasOnItem && !isInBatch; // user removed this tag from batch → danger subtle + strikethrough
-                          const willBeAdded = !wasOnItem && isInBatch; // tag in batch but not on this item
-                          const isNewTag = willBeAdded && addedTagsInBatch.includes(slug); // added from autocomplete → success subtle
-                          const isMissingOnThisItem = willBeAdded && !isNewTag; // other items have it, this item doesn't → warning subtle
+                          const isRemoved = wasOnItem && !isInBatch; // removed from batch → red + strikethrough
+                          const willBeAdded = !wasOnItem && isInBatch;
+                          const isNewTag = willBeAdded && addedTagsInBatch.includes(slug); // new in this batch → green
+                          const isDifference = willBeAdded && !isNewTag; // will be added from other items → yellow
+                          const canRemove = isInBatch; // remove from batch; pill stays and shows red + strikethrough
                           return (
                             <Badge
                               key={slug}
                               intent={
-                                isRemoved ? "danger" : isNewTag ? "success" : isMissingOnThisItem ? "warning" : "neutral"
+                                isRemoved ? "danger" : isNewTag ? "success" : isDifference ? "warning" : "neutral"
                               }
-                              variant={isRemoved || isNewTag || isMissingOnThisItem ? "subtle" : undefined}
+                              variant={isRemoved || isNewTag || isDifference ? "subtle" : undefined}
                               style={isRemoved ? { textDecoration: "line-through" } : undefined}
                             >
-                              {getDisplayName(slug)}
+                              <Box display="flex" alignItems="center" gap="4">
+                                <span>{getDisplayName(slug)}</span>
+                                {canRemove && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleRemoveTag(slug);
+                                    }}
+                                    aria-label={`Remove ${getDisplayName(slug)} from batch`}
+                                    style={{
+                                      background: "none",
+                                      border: "none",
+                                      cursor: "pointer",
+                                      padding: 0,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      fontSize: "14px",
+                                      lineHeight: 1,
+                                      color: "inherit",
+                                      opacity: 0.8,
+                                    }}
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </Box>
                             </Badge>
                           );
                         })}

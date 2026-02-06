@@ -27,6 +27,7 @@ interface DetailsPaneProps {
   onCategoriesChange?: (contentId: string, categories: string[]) => void;
   onCategoriesChangeBatch?: (updates: Array<{ id: string; categories: string[] }>) => void;
   onClose: () => void;
+  onBatchEditModeChange?: (mode: { tags: boolean; categories: boolean }) => void;
 }
 
 const getIconForType = (type: ContentItem["baseType"], size: number = 16) => {
@@ -57,6 +58,7 @@ export default function DetailsPane({
   onCategoriesChange,
   onCategoriesChangeBatch,
   onClose,
+  onBatchEditModeChange,
 }: DetailsPaneProps) {
   // Show multi-select view when 2+ items selected
   if (selectedIds && selectedIds.size > 1 && allContent) {
@@ -73,6 +75,7 @@ export default function DetailsPane({
         onCategoriesChange={onCategoriesChange}
         onCategoriesChangeBatch={onCategoriesChangeBatch}
         onClose={onClose}
+        onBatchEditModeChange={onBatchEditModeChange}
       />
     );
   }
