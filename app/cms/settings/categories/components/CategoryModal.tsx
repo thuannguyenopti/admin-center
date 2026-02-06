@@ -304,6 +304,11 @@ export function CategoryModal({
           }}
         >
           <Box display="flex" flexDirection="column" gap="8">
+            {mode === 'create' && generateError && (
+              <Text fontSize="xs" color="fg.error">
+                {generateError}
+              </Text>
+            )}
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
@@ -372,35 +377,25 @@ export function CategoryModal({
                 </Box>
               ))}
             </Box>
-            {mode === 'create' && (
-              <Box display="flex" justifyContent="flex-start" alignItems="center">
-                <Button
-                  appearance="default-opal"
-                  size="sm"
-                  rounded="sm"
-                  px="8"
-                  className="opalGenerateButton"
-                  icon={<IconSparkles size={16} />}
-                  iconPosition="start"
-                  onClick={handleGenerate}
-                  disabled={generateLoading || (allCategories.length === 0 && contentContext.length === 0)}
-                  loading={generateLoading}
-                  aria-label="Generate category suggestions with Opal"
-                >
-                  Generate
-                </Button>
-              </Box>
-            )}
-            {mode === 'create' && generateError && (
-              <Box>
-                <Text fontSize="xs" color="fg.error">
-                  {generateError}
-                </Text>
-              </Box>
-            )}
           </Box>
         </DialogBody>
-        <DialogFooter style={{ gap: '16px' }}>
+        <DialogFooter style={{ gap: '16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          {mode === 'create' && (
+            <Button
+              appearance="default-opal"
+              size="lg"
+              className="opalGenerateButton"
+              icon={<IconSparkles size={16} />}
+              iconPosition="start"
+              onClick={handleGenerate}
+              disabled={generateLoading || (allCategories.length === 0 && contentContext.length === 0)}
+              loading={generateLoading}
+              aria-label="Generate category suggestions with Opal"
+            >
+              Generate
+            </Button>
+          )}
+          <Box style={{ flex: 1 }} />
           <DialogClose size="lg">Cancel</DialogClose>
           <Button
             appearance="primary"

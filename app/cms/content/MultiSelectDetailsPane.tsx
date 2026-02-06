@@ -417,7 +417,11 @@ export default function MultiSelectDetailsPane({
             />
           )}
           <Text fontSize="lg" fontWeight="600">
-            {metadata.count} items selected
+            {isBatchEditMode
+              ? `Batch edit tags (${metadata.count})`
+              : isCategoryBatchEditMode
+                ? `Batch edit categories (${metadata.count})`
+                : `${metadata.count} items selected`}
           </Text>
         </Box>
         <Box display="flex" alignItems="center" gap="4">
