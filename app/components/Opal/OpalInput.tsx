@@ -144,63 +144,76 @@ export function OpalInput({
 
   const toggleRecording = () => {
     if (isRecording) {
+      console.log('🛑 [Voice] User manually stopped recording');
       recognitionRef.current?.stop();
       setIsRecording(false);
-      // Reset retry count on manual stop
       retryCount.current = 0;
       return;
     }
 
-    // Abort any existing recognition before starting a new one
+    console.log('🎤 [Voice] Starting voice recognition...');
+
     recognitionRef.current?.abort();
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
+      console.error('❌ [Voice] SpeechRecognition API not available in this browser');
       alert("Speech recognition is not supported in this browser.");
       return;
     }
+    console.log('✅ [Voice] SpeechRecognition API available');
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
+    console.log('⚙️ [Voice] Recognition configured:', { continuous: true, interimResults: false, lang: 'en-US' });
 
     recognition.onstart = () => {
+      console.log('✅ [Voice] Recognition started successfully');
       setIsRecording(true);
-      // We don't reset retry count here to avoid infinite loops on immediate start/fail cycles,
-      // but we could reset it if we successfully get a result.
     };
 
     recognition.onend = () => {
+      console.log('⏹️ [Voice] Recognition ended');
       setIsRecording(false);
-      // If we stopped but it wasn't a manual stop (and no error fired), we might want to stay stopped.
     };
 
     recognition.onerror = (event: any) => {
-      console.warn('Speech recognition warning:', event.error);
+      // Use console.log for network errors to avoid Next.js error overlay
+      const logLevel = (event.error === 'network' || event.error === 'no-speech') ? console.log : console.error;
+      logLevel(`❌ [Voice] Error occurred:`, {
+        error: event.error,
+        message: event.message,
+        retryCount: retryCount.current,
+        timestamp: new Date().toISOString()
+      });
       setIsRecording(false);
 
       if (event.error === 'network') {
         if (retryCount.current < 2) {
-          // Auto-retry silently for network errors
           retryCount.current += 1;
-          console.log(`Speech recognition network error, retrying... (${retryCount.current}/2)`);
+          console.log(`🔄 [Voice] Auto-retry ${retryCount.current}/2 in 500ms...`);
           setTimeout(() => {
             toggleRecording();
           }, 500);
         } else {
-          // Give up silently after retries fail
-          console.log('Voice input failed after retries. Stopping.');
+          console.log('❌ [Voice] Max retries (2) exceeded. Network error persists. Giving up.');
           retryCount.current = 0;
         }
       } else if (event.error === 'not-allowed') {
+        console.error('❌ [Voice] Microphone permission denied by user');
         alert("Microphone access was denied. Please check your browser permissions.");
+      } else if (event.error === 'no-speech') {
+        console.log('ℹ️ [Voice] No speech detected, stopping.');
+      } else {
+        console.error(`❌ [Voice] Unexpected error type: ${event.error}`);
       }
     };
 
     recognition.onresult = (event: any) => {
-      // Successful result, reset retry count
       retryCount.current = 0;
+      console.log('📝 [Voice] Speech recognized:', { resultIndex: event.resultIndex, resultsLength: event.results.length });
 
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -210,12 +223,18 @@ export function OpalInput({
       }
 
       if (finalTranscript) {
+        console.log('✅ [Voice] Transcribed text:', finalTranscript);
         onChange(value + (value && !value.endsWith(' ') ? ' ' : '') + finalTranscript);
       }
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+      console.log('🚀 [Voice] recognition.start() called');
+    } catch (err) {
+      console.error('❌ [Voice] Failed to call recognition.start():', err);
+    }
   };
 
   const handleInputChange = (newValue: string) => {
