@@ -305,16 +305,30 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
           throw new Error('Failed to get response from Opal');
         }
 
-        const data = await response.json();
+        if (!response.body) {
+          throw new Error('No response body from Opal');
+        }
 
-        // Update loading message with actual response
-        updateMessage(loadingMessage.id, {
-          content: data.response || 'Sorry, I couldn\'t generate a response.',
-          isLoading: false,
-        });
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let accumulatedContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          accumulatedContent += chunk;
+
+          // Update message with accumulated content and turn off loading flag once we have content
+          updateMessage(loadingMessage.id, {
+            content: accumulatedContent,
+            isLoading: false,
+          });
+        }
       } else {
         // Simulation delay for mock data
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         const mockResponses = [
           "That's an interesting question about optimization. Based on your current context, I'd recommend looking at your mobile conversion rates first.",
@@ -324,10 +338,19 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
         ];
         const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
 
-        updateMessage(loadingMessage.id, {
-          content: randomResponse,
-          isLoading: false,
-        });
+        // Simulate streaming for mock data
+        const words = randomResponse.split(' ');
+        let simulatedContent = '';
+
+        for (let i = 0; i < words.length; i++) {
+          simulatedContent += (i === 0 ? '' : ' ') + words[i];
+          updateMessage(loadingMessage.id, {
+            content: simulatedContent,
+            isLoading: false,
+          });
+          // Small delay between words
+          await new Promise(resolve => setTimeout(resolve, 40 + Math.random() * 40));
+        }
       }
     } catch (err) {
       console.error('Error sending message:', err);

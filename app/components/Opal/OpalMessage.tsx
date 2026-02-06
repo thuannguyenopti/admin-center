@@ -51,52 +51,96 @@ export function OpalMessage({ message }: OpalMessageProps) {
       display="flex"
       flexDirection="column"
       w="full"
-      mb="12"
-      gap="8"
+      mb="16"
+      gap="4"
       style={{
         alignItems: isUser ? "flex-end" : "flex-start",
       }}
     >
+      {/* Name/Badge Area */}
+      {!isUser && (
+        <Box display="flex" alignItems="center" gap="8" mb="4" ml="4">
+          <Box
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#10B981', // Green dot for Opal
+            }}
+          />
+          <Text
+            style={{
+              ...opalTypography.label,
+              fontWeight: 600,
+              color: 'var(--opal-text-body)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+            }}
+          >
+            Opal
+          </Text>
+        </Box>
+      )}
+
       <Box
         display="flex"
         flexDirection="row"
         alignItems="start"
         gap="8"
+        w="full"
         style={{
-          maxWidth: isUser ? '80%' : '100%',
+          justifyContent: isUser ? 'flex-end' : 'flex-start',
         }}
       >
+        {!isUser && (
+          <Box
+            style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--opal-accent-purple)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              marginTop: '4px'
+            }}
+          >
+            <Text style={{ color: 'white', fontSize: '10px', fontWeight: 'bold' }}>O</Text>
+          </Box>
+        )}
+
         <Box
-          p="12"
           style={{
-            flex: 1,
-            backgroundColor: isUser ? 'var(--avatar-bg-neutral)' : 'transparent',
+            maxWidth: '85%',
+            backgroundColor: isUser ? '#F3F4F6' : 'transparent',
             color: isUser ? 'var(--opal-text-user)' : 'var(--opal-text-body)',
-            borderRadius: '8px',
-            padding: isUser ? '12px' : '0px',
-            borderTopRightRadius: isUser ? '4px' : undefined,
+            borderRadius: '16px',
+            padding: isUser ? '12px 16px' : '4px 8px',
+            borderTopRightRadius: isUser ? '4px' : '16px',
+            borderTopLeftRadius: isUser ? '16px' : '4px',
+            position: 'relative',
           }}
         >
           {isLoading ? (
-            <Box display="flex" alignItems="center" gap="8">
+            <Box display="flex" alignItems="center" gap="12" py="4">
               <Box
                 className="opal-loading-spinner"
                 style={{
                   width: '16px',
                   height: '16px',
                   border: '2px solid currentColor',
-                  borderTopColor: 'currentColor',
-                  opacity: 0.3,
+                  borderTopColor: 'transparent',
+                  opacity: 0.5,
                   borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite',
+                  animation: 'spin 1s linear infinite',
                 }}
               />
               <Text
-                fontSize="sm"
                 style={{
+                  ...opalTypography.body,
+                  color: 'fg.tertiary',
                   margin: 0,
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
                 }}
               >
                 Opal is thinking...
@@ -105,8 +149,8 @@ export function OpalMessage({ message }: OpalMessageProps) {
           ) : (
             isUser ? (
               <Text
-                fontSize="md"
                 style={{
+                  ...opalTypography.body,
                   margin: 0,
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
@@ -119,30 +163,36 @@ export function OpalMessage({ message }: OpalMessageProps) {
             )
           )}
         </Box>
+
         {isUser && (
-          <div
+          <Box
             style={{
-              width: '20px',
-              height: '20px',
+              width: '24px',
+              height: '24px',
               borderRadius: '50%',
               overflow: 'hidden',
               flexShrink: 0,
+              marginTop: '4px'
             }}
           >
             <Image
               src="/avatar-user.png"
-              alt="User avatar"
-              width={20}
-              height={20}
+              alt="User"
+              width={24}
+              height={24}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
-          </div>
+          </Box>
         )}
       </Box>
+
+      {/* Timestamp */}
       <Text
-        fontSize="xs"
-        color="fg.tertiary"
-        style={{ margin: 0 }}
+        style={{
+          ...opalTypography.disclaimer,
+          color: 'fg.tertiary',
+          margin: isUser ? '0 32px 0 0' : '0 0 0 32px',
+        }}
       >
         {formatTimestamp(message.timestamp)}
       </Text>
@@ -154,9 +204,9 @@ function formatTimestamp(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
 
-  if (diff < 60000) return 'just now';
+  if (diff < 60000) return 'Just now';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
 
-  return new Date(timestamp).toLocaleDateString();
+  return new Date(timestamp).toLocaleDateString([], { hour: '2-digit', minute: '2-digit' });
 }
