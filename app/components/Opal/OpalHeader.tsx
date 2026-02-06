@@ -5,9 +5,7 @@ import { Text } from "../Text";
 import { IconXmark, IconBars, IconCirclePlus } from "@optimizely/axiom-icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
-import IconTrash from "@/app/assets/opal/icon-trash.svg";
 import IconPopOut from "@/app/assets/opal/icon-pop-out.svg";
-import IconClose from "@/app/assets/opal/icon-close.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHeaderProps = {
@@ -56,7 +54,7 @@ export function OpalHeader({
                         justifyContent: 'center',
                     }}
                 >
-                    <IconBars size={16} />
+                    <IconBars size={20} />
                 </Button>
 
                 <Button
@@ -145,7 +143,7 @@ export function OpalHeader({
                         justifyContent: 'center',
                     }}
                 >
-                    <IconXmark size={16} />
+                    <IconXmark size={20} />
                 </Button>
             </Box>
         </Box>
