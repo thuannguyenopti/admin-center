@@ -116,18 +116,32 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [enableAI, setEnableAI] = useState<boolean>(false);
 
-  // Load enableAI from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('opal_enable_ai');
-    if (saved !== null) {
-      setEnableAI(saved === 'true');
-    }
+  // Manual handler to set AND save preference
+  const setEnableAIWithStorage = useCallback((enabled: boolean) => {
+    setEnableAI(enabled);
+    localStorage.setItem('opal_ai_enabled', String(enabled));
   }, []);
 
-  // Save enableAI to localStorage when it changes
+  // Consolidated effect: Load preference or apply smart default on mount & path change
   useEffect(() => {
-    localStorage.setItem('opal_enable_ai', String(enableAI));
-  }, [enableAI]);
+    // Check new key first, then fallback to legacy key
+    let saved = localStorage.getItem('opal_ai_enabled');
+    if (saved === null) {
+      saved = localStorage.getItem('opal_enable_ai');
+    }
+
+    if (saved !== null) {
+      // If a preference exists, ALWAYS respect it
+      setEnableAI(saved === 'true');
+    } else {
+      // No preference? Use Smart Defaults: ON for CMS edit, OFF for everything else
+      const path = opalContext?.currentPage?.path;
+      const isCMSEdit = path?.startsWith('/cms/edit');
+      setEnableAI(!!isCMSEdit);
+    }
+  }, [opalContext?.currentPage?.path]);
+
+  // REMOVED: Auto-saving effect. We only save on manual interaction now.
 
   // Load chat messages when activeChatId changes or storage event triggers
   const loadMessages = useCallback(() => {
@@ -387,6 +401,6 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     sendMessage,
     clearHistory,
     enableAI,
-    setEnableAI,
+    setEnableAI: setEnableAIWithStorage,
   };
 }
