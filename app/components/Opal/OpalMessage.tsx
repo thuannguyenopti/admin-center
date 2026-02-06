@@ -57,15 +57,15 @@ export function OpalMessage({ message }: OpalMessageProps) {
         alignItems: isUser ? "flex-end" : "flex-start",
       }}
     >
-      {/* Name/Badge Area */}
-      {!isUser && (
+      {/* Name/Badge Area - Hidden for now until multiple agents are supported */}
+      {/* {!isUser && (
         <Box display="flex" alignItems="center" gap="8" mb="4" ml="4">
           <Box
             style={{
               width: '8px',
               height: '8px',
               borderRadius: '50%',
-              backgroundColor: '#10B981', // Green dot for Opal
+              backgroundColor: 'var(--opal-accent-purple)', // Updated to purple
             }}
           />
           <Text
@@ -80,7 +80,7 @@ export function OpalMessage({ message }: OpalMessageProps) {
             Opal
           </Text>
         </Box>
-      )}
+      )} */}
 
       <Box
         display="flex"
@@ -92,27 +92,9 @@ export function OpalMessage({ message }: OpalMessageProps) {
           justifyContent: isUser ? 'flex-end' : 'flex-start',
         }}
       >
-        {!isUser && (
-          <Box
-            style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--opal-accent-purple)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              marginTop: '4px'
-            }}
-          >
-            <Text style={{ color: 'white', fontSize: '10px', fontWeight: 'bold' }}>O</Text>
-          </Box>
-        )}
-
         <Box
           style={{
-            maxWidth: '85%',
+            maxWidth: isUser ? '85%' : '100%',
             backgroundColor: isUser ? '#F3F4F6' : 'transparent',
             color: isUser ? 'var(--opal-text-user)' : 'var(--opal-text-body)',
             borderRadius: '16px',

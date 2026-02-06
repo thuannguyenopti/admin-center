@@ -7,6 +7,7 @@ import { OpalSuggestions } from "./OpalSuggestions";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { useEffect, useRef } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
+import { useOpalContext } from "@/app/context/OpalContext";
 
 type OpalChatProps = {
   messages: ChatMessage[];
@@ -17,6 +18,15 @@ type OpalChatProps = {
 
 export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant = 'assistant' }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  let opalContext;
+  try {
+    opalContext = useOpalContext();
+  } catch (e) {
+    // Context might not be available in some cases
+  }
+
+  const isCMS = opalContext?.currentPage?.path?.startsWith('/cms') ||
+    opalContext?.currentPage?.productArea?.includes('CMS');
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -54,7 +64,7 @@ export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant
               <br /><br />
               What can I help you with?
             </Text>
-            <OpalSuggestions onSuggestionClick={onSuggestionClick} />
+            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={isCMS ? 'cms' : 'default'} />
           </>
         )
       ) : (

@@ -6,7 +6,7 @@ import { Input } from "../Input";
 import { OpalHistoryItem } from "./OpalHistoryItem";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import IconSearch from "@/app/assets/opal/icon-search.svg";
-import IconInfo from "@/app/assets/opal/icon-info.svg";
+import { IconCirclePlus } from "@optimizely/axiom-icons";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHistorySidebarProps = {
@@ -93,7 +93,7 @@ export function OpalHistorySidebar({
             e.currentTarget.style.borderColor = 'var(--opal-border-input)';
           }}
         >
-          <IconInfo style={{ width: '16px', height: '16px', flexShrink: 0 }} />
+          <IconCirclePlus size={16} style={{ flexShrink: 0 }} />
           <Text
             style={{
               fontSize: '14px',
