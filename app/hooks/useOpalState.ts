@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { OpalContextType } from '@/app/context/OpalContext';
 
 export type ChatMessage = {
@@ -270,11 +270,25 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     ));
   }, []);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim() || isLoading) return;
+    // If already loading, getting called again means STOP/CANCEL
+    if (isLoading) {
+      console.log('🛑 [Opal] User cancelled generation');
+      abortControllerRef.current?.abort();
+      setIsLoading(false);
+      return;
+    }
+
+    if (!content.trim()) return;
 
     setError(undefined);
     setIsLoading(true);
+
+    // Create new controller for this request
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     // Add user message
     const userMessage = addMessage({
@@ -313,6 +327,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
               opalCapabilities: opalContext.opalCapabilities,
             } : undefined,
           }),
+          signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -342,7 +357,13 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
         }
       } else {
         // Simulation delay for mock data
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(resolve, 800);
+          controller.signal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+            reject(new DOMException('Aborted', 'AbortError'));
+          });
+        });
 
         const mockResponses = [
           "That's an interesting question about optimization. Based on your current context, I'd recommend looking at your mobile conversion rates first.",
@@ -357,6 +378,8 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
         let simulatedContent = '';
 
         for (let i = 0; i < words.length; i++) {
+          if (controller.signal.aborted) break;
+
           simulatedContent += (i === 0 ? '' : ' ') + words[i];
           updateMessage(loadingMessage.id, {
             content: simulatedContent,
@@ -366,14 +389,19 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
           await new Promise(resolve => setTimeout(resolve, 40 + Math.random() * 40));
         }
       }
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setError('Failed to send message. Please try again.');
-
-      // Remove loading message on error
-      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Generation aborted successfully');
+        // Optionally remove the loading message or mark it as interrupted
+      } else {
+        console.error('Error sending message:', err);
+        setError('Failed to send message. Please try again.');
+        // Remove loading message on genuine error
+        setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   }, [isLoading, addMessage, updateMessage, opalContext, enableAI]);
 

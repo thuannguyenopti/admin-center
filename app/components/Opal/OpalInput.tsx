@@ -104,17 +104,65 @@ export function OpalInput({
     }
   }, [value, selectedAgent]);
 
+  const [focusedAgentIndex, setFocusedAgentIndex] = useState(0);
+
+  useEffect(() => {
+    if (showAgentDropdown) {
+      setFocusedAgentIndex(0);
+    }
+  }, [showAgentDropdown]);
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      if (showAgentDropdown && MOCK_AGENTS.length > 0) {
-        handleSelectAgent(MOCK_AGENTS[0]);
+    if (showAgentDropdown) {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
-      } else {
+        setFocusedAgentIndex((prev) => (prev + 1) % MOCK_AGENTS.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
         e.preventDefault();
-        onSend();
+        setFocusedAgentIndex((prev) => (prev - 1 + MOCK_AGENTS.length) % MOCK_AGENTS.length);
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowAgentDropdown(false);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSelectAgent(MOCK_AGENTS[focusedAgentIndex]);
+        return;
       }
     }
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSend();
+    }
   };
+
+  // Add global Escape listener for stopping generation
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape' && isLoading) {
+        e.preventDefault();
+        onSend(); // Trigger stop
+        // Optional: refocus textarea
+        setTimeout(() => textareaRef.current?.focus(), 50);
+      }
+    };
+
+    if (isLoading) {
+      document.addEventListener('keydown', handleGlobalKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [isLoading, onSend]);
+
+
 
   const handleSelectAgent = (agent: Agent) => {
     setSelectedAgent(agent);
@@ -137,133 +185,112 @@ export function OpalInput({
   const hasValue = value.trim().length > 0 || selectedAgent !== null;
 
   const [isRecording, setIsRecording] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Add a ref to track retry attempts
-  const retryCount = useRef(0);
-
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (isRecording) {
-      console.log('🛑 [Voice] User manually stopped recording');
-      recognitionRef.current?.stop();
+      console.log('[Voice] Stopping recording...');
+      mediaRecorderRef.current?.stop();
       setIsRecording(false);
-      retryCount.current = 0;
       return;
     }
 
-    console.log('🎤 [Voice] Starting voice recognition...');
-
-    recognitionRef.current?.abort();
-
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.error('❌ [Voice] SpeechRecognition API not available in this browser');
-      alert("Speech recognition is not supported in this browser.");
-      return;
-    }
-    console.log('✅ [Voice] SpeechRecognition API available');
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-    console.log('⚙️ [Voice] Recognition configured:', { continuous: true, interimResults: false, lang: 'en-US' });
-
-    recognition.onstart = () => {
-      console.log('✅ [Voice] Recognition started successfully');
-      setIsRecording(true);
-    };
-
-    recognition.onend = () => {
-      console.log('⏹️ [Voice] Recognition ended');
-      setIsRecording(false);
-    };
-
-    recognition.onerror = (event: any) => {
-      // Use console.log for network errors to avoid Next.js error overlay
-      const logLevel = (event.error === 'network' || event.error === 'no-speech') ? console.log : console.error;
-      logLevel(`❌ [Voice] Error occurred:`, {
-        error: event.error,
-        message: event.message,
-        retryCount: retryCount.current,
-        timestamp: new Date().toISOString()
-      });
-      setIsRecording(false);
-
-      if (event.error === 'network') {
-        if (retryCount.current < 2) {
-          retryCount.current += 1;
-          console.log(`🔄 [Voice] Auto-retry ${retryCount.current}/2 in 500ms...`);
-          setTimeout(() => {
-            toggleRecording();
-          }, 500);
-        } else {
-          console.log('❌ [Voice] Max retries (2) exceeded. Network error persists. Giving up.');
-          retryCount.current = 0;
-        }
-      } else if (event.error === 'not-allowed') {
-        console.error('❌ [Voice] Microphone permission denied by user');
-        alert("Microphone access was denied. Please check your browser permissions.");
-      } else if (event.error === 'no-speech') {
-        console.log('ℹ️ [Voice] No speech detected, stopping.');
-      } else {
-        console.error(`❌ [Voice] Unexpected error type: ${event.error}`);
-      }
-    };
-
-    recognition.onresult = (event: any) => {
-      retryCount.current = 0;
-      console.log('📝 [Voice] Speech recognized:', { resultIndex: event.resultIndex, resultsLength: event.results.length });
-
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        }
-      }
-
-      if (finalTranscript) {
-        console.log('✅ [Voice] Transcribed text:', finalTranscript);
-        onChange(value + (value && !value.endsWith(' ') ? ' ' : '') + finalTranscript);
-      }
-    };
-
-    recognitionRef.current = recognition;
+    console.log('[Voice] Starting recording...');
     try {
-      recognition.start();
-      console.log('🚀 [Voice] recognition.start() called');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm',
+      });
+
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        // Stop all tracks to release the mic
+        stream.getTracks().forEach((track) => track.stop());
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log('[Voice] Recording complete, sending to Whisper...', {
+          size: `${(audioBlob.size / 1024).toFixed(1)}KB`,
+        });
+
+        if (audioBlob.size < 1000) {
+          console.log('[Voice] Audio too short, skipping transcription');
+          return;
+        }
+
+        setIsTranscribing(true);
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+
+          const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const err = await response.json();
+            console.error('[Voice] Transcription failed:', err);
+            return;
+          }
+
+          const { text } = await response.json();
+          if (text?.trim()) {
+            console.log('[Voice] Transcribed:', text);
+            onChange(value + (value && !value.endsWith(' ') ? ' ' : '') + text);
+          }
+        } catch (error) {
+          console.error('[Voice] Transcription error:', error);
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      mediaRecorder.onerror = () => {
+        console.error('[Voice] MediaRecorder error');
+        setIsRecording(false);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+      console.log('[Voice] Recording started');
     } catch (err) {
-      console.error('❌ [Voice] Failed to call recognition.start():', err);
+      console.error('[Voice] Mic access denied or unavailable:', err);
+      alert('Microphone access was denied. Please check your browser permissions.');
     }
   };
 
   const handleInputChange = (newValue: string) => {
     if (isRecording) {
-      recognitionRef.current?.abort();
+      mediaRecorderRef.current?.stop();
       setIsRecording(false);
     }
     onChange(newValue);
   };
 
-  const handleMainAction = () => {
-    if (isLoading) {
-      onSend();
-    } else if (hasValue) {
-      onSend();
-    } else {
-      toggleRecording();
-    }
-  };
+
 
   // Determine border color based on state
   let borderColor = 'var(--opal-border-input)';
-  if (isFocused || hasValue || isLoading || isRecording) {
+  if (isFocused || hasValue || isLoading || isRecording || isTranscribing) {
     borderColor = 'var(--opal-accent-purple)';
   }
 
   // CTA Icon state logic
   let ctaIcon = <IconMicrophone size={20} />;
-  if (isLoading || isRecording) {
+  if (isLoading || isRecording || isTranscribing) {
     ctaIcon = <IconCircleStop size={20} />;
   } else if (hasValue) {
     ctaIcon = <IconArrowUp size={20} />;
@@ -307,16 +334,18 @@ export function OpalInput({
           <Box p="8" borderB="1" borderColor="border.secondary" bg="bg.secondary">
             <Text fontSize="xs" fontWeight="600" color="fg.tertiary">Recently used agents</Text>
           </Box>
-          {MOCK_AGENTS.map((agent) => (
+          {MOCK_AGENTS.map((agent, index) => (
             <Box
               key={agent.id}
               p="12"
               display="flex"
               flexDirection="column"
-              style={{ cursor: 'pointer' }}
+              style={{
+                cursor: 'pointer',
+                backgroundColor: index === focusedAgentIndex ? 'var(--opal-bg-sidebar)' : 'transparent'
+              }}
               onClick={() => handleSelectAgent(agent)}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--opal-bg-sidebar)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              onMouseEnter={() => setFocusedAgentIndex(index)}
             >
               <Text fontSize="sm" fontWeight="600" color="fg.default">{agent.name}</Text>
               <Text fontSize="xs" color="fg.tertiary">{agent.description}</Text>
@@ -451,33 +480,66 @@ export function OpalInput({
             />
           </Box>
 
-          {/* Right Action (Send/Stop/Mic) */}
-          <Button
-            appearance="default"
-            size="md"
-            aria-label={isLoading ? "Stop generating" : (isRecording ? "Stop recording" : (hasValue ? "Send message" : "Voice input"))}
-            onClick={handleMainAction}
-            disabled={!isLoading && !hasValue && !isRecording && false}
-            style={{
-              width: '32px',
-              height: '32px',
-              padding: 0,
-              borderRadius: '8px',
-              backgroundColor: (isLoading || isRecording)
-                ? (isRecording ? '#E01E5A' : 'var(--opal-stop-btn-bg)')
-                : 'var(--opal-accent-purple)',
-              color: (isLoading || isRecording) ? (isRecording ? 'white' : 'var(--opal-accent-purple)') : 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              animation: isRecording ? 'opal-pulse 1.5s infinite' : 'none',
-            }}
-          >
-            {ctaIcon}
-          </Button>
+          {/* Right Actions (Mic + Send) */}
+          <Box display="flex" gap="8" alignItems="center">
+            <Button
+              appearance="subtle"
+              size="sm"
+              icon={isRecording ? <IconCircleStop size={20} /> : <IconMicrophone size={20} />}
+              aria-label={isRecording ? "Stop recording" : "Voice input"}
+              onClick={toggleRecording}
+              disabled={isTranscribing}
+              style={{
+                width: '32px',
+                height: '32px',
+                padding: 0,
+                borderRadius: '50%',
+                color: isRecording ? '#E01E5A' : 'var(--opal-text-primary)',
+                backgroundColor: isRecording ? 'rgba(224, 30, 90, 0.1)' : 'transparent',
+                animation: isRecording ? 'opal-pulse 1.5s infinite' : 'none',
+                opacity: isTranscribing ? 0.5 : 1,
+                cursor: isTranscribing ? 'wait' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+              }}
+            />
+            <Button
+              appearance="default"
+              size="md"
+              aria-label={isLoading ? "Stop generating" : "Send message"}
+              onClick={() => {
+                if (isLoading) {
+                  onSend();
+                } else {
+                  onSend();
+                  // Refocus after sending
+                  setTimeout(() => textareaRef.current?.focus(), 50);
+                }
+              }}
+              disabled={!isLoading && !hasValue}
+              style={{
+                width: '32px',
+                height: '32px',
+                padding: 0,
+                borderRadius: '8px',
+                backgroundColor: isLoading
+                  ? 'var(--opal-stop-btn-bg)'
+                  : 'var(--opal-accent-purple)',
+                color: isLoading ? 'var(--opal-accent-purple)' : 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                opacity: (!isLoading && !hasValue) ? 0.5 : 1,
+              }}
+            >
+              {isLoading ? <IconCircleStop size={20} /> : <IconArrowUp size={20} />}
+            </Button>
+          </Box>
         </Box>
       </Box>
 

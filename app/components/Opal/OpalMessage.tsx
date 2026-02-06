@@ -21,10 +21,11 @@ const MarkdownContent = ({ content }: { content: string }) => {
           h1: ({ node, ...props }) => <h1 style={{ ...opalTypography.title, fontSize: '24px', margin: '24px 0 12px' }} {...props} />,
           h2: ({ node, ...props }) => <h2 style={{ ...opalTypography.title, fontSize: '20px', margin: '20px 0 10px' }} {...props} />,
           h3: ({ node, ...props }) => <h3 style={{ ...opalTypography.title, margin: '16px 0 8px' }} {...props} />,
-          p: ({ node, ...props }) => <p style={{ ...opalTypography.body, margin: '0 0 16px' }} {...props} />,
+          p: ({ node, ...props }) => <div style={{ ...opalTypography.body, margin: '0 0 16px' }} {...props} />,
           ul: ({ node, ...props }) => <ul style={{ margin: '0 0 16px', paddingLeft: '24px', listStyleType: 'disc' }} {...props} />,
           ol: ({ node, ...props }) => <ol style={{ margin: '0 0 16px', paddingLeft: '24px', listStyleType: 'decimal' }} {...props} />,
           li: ({ node, ...props }) => <li style={{ margin: '8px 0', ...opalTypography.body }} {...props} />,
+          pre: ({ node, ...props }) => <>{props.children}</>, // Avoid double pre wrapping
           code: ({ node, inline, ...props }: any) =>
             inline ? (
               <code style={{ backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 4px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9em' }} {...props} />
@@ -173,7 +174,7 @@ export function OpalMessage({ message }: OpalMessageProps) {
         style={{
           ...opalTypography.disclaimer,
           color: 'fg.tertiary',
-          margin: isUser ? '0 32px 0 0' : '0 0 0 32px',
+          margin: isUser ? '0 32px 0 0' : '0 0 0 8px',
         }}
       >
         {formatTimestamp(message.timestamp)}
