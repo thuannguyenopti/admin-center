@@ -1,6 +1,6 @@
 "use client";
 
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
+import {Box, Sidebar, NavBody, NavFooter, NavItem, NavList, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
 import {Button} from "./Button";
 import {Text} from "./Text";
 import Link from "next/link";
@@ -14,6 +14,7 @@ import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
+import {ContentManagerLayoutProvider, useContentManagerLayout} from "../cms/content/context/ContentManagerLayoutContext";
 import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
 import {OpalPanel} from "./OpalPanel";
 import {useOpalState} from "@/app/hooks/useOpalState";
@@ -91,6 +92,11 @@ function TemplateContent({
 
 	// Show secondary sidebar for Content Manager or hierarchical navigation
 	const showSecondarySidebar = isContentManager || showVT;
+	const { contentSubNavExpanded } = useContentManagerLayout();
+	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
+	const secondarySidebarWidth = isContentManager
+		? (contentSubNavExpanded ? 224 : 56)
+		: 224;
 
 	const customLayout = highlight1?.customLayout;
 
@@ -110,7 +116,7 @@ function TemplateContent({
 	return (
 		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
 			<GlobalBar onOpalClick={toggleOpal} />
-			<Box display="flex" z="10" style={{minHeight: 0}}>
+			<Box display="flex" z="10" style={{ minHeight: 0 }}>
 				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
 						<NavBody>
@@ -168,37 +174,41 @@ function TemplateContent({
 								)
 							)}
 						</NavBody>
+						<NavFooter>
+							<NavList>
+								<Button
+									aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
+									icon={
+										!isExpanded ? (
+											<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
+										) : (
+											<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
+										)
+									}
+									onClick={() => setIsExpanded(!isExpanded)}
+									appearance="subtle"
+								/>
+							</NavList>
+						</NavFooter>
 					</Nav>
-					<Box className="absolute bottom-0 left-0 right-0" p="8">
-						<Button
-							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-							icon={
-								!isExpanded ? (
-									<IconChevronRight size={16} />
-								) : (
-									<IconChevronLeft size={16} />
-								)
-							}
-							onClick={() => setIsExpanded(!isExpanded)}
-							appearance="subtle"
-						/>
-					</Box>
 				</Sidebar>
 				<Box
 					style={{
-						marginLeft: "-224px",
-						transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
-						transition: ".7s cubic-bezier(0, 1, 0, 1)",
+						marginLeft: -secondarySidebarWidth,
+						transform: showSecondarySidebar ? `translateX(${secondarySidebarWidth}px)` : "translateX(0px)",
 						overflowX: "hidden",
 						overflowY: isContentManager ? "hidden" : undefined,
 						minHeight: isContentManager ? 0 : undefined,
+						width: secondarySidebarWidth,
+						minWidth: secondarySidebarWidth,
+						flexShrink: 0,
+						height: "100%",
 					}}
 					borderR="1"
 					borderColor="border.tertiary"
 					bg="bg.default"
 					overflow="hidden"
-					h="full"
-					className="slide w-[224px] h-[calc(100vh-58px)]"
+					className="slide"
 				>
 					{isContentManager ? (
 						<ContentManagerSidebar />
@@ -269,21 +279,21 @@ function TemplateContent({
 					) : (
 						<Box
 							style={{
-								marginLeft: "224px",
-								marginRight: "-224px",
-								width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
+								marginLeft: secondarySidebarWidth,
+								marginRight: -secondarySidebarWidth,
+								width: !showSecondarySidebar ? "100%" : `calc(100% - ${secondarySidebarWidth}px)`,
 								transform: showSecondarySidebar
-									? "translatex(0px)"
-									: "translatex(-224px)",
-								transition: ".7s cubic-bezier(0, 1, 0, 1)",
+									? "translateX(0px)"
+									: `translateX(-${secondarySidebarWidth}px)`,
+								transition: "margin 0.2s ease-out, width 0.2s ease-out, transform 0.2s ease-out",
 							}}
 							color="fg.default"
 							overflow="auto"
 							p="24"
 						>
 							<>
-								<Box w="full" className="min-w-0">
-									<Heading level="3" mb="16">
+								<Box w="full" className="min-w-0" overflow="hidden">
+									<Heading level="3" mb="16" truncate>
 										{heading || highlight1?.label}
 									</Heading>
 									{desc && (
@@ -355,14 +365,20 @@ function TemplateWrapper(props: any) {
 	if (isContentManager) {
 		return (
 			<Suspense fallback={<Box p="24">Loading...</Box>}>
-				<FilterPanelProvider>
-					<TemplateContent {...props} />
-				</FilterPanelProvider>
+				<ContentManagerLayoutProvider>
+					<FilterPanelProvider>
+						<TemplateContent {...props} />
+					</FilterPanelProvider>
+				</ContentManagerLayoutProvider>
 			</Suspense>
 		);
 	}
 
-	return <TemplateContent {...props} />;
+	return (
+		<ContentManagerLayoutProvider>
+			<TemplateContent {...props} />
+		</ContentManagerLayoutProvider>
+	);
 }
 
 export default function Template(props: any) {
