@@ -38,8 +38,8 @@
   --opal-icon-dark: var(--ax-colors-fg-default, #1f2937);
   --opal-send-btn-bg: var(--ax-colors-bg-accent, #7c5cff);
   --opal-send-btn-text: var(--ax-colors-fg-default-inverse, #ffffff);
-  --opal-stop-btn-bg: #808080;
-  /* Gray for stop button */
+  --opal-stop-btn-bg: #f5f3ff;
+  /* Light purple for stop button */
 }
 
 /* Dark Mode - Apply based on OS preference or explicit theme setting */
