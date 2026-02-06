@@ -21,7 +21,7 @@ export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      chatEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages]);
 
