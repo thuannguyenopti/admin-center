@@ -4,9 +4,42 @@ import { Box } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import Image from "next/image";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalMessageProps = {
   message: ChatMessage;
+};
+
+const MarkdownContent = ({ content }: { content: string }) => {
+  return (
+    <Box className="opal-markdown-content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: ({ node, ...props }) => <h1 style={{ ...opalTypography.title, fontSize: '24px', margin: '24px 0 12px' }} {...props} />,
+          h2: ({ node, ...props }) => <h2 style={{ ...opalTypography.title, fontSize: '20px', margin: '20px 0 10px' }} {...props} />,
+          h3: ({ node, ...props }) => <h3 style={{ ...opalTypography.title, margin: '16px 0 8px' }} {...props} />,
+          p: ({ node, ...props }) => <p style={{ ...opalTypography.body, margin: '0 0 16px' }} {...props} />,
+          ul: ({ node, ...props }) => <ul style={{ margin: '0 0 16px', paddingLeft: '24px', listStyleType: 'disc' }} {...props} />,
+          ol: ({ node, ...props }) => <ol style={{ margin: '0 0 16px', paddingLeft: '24px', listStyleType: 'decimal' }} {...props} />,
+          li: ({ node, ...props }) => <li style={{ margin: '8px 0', ...opalTypography.body }} {...props} />,
+          code: ({ node, inline, ...props }: any) =>
+            inline ? (
+              <code style={{ backgroundColor: 'rgba(0,0,0,0.05)', padding: '2px 4px', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.9em' }} {...props} />
+            ) : (
+              <pre style={{ backgroundColor: 'rgba(0,0,0,0.05)', padding: '16px', borderRadius: '8px', overflowX: 'auto', margin: '16px 0', fontFamily: 'monospace', fontSize: '0.9em' }} {...props} />
+            ),
+          strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
+          em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
+          a: ({ node, ...props }) => <a style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" {...props} />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </Box>
+  );
 };
 
 export function OpalMessage({ message }: OpalMessageProps) {
@@ -70,16 +103,20 @@ export function OpalMessage({ message }: OpalMessageProps) {
               </Text>
             </Box>
           ) : (
-            <Text
-              fontSize="md"
-              style={{
-                margin: 0,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}
-            >
-              {message.content}
-            </Text>
+            isUser ? (
+              <Text
+                fontSize="md"
+                style={{
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {message.content}
+              </Text>
+            ) : (
+              <MarkdownContent content={message.content} />
+            )
           )}
         </Box>
         {isUser && (

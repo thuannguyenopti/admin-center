@@ -114,6 +114,20 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [enableAI, setEnableAI] = useState<boolean>(false);
+
+  // Load enableAI from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('opal_enable_ai');
+    if (saved !== null) {
+      setEnableAI(saved === 'true');
+    }
+  }, []);
+
+  // Save enableAI to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('opal_enable_ai', String(enableAI));
+  }, [enableAI]);
 
   // Load chat messages when activeChatId changes or storage event triggers
   const loadMessages = useCallback(() => {
@@ -270,33 +284,51 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     });
 
     try {
-      // Call API with context
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userMessage: content.trim(),
-          context: opalContext ? {
-            currentPage: opalContext.currentPage,
-            availableFeatures: opalContext.availableFeatures,
-            opalCapabilities: opalContext.opalCapabilities,
-          } : undefined,
-        }),
-      });
+      if (enableAI) {
+        // Call API with context
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userMessage: content.trim(),
+            context: opalContext ? {
+              currentPage: opalContext.currentPage,
+              availableFeatures: opalContext.availableFeatures,
+              opalCapabilities: opalContext.opalCapabilities,
+            } : undefined,
+          }),
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to get response from Opal');
+        if (!response.ok) {
+          throw new Error('Failed to get response from Opal');
+        }
+
+        const data = await response.json();
+
+        // Update loading message with actual response
+        updateMessage(loadingMessage.id, {
+          content: data.response || 'Sorry, I couldn\'t generate a response.',
+          isLoading: false,
+        });
+      } else {
+        // Simulation delay for mock data
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        const mockResponses = [
+          "That's an interesting question about optimization. Based on your current context, I'd recommend looking at your mobile conversion rates first.",
+          "I've analyzed your request. You might find better results by grouping those navigation items into a single 'Help' menu as we discussed.",
+          "Great idea for a campaign! To start, we should define your primary KPIs and target segments.",
+          "Optimizely's Opal AI can help you with that! Try selecting one of the specialized agents for more tailored advice."
+        ];
+        const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+
+        updateMessage(loadingMessage.id, {
+          content: randomResponse,
+          isLoading: false,
+        });
       }
-
-      const data = await response.json();
-
-      // Update loading message with actual response
-      updateMessage(loadingMessage.id, {
-        content: data.response || 'Sorry, I couldn\'t generate a response.',
-        isLoading: false,
-      });
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message. Please try again.');
@@ -306,7 +338,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, addMessage, updateMessage, opalContext]);
+  }, [isLoading, addMessage, updateMessage, opalContext, enableAI]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
@@ -331,5 +363,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     setInputValue,
     sendMessage,
     clearHistory,
+    enableAI,
+    setEnableAI,
   };
 }

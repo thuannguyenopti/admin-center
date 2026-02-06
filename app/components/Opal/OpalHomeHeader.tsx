@@ -2,7 +2,8 @@
 
 import { Box, Button, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconMenu2, IconPlus, IconChevronDown } from "@tabler/icons-react";
+import { IconBars, IconCirclePlus } from "@optimizely/axiom-icons";
+import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHomeHeaderProps = {
@@ -20,27 +21,52 @@ export function OpalHomeHeader({
             alignItems="center"
             justifyContent="space-between"
             style={{
-                padding: '12px 24px',
+                padding: '16px 24px',
                 width: '100%',
                 backgroundColor: 'var(--opal-bg-primary)',
                 borderBottom: '1px solid var(--opal-border-secondary)',
-                minHeight: '64px',
-                zIndex: 1,
+                minHeight: '56px',
+                zIndex: 10,
+                gap: '12px',
+                position: 'sticky',
+                top: 0,
             }}
         >
-            <Box display="flex" alignItems="center" gap="8">
+            <Box display="flex" alignItems="center" gap="12">
                 <Button
                     appearance="subtle"
-                    icon={<IconMenu2 size={20} />}
                     onClick={onToggleHistory}
                     aria-label="Toggle history"
-                />
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '6px',
+                        padding: 0,
+                        minWidth: 'auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <IconBars size={16} />
+                </Button>
                 <Button
                     appearance="subtle"
-                    icon={<IconPlus size={20} />}
                     onClick={onNewChat}
                     aria-label="New chat"
-                />
+                    style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '6px',
+                        padding: 0,
+                        minWidth: 'auto',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <IconCirclePlus size={20} />
+                </Button>
                 <Menu
                     options={[
                         {
@@ -57,21 +83,19 @@ export function OpalHomeHeader({
                         <Box
                             display="flex"
                             alignItems="center"
-                            gap="4"
-                            style={{ cursor: 'pointer', marginLeft: '8px' }}
+                            gap="8"
+                            style={{ cursor: 'pointer' }}
                         >
                             <Text
                                 style={{
                                     ...opalTypography.title,
                                     margin: 0,
                                     color: 'var(--opal-text-primary)',
-                                    fontSize: '16px',
-                                    fontWeight: 600,
                                 }}
                             >
                                 Opal
                             </Text>
-                            <IconChevronDown size={14} style={{ color: 'var(--opal-text-secondary)' }} />
+                            <IconDropdown style={{ width: '10px', height: '5px' }} />
                         </Box>
                     </MenuTrigger>
                     <MenuContent />

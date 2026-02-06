@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Textarea } from "@optiaxiom/react";
+import { Box, Button, Textarea, Switch } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
 import {
@@ -34,6 +34,8 @@ type OpalInputProps = {
   error?: string;
   isLoading?: boolean;
   variant?: 'assistant' | 'home';
+  enableAI?: boolean;
+  onEnableAIChange?: (enabled: boolean) => void;
 };
 
 export function OpalInput({
@@ -43,7 +45,9 @@ export function OpalInput({
   disabled,
   error,
   isLoading,
-  variant = 'assistant'
+  variant = 'assistant',
+  enableAI,
+  onEnableAIChange
 }: OpalInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -357,19 +361,43 @@ export function OpalInput({
         </Box>
       </Box>
 
-      {/* Disclaimer */}
-      <Text
-        style={{
-          ...opalTypography.disclaimer,
-          margin: 0,
-          marginTop: '4px',
-          color: 'var(--opal-text-tertiary)',
-          fontSize: '11px',
-          opacity: 0.8,
-        }}
+      {/* Footer Area: Disclaimer + Testing Toggle */}
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        w="full"
+        mt="4"
+        style={{ opacity: 0.8 }}
       >
-        Opal can make mistakes. Double-check its responses.
-      </Text>
+        <Text
+          style={{
+            ...opalTypography.disclaimer,
+            margin: 0,
+            color: 'var(--opal-text-tertiary)',
+            fontSize: '11px',
+          }}
+        >
+          Opal can make mistakes. Double-check its responses.
+        </Text>
+
+        {/* Testing Toggle - Tiny & Minimal */}
+        <Box
+          display="flex"
+          alignItems="center"
+          style={{
+            transform: 'scale(0.7)',
+            transformOrigin: 'right center',
+          }}
+        >
+          <Switch
+            size="md"
+            checked={!!enableAI}
+            onCheckedChange={onEnableAIChange}
+            aria-label="Toggle AI Queries (Testing)"
+          />
+        </Box>
+      </Box>
     </Box>
   );
 }

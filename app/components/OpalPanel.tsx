@@ -28,6 +28,8 @@ type OpalPanelProps = {
   createNewChat: () => void;
   deleteChat: (id: string) => void;
   selectChat: (id: string) => void;
+  enableAI?: boolean;
+  onEnableAIChange?: (enabled: boolean) => void;
 };
 
 export function OpalPanel({
@@ -50,6 +52,8 @@ export function OpalPanel({
   createNewChat,
   deleteChat,
   selectChat,
+  enableAI,
+  onEnableAIChange
 }: OpalPanelProps) {
   const handleSend = () => {
     if (inputValue.trim() && !isLoading) {
@@ -148,6 +152,8 @@ export function OpalPanel({
           onSend={sendMessage}
           onSuggestionClick={handleSuggestionClick}
           variant="assistant"
+          enableAI={enableAI}
+          onEnableAIChange={onEnableAIChange}
         />
       </Box>
     </Box>
