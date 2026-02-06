@@ -31,7 +31,7 @@ export function ChatInterface({ initialMessages = [] }: ChatInterfaceProps) {
     };
 
     return (
-        <Box display="flex" flexDirection="column" h="full" w="full" bg="bg.canvas">
+        <Box display="flex" flexDirection="column" h="full" w="full" bg="bg.default">
             <Box flex="1" overflow="auto">
                 <MessageList messages={messages} />
             </Box>
