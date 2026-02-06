@@ -51,6 +51,46 @@ export function OpalInput({
   const [contextChip, setContextChip] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    const container = containerRef.current;
+    if (textarea && container) {
+      // Temporarily reset height to 34px to get the most accurate scrollHeight
+      textarea.style.setProperty('height', '34px', 'important');
+      const naturalHeight = textarea.scrollHeight;
+
+      // Calculate final heights
+      // Total 88px = Textarea 34px + Offset 54px
+      // Offset 54px = Padding (8+8=16) + Margin (2) + Submit Button (32) + Extra Gap (4)
+      const offset = 54;
+      const minTextareaHeight = 34;
+      const minContainerHeight = 88;
+      const maxContainerHeight = window.innerHeight * 0.5; // 50vh
+
+      const targetTextareaHeight = Math.max(naturalHeight, minTextareaHeight);
+      const neededContainerHeight = targetTextareaHeight + offset;
+      const finalContainerHeight = Math.round(Math.min(neededContainerHeight, maxContainerHeight));
+      const finalTextareaHeight = finalContainerHeight - offset;
+
+      // Apply heights with !important
+      container.style.setProperty('height', `${finalContainerHeight}px`, 'important');
+      textarea.style.setProperty('height', `${finalTextareaHeight}px`, 'important');
+
+      // Strict scrollbar control
+      if (naturalHeight > finalTextareaHeight + 1) {
+        textarea.style.overflowY = 'auto';
+      } else {
+        textarea.style.overflowY = 'hidden';
+      }
+
+      container.style.boxSizing = 'border-box';
+      textarea.style.boxSizing = 'border-box';
+    }
+  }, [value]);
 
   useEffect(() => {
     if (value.startsWith('@') && !selectedAgent) {
@@ -112,7 +152,7 @@ export function OpalInput({
       flexDirection="column"
       gap="4"
       p={variant === 'assistant' ? "16" : "0"}
-      borderT={variant === 'assistant' ? "1" : "0"}
+      borderT="0"
       borderColor="border.secondary"
       style={{
         backgroundColor: variant === 'assistant' ? 'var(--opal-bg-primary)' : 'transparent',
@@ -174,9 +214,10 @@ export function OpalInput({
 
       {/* Input Container */}
       <Box
+        ref={containerRef}
         display="flex"
         flexDirection="column"
-        p="12"
+        px="12"
         border="1"
         rounded="lg"
         style={{
@@ -185,6 +226,10 @@ export function OpalInput({
           borderRadius: '12px',
           boxShadow: variant === 'home' ? 'var(--shadow-sm)' : 'none',
           transition: 'all 0.2s ease',
+          minHeight: '88px',
+          boxSizing: 'border-box',
+          paddingTop: '8px',
+          paddingBottom: '8px',
         }}
       >
         {/* Active Context/Agent Chips */}
@@ -228,6 +273,7 @@ export function OpalInput({
         )}
 
         <Textarea
+          ref={textareaRef}
           placeholder={selectedAgent ? "Ask anything..." : "Ask Opal"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -235,13 +281,13 @@ export function OpalInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled && !isLoading}
-          rows={2}
           style={{
             flex: 1,
             border: 'none',
             padding: 0,
             resize: 'none',
-            minHeight: '48px',
+            height: '34px',
+            minHeight: '0px',
             fontSize: '14px',
             fontWeight: 400,
             lineHeight: '22.4px',
@@ -250,6 +296,8 @@ export function OpalInput({
             backgroundColor: 'transparent',
             boxShadow: 'none',
             outline: 'none',
+            overflowY: 'hidden',
+            boxSizing: 'border-box',
           }}
         />
 
@@ -259,21 +307,21 @@ export function OpalInput({
           flexDirection="row"
           justifyContent="space-between"
           alignItems="center"
-          mt="8"
+          style={{ marginTop: '2px' }}
         >
           {/* Left Actions */}
           <Box display="flex" gap="4">
             <Button
               appearance="subtle"
               size="sm"
-              icon={<IconAgent size={20} />}
+              icon={<IconAgent size={16} />}
               aria-label="Agent selection"
               style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
             />
             <Button
               appearance="subtle"
               size="sm"
-              icon={<IconFileArrowUp size={20} />}
+              icon={<IconFileArrowUp size={16} />}
               aria-label="Upload file"
               onClick={handleAddContext}
               style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
@@ -283,7 +331,7 @@ export function OpalInput({
           {/* Right Action (Send/Stop/Mic) */}
           <Button
             appearance="default"
-            size="sm"
+            size="md"
             aria-label={isLoading ? "Stop generating" : (hasValue ? "Send message" : "Voice input")}
             onClick={onSend}
             disabled={!isLoading && !hasValue && false}
@@ -295,7 +343,7 @@ export function OpalInput({
               backgroundColor: isLoading
                 ? 'var(--opal-stop-btn-bg)'
                 : 'var(--opal-accent-purple)',
-              color: 'white',
+              color: isLoading ? 'var(--opal-accent-purple)' : 'white',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
