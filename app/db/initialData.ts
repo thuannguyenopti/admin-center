@@ -197,13 +197,59 @@ export const initialUsers: User[] = [
 	},
 ];
 
+export type PropertyType =
+	| "String"
+	| "LongString"
+	| "XhtmlString"
+	| "Int"
+	| "Double"
+	| "Boolean"
+	| "DateTime"
+	| "ContentReference"
+	| "ContentArea"
+	| "Url"
+	| "LinkItemCollection"
+	| "PageReference"
+	| "ImageReference"
+	| "VideoReference"
+	| "SelectOne"
+	| "SelectMany"
+	// Legacy types for backwards compatibility
+	| "text"
+	| "textarea"
+	| "richtext"
+	| "reference"
+	| "address"
+	| "outline"
+	| "checkbox"
+	| "seo";
+
 export type Property = {
 	id: string;
 	name: string;
-	type: "text" | "textarea" | "richtext" | "reference" | "address" | "outline" | "checkbox" | "seo";
+	displayName?: string;
+	type: PropertyType;
 	required?: boolean;
+	searchable?: boolean;
+	cultureSpecific?: boolean;
+	groupName?: string; // Property group for organizing (e.g., "Content", "Settings", "SEO")
+	order?: number;
+	description?: string;
+	defaultValue?: any;
 	/** when type is reference this points to a collection like 'users' */
 	of?: string;
+	/** For reference types - allowed content types */
+	allowedTypes?: string[];
+	/** For selection types */
+	options?: { label: string; value: string }[];
+	/** Validation rules */
+	validation?: {
+		minLength?: number;
+		maxLength?: number;
+		min?: number;
+		max?: number;
+		pattern?: string;
+	};
 };
 
 export type VariantDimension = {
@@ -215,21 +261,51 @@ export type VariantDimension = {
 export type ContentType = {
 	id: string;
 	name: string;
+	displayName?: string;
 	baseType: "Page" | "Experience" | "Media" | "Product" | "Block";
 	description?: string;
+	guid?: string;
+	groupName?: string;
+	sortOrder?: number;
+	isAvailable?: boolean;
 	properties: Property[];
 	variantDimensions?: VariantDimension[];
+	modifiedAt?: string;
+	modifiedBy?: string;
 };
 
 export const initialContentTypes: ContentType[] = [
 	{
+		id: "ct-header",
+		name: "Header",
+		displayName: "Header",
+		baseType: "Block",
+		description: "Site header block with navigation",
+		groupName: "Group header",
+		guid: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		isAvailable: true,
+		modifiedAt: "2024-01-13T10:30:00Z",
+		modifiedBy: "Alice Johnson",
+		properties: [
+			{ id: "textString", name: "Text String", displayName: "Text String", type: "String", groupName: "Categories", order: 1, validation: { maxLength: 255 } },
+			{ id: "textLongString", name: "Text Long String", displayName: "Text Long String", type: "LongString", groupName: "Categories", order: 2 },
+			{ id: "textHtmlString", name: "Text HTML String", displayName: "Text HTML String", type: "XhtmlString", groupName: "Categories", order: 3 },
+		],
+	},
+	{
 		id: "ct-page",
 		name: "Page",
+		displayName: "Page",
 		baseType: "Experience",
 		description: "Standard page (uses outlines)",
+		groupName: "Standard",
+		guid: "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+		isAvailable: true,
+		modifiedAt: "2024-01-10T14:20:00Z",
+		modifiedBy: "Bob Smith",
 		properties: [
-			{ id: "mainOutline", name: "Main", type: "outline" },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "mainOutline", name: "Main", displayName: "Main Content", type: "outline", groupName: "Content", order: 1 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "SEO", order: 1 },
 		],
 	},
 	{
@@ -350,6 +426,27 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "placeholder", name: "Placeholder", type: "text" },
 			{ id: "tooltip", name: "Tooltip", type: "text" },
 			{ id: "required", name: "Required", type: "checkbox" },
+		],
+	},
+	{
+		id: "ct-seo",
+		name: "SEO",
+		displayName: "SEO Block",
+		baseType: "Block",
+		description: "SEO metadata block for pages and content",
+		groupName: "SEO",
+		isAvailable: true,
+		properties: [
+			{ id: "title", name: "Title", displayName: "Page Title", type: "String", groupName: "Basic", order: 1, description: "The page title shown in browser tabs and search results", validation: { maxLength: 60 } },
+			{ id: "description", name: "Description", displayName: "Meta Description", type: "LongString", groupName: "Basic", order: 2, description: "A brief description for search engine results", validation: { maxLength: 160 } },
+			{ id: "canonicalUrl", name: "CanonicalUrl", displayName: "Canonical URL", type: "Url", groupName: "Basic", order: 3, description: "The preferred URL for this page" },
+			{ id: "robots", name: "Robots", displayName: "Robots Directive", type: "String", groupName: "Basic", order: 4, description: "Instructions for search engine crawlers (e.g., noindex, nofollow)" },
+			{ id: "ogTitle", name: "OgTitle", displayName: "Open Graph Title", type: "String", groupName: "Social", order: 1 },
+			{ id: "ogDescription", name: "OgDescription", displayName: "Open Graph Description", type: "LongString", groupName: "Social", order: 2 },
+			{ id: "ogImage", name: "OgImage", displayName: "Open Graph Image", type: "ImageReference", groupName: "Social", order: 3 },
+			{ id: "twitterTitle", name: "TwitterTitle", displayName: "Twitter Title", type: "String", groupName: "Social", order: 4 },
+			{ id: "twitterDescription", name: "TwitterDescription", displayName: "Twitter Description", type: "LongString", groupName: "Social", order: 5 },
+			{ id: "twitterImage", name: "TwitterImage", displayName: "Twitter Image", type: "ImageReference", groupName: "Social", order: 6 },
 		],
 	},
 ];
