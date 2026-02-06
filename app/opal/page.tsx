@@ -19,7 +19,9 @@ export default function OpalPage() {
         isLoading,
         error,
         setInputValue,
-        sendMessage
+        sendMessage,
+        enableAI,
+        setEnableAI,
     } = opalContext.chatState;
 
     const cards = [
@@ -27,42 +29,45 @@ export default function OpalPage() {
             icon: <Box style={{ color: opal_primary }}><IconBrowser size={24} /></Box>,
             title: "Optimize webpage",
             description: "Refine the page Event - Triathlon NYC to meet the business goal.",
-            prompt: "Optimize the page to improve conversion."
+            prompt: "Please optimize [Page Name/URL] to improve its conversion rate by focusing on [Device Type] users and targeting [Key Metric]."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconPen size={24} /></Box>,
             title: "Plan campaign",
             description: "Brainstorm and map out your next campaign with Opal.",
-            prompt: "Plan a new digital marketing campaign."
+            prompt: "Generate a comprehensive digital marketing campaign plan for [Product/Service] targeting [Target Audience] with a budget of [Budget Amount] over [Duration]."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconFile size={24} /></Box>,
             title: "Create landing page",
             description: "Turn your design into a high-converting landing page with structure.",
-            prompt: "Design a high-converting landing page structure."
+            prompt: "Create a high-converting landing page structure for [Campaign Topic] including a hero section, [Key Features], and a strong CTA for [Desired Action]."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconUserGroup size={24} /></Box>,
             title: "Find the right audience",
             description: "Identify high-performing audience segments based on past experiments.",
-            prompt: "Analyze our segments for better targeting."
+            prompt: "Analyze our recent performance data from [Time Period] to identify the top 3 high-performing audience segments for [Product Category]."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconChartLine size={24} /></Box>,
             title: "Analyze page performance",
             description: "Analyze traffic and bounce rate for the Home page.",
-            prompt: "Analyze the home page performance metrics."
+            prompt: "Conduct a deep-dive analysis of [Page Name] performance, specifically investigating why the bounce rate is high for [Traffic Source]."
         },
         {
             icon: <Box style={{ color: opal_primary }}><IconImage size={24} /></Box>,
             title: "Repurpose your assets",
             description: "Find existing assets you can reuse —and put them to work faster.",
-            prompt: "Suggest ways to repurpose our current brand assets."
+            prompt: "Suggest 5 creative ways to repurpose our current [Asset Type, e.g., Video] content for [Social Platform] to increase engagement with [Audience]."
         }
     ];
 
     const handleCardClick = (prompt: string) => {
-        sendMessage(prompt);
+        setInputValue(prompt);
+        // Scroll to input if needed or just focus it
+        const textarea = document.querySelector('textarea');
+        if (textarea) textarea.focus();
     };
 
     const landingHeader = (
@@ -125,7 +130,11 @@ export default function OpalPage() {
             </Box>
 
             <Box w="full" style={{ maxWidth: "864px" }} display="flex" justifyContent="flex-end">
-                <Button appearance="subtle" style={{ color: 'fg.secondary' }}>See more <IconChevronRight size={16} style={{ marginLeft: '4px' }} /></Button>
+                <Button appearance="subtle" style={{ color: 'fg.secondary', minWidth: 'max-content' }}>
+                    <Box display="flex" alignItems="center" gap="4" style={{ whiteSpace: 'nowrap', minWidth: 'max-content' }}>
+                        See more <IconChevronRight size={16} />
+                    </Box>
+                </Button>
             </Box>
         </Box>
     );
@@ -136,11 +145,12 @@ export default function OpalPage() {
             display="flex"
             flexDirection="column"
             alignItems="center"
+            h="full"
             w="full"
             style={{
-                height: '100%',
                 backgroundColor: 'var(--opal-bg-page)',
-                paddingTop: '64px',
+                overflow: 'hidden',
+                minHeight: 0, // Added minHeight: 0
             }}
         >
             <OpalChatView
@@ -165,6 +175,8 @@ export default function OpalPage() {
 
                 landingHeader={landingHeader}
                 emptyState={emptyState}
+                enableAI={enableAI}
+                onEnableAIChange={setEnableAI}
             />
         </Box>
     );

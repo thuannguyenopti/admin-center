@@ -2,7 +2,7 @@
 
 import { Box, Button, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconX, IconMenu2 } from "@tabler/icons-react";
+import { IconXmark, IconBars } from "@optimizely/axiom-icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconInfo from "@/app/assets/opal/icon-info.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
@@ -55,7 +55,7 @@ export function OpalHeader({
                         justifyContent: 'center',
                     }}
                 >
-                    <IconMenu2 size={16} />
+                    <IconBars size={16} />
                 </Button>
                 <Button
                     appearance="subtle"
@@ -142,7 +142,7 @@ export function OpalHeader({
                         justifyContent: 'center',
                     }}
                 >
-                    <IconX size={16} />
+                    <IconXmark size={16} />
                 </Button>
             </Box>
         </Box>

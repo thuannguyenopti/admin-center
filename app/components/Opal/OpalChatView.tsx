@@ -32,6 +32,8 @@ type OpalChatViewProps = {
     landingHeader?: ReactNode;
     emptyState?: ReactNode;
     variant?: 'assistant' | 'home';
+    enableAI?: boolean;
+    onEnableAIChange?: (enabled: boolean) => void;
 };
 
 export function OpalChatView({
@@ -53,7 +55,9 @@ export function OpalChatView({
     onSelectChat,
     landingHeader,
     emptyState,
-    variant = 'assistant'
+    variant = 'assistant',
+    enableAI,
+    onEnableAIChange
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -94,6 +98,8 @@ export function OpalChatView({
                             disabled={isLoading}
                             isLoading={isLoading}
                             error={error}
+                            enableAI={enableAI}
+                            onEnableAIChange={onEnableAIChange}
                         />
                         {emptyState}
                     </Box>
@@ -130,7 +136,7 @@ export function OpalChatView({
             <Box
                 display="flex"
                 flexDirection="column"
-                style={{ flex: 1, minWidth: 0, height: '100%' }}
+                style={{ flex: 1, minWidth: 0, height: '100%', minHeight: 0, overflow: 'hidden' }}
             >
                 {variant === 'home' && (
                     <Box style={{ flexShrink: 0, width: '100%' }}>
@@ -147,10 +153,11 @@ export function OpalChatView({
                     w="full"
                     style={{
                         flex: 1,
-                        overflowY: variant === 'home' ? 'auto' : 'hidden',
+                        overflowY: 'hidden',
                         width: '100%',
                         alignItems: variant === 'home' ? 'center' : 'stretch',
-                        paddingTop: variant === 'home' ? '16px' : '0'
+                        paddingTop: variant === 'home' ? '16px' : '0',
+                        minHeight: 0
                     }}
                 >
                     <OpalChat
@@ -178,6 +185,8 @@ export function OpalChatView({
                         disabled={isLoading}
                         isLoading={isLoading}
                         error={error}
+                        enableAI={enableAI}
+                        onEnableAIChange={onEnableAIChange}
                     />
                 </Box>
             </Box>

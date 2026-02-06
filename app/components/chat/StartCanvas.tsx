@@ -15,37 +15,37 @@ export function StartCanvas({ onCardClick }: StartCanvasProps) {
             icon: <IconBrowser size={24} />,
             title: "Optimize webpage",
             description: "Refine the page Event - Triathlon NYC to meet the business goal.",
-            prompt: "Optimize the [page name] to improve [key metric] for [target audience]. Focus on [specific element] and ensure it aligns with our business goal of [goal]."
+            prompt: "Please optimize [Page Name/URL] to improve its conversion rate by focusing on [Device Type] users and targeting [Key Metric]."
         },
         {
             icon: <IconPen size={24} />,
             title: "Plan campaign",
             description: "Brainstorm and map out your next campaign with Opal.",
-            prompt: "Create a comprehensive campaign plan for [campaign name] targeting [audience]. Include [number] creative variations, timeline spanning [duration], and key messaging around [theme]."
+            prompt: "Generate a comprehensive digital marketing campaign plan for [Product/Service] targeting [Target Audience] with a budget of [Budget Amount] over [Duration]."
         },
         {
             icon: <IconFile size={24} />,
             title: "Create landing page",
             description: "Turn your design into a high-converting landing page with structure.",
-            prompt: "Design a landing page for [product/service] that converts [target audience]. Include sections for [section 1], [section 2], and [section 3]. The primary CTA should be [call to action]."
+            prompt: "Create a high-converting landing page structure for [Campaign Topic] including a hero section, [Key Features], and a strong CTA for [Desired Action]."
         },
         {
             icon: <IconUserGroup size={24} />,
             title: "Find the right audience",
             description: "Identify high-performing audience segments based on past experiments.",
-            prompt: "Analyze our customer data to identify audience segments for [product/campaign]. Focus on users who [behavior/characteristic] and have shown interest in [interest area]. Include demographic and psychographic insights."
+            prompt: "Analyze our recent performance data from [Time Period] to identify the top 3 high-performing audience segments for [Product Category]."
         },
         {
             icon: <IconChartLine size={24} />,
             title: "Analyze page performance",
             description: "Analyze traffic and bounce rate for the Home page.",
-            prompt: "Analyze the performance of [page name] focusing on [metric 1], [metric 2], and [metric 3]. Provide insights on [time period] data and suggest [number] actionable improvements."
+            prompt: "Conduct a deep-dive analysis of [Page Name] performance, specifically investigating why the bounce rate is high for [Traffic Source]."
         },
         {
             icon: <IconImage size={24} />,
             title: "Repurpose your assets",
             description: "Find existing assets you can reuse —and put them to work faster.",
-            prompt: "Identify existing [asset type] that can be repurposed for [new channel/campaign]. Focus on content related to [topic/theme] and suggest [number] ways to adapt them for [platform/audience]."
+            prompt: "Suggest 5 creative ways to repurpose our current [Asset Type, e.g., Video] content for [Social Platform] to increase engagement with [Audience]."
         }
     ];
 

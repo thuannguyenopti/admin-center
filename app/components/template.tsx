@@ -55,6 +55,8 @@ function TemplateContent({
 		closePanel: closeOpal,
 		setInputValue,
 		sendMessage,
+		enableAI,
+		setEnableAI,
 	} = chatState;
 
 	const menuClick = (url: string) => {
@@ -340,6 +342,8 @@ function TemplateContent({
 				createNewChat={createNewChat}
 				deleteChat={deleteChat}
 				selectChat={selectChat}
+				enableAI={enableAI}
+				onEnableAIChange={setEnableAI}
 			/>
 		</Box>
 	);
