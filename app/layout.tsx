@@ -449,20 +449,6 @@ export default function RootLayout({
 				),
 			},
 			{
-				label: "RAG",
-				url: "/opal/rag",
-				highlight: "/opal/rag",
-				icon: <img src="/nav_icons/database.svg" alt="RAG" width={20} height={20} />,
-			},
-			{
-				label: "Connections",
-				url: "/opal/connections",
-				highlight: "/opal/connections",
-				icon: (
-					<img src="/nav_icons/toggle-off.svg" alt="Connections" width={20} height={20} />
-				),
-			},
-			{
 				label: "Settings",
 				url: "/opal/settings",
 				highlight: "/opal/settings",
