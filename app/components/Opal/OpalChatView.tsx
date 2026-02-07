@@ -34,6 +34,8 @@ type OpalChatViewProps = {
     variant?: 'assistant' | 'home';
     enableAI?: boolean;
     onEnableAIChange?: (enabled: boolean) => void;
+    onMessageEdit?: (id: string, newContent: string) => void;
+    onRegenerate?: (id: string) => void;
 };
 
 export function OpalChatView({
@@ -57,7 +59,9 @@ export function OpalChatView({
     emptyState,
     variant = 'assistant',
     enableAI,
-    onEnableAIChange
+    onEnableAIChange,
+    onMessageEdit,
+    onRegenerate
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -165,6 +169,8 @@ export function OpalChatView({
                         onSuggestionClick={onSuggestionClick}
                         hideSuggestions={!!emptyState}
                         variant={variant}
+                        onMessageEdit={onMessageEdit}
+                        onRegenerate={onRegenerate}
                     />
                 </Box>
 

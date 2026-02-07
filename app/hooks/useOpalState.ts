@@ -272,37 +272,12 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (content: string) => {
-    // If already loading, getting called again means STOP/CANCEL
-    if (isLoading) {
-      console.log('🛑 [Opal] User cancelled generation');
-      abortControllerRef.current?.abort();
-      setIsLoading(false);
-      return;
-    }
-
-    if (!content.trim()) return;
-
+  const generateResponse = useCallback(async (content: string) => {
     setError(undefined);
     setIsLoading(true);
 
-    // Create new controller for this request
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
-    // Add user message
-    const userMessage = addMessage({
-      role: 'user',
-      content: content.trim(),
-    });
-
-    // Notify parent about new message
-    if (onMessageSent) {
-      onMessageSent(content.trim());
-    }
-
-    // Clear input
-    setInputValue('');
 
     // Add loading message
     const loadingMessage = addMessage({
@@ -320,7 +295,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            userMessage: content.trim(),
+            userMessage: content,
             context: opalContext ? {
               currentPage: opalContext.currentPage,
               availableFeatures: opalContext.availableFeatures,
@@ -349,7 +324,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
           const chunk = decoder.decode(value, { stream: true });
           accumulatedContent += chunk;
 
-          // Update message with accumulated content and turn off loading flag once we have content
+          // Update message with accumulated content
           updateMessage(loadingMessage.id, {
             content: accumulatedContent,
             isLoading: false,
@@ -392,18 +367,100 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     } catch (err: any) {
       if (err.name === 'AbortError') {
         console.log('Generation aborted successfully');
-        // Optionally remove the loading message or mark it as interrupted
       } else {
         console.error('Error sending message:', err);
         setError('Failed to send message. Please try again.');
-        // Remove loading message on genuine error
         setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
       }
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [isLoading, addMessage, updateMessage, opalContext, enableAI]);
+  }, [enableAI, opalContext, addMessage, updateMessage]);
+
+  const sendMessage = useCallback(async (content: string) => {
+    // If already loading, getting called again means STOP/CANCEL
+    if (isLoading) {
+      console.log('🛑 [Opal] User cancelled generation');
+      abortControllerRef.current?.abort();
+      setIsLoading(false);
+      return;
+    }
+
+    if (!content.trim()) return;
+
+    // Add user message
+    addMessage({
+      role: 'user',
+      content: content.trim(),
+    });
+
+    // Notify parent
+    if (onMessageSent) {
+      onMessageSent(content.trim());
+    }
+
+    // Clear input
+    setInputValue('');
+
+    await generateResponse(content.trim());
+  }, [isLoading, addMessage, onMessageSent, generateResponse]);
+
+  const editPrompt = useCallback(async (id: string, newContent: string) => {
+    // Abort active generation if any
+    if (isLoading) {
+      abortControllerRef.current?.abort();
+    }
+
+    const query = newContent.trim();
+    if (!query) {
+      return;
+    }
+
+    // Update history: find message, update it, and remove everything after it
+    setMessages(prev => {
+      const idx = prev.findIndex(m => m.id === id);
+      if (idx === -1) {
+        return prev;
+      }
+
+      const newHistory = prev.slice(0, idx + 1);
+      newHistory[idx] = { ...newHistory[idx], content: query };
+      return newHistory;
+    });
+
+    await generateResponse(query);
+  }, [isLoading, generateResponse]);
+
+  const regenerate = useCallback(async (assistantMessageId: string) => {
+    // Abort active generation if any
+    if (isLoading) {
+      abortControllerRef.current?.abort();
+    }
+
+    // Find the assistant message and the previous user message
+    const assistantIdx = messages.findIndex(m => m.id === assistantMessageId);
+    if (assistantIdx === -1 || assistantIdx === 0) return;
+
+    // Find the previous user message
+    let userMessageIdx = -1;
+    for (let i = assistantIdx - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        userMessageIdx = i;
+        break;
+      }
+    }
+
+    if (userMessageIdx === -1) return;
+
+    const userMessage = messages[userMessageIdx];
+
+    // Remove the assistant message (keep everything up to and including the user message)
+    setMessages(prev => prev.slice(0, assistantIdx));
+
+    // Generate new response
+    await generateResponse(userMessage.content);
+  }, [isLoading, messages, generateResponse]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
@@ -430,5 +487,8 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     clearHistory,
     enableAI,
     setEnableAI: setEnableAIWithStorage,
+    updateMessage,
+    editPrompt,
+    regenerate,
   };
 }

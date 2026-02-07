@@ -30,6 +30,8 @@ type OpalPanelProps = {
   selectChat: (id: string) => void;
   enableAI?: boolean;
   onEnableAIChange?: (enabled: boolean) => void;
+  onMessageEdit?: (id: string, newContent: string) => void;
+  onRegenerate?: (id: string) => void;
 };
 
 export function OpalPanel({
@@ -53,7 +55,9 @@ export function OpalPanel({
   deleteChat,
   selectChat,
   enableAI,
-  onEnableAIChange
+  onEnableAIChange,
+  onMessageEdit,
+  onRegenerate
 }: OpalPanelProps) {
   const dragControls = useDragControls();
 
@@ -261,6 +265,8 @@ export function OpalPanel({
             variant="assistant"
             enableAI={enableAI}
             onEnableAIChange={onEnableAIChange}
+            onMessageEdit={onMessageEdit}
+            onRegenerate={onRegenerate}
           />
         </Box>
       </motion.div>
