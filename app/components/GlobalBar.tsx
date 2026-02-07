@@ -1,9 +1,9 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator} from "@optiaxiom/react";
-import {Text} from "./Text";
-import {ReactNode} from "react";
-import {useRouter, usePathname} from "next/navigation";
+import { Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator } from "@optiaxiom/react";
+import { Text } from "./Text";
+import { ReactNode } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
 	IconSearch,
 	IconBell,
@@ -16,16 +16,16 @@ import {
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
-import {useTheme} from "@/app/hooks/useTheme";
+import { useTheme } from "@/app/hooks/useTheme";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
 };
 
-export default function GlobalBar({onOpalClick}: GlobalBarProps) {
+export default function GlobalBar({ onOpalClick }: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
-	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
+	const { preference: themePreference, setPreference: setThemePreference } = useTheme();
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
@@ -133,7 +133,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							display="flex"
 							alignItems={"center"}
 							gap="8"
-							style={{cursor: "pointer"}}
+							style={{ cursor: "pointer" }}
 						>
 							<Text fontSize="md" fontWeight="500" color="fg.default">
 								{getCurrentProduct()}
@@ -161,19 +161,19 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						{
 							label: "Light",
 							addon: <IconSunFilled size={16} />,
-							...(themePreference === "light" && {selected: true}),
+							...(themePreference === "light" && { selected: true }),
 							execute: () => setThemePreference("light"),
 						},
 						{
 							label: "Dark",
 							addon: <IconMoon size={16} />,
-							...(themePreference === "dark" && {selected: true}),
+							...(themePreference === "dark" && { selected: true }),
 							execute: () => setThemePreference("dark"),
 						},
 						{
 							label: "System",
 							addon: <IconDeviceDesktop size={16} />,
-							...(themePreference === "system" && {selected: true}),
+							...(themePreference === "system" && { selected: true }),
 							execute: () => setThemePreference("system"),
 						},
 					]}
@@ -203,15 +203,17 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					icon={<IconSearch size={20} />}
 					aria-label="Search"
 				/>
-				<Button
-					appearance="subtle"
-					size="md"
-					aria-label="Opal AI Assistant"
-					onClick={onOpalClick}
-				>
-					<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
-				</Button>
-				<Box style={{position: "relative"}}>
+				{pathname !== '/opal' && (
+					<Button
+						appearance="subtle"
+						size="md"
+						aria-label="Opal AI Assistant"
+						onClick={onOpalClick}
+					>
+						<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+					</Button>
+				)}
+				<Box style={{ position: "relative" }}>
 					<Button
 						appearance="subtle"
 						size="md"
