@@ -57,6 +57,8 @@ function TemplateContent({
 		sendMessage,
 		enableAI,
 		setEnableAI,
+		editPrompt,
+		regenerate,
 	} = chatState;
 
 	const menuClick = (url: string) => {
@@ -344,6 +346,8 @@ function TemplateContent({
 				selectChat={selectChat}
 				enableAI={enableAI}
 				onEnableAIChange={setEnableAI}
+				onMessageEdit={editPrompt}
+				onRegenerate={regenerate}
 			/>
 		</Box>
 	);

@@ -14,9 +14,11 @@ type OpalChatProps = {
   onSuggestionClick: (suggestion: string) => void;
   hideSuggestions?: boolean;
   variant?: 'assistant' | 'home';
+  onMessageEdit?: (id: string, newContent: string) => void;
+  onRegenerate?: (id: string) => void;
 };
 
-export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant = 'assistant' }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant = 'assistant', onMessageEdit, onRegenerate }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   let opalContext;
   try {
@@ -73,13 +75,13 @@ export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant
           gap="16"
           w="full"
           style={{
-            maxWidth: variant === 'home' ? '768px' : 'none',
+            maxWidth: variant === 'home' ? '768px' : 'margin: 0',
             margin: variant === 'home' ? '0 auto' : '0',
             width: '100%',
           }}
         >
           {messages.map((message) => (
-            <OpalMessage key={message.id} message={message} />
+            <OpalMessage key={message.id} message={message} onEdit={onMessageEdit} onRegenerate={onRegenerate} />
           ))}
         </Box>
       )}

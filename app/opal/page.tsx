@@ -22,6 +22,9 @@ export default function OpalPage() {
         sendMessage,
         enableAI,
         setEnableAI,
+        updateMessage,
+        editPrompt,
+        regenerate,
     } = opalContext.chatState;
 
     const cards = [
@@ -177,6 +180,8 @@ export default function OpalPage() {
                 emptyState={emptyState}
                 enableAI={enableAI}
                 onEnableAIChange={setEnableAI}
+                onMessageEdit={(id, content) => editPrompt(id, content)}
+                onRegenerate={(id) => regenerate(id)}
             />
         </Box>
     );
