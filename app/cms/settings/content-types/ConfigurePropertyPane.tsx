@@ -14,7 +14,9 @@ import {
 	Separator,
 	RadioGroup,
 	Radio,
+	Link,
 } from "@optiaxiom/react";
+import { Text } from "@/app/components/Text";
 import { IconX } from "@tabler/icons-react";
 import { Property, PropertyType } from "@/app/db/initialData";
 import { useState, useEffect } from "react";
@@ -23,6 +25,8 @@ interface ConfigurePropertyPaneProps {
 	property: Property;
 	onClose: () => void;
 	onSave?: (property: Property) => void;
+	/** Whether this property was just created and hasn't been saved yet */
+	isNew?: boolean;
 }
 
 // Type categories and their sub-types
@@ -109,13 +113,28 @@ const normalizeType = (type: PropertyType): PropertyType => {
 	return typeMap[type] || type;
 };
 
+// Convert display name to a system-safe name (snake_case, no special chars)
+const toSystemName = (displayName: string): string => {
+	return displayName
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9\s]/g, "")
+		.replace(/\s+/g, "_")
+		.replace(/_+/g, "_")
+		.replace(/^_|_$/g, "");
+};
+
 export default function ConfigurePropertyPane({
 	property,
 	onClose,
 	onSave,
+	isNew = false,
 }: ConfigurePropertyPaneProps) {
 	const normalizedType = normalizeType(property.type);
-	const [name, setName] = useState(property.displayName || property.name);
+	const [displayName, setDisplayName] = useState(property.displayName || property.name);
+	const [systemName, setSystemName] = useState(property.name);
+	const [nameManuallyEdited, setNameManuallyEdited] = useState(!!property.name && property.displayName ? property.name !== toSystemName(property.displayName) : false);
+	const [showNameField, setShowNameField] = useState(false);
 	const [typeCategory, setTypeCategory] = useState<TypeCategory>(getCategoryFromType(normalizedType));
 	const [propertyType, setPropertyType] = useState<PropertyType>(normalizedType);
 	const [required, setRequired] = useState(property.required || false);
@@ -131,7 +150,10 @@ export default function ConfigurePropertyPane({
 	// Reset state when property changes
 	useEffect(() => {
 		const normalized = normalizeType(property.type);
-		setName(property.displayName || property.name);
+		setDisplayName(property.displayName || property.name);
+		setSystemName(property.name);
+		setNameManuallyEdited(!!property.name && property.displayName ? property.name !== toSystemName(property.displayName) : false);
+		setShowNameField(false);
 		setTypeCategory(getCategoryFromType(normalized));
 		setPropertyType(normalized);
 		setRequired(property.required || false);
@@ -154,10 +176,11 @@ export default function ConfigurePropertyPane({
 
 	const handleSave = () => {
 		if (onSave) {
+			const finalName = nameManuallyEdited ? systemName.trim() : toSystemName(displayName);
 			onSave({
 				...property,
-				name: name,
-				displayName: name,
+				name: finalName || toSystemName(displayName),
+				displayName: displayName.trim(),
 				type: propertyType,
 				required,
 				searchable,
@@ -174,6 +197,7 @@ export default function ConfigurePropertyPane({
 	const subTypeOptions = subTypesByCategory[typeCategory] || [];
 	const selectedSubTypeLabel = subTypeOptions.find(opt => opt.value === propertyType)?.label || propertyType;
 	const isTextType = ["String", "LongString", "XhtmlString", "text", "textarea", "richtext"].includes(propertyType);
+	const autoName = nameManuallyEdited ? systemName : toSystemName(displayName);
 
 	return (
 		<Box
@@ -206,14 +230,44 @@ export default function ConfigurePropertyPane({
 
 			{/* Content */}
 			<Box flex="1" overflow="auto" p="16">
-				{/* Name Field */}
-				<Field label="Name" required mb="16">
-					<Input
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-						placeholder="Property name"
-					/>
-				</Field>
+				{/* System Name Field - always visible & disabled for existing, toggleable for new */}
+				{(!isNew || showNameField) && (
+					<Field label="Name" required mb="16">
+						<Input
+							value={nameManuallyEdited ? systemName : autoName}
+							onChange={(e) => {
+								setSystemName(e.target.value);
+								setNameManuallyEdited(true);
+							}}
+							placeholder="System name"
+							disabled={!isNew}
+						/>
+					</Field>
+				)}
+
+				{/* Display Name Field */}
+				<Box mb="16">
+					<Field label="Display Name" required>
+						<Input
+							value={displayName}
+							onChange={(e) => {
+								setDisplayName(e.target.value);
+								if (!nameManuallyEdited) {
+									setSystemName(toSystemName(e.target.value));
+								}
+							}}
+							placeholder="Property display name"
+						/>
+					</Field>
+					{isNew && !showNameField && (
+						<Text fontSize="sm" color="fg.tertiary" mt="4">
+							{displayName.trim()
+								? <>Name: {autoName} (<Link asChild><button onClick={() => setShowNameField(true)}>change</button></Link>)</>
+								: <>Name generated from Display Name (<Link asChild><button onClick={() => setShowNameField(true)}>change</button></Link>)</>
+							}
+						</Text>
+					)}
+				</Box>
 
 				{/* Type Field */}
 				<Field label="Type" required mb="16">
@@ -322,8 +376,13 @@ export default function ConfigurePropertyPane({
 
 				<Field label="Display name" mb="16">
 					<Input
-						value={name}
-						onChange={(e) => setName(e.target.value)}
+						value={displayName}
+						onChange={(e) => {
+							setDisplayName(e.target.value);
+							if (!nameManuallyEdited) {
+								setSystemName(toSystemName(e.target.value));
+							}
+						}}
 						placeholder="Display name"
 					/>
 				</Field>
@@ -378,7 +437,7 @@ export default function ConfigurePropertyPane({
 						<Button appearance="subtle" onClick={onClose}>
 							Cancel
 						</Button>
-						<Button appearance="primary" onClick={handleSave} disabled={!name.trim()}>
+						<Button appearance="primary" onClick={handleSave} disabled={!displayName.trim()}>
 							Save
 						</Button>
 					</Flex>

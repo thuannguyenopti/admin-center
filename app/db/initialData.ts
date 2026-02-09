@@ -258,11 +258,14 @@ export type VariantDimension = {
 	values: string[];
 };
 
+export type MediaType = "Image" | "Video" | "Audio" | "Documents" | "Archives" | "Web Files" | "Program Files";
+
 export type ContentType = {
 	id: string;
 	name: string;
 	displayName?: string;
 	baseType: "Page" | "Experience" | "Media" | "Product" | "Block";
+	mediaType?: MediaType;
 	description?: string;
 	guid?: string;
 	groupName?: string;
