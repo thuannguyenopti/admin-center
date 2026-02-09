@@ -260,6 +260,8 @@ export type VariantDimension = {
 
 export type MediaType = "Image" | "Video" | "Audio" | "Documents" | "Archives" | "Web Files" | "Program Files";
 
+export type CompositionDisplayAs = "Section" | "Element" | "FormElement";
+
 export type ContentType = {
 	id: string;
 	name: string;
@@ -271,6 +273,8 @@ export type ContentType = {
 	groupName?: string;
 	sortOrder?: number;
 	isAvailable?: boolean;
+	availableForComposition?: boolean;
+	compositionDisplayAs?: CompositionDisplayAs[];
 	properties: Property[];
 	variantDimensions?: VariantDimension[];
 	modifiedAt?: string;
@@ -290,9 +294,13 @@ export const initialContentTypes: ContentType[] = [
 		modifiedAt: "2024-01-13T10:30:00Z",
 		modifiedBy: "Alice Johnson",
 		properties: [
-			{ id: "textString", name: "Text String", displayName: "Text String", type: "String", groupName: "Categories", order: 1, validation: { maxLength: 255 } },
-			{ id: "textLongString", name: "Text Long String", displayName: "Text Long String", type: "LongString", groupName: "Categories", order: 2 },
-			{ id: "textHtmlString", name: "Text HTML String", displayName: "Text HTML String", type: "XhtmlString", groupName: "Categories", order: 3 },
+			{ id: "siteName", name: "SiteName", displayName: "Site Name", type: "String", groupName: "Content", order: 1, required: true, validation: { maxLength: 100 } },
+			{ id: "logo", name: "Logo", displayName: "Logo", type: "ImageReference", groupName: "Content", order: 2 },
+			{ id: "navigationLinks", name: "NavigationLinks", displayName: "Navigation Links", type: "LinkItemCollection", groupName: "Content", order: 3 },
+			{ id: "ctaButtonText", name: "CtaButtonText", displayName: "CTA Button Text", type: "String", groupName: "Content", order: 4, validation: { maxLength: 50 } },
+			{ id: "ctaButtonUrl", name: "CtaButtonUrl", displayName: "CTA Button URL", type: "Url", groupName: "Content", order: 5 },
+			{ id: "isSticky", name: "IsSticky", displayName: "Sticky Header", type: "Boolean", groupName: "Settings", order: 6, description: "Keep the header fixed at the top when scrolling" },
+			{ id: "showSearch", name: "ShowSearch", displayName: "Show Search", type: "Boolean", groupName: "Settings", order: 7 },
 		],
 	},
 	{
