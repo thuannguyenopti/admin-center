@@ -273,7 +273,7 @@ export default function ConfigurePropertyPane({
 						checked={required}
 						onCheckedChange={(checked) => setRequired(checked === true)}
 					>
-						Value must be entered
+						Is Required
 					</Checkbox>
 				</Box>
 

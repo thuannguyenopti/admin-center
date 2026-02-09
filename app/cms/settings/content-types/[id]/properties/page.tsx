@@ -109,21 +109,21 @@ export default function PropertiesPage() {
 
 	// Use persistent state for content types
 	const [savedContentTypes, setContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], (value: ContentType[]) => void];
-	
+
 	// Merge saved content types with initial data to include any new content types
 	const contentTypes = useMemo(() => {
 		if (!savedContentTypes) return initialContentTypes;
-		
+
 		// Create a map of saved content types
 		const savedMap = new Map(savedContentTypes.map((ct) => [ct.id, ct]));
-		
+
 		// Add any content types from initialContentTypes that don't exist in saved
 		initialContentTypes.forEach((ct) => {
 			if (!savedMap.has(ct.id)) {
 				savedMap.set(ct.id, ct);
 			}
 		});
-		
+
 		return Array.from(savedMap.values());
 	}, [savedContentTypes]);
 
@@ -133,7 +133,7 @@ export default function PropertiesPage() {
 	const [filterGroup, setFilterGroup] = useState<string>("All");
 	const [searchFilter, setSearchFilter] = useState<string>("");
 	const [draggedPropertyId, setDraggedPropertyId] = useState<string | null>(null);
-	const [dragOverPropertyId, setDragOverPropertyId] = useState<string | null>(null);
+	const [dropIndicator, setDropIndicator] = useState<{ propertyId: string; position: "before" | "after" } | null>(null);
 
 	// Ref to track newly added property for scrolling
 	const newlyAddedPropertyIdRef = useRef<string | null>(null);
@@ -146,7 +146,7 @@ export default function PropertiesPage() {
 		if (newlyAddedPropertyIdRef.current) {
 			const propertyId = newlyAddedPropertyIdRef.current;
 			newlyAddedPropertyIdRef.current = null;
-			
+
 			// Use longer timeout to allow Aside to fully open and layout to stabilize
 			const timeoutId = setTimeout(() => {
 				const element = document.querySelector(`[data-property-id="${propertyId}"]`);
@@ -159,7 +159,7 @@ export default function PropertiesPage() {
 					}, 1500);
 				}
 			}, 300);
-			
+
 			return () => clearTimeout(timeoutId);
 		}
 	}, [contentType?.properties]);
@@ -217,26 +217,35 @@ export default function PropertiesPage() {
 		setDraggedPropertyId(propertyId);
 	}, []);
 
-	const handleDragOver = useCallback((e: React.DragEvent, propertyId: string) => {
+	const handleDragOver = useCallback((e: React.DragEvent, propertyId: string, isFirst: boolean) => {
 		e.preventDefault();
-		setDragOverPropertyId(propertyId);
-	}, []);
+		if (draggedPropertyId === propertyId) return;
+		const rect = e.currentTarget.getBoundingClientRect();
+		const midY = rect.top + rect.height / 2;
+		// Only use "before" on the very first item; otherwise always use "after"
+		const position = isFirst && e.clientY < midY ? "before" : "after";
+		setDropIndicator({ propertyId, position });
+	}, [draggedPropertyId]);
 
-	const handleDrop = useCallback((e: React.DragEvent, dropPropertyId: string) => {
+	const handleDrop = useCallback((e: React.DragEvent) => {
 		e.preventDefault();
 
-		if (!draggedPropertyId || !contentTypes || !contentType) return;
-		if (draggedPropertyId === dropPropertyId) return;
+		if (!draggedPropertyId || !dropIndicator || !contentTypes || !contentType) return;
+		if (draggedPropertyId === dropIndicator.propertyId) return;
 
 		const properties = [...contentType.properties];
 		const draggedIndex = properties.findIndex((p) => p.id === draggedPropertyId);
-		const dropIndex = properties.findIndex((p) => p.id === dropPropertyId);
+		let dropIndex = properties.findIndex((p) => p.id === dropIndicator.propertyId);
 
 		if (draggedIndex === -1 || dropIndex === -1) return;
 
-		// Remove dragged item and insert at new position
+		// Remove dragged item
 		const [draggedProperty] = properties.splice(draggedIndex, 1);
-		properties.splice(dropIndex, 0, draggedProperty);
+
+		// Recalculate drop index after removal
+		dropIndex = properties.findIndex((p) => p.id === dropIndicator.propertyId);
+		const insertIndex = dropIndicator.position === "after" ? dropIndex + 1 : dropIndex;
+		properties.splice(insertIndex, 0, draggedProperty);
 
 		// Update order values
 		const reorderedProperties = properties.map((p, index) => ({
@@ -250,12 +259,12 @@ export default function PropertiesPage() {
 
 		setContentTypes(updatedContentTypes);
 		setDraggedPropertyId(null);
-		setDragOverPropertyId(null);
-	}, [draggedPropertyId, contentTypes, contentType, id, setContentTypes]);
+		setDropIndicator(null);
+	}, [draggedPropertyId, dropIndicator, contentTypes, contentType, id, setContentTypes]);
 
 	const handleDragEnd = useCallback(() => {
 		setDraggedPropertyId(null);
-		setDragOverPropertyId(null);
+		setDropIndicator(null);
 	}, []);
 
 	if (!contentType) {
@@ -288,7 +297,17 @@ export default function PropertiesPage() {
 
 	return (
 		<>
-			<Box flex="1" p="24">
+			<Box
+				flex="1"
+				onDragOver={(e: React.DragEvent) => e.preventDefault()}
+				onDrop={(e: React.DragEvent) => handleDrop(e)}
+				onDragLeave={(e: React.DragEvent) => {
+					// Only clear if actually leaving the container (not entering a child)
+					if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+						setDropIndicator(null);
+					}
+				}}
+			>
 				<Text color="fg.secondary" mb="24">
 					Manage properties for this content type. Use property groups to organise your properties.
 				</Text>
@@ -329,17 +348,18 @@ export default function PropertiesPage() {
 							{groupName}
 						</Text>
 						<Flex flexDirection="column" gap="8">
-							{properties.map((property) => (
+							{properties.map((property, index) => (
 								<PropertyCard
 									key={property.id}
 									property={property}
 									isSelected={selectedPropertyId === property.id}
 									isDragging={draggedPropertyId === property.id}
-									isDragOver={dragOverPropertyId === property.id}
+									showDropBefore={dropIndicator?.propertyId === property.id && dropIndicator.position === "before"}
+									showDropAfter={dropIndicator?.propertyId === property.id && dropIndicator.position === "after"}
 									onSelect={() => handleSelectProperty(property.id)}
 									onDragStart={() => handleDragStart(property.id)}
-									onDragOver={(e) => handleDragOver(e, property.id)}
-									onDrop={(e) => handleDrop(e, property.id)}
+									onDragOver={(e) => handleDragOver(e, property.id, index === 0)}
+									onDrop={(e) => handleDrop(e)}
 									onDragEnd={handleDragEnd}
 								/>
 							))}
@@ -407,12 +427,33 @@ function AddPropertyMenu({ onAddProperty }: { onAddProperty: (type: PropertyType
 	);
 }
 
+// Drop position indicator line (centered in the 8px gap between cards)
+const INSERT_BAR_BASE: React.CSSProperties = {
+	height: "2px",
+	backgroundColor: "#0037FF",
+	borderRadius: "2px",
+	pointerEvents: "none",
+};
+
+const INSERT_BAR_BEFORE: React.CSSProperties = {
+	...INSERT_BAR_BASE,
+	marginTop: "-5px",
+	marginBottom: "3px",
+};
+
+const INSERT_BAR_AFTER: React.CSSProperties = {
+	...INSERT_BAR_BASE,
+	marginTop: "3px",
+	marginBottom: "-5px",
+};
+
 // Property Card Component using Axiom Card
 interface PropertyCardProps {
 	property: Property;
 	isSelected?: boolean;
 	isDragging?: boolean;
-	isDragOver?: boolean;
+	showDropBefore?: boolean;
+	showDropAfter?: boolean;
 	onSelect?: () => void;
 	onDragStart?: () => void;
 	onDragOver?: (e: React.DragEvent) => void;
@@ -424,7 +465,8 @@ function PropertyCard({
 	property,
 	isSelected,
 	isDragging,
-	isDragOver,
+	showDropBefore,
+	showDropAfter,
 	onSelect,
 	onDragStart,
 	onDragOver,
@@ -435,53 +477,57 @@ function PropertyCard({
 	const specificType = getSpecificTypeLabel(property.type);
 
 	return (
-		<Card
-			data-property-id={property.id}
-			p="12"
-			cursor="pointer"
-			onClick={onSelect}
-			draggable
-			onDragStart={onDragStart}
+		<div
 			onDragOver={onDragOver}
 			onDrop={onDrop}
-			onDragEnd={onDragEnd}
-			borderColor={isSelected ? "border.accent" : isDragOver ? "border.accent" : undefined}
-			style={{
-				transition: "border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease",
-				boxShadow: isSelected ? "0 0 0 1px var(--ax-color-border-accent)" : undefined,
-				opacity: isDragging ? 0.5 : 1,
-				transform: isDragOver ? "translateY(2px)" : undefined,
-			}}
 		>
-			<Flex alignItems="center" gap="12" w="full">
-				{/* Drag Handle */}
-				<Box
-					color="fg.tertiary"
-					style={{ cursor: "grab" }}
-					onMouseDown={(e) => e.stopPropagation()}
-				>
-					<IconGripVertical size={16} />
-				</Box>
+			{showDropBefore && <div style={INSERT_BAR_BEFORE} />}
+			<Card
+				data-property-id={property.id}
+				p="12"
+				cursor="pointer"
+				onClick={onSelect}
+				draggable
+				onDragStart={onDragStart}
+				onDragEnd={onDragEnd}
+				borderColor={isSelected ? "border.accent" : undefined}
+				style={{
+					transition: "border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
+					boxShadow: isSelected ? "0 0 0 1px var(--ax-color-border-accent)" : undefined,
+					opacity: isDragging ? 0.4 : 1,
+				}}
+			>
+				<Flex alignItems="center" gap="12" w="full">
+					{/* Drag Handle */}
+					<Box
+						color="fg.tertiary"
+						style={{ cursor: "grab" }}
+						onMouseDown={(e) => e.stopPropagation()}
+					>
+						<IconGripVertical size={16} />
+					</Box>
 
-				{/* Property Info */}
-				<Box flex="1">
-					<Text fontWeight="500">{property.displayName || property.name}</Text>
-					<Text color="fg.tertiary" fontSize="sm">
-						{typeCategory} · {specificType}
-					{property.required && <span style={{ color: "var(--ax-color-fg-error)" }}> *</span>}
-					</Text>
-				</Box>
+					{/* Property Info */}
+					<Box flex="1">
+						<Text fontWeight="500">{property.displayName || property.name}</Text>
+						<Text color="fg.tertiary" fontSize="sm">
+							{typeCategory} · {specificType}
+							{property.required && <span style={{ color: "var(--ax-color-fg-error)" }}> *</span>}
+						</Text>
+					</Box>
 
-				{/* Actions */}
-				<Button
-					appearance="subtle"
-					size="sm"
-					aria-label="More options"
-					onClick={(e) => e.stopPropagation()}
-				>
-					•••
-				</Button>
-			</Flex>
-		</Card>
+					{/* Actions */}
+					<Button
+						appearance="subtle"
+						size="sm"
+						aria-label="More options"
+						onClick={(e) => e.stopPropagation()}
+					>
+						•••
+					</Button>
+				</Flex>
+			</Card>
+			{showDropAfter && <div style={INSERT_BAR_AFTER} />}
+		</div>
 	);
 }
