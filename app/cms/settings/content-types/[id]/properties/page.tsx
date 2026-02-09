@@ -1,11 +1,11 @@
 "use client";
 
-import { Box, Card, SearchInput, Menu, MenuTrigger, LabelMenuButton, MenuContent } from "@optiaxiom/react";
+import { Box, Card, SearchInput, Menu, MenuTrigger, LabelMenuButton, MenuContent, AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@optiaxiom/react";
 import { Flex } from "@/app/components/Flex";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
-import { IconGripVertical, IconChevronDown } from "@tabler/icons-react";
-import { initialContentTypes, Property, PropertyType, ContentType } from "@/app/db/initialData";
+import { IconGripVertical, IconChevronDown, IconDots } from "@tabler/icons-react";
+import { initialContentTypes, initialPages, Property, PropertyType, ContentType, Page } from "@/app/db/initialData";
 import { useParams } from "next/navigation";
 import { use, useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Aside } from "@/app/context/LayoutContext";
@@ -141,6 +141,15 @@ export default function PropertiesPage() {
 	// Track which property IDs are newly created (not yet saved)
 	const [newPropertyIds, setNewPropertyIds] = useState<Set<string>>(new Set());
 
+	// Remove property confirm dialog state
+	const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
+	const [propertyToRemove, setPropertyToRemove] = useState<Property | null>(null);
+
+	// Find content items using this content type
+	const contentItemsUsingType = useMemo(() => {
+		return initialPages.filter((page: Page) => page.contentTypeId === id);
+	}, [id]);
+
 	// Use key to force re-render of Aside when property changes
 	const selectedProperty = contentType?.properties.find((p: Property) => p.id === selectedPropertyId);
 
@@ -221,6 +230,40 @@ export default function PropertiesPage() {
 		});
 		setSelectedPropertyId(null);
 	}, [contentTypes, contentType, id, setContentTypes]);
+
+	// Remove property handler
+	const handleRemoveProperty = useCallback((property: Property) => {
+		if (contentItemsUsingType.length > 0) {
+			// Has content instances — show confirmation dialog
+			setPropertyToRemove(property);
+			setRemoveConfirmOpen(true);
+		} else {
+			// No content instances — remove directly
+			confirmRemoveProperty(property.id);
+		}
+	}, [contentItemsUsingType]);
+
+	const confirmRemoveProperty = useCallback((propertyId: string) => {
+		if (!contentTypes || !contentType) return;
+
+		const updatedContentTypes = contentTypes.map((ct: ContentType) =>
+			ct.id === id
+				? { ...ct, properties: ct.properties.filter((p) => p.id !== propertyId) }
+				: ct
+		);
+
+		setContentTypes(updatedContentTypes);
+		if (selectedPropertyId === propertyId) {
+			setSelectedPropertyId(null);
+		}
+		setNewPropertyIds((prev) => {
+			const next = new Set(prev);
+			next.delete(propertyId);
+			return next;
+		});
+		setRemoveConfirmOpen(false);
+		setPropertyToRemove(null);
+	}, [contentTypes, contentType, id, setContentTypes, selectedPropertyId]);
 
 	// Drag and drop handlers
 	const handleDragStart = useCallback((propertyId: string) => {
@@ -371,6 +414,7 @@ export default function PropertiesPage() {
 									onDragOver={(e) => handleDragOver(e, property.id, index === 0)}
 									onDrop={(e) => handleDrop(e)}
 									onDragEnd={handleDragEnd}
+									onRemove={() => handleRemoveProperty(property)}
 								/>
 							))}
 						</Flex>
@@ -406,6 +450,41 @@ export default function PropertiesPage() {
 					/>
 				</Aside>
 			)}
+
+			{/* Remove Property Confirm Dialog */}
+			<AlertDialog open={removeConfirmOpen} onOpenChange={setRemoveConfirmOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>Remove Property</AlertDialogHeader>
+					<AlertDialogBody>
+						<Box>
+							<Text mb="12">
+								Are you sure you want to remove the property <strong>{propertyToRemove?.displayName || propertyToRemove?.name}</strong>? This will affect {contentItemsUsingType.length} content {contentItemsUsingType.length === 1 ? "item" : "items"} using this content type:
+							</Text>
+							<Box
+								p="12"
+								rounded="md"
+								bg="bg.secondary"
+								style={{ maxHeight: "200px", overflowY: "auto" }}
+							>
+								{contentItemsUsingType.map((item) => (
+									<Text key={item.id} fontSize="sm" py="4">
+										{item.name}
+									</Text>
+								))}
+							</Box>
+						</Box>
+					</AlertDialogBody>
+					<AlertDialogFooter>
+						<AlertDialogCancel />
+						<AlertDialogAction
+							appearance="danger"
+							onClick={() => propertyToRemove && confirmRemoveProperty(propertyToRemove.id)}
+						>
+							Remove
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 }
@@ -470,6 +549,7 @@ interface PropertyCardProps {
 	onDragOver?: (e: React.DragEvent) => void;
 	onDrop?: (e: React.DragEvent) => void;
 	onDragEnd?: () => void;
+	onRemove?: () => void;
 }
 
 function PropertyCard({
@@ -483,6 +563,7 @@ function PropertyCard({
 	onDragOver,
 	onDrop,
 	onDragEnd,
+	onRemove,
 }: PropertyCardProps) {
 	const typeCategory = getTypeCategory(property.type);
 	const specificType = getSpecificTypeLabel(property.type);
@@ -528,14 +609,22 @@ function PropertyCard({
 					</Box>
 
 					{/* Actions */}
-					<Button
-						appearance="subtle"
-						size="sm"
-						aria-label="More options"
-						onClick={(e) => e.stopPropagation()}
+					<Menu
+						options={[
+							{ label: "Remove", execute: () => onRemove?.() },
+						]}
 					>
-						•••
-					</Button>
+						<MenuTrigger asChild>
+							<Button
+								appearance="subtle"
+								size="sm"
+								aria-label="More options"
+								icon={<IconDots size={16} />}
+								onClick={(e) => e.stopPropagation()}
+							/>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 				</Flex>
 			</Card>
 			{showDropAfter && <div style={INSERT_BAR_AFTER} />}
