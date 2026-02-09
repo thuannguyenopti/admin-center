@@ -218,7 +218,7 @@ export default function ContentTypesSettings() {
 					options={[
 						{
 							label: "Generate from File(s)…",
-							execute: () => {},
+							execute: () => { },
 						},
 						...BASE_TYPE_OPTIONS.map((opt) => ({
 							label: opt.label,
@@ -226,7 +226,7 @@ export default function ContentTypesSettings() {
 						})),
 						{
 							label: "Connect From Graph",
-							execute: () => {},
+							execute: () => { },
 						},
 					]}
 				>
@@ -351,7 +351,7 @@ export default function ContentTypesSettings() {
 									appearance="primary"
 									size="lg"
 									onClick={handleCreate}
-										disabled={!dialogDisplayName.trim() || (dialogBaseType === "Media" && !dialogMediaType)}
+									disabled={!dialogDisplayName.trim() || (dialogBaseType === "Media" && !dialogMediaType)}
 								>
 									Create {baseTypeLabel}
 								</Button>
