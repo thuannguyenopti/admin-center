@@ -283,6 +283,8 @@ function TemplateContent({
 							color="fg.default"
 							overflow="auto"
 							p="24"
+							px="32"
+							py="24"
 						>
 							<>
 								<Heading level="3">{heading || highlight1?.label}</Heading>
