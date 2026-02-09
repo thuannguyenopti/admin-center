@@ -138,6 +138,9 @@ export default function PropertiesPage() {
 	// Ref to track newly added property for scrolling
 	const newlyAddedPropertyIdRef = useRef<string | null>(null);
 
+	// Track which property IDs are newly created (not yet saved)
+	const [newPropertyIds, setNewPropertyIds] = useState<Set<string>>(new Set());
+
 	// Use key to force re-render of Aside when property changes
 	const selectedProperty = contentType?.properties.find((p: Property) => p.id === selectedPropertyId);
 
@@ -173,10 +176,11 @@ export default function PropertiesPage() {
 	const handleAddProperty = useCallback((type: PropertyType, groupName: string = "Content") => {
 		if (!contentTypes || !contentType) return;
 
+		const displayName = `New ${getSpecificTypeLabel(type)}`;
 		const newProperty: Property = {
 			id: generatePropertyId(),
-			name: `New ${getSpecificTypeLabel(type)}`,
-			displayName: `New ${getSpecificTypeLabel(type)}`,
+			name: displayName.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, ""),
+			displayName,
 			type,
 			groupName,
 			order: contentType.properties.length + 1,
@@ -191,6 +195,7 @@ export default function PropertiesPage() {
 		setContentTypes(updatedContentTypes);
 		setSelectedPropertyId(newProperty.id);
 		newlyAddedPropertyIdRef.current = newProperty.id;
+		setNewPropertyIds((prev) => new Set(prev).add(newProperty.id));
 	}, [contentTypes, contentType, id, setContentTypes]);
 
 	// Update property
@@ -209,6 +214,11 @@ export default function PropertiesPage() {
 		);
 
 		setContentTypes(updatedContentTypes);
+		setNewPropertyIds((prev) => {
+			const next = new Set(prev);
+			next.delete(updatedProperty.id);
+			return next;
+		});
 		setSelectedPropertyId(null);
 	}, [contentTypes, contentType, id, setContentTypes]);
 
@@ -392,6 +402,7 @@ export default function PropertiesPage() {
 						property={selectedProperty}
 						onClose={() => setSelectedPropertyId(null)}
 						onSave={handleSaveProperty}
+						isNew={newPropertyIds.has(selectedProperty.id)}
 					/>
 				</Aside>
 			)}
