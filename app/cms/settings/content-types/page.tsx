@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Box, Heading, SearchInput, Menu, MenuTrigger, LabelMenuButton, MenuContent } from "@optiaxiom/react";
+import { Box, Heading, SearchInput, Menu, MenuTrigger, LabelMenuButton, MenuContent, Flex } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Text } from "@/app/components/Text";
-import { initialContentTypes, ContentType } from "@/app/db/initialData";
+import { initialContentTypes, ContentType, Property } from "@/app/db/initialData";
+import { useRouter } from "next/navigation";
 
 export default function ContentTypesSettings() {
+	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [typeFilter, setTypeFilter] = useState<string | null>(null);
 	const [accessFilter, setAccessFilter] = useState<string | null>(null);
@@ -51,6 +53,10 @@ export default function ContentTypesSettings() {
 			return true;
 		});
 	}, [contentTypes, search, typeFilter, accessFilter]);
+
+	const handleRowClick = (contentType: ContentType) => {
+		router.push(`/cms/settings/content-types/${contentType.id}/properties`);
+	};
 
 	return (
 		<>
@@ -96,10 +102,14 @@ export default function ContentTypesSettings() {
 				<tbody>
 					{filtered.map((ct) => {
 						return (
-							<Tr key={ct.id}>
-								<Td type="header">{ct.name}</Td>
+							<Tr
+								key={ct.id}
+								onClick={() => handleRowClick(ct)}
+								style={{ cursor: "pointer" }}
+							>
+								<Td type="header">{ct.displayName || ct.name}</Td>
 								<Td>{ct.baseType}</Td>
-								<Td>Jan 13, 2024</Td>
+								<Td>{ct.modifiedAt ? new Date(ct.modifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 13, 2024"}</Td>
 								<Td>Everyone</Td>
 								<Td type="button" data={() => console.log('actions for', ct.id)}>
 									<></>
