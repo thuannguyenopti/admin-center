@@ -57,7 +57,7 @@ export default function SynonymsPage() {
 	const confirmRemoveSynonym = () => {
 		if (!pendingDeleteId) return;
 
-		setSynonyms((prev) => prev.filter((s) => s.id !== pendingDeleteId));
+		setSynonyms(synonyms.filter((s) => s.id !== pendingDeleteId));
 		setPendingDeleteId(null);
 		setIsDeleteDialogOpen(false);
 	};
