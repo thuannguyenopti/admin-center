@@ -51,7 +51,7 @@ export default function AutocompletePhrasesPage() {
 	const confirmRemovePhrase = () => {
 		if (!pendingDeleteId) return;
 
-		setPhrases((prev) => prev.filter((p) => p.id !== pendingDeleteId));
+		setPhrases(phrases.filter((p: AutocompletePhrase) => p.id !== pendingDeleteId));
 		setPendingDeleteId(null);
 		setIsDeleteDialogOpen(false);
 	};

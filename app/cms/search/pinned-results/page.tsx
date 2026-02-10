@@ -51,8 +51,7 @@ export default function PinnedResultsPage() {
 
 	const confirmRemovePinnedResult = () => {
 		if (!pendingDeleteQuery) return;
-
-		setPinnedResults((prev) => prev.filter((b) => b.query !== pendingDeleteQuery));
+		setPinnedResults(pinnedResults.filter((p: PinnedResult) => p.query !== pendingDeleteQuery));
 		setPendingDeleteQuery(null);
 		setIsDeleteDialogOpen(false);
 	};

@@ -52,7 +52,7 @@ export default function RelatedQueriesPage() {
 	const confirmRemoveRelatedQuery = () => {
 		if (!pendingDeleteQuery) return;
 
-		setRelatedQueries((prev) => prev.filter((sq) => sq.query !== pendingDeleteQuery));
+		setRelatedQueries(relatedQueries.filter((sq) => sq.query !== pendingDeleteQuery));
 		setPendingDeleteQuery(null);
 		setIsDeleteDialogOpen(false);
 	};
