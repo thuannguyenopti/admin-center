@@ -89,7 +89,7 @@ html.dark,
 	--ax-colors-bg-accent-hovered: #4b7bf6; /* brand.dark.300 */
 	--ax-colors-bg-accent-subtle: #21283f; /* brand.dark.900 */
 	/*--ax-colors-bg-accent-light: #001666; /* brand.800 */
-	--ax-colors-bg-overlay: #0000001a;
+	--ax-colors-bg-overlay: #00000077;
 
 	/* Status backgrounds - Error (red)
 	   Dark mode needs a new "red.dark" stack for muted/tinted backgrounds:
