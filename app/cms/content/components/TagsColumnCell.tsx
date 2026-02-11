@@ -76,7 +76,7 @@ export default function TagsColumnCell({ tags }: TagsColumnCellProps) {
   }
 
   const hiddenCount = tags.length - visibleCount;
-  const showRollup = hiddenCount > 0;
+  const showRollup = hiddenCount > 0; // Show rollup if any tags are hidden
   const visibleTags = tags.slice(0, visibleCount);
 
   const displayContent = (
@@ -91,7 +91,15 @@ export default function TagsColumnCell({ tags }: TagsColumnCellProps) {
       }}
     >
       {visibleTags.map((slug) => (
-        <Badge key={slug} intent="neutral" style={{ flexShrink: 0 }}>
+        <Badge
+          key={slug}
+          intent="neutral"
+          style={{
+            flexShrink: 0,
+            maxWidth: 'none',
+            whiteSpace: 'nowrap'
+          }}
+        >
           {getDisplayName(slug, slugToName)}
         </Badge>
       ))}
@@ -171,7 +179,15 @@ export default function TagsColumnCell({ tags }: TagsColumnCellProps) {
         }}
       >
         {tags.map((slug) => (
-          <Badge key={slug} intent="neutral" style={{ flexShrink: 0 }}>
+          <Badge
+            key={slug}
+            intent="neutral"
+            style={{
+              flexShrink: 0,
+              maxWidth: 'none',
+              whiteSpace: 'nowrap'
+            }}
+          >
             {getDisplayName(slug, slugToName)}
           </Badge>
         ))}
