@@ -46,7 +46,11 @@ export default function VT({
 					<Box px="12" py="16">
 						{backLink && (
 							<Link href={backLink.url as Url}>
-								<Text color="fg.secondary" fontSize="sm">
+								<Text
+									color="fg.secondary"
+									fontSize="sm"
+									className="hover:!text-black"
+								>
 									← {backLink.label}
 								</Text>
 							</Link>
