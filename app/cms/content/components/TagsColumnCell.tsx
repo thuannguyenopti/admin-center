@@ -78,6 +78,8 @@ export default function TagsColumnCell({ tags }: TagsColumnCellProps) {
   const hiddenCount = tags.length - visibleCount;
   const showRollup = hiddenCount > 0; // Show rollup if any tags are hidden
   const visibleTags = tags.slice(0, visibleCount);
+  // If no tags are visible, show count without "+", otherwise show "+N"
+  const rollupLabel = visibleCount === 0 ? String(hiddenCount) : `+${hiddenCount}`;
 
   const displayContent = (
     <Box
@@ -115,7 +117,7 @@ export default function TagsColumnCell({ tags }: TagsColumnCellProps) {
               }}
               onMouseLeave={scheduleClose}
             >
-              <Badge intent="neutral">+{hiddenCount}</Badge>
+              <Badge intent="neutral">{rollupLabel}</Badge>
             </Box>
           </PopoverTrigger>
           <PopoverContent
