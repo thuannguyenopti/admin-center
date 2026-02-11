@@ -229,7 +229,16 @@ export default function MultiSelectDetailsPane({
   };
   const handleApplyCategories = () => {
     if (!onCategoriesChangeBatch || items.length === 0) return;
-    onCategoriesChangeBatch(items.map((item) => ({ id: item.id, categories })));
+    const initial = initialCategoriesRef.current;
+    const removed = initial.filter((s) => !categories.includes(s));
+    const added = categories.filter((s) => !initial.includes(s));
+    const updates = items.map((item) => {
+      const existing = item.categories ?? [];
+      const withoutRemoved = existing.filter((slug) => !removed.includes(slug));
+      const merged = Array.from(new Set([...withoutRemoved, ...added]));
+      return { id: item.id, categories: merged };
+    });
+    onCategoriesChangeBatch(updates);
     exitCategoryBatchEdit(true);
   };
 
@@ -254,7 +263,15 @@ export default function MultiSelectDetailsPane({
     const initial = initialTagsRef.current;
     const removed = initial.filter((s) => !tags.includes(s));
     const added = tags.filter((s) => !initial.includes(s));
-    onTagsChangeBatch(items.map((item) => ({ id: item.id, tags })));
+    // Apply changes as per-item deltas so we don't overwrite
+    // each item's unique tags with a single shared list.
+    const updates = items.map((item) => {
+      const existing = item.tags ?? [];
+      const withoutRemoved = existing.filter((slug) => !removed.includes(slug));
+      const merged = Array.from(new Set([...withoutRemoved, ...added]));
+      return { id: item.id, tags: merged };
+    });
+    onTagsChangeBatch(updates);
     const parts: string[] = [];
     removed.forEach((slug) => {
       const count = items.filter((i) => (i.tags ?? []).includes(slug)).length;

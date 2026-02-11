@@ -7,7 +7,7 @@ import { ContentItem } from "./page";
 import { useDetailsMetadata } from "./useDetailsMetadata";
 import MultiSelectDetailsPane from "./MultiSelectDetailsPane";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
 import { useGlobalCategories } from "../hooks/useGlobalCategories";
 import type { Tag } from "../settings/tags/types";
@@ -148,7 +148,11 @@ export default function DetailsPane({
   const hiddenCategoriesCount = categories.length - CATEGORIES_INITIAL_VISIBLE;
 
   const handleRemoveTag = (slugToRemove: string) => {
-    setTags(tags.filter((slug) => slug !== slugToRemove));
+    const next = tags.filter((slug) => slug !== slugToRemove);
+    setTags(next);
+    if (onTagsChange && content?.id) {
+      onTagsChange(content.id, next);
+    }
   };
 
   const handleAddTag = (value: string) => {
@@ -160,7 +164,11 @@ export default function DetailsPane({
       return;
     }
     if (!isSlug && !tagExists(value)) addGlobalTag(value);
-    setTags([...tags, slug]);
+    const next = [...tags, slug];
+    setTags(next);
+    if (onTagsChange && content?.id) {
+      onTagsChange(content.id, next);
+    }
     setNewTag("");
   };
 
@@ -232,7 +240,11 @@ export default function DetailsPane({
   };
 
   const handleRemoveCategory = (slugToRemove: string) => {
-    setCategories(categories.filter((slug) => slug !== slugToRemove));
+    const next = categories.filter((slug) => slug !== slugToRemove);
+    setCategories(next);
+    if (onCategoriesChange && content?.id) {
+      onCategoriesChange(content.id, next);
+    }
   };
 
   const handleAddCategory = (value: string) => {
@@ -244,7 +256,11 @@ export default function DetailsPane({
       return;
     }
     if (!isSlug && !categoryExists(value)) addGlobalCategory(value);
-    setCategories([...categories, slug]);
+    const next = [...categories, slug];
+    setCategories(next);
+    if (onCategoriesChange && content?.id) {
+      onCategoriesChange(content.id, next);
+    }
     setNewCategory("");
   };
 
@@ -296,19 +312,7 @@ export default function DetailsPane({
     setSuggestedCategorySlugs([]);
   };
 
-  // Persist tag changes (debounced) for single item
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!onTagsChange || !content?.id) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      onTagsChange(content.id, tags);
-      debounceRef.current = null;
-    }, 400);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [tags, content?.id, onTagsChange]);
+  // Tag changes are persisted immediately when user edits tags (not on selection changes)
 
   // Filter global tags by input (by name)
   const filteredTags = globalTags.filter(
@@ -353,19 +357,7 @@ export default function DetailsPane({
     });
   }
 
-  // Persist category changes (debounced) for single item
-  const categoriesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!onCategoriesChange || !content?.id) return;
-    if (categoriesDebounceRef.current) clearTimeout(categoriesDebounceRef.current);
-    categoriesDebounceRef.current = setTimeout(() => {
-      onCategoriesChange(content.id, categories);
-      categoriesDebounceRef.current = null;
-    }, 400);
-    return () => {
-      if (categoriesDebounceRef.current) clearTimeout(categoriesDebounceRef.current);
-    };
-  }, [categories, content?.id, onCategoriesChange]);
+  // Category changes are persisted immediately when user edits categories
 
   return (
     <Box
