@@ -304,12 +304,11 @@ export default function MultiSelectDetailsPane({
   };
 
   const handleSuggestTagsForSelected = async () => {
-    if (items.length === 0 || globalTags.length === 0) return;
+    if (items.length === 0) return;
     setSuggestLoading(true);
     setSuggestError(null);
     setSuggestEmpty(false);
     setSuggestedSlugs([]);
-    const taxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
     try {
       const settled = await Promise.allSettled(
         items.map((item) => {
@@ -318,15 +317,18 @@ export default function MultiSelectDetailsPane({
             name: item.name,
             baseType: item.baseType,
           });
+          const payload: any = {
+            itemName: item.name,
+            contentTypeId: item.contentTypeId,
+            imageUrl,
+          };
+          if (globalTags.length > 0) {
+            payload.tagTaxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
+          }
           return fetch("/api/tags/suggest", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              itemName: item.name,
-              contentTypeId: item.contentTypeId,
-              tagTaxonomy: taxonomy,
-              imageUrl,
-            }),
+            body: JSON.stringify(payload),
           }).then(async (res) => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Request failed");
@@ -537,7 +539,7 @@ export default function MultiSelectDetailsPane({
                             e.preventDefault();
                             handleSuggestTagsForSelected();
                           }}
-                          disabled={suggestLoading || globalTags.length === 0}
+                          disabled={suggestLoading}
                           loading={suggestLoading}
                           aria-label="Suggest tags for selected with Opal"
                         />

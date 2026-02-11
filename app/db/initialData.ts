@@ -4965,7 +4965,7 @@ export const siteConfig = {
 	},
 };
 
-// Initial Tags
+// Initial Tags - cleaned: removed 8 orphaned tags and updated usage counts to match actual content usage
 export const initialTags = [
 	{
 		id: 'tag-1',
@@ -4973,7 +4973,7 @@ export const initialTags = [
 		slug: 'spring-reset',
 		visibility: 'private' as const,
 		modifiedBy: 'Tien Le',
-		usage: 85,
+		usage: 2,
 		lastModified: 'Jan 11, 2025',
 	},
 	{
@@ -4982,17 +4982,8 @@ export const initialTags = [
 		slug: 'summer-shred',
 		visibility: 'private' as const,
 		modifiedBy: 'Sofia Kim',
-		usage: 90,
+		usage: 1,
 		lastModified: 'Feb 15, 2025',
-	},
-	{
-		id: 'tag-3',
-		name: 'Beach Body',
-		slug: 'beach-body',
-		visibility: 'public' as const,
-		modifiedBy: 'Amir Patel',
-		usage: 78,
-		lastModified: 'Mar 1, 2025',
 	},
 	{
 		id: 'tag-4',
@@ -5000,71 +4991,8 @@ export const initialTags = [
 		slug: 'outdoor-training',
 		visibility: 'private' as const,
 		modifiedBy: 'Lara Chen',
-		usage: 88,
+		usage: 4,
 		lastModified: 'Mar 20, 2025',
-	},
-	{
-		id: 'tag-5',
-		name: 'Back to Fitness',
-		slug: 'back-to-fitness',
-		visibility: 'public' as const,
-		modifiedBy: 'Raj Singh',
-		usage: 83,
-		lastModified: 'Apr 5, 2025',
-	},
-	{
-		id: 'tag-6',
-		name: 'Fall Focus',
-		slug: 'fall-focus',
-		visibility: 'public' as const,
-		modifiedBy: 'Emma Brown',
-		usage: 95,
-		lastModified: 'Apr 22, 2025',
-	},
-	{
-		id: 'tag-7',
-		name: 'Routine Reboot',
-		slug: 'routine-reboot',
-		visibility: 'private' as const,
-		modifiedBy: 'David Lee',
-		usage: 80,
-		lastModified: 'May 10, 2025',
-	},
-	{
-		id: 'tag-8',
-		name: 'Holiday Hustle',
-		slug: 'holiday-hustle',
-		visibility: 'public' as const,
-		modifiedBy: 'Nina Roberts',
-		usage: 89,
-		lastModified: 'May 30, 2025',
-	},
-	{
-		id: 'tag-9',
-		name: 'New Year Reset',
-		slug: 'new-year-reset',
-		visibility: 'private' as const,
-		modifiedBy: 'Tom Green',
-		usage: 92,
-		lastModified: 'Jun 15, 2025',
-	},
-	{
-		id: 'tag-10',
-		name: 'Resolution Challenge',
-		slug: 'resolution-challenge',
-		visibility: 'public' as const,
-		modifiedBy: 'Hannah White',
-		usage: 87,
-		lastModified: 'Jul 1, 2025',
-	},
-	{
-		id: 'tag-11',
-		name: 'Festive Fitness',
-		slug: 'festive-fitness',
-		visibility: 'private' as const,
-		modifiedBy: 'Jake Wilson',
-		usage: 91,
-		lastModified: 'Jul 20, 2025',
 	},
 	{
 		id: 'tag-12',
@@ -5081,7 +5009,7 @@ export const initialTags = [
 		slug: 'cycling-performance',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 12,
+		usage: 9,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5090,7 +5018,7 @@ export const initialTags = [
 		slug: 'exercise-routine',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 20,
+		usage: 5,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5099,7 +5027,7 @@ export const initialTags = [
 		slug: 'cardio-workout',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 18,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5108,7 +5036,7 @@ export const initialTags = [
 		slug: 'mountain-biking',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 10,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5117,7 +5045,7 @@ export const initialTags = [
 		slug: 'road-cycling',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 14,
+		usage: 7,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5126,7 +5054,7 @@ export const initialTags = [
 		slug: 'indoor-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 16,
+		usage: 2,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5135,7 +5063,7 @@ export const initialTags = [
 		slug: 'fitness-tracking',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 22,
+		usage: 18,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5144,7 +5072,7 @@ export const initialTags = [
 		slug: 'endurance-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 13,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5153,7 +5081,7 @@ export const initialTags = [
 		slug: 'sprint-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 11,
+		usage: 1,
 		lastModified: 'Jan 28, 2026',
 	},
 ];

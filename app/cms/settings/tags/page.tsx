@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import {
   Box,
   Button,
+  Heading,
   SearchInput,
   Text,
   AngleMenuButton,
@@ -26,8 +27,10 @@ import { useSelection } from './hooks/useSelection';
 import { useTagActions } from './hooks/useTagActions';
 import { filterTags } from './utils';
 import EmptyStateIllustration from './empty-state.svg';
+import { useLayout } from '@/app/context/LayoutContext';
 
 export default function TagsSettings() {
+  const { setHidePageHeader } = useLayout();
   const [tags, setTags] = usePersistentState('tags', initialTags);
   const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
@@ -251,8 +254,20 @@ export default function TagsSettings() {
     }
   };
 
+  // Prepare content context for tag generation
+  const contentContext = useMemo(() => {
+    return contentItems.map((item) => ({
+      name: item.name,
+      baseType: item.baseType,
+      tagSlugs: item.tags || [],
+    }));
+  }, [contentItems]);
+
   // Show empty state if no tags
   if (tagsWithUsage.length === 0 && !isModalOpen) {
+    // Hide the page header for empty state
+    setHidePageHeader(true);
+
     return (
       <>
         <Box
@@ -273,6 +288,18 @@ export default function TagsSettings() {
             textAlign="center"
             style={{ maxWidth: '552px' }}
           >
+            <Heading
+              level="3"
+              style={{
+                fontSize: '28px',
+                fontWeight: '500',
+                letterSpacing: '-0.60px',
+                color: '#2e3442',
+              }}
+            >
+              No tags
+            </Heading>
+
             <AppText
               style={{
                 fontSize: '16px',
@@ -282,8 +309,7 @@ export default function TagsSettings() {
                 color: '#2e3442',
               }}
             >
-              Tags help you organise and surface related content. Create your first tag
-              to get started.{' '}
+              Tags are labels you attach to content (e.g. "featured", "how-to"). Use them to filter and search in the Content Manager, power faceted search, and surface related content. Create tags here, then assign them to pages and other content when editing.{' '}
               <a
                 href="#"
                 style={{
@@ -323,11 +349,15 @@ export default function TagsSettings() {
           mode={modalMode}
           initialTags={editingTags}
           allTags={tagsWithUsage}
+          contentContext={contentContext}
           onSave={handleSave}
         />
       </>
     );
   }
+
+  // Show page header when there are tags
+  setHidePageHeader(false);
 
   // Show full tags interface when there are tags
   return (
@@ -406,6 +436,7 @@ export default function TagsSettings() {
         mode={modalMode}
         initialTags={editingTags}
         allTags={tagsWithUsage}
+        contentContext={contentContext}
         onSave={handleSave}
       />
 

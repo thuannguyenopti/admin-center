@@ -25,8 +25,10 @@ import { useSelection } from './hooks/useSelection';
 import { useCategoryActions } from './hooks/useCategoryActions';
 import { filterCategoriesWithHierarchy } from './utils';
 import EmptyStateIllustration from './empty-state.svg';
+import { useLayout } from '@/app/context/LayoutContext';
 
 export default function CategoriesSettings() {
+  const { setHidePageHeader } = useLayout();
   const [categories, setCategories] = usePersistentState('categories', initialCategories);
   const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,6 +207,9 @@ export default function CategoriesSettings() {
 
   // Show empty state if no categories
   if (categoriesWithUsage.length === 0 && !isModalOpen) {
+    // Hide the page header for empty state
+    setHidePageHeader(true);
+
     return (
       <>
         <Box
@@ -246,8 +251,7 @@ export default function CategoriesSettings() {
                 color: '#2e3442',
               }}
             >
-              Categories help you classify and organise your content, making it easier to
-              filter, search, and navigate. Create your first category to begin.{' '}
+              Categories organise your content into a hierarchy (e.g. Sport &gt; Cycling). Use them to structure navigation, filter content, and group related items. Assign categories to content when editing, and create parent categories to build a taxonomy.{' '}
               <a
                 href="#"
                 style={{
@@ -293,6 +297,9 @@ export default function CategoriesSettings() {
       </>
     );
   }
+
+  // Show page header when there are categories
+  setHidePageHeader(false);
 
   // Show full categories interface when there are categories
   return (

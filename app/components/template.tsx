@@ -27,7 +27,7 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent} = useLayout();
+	const {asideContent, hidePageHeader} = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
@@ -292,24 +292,26 @@ function TemplateContent({
 							p="24"
 						>
 							<>
-								<Box w="full" className="min-w-0" overflow="hidden">
-									<Heading level="3" mb="16" truncate>
-										{heading || highlight1?.label}
-									</Heading>
-									{desc && (
-										<Text
-											mb="24"
-											color="fg.secondary"
-											display="block"
-											w="full"
-											style={{ width: "100%", maxWidth: "none" }}
-										>
-											{desc}
-										</Text>
-									)}
-								</Box>
+								{!hidePageHeader && (
+									<Box w="full" className="min-w-0" overflow="hidden">
+										<Heading level="3" mb="16" truncate>
+											{heading || highlight1?.label}
+										</Heading>
+										{desc && (
+											<Text
+												mb="24"
+												color="fg.secondary"
+												display="block"
+												w="full"
+												style={{ width: "100%", maxWidth: "none" }}
+											>
+												{desc}
+											</Text>
+										)}
+									</Box>
+								)}
 								<Box
-									mt={desc ? "0" : "24"}
+									mt={!hidePageHeader && desc ? "0" : !hidePageHeader ? "24" : "0"}
 									z="10"
 									className="relative"
 									w="full"

@@ -10,6 +10,7 @@ import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
+import {MigrationRunner} from "@/app/components/MigrationRunner";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -422,6 +423,7 @@ export default function RootLayout({
 			<body suppressHydrationWarning>
 				<ThemeProvider>
 					<HydrationErrorSuppressor />
+					<MigrationRunner />
 					{menu ? <Template structure={menu}>{children}</Template> : children}
 					{activeEffect === "snow" && <SnowEffect />}
 					{activeEffect === "newyear" && <NewYearEffect />}

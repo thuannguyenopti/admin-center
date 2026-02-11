@@ -180,7 +180,7 @@ export default function DetailsPane({
       .replace(/[^a-z0-9-]/g, "");
 
   const handleSuggestTags = async () => {
-    if (!content?.name || globalTags.length === 0) return;
+    if (!content?.name) return;
     setSuggestLoading(true);
     setSuggestError(null);
     setSuggestEmpty(false);
@@ -191,15 +191,18 @@ export default function DetailsPane({
         name: content.name,
         baseType: content.baseType,
       });
+      const payload: any = {
+        itemName: content.name,
+        contentTypeId: content.contentTypeId,
+        imageUrl,
+      };
+      if (globalTags.length > 0) {
+        payload.tagTaxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
+      }
       const res = await fetch("/api/tags/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          itemName: content.name,
-          contentTypeId: content.contentTypeId,
-          tagTaxonomy: globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug })),
-          imageUrl,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -265,22 +268,25 @@ export default function DetailsPane({
   };
 
   const handleSuggestCategories = async () => {
-    if (!content?.name || !globalCategoriesFull?.length) return;
+    if (!content?.name) return;
     setSuggestCategoriesLoading(true);
     setSuggestCategoryError(null);
     setSuggestCategoryEmpty(false);
     setSuggestedCategorySlugs([]);
     try {
-      const categoryTaxonomy = globalCategoriesFull.map((c: { id: string; name: string; slug: string; parentId: string | null }) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        parentId: c.parentId ?? null,
-      }));
+      const payload: any = { itemName: content.name };
+      if (globalCategoriesFull.length > 0) {
+        payload.categoryTaxonomy = globalCategoriesFull.map((c: { id: string; name: string; slug: string; parentId: string | null }) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          parentId: c.parentId ?? null,
+        }));
+      }
       const res = await fetch("/api/categories/suggest-for-item", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemName: content.name, categoryTaxonomy }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -559,7 +565,7 @@ export default function DetailsPane({
                               e.preventDefault();
                               handleSuggestTags();
                             }}
-                            disabled={suggestLoading || globalTags.length === 0}
+                            disabled={suggestLoading}
                             loading={suggestLoading}
                             aria-label="Suggest tags with Opal"
                           />
@@ -781,7 +787,7 @@ export default function DetailsPane({
                               e.preventDefault();
                               handleSuggestCategories();
                             }}
-                            disabled={suggestCategoriesLoading || globalCategories.length === 0}
+                            disabled={suggestCategoriesLoading}
                             loading={suggestCategoriesLoading}
                             aria-label="Suggest categories with Opal"
                           />
