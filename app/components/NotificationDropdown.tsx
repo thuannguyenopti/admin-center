@@ -1,0 +1,407 @@
+"use client";
+
+import { Box, Button, Text, Badge, Switch, Separator, Disclosure, DisclosureContent, DisclosureTrigger, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
+import { IconBell, IconX, IconSettings, IconAdjustmentsHorizontal, IconCheck, IconChecks, IconTrash, IconUser, IconBrandOpenai, IconRobot, IconChevronDown } from "@tabler/icons-react";
+import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
+import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
+import { useLayout } from "@/app/context/LayoutContext";
+import NextLink from "next/link";
+
+const UnreadIndicator = () => (
+    <Box
+        rounded="full"
+        style={{
+            width: 8,
+            height: 8,
+            backgroundColor: "var(--ax-colors-fg-error)",
+            flexShrink: 0,
+        }}
+    />
+);
+
+// Compact notification card for sidebar
+function CompactNotificationCard({ notification }: { notification: Notification }) {
+    const isUnread = notification.status === "unread";
+
+    // Helper for agent/system avatars
+    const getAvatar = () => {
+        if (notification.category === "agent_execution") {
+            return (
+                <Box
+                    rounded="full"
+                    bg="bg.accent.subtle"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    style={{ width: 32, height: 32, flexShrink: 0 }}
+                >
+                    <IconRobot size={18} color="var(--ax-colors-fg-accent)" />
+                </Box>
+            );
+        }
+        if (notification.author?.avatar) {
+            return (
+                <img
+                    src={notification.author.avatar}
+                    alt=""
+                    style={{ width: 32, height: 32, borderRadius: "9999px", flexShrink: 0, objectFit: "cover" }}
+                />
+            );
+        }
+        return (
+            <Box
+                rounded="full"
+                bg="bg.secondary"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                style={{ width: 32, height: 32, flexShrink: 0 }}
+            >
+                <IconUser size={18} color="var(--ax-colors-fg-tertiary)" />
+            </Box>
+        );
+    };
+
+    return (
+        <NextLink href={notification.deepLink} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+            <Box
+                p="16"
+                bg={isUnread ? "bg.default" : "bg.secondary"}
+                className="hover:bg-[var(--ax-colors-bg-tertiary)] cursor-pointer transition-colors"
+                display="flex"
+                gap="12"
+                style={{ position: "relative", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
+            >
+                {/* Avatar */}
+                {getAvatar()}
+
+                {/* Content Column */}
+                <Box flex="1" style={{ minWidth: 0 }} display="flex" flexDirection="column" gap="4">
+                    {/* Header: Title + Timestamp + Dot */}
+                    <Box display="flex" alignItems="start" justifyContent="space-between" gap="8">
+                        <Text
+                            fontSize="sm"
+                            fontWeight={isUnread ? "600" : "500"}
+                            color="fg.default"
+                            className="line-clamp-2"
+                            flex="1"
+                        >
+                            {notification.title}
+                        </Text>
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap" pt="2">
+                                {notification.timestamp}
+                            </Text>
+                            {isUnread && <UnreadIndicator />}
+                        </Box>
+                    </Box>
+
+                    {/* Subtitle: Category • Message style snippet */}
+                    <Box display="flex" alignItems="center" gap="4">
+                        <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
+                            {getCategoryLabel(notification.category)}
+                        </Text>
+                        <Text fontSize="xs" color="fg.tertiary">•</Text>
+                        <Text fontSize="xs" color="fg.tertiary" className="line-clamp-2">
+                            {notification.message}
+                        </Text>
+                    </Box>
+
+                    <Box display="flex" gap="8" pt="8">
+                        <Button size="sm" appearance="subtle">
+                            {notification.actionRequired ? "Take Action" : "View"}
+                        </Button>
+                        {notification.actionRequired && (
+                            <Button size="sm" appearance="subtle">Dismiss</Button>
+                        )}
+                    </Box>
+                </Box>
+            </Box>
+        </NextLink>
+    );
+}
+
+export function NotificationPanel({ onClose }: { onClose: () => void }) {
+    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+    const [productFilter, setProductFilter] = useState("All Products");
+    const [panelWidth, setPanelWidth] = useState(560);
+    const resizingStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
+
+    useEffect(() => {
+        const handleMove = (event: MouseEvent) => {
+            if (!resizingStateRef.current) return;
+            const { startX, startWidth } = resizingStateRef.current;
+            const deltaX = event.clientX - startX;
+            const nextWidth = Math.max(400, Math.min(760, startWidth - deltaX));
+            setPanelWidth(nextWidth);
+        };
+
+        const handleUp = () => {
+            resizingStateRef.current = null;
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+        };
+
+        window.addEventListener("mousemove", handleMove);
+        window.addEventListener("mouseup", handleUp);
+        return () => {
+            window.removeEventListener("mousemove", handleMove);
+            window.removeEventListener("mouseup", handleUp);
+        };
+    }, []);
+
+    const startResize = (event: ReactMouseEvent<HTMLDivElement>) => {
+        resizingStateRef.current = {
+            startX: event.clientX,
+            startWidth: panelWidth,
+        };
+        document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
+    };
+
+    const filtered = useMemo(() => {
+        return showUnreadOnly
+            ? mockNotifications.filter(n => n.status === "unread")
+            : mockNotifications;
+    }, [showUnreadOnly]);
+
+    const groups = useMemo(() => {
+        const g: Record<string, Notification[]> = {};
+        filtered.forEach(n => {
+            if (!g[n.category]) g[n.category] = [];
+            g[n.category].push(n);
+        });
+        return g;
+    }, [filtered]);
+
+    return (
+        <Box h="full" style={{ width: panelWidth, position: "relative" }}>
+            <Box
+                aria-label="Resize notification tray"
+                onMouseDown={startResize}
+                h="full"
+                style={{ position: "absolute", left: 0, top: 0, width: 8, transform: "translateX(-50%)", cursor: "col-resize", zIndex: 20 }}
+            >
+                <Box
+                    h="full"
+                    bg="bg.tertiary"
+                    style={{ position: "absolute", left: "50%", top: 0, width: 1, transform: "translateX(-50%)", opacity: 0.7 }}
+                />
+            </Box>
+            <DetailsPanel
+                h="full"
+                bg="bg.page"
+                borderL="1"
+                borderColor="border.tertiary"
+                overflow="hidden"
+            >
+                <DetailsPanelHeader
+                    px="16"
+                    py="8"
+                    borderB="1"
+                    borderColor="border.tertiary"
+                    addonAfter={
+                        <Box display="flex" gap="4" alignItems="center">
+                            <Button icon={<IconAdjustmentsHorizontal size={16} />} appearance="subtle" size="sm" aria-label="Filters" />
+                            <Button icon={<IconSettings size={16} />} appearance="subtle" size="sm" aria-label="Settings" />
+                            <Separator orientation="vertical" h="16" mx="4" />
+                            <Button
+                                icon={<IconX size={16} />}
+                                appearance="subtle"
+                                aria-label="Close"
+                                size="sm"
+                                onClick={onClose}
+                            />
+                        </Box>
+                    }
+                >
+                    <Text fontWeight="600" fontSize="lg">Notifications</Text>
+                </DetailsPanelHeader>
+
+                <DetailsPanelBody p="0" overflowY="auto">
+                    {/* Control Bar */}
+                    <Box
+                        px="16"
+                        py="8"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        borderB="1"
+                        borderColor="border.tertiary"
+                    >
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Switch
+                                checked={showUnreadOnly}
+                                onCheckedChange={setShowUnreadOnly}
+                            />
+                            <Text fontSize="sm" color="fg.secondary">Show unread</Text>
+                        </Box>
+                        <Box display="flex" alignItems="center" gap="4">
+                            <Menu
+                                options={[
+                                    { label: "All Products", execute: () => setProductFilter("All Products") },
+                                    { label: "Opal", execute: () => setProductFilter("Opal") },
+                                    { label: "CMP", execute: () => setProductFilter("CMP") },
+                                    { label: "CMS", execute: () => setProductFilter("CMS") },
+                                ]}
+                            >
+                                <MenuTrigger asChild>
+                                    <Button appearance="subtle" size="sm" icon={<IconChevronDown size={14} />} iconPosition="end">
+                                        {productFilter}
+                                    </Button>
+                                </MenuTrigger>
+                                <MenuContent />
+                            </Menu>
+                        </Box>
+                    </Box>
+
+                    {/* Secondary Actions Bar */}
+                    <Box
+                        px="16"
+                        py="4"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                    >
+                        <button
+                            type="button"
+                            style={{
+                                background: "transparent",
+                                border: "none",
+                                padding: 0,
+                                margin: 0,
+                                color: "var(--ax-colors-fg-accent)",
+                                fontSize: "12px",
+                                lineHeight: "16px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Mark all as read
+                        </button>
+                        <button
+                            type="button"
+                            style={{
+                                background: "transparent",
+                                border: "none",
+                                padding: 0,
+                                margin: 0,
+                                color: "var(--ax-colors-fg-secondary)",
+                                fontSize: "12px",
+                                lineHeight: "16px",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Clear all
+                        </button>
+                    </Box>
+
+                    <Box display="flex" flexDirection="column">
+                        {Object.entries(groups).length > 0 ? (
+                            Object.entries(groups).map(([category, ns]) => (
+                                <Disclosure key={category} defaultOpen={category === "agent_execution" || category === "guardrail"}>
+                                    <DisclosureTrigger>
+                                        <Box px="16" py="12" bg="bg.secondary" display="flex" alignItems="center" justifyContent="space-between">
+                                            <Text fontSize="sm" fontWeight="600" color="fg.secondary">
+                                                {getCategoryLabel(category)} ({ns.length})
+                                            </Text>
+                                        </Box>
+                                    </DisclosureTrigger>
+                                    <DisclosureContent>
+                                        <Box display="flex" flexDirection="column">
+                                            {ns.slice(0, 5).map((notification) => (
+                                                <CompactNotificationCard
+                                                    key={notification.id}
+                                                    notification={notification}
+                                                />
+                                            ))}
+                                        </Box>
+                                    </DisclosureContent>
+                                </Disclosure>
+                            ))
+                        ) : (
+                            <Box p="40" display="flex" flexDirection="column" alignItems="center" gap="12">
+                                <IconBell size={48} className="text-fg-tertiary" style={{ opacity: 0.2 }} />
+                                <Text color="fg.tertiary">No notifications found</Text>
+                            </Box>
+                        )}
+                    </Box>
+
+                    {filtered.length > 0 && (
+                        <NextLink href="/opal/notifications" style={{ textDecoration: "none" }} onClick={onClose}>
+                            <Box
+                                p="16"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                className="hover:bg-[var(--ax-colors-bg-secondary)] cursor-pointer transition-colors"
+                            >
+                                <Text fontSize="sm" fontWeight="600" color="fg.accent">
+                                    View all notifications
+                                </Text>
+                            </Box>
+                        </NextLink>
+                    )}
+                </DetailsPanelBody>
+            </DetailsPanel>
+        </Box>
+    );
+}
+
+export default function NotificationDropdown() {
+    const { asideContent, setAsideContent } = useLayout();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const unreadCount = useMemo(() => getUnreadCount(mockNotifications), []);
+
+    const togglePanel = () => {
+        if (asideContent) {
+            setAsideContent(null);
+        } else {
+            setAsideContent(
+                <Box h="full" style={{ position: "sticky", top: 0 }}>
+                    <NotificationPanel onClose={() => setAsideContent(null)} />
+                </Box>
+            );
+        }
+    };
+
+    return (
+        <>
+            <Button
+                appearance="subtle"
+                size="md"
+                icon={<IconBell size={20} />}
+                aria-label="Notifications"
+                className="relative"
+                onClick={togglePanel}
+            >
+                {mounted && unreadCount > 0 && (
+                    <Box
+                        rounded="full"
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        className="absolute"
+                        style={{
+                            top: 6,
+                            right: 6,
+                            backgroundColor: "#EF4444",
+                            width: 16,
+                            height: 16,
+                            fontSize: 9,
+                            fontWeight: 700,
+                            color: "white",
+                            zIndex: 10
+                        }}
+                    >
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                    </Box>
+                )}
+            </Button>
+        </>
+    );
+}
