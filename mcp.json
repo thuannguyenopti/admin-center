@@ -1,13 +1,17 @@
 {
-    "mcpServers": {
-      "TalkToFigma": {
-        "command": "bunx",
-        "args": [
-          "cursor-talk-to-figma-mcp@latest"
-        ]
-      },
-      "Figma": {
-        "url": "http://localhost:3001"
-      }
+  "mcpServers": {
+    "axiom": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@optiaxiom/mcp"
+      ]
+    },
+    "TalkToFigma": {
+      "command": "bunx",
+      "args": [
+        "cursor-talk-to-figma-mcp@latest"
+      ]
     }
   }
+}

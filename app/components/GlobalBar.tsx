@@ -2,15 +2,21 @@
 
 import { Box, Heading, Menu, MenuContent, MenuTrigger, Button } from "@optiaxiom/react";
 import { Text } from "./Text";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { IconSearch, IconBell, IconHelp, IconUser } from "@tabler/icons-react";
+import NotificationDropdown from "./NotificationDropdown";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function GlobalBar() {
 	const router = useRouter();
 	const pathname = usePathname();
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
@@ -92,69 +98,99 @@ export default function GlobalBar() {
 						/>
 					</svg>
 				</Box>
-				<Menu
-					options={[
-						{
-							label: "Opal",
-							execute: () => router.push("/opal"),
-						},
-						{
-							label: "Content Management System",
-							execute: () => router.push("/cms/dashboard"),
-						},
-						{
-							label: "Content Marketing Platform",
-							disabledReason: "TBD",
-						},
-						{
-							label: "Connect Platform",
-							disabledReason: "TBD",
-						},
-						{
-							label: "Data Platform",
-							disabledReason: "TBD",
-						},
-						{
-							label: "Analytics",
-							disabledReason: "TBD",
-						},
-						{
-							label: "Frontend Hosting",
-							disabledReason: "TBD",
-						},
-					]}
-				>
-					<MenuTrigger asChild>
-						<Box
-							ml="32"
-							display="flex"
-							alignItems={"center"}
-							gap="8"
-							style={{ cursor: "pointer" }}
+				{mounted ? (
+					<Menu
+						options={[
+							{
+								label: "Opal",
+								execute: () => router.push("/opal"),
+							},
+							{
+								label: "Content Management System",
+								execute: () => router.push("/cms/dashboard"),
+							},
+							{
+								label: "Content Marketing Platform",
+								disabledReason: "TBD",
+							},
+							{
+								label: "Connect Platform",
+								disabledReason: "TBD",
+							},
+							{
+								label: "Data Platform",
+								disabledReason: "TBD",
+							},
+							{
+								label: "Analytics",
+								disabledReason: "TBD",
+							},
+							{
+								label: "Frontend Hosting",
+								disabledReason: "TBD",
+							},
+						]}
+					>
+						<MenuTrigger asChild>
+							<Box
+								ml="32"
+								display="flex"
+								alignItems={"center"}
+								gap="8"
+								style={{ cursor: "pointer" }}
+							>
+								<Text
+									fontSize="md"
+									fontWeight="500"
+									color="fg.default"
+								>
+									{getCurrentProduct()}
+								</Text>
+								<svg
+									width="14"
+									height="12"
+									viewBox="0 0 14 12"
+									fill="none"
+									xmlns="http://www.w3.org/2000/svg"
+								>
+									<path
+										d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
+										fill="#2E3442"
+									/>
+								</svg>
+							</Box>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				) : (
+					<Box
+						ml="32"
+						display="flex"
+						alignItems={"center"}
+						gap="8"
+						style={{ cursor: "pointer" }}
+					>
+						<Text
+							fontSize="md"
+							fontWeight="500"
+							color="fg.default"
 						>
-							<Text
-								fontSize="md"
-								fontWeight="500"
-								color="fg.default"
-							>
-								{getCurrentProduct()}
-							</Text>
-							<svg
-								width="14"
-								height="12"
-								viewBox="0 0 14 12"
-								fill="none"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path
-									d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
-									fill="#2E3442"
-								/>
-							</svg>
-						</Box>
-					</MenuTrigger>
-					<MenuContent />
-				</Menu>
+							{getCurrentProduct()}
+						</Text>
+						<svg
+							width="14"
+							height="12"
+							viewBox="0 0 14 12"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
+								fill="#2E3442"
+							/>
+						</svg>
+					</Box>
+				)}
 			</Box>
 			<Box
 				display="flex"
@@ -179,12 +215,7 @@ export default function GlobalBar() {
 						height={20}
 					/>
 				</Button>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconBell size={20} />}
-					aria-label="Notifications"
-				/>
+				<NotificationDropdown />
 				<Button
 					appearance="subtle"
 					size="md"

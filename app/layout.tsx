@@ -3,12 +3,13 @@ import Template from "./components/template";
 import "./globals.css";
 import { AxiomProvider } from "@optiaxiom/react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import usePersistentState from "@/app/usePersistentState";
 import { Algorithm, initialAlgorithms } from "@/app/db/initialData";
 import { useSecretCode } from "@/app/hooks/useSecretCode";
 import { SnowEffect } from "@/app/components/effects/SnowEffect";
 import { NewYearEffect } from "@/app/components/effects/NewYearEffect";
+import { NotificationToastProvider } from "@/app/components/NotificationToast";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -424,14 +425,29 @@ export default function RootLayout({
 
 	const [feHostingState, setFeHostingState] = useState({});
 	const { activeEffect } = useSecretCode();
+	const [isMounted, setIsMounted] = useState(false);
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
+	if (!isMounted) {
+		return (
+			<html lang="en" suppressHydrationWarning>
+				<body suppressHydrationWarning />
+			</html>
+		);
+	}
 
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body>
+			<body suppressHydrationWarning>
 				<AxiomProvider>
-					{menu ? <Template structure={menu}>{children}</Template> : children}
-					{activeEffect === "snow" && <SnowEffect />}
-					{activeEffect === "newyear" && <NewYearEffect />}
+					<NotificationToastProvider>
+						{menu ? <Template structure={menu}>{children}</Template> : children}
+						{activeEffect === "snow" && <SnowEffect />}
+						{activeEffect === "newyear" && <NewYearEffect />}
+					</NotificationToastProvider>
 				</AxiomProvider>
 			</body>
 		</html>

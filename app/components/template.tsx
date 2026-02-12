@@ -185,6 +185,7 @@ function TemplateContent({
 				flexDirection="row"
 				fontSize="md"
 				color="fg.default"
+				style={{ minHeight: 0 }}
 			>
 				<Box
 					flex="1"
@@ -227,6 +228,7 @@ function TemplateContent({
 						bg="bg.default"
 						h="full"
 						overflow="auto"
+						style={{ flexShrink: 0 }}
 					>
 						{asideContent}
 					</Box>
