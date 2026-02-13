@@ -1723,48 +1723,6 @@ function SpecializedAgentSetupContent() {
                                             {/* Side-by-side layout */}
                                             <Box display="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
-                                                {/* Single-turn Experience Box */}
-                                                <Box
-                                                    p="20"
-                                                    rounded="md"
-                                                    borderT="1"
-                                                    borderR="1"
-                                                    borderB="1"
-                                                    borderL="1"
-                                                    bg={!multiTurnMode ? "bg.accent.subtle" : "bg.default"}
-                                                    style={{ cursor: "pointer" }}
-                                                    onClick={() => setMultiTurnMode(false)}
-                                                >
-                                                    {/* Radio button header */}
-                                                    <Box display="flex" alignItems="start" gap="12" mb="20">
-                                                        <input
-                                                            type="radio"
-                                                            checked={!multiTurnMode}
-                                                            onChange={() => setMultiTurnMode(false)}
-                                                            style={{ width: "20px", height: "20px", marginTop: "2px" }}
-                                                        />
-                                                        <Box>
-                                                            <Text fontWeight="600" mb="4">Single-turn</Text>
-                                                            <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
-                                                        </Box>
-                                                    </Box>
-
-                                                    {/* Full single-turn configuration */}
-                                                    <Box display="flex" flexDirection="column" onClick={(e) => e.stopPropagation()} style={{ minHeight: "600px" }}>
-                                                        {/* Prompt Template */}
-                                                        <Box display="flex" flexDirection="column" style={{ flexGrow: 1 }}>
-                                                            <Text fontWeight="500" fontSize="md" mb="8">Prompt Template</Text>
-                                                            <Textarea
-                                                                value={promptTemplate}
-                                                                onChange={(e) => setPromptTemplate(e.target.value)}
-                                                                placeholder="Role: You are a marketing copy expert..."
-                                                                readOnly={isReadOnly}
-                                                                style={{ flexGrow: 1, resize: "vertical" }}
-                                                            />
-                                                        </Box>
-                                                    </Box>
-                                                </Box>
-
                                                 {/* Multi-turn Experience Box */}
                                                 <Box
                                                     p="20"
@@ -1928,6 +1886,48 @@ function SpecializedAgentSetupContent() {
                                                                     </Box>
                                                                 </Box>
                                                             </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+
+                                                {/* Single-turn Experience Box */}
+                                                <Box
+                                                    p="20"
+                                                    rounded="md"
+                                                    borderT="1"
+                                                    borderR="1"
+                                                    borderB="1"
+                                                    borderL="1"
+                                                    bg={!multiTurnMode ? "bg.accent.subtle" : "bg.default"}
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => setMultiTurnMode(false)}
+                                                >
+                                                    {/* Radio button header */}
+                                                    <Box display="flex" alignItems="start" gap="12" mb="20">
+                                                        <input
+                                                            type="radio"
+                                                            checked={!multiTurnMode}
+                                                            onChange={() => setMultiTurnMode(false)}
+                                                            style={{ width: "20px", height: "20px", marginTop: "2px" }}
+                                                        />
+                                                        <Box>
+                                                            <Text fontWeight="600" mb="4">Single-turn</Text>
+                                                            <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
+                                                        </Box>
+                                                    </Box>
+
+                                                    {/* Full single-turn configuration */}
+                                                    <Box display="flex" flexDirection="column" onClick={(e) => e.stopPropagation()} style={{ minHeight: "600px" }}>
+                                                        {/* Prompt Template */}
+                                                        <Box display="flex" flexDirection="column" style={{ flexGrow: 1 }}>
+                                                            <Text fontWeight="500" fontSize="md" mb="8">Prompt Template</Text>
+                                                            <Textarea
+                                                                value={promptTemplate}
+                                                                onChange={(e) => setPromptTemplate(e.target.value)}
+                                                                placeholder="Role: You are a marketing copy expert..."
+                                                                readOnly={isReadOnly}
+                                                                style={{ flexGrow: 1, resize: "vertical" }}
+                                                            />
                                                         </Box>
                                                     </Box>
                                                 </Box>
