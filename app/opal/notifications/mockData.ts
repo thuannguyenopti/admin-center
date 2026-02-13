@@ -5,6 +5,7 @@ export type NotificationType =
     | "agent_execution_autonomous"
     | "agent_execution_failed"
     | "agent_execution_long_running"
+    | "approval_required"
     | "guardrail_observer"
     | "guardrail_enforcer"
     | "guardrail_quality"
@@ -49,6 +50,8 @@ export interface Notification {
     // Actions & linking
     deepLink: string;
     actionRequired: boolean;
+    approvalRequired?: boolean;
+    approvalType?: "opal_admin" | "cmp_workflow";
 
     // Timestamps
     createdAt: Date;
@@ -130,6 +133,66 @@ const formatDate = (d: Date) => {
 };
 
 export const mockNotifications: Notification[] = [
+    // ── Approval Required ───────────────────────────────────────────────────
+    {
+        id: "n-a01",
+        userId: "u1",
+        type: "approval_required",
+        title: "Install request: Voice-of-Customer Analyzer",
+        message:
+            'David Kim has requested to install "Voice-of-Customer Analyzer" from the Agent Directory. Review the agent permissions and approve or deny.',
+        status: "unread",
+        priority: "high",
+        category: "directory",
+        agentName: "Voice-of-Customer Analyzer",
+        deepLink: "/opal/agents/directory/voc-analyzer/install-request",
+        actionRequired: true,
+        approvalRequired: true,
+        approvalType: "opal_admin",
+        createdAt: m(3),
+        timestamp: formatTime(m(3)),
+        date: formatDate(m(3)),
+        author: { name: "David Kim", avatar: null },
+    },
+    {
+        id: "n-a02",
+        userId: "u1",
+        type: "approval_required",
+        title: "Tool access request: Shopify Product Feed",
+        message:
+            'Sarah Chen is requesting access to the Shopify Product Feed connector for the Marketing Automation workspace. Approve or deny this tool request.',
+        status: "unread",
+        priority: "high",
+        category: "tools",
+        deepLink: "/opal/tools/shopify-feed/access-request",
+        actionRequired: true,
+        approvalRequired: true,
+        approvalType: "opal_admin",
+        createdAt: m(7),
+        timestamp: formatTime(m(7)),
+        date: formatDate(m(7)),
+        author: { name: "Sarah Chen", avatar: null },
+    },
+    {
+        id: "n-a03",
+        userId: "u1",
+        type: "approval_required",
+        title: "Content ready for review: Holiday Campaign",
+        message:
+            'The "Holiday Campaign" content creation step is complete. 12 assets across 4 languages are ready for your review before moving to the next workflow step.',
+        status: "unread",
+        priority: "high",
+        category: "collaboration",
+        deepLink: "/cms/workflows/holiday-campaign/review",
+        actionRequired: true,
+        approvalRequired: true,
+        approvalType: "cmp_workflow",
+        createdAt: m(15),
+        timestamp: formatTime(m(15)),
+        date: formatDate(m(15)),
+        author: { name: "Content Localizer", avatar: null },
+    },
+
     // ── Agent Execution ─────────────────────────────────────────────────────
     {
         id: "n-001",
@@ -1559,6 +1622,7 @@ export function getNotificationTypeLabel(type: NotificationType): string {
         agent_execution_autonomous: "Autonomous Execution",
         agent_execution_failed: "Failed Execution",
         agent_execution_long_running: "Long-Running Execution",
+        approval_required: "Approval Required",
         guardrail_observer: "Guardrail Observer",
         guardrail_enforcer: "Guardrail Enforcer",
         guardrail_quality: "Quality Score",
