@@ -239,6 +239,7 @@ function SpecializedAgentSetupContent() {
         setCurrentModeIndex((prev) => (prev - 1 + enforcerModes.length) % enforcerModes.length);
     };
     const [outputOpen, setOutputOpen] = useState(false);
+    const [chatConfigOpen, setChatConfigOpen] = useState(true);
 
     // Setup Fields State
     const [agentName, setAgentName] = useState("");
@@ -251,6 +252,15 @@ function SpecializedAgentSetupContent() {
     const [inferenceLevel, setInferenceLevel] = useState("balanced");
     const [variables, setVariables] = useState<any[]>([]);
     const [sensitivity, setSensitivity] = useState(3);
+
+    // New Fields
+    const [enabledInChat, setEnabledInChat] = useState(true);
+    const [multiTurnMode, setMultiTurnMode] = useState(true);
+    const [memoryTokenLimit, setMemoryTokenLimit] = useState(100000);
+    const [initialMessage, setInitialMessage] = useState("Hi! I'm your assistant. How can I help?");
+    const [conversationStarter, setConversationStarter] = useState("Once you summarize the article and present the takeaways, be prepared answer any follow up questions on the article if the reader needs further clarification.");
+    const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(["Author Bio", "Tell me more about the..."]);
+    const [restrictFirstTurn, setRestrictFirstTurn] = useState(true);
 
     // State for scroll
     const [isScrolled, setIsScrolled] = useState(false);
@@ -766,7 +776,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Details
                                         </DisclosureTrigger>
-                                        <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
                                                 <Field label="Name" required>
                                                     {isComparing && comparisonData ? (
@@ -837,87 +847,332 @@ function SpecializedAgentSetupContent() {
                                                         />
                                                     )}
                                                 </Field>
+
+
                                             </Box>
                                         </DisclosureContent>
                                     </Disclosure>
 
-                                    {/* Input Section */}
+                                    {/* Chat & Interaction Settings Section */}
+                                    <Disclosure defaultOpen={chatConfigOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            <Box display="flex" alignItems="center" gap="4">
+                                                How should this agent interact?
+                                                <Tooltip content="Configure the agent's response behavior">
+                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                </Tooltip>
+                                            </Box>
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
+                                                <Box display="flex" alignItems="center" gap="12">
+                                                    <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
+                                                    <Box>
+                                                        <Text fontWeight="500">Enable in chat</Text>
+                                                        <Text fontSize="sm" color="fg.secondary">Allow users to invoke this agent from chat</Text>
+                                                    </Box>
+                                                </Box>
+
+                                                <Box>
+                                                    <Text fontWeight="500" fontSize="md" mb="8">Response Style</Text>
+
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Box display="flex" alignItems="start" gap="12" style={{ cursor: isReadOnly ? "default" : "pointer" }} onClick={() => !isReadOnly && setMultiTurnMode(false)}>
+                                                            <input
+                                                                type="radio"
+                                                                checked={!multiTurnMode}
+                                                                onChange={() => !isReadOnly && setMultiTurnMode(false)}
+                                                                disabled={isReadOnly}
+                                                                style={{ width: "20px", height: "20px", cursor: isReadOnly ? "default" : "pointer", marginTop: "2px" }}
+                                                            />
+                                                            <Box style={{ flexGrow: 1 }}>
+                                                                <Text fontWeight="500">Single-turn</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
+                                                            </Box>
+                                                        </Box>
+
+                                                        <Box display="flex" alignItems="start" gap="12" style={{ cursor: isReadOnly ? "default" : "pointer" }} onClick={() => !isReadOnly && setMultiTurnMode(true)}>
+                                                            <input
+                                                                type="radio"
+                                                                checked={multiTurnMode}
+                                                                onChange={() => !isReadOnly && setMultiTurnMode(true)}
+                                                                disabled={isReadOnly}
+                                                                style={{ width: "20px", height: "20px", cursor: isReadOnly ? "default" : "pointer", marginTop: "2px" }}
+                                                            />
+                                                            <Box style={{ flexGrow: 1 }}>
+                                                                <Text fontWeight="500">Multi-turn conversation</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">Back-and-forth dialogue with context memory</Text>
+                                                            </Box>
+                                                        </Box>
+
+                                                        {multiTurnMode && (
+                                                            <Box pl="32" pt="8">
+                                                                <Field label="Conversation Memory" style={{ maxWidth: "200px" }}>
+                                                                    <Box display="flex" flexDirection="column" gap="4">
+                                                                        <Box display="flex" alignItems="center" gap="8">
+                                                                            <Text fontSize="sm" color="fg.secondary">Token Limit</Text>
+                                                                            <Tooltip content="Maximum tokens to maintain in conversation context">
+                                                                                <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
+                                                                            </Tooltip>
+                                                                        </Box>
+                                                                        <Input
+                                                                            type="number"
+                                                                            value={memoryTokenLimit}
+                                                                            onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)}
+                                                                            readOnly={isReadOnly}
+                                                                        />
+                                                                    </Box>
+                                                                </Field>
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+
+                                                {multiTurnMode && (
+                                                    <Box pl="32">
+                                                        <Box borderT="1" pt="24" style={{ borderTopColor: "var(--ax-colors-border-secondary)" }}>
+                                                            <Box mb="16">
+                                                                <Text fontWeight="600" fontSize="md">Chat Experience Settings</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">Configure how the agent appears and behaves in chat</Text>
+                                                            </Box>
+
+                                                            <Box display="flex" flexDirection="column" gap="20">
+                                                            <Field label="First Message" info="What users see when they start a chat session">
+                                                                <Textarea
+                                                                    value={initialMessage}
+                                                                    onChange={(e) => setInitialMessage(e.target.value)}
+                                                                    placeholder="Hi! I'm your assistant. How can I help?"
+                                                                    className="h-24"
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Field>
+
+                                                            <Field label="Follow-up Instructions" info="Guide the agent's behavior during conversations">
+                                                                <Textarea
+                                                                    value={conversationStarter}
+                                                                    onChange={(e) => setConversationStarter(e.target.value)}
+                                                                    placeholder="e.g. Once you summarize the article and present the takeaways, be prepared to answer any follow-up questions..."
+                                                                    className="h-24"
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Field>
+
+                                                            <Box>
+                                                                <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                                    <Box display="flex" alignItems="center" gap="4">
+                                                                        <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
+                                                                        <Tooltip content="Help users get started with pre-written suggestions">
+                                                                            <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                        </Tooltip>
+                                                                    </Box>
+                                                                    <Link fontSize="sm">View examples ↗</Link>
+                                                                </Box>
+
+                                                                <Text fontSize="sm" color="fg.secondary" mb="12">Help users get started with pre-written suggestions</Text>
+
+                                                                {/* Table-like layout with column headers */}
+                                                                <Box display="flex" flexDirection="column" gap="8">
+                                                                    {/* Column headers */}
+                                                                    <Box display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
+                                                                        <Text fontSize="sm" fontWeight="500" color="fg.secondary">Suggested Prompt</Text>
+                                                                        <Text fontSize="sm" fontWeight="500" color="fg.secondary">Prompt to LLM</Text>
+                                                                        <Box style={{ width: "40px" }}></Box>
+                                                                    </Box>
+
+                                                                    {/* Prompt rows */}
+                                                                    {suggestedPrompts.map((prompt, index) => (
+                                                                        <Box key={index} display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
+                                                                            <Input
+                                                                                value={prompt}
+                                                                                onChange={(e) => {
+                                                                                    const newPrompts = [...suggestedPrompts];
+                                                                                    newPrompts[index] = e.target.value;
+                                                                                    setSuggestedPrompts(newPrompts);
+                                                                                }}
+                                                                                readOnly={isReadOnly}
+                                                                                placeholder="e.g., Author Bio"
+                                                                            />
+                                                                            <Input
+                                                                                value={prompt}
+                                                                                onChange={(e) => {
+                                                                                    const newPrompts = [...suggestedPrompts];
+                                                                                    newPrompts[index] = e.target.value;
+                                                                                    setSuggestedPrompts(newPrompts);
+                                                                                }}
+                                                                                readOnly={isReadOnly}
+                                                                                placeholder="e.g., Tell me more about the..."
+                                                                            />
+                                                                            <Button
+                                                                                appearance="subtle"
+                                                                                icon={<IconTrashCan />}
+                                                                                onClick={() => {
+                                                                                    const newPrompts = suggestedPrompts.filter((_, i) => i !== index);
+                                                                                    setSuggestedPrompts(newPrompts);
+                                                                                }}
+                                                                                disabled={isReadOnly}
+                                                                                aria-label="Remove prompt"
+                                                                                style={{ padding: "8px" }}
+                                                                            />
+                                                                        </Box>
+                                                                    ))}
+
+                                                                    {/* Add Prompt button */}
+                                                                    <Box mt="4">
+                                                                        <Button
+                                                                            appearance="default"
+                                                                            size="md"
+                                                                            onClick={() => setSuggestedPrompts([...suggestedPrompts, ""])}
+                                                                            disabled={isReadOnly}
+                                                                        >
+                                                                            Add prompt
+                                                                        </Button>
+                                                                    </Box>
+                                                                </Box>
+
+                                                                {/* Prompt Restrictions */}
+                                                                <Box mt="20">
+                                                                    <Box display="flex" alignItems="center" gap="12">
+                                                                        <Switch checked={restrictFirstTurn} onCheckedChange={setRestrictFirstTurn} disabled={isReadOnly} />
+                                                                        <Box>
+                                                                            <Text fontWeight="500">Restrict users to these prompts initially</Text>
+                                                                            <Text fontSize="sm" color="fg.secondary">Users can type freely after selecting a prompt</Text>
+                                                                        </Box>
+                                                                    </Box>
+                                                                </Box>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Input (Agent Instructions & Variables) Section */}
                                     <Disclosure defaultOpen={inputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
-                                                Input
-                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                Input (Agent Instructions & Variables)
+                                                <Tooltip content="Define how the agent should behave and the inputs it accepts">
+                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                </Tooltip>
                                             </Box>
                                         </DisclosureTrigger>
-                                        <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
-                                                <Field label="Prompt Template" info="Define the system instructions">
-                                                    {isComparing && comparisonData ? (
-                                                        <FieldComparison
-                                                            previousValue={comparisonData.promptTemplate}
-                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
-                                                            multiline
-                                                        />
-                                                    ) : showDiffs && viewingVersion ? (
-                                                        <FieldComparison
-                                                            previousValue={promptTemplate}
-                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
-                                                            multiline
-                                                            mode="stacked"
-                                                        />
-                                                    ) : isReadOnly ? (
-                                                        <Box
-                                                            p="12"
-                                                            rounded="sm"
-                                                            bg="bg.secondary"
-                                                            style={{
-                                                                whiteSpace: "pre-wrap",
-                                                                wordBreak: "break-word",
-                                                                minHeight: "256px",
-                                                                cursor: "text",
-                                                                userSelect: "text",
-                                                                border: "1px solid var(--ax-colors-border-secondary)"
-                                                            }}
-                                                        >
-                                                            {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
-                                                                if (part.startsWith("[[") && part.endsWith("]]")) {
-                                                                    return <span key={i} style={{ color: "var(--ax-colors-fg-warning-strong)", fontWeight: "600" }}>{part}</span>;
-                                                                }
-                                                                if (part.startsWith("{") && part.endsWith("}")) {
-                                                                    return <span key={i} style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: "600" }}>{part}</span>;
-                                                                }
-                                                                if (part.startsWith("`") && part.endsWith("`")) {
-                                                                    return (
-                                                                        <span key={i} style={{
-                                                                            color: "var(--ax-colors-fg-secondary)",
-                                                                            fontWeight: "600",
-                                                                            backgroundColor: "var(--ax-colors-bg-tertiary)",
-                                                                            padding: "0 4px",
-                                                                            borderRadius: "4px",
-                                                                            border: "1px solid var(--ax-colors-border-secondary)"
-                                                                        }}>
-                                                                            {part}
-                                                                        </span>
-                                                                    );
-                                                                }
-                                                                return <span key={i}>{part}</span>;
-                                                            })}
+                                                {!multiTurnMode ? (
+                                                    <>
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                            <Text fontWeight="500" fontSize="md">Instructions</Text>
+                                                            <Link fontSize="sm">View best practices ↗</Link>
                                                         </Box>
-                                                    ) : (
-                                                        <Textarea
-                                                            value={promptTemplate}
-                                                            onChange={(e) => setPromptTemplate(e.target.value)}
-                                                            placeholder="Role: You are a marketing copy expert..."
-                                                            className="h-64"
-                                                        />
-                                                    )}
-                                                </Field>
+                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Define how the agent should behave and respond</Text>
+                                                        <Field info="">
+                                                            {isComparing && comparisonData ? (
+                                                                <FieldComparison
+                                                                    previousValue={comparisonData.promptTemplate}
+                                                                    currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
+                                                                    multiline
+                                                                />
+                                                            ) : showDiffs && viewingVersion ? (
+                                                                <FieldComparison
+                                                                    previousValue={promptTemplate}
+                                                                    currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
+                                                                    multiline
+                                                                    mode="stacked"
+                                                                />
+                                                            ) : isReadOnly ? (
+                                                                <Box
+                                                                    p="12"
+                                                                    rounded="sm"
+                                                                    bg="bg.secondary"
+                                                                    style={{
+                                                                        whiteSpace: "pre-wrap",
+                                                                        wordBreak: "break-word",
+                                                                        minHeight: "256px",
+                                                                        cursor: "text",
+                                                                        userSelect: "text",
+                                                                        border: "1px solid var(--ax-colors-border-secondary)"
+                                                                    }}
+                                                                >
+                                                                    {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
+                                                                        if (part.startsWith("[[") && part.endsWith("]]")) {
+                                                                            return <span key={i} style={{ color: "var(--ax-colors-fg-warning-strong)", fontWeight: "600" }}>{part}</span>;
+                                                                        }
+                                                                        if (part.startsWith("{") && part.endsWith("}")) {
+                                                                            return <span key={i} style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: "600" }}>{part}</span>;
+                                                                        }
+                                                                        if (part.startsWith("`") && part.endsWith("`")) {
+                                                                            return (
+                                                                                <span key={i} style={{
+                                                                                    color: "var(--ax-colors-fg-secondary)",
+                                                                                    fontWeight: "600",
+                                                                                    backgroundColor: "var(--ax-colors-bg-tertiary)",
+                                                                                    padding: "0 4px",
+                                                                                    borderRadius: "4px",
+                                                                                    border: "1px solid var(--ax-colors-border-secondary)"
+                                                                                }}>
+                                                                                    {part}
+                                                                                </span>
+                                                                            );
+                                                                        }
+                                                                        return <span key={i}>{part}</span>;
+                                                                    })}
+                                                                </Box>
+                                                            ) : (
+                                                                <Textarea
+                                                                    value={promptTemplate}
+                                                                    onChange={(e) => setPromptTemplate(e.target.value)}
+                                                                    placeholder="Role: You are a marketing copy expert..."
+                                                                    className="h-64"
+                                                                />
+                                                            )}
+                                                        </Field>
+                                                    </>
+                                                ) : (
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                            <Text fontWeight="500" fontSize="md">Instructions</Text>
+                                                            <Link fontSize="sm">View best practices ↗</Link>
+                                                        </Box>
+                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Define system prompt and seed prompt for multi-turn conversations</Text>
+
+                                                        <Box display="flex" flexDirection="column" gap="20">
+                                                            {/* System Prompt Template */}
+                                                            <Field label="System Prompt Template" info="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
+                                                                <Textarea
+                                                                    value={promptTemplate}
+                                                                    onChange={(e) => setPromptTemplate(e.target.value)}
+                                                                    placeholder="You are a localization expert. Your task is to adapt the provided content for the target region: [[region]]..."
+                                                                    className="h-64"
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Field>
+
+                                                            {/* Seed Prompt Template */}
+                                                            <Field label="Seed Prompt Template" info="A prompt that runs automatically (if set) when the conversation starts to prime the agent's first response">
+                                                                <Textarea
+                                                                    value={conversationStarter}
+                                                                    onChange={(e) => setConversationStarter(e.target.value)}
+                                                                    placeholder="Please localize the following content for [[region]]..."
+                                                                    className="h-48"
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Field>
+                                                        </Box>
+                                                    </Box>
+                                                )}
+
+
+
+
 
                                                 <Box>
                                                     <Box display="flex" justifyContent="space-between" mb="8">
-                                                        <Text fontWeight="400" fontSize="md">Variables</Text>
+                                                        <Text fontWeight="500" fontSize="md">Input Variables</Text>
                                                         <Button appearance="subtle" size="sm" icon={<IconPlus />} disabled={isReadOnly}>Add Variable</Button>
                                                     </Box>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="12">Reference these in instructions using {"{{"}"variableName{"}}"}</Text>
                                                     {/* Variables List */}
                                                     <Box display="flex" flexDirection="column" gap="8">
                                                         {variables.length > 0 ? (
@@ -1082,8 +1337,8 @@ function SpecializedAgentSetupContent() {
                                                                 {inferenceLevel === "fast"
                                                                     ? "Fast"
                                                                     : inferenceLevel === "advanced"
-                                                                      ? "Advanced"
-                                                                      : "Balanced (Default)"}
+                                                                        ? "Advanced"
+                                                                        : "Balanced (Default)"}
                                                             </SelectTrigger>
                                                             <SelectContent suppressHydrationWarning />
                                                         </Select>
@@ -1154,7 +1409,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Output
                                         </DisclosureTrigger>
-                                        <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
                                                 <Text color="fg.secondary">Output configuration content goes here...</Text>
                                             </Box>
@@ -1677,14 +1932,15 @@ function SpecializedAgentSetupContent() {
                                 <Text>Agent Activity Logs</Text>
                             </Box>
                         </TabsContent>
-                    </Box>
-                </Tabs>
-            </Box>
+                    </Box >
+                </Tabs >
+            </Box >
 
             {/* Version History Sidebar */}
-            <VersionHistory
+            < VersionHistory
                 isOpen={isVersionHistoryOpen}
-                onClose={() => setIsVersionHistoryOpen(false)}
+                onClose={() => setIsVersionHistoryOpen(false)
+                }
                 onViewVersion={handleViewVersion}
                 onRestoreVersion={handleRestoreVersion}
                 onCompareVersion={handleCompareVersion}
@@ -1703,6 +1959,6 @@ function SpecializedAgentSetupContent() {
                 onClose={() => setIsTestRunOpen(false)}
                 variables={variables}
             />
-        </Box>
+        </Box >
     );
 }
