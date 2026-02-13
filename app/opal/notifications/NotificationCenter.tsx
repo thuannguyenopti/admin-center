@@ -30,6 +30,8 @@ import {
     IconEllipsisStroke,
     IconCircleExclamation,
     IconTriangleExclamation,
+    IconCircleCheck,
+    IconFileLines,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -299,7 +301,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         if (n.guardrailStatus === "warning" || n.guardrailStatus === "triggered") {
             return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
         }
-        return null;
+        if (n.executionStatus === "success" || n.guardrailStatus === "success") {
+            return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+        }
+        return <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
     };
 
     // ── Loading Skeleton ────────────────────────────────────────────────────
@@ -835,7 +840,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
                                                     {/* Status Icon */}
                                                     <Box style={{ flexShrink: 0 }} pt="4">
-                                                        {getStatusIcon(n) || <IconInbox style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />}
+                                                        {getStatusIcon(n)}
                                                     </Box>
 
                                                     {/* Content Column */}
@@ -862,7 +867,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {/* Meta Column */}
                                                     <Box display="flex" alignItems="center" gap="8" pt="6" style={{ flexShrink: 0 }}>
                                                         {n.actionRequired && (
-                                                            <Badge intent="warning" variant="subtle" size="sm" className="whitespace-nowrap">
+                                                            <Badge intent="warning" variant="subtle" className="whitespace-nowrap">
                                                                 Action Required
                                                             </Badge>
                                                         )}

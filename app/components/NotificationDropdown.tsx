@@ -1,8 +1,8 @@
 "use client";
 
-import { Box, Button, Text, Badge, Switch, Separator, Disclosure, DisclosureContent, DisclosureTrigger, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import { Box, Button, Text, Badge, Separator, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconAdjustmentsHorizontal, IconCheck, IconChecks, IconTrash, IconUser, IconBrandOpenai, IconRobot, IconChevronDown } from "@tabler/icons-react";
+import { IconBell, IconX, IconSettings, IconAdjustmentsHorizontal, IconCheck, IconChecks, IconTrash, IconUser, IconBrandOpenai, IconRobot } from "@tabler/icons-react";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -109,11 +109,26 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                     </Box>
 
                     <Box display="flex" gap="8" pt="8">
-                        <Button size="sm" appearance="subtle">
-                            {notification.actionRequired ? "Take Action" : "View"}
-                        </Button>
-                        {notification.actionRequired && (
-                            <Button size="sm" appearance="subtle">Dismiss</Button>
+                        {notification.approvalRequired ? (
+                            <>
+                                <Button size="sm" appearance="inverse">Approve</Button>
+                                <Button size="sm" appearance="default">
+                                    {notification.approvalType === "opal_admin" ? "Deny" : "Send back"}
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button size="sm" appearance="default">
+                                    {notification.category === "guardrail"
+                                        ? "View Details"
+                                        : notification.actionRequired
+                                            ? "Take Action"
+                                            : "View"}
+                                </Button>
+                                {notification.actionRequired && (
+                                    <Button size="sm" appearance="default">Dismiss</Button>
+                                )}
+                            </>
                         )}
                     </Box>
                 </Box>
@@ -123,8 +138,7 @@ function CompactNotificationCard({ notification }: { notification: Notification 
 }
 
 export function NotificationPanel({ onClose }: { onClose: () => void }) {
-    const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-    const [productFilter, setProductFilter] = useState("All Products");
+    const [activeTab, setActiveTab] = useState<"all" | "action_required" | "unread">("all");
     const [panelWidth, setPanelWidth] = useState(560);
     const resizingStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
@@ -160,11 +174,14 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
         document.body.style.userSelect = "none";
     };
 
+    const actionRequiredCount = useMemo(() => mockNotifications.filter(n => n.actionRequired).length, []);
+    const unreadCount = useMemo(() => mockNotifications.filter(n => n.status === "unread").length, []);
+
     const filtered = useMemo(() => {
-        return showUnreadOnly
-            ? mockNotifications.filter(n => n.status === "unread")
-            : mockNotifications;
-    }, [showUnreadOnly]);
+        if (activeTab === "action_required") return mockNotifications.filter(n => n.actionRequired);
+        if (activeTab === "unread") return mockNotifications.filter(n => n.status === "unread");
+        return mockNotifications;
+    }, [activeTab]);
 
     const groups = useMemo(() => {
         const g: Record<string, Notification[]> = {};
@@ -220,81 +237,58 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                 </DetailsPanelHeader>
 
                 <DetailsPanelBody p="0" overflowY="auto">
-                    {/* Control Bar */}
+                    {/* Tab Bar */}
                     <Box
-                        px="16"
-                        py="8"
+                        px="8"
                         display="flex"
                         alignItems="center"
-                        justifyContent="space-between"
+                        gap="0"
                         borderB="1"
                         borderColor="border.tertiary"
+                        style={{ minHeight: 40 }}
                     >
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Switch
-                                checked={showUnreadOnly}
-                                onCheckedChange={setShowUnreadOnly}
-                            />
-                            <Text fontSize="sm" color="fg.secondary">Show unread</Text>
-                        </Box>
-                        <Box display="flex" alignItems="center" gap="4">
-                            <Menu
-                                options={[
-                                    { label: "All Products", execute: () => setProductFilter("All Products") },
-                                    { label: "Opal", execute: () => setProductFilter("Opal") },
-                                    { label: "CMP", execute: () => setProductFilter("CMP") },
-                                    { label: "CMS", execute: () => setProductFilter("CMS") },
-                                ]}
+                        {([
+                            { key: "all" as const, label: "All", count: null },
+                            { key: "action_required" as const, label: "Action Required", count: actionRequiredCount },
+                            { key: "unread" as const, label: "Unread", count: unreadCount },
+                        ]).map(tab => (
+                            <button
+                                key={tab.key}
+                                type="button"
+                                onClick={() => setActiveTab(tab.key)}
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    borderBottom: activeTab === tab.key ? "2px solid var(--ax-colors-fg-accent)" : "2px solid transparent",
+                                    padding: "10px 8px",
+                                    margin: 0,
+                                    cursor: "pointer",
+                                    fontSize: "13px",
+                                    fontWeight: activeTab === tab.key ? 600 : 400,
+                                    color: activeTab === tab.key ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
+                                    whiteSpace: "nowrap",
+                                    transition: "color 0.15s, border-color 0.15s",
+                                    flexShrink: tab.key === "all" ? 0 : 1,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    minWidth: 0,
+                                }}
                             >
-                                <MenuTrigger asChild>
-                                    <Button appearance="subtle" size="sm" icon={<IconChevronDown size={14} />} iconPosition="end">
-                                        {productFilter}
-                                    </Button>
-                                </MenuTrigger>
-                                <MenuContent />
-                            </Menu>
-                        </Box>
+                                {tab.label}{tab.count !== null ? ` (${tab.count})` : ""}
+                            </button>
+                        ))}
+                        <Box flex="1" style={{ minWidth: 8 }} />
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            icon={<IconChecks size={16} />}
+                            aria-label="Mark all as read"
+                            style={{ flexShrink: 0 }}
+                        >
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Mark all as read</span>
+                        </Button>
                     </Box>
 
-                    {/* Secondary Actions Bar */}
-                    <Box
-                        px="16"
-                        py="4"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="space-between"
-                    >
-                        <button
-                            type="button"
-                            style={{
-                                background: "transparent",
-                                border: "none",
-                                padding: 0,
-                                margin: 0,
-                                color: "var(--ax-colors-fg-accent)",
-                                fontSize: "12px",
-                                lineHeight: "16px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            Mark all as read
-                        </button>
-                        <button
-                            type="button"
-                            style={{
-                                background: "transparent",
-                                border: "none",
-                                padding: 0,
-                                margin: 0,
-                                color: "var(--ax-colors-fg-secondary)",
-                                fontSize: "12px",
-                                lineHeight: "16px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            Clear all
-                        </button>
-                    </Box>
 
                     <Box display="flex" flexDirection="column">
                         {Object.entries(groups).length > 0 ? (
