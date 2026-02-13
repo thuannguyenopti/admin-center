@@ -12,6 +12,24 @@ import {getProperty, isImageDrag, isInternalDrag, VB_INTERNAL_MIME} from "./bloc
 import {BLOCK_SCHEMAS} from "./blocks/schemas";
 import {initialPages} from "@/app/db/initialData";
 
+/** Extract plain text from a TipTap JSON document (or string) for outline labels. */
+function extractPlainText(value: any): string {
+	if (!value) return "";
+	if (typeof value === "string") {
+		try {
+			const parsed = JSON.parse(value);
+			return extractPlainText(parsed);
+		} catch {
+			// Strip HTML tags and return plain text
+			return value.replace(/<[^>]*>/g, "").trim();
+		}
+	}
+	if (value.type === "text") return value.text ?? "";
+	if (Array.isArray(value.content)) return value.content.map(extractPlainText).join("");
+	if (Array.isArray(value)) return value.map(extractPlainText).join("");
+	return "";
+}
+
 interface OutlineProps {
 	cloning?: boolean;
 	currentHoverEle: string;
@@ -942,6 +960,26 @@ export default function OutlineTree({
 																											?.properties,
 																										"label",
 																										"Label"
+																									) ||
+																									getProperty(
+																										theEles[
+																											element
+																												.id
+																										]
+																											?.properties,
+																										"name",
+																										"Name"
+																									) ||
+																									extractPlainText(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"richtext",
+																											"Rich Text"
+																										)
 																									) ||
 																									undefined
 																								}
