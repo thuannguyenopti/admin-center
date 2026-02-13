@@ -741,6 +741,8 @@ function SpecializedAgentSetupContent() {
                         <Box px="24">
                             <TabsList suppressHydrationWarning>
                                 <TabsTrigger value="setup" suppressHydrationWarning>Setup</TabsTrigger>
+                                <TabsTrigger value="setup2" suppressHydrationWarning>Setup 2</TabsTrigger>
+                                <TabsTrigger value="setup3" suppressHydrationWarning>Setup 3</TabsTrigger>
                                 <TabsTrigger value="triggers" suppressHydrationWarning>In-app Triggers</TabsTrigger>
                                 <TabsTrigger value="quality" suppressHydrationWarning>Quality</TabsTrigger>
                                 <TabsTrigger value="logs" suppressHydrationWarning>Logs</TabsTrigger>
@@ -1048,11 +1050,11 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureContent>
                                     </Disclosure>
 
-                                    {/* Input (Agent Instructions & Variables) Section */}
+                                    {/* Input Section */}
                                     <Disclosure defaultOpen={inputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
-                                                Input (Agent Instructions & Variables)
+                                                Input
                                                 <Tooltip content="Define how the agent should behave and the inputs it accepts">
                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                 </Tooltip>
@@ -1416,6 +1418,508 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureContent>
                                     </Disclosure>
 
+                                </Box>
+                            </Box>
+                        </TabsContent>
+
+                        <TabsContent value="setup2" style={{ height: "100%" }} suppressHydrationWarning>
+                            <Box
+                                h="full"
+                                display="flex"
+                                flexDirection="column"
+                                style={{
+                                    overflowY: "auto",
+                                    WebkitOverflowScrolling: "touch",
+                                }}
+                            >
+                                <Box p="24" display="flex" flexDirection="column" gap="16">
+                                    {/* Banner explaining this is alternative layout */}
+                                    <Box p="16" bg="bg.information.subtle" rounded="md" borderL="2" style={{ borderLeftColor: "var(--ax-colors-border-information)", borderLeftWidth: "4px" }}>
+                                        <Text fontWeight="600" mb="4">Alternative Layout (Setup 2)</Text>
+                                        <Text fontSize="sm" color="fg.secondary">
+                                            This is an alternative organization that groups Quick Start Prompts under Chat Experience since they're part of the chat UX, keeping Instructions section focused on the core agent behavior.
+                                        </Text>
+                                    </Box>
+
+                                    {/* Details Section - Same as Setup 1 */}
+                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            Details
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Text fontSize="sm" color="fg.secondary">
+                                                (Same as Setup 1 - Name, Description, Icon, Category)
+                                            </Text>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Interaction Mode Section */}
+                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            <Box display="flex" alignItems="center" gap="4">
+                                                Interaction Mode
+                                                <Tooltip content="Configure how users interact with this agent">
+                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                </Tooltip>
+                                            </Box>
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="24">
+                                                {/* Enable in chat */}
+                                                <Box display="flex" alignItems="center" gap="12">
+                                                    <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
+                                                    <Box>
+                                                        <Text fontWeight="500">Enable in chat</Text>
+                                                        <Text fontSize="sm" color="fg.secondary">Allow users to invoke this agent from chat</Text>
+                                                    </Box>
+                                                </Box>
+
+                                                {/* Response Style */}
+                                                <Box>
+                                                    <Text fontWeight="500" fontSize="md" mb="8">Response Style</Text>
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Box display="flex" alignItems="start" gap="12" style={{ cursor: "pointer" }} onClick={() => setMultiTurnMode(false)}>
+                                                            <input type="radio" checked={!multiTurnMode} onChange={() => setMultiTurnMode(false)} style={{ width: "20px", height: "20px", marginTop: "2px" }} />
+                                                            <Box style={{ flexGrow: 1 }}>
+                                                                <Text fontWeight="500">Single-turn</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
+                                                            </Box>
+                                                        </Box>
+
+                                                        <Box display="flex" alignItems="start" gap="12" style={{ cursor: "pointer" }} onClick={() => setMultiTurnMode(true)}>
+                                                            <input type="radio" checked={multiTurnMode} onChange={() => setMultiTurnMode(true)} style={{ width: "20px", height: "20px", marginTop: "2px" }} />
+                                                            <Box style={{ flexGrow: 1 }}>
+                                                                <Text fontWeight="500">Multi-turn conversation</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">Back-and-forth dialogue with context memory</Text>
+                                                            </Box>
+                                                        </Box>
+
+                                                        {/* Memory Token Limit */}
+                                                        {multiTurnMode && (
+                                                            <Box pl="32" pt="8">
+                                                                <Field label="Conversation Memory" style={{ maxWidth: "200px" }}>
+                                                                    <Box display="flex" flexDirection="column" gap="4">
+                                                                        <Box display="flex" alignItems="center" gap="8">
+                                                                            <Text fontSize="sm" color="fg.secondary">Token Limit</Text>
+                                                                            <Tooltip content="Maximum tokens to maintain in conversation context">
+                                                                                <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
+                                                                            </Tooltip>
+                                                                        </Box>
+                                                                        <Input type="number" value={memoryTokenLimit} onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)} />
+                                                                    </Box>
+                                                                </Field>
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Instructions Section - Core agent behavior only */}
+                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            <Box display="flex" alignItems="center" gap="4">
+                                                Instructions
+                                                <Tooltip content="Define the core agent behavior and instructions">
+                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                </Tooltip>
+                                            </Box>
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="24">
+                                                {!multiTurnMode ? (
+                                                    <>
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                            <Text fontWeight="500" fontSize="md">Agent Instructions</Text>
+                                                            <Link fontSize="sm">View best practices ↗</Link>
+                                                        </Box>
+                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Define how the agent should behave and respond</Text>
+                                                        <Field info="">
+                                                            <Textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} placeholder="Role: You are a marketing copy expert..." className="h-64" />
+                                                        </Field>
+                                                    </>
+                                                ) : (
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                            <Text fontWeight="500" fontSize="md">Agent Instructions</Text>
+                                                            <Link fontSize="sm">View best practices ↗</Link>
+                                                        </Box>
+                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Define system prompt and seed prompt for multi-turn conversations</Text>
+
+                                                        <Box display="flex" flexDirection="column" gap="20">
+                                                            <Field label="System Prompt Template" info="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
+                                                                <Textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} placeholder="You are a localization expert..." className="h-64" />
+                                                            </Field>
+
+                                                            <Field label="Seed Prompt Template" info="A prompt that runs automatically (if set) when the conversation starts to prime the agent's first response">
+                                                                <Textarea value={conversationStarter} onChange={(e) => setConversationStarter(e.target.value)} placeholder="Please localize the following content..." className="h-48" />
+                                                            </Field>
+                                                        </Box>
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Chat Experience Section - Only for Multi-turn, includes Quick Start Prompts */}
+                                    {multiTurnMode && (
+                                        <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                            <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                                <Box display="flex" alignItems="center" gap="4">
+                                                    Chat Experience
+                                                    <Tooltip content="Configure the chat interface and user experience">
+                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                    </Tooltip>
+                                                </Box>
+                                            </DisclosureTrigger>
+                                            <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                                <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="20">
+                                                    <Text fontSize="sm" color="fg.secondary">Configure how users interact with the agent in chat</Text>
+
+                                                    <Field label="First Message" info="What users see when they start a chat session">
+                                                        <Textarea value={initialMessage} onChange={(e) => setInitialMessage(e.target.value)} placeholder="Hi! I'm your assistant. How can I help?" className="h-24" />
+                                                    </Field>
+
+                                                    <Field label="Follow-up Instructions" info="Guide the agent's behavior during conversations">
+                                                        <Textarea value={conversationStarter} onChange={(e) => setConversationStarter(e.target.value)} placeholder="e.g. Once you summarize..." className="h-24" />
+                                                    </Field>
+
+                                                    {/* Quick Start Prompts */}
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                            <Box display="flex" alignItems="center" gap="4">
+                                                                <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
+                                                                <Tooltip content="Help users get started with pre-written suggestions">
+                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Tooltip>
+                                                            </Box>
+                                                            <Link fontSize="sm">View examples ↗</Link>
+                                                        </Box>
+
+                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Suggested prompts users can select to start conversations</Text>
+
+                                                        <Box display="flex" flexDirection="column" gap="8">
+                                                            <Box display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
+                                                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">Suggested Prompt</Text>
+                                                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">Prompt to LLM</Text>
+                                                                <Box style={{ width: "40px" }}></Box>
+                                                            </Box>
+
+                                                            {suggestedPrompts.map((prompt, index) => (
+                                                                <Box key={index} display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
+                                                                    <Input value={prompt} onChange={(e) => {
+                                                                        const newPrompts = [...suggestedPrompts];
+                                                                        newPrompts[index] = e.target.value;
+                                                                        setSuggestedPrompts(newPrompts);
+                                                                    }} placeholder="e.g., Author Bio" />
+                                                                    <Input value={prompt} onChange={(e) => {
+                                                                        const newPrompts = [...suggestedPrompts];
+                                                                        newPrompts[index] = e.target.value;
+                                                                        setSuggestedPrompts(newPrompts);
+                                                                    }} placeholder="e.g., Tell me more about the..." />
+                                                                    <Button appearance="subtle" icon={<IconTrashCan />} onClick={() => {
+                                                                        const newPrompts = suggestedPrompts.filter((_, i) => i !== index);
+                                                                        setSuggestedPrompts(newPrompts);
+                                                                    }} aria-label="Remove prompt" style={{ padding: "8px" }} />
+                                                                </Box>
+                                                            ))}
+
+                                                            <Box mt="4">
+                                                                <Button appearance="default" size="md" onClick={() => setSuggestedPrompts([...suggestedPrompts, ""])}>Add prompt</Button>
+                                                            </Box>
+                                                        </Box>
+
+                                                        {/* Prompt Restrictions */}
+                                                        <Box mt="20">
+                                                            <Box display="flex" alignItems="center" gap="12">
+                                                                <Switch checked={restrictFirstTurn} onCheckedChange={setRestrictFirstTurn} />
+                                                                <Box>
+                                                                    <Text fontWeight="500">Restrict users to these prompts initially</Text>
+                                                                    <Text fontSize="sm" color="fg.secondary">Users can type freely after selecting a prompt</Text>
+                                                                </Box>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </DisclosureContent>
+                                        </Disclosure>
+                                    )}
+
+                                    {/* Input Variables Section */}
+                                    <Disclosure defaultOpen={false} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            <Box display="flex" alignItems="center" gap="4">
+                                                Input Variables
+                                                <Tooltip content="Define variables that users provide as input">
+                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                </Tooltip>
+                                            </Box>
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Text fontSize="sm" color="fg.secondary">
+                                                (Same as Setup 1 - Variable definitions)
+                                            </Text>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Output Section */}
+                                    <Disclosure defaultOpen={false} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            Output
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Text fontSize="sm" color="fg.secondary">
+                                                (Same as Setup 1 - Output configuration)
+                                            </Text>
+                                        </DisclosureContent>
+                                    </Disclosure>
+                                </Box>
+                            </Box>
+                        </TabsContent>
+
+                        <TabsContent value="setup3" style={{ height: "100%" }} suppressHydrationWarning>
+                            <Box
+                                h="full"
+                                display="flex"
+                                flexDirection="column"
+                                style={{
+                                    overflowY: "auto",
+                                    WebkitOverflowScrolling: "touch",
+                                }}
+                            >
+                                <Box p="24" display="flex" flexDirection="column" gap="16">
+                                    {/* Banner explaining this layout */}
+                                    <Box p="16" bg="bg.information.subtle" rounded="md" borderL="2" style={{ borderLeftColor: "var(--ax-colors-border-information)", borderLeftWidth: "4px" }}>
+                                        <Text fontWeight="600" mb="4">Consolidated Input Layout (Setup 3)</Text>
+                                        <Text fontSize="sm" color="fg.secondary">
+                                            This layout combines Interaction Mode, Instructions, and Variables all under one "Input" section with clear subsections, mirroring the Output structure.
+                                        </Text>
+                                    </Box>
+
+                                    {/* Details Section */}
+                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            Details
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Text fontSize="sm" color="fg.secondary">
+                                                (Same as Setup 1 - Name, Description, Icon, Category)
+                                            </Text>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Input Section - Consolidated */}
+                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            <Box display="flex" alignItems="center" gap="4">
+                                                Input
+                                                <Tooltip content="Define interaction mode, agent behavior, and input variables">
+                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                </Tooltip>
+                                            </Box>
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="32">
+
+                                                {/* Interaction Mode Subsection */}
+                                                <Box>
+                                                    <Text fontWeight="600" fontSize="md" mb="8">Interaction Mode</Text>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="16">Configure how users interact with this agent</Text>
+
+                                                    <Box display="flex" flexDirection="column" gap="24">
+                                                        {/* Enable in chat */}
+                                                        <Box display="flex" alignItems="center" gap="12">
+                                                            <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
+                                                            <Box>
+                                                                <Text fontWeight="500">Enable in chat</Text>
+                                                                <Text fontSize="sm" color="fg.secondary">Allow users to invoke this agent from chat</Text>
+                                                            </Box>
+                                                        </Box>
+
+                                                        {/* Response Style */}
+                                                        <Box>
+                                                            <Text fontWeight="500" fontSize="md" mb="8">Response Style</Text>
+                                                            <Box display="flex" flexDirection="column" gap="12">
+                                                                <Box display="flex" alignItems="start" gap="12" style={{ cursor: "pointer" }} onClick={() => setMultiTurnMode(false)}>
+                                                                    <input type="radio" checked={!multiTurnMode} onChange={() => setMultiTurnMode(false)} style={{ width: "20px", height: "20px", marginTop: "2px" }} />
+                                                                    <Box style={{ flexGrow: 1 }}>
+                                                                        <Text fontWeight="500">Single-turn</Text>
+                                                                        <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
+                                                                    </Box>
+                                                                </Box>
+
+                                                                <Box display="flex" alignItems="start" gap="12" style={{ cursor: "pointer" }} onClick={() => setMultiTurnMode(true)}>
+                                                                    <input type="radio" checked={multiTurnMode} onChange={() => setMultiTurnMode(true)} style={{ width: "20px", height: "20px", marginTop: "2px" }} />
+                                                                    <Box style={{ flexGrow: 1 }}>
+                                                                        <Text fontWeight="500">Multi-turn conversation</Text>
+                                                                        <Text fontSize="sm" color="fg.secondary">Back-and-forth dialogue with context memory</Text>
+                                                                    </Box>
+                                                                </Box>
+
+                                                                {/* Memory Token Limit */}
+                                                                {multiTurnMode && (
+                                                                    <Box pl="32" pt="8">
+                                                                        <Field label="Conversation Memory" style={{ maxWidth: "200px" }}>
+                                                                            <Box display="flex" flexDirection="column" gap="4">
+                                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                                    <Text fontSize="sm" color="fg.secondary">Token Limit</Text>
+                                                                                    <Tooltip content="Maximum tokens to maintain in conversation context">
+                                                                                        <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
+                                                                                    </Tooltip>
+                                                                                </Box>
+                                                                                <Input type="number" value={memoryTokenLimit} onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)} />
+                                                                            </Box>
+                                                                        </Field>
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+
+                                                {/* Instructions Subsection */}
+                                                <Box borderT="1" pt="24" style={{ borderTopColor: "var(--ax-colors-border-secondary)" }}>
+                                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                        <Text fontWeight="600" fontSize="md">Instructions</Text>
+                                                        <Link fontSize="sm">View best practices ↗</Link>
+                                                    </Box>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="16">
+                                                        {!multiTurnMode ? "Define how the agent should behave and respond" : "Define system prompt and seed prompt for multi-turn conversations"}
+                                                    </Text>
+
+                                                    {!multiTurnMode ? (
+                                                        <Field info="">
+                                                            <Textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} placeholder="Role: You are a marketing copy expert..." className="h-64" />
+                                                        </Field>
+                                                    ) : (
+                                                        <Box display="flex" flexDirection="column" gap="20">
+                                                            <Field label="System Prompt Template" info="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
+                                                                <Textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} placeholder="You are a localization expert..." className="h-64" />
+                                                            </Field>
+
+                                                            <Field label="Seed Prompt Template" info="A prompt that runs automatically (if set) when the conversation starts to prime the agent's first response">
+                                                                <Textarea value={conversationStarter} onChange={(e) => setConversationStarter(e.target.value)} placeholder="Please localize the following content..." className="h-48" />
+                                                            </Field>
+                                                        </Box>
+                                                    )}
+                                                </Box>
+
+                                                {/* Variables Subsection */}
+                                                <Box borderT="1" pt="24" style={{ borderTopColor: "var(--ax-colors-border-secondary)" }}>
+                                                    <Box display="flex" justifyContent="space-between" mb="8">
+                                                        <Text fontWeight="600" fontSize="md">Variables</Text>
+                                                        <Button appearance="subtle" size="sm" icon={<IconPlus />} disabled={isReadOnly}>Add Variable</Button>
+                                                    </Box>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="12">Reference these in instructions using {"{{"}"variableName{"}}"}</Text>
+
+                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                        {variables.length > 0 ? (
+                                                            <Text fontSize="sm" color="fg.tertiary">(Variable cards would appear here)</Text>
+                                                        ) : (
+                                                            <Text color="fg.tertiary" fontSize="sm">No variables defined.</Text>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        </DisclosureContent>
+                                    </Disclosure>
+
+                                    {/* Chat Experience Section - Only for Multi-turn */}
+                                    {multiTurnMode && (
+                                        <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                            <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                                <Box display="flex" alignItems="center" gap="4">
+                                                    Chat Experience
+                                                    <Tooltip content="Configure the chat interface and user experience">
+                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                    </Tooltip>
+                                                </Box>
+                                            </DisclosureTrigger>
+                                            <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                                <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="20">
+                                                    <Text fontSize="sm" color="fg.secondary">Configure how users interact with the agent in chat</Text>
+
+                                                    <Field label="First Message" info="What users see when they start a chat session">
+                                                        <Textarea value={initialMessage} onChange={(e) => setInitialMessage(e.target.value)} placeholder="Hi! I'm your assistant. How can I help?" className="h-24" />
+                                                    </Field>
+
+                                                    <Field label="Follow-up Instructions" info="Guide the agent's behavior during conversations">
+                                                        <Textarea value={conversationStarter} onChange={(e) => setConversationStarter(e.target.value)} placeholder="e.g. Once you summarize..." className="h-24" />
+                                                    </Field>
+
+                                                    {/* Quick Start Prompts */}
+                                                    <Box>
+                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                            <Box display="flex" alignItems="center" gap="4">
+                                                                <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
+                                                                <Tooltip content="Help users get started with pre-written suggestions">
+                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Tooltip>
+                                                            </Box>
+                                                            <Link fontSize="sm">View examples ↗</Link>
+                                                        </Box>
+
+                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Suggested prompts users can select to start conversations</Text>
+
+                                                        <Box display="flex" flexDirection="column" gap="8">
+                                                            <Box display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
+                                                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">Suggested Prompt</Text>
+                                                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">Prompt to LLM</Text>
+                                                                <Box style={{ width: "40px" }}></Box>
+                                                            </Box>
+
+                                                            {suggestedPrompts.map((prompt, index) => (
+                                                                <Box key={index} display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
+                                                                    <Input value={prompt} onChange={(e) => {
+                                                                        const newPrompts = [...suggestedPrompts];
+                                                                        newPrompts[index] = e.target.value;
+                                                                        setSuggestedPrompts(newPrompts);
+                                                                    }} placeholder="e.g., Author Bio" />
+                                                                    <Input value={prompt} onChange={(e) => {
+                                                                        const newPrompts = [...suggestedPrompts];
+                                                                        newPrompts[index] = e.target.value;
+                                                                        setSuggestedPrompts(newPrompts);
+                                                                    }} placeholder="e.g., Tell me more about the..." />
+                                                                    <Button appearance="subtle" icon={<IconTrashCan />} onClick={() => {
+                                                                        const newPrompts = suggestedPrompts.filter((_, i) => i !== index);
+                                                                        setSuggestedPrompts(newPrompts);
+                                                                    }} aria-label="Remove prompt" style={{ padding: "8px" }} />
+                                                                </Box>
+                                                            ))}
+
+                                                            <Box mt="4">
+                                                                <Button appearance="default" size="md" onClick={() => setSuggestedPrompts([...suggestedPrompts, ""])}>Add prompt</Button>
+                                                            </Box>
+                                                        </Box>
+
+                                                        {/* Prompt Restrictions */}
+                                                        <Box mt="20">
+                                                            <Box display="flex" alignItems="center" gap="12">
+                                                                <Switch checked={restrictFirstTurn} onCheckedChange={setRestrictFirstTurn} />
+                                                                <Box>
+                                                                    <Text fontWeight="500">Restrict users to these prompts initially</Text>
+                                                                    <Text fontSize="sm" color="fg.secondary">Users can type freely after selecting a prompt</Text>
+                                                                </Box>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            </DisclosureContent>
+                                        </Disclosure>
+                                    )}
+
+                                    {/* Output Section */}
+                                    <Disclosure defaultOpen={false} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                            Output
+                                        </DisclosureTrigger>
+                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
+                                            <Text fontSize="sm" color="fg.secondary">
+                                                (Same as Setup 1 - Output configuration)
+                                            </Text>
+                                        </DisclosureContent>
+                                    </Disclosure>
                                 </Box>
                             </Box>
                         </TabsContent>
