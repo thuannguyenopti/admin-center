@@ -694,7 +694,7 @@ function SpecializedAgentSetupContent() {
                                         >
                                             Test Run
                                         </Button>
-                                        <Tooltip content="Version History">
+                                        <Tooltip delayDuration={300} content="Version History">
                                             <Button
                                                 appearance="default"
                                                 size="lg"
@@ -870,7 +870,7 @@ function SpecializedAgentSetupContent() {
                                                             <Box display="flex" alignItems="center" gap="4" mb="8">
                                                                 <Text fontWeight="500" fontSize="md">Response Style</Text>
                                                                 {multiTurnMode && (
-                                                                    <Tooltip content="Choose between single-turn or multi-turn conversation mode">
+                                                                    <Tooltip delayDuration={300} content="Choose between single-turn or multi-turn conversation mode">
                                                                         <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                     </Tooltip>
                                                                 )}
@@ -931,7 +931,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Input
-                                                <Tooltip content="Define how the agent should behave and the inputs it accepts">
+                                                <Tooltip delayDuration={300} content="Define how the agent should behave and the inputs it accepts">
                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                 </Tooltip>
                                             </Box>
@@ -1045,7 +1045,7 @@ function SpecializedAgentSetupContent() {
                                                                     <Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
                                                                         <Box display="flex" alignItems="center" gap="4">
                                                                             <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
-                                                                            <Tooltip content="Suggested prompts users can select to start conversations">
+                                                                            <Tooltip delayDuration={300} content="Suggested prompts users can select to start conversations">
                                                                                 <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                             </Tooltip>
                                                                         </Box>
@@ -1114,7 +1114,7 @@ function SpecializedAgentSetupContent() {
                                                                             <Box style={{ flexGrow: 1 }}>
                                                                                 <Box display="flex" alignItems="center" gap="4">
                                                                                     <Text fontWeight="500">Restrict users to these prompts initially</Text>
-                                                                                    <Tooltip content="When enabled, this restricts user input to only the provided Suggested Prompts after the agent's initial response, guiding the conversation.">
+                                                                                    <Tooltip delayDuration={300} content="When enabled, this restricts user input to only the provided Suggested Prompts after the agent's initial response, guiding the conversation.">
                                                                                         <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                                     </Tooltip>
                                                                                 </Box>
@@ -1421,7 +1421,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Interaction Mode
-                                                <Tooltip content="Configure how users interact with this agent">
+                                                <Tooltip delayDuration={300} content="Configure how users interact with this agent">
                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                 </Tooltip>
                                             </Box>
@@ -1521,7 +1521,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Instructions
-                                                <Tooltip content="Define the core agent behavior and instructions">
+                                                <Tooltip delayDuration={300} content="Define the core agent behavior and instructions">
                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                 </Tooltip>
                                             </Box>
@@ -1568,7 +1568,7 @@ function SpecializedAgentSetupContent() {
                                             <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                                 <Box display="flex" alignItems="center" gap="4">
                                                     Chat Experience
-                                                    <Tooltip content="Configure the chat interface and user experience">
+                                                    <Tooltip delayDuration={300} content="Configure the chat interface and user experience">
                                                         <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                     </Tooltip>
                                                 </Box>
@@ -1590,7 +1590,7 @@ function SpecializedAgentSetupContent() {
                                                         <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
                                                             <Box display="flex" alignItems="center" gap="4">
                                                                 <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
-                                                                <Tooltip content="Help users get started with pre-written suggestions">
+                                                                <Tooltip delayDuration={300} content="Help users get started with pre-written suggestions">
                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                 </Tooltip>
                                                             </Box>
@@ -1651,7 +1651,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Input Variables
-                                                <Tooltip content="Define variables that users provide as input">
+                                                <Tooltip delayDuration={300} content="Define variables that users provide as input">
                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                 </Tooltip>
                                             </Box>
@@ -1709,205 +1709,254 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureContent>
                                     </Disclosure>
 
-                                    {/* Input Section - Consolidated */}
+                                    {/* Input Section - Side by Side Experiences */}
                                     <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Input
-                                                <Tooltip content="Define interaction mode, agent behavior, and input variables">
+                                                <Tooltip delayDuration={300} content="Choose interaction mode and configure the input experience">
                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                 </Tooltip>
                                             </Box>
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
-                                            <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="32">
+                                            {/* Side-by-side layout */}
+                                            <Box display="grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
 
-                                                {/* Interaction Mode Subsection */}
-                                                <Box>
-                                                    <Text fontWeight="600" fontSize="md" mb="8">Interaction Mode</Text>
-                                                    <Text fontSize="sm" color="fg.secondary" mb="16">Configure how users interact with this agent</Text>
+                                                {/* Single-turn Experience Box */}
+                                                <Box
+                                                    p="20"
+                                                    rounded="md"
+                                                    borderT="1"
+                                                    borderR="1"
+                                                    borderB="1"
+                                                    borderL="1"
+                                                    bg={!multiTurnMode ? "bg.accent.subtle" : "bg.default"}
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => setMultiTurnMode(false)}
+                                                >
+                                                    {/* Radio button header */}
+                                                    <Box display="flex" alignItems="start" gap="12" mb="20">
+                                                        <input
+                                                            type="radio"
+                                                            checked={!multiTurnMode}
+                                                            onChange={() => setMultiTurnMode(false)}
+                                                            style={{ width: "20px", height: "20px", marginTop: "2px" }}
+                                                        />
+                                                        <Box>
+                                                            <Text fontWeight="600" mb="4">Single-turn</Text>
+                                                            <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
+                                                        </Box>
+                                                    </Box>
 
-                                                    <Box display="flex" flexDirection="column" gap="24">
-                                                        {/* Enable in chat */}
-                                                        <Box display="flex" alignItems="center" gap="12">
-                                                            <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
-                                                            <Box>
-                                                                <Text fontWeight="500">Enable in chat</Text>
-                                                                <Text fontSize="sm" color="fg.secondary">Allow users to invoke this agent from chat</Text>
-                                                            </Box>
+                                                    {/* Full single-turn configuration */}
+                                                    <Box display="flex" flexDirection="column" onClick={(e) => e.stopPropagation()} style={{ minHeight: "600px" }}>
+                                                        {/* Prompt Template */}
+                                                        <Box display="flex" flexDirection="column" style={{ flexGrow: 1 }}>
+                                                            <Text fontWeight="500" fontSize="md" mb="8">Prompt Template</Text>
+                                                            <Textarea
+                                                                value={promptTemplate}
+                                                                onChange={(e) => setPromptTemplate(e.target.value)}
+                                                                placeholder="Role: You are a marketing copy expert..."
+                                                                readOnly={isReadOnly}
+                                                                style={{ flexGrow: 1, resize: "vertical" }}
+                                                            />
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+
+                                                {/* Multi-turn Experience Box */}
+                                                <Box
+                                                    p="20"
+                                                    rounded="md"
+                                                    borderT="1"
+                                                    borderR="1"
+                                                    borderB="1"
+                                                    borderL="1"
+                                                    bg={multiTurnMode ? "bg.accent.subtle" : "bg.default"}
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => setMultiTurnMode(true)}
+                                                >
+                                                    {/* Radio button header */}
+                                                    <Box display="flex" alignItems="start" gap="12" mb="20">
+                                                        <input
+                                                            type="radio"
+                                                            checked={multiTurnMode}
+                                                            onChange={() => setMultiTurnMode(true)}
+                                                            style={{ width: "20px", height: "20px", marginTop: "2px" }}
+                                                        />
+                                                        <Box>
+                                                            <Text fontWeight="600" mb="4">Multi-turn conversation</Text>
+                                                            <Text fontSize="sm" color="fg.secondary">Back-and-forth dialogue with context memory</Text>
+                                                        </Box>
+                                                    </Box>
+
+                                                    {/* Full multi-turn configuration */}
+                                                    <Box display="flex" flexDirection="column" gap="20" onClick={(e) => e.stopPropagation()}>
+                                                        {/* Memory Token Limit */}
+                                                        <Box>
+                                                            <Field label="Memory Token Limit" info="Defines the maximum token count for the agent's conversation memory. This limit ensures Opal's context window remains manageable by trimming older messages as the conversation grows." style={{ maxWidth: "200px" }}>
+                                                                <Input
+                                                                    type="number"
+                                                                    value={memoryTokenLimit}
+                                                                    onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)}
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Field>
                                                         </Box>
 
-                                                        {/* Response Style */}
+                                                        {/* System Prompt Template */}
+                                                        <Box borderT="1" pt="16">
+                                                            <Text fontWeight="500" fontSize="md" mb="8">System Prompt Template</Text>
+                                                            <Text fontSize="sm" color="fg.secondary" mb="8">Defines the agent's persona and behavioral guidelines</Text>
+                                                            <Textarea
+                                                                value={promptTemplate}
+                                                                onChange={(e) => setPromptTemplate(e.target.value)}
+                                                                placeholder="You are a localization expert..."
+                                                                className="h-40"
+                                                                readOnly={isReadOnly}
+                                                            />
+                                                        </Box>
+
+                                                        {/* Seed Prompt Template */}
                                                         <Box>
-                                                            <Text fontWeight="500" fontSize="md" mb="8">Response Style</Text>
-                                                            <Box display="flex" flexDirection="column" gap="12">
-                                                                <Box display="flex" alignItems="start" gap="12" style={{ cursor: "pointer" }} onClick={() => setMultiTurnMode(false)}>
-                                                                    <input type="radio" checked={!multiTurnMode} onChange={() => setMultiTurnMode(false)} style={{ width: "20px", height: "20px", marginTop: "2px" }} />
-                                                                    <Box style={{ flexGrow: 1 }}>
-                                                                        <Text fontWeight="500">Single-turn</Text>
-                                                                        <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
-                                                                    </Box>
-                                                                </Box>
+                                                            <Text fontWeight="500" fontSize="md" mb="8">Seed Prompt Template</Text>
+                                                            <Text fontSize="sm" color="fg.secondary" mb="8">Runs automatically when conversation starts</Text>
+                                                            <Textarea
+                                                                value={conversationStarter}
+                                                                onChange={(e) => setConversationStarter(e.target.value)}
+                                                                placeholder="Please localize the following content..."
+                                                                className="h-32"
+                                                                readOnly={isReadOnly}
+                                                            />
+                                                        </Box>
 
-                                                                <Box display="flex" alignItems="start" gap="12" style={{ cursor: "pointer" }} onClick={() => setMultiTurnMode(true)}>
-                                                                    <input type="radio" checked={multiTurnMode} onChange={() => setMultiTurnMode(true)} style={{ width: "20px", height: "20px", marginTop: "2px" }} />
-                                                                    <Box style={{ flexGrow: 1 }}>
-                                                                        <Text fontWeight="500">Multi-turn conversation</Text>
-                                                                        <Text fontSize="sm" color="fg.secondary">Back-and-forth dialogue with context memory</Text>
-                                                                    </Box>
-                                                                </Box>
+                                                        {/* First Message */}
+                                                        <Box borderT="1" pt="16">
+                                                            <Text fontWeight="500" fontSize="md" mb="8">First Message</Text>
+                                                            <Text fontSize="sm" color="fg.secondary" mb="8">What users see when they start a chat</Text>
+                                                            <Textarea
+                                                                value={initialMessage}
+                                                                onChange={(e) => setInitialMessage(e.target.value)}
+                                                                placeholder="Hi! I can help you localize your content..."
+                                                                className="h-24"
+                                                                readOnly={isReadOnly}
+                                                            />
+                                                        </Box>
 
-                                                                {/* Memory Token Limit */}
-                                                                {multiTurnMode && (
-                                                                    <Box pl="32" pt="8">
-                                                                        <Field label="Conversation Memory" style={{ maxWidth: "200px" }}>
-                                                                            <Box display="flex" flexDirection="column" gap="4">
-                                                                                <Box display="flex" alignItems="center" gap="8">
-                                                                                    <Text fontSize="sm" color="fg.secondary">Token Limit</Text>
-                                                                                    <Tooltip content="Maximum tokens to maintain in conversation context">
-                                                                                        <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
-                                                                                    </Tooltip>
-                                                                                </Box>
-                                                                                <Input type="number" value={memoryTokenLimit} onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)} />
-                                                                            </Box>
-                                                                        </Field>
+                                                        {/* Quick Start Prompts */}
+                                                        <Box>
+                                                            <Box display="flex" alignItems="center" gap="4" mb="12">
+                                                                <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
+                                                                <Tooltip delayDuration={300} content="Suggested prompts users can select to start conversations">
+                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Tooltip>
+                                                            </Box>
+                                                            <Box display="flex" flexDirection="column" gap="8">
+                                                                {/* Column Headers */}
+                                                                {suggestedPrompts.length > 0 && (
+                                                                    <Box display="flex" gap="8" alignItems="center">
+                                                                        <Text fontSize="sm" fontWeight="500" color="fg.secondary" style={{ flexGrow: 1 }}>Suggested Prompt</Text>
+                                                                        <Text fontSize="sm" fontWeight="500" color="fg.secondary" style={{ flexGrow: 1 }}>Prompt to LLM</Text>
+                                                                        <Box style={{ width: "32px", flexShrink: 0 }}></Box>
                                                                     </Box>
                                                                 )}
+
+                                                                {suggestedPrompts.length > 0 ? (
+                                                                    suggestedPrompts.map((prompt, index) => (
+                                                                        <Box key={index} display="flex" gap="8" alignItems="center">
+                                                                            <Input
+                                                                                value={prompt}
+                                                                                onChange={(e) => {
+                                                                                    const newPrompts = [...suggestedPrompts];
+                                                                                    newPrompts[index] = e.target.value;
+                                                                                    setSuggestedPrompts(newPrompts);
+                                                                                }}
+                                                                                placeholder="e.g., Author Bio"
+                                                                                style={{ flexGrow: 1 }}
+                                                                            />
+                                                                            <Input
+                                                                                value={prompt}
+                                                                                onChange={(e) => {
+                                                                                    const newPrompts = [...suggestedPrompts];
+                                                                                    newPrompts[index] = e.target.value;
+                                                                                    setSuggestedPrompts(newPrompts);
+                                                                                }}
+                                                                                placeholder="e.g., Tell me more about the..."
+                                                                                style={{ flexGrow: 1 }}
+                                                                            />
+                                                                            <Button
+                                                                                appearance="subtle"
+                                                                                icon={<IconTrashCan />}
+                                                                                onClick={() => {
+                                                                                    const newPrompts = suggestedPrompts.filter((_, i) => i !== index);
+                                                                                    setSuggestedPrompts(newPrompts);
+                                                                                }}
+                                                                                aria-label="Remove prompt"
+                                                                                style={{ flexShrink: 0 }}
+                                                                            />
+                                                                        </Box>
+                                                                    ))
+                                                                ) : (
+                                                                    <Text fontSize="sm" color="fg.tertiary">No prompts configured</Text>
+                                                                )}
+                                                                <Box mt="4">
+                                                                    <Button
+                                                                        appearance="default"
+                                                                        size="sm"
+                                                                        onClick={() => setSuggestedPrompts([...suggestedPrompts, ""])}
+                                                                        disabled={isReadOnly}
+                                                                    >
+                                                                        Add prompt
+                                                                    </Button>
+                                                                </Box>
+                                                            </Box>
+
+                                                            {/* Restrict toggle */}
+                                                            <Box mt="12">
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Switch
+                                                                        checked={restrictFirstTurn}
+                                                                        onCheckedChange={setRestrictFirstTurn}
+                                                                        disabled={isReadOnly}
+                                                                    />
+                                                                    <Box display="flex" alignItems="center" gap="4">
+                                                                        <Text fontSize="sm" fontWeight="500">Restrict to these prompts initially</Text>
+                                                                        <Tooltip delayDuration={300} content="When enabled, this restricts user input to only the provided Suggested Prompts after the agent's initial response, guiding the conversation.">
+                                                                            <IconHelp size={14} color="var(--ax-colors-fg-tertiary)" />
+                                                                        </Tooltip>
+                                                                    </Box>
+                                                                </Box>
                                                             </Box>
                                                         </Box>
                                                     </Box>
                                                 </Box>
+                                            </Box>
 
-                                                {/* Instructions Subsection */}
-                                                <Box borderT="1" pt="24" style={{ borderTopColor: "var(--ax-colors-border-secondary)" }}>
-                                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-                                                        <Text fontWeight="600" fontSize="md">Instructions</Text>
-                                                        <Link fontSize="sm">View best practices ↗</Link>
-                                                    </Box>
-                                                    <Text fontSize="sm" color="fg.secondary" mb="16">
-                                                        {!multiTurnMode ? "Define how the agent should behave and respond" : "Define system prompt and seed prompt for multi-turn conversations"}
-                                                    </Text>
-
-                                                    {!multiTurnMode ? (
-                                                        <Field info="">
-                                                            <Textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} placeholder="Role: You are a marketing copy expert..." className="h-64" />
-                                                        </Field>
-                                                    ) : (
-                                                        <Box display="flex" flexDirection="column" gap="20">
-                                                            <Field label="System Prompt Template" info="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
-                                                                <Textarea value={promptTemplate} onChange={(e) => setPromptTemplate(e.target.value)} placeholder="You are a localization expert..." className="h-64" />
-                                                            </Field>
-
-                                                            <Field label="Seed Prompt Template" info="A prompt that runs automatically (if set) when the conversation starts to prime the agent's first response">
-                                                                <Textarea value={conversationStarter} onChange={(e) => setConversationStarter(e.target.value)} placeholder="Please localize the following content..." className="h-48" />
-                                                            </Field>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-
-                                                {/* Variables Subsection */}
-                                                <Box borderT="1" pt="24" style={{ borderTopColor: "var(--ax-colors-border-secondary)" }}>
-                                                    <Box display="flex" justifyContent="space-between" mb="8">
-                                                        <Text fontWeight="600" fontSize="md">Variables</Text>
+                                            {/* Shared Variables and Tools sections */}
+                                            <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="24" mt="24">
+                                                {/* Variables */}
+                                                <Box borderT="1" pt="20">
+                                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb="8">
+                                                        <Text fontWeight="500" fontSize="md">Variables</Text>
                                                         <Button appearance="subtle" size="sm" icon={<IconPlus />} disabled={isReadOnly}>Add Variable</Button>
                                                     </Box>
-                                                    <Text fontSize="sm" color="fg.secondary" mb="12">Reference these in instructions using {"{{"}"variableName{"}}"}</Text>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="12">Reference in templates using {"{{"}"variableName{"}}"}</Text>
+                                                    <Text color="fg.tertiary" fontSize="sm">No variables defined.</Text>
+                                                </Box>
 
-                                                    <Box display="flex" flexDirection="column" gap="8">
-                                                        {variables.length > 0 ? (
-                                                            <Text fontSize="sm" color="fg.tertiary">(Variable cards would appear here)</Text>
-                                                        ) : (
-                                                            <Text color="fg.tertiary" fontSize="sm">No variables defined.</Text>
-                                                        )}
+                                                {/* Tools */}
+                                                <Box borderT="1" pt="20">
+                                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb="8">
+                                                        <Text fontWeight="500" fontSize="md">Tools</Text>
+                                                        <Button appearance="subtle" size="sm" icon={<IconPlus />} disabled={isReadOnly}>Add Tool</Button>
                                                     </Box>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="12">Extend agent capabilities with custom tools</Text>
+                                                    <Text color="fg.tertiary" fontSize="sm">No tools configured.</Text>
                                                 </Box>
                                             </Box>
                                         </DisclosureContent>
                                     </Disclosure>
-
-                                    {/* Chat Experience Section - Only for Multi-turn */}
-                                    {multiTurnMode && (
-                                        <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
-                                            <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
-                                                <Box display="flex" alignItems="center" gap="4">
-                                                    Chat Experience
-                                                    <Tooltip content="Configure the chat interface and user experience">
-                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                    </Tooltip>
-                                                </Box>
-                                            </DisclosureTrigger>
-                                            <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
-                                                <Box style={{ maxWidth: "980px" }} display="flex" flexDirection="column" gap="20">
-                                                    <Text fontSize="sm" color="fg.secondary">Configure how users interact with the agent in chat</Text>
-
-                                                    <Field label="First Message" info="What users see when they start a chat session">
-                                                        <Textarea value={initialMessage} onChange={(e) => setInitialMessage(e.target.value)} placeholder="Hi! I'm your assistant. How can I help?" className="h-24" />
-                                                    </Field>
-
-                                                    <Field label="Follow-up Instructions" info="Guide the agent's behavior during conversations">
-                                                        <Textarea value={conversationStarter} onChange={(e) => setConversationStarter(e.target.value)} placeholder="e.g. Once you summarize..." className="h-24" />
-                                                    </Field>
-
-                                                    {/* Quick Start Prompts */}
-                                                    <Box>
-                                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-                                                            <Box display="flex" alignItems="center" gap="4">
-                                                                <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
-                                                                <Tooltip content="Help users get started with pre-written suggestions">
-                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                </Tooltip>
-                                                            </Box>
-                                                            <Link fontSize="sm">View examples ↗</Link>
-                                                        </Box>
-
-                                                        <Text fontSize="sm" color="fg.secondary" mb="12">Suggested prompts users can select to start conversations</Text>
-
-                                                        <Box display="flex" flexDirection="column" gap="8">
-                                                            <Box display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
-                                                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">Suggested Prompt</Text>
-                                                                <Text fontSize="sm" fontWeight="500" color="fg.secondary">Prompt to LLM</Text>
-                                                                <Box style={{ width: "40px" }}></Box>
-                                                            </Box>
-
-                                                            {suggestedPrompts.map((prompt, index) => (
-                                                                <Box key={index} display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
-                                                                    <Input value={prompt} onChange={(e) => {
-                                                                        const newPrompts = [...suggestedPrompts];
-                                                                        newPrompts[index] = e.target.value;
-                                                                        setSuggestedPrompts(newPrompts);
-                                                                    }} placeholder="e.g., Author Bio" />
-                                                                    <Input value={prompt} onChange={(e) => {
-                                                                        const newPrompts = [...suggestedPrompts];
-                                                                        newPrompts[index] = e.target.value;
-                                                                        setSuggestedPrompts(newPrompts);
-                                                                    }} placeholder="e.g., Tell me more about the..." />
-                                                                    <Button appearance="subtle" icon={<IconTrashCan />} onClick={() => {
-                                                                        const newPrompts = suggestedPrompts.filter((_, i) => i !== index);
-                                                                        setSuggestedPrompts(newPrompts);
-                                                                    }} aria-label="Remove prompt" style={{ padding: "8px" }} />
-                                                                </Box>
-                                                            ))}
-
-                                                            <Box mt="4">
-                                                                <Button appearance="default" size="md" onClick={() => setSuggestedPrompts([...suggestedPrompts, ""])}>Add prompt</Button>
-                                                            </Box>
-                                                        </Box>
-
-                                                        {/* Prompt Restrictions */}
-                                                        <Box mt="20">
-                                                            <Box display="flex" alignItems="center" gap="12">
-                                                                <Switch checked={restrictFirstTurn} onCheckedChange={setRestrictFirstTurn} />
-                                                                <Box>
-                                                                    <Text fontWeight="500">Restrict users to these prompts initially</Text>
-                                                                    <Text fontSize="sm" color="fg.secondary">Users can type freely after selecting a prompt</Text>
-                                                                </Box>
-                                                            </Box>
-                                                        </Box>
-                                                    </Box>
-                                                </Box>
-                                            </DisclosureContent>
-                                        </Disclosure>
-                                    )}
 
                                     {/* Output Section */}
                                     <Disclosure defaultOpen={false} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
@@ -2073,7 +2122,7 @@ function SpecializedAgentSetupContent() {
                                             <Box bg="bg.secondary" p="24" rounded="md" style={{ maxWidth: "1280px" }} suppressHydrationWarning>
                                                 <Box display="flex" alignItems="center" gap="8" mb="8">
                                                     <Text fontWeight="600" fontSize="lg">Output Evaluation Examples</Text>
-                                                    <Tooltip content="Provide examples of good outputs to guide the evaluation">
+                                                    <Tooltip delayDuration={300} content="Provide examples of good outputs to guide the evaluation">
                                                         <Box display="inline-flex" suppressHydrationWarning>
                                                             <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
                                                         </Box>
@@ -2416,7 +2465,7 @@ function SpecializedAgentSetupContent() {
                                                         <Box display="flex" alignItems="center" gap="8">
                                                             <Switch defaultChecked />
                                                             <Text>Automatically terminate executions in Enforcer mode</Text>
-                                                            <Tooltip content="When enabled, executions that exceed critical guardrails will be terminated automatically in Enforcer mode. This prevents rogue agent runs, and credits for the terminated executions will be automatically refunded.">
+                                                            <Tooltip delayDuration={300} content="When enabled, executions that exceed critical guardrails will be terminated automatically in Enforcer mode. This prevents rogue agent runs, and credits for the terminated executions will be automatically refunded.">
                                                                 <Box display="inline-flex" suppressHydrationWarning>
                                                                     <IconCircleQuestion size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                 </Box>
