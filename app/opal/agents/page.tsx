@@ -46,7 +46,7 @@ const agents = [
         icon: <IconAgent />,
         name: "Heatmap Analysis",
         handle: "@heatmap_analysis",
-        creator: { name: "Optimizely", type: "system" },
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
         category: "Optimization",
         categoryColor: "primary",
         description:
@@ -60,7 +60,7 @@ const agents = [
         icon: <IconAgent />,
         name: "Experiment Planning Agent",
         handle: "@test_planning",
-        creator: { name: "Optimizely", type: "system" },
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
         category: "Product",
         categoryColor: "primary",
         description:
@@ -75,7 +75,7 @@ const agents = [
         name: "GEO Recommendations",
         handle: "@opti_geo_recommendati...",
         tag: "Updated",
-        creator: { name: "Optimizely", type: "system" },
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
         category: "SEO",
         categoryColor: "primary",
         description:
@@ -89,7 +89,7 @@ const agents = [
         icon: <IconCodeBranch />,
         name: "Resource Manager",
         handle: "@rm",
-        creator: { name: "Optimizely", type: "system" },
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
         category: "Project Mgmt",
         categoryColor: "primary",
         description: "Look up available team members for task assignment based on workload and expertise.",
@@ -102,7 +102,7 @@ const agents = [
         icon: <IconCodeBranch />,
         name: "SEO Keyword Research",
         handle: "@seo_keyword_resaerch",
-        creator: { name: "Optimizely", type: "system" },
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
         category: "Marketing",
         categoryColor: "primary",
         description:
@@ -228,7 +228,7 @@ export default function AgentsPage() {
                         <Th>Created by</Th>
                         <Th>Category</Th>
                         <Th>Description</Th>
-                        <Th>Activity</Th>
+                        <Th>Activity / Runs</Th>
                         <Th>Last Modified</Th>
                         <Th>Status</Th>
                         <Th></Th>
@@ -255,12 +255,18 @@ export default function AgentsPage() {
                             </Td>
                             <Td>
                                 <Box display="flex" flexDirection="row" gap="8" alignItems="center">
-                                    <Avatar name={agent.creator.name} src={agent.creator.avatar} size="sm" />
+                                    {agent.creator.type === "system" ? (
+                                        <Box className="w-6 h-6 rounded-full flex items-center justify-center bg-white border border-gray-200 overflow-hidden shrink-0">
+                                            <img src={agent.creator.avatar} className="w-3.5 h-3.5" alt="" />
+                                        </Box>
+                                    ) : (
+                                        <Avatar name={agent.creator.name} src={agent.creator.avatar} size="sm" />
+                                    )}
                                     <Text>{agent.creator.name}</Text>
                                 </Box>
                             </Td>
                             <Td>
-                                <Badge intent="information" variant="subtle">
+                                <Badge intent="information" variant="subtle" className="whitespace-nowrap truncate max-w-[200px] block">
                                     {agent.category}
                                 </Badge>
                             </Td>
@@ -269,7 +275,7 @@ export default function AgentsPage() {
                                     {agent.description}
                                 </Text>
                             </Td>
-                            <Td>{agent.activity}</Td>
+                            <Td>{agent.activity.replace(/ Run(s)?/g, "")}</Td>
                             <Td>
                                 <Box>
                                     <Text fontSize="sm">{agent.lastModified.date}</Text>
