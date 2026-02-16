@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import {Box, Text, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
+import {Box, Text, Badge, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
 import {Button} from "./Button";
 import {
 	IconListTree,
@@ -31,6 +31,10 @@ import {
 	IconVersions,
 	IconStack2,
 	IconPencil,
+	IconArrowBackUp,
+	IconArrowForwardUp,
+	IconHistory,
+	IconRestore,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -56,12 +60,38 @@ interface CMSToolbarProps {
 	onTrash?: () => void;
 	onRenamePage?: () => void;
 
+	onUndo?: () => void;
+	onRedo?: () => void;
+	onRevert?: () => void;
+	onShowVersionHistory?: () => void;
+
 	// ✅ controlled preview state
 	preview?: PreviewSettings;
 	onPreviewChange?: (patch: Partial<PreviewSettings>) => void;
 
 	contentTypeIcon?: React.ReactNode;
 }
+
+const getStatusIntent = (status: string): "neutral" | "information" | "success" | "warning" | "danger" | "primary" => {
+	switch (status) {
+		case "Changed":
+		case "Draft":
+			return "warning";
+		case "Scheduled":
+		case "In Review":
+			return "primary";
+		case "Published":
+			return "success";
+		case "Expired":
+		case "Scheduled to expire":
+			return "danger";
+		case "Archived":
+		case "In Trash":
+			return "neutral";
+		default:
+			return "neutral";
+	}
+};
 
 export default function CMSToolbar({
 	pageName = "New Page",
@@ -88,6 +118,11 @@ export default function CMSToolbar({
 	onRenameVariation,
 	onTrash,
 	onRenamePage,
+
+	onUndo,
+	onRedo,
+	onRevert,
+	onShowVersionHistory,
 
 	preview = {mode: "responsive", width: 1100, maxWidth: 1100},
 	onPreviewChange = () => {},
@@ -159,25 +194,60 @@ export default function CMSToolbar({
 					</Text>
 				</Box>
 
-				<Text
-					fontSize="sm"
-					fontWeight="500"
-					px="8"
-					py="2"
-					rounded="full"
-					bg="bg.success.subtle"
-					color="fg.success.strong"
-					className={`transition-opacity duration-500 ${lastSaved ? "opacity-100" : "opacity-0"}`}
-				>
-					{lastSaved ? "Auto-saved" : "Saved"}
-				</Text>
+				{/* Status Badge */}
+				<Badge intent={getStatusIntent(pageStatus)} variant="subtle">
+					{pageStatus}
+				</Badge>
 
-				<Box
-					color="fg.default"
-					className={`transition-opacity duration-500 ${lastSaved ? "opacity-100" : "opacity-0"}`}
+				{/* Save Status with Dropdown */}
+				<Menu
+					options={[
+						{
+							label: "Undo",
+							addon: <IconArrowBackUp size={16} />,
+							execute: onUndo || (() => {}),
+						},
+						{
+							label: "Redo",
+							addon: <IconArrowForwardUp size={16} />,
+							execute: onRedo || (() => {}),
+						},
+						{
+							label: "Revert to saved",
+							addon: <IconRestore size={16} />,
+							execute: onRevert || (() => {}),
+							group: {label: "history", hidden: true, separator: true},
+						},
+						{
+							label: "Version history",
+							addon: <IconHistory size={16} />,
+							execute: onShowVersionHistory || (() => {}),
+							group: {label: "history", hidden: true, separator: true},
+						},
+					]}
 				>
-					<IconCloud size={16} />
-				</Box>
+					<MenuTrigger asChild>
+						<Box
+							display="flex"
+							alignItems="center"
+							gap="4"
+							cursor="pointer"
+							rounded="sm"
+							px="4"
+							py="2"
+							className="hover:bg-[var(--ax-bg-default-hover)] transition-colors"
+						>
+							<IconCloud size={14} style={{opacity: 0.5}} />
+							<Text
+								fontSize="sm"
+								color="fg.tertiary"
+							>
+								Saved
+							</Text>
+						</Box>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 			</Box>
 
 			{/* Right Section */}
