@@ -44,9 +44,11 @@ import Link from "next/link";
 
 interface CMSToolbarProps {
 	pageName?: string;
+	pageId?: string;
 	lastSaved?: Date | null;
 	pageStatus?: string;
 	onPublish?: () => void;
+	onViewOnWebsite?: () => void;
 
 	languageOptions?: Array<{label: string; value: string}>;
 	variationOptions?: Array<{label: string; value: string}>;
@@ -72,7 +74,9 @@ interface CMSToolbarProps {
 	contentTypeIcon?: React.ReactNode;
 }
 
-const getStatusIntent = (status: string): "neutral" | "information" | "success" | "warning" | "danger" | "primary" => {
+const getStatusIntent = (
+	status: string
+): "neutral" | "information" | "success" | "warning" | "danger" | "primary" => {
 	switch (status) {
 		case "Changed":
 		case "Draft":
@@ -95,9 +99,11 @@ const getStatusIntent = (status: string): "neutral" | "information" | "success" 
 
 export default function CMSToolbar({
 	pageName = "New Page",
+	pageId,
 	lastSaved = null,
 	pageStatus = "Draft",
 	onPublish = () => {},
+	onViewOnWebsite,
 
 	languageOptions = [
 		{label: "English (Main)", value: "en"},
@@ -238,10 +244,7 @@ export default function CMSToolbar({
 							className="hover:bg-[var(--ax-bg-default-hover)] transition-colors"
 						>
 							<IconCloud size={14} style={{opacity: 0.5}} />
-							<Text
-								fontSize="sm"
-								color="fg.tertiary"
-							>
+							<Text fontSize="sm" color="fg.tertiary">
 								Saved
 							</Text>
 						</Box>
@@ -311,6 +314,16 @@ export default function CMSToolbar({
 				{/* Publish Button with Menu */}
 				<Menu
 					options={[
+						...(onViewOnWebsite
+							? [
+									{
+										label: "View on website",
+										addon: <IconWorld size={16} />,
+										execute: onViewOnWebsite,
+										group: {label: "view", hidden: true, separator: true},
+									},
+								]
+							: []),
 						{
 							label: "Publish now",
 							addon: <IconWorldCheck size={16} />,
