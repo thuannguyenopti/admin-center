@@ -23,6 +23,7 @@ import PreviewCanvas from "./vb/PreviewCanvas";
 import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
+import VersionHistory from "./vb/versionHistory/VersionHistory";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -270,6 +271,7 @@ export default function VBPrototype({
 	const [isDeleteVariationDialogOpen, setIsDeleteVariationDialogOpen] = useState(false);
 	const [isRenameVariationDialogOpen, setIsRenameVariationDialogOpen] = useState(false);
 	const [isTrashDialogOpen, setIsTrashDialogOpen] = useState(false);
+	const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 	const [newVariationName, setNewVariationName] = useState("");
 	const [renameVariationName, setRenameVariationName] = useState("");
 
@@ -1204,6 +1206,7 @@ export default function VBPrototype({
 						pageStatus={pageStatus}
 						onPublish={onPublish}
 						onViewOnWebsite={onViewOnWebsite}
+						onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
@@ -1345,6 +1348,7 @@ export default function VBPrototype({
 					pageStatus={pageStatus}
 					onPublish={onPublish}
 					onViewOnWebsite={onViewOnWebsite}
+					onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
@@ -2029,6 +2033,14 @@ export default function VBPrototype({
 			>
 				<Text>This action will unpublish the page and move it to the trash.</Text>
 			</AbstractDialog>
+
+			{isVersionHistoryOpen && (
+				<VersionHistory
+					variations={variations}
+					pageOutlines={outlines}
+					onClose={() => setIsVersionHistoryOpen(false)}
+				/>
+			)}
 		</div>
 	);
 }
