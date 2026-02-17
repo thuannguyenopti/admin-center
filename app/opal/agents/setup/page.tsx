@@ -70,6 +70,7 @@ import {
     IconPen,
     IconPlus,
     IconTrashCan,
+    IconMessages,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -80,19 +81,50 @@ import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
 import { ComparisonBanner } from "./components/ComparisonBanner";
 import { FieldComparison } from "./components/FieldComparison";
 import { TestRunTray } from "./components/TestRunTray";
+import { CustomizeChatModal } from "./components/CustomizeChatModal";
 
 // Mock data for agents
+const DEFAULT_SYSTEM_PROMPT = `You are a conversational agent interacting with a user.
+The user can ask follow-up questions and you should respond in context of the ongoing conversation. Use the conversation history to maintain continuity across turns.
+
+Important guidelines:
+ - Stay within the scope of your defined capabilities and the tools available to you.
+ - If a question is outside your area of expertise or capabilities, clearly say so rather than guessing or making up information.
+ - Do not hallucinate facts, data, or capabilities you don't have.
+ - If you need more information from the user to provide a good answer, ask for it.
+ - Use the tools provided to you when they can help answer the user's question accurately.`;
+
 const MOCK_AGENTS_DATA: Record<string, any> = {
     "content-localizer": {
-        name: "Content Localizer",
-        agentId: "content_localizer",
-        description: "Localize your content with specific regional context while maintaining brand voice.",
-        promptTemplate: "You are a localization expert. Your task is to adapt the provided content for the target region: [[region]].\n\n{Instruction}\n- Use local terminology and cultural references.\n- Maintain the original brand voice and tone.\n- Ensure the length remains similar to the original.\n\nContent to localize: [[content]]\n\n`Translate` `Style Guide Checker`",
-        tools: "Translate, Style Guide Checker, Regional Thesaurus",
+        name: "Content Translation",
+        agentId: "content_translation",
+        description: "Converts content or PDFs into different languages, accounting for grammatical differences and adapting to cultural and company-specific terminology during the translation process. This ensures accurate and contextually appropriate linguistic conversion, enabling you to effectively communicate with diverse audiences and streamline your global content efforts.",
+        promptTemplate: `Role:
+You are an expert English-to-[[language]] translator with deep knowledge of both languages, cultural nuances, and technical terminology.
+
+Input:
+1. Source text: [[content]] or [[file]] (at least one needed)
+2. Term-base: {instruction: translate to [[language]]}
+3. Language to translate to: [[language]]
+
+Goal:
+Translate the provided content into [[language]] with maximum accuracy while maintaining the original meaning, tone, and style.
+Term-base compliance:
+* You may be provided with a term-base with the user's desired translation for specific words
+* ALWAYS use the exact equivalent provided in the term-base for any word that appears in the source text
+* Maintain the exact capitalization, spacing, and formatting of the original source text
+* Do not modify, translate, or adapt term-base entries - use them exactly as specified
+* If a term and equivalent are the same, it should be used as-is, including capitalization
+
+Translation guidelines:
+1. Accuracy: Preserve the exact meaning and intent of the source text.`,
+        tools: "",
         variables: [
-            { name: "region", description: "The country or area to localize for", type: "String", required: true },
-            { name: "content", description: "The text that needs localization", type: "String", required: true }
+            { name: "language", description: "What language to translate to", type: "String", required: true },
+            { name: "content", description: "Text or URL content that needs to be translated", type: "String", required: true },
+            { name: "file", description: "File to translate, if content was provided", type: "String", required: true }
         ],
+        systemPrompt: DEFAULT_SYSTEM_PROMPT,
         creativity: 30
     },
     "heatmap-analysis": {
@@ -260,10 +292,14 @@ function SpecializedAgentSetupContent() {
     const [initialMessage, setInitialMessage] = useState("Hi! I'm your assistant. How can I help?");
     const [conversationStarter, setConversationStarter] = useState("Once you summarize the article and present the takeaways, be prepared answer any follow up questions on the article if the reader needs further clarification.");
     const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(["Author Bio", "Tell me more about the..."]);
+
     const [restrictFirstTurn, setRestrictFirstTurn] = useState(true);
+    const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
 
     // State for scroll
     const [isScrolled, setIsScrolled] = useState(false);
+
+    const [customizeChatModalOpen, setCustomizeChatModalOpen] = useState(false);
 
     // Test Run State
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
@@ -582,17 +618,19 @@ function SpecializedAgentSetupContent() {
                 setVariables(data.variables);
                 setCreativity(data.creativity || 40);
                 setInferenceLevel(data.inferenceLevel || "balanced");
+                setSystemPrompt(data.systemPrompt || DEFAULT_SYSTEM_PROMPT);
             } else {
-                // Default fallback (Email Creation)
-                setAgentName("Email Creation");
-                setAgentId("email_creation");
-                setDescription("Transforms a provided overview into a high-quality email draft.");
-                setPromptTemplate("You are an expert email marketer. Generate a professional email based on the following overview:\n\n[[overview]]\n\n{Instruction}\n- Tone: Professional yet engaging\n- Length: Concise (under 200 words)\n- Include a clear call-to-action.\n\nUse `Email Validator`.");
-                setTools("Email Validator, Template Gallery");
-                setVariables([
-                    { name: "overview", description: "what the email is about", type: "String", required: true }
-                ]);
-                setCreativity(40);
+                // Default fallback (Content Translation)
+                const data = MOCK_AGENTS_DATA["content-localizer"];
+                setAgentName(data.name);
+                setAgentId(data.agentId);
+                setDescription(data.description);
+                setPromptTemplate(data.promptTemplate);
+                setTools(data.tools);
+                setVariables(data.variables);
+                setCreativity(data.creativity || 40);
+                setInferenceLevel(data.inferenceLevel || "balanced");
+                setSystemPrompt(data.systemPrompt || DEFAULT_SYSTEM_PROMPT);
             }
         } else {
             // mode === 'create'
@@ -605,6 +643,7 @@ function SpecializedAgentSetupContent() {
             setDescription("");
             setPromptTemplate("");
             setTools("");
+            setSystemPrompt(DEFAULT_SYSTEM_PROMPT);
             setVariables([]);
             setCreativity(40);
             setInferenceLevel("balanced");
@@ -855,70 +894,17 @@ function SpecializedAgentSetupContent() {
                                                     <Text fontWeight="500" fontSize="md" mb="4">Interaction Mode</Text>
                                                     <Text fontSize="sm" color="fg.secondary" mb="12">Configure how users interact with this agent</Text>
 
-                                                    <Box display="flex" flexDirection="column" gap="20">
-                                                        {/* Enable in Chat */}
+                                                    <Box display="flex" flexDirection="column" gap="16">
+                                                        {/* Trigger from Chat */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
-                                                            <Box>
-                                                                <Text fontWeight="500">Enable in Chat</Text>
-                                                                <Text fontSize="sm" color="fg.secondary">Allow users to trigger this agent from Chat</Text>
-                                                            </Box>
+                                                            <Text fontWeight="500">Trigger from Chat</Text>
                                                         </Box>
 
-                                                        {/* Response Style */}
-                                                        <Box>
-                                                            <Box display="flex" alignItems="center" gap="4" mb="8">
-                                                                <Text fontWeight="500" fontSize="md">Response Style</Text>
-                                                                {multiTurnMode && (
-                                                                    <Tooltip delayDuration={300} content="Choose between single-turn or multi-turn conversation mode">
-                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                    </Tooltip>
-                                                                )}
-                                                            </Box>
-
-                                                            <Box display="flex" flexDirection="column" gap="12">
-                                                                <Box display="flex" alignItems="start" gap="12" style={{ cursor: isReadOnly ? "default" : "pointer" }} onClick={() => !isReadOnly && setMultiTurnMode(false)}>
-                                                                    <input
-                                                                        type="radio"
-                                                                        checked={!multiTurnMode}
-                                                                        onChange={() => !isReadOnly && setMultiTurnMode(false)}
-                                                                        disabled={isReadOnly}
-                                                                        style={{ width: "20px", height: "20px", cursor: isReadOnly ? "default" : "pointer", marginTop: "2px" }}
-                                                                    />
-                                                                    <Box style={{ flexGrow: 1 }}>
-                                                                        <Text fontWeight="500">Single-turn</Text>
-                                                                        <Text fontSize="sm" color="fg.secondary">One input → One output, then complete</Text>
-                                                                    </Box>
-                                                                </Box>
-
-                                                                <Box display="flex" alignItems="start" gap="12" style={{ cursor: isReadOnly ? "default" : "pointer" }} onClick={() => !isReadOnly && setMultiTurnMode(true)}>
-                                                                    <input
-                                                                        type="radio"
-                                                                        checked={multiTurnMode}
-                                                                        onChange={() => !isReadOnly && setMultiTurnMode(true)}
-                                                                        disabled={isReadOnly}
-                                                                        style={{ width: "20px", height: "20px", cursor: isReadOnly ? "default" : "pointer", marginTop: "2px" }}
-                                                                    />
-                                                                    <Box style={{ flexGrow: 1 }}>
-                                                                        <Text fontWeight="500">Multi-turn</Text>
-                                                                        <Text fontSize="sm" color="fg.secondary">Back-and-forth dialogue with context memory</Text>
-                                                                    </Box>
-                                                                </Box>
-
-                                                                {/* Memory Token Limit */}
-                                                                {multiTurnMode && (
-                                                                    <Box pl="32" pt="4">
-                                                                        <Field label="Memory Token Limit" info="Defines the maximum token count for the agent's conversation memory. This limit ensures Opal's context window remains manageable by trimming older messages as the conversation grows." style={{ maxWidth: "200px" }}>
-                                                                            <Input
-                                                                                type="number"
-                                                                                value={memoryTokenLimit}
-                                                                                onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)}
-                                                                                readOnly={isReadOnly}
-                                                                            />
-                                                                        </Field>
-                                                                    </Box>
-                                                                )}
-                                                            </Box>
+                                                        {/* Support back-and-forth dialogue */}
+                                                        <Box display="flex" alignItems="center" gap="12">
+                                                            <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
+                                                            <Text fontWeight="500">Support back-and-forth dialogue</Text>
                                                         </Box>
                                                     </Box>
                                                 </Box>
@@ -938,192 +924,126 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
-                                                {!multiTurnMode ? (
-                                                    <>
-                                                        <Field label="Prompt Template" info="">
-                                                            {isComparing && comparisonData ? (
-                                                                <FieldComparison
-                                                                    previousValue={comparisonData.promptTemplate}
-                                                                    currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
-                                                                    multiline
-                                                                />
-                                                            ) : showDiffs && viewingVersion ? (
-                                                                <FieldComparison
-                                                                    previousValue={promptTemplate}
-                                                                    currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
-                                                                    multiline
-                                                                    mode="stacked"
-                                                                />
-                                                            ) : isReadOnly ? (
-                                                                <Box
-                                                                    p="12"
-                                                                    rounded="sm"
-                                                                    bg="bg.secondary"
-                                                                    style={{
-                                                                        whiteSpace: "pre-wrap",
-                                                                        wordBreak: "break-word",
-                                                                        minHeight: "256px",
-                                                                        cursor: "text",
-                                                                        userSelect: "text",
-                                                                        border: "1px solid var(--ax-colors-border-secondary)"
-                                                                    }}
-                                                                >
-                                                                    {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
-                                                                        if (part.startsWith("[[") && part.endsWith("]]")) {
-                                                                            return <span key={i} style={{ color: "var(--ax-colors-fg-warning-strong)", fontWeight: "600" }}>{part}</span>;
-                                                                        }
-                                                                        if (part.startsWith("{") && part.endsWith("}")) {
-                                                                            return <span key={i} style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: "600" }}>{part}</span>;
-                                                                        }
-                                                                        if (part.startsWith("`") && part.endsWith("`")) {
-                                                                            return (
-                                                                                <span key={i} style={{
-                                                                                    color: "var(--ax-colors-fg-secondary)",
-                                                                                    fontWeight: "600",
-                                                                                    backgroundColor: "var(--ax-colors-bg-tertiary)",
-                                                                                    padding: "0 4px",
-                                                                                    borderRadius: "4px",
-                                                                                    border: "1px solid var(--ax-colors-border-secondary)"
-                                                                                }}>
-                                                                                    {part}
-                                                                                </span>
-                                                                            );
-                                                                        }
-                                                                        return <span key={i}>{part}</span>;
-                                                                    })}
-                                                                </Box>
-                                                            ) : (
-                                                                <Textarea
-                                                                    value={promptTemplate}
-                                                                    onChange={(e) => setPromptTemplate(e.target.value)}
-                                                                    placeholder="Role: You are a marketing copy expert..."
-                                                                    className="h-64"
-                                                                />
-                                                            )}
-                                                        </Field>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        {/* System Prompt Template */}
-                                                        <Field label="System Prompt Template" info="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
-                                                            <Textarea
-                                                                value={promptTemplate}
-                                                                onChange={(e) => setPromptTemplate(e.target.value)}
-                                                                placeholder="You are a localization expert. Your task is to adapt the provided content for the target region: [[region]]..."
-                                                                className="h-64"
-                                                                readOnly={isReadOnly}
-                                                            />
-                                                        </Field>
 
-                                                        {/* Seed Prompt Template */}
-                                                        <Field label="Seed Prompt Template" info="A prompt that runs automatically (if set) when the conversation starts to prime the agent's first response">
-                                                            <Textarea
-                                                                value={conversationStarter}
-                                                                onChange={(e) => setConversationStarter(e.target.value)}
-                                                                placeholder="Please localize the following content for [[region]]..."
-                                                                className="h-48"
-                                                                readOnly={isReadOnly}
-                                                            />
-                                                        </Field>
+                                                <Field label="Prompt Template" info="">
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            previousValue={comparisonData.promptTemplate}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
+                                                            multiline
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={promptTemplate}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].promptTemplate}
+                                                            multiline
+                                                            mode="stacked"
+                                                        />
+                                                    ) : isReadOnly ? (
+                                                        <Box
+                                                            p="12"
+                                                            rounded="sm"
+                                                            bg="bg.secondary"
+                                                            style={{
+                                                                whiteSpace: "pre-wrap",
+                                                                wordBreak: "break-word",
+                                                                minHeight: "256px",
+                                                                cursor: "text",
+                                                                userSelect: "text",
+                                                                border: "1px solid var(--ax-colors-border-secondary)"
+                                                            }}
+                                                        >
+                                                            {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
+                                                                if (part.startsWith("[[") && part.endsWith("]]")) {
+                                                                    return <span key={i} style={{ color: "var(--ax-colors-fg-warning-strong)", fontWeight: "600" }}>{part}</span>;
+                                                                }
+                                                                if (part.startsWith("{") && part.endsWith("}")) {
+                                                                    return <span key={i} style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: "600" }}>{part}</span>;
+                                                                }
+                                                                if (part.startsWith("`") && part.endsWith("`")) {
+                                                                    return (
+                                                                        <span key={i} style={{
+                                                                            color: "var(--ax-colors-fg-secondary)",
+                                                                            fontWeight: "600",
+                                                                            backgroundColor: "var(--ax-colors-bg-tertiary)",
+                                                                            padding: "0 4px",
+                                                                            borderRadius: "4px",
+                                                                            border: "1px solid var(--ax-colors-border-secondary)"
+                                                                        }}>
+                                                                            {part}
+                                                                        </span>
+                                                                    );
+                                                                }
+                                                                return <span key={i}>{part}</span>;
+                                                            })}
+                                                        </Box>
+                                                    ) : (
+                                                        <Textarea
+                                                            value={promptTemplate}
+                                                            onChange={(e) => setPromptTemplate(e.target.value)}
+                                                            placeholder="Role: You are a marketing copy expert..."
+                                                            className="h-64"
+                                                        />
+                                                    )}
+                                                </Field>
 
-                                                        {/* Multi-turn Chat Experience */}
+                                                {/* System Prompt Template - Visible only when multiTurnMode is true */}
+                                                {multiTurnMode && (
+                                                    <>
                                                         <Box>
-                                                            <Text fontWeight="600" fontSize="md" mb="4">Multi-turn Chat Experience</Text>
-                                                            <Box display="flex" flexDirection="column" gap="20">
-                                                                <Field label="First Message" info="What users see when they start a chat session">
-                                                                    <Textarea
-                                                                        value={initialMessage}
-                                                                        onChange={(e) => setInitialMessage(e.target.value)}
-                                                                        placeholder="Hi! I can help you localize your content. What would you like to start with?"
-                                                                        className="h-24"
-                                                                        readOnly={isReadOnly}
-                                                                    />
-                                                                </Field>
-
-                                                                {/* Quick Start Prompts */}
-                                                                <Box>
-                                                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
-                                                                        <Box display="flex" alignItems="center" gap="4">
-                                                                            <Text fontWeight="500" fontSize="md">Quick Start Prompts</Text>
-                                                                            <Tooltip delayDuration={300} content="Suggested prompts users can select to start conversations">
-                                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                            </Tooltip>
-                                                                        </Box>
-                                                                        <Link fontSize="sm">View examples ↗</Link>
-                                                                    </Box>
-
-                                                                    <Box display="flex" flexDirection="column" gap="8">
-                                                                        <Box display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
-                                                                            <Text fontSize="sm" fontWeight="500" color="fg.secondary">Suggested Prompt</Text>
-                                                                            <Text fontSize="sm" fontWeight="500" color="fg.secondary">Prompt to LLM</Text>
-                                                                            <Box style={{ width: "40px" }}></Box>
-                                                                        </Box>
-
-                                                                        {suggestedPrompts.map((prompt, index) => (
-                                                                            <Box key={index} display="grid" style={{ gridTemplateColumns: "240px 1fr auto", gap: "12px", alignItems: "center" }}>
-                                                                                <Input
-                                                                                    value={prompt}
-                                                                                    onChange={(e) => {
-                                                                                        const newPrompts = [...suggestedPrompts];
-                                                                                        newPrompts[index] = e.target.value;
-                                                                                        setSuggestedPrompts(newPrompts);
-                                                                                    }}
-                                                                                    readOnly={isReadOnly}
-                                                                                    placeholder="Eg. Localize my content"
-                                                                                />
-                                                                                <Input
-                                                                                    value={prompt}
-                                                                                    onChange={(e) => {
-                                                                                        const newPrompts = [...suggestedPrompts];
-                                                                                        newPrompts[index] = e.target.value;
-                                                                                        setSuggestedPrompts(newPrompts);
-                                                                                    }}
-                                                                                    readOnly={isReadOnly}
-                                                                                    placeholder="Eg. Localize my content"
-                                                                                />
-                                                                                <Button
-                                                                                    appearance="subtle"
-                                                                                    icon={<IconTrashCan />}
-                                                                                    onClick={() => {
-                                                                                        const newPrompts = suggestedPrompts.filter((_, i) => i !== index);
-                                                                                        setSuggestedPrompts(newPrompts);
-                                                                                    }}
-                                                                                    disabled={isReadOnly}
-                                                                                    aria-label="Remove prompt"
-                                                                                    style={{ padding: "8px" }}
-                                                                                />
-                                                                            </Box>
-                                                                        ))}
-
-                                                                        <Box mt="4">
-                                                                            <Button
-                                                                                appearance="default"
-                                                                                size="sm"
-                                                                                onClick={() => setSuggestedPrompts([...suggestedPrompts, ""])}
-                                                                                disabled={isReadOnly}
-                                                                            >
-                                                                                Add prompt
-                                                                            </Button>
-                                                                        </Box>
-                                                                    </Box>
-
-                                                                    {/* Prompt Restrictions */}
-                                                                    <Box mt="20">
-                                                                        <Box display="flex" alignItems="center" gap="12">
-                                                                            <Switch checked={restrictFirstTurn} onCheckedChange={setRestrictFirstTurn} disabled={isReadOnly} />
-                                                                            <Box style={{ flexGrow: 1 }}>
-                                                                                <Box display="flex" alignItems="center" gap="4">
-                                                                                    <Text fontWeight="500">Restrict users to these prompts initially</Text>
-                                                                                    <Tooltip delayDuration={300} content="When enabled, this restricts user input to only the provided Suggested Prompts after the agent's initial response, guiding the conversation.">
-                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                    </Tooltip>
-                                                                                </Box>
-                                                                                <Text fontSize="sm" color="fg.secondary">Users can type freely after selecting a prompt</Text>
-                                                                            </Box>
-                                                                        </Box>
-                                                                    </Box>
+                                                            <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                                <Box display="flex" alignItems="center" gap="4">
+                                                                    <Text fontWeight="500" fontSize="md">System Prompt Template</Text>
+                                                                    <Tooltip delayDuration={300} content="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
+                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                    </Tooltip>
+                                                                </Box>
+                                                                <Box display="flex" gap="12">
+                                                                    <Button appearance="subtle" size="sm" icon={<IconTrashCan size={16} />} onClick={() => setSystemPrompt("")}>Clear</Button>
+                                                                    <Button
+                                                                        appearance="subtle"
+                                                                        size="sm"
+                                                                        icon={<IconClockRotateLeft size={16} />}
+                                                                        onClick={() => {
+                                                                            if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
+                                                                                setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
+                                                                            }
+                                                                        }}
+                                                                    >
+                                                                        Reset
+                                                                    </Button>
                                                                 </Box>
                                                             </Box>
+
+                                                            <Textarea
+                                                                value={systemPrompt}
+                                                                onChange={(e) => {
+                                                                    setSystemPrompt(e.target.value);
+                                                                    e.target.style.height = "auto";
+                                                                    e.target.style.height = `${Math.min(e.target.scrollHeight, 800)}px`;
+                                                                }}
+                                                                placeholder="You are a conversational agent interacting with a user..."
+                                                                style={{
+                                                                    minHeight: "192px", // kept the original h-48 look as min height
+                                                                    maxHeight: "800px",
+                                                                    resize: "none",
+                                                                    overflowY: "auto"
+                                                                }}
+                                                                readOnly={isReadOnly}
+                                                                ref={(ref) => {
+                                                                    if (ref) {
+                                                                        ref.style.height = "auto";
+                                                                        ref.style.height = `${Math.min(ref.scrollHeight, 800)}px`;
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <Text fontSize="sm" color="fg.tertiary" mt="8">
+                                                                Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
+                                                            </Text>
+                                                        </Box>
+
+                                                        <Box>
+                                                            <Button appearance="default" icon={<IconMessages />} onClick={() => setCustomizeChatModalOpen(true)}>Customize Chat Interactions</Button>
                                                         </Box>
                                                     </>
                                                 )}
@@ -1145,26 +1065,6 @@ function SpecializedAgentSetupContent() {
                                                                 <Card key={index} p="12">
                                                                     <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                                                                         <Box display="flex" gap="12" alignItems="center" flex="1">
-                                                                            <Box
-                                                                                display="flex"
-                                                                                alignItems="center"
-                                                                                justifyContent="center"
-                                                                                w="32"
-                                                                                h="32"
-                                                                                color="fg.secondary"
-                                                                            >
-                                                                                {(() => {
-                                                                                    switch (variable.type.toLowerCase()) {
-                                                                                        case "string": return <IconInputText size={20} />;
-                                                                                        case "number": return <IconInputNumeric size={20} />;
-                                                                                        case "json": return <IconBracketsCurly size={20} />;
-                                                                                        case "date": return <IconCalendar size={20} />;
-                                                                                        case "boolean": return <IconToggleOff size={20} />;
-                                                                                        case "file": return <IconFile size={20} />;
-                                                                                        default: return <IconBracketsSquare size={20} />;
-                                                                                    }
-                                                                                })()}
-                                                                            </Box>
                                                                             <Box flex="1">
                                                                                 <Text fontWeight="600">{variable.name}</Text>
                                                                                 <Text fontSize="sm" color="fg.secondary">{variable.description}</Text>
@@ -1207,56 +1107,63 @@ function SpecializedAgentSetupContent() {
                                                             mode="stacked"
                                                         />
                                                     ) : (
-                                                        <Box display="flex" flexDirection="column" gap="8">
-                                                            {/* Mock tools data */}
-                                                            {[
-                                                                {
-                                                                    name: "translate",
-                                                                    description: "Translates text between languages with context awareness"
-                                                                },
-                                                                {
-                                                                    name: "style-guide-checker",
-                                                                    description: "Validates content against brand style guidelines and tone"
-                                                                },
-                                                                {
-                                                                    name: "regional-thesaurus",
-                                                                    description: "Provides region-specific synonyms and terminology alternatives"
-                                                                }
-                                                            ].map((tool, index) => (
-                                                                <Box
-                                                                    key={index}
-                                                                    p="12"
-                                                                    border="1"
-                                                                    borderColor="border.secondary"
-                                                                    rounded="md"
-                                                                    bg="bg.default"
-                                                                    display="flex"
-                                                                    alignItems="center"
-                                                                    justifyContent="space-between"
-                                                                    gap="12"
-                                                                >
-                                                                    <Box flex="1">
-                                                                        <Text fontWeight="500" fontSize="md">{tool.name}</Text>
-                                                                        <Text color="fg.secondary" fontSize="sm" mt="4">{tool.description}</Text>
+                                                        tools ? (
+                                                            <Box display="flex" flexDirection="column" gap="8">
+                                                                {tools.split(",").map((toolName, index) => (
+                                                                    <Box
+                                                                        key={index}
+                                                                        p="12"
+                                                                        border="1"
+                                                                        borderColor="border.secondary"
+                                                                        rounded="md"
+                                                                        bg="bg.default"
+                                                                        display="flex"
+                                                                        alignItems="center"
+                                                                        justifyContent="space-between"
+                                                                        gap="12"
+                                                                    >
+                                                                        <Box flex="1">
+                                                                            <Text fontWeight="500" fontSize="md">{toolName.trim()}</Text>
+                                                                            <Text color="fg.secondary" fontSize="sm" mt="4">Tool description placeholder</Text>
+                                                                        </Box>
+                                                                        <DropdownMenu>
+                                                                            <DropdownMenuTrigger asChild suppressHydrationWarning>
+                                                                                <Button
+                                                                                    appearance="subtle"
+                                                                                    size="sm"
+                                                                                    icon={<IconEllipsisSolid size={16} />}
+                                                                                    aria-label="Tool options"
+                                                                                    suppressHydrationWarning
+                                                                                />
+                                                                            </DropdownMenuTrigger>
+                                                                            <DropdownMenuContent>
+                                                                                <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                                                <DropdownMenuItem>Remove</DropdownMenuItem>
+                                                                            </DropdownMenuContent>
+                                                                        </DropdownMenu>
                                                                     </Box>
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild suppressHydrationWarning>
-                                                                            <Button
-                                                                                appearance="subtle"
-                                                                                size="sm"
-                                                                                icon={<IconEllipsisSolid size={16} />}
-                                                                                aria-label="Tool options"
-                                                                                suppressHydrationWarning
-                                                                            />
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent>
-                                                                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                                            <DropdownMenuItem>Remove</DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
-                                                                </Box>
-                                                            ))}
-                                                        </Box>
+                                                                ))}
+                                                            </Box>
+                                                        ) : (
+                                                            <Box
+                                                                border="2"
+                                                                borderColor="border.tertiary"
+                                                                style={{ borderStyle: "dashed" }}
+                                                                rounded="md"
+                                                                p="32"
+                                                                display="flex"
+                                                                flexDirection="column"
+                                                                alignItems="center"
+                                                                justifyContent="center"
+                                                                gap="16"
+                                                                bg="transparent"
+                                                            >
+                                                                <Text color="fg.secondary" textAlign="center">
+                                                                    Specify the tools via <span style={{ color: "var(--ax-colors-fg-default)", backgroundColor: "var(--ax-colors-bg-tertiary)", padding: "2px 4px", borderRadius: "4px", border: "1px solid var(--ax-colors-border-secondary)" }}>`tool_name`</span> in your prompt template.
+                                                                </Text>
+                                                                <Button icon={<IconPlus />} appearance="default" size="sm">Add Tool</Button>
+                                                            </Box>
+                                                        )
                                                     )}
                                                 </Field>
 
@@ -2511,6 +2418,18 @@ function SpecializedAgentSetupContent() {
                 isOpen={isTestRunOpen}
                 onClose={() => setIsTestRunOpen(false)}
                 variables={variables}
+            />
+
+            <CustomizeChatModal
+                isOpen={customizeChatModalOpen}
+                onClose={() => setCustomizeChatModalOpen(false)}
+                initialMessage={initialMessage}
+                currentSuggestedPrompts={Array.isArray(suggestedPrompts) ? suggestedPrompts.join("\n") : (suggestedPrompts || "")} // suggestedPrompts is string[] in page state
+                onUpdate={(msg, prompts) => {
+                    setInitialMessage(msg);
+                    setSuggestedPrompts(prompts.split("\n").filter(p => p.trim() !== ""));
+                    setCustomizeChatModalOpen(false);
+                }}
             />
         </Box >
     );
