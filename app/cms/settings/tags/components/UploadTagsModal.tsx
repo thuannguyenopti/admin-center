@@ -465,7 +465,7 @@ Product Update,,public`;
 
             {/* Preview table */}
             <Box display="flex" flexDirection="column" gap="16">
-              <Box style={{ minHeight: '440px' }}>
+              <Box>
                 <Table>
                   <thead>
                     {/* Quick Actions Row - Only show when conflicts exist */}
@@ -705,7 +705,7 @@ Product Update,,public`;
         size="lg"
         style={{
           maxWidth: step === 'preview' ? '1088px' : '736px',
-          maxHeight: '80vh',
+          maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
