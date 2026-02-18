@@ -231,6 +231,7 @@ export default function VBPrototype({
 	onSave,
 	onPublish,
 	pageName,
+	pageId,
 	pageStatus,
 	variations,
 	onAddVariation,
@@ -238,13 +239,16 @@ export default function VBPrototype({
 	onRenameVariation,
 	onTrash,
 	onRenamePage,
+	onViewOnWebsite,
 }: {
 	initialData?: PageInput;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
 	onTrash?: () => void;
 	pageName?: string;
+	pageId?: string;
 	pageStatus?: string;
+	onViewOnWebsite?: () => void;
 	variations?: {
 		id: string;
 		name: string;
@@ -1196,9 +1200,11 @@ export default function VBPrototype({
 				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
+						pageId={pageId}
 						lastSaved={lastSaved}
 						pageStatus={pageStatus}
 						onPublish={onPublish}
+						onViewOnWebsite={onViewOnWebsite}
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
@@ -1304,9 +1310,11 @@ export default function VBPrototype({
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
+					pageId={pageId}
 					lastSaved={lastSaved}
 					pageStatus={pageStatus}
 					onPublish={onPublish}
+					onViewOnWebsite={onViewOnWebsite}
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
