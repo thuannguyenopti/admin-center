@@ -40,14 +40,20 @@ const buildTree = (pages: Page[]) => {
 
 const getStatusIntent = (status: string) => {
 	switch (status) {
+		case "Changed":
+		case "Draft":
+			return "warning";
+		case "Scheduled":
+		case "In Review":
+			return "primary";
 		case "Published":
 			return "success";
-		case "Draft":
+		case "Expired":
+		case "Scheduled to expire":
+			return "danger";
+		case "Archived":
+		case "In Trash":
 			return "neutral";
-		case "Review":
-			return "warning";
-		case "Changed":
-			return "information";
 		default:
 			return "neutral";
 	}
