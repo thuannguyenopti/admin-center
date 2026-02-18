@@ -174,8 +174,8 @@ export default function ContentPage() {
 		}
 	}, [paneOpen, contentSubNavExpanded, contentSubNavPinned, isFilterPanelOpen, setContentSubNavExpanded]);
 	const selectedItems = useMemo(
-		() => (paginatedItems ?? []).filter((item) => selectedRows.has(item.id)),
-		[paginatedItems, selectedRows]
+		() => (displayContent ?? []).filter((item) => selectedRows.has(item.id)),
+		[displayContent, selectedRows]
 	);
 	const selectedItemsTagUnion = useMemo(
 		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
@@ -215,13 +215,22 @@ export default function ContentPage() {
 	}, [filters, itemsPerPage]);
 
 	const handleSelectAll = (checked: boolean) => {
-		const newSet = new Set(selectedRows);
-		if (checked) {
+		// Check if we're currently in indeterminate state (some but not all selected)
+		const currentlyAllSelected = displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
+		const currentlyIndeterminate = selectedRows.size > 0 && !currentlyAllSelected;
+
+		// If clicking from indeterminate state, always deselect all
+		if (currentlyIndeterminate) {
+			setSelectedRows(new Set());
+		} else if (checked) {
+			// Select all items on current page
+			const newSet = new Set(selectedRows);
 			paginatedItems.forEach((item) => newSet.add(item.id));
+			setSelectedRows(newSet);
 		} else {
-			paginatedItems.forEach((item) => newSet.delete(item.id));
+			// Deselect all items across all pages
+			setSelectedRows(new Set());
 		}
-		setSelectedRows(newSet);
 		setSelectedContentId(null);
 	};
 
@@ -248,10 +257,11 @@ export default function ContentPage() {
 		}
 	};
 
+	// Check selection state across ALL items (not just current page)
 	const isAllSelected =
-		paginatedItems.length > 0 && paginatedItems.every((item) => selectedRows.has(item.id));
+		displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
 	const isSomeSelected =
-		paginatedItems.some((item) => selectedRows.has(item.id)) && !isAllSelected;
+		selectedRows.size > 0 && !isAllSelected;
 
 	const handleSort = (column: string) => {
 		if (sortColumn === column) {

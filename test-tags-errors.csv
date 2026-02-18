@@ -1,0 +1,14 @@
+name,slug,visibility
+Valid Tag,valid-tag,public
+X,x,public
+,missing-name,public
+Name Only,,public
+Has Spaces In Slug,has spaces,public
+UPPERCASE-SLUG,UPPERCASE-SLUG,public
+Special!@#$%,special-chars!@#,public
+Valid Entry,good-slug,public
+Numbers123,numbers-123,public
+Underscore_Test,under_score,public
+Tab	Character,tab-char,public
+"Quoted, Name",quoted-name,public
+Emoji 🚀,emoji-rocket,public

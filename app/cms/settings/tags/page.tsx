@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -23,6 +23,7 @@ import { TagsTable } from './components/TagsTable';
 import { TagModal } from './components/TagModal';
 import { DeleteTagModal } from './components/DeleteTagModal';
 import { MergeTagsModal } from './components/MergeTagsModal';
+import { UploadTagsModal } from './components/UploadTagsModal';
 import { useSelection } from './hooks/useSelection';
 import { useTagActions } from './hooks/useTagActions';
 import { filterTags } from './utils';
@@ -41,6 +42,7 @@ export default function TagsSettings() {
   const [tagsToDelete, setTagsToDelete] = useState<Tag[]>([]);
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
   const [tagsToMerge, setTagsToMerge] = useState<Tag[]>([]);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [contentTagOverrides, setContentTagOverrides] = usePersistentState(
     'contentTagOverrides',
     {}
@@ -80,6 +82,11 @@ export default function TagsSettings() {
       usage: tagUsageCounts[tag.slug] || 0,
     }));
   }, [tags, tagUsageCounts]);
+
+  // Update page header visibility based on tags
+  useEffect(() => {
+    setHidePageHeader(tagsWithUsage.length === 0 && !isModalOpen);
+  }, [tagsWithUsage.length, isModalOpen, setHidePageHeader]);
 
   const {
     selectedIds,
@@ -243,6 +250,12 @@ export default function TagsSettings() {
     deselectAll();
   };
 
+  const handleUploadImport = (toCreate: TagFormRow[], toUpdate: TagFormRow[]) => {
+    if (toCreate.length > 0) createTags(toCreate);
+    if (toUpdate.length > 0) updateTags(toUpdate);
+    setIsUploadModalOpen(false);
+  };
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       // Toggle direction if same column
@@ -265,9 +278,6 @@ export default function TagsSettings() {
 
   // Show empty state if no tags
   if (tagsWithUsage.length === 0 && !isModalOpen) {
-    // Hide the page header for empty state
-    setHidePageHeader(true);
-
     return (
       <>
         <Box
@@ -356,9 +366,6 @@ export default function TagsSettings() {
     );
   }
 
-  // Show page header when there are tags
-  setHidePageHeader(false);
-
   // Show full tags interface when there are tags
   return (
     <>
@@ -400,8 +407,15 @@ export default function TagsSettings() {
               </DropdownMenu>
             </>
           )}
+          <Button
+            appearance="default"
+            size="md"
+            onClick={() => setIsUploadModalOpen(true)}
+          >
+            Import
+          </Button>
           <Button appearance="primary" size="md" onClick={handleCreateClick}>
-            Create tags
+            Create
           </Button>
         </Box>
       </Box>
@@ -456,6 +470,14 @@ export default function TagsSettings() {
         allTags={tagsWithUsage}
         contentItems={contentItems}
         onMerge={handleMerge}
+      />
+
+      {/* Upload Modal */}
+      <UploadTagsModal
+        open={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        allTags={tagsWithUsage}
+        onImport={handleUploadImport}
       />
     </>
   );

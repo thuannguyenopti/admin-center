@@ -48,10 +48,18 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
     Media: items.filter(i => i.baseType === "Media").length,
   };
 
-  // Union of all selected items' tags (slugs) for display and edit
-  const tags = [...new Set(items.flatMap((i) => i.tags ?? []))];
-  // Union of all selected items' categories (slugs) for display and edit
-  const categories = [...new Set(items.flatMap((i) => i.categories ?? []))];
+  // Intersection of all selected items' tags (only tags ALL items share)
+  const tags = items.length > 0
+    ? (items[0].tags ?? []).filter(tag =>
+        items.every(item => (item.tags ?? []).includes(tag))
+      )
+    : [];
+  // Intersection of all selected items' categories (only categories ALL items share)
+  const categories = items.length > 0
+    ? (items[0].categories ?? []).filter(category =>
+        items.every(item => (item.categories ?? []).includes(category))
+      )
+    : [];
 
   // Calculate total file size (mock)
   const totalFileSize = (items.length * 11.42).toFixed(1); // Mock calculation

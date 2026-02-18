@@ -279,7 +279,7 @@ export default function CategoriesSettings() {
               }}
               onClick={handleCreateClick}
             >
-              Create categories
+              Create
             </AppButton>
           </Box>
         </Box>
@@ -342,8 +342,15 @@ export default function CategoriesSettings() {
               </DropdownMenu>
             </>
           )}
+          <Button
+            appearance="default"
+            size="md"
+            onClick={() => {/* TODO: Add import modal */}}
+          >
+            Import
+          </Button>
           <Button appearance="primary" size="md" onClick={handleCreateClick}>
-            Create categories
+            Create
           </Button>
         </Box>
       </Box>
