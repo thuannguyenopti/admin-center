@@ -926,14 +926,24 @@ function SpecializedAgentSetupContent() {
 
                                                 {/* Interaction Mode */}
                                                 <Box>
-                                                    <Text fontWeight="500" fontSize="md" mb="4">Interaction Mode</Text>
+                                                    <Box display="flex" alignItems="center" gap="4" mb="4">
+                                                        <Text fontWeight="500" fontSize="md">Interaction Mode</Text>
+                                                        <Tooltip delayDuration={300} content="Configure how users interact with this agent">
+                                                            <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                        </Tooltip>
+                                                    </Box>
                                                     <Text fontSize="sm" color="fg.secondary" mb="12">Configure how users interact with this agent</Text>
 
                                                     <Box display="flex" flexDirection="column" gap="16">
                                                         {/* Support back-and-forth dialogue */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
-                                                            <Text fontWeight="500">Support back-and-forth dialogue</Text>
+                                                            <Box display="flex" alignItems="center" gap="4">
+                                                                <Text fontWeight="500">Support back-and-forth dialogue</Text>
+                                                                <Tooltip delayDuration={300} content="Select this option for multi-turn conversations for this agent, facilitating interactive guidance, clarification, and personalized user experiences.">
+                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Tooltip>
+                                                            </Box>
                                                         </Box>
 
                                                         {/* Enable in Chat */}
@@ -960,7 +970,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
 
-                                                <Field label={multiTurnMode ? "First Prompt" : "Prompt"} info="">
+                                                <Field label={multiTurnMode ? "First Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
                                                             previousValue={comparisonData.promptTemplate}
@@ -1013,11 +1023,16 @@ function SpecializedAgentSetupContent() {
                                                             })}
                                                         </Box>
                                                     ) : (
-                                                        <Textarea
+                                                        <AutoResizeTextarea
                                                             value={promptTemplate}
-                                                            onChange={(e) => setPromptTemplate(e.target.value)}
+                                                            onChange={(e: any) => setPromptTemplate(e.target.value)}
                                                             placeholder="Role: You are a marketing copy expert..."
-                                                            className="h-64"
+                                                            style={{
+                                                                minHeight: "200px",
+                                                                maxHeight: "calc(100vh - 240px)",
+                                                                resize: "none",
+                                                                overflowY: "auto"
+                                                            }}
                                                         />
                                                     )}
                                                 </Field>
@@ -1029,7 +1044,7 @@ function SpecializedAgentSetupContent() {
                                                             <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
                                                                 <Box display="flex" alignItems="center" gap="4">
                                                                     <Text fontSize="md">Recurring Prompt</Text>
-                                                                    <Tooltip delayDuration={300} content="Defines the agent's persona and behavioral guidelines. Supports variables and directives.">
+                                                                    <Tooltip delayDuration={300} content="Defines the agent’s persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
                                                                         <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                     </Tooltip>
                                                                 </Box>
@@ -1050,27 +1065,17 @@ function SpecializedAgentSetupContent() {
                                                                 </Box>
                                                             </Box>
 
-                                                            <Textarea
+                                                            <AutoResizeTextarea
                                                                 value={systemPrompt}
-                                                                onChange={(e) => {
-                                                                    setSystemPrompt(e.target.value);
-                                                                    e.target.style.height = "auto";
-                                                                    e.target.style.height = `${Math.min(e.target.scrollHeight, 800)}px`;
-                                                                }}
+                                                                onChange={(e: any) => setSystemPrompt(e.target.value)}
                                                                 placeholder="You are a conversational agent interacting with a user..."
                                                                 style={{
-                                                                    minHeight: "192px", // kept the original h-48 look as min height
-                                                                    maxHeight: "800px",
+                                                                    minHeight: "200px",
+                                                                    maxHeight: "calc(100vh - 240px)",
                                                                     resize: "none",
                                                                     overflowY: "auto"
                                                                 }}
                                                                 readOnly={isReadOnly}
-                                                                ref={(ref) => {
-                                                                    if (ref) {
-                                                                        ref.style.height = "auto";
-                                                                        ref.style.height = `${Math.min(ref.scrollHeight, 800)}px`;
-                                                                    }
-                                                                }}
                                                             />
                                                             <Text fontSize="sm" color="fg.tertiary" mt="8">
                                                                 Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
