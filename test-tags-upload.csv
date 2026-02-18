@@ -1,0 +1,21 @@
+name,slug,visibility
+Getting Started,getting-started,public
+Advanced Features,advanced-features,private
+Product Updates,product-updates,public
+Tutorial Videos,tutorial-videos,public
+Getting Started,getting-started-duplicate,public
+A,too-short,public
+,empty-name,public
+Special @#$ Characters,special-characters,public
+Invalid Slug Here,Invalid-Slug-123,public
+Auto Generate Slug,,public
+Case Insensitive,case-test,Public
+Wrong Visibility,wrong-vis,invalid-value
+Cycling Training,cycling-training,public
+Documentation,documentation,private
+Performance Tips,performance-tips,public
+Getting Started,getting-started,private
+Security Best Practices,security-best-practices,public
+API Integration,api-integration,public
+Troubleshooting,troubleshooting,public
+Quick Reference,quick-reference,private

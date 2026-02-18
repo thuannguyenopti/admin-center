@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip, Skeleton } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip, Skeleton, Alert } from "@optiaxiom/react";
 import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, IconBox, IconLayoutGrid, IconCheck, IconArrowLeft, IconChevronLeft, IconChevronRight, IconSparkles } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
@@ -124,6 +124,7 @@ export default function MultiSelectDetailsPane({
   const [suggestedSlugs, setSuggestedSlugs] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestEmpty, setSuggestEmpty] = useState(false);
+  const [batchTagsExpanded, setBatchTagsExpanded] = useState(false);
   const initialTagsRef = useRef<string[]>([]);
   const initialCategoriesRef = useRef<string[]>([]);
   const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -659,48 +660,78 @@ export default function MultiSelectDetailsPane({
                 </Box>
               </Box>
             )}
-            <Box display="flex" flexDirection="column" gap="8">
-              {suggestedSlugs.length > 0 && tags.length > 0 && (
-                <Text fontSize="xs" color="fg.secondary" fontWeight="600">
-                  Existing
-                </Text>
-              )}
-              {tags.map((slug) => {
-                const itemsWithTag = items.filter((item) => (item.tags ?? []).includes(slug));
-                const count = itemsWithTag.length;
-                const isAddedInBatch = addedTagsInBatch.includes(slug);
-                return (
-                  <Box key={slug} display="flex" alignItems="center" gap="4">
-                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
-                      <Box display="flex" alignItems="center" gap="4">
-                        <span>{getDisplayName(slug)}</span>
-                        <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
-                          on {count} {count === 1 ? "item" : "items"}
-                        </Text>
-                        <button
-                          onClick={() => handleRemoveTag(slug)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            lineHeight: 1,
-                            color: "inherit",
-                          }}
-                          aria-label={`Remove tag ${getDisplayName(slug)}`}
-                        >
-                          ×
-                        </button>
-                      </Box>
-                    </Badge>
+            {tags.length > 0 && (
+              <Disclosure open={batchTagsExpanded} onOpenChange={setBatchTagsExpanded}>
+                <DisclosureTrigger asChild>
+                  <button
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      padding: '8px 0',
+                      border: 'none',
+                      background: 'transparent',
+                      width: '100%',
+                    }}
+                  >
+                    <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                      {suggestedSlugs.length > 0 ? 'Existing' : 'Common tags'} ({tags.length})
+                    </Text>
+                    <Box
+                      style={{
+                        transform: batchTagsExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <IconChevronRight size={14} />
+                    </Box>
+                  </button>
+                </DisclosureTrigger>
+                <DisclosureContent>
+                  <Box display="flex" flexDirection="column" gap="8" pt="8">
+                    {tags.map((slug) => {
+                      const itemsWithTag = items.filter((item) => (item.tags ?? []).includes(slug));
+                      const count = itemsWithTag.length;
+                      const isAddedInBatch = addedTagsInBatch.includes(slug);
+                      return (
+                        <Box key={slug} display="flex" alignItems="center" gap="4">
+                          <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
+                            <Box display="flex" alignItems="center" gap="4">
+                              <span>{getDisplayName(slug)}</span>
+                              <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                                on {count} {count === 1 ? "item" : "items"}
+                              </Text>
+                              <button
+                                onClick={() => handleRemoveTag(slug)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  lineHeight: 1,
+                                  color: "inherit",
+                                }}
+                                aria-label={`Remove tag ${getDisplayName(slug)}`}
+                              >
+                                ×
+                              </button>
+                            </Box>
+                          </Badge>
+                        </Box>
+                      );
+                    })}
                   </Box>
-                );
-              })}
-            </Box>
+                </DisclosureContent>
+              </Disclosure>
+            )}
           </Box>
           {/* Tag preview (fills remaining height, scrolls within) */}
           <Box
@@ -711,6 +742,35 @@ export default function MultiSelectDetailsPane({
             style={{ minHeight: 0 }}
             overflow="hidden"
           >
+            {(() => {
+              // Calculate summary stats
+              const initial = initialTagsRef.current;
+              const tagsBeingAdded = tags.filter((s) => !initial.includes(s));
+              const tagsBeingRemoved = initial.filter((s) => !tags.includes(s));
+              const itemsWithChanges = items.filter((item) => {
+                const itemTags = item.tags ?? [];
+                const hasRemovals = initial.some((s) => itemTags.includes(s) && !tags.includes(s));
+                const hasAdditions = tags.some((s) => !itemTags.includes(s));
+                return hasRemovals || hasAdditions;
+              });
+
+              return (
+                (tagsBeingAdded.length > 0 || tagsBeingRemoved.length > 0) && (
+                  <Alert intent="information" rounded="md" style={{ flexShrink: 0 }}>
+                    <Box display="flex" flexDirection="column" gap="4">
+                      <Text fontSize="sm" fontWeight="600">
+                        Summary of changes
+                      </Text>
+                      <Text fontSize="sm">
+                        {itemsWithChanges.length} of {items.length} {items.length === 1 ? 'item' : 'items'} will be modified
+                        {tagsBeingAdded.length > 0 && ` • Adding ${tagsBeingAdded.length} tag${tagsBeingAdded.length === 1 ? '' : 's'}`}
+                        {tagsBeingRemoved.length > 0 && ` • Removing ${tagsBeingRemoved.length} tag${tagsBeingRemoved.length === 1 ? '' : 's'}`}
+                      </Text>
+                    </Box>
+                  </Alert>
+                )
+              );
+            })()}
             <Text fontSize="sm" fontWeight="600" color="fg.default" style={{ flexShrink: 0 }}>
               Tag preview
             </Text>
@@ -724,8 +784,8 @@ export default function MultiSelectDetailsPane({
             >
               {items.slice(0, items.length > 20 ? 15 : items.length).map((item) => {
                 const itemTags = item.tags ?? [];
-                // Union of item's current tags and batch selection: show removed, kept, and added
-                const allSlugsForItem = Array.from(new Set([...itemTags, ...tags]));
+                  // Union of item's current tags and batch selection: show removed, kept, and added
+                  const allSlugsForItem = Array.from(new Set([...itemTags, ...tags]));
                 const hasAnyTags = allSlugsForItem.length > 0;
                 return (
                   <Box
@@ -769,46 +829,54 @@ export default function MultiSelectDetailsPane({
                           const isRemoved = wasOnItem && !isInBatch; // removed from batch → red + strikethrough
                           const willBeAdded = !wasOnItem && isInBatch;
                           const isNewTag = willBeAdded && addedTagsInBatch.includes(slug); // new in this batch → green
-                          const isDifference = willBeAdded && !isNewTag; // will be added from other items → yellow
                           const canRemove = isInBatch; // remove from batch; pill stays and shows red + strikethrough
+
+                          // Calculate tooltip content
+                          const tooltipContent = isRemoved
+                            ? `Will remove from all ${items.length} ${items.length === 1 ? 'item' : 'items'}`
+                            : isNewTag
+                              ? `Will add to all ${items.length} ${items.length === 1 ? 'item' : 'items'}`
+                              : `Common to all items`;
+
                           return (
-                            <Badge
-                              key={slug}
-                              intent={
-                                isRemoved ? "danger" : isNewTag ? "success" : isDifference ? "warning" : "neutral"
-                              }
-                              variant={isRemoved || isNewTag || isDifference ? "subtle" : undefined}
-                              style={isRemoved ? { textDecoration: "line-through" } : undefined}
-                            >
-                              <Box display="flex" alignItems="center" gap="4">
-                                <span>{getDisplayName(slug)}</span>
-                                {canRemove && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRemoveTag(slug);
-                                    }}
-                                    aria-label={`Remove ${getDisplayName(slug)} from batch`}
-                                    style={{
-                                      background: "none",
-                                      border: "none",
-                                      cursor: "pointer",
-                                      padding: 0,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      fontSize: "14px",
-                                      lineHeight: 1,
-                                      color: "inherit",
-                                      opacity: 0.8,
-                                    }}
-                                  >
-                                    ×
-                                  </button>
-                                )}
-                              </Box>
-                            </Badge>
+                            <Tooltip key={slug} content={tooltipContent}>
+                              <Badge
+                                intent={
+                                  isRemoved ? "danger" : isNewTag ? "success" : "neutral"
+                                }
+                                variant={isRemoved || isNewTag ? "subtle" : undefined}
+                                style={isRemoved ? { textDecoration: "line-through" } : undefined}
+                              >
+                                <Box display="flex" alignItems="center" gap="4">
+                                  <span>{getDisplayName(slug)}</span>
+                                  {canRemove && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveTag(slug);
+                                      }}
+                                      aria-label={`Remove ${getDisplayName(slug)} from batch`}
+                                      style={{
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: 0,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "14px",
+                                        lineHeight: 1,
+                                        color: "inherit",
+                                        opacity: 0.8,
+                                      }}
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </Box>
+                              </Badge>
+                            </Tooltip>
                           );
                         })}
                       </Box>
