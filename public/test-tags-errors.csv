@@ -1,0 +1,7 @@
+name,slug,visibility
+Valid Tag,valid-tag,public
+,missing-name,public
+"",empty-name,private
+Another Valid Tag,another-valid-tag,public
+"   ",whitespace-name,public
+Good Tag,good-tag,public

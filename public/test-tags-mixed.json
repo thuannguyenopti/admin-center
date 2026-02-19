@@ -1,0 +1,46 @@
+[
+  {
+    "name": "New Feature Launch",
+    "slug": "new-feature-launch",
+    "visibility": "public"
+  },
+  {
+    "name": "Getting Started",
+    "slug": "getting-started",
+    "visibility": "public"
+  },
+  {
+    "name": "Product Update",
+    "slug": "product-update",
+    "visibility": "public"
+  },
+  {
+    "slug": "no-name-error",
+    "visibility": "private"
+  },
+  {
+    "name": "Product Update Duplicate",
+    "slug": "product-update",
+    "visibility": "private"
+  },
+  {
+    "name": "Advanced Guide",
+    "slug": "advanced-guide",
+    "visibility": "private"
+  },
+  {
+    "name": "Valid New Tag",
+    "slug": "valid-new-tag",
+    "visibility": "public"
+  },
+  {
+    "name": "",
+    "slug": "empty-name-error",
+    "visibility": "public"
+  },
+  {
+    "name": "Another Valid Tag",
+    "slug": "another-valid-tag",
+    "visibility": "public"
+  }
+]

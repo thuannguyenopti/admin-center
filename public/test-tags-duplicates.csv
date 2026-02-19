@@ -1,0 +1,7 @@
+name,slug,visibility
+Product Launch,product-launch,public
+Engineering Blog,engineering-blog,public
+Product Launch Duplicate,product-launch,private
+Customer Success,customer-success,public
+Engineering Blog Again,engineering-blog,public
+Feature Update,feature-update,public
