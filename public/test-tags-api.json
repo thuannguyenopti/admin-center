@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Product Launch",
+    "slug": "product-launch",
+    "visibility": "public"
+  },
+  {
+    "name": "Engineering Blog",
+    "slug": "engineering-blog",
+    "visibility": "public"
+  },
+  {
+    "name": "Customer Success",
+    "slug": "customer-success",
+    "visibility": "private"
+  },
+  {
+    "name": "Feature Update",
+    "slug": "feature-update",
+    "visibility": "public"
+  },
+  {
+    "name": "Internal Announcement",
+    "slug": "internal-announcement",
+    "visibility": "private"
+  },
+  {
+    "name": "Tutorial",
+    "slug": "tutorial",
+    "visibility": "public"
+  },
+  {
+    "name": "Case Study",
+    "slug": "case-study",
+    "visibility": "public"
+  },
+  {
+    "name": "Release Notes",
+    "slug": "release-notes",
+    "visibility": "public"
+  }
+]

@@ -1,0 +1,10 @@
+name,slug,visibility
+New Feature Launch,new-feature-launch,public
+Getting Started,getting-started,public
+Product Update,product-update,public
+,no-name-error,private
+Product Update Duplicate,product-update,private
+Advanced Guide,advanced-guide,private
+Valid New Tag,valid-new-tag,public
+"",empty-name-error,public
+Another Valid Tag,another-valid-tag,public
