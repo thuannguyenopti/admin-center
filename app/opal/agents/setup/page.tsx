@@ -970,7 +970,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
 
-                                                <Field label={multiTurnMode ? "First Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
+                                                <Field label={multiTurnMode ? "Initial Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
                                                             previousValue={comparisonData.promptTemplate}
@@ -1320,7 +1320,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
 
-                                                <Field label={multiTurnMode ? "First Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
+                                                <Field label={multiTurnMode ? "Initial Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
                                                     <AutoResizeTextarea
                                                         value={promptTemplate}
                                                         onChange={(e: any) => setPromptTemplate(e.target.value)}
@@ -1668,7 +1668,7 @@ function SpecializedAgentSetupContent() {
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
 
-                                                <Field label={multiTurnMode ? "First Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
+                                                <Field label={multiTurnMode ? "Initial Prompt" : "Prompt"} info="A prompt that automatically runs at the start of a conversation to prime the agent's initial response.">
                                                     <AutoResizeTextarea
                                                         value={promptTemplate}
                                                         onChange={(e: any) => setPromptTemplate(e.target.value)}
