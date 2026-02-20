@@ -1,0 +1,5 @@
+name,slug,parentSlug,status,visibility
+Bikes,bikes,equipment,published,public
+Road Bikes,road-bikes,bikes,published,public
+Duplicate Bikes,bikes,equipment,published,private
+Accessories,accessories,equipment,published,public

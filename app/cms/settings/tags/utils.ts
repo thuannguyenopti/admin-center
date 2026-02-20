@@ -117,7 +117,7 @@ export async function parseTagsCSV(
         let errorsCount = 0;
 
         results.data.forEach((row: any, index: number) => {
-          const rowNum = index + 2; // +2 for 1-based indexing and header row
+          const rowNum = index + 1; // +1 for 1-based indexing (starting from first data row)
 
           // Validate name
           const name = (row.name || '').trim();

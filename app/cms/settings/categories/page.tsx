@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuContent,
   Pagination,
+  toaster,
 } from '@optiaxiom/react';
 import { Button as AppButton } from '@/app/components/Button';
 import { Text as AppText } from '@/app/components/Text';
@@ -21,6 +22,7 @@ import { Category, CategoryFormRow } from './types';
 import { initialCategories, getAllContentItems, initialPages, type Page } from '@/app/db/initialData';
 import { CategoriesTable } from './components/CategoriesTable';
 import { CategoryModal } from './components/CategoryModal';
+import { UploadCategoriesModal } from './components/UploadCategoriesModal';
 import { useSelection } from './hooks/useSelection';
 import { useCategoryActions } from './hooks/useCategoryActions';
 import { filterCategoriesWithHierarchy } from './utils';
@@ -33,11 +35,13 @@ export default function CategoriesSettings() {
   const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingCategories, setEditingCategories] = useState<Category[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [newlyImportedIds, setNewlyImportedIds] = useState<Set<string>>(new Set());
 
   // Calculate actual category usage from content items
   const contentItems = useMemo(() => getAllContentItems(pages || initialPages), [pages]);
@@ -194,6 +198,28 @@ export default function CategoriesSettings() {
     deselectAll();
   };
 
+  const handleImport = async (toCreate: CategoryFormRow[], toUpdate: CategoryFormRow[]) => {
+    const importedIds: string[] = [];
+    if (toCreate.length > 0) importedIds.push(...createCategories(toCreate));
+    if (toUpdate.length > 0) importedIds.push(...updateCategories(toUpdate));
+
+    const count = toCreate.length + toUpdate.length;
+    if (count > 0) {
+      const noun = count === 1 ? 'category' : 'categories';
+      toaster.create(`${count} ${noun} imported successfully.`, { intent: 'success' });
+    }
+
+    // Track newly imported IDs for highlighting
+    setNewlyImportedIds(new Set(importedIds));
+
+    // Clear the highlight after animation completes (2 seconds)
+    setTimeout(() => {
+      setNewlyImportedIds(new Set());
+    }, 2000);
+
+    setShowImportModal(false);
+  };
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       // Toggle direction if same column
@@ -345,7 +371,7 @@ export default function CategoriesSettings() {
           <Button
             appearance="default"
             size="md"
-            onClick={() => {/* TODO: Add import modal */}}
+            onClick={() => setShowImportModal(true)}
           >
             Import
           </Button>
@@ -367,6 +393,7 @@ export default function CategoriesSettings() {
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        newlyImportedIds={newlyImportedIds}
       />
 
       {/* Pagination */}
@@ -388,6 +415,14 @@ export default function CategoriesSettings() {
         allCategories={categoriesWithUsage}
         contentContext={contentContext}
         onSave={handleSave}
+      />
+
+      {/* Import Modal */}
+      <UploadCategoriesModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+        allCategories={categoriesWithUsage}
+        onImport={handleImport}
       />
     </>
   );

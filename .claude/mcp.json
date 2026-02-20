@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "axiom": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@optiaxiom/mcp"
+      ]
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    }
+  }
+}

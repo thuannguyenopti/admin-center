@@ -419,6 +419,7 @@ export default function RootLayout({
 					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
 					rel="stylesheet"
 				/>
+				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
 			<body suppressHydrationWarning>
 				<ThemeProvider>

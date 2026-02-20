@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuContent,
   Pagination,
+  toaster,
 } from '@optiaxiom/react';
 import { Button as AppButton } from '@/app/components/Button';
 import { Text as AppText } from '@/app/components/Text';
@@ -50,6 +51,7 @@ export default function TagsSettings() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [newlyImportedIds, setNewlyImportedIds] = useState<Set<string>>(new Set());
 
   // Base content items from pages
   const baseContentItems = useMemo(
@@ -251,8 +253,24 @@ export default function TagsSettings() {
   };
 
   const handleUploadImport = (toCreate: TagFormRow[], toUpdate: TagFormRow[]) => {
-    if (toCreate.length > 0) createTags(toCreate);
-    if (toUpdate.length > 0) updateTags(toUpdate);
+    const importedIds: string[] = [];
+    if (toCreate.length > 0) importedIds.push(...createTags(toCreate));
+    if (toUpdate.length > 0) importedIds.push(...updateTags(toUpdate));
+
+    const count = toCreate.length + toUpdate.length;
+    if (count > 0) {
+      const noun = count === 1 ? 'tag' : 'tags';
+      toaster.create(`${count} ${noun} imported successfully.`, { intent: 'success' });
+    }
+
+    // Track newly imported IDs for highlighting
+    setNewlyImportedIds(new Set(importedIds));
+
+    // Clear the highlight after animation completes (2 seconds)
+    setTimeout(() => {
+      setNewlyImportedIds(new Set());
+    }, 2000);
+
     setIsUploadModalOpen(false);
   };
 
@@ -431,6 +449,7 @@ export default function TagsSettings() {
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        newlyImportedIds={newlyImportedIds}
       />
 
       {/* Pagination */}
