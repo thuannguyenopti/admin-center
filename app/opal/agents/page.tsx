@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 const agents = [
     {
         icon: <IconAgent />,
+        url: "/opal/agents/setup?mode=edit",
         name: "Content Localizer",
         handle: "@content_localizer",
         creator: { name: "User Name", avatar: "/avatars/user.png" }, // Mock avatar
@@ -40,6 +41,7 @@ const agents = [
     },
     {
         icon: <IconAgent />,
+        url: "/opal/agents/setup?mode=edit",
         name: "Heatmap Analysis",
         handle: "@heatmap_analysis",
         creator: { name: "Optimizely", type: "system" },
@@ -53,6 +55,7 @@ const agents = [
     },
     {
         icon: <IconAgent />,
+        url: "/opal/agents/setup?mode=edit",
         name: "Experiment Planning Agent",
         handle: "@test_planning",
         creator: { name: "Optimizely", type: "system" },
@@ -66,6 +69,7 @@ const agents = [
     },
     {
         icon: <IconCodeBranch />,
+        url: "/opal/agents/workflow",
         name: "GEO Recommendations",
         handle: "@opti_geo_recommendati...",
         tag: "Updated",
@@ -80,6 +84,7 @@ const agents = [
     },
     {
         icon: <IconCodeBranch />,
+        url: "/opal/agents/workflow",
         name: "Resource Manager",
         handle: "@rm",
         creator: { name: "Optimizely", type: "system" },
@@ -92,6 +97,7 @@ const agents = [
     },
     {
         icon: <IconCodeBranch />,
+        url: "/opal/agents/workflow",
         name: "SEO Keyword Research",
         handle: "@seo_keyword_resaerch",
         creator: { name: "Optimizely", type: "system" },
@@ -105,6 +111,7 @@ const agents = [
     },
     {
         icon: <IconAgent />,
+        url: "/opal/agents/setup?mode=edit",
         name: "Synthesize Agent",
         handle: "@meeting_synthesizer",
         creator: { name: "User Name", avatar: "/avatars/user.png" },
@@ -254,7 +261,7 @@ export default function AgentsPage() {
                 </thead>
                 <tbody>
                     {agents.map((agent, index) => (
-                        <Tr key={index}>
+                        <Tr key={index} url={agent.url}>
                             <Td>
                                 <Box color="fg.secondary">{agent.icon}</Box>
                             </Td>

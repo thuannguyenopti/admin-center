@@ -5,6 +5,7 @@ import {
     Heading,
     Text,
     Button,
+    Badge,
     Textarea,
     Switch,
     Field,
@@ -15,6 +16,20 @@ import {
     TabsList,
     TabsTrigger,
     TabsContent,
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogBody,
+    DialogFooter,
+    DialogClose,
+    Checkbox,
+    Select,
+    SelectTrigger,
+    SelectContent,
 } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input";
 import {
@@ -24,11 +39,12 @@ import {
     IconPlus,
     IconHelp,
     IconSparkles,
-    IconDots,
+    IconDownload,
 } from "@tabler/icons-react";
 import {
     IconFileImport,
     IconPlay,
+    IconEllipsisStroke,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -45,6 +61,8 @@ function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
+
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
     // State for collapsible sections
     const [detailsOpen, setDetailsOpen] = useState(true);
@@ -104,7 +122,25 @@ function SpecializedAgentSetupContent() {
                 <Box display="flex" alignItems="center" gap="8">
                     <Button appearance="primary">Save</Button>
                     <Button appearance="subtle" icon={<IconPlay />}>Test Run</Button>
-                    <Button appearance="subtle" icon={<IconDots />} aria-label="More options" />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="More options" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Duplicate Agent</DropdownMenuItem>
+                            <DropdownMenuItem>Copy as JSON</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setExportDialogOpen(true)}>
+                                <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+                                    Export Logs
+                                    <Badge intent="information" variant="subtle">New</Badge>
+                                </Box>
+                            </DropdownMenuItem>
+                            <Box style={{ height: "1px", background: "var(--ax-colors-border-secondary)", margin: "4px 0" }} />
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                                Delete Agent
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </Box>
             </Box>
 
@@ -119,8 +155,8 @@ function SpecializedAgentSetupContent() {
                         </TabsList>
                     </Box>
 
-                    <TabsContent value="setup" style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                        <Box h="full" overflowY="auto" p="24" display="flex" flexDirection="column" gap="24" style={{ maxWidth: "800px" }}>
+                    <TabsContent value="setup" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                        <Box p="24" display="flex" flexDirection="column" gap="24" style={{ maxWidth: "800px" }}>
 
                             {/* Details Section */}
                             <CollapsibleSection
@@ -195,8 +231,8 @@ function SpecializedAgentSetupContent() {
                                                 <Text fontSize="sm" color="fg.secondary">what the email is about</Text>
                                             </Box>
                                             <Box display="flex" gap="8" alignItems="center">
-                                                <Box bg="bg.accent.subtle" px="8" py="2" rounded="full"><Text fontSize="xs" color="fg.accent">Required</Text></Box>
-                                                <Text fontSize="sm" color="fg.secondary">String</Text>
+                                                <Badge intent="information" variant="subtle">Required</Badge>
+                                                <Badge variant="subtle">String</Badge>
                                                 <IconTrash size={16} color="var(--ax-colors-fg-tertiary)" />
                                             </Box>
                                         </Box>
@@ -267,7 +303,173 @@ function SpecializedAgentSetupContent() {
                     </TabsContent>
                 </Tabs>
             </Box>
+
+            <ExportLogsDialog
+                open={exportDialogOpen}
+                onOpenChange={setExportDialogOpen}
+                agentName="Specialized Agent"
+                executionCount={47}
+            />
         </Box>
+    );
+}
+
+const COLUMN_GROUPS = [
+    {
+        label: "Execution Info",
+        columns: [
+            { key: "agentName", label: "Agent name" },
+            { key: "executionId", label: "Execution ID" },
+            { key: "executionTime", label: "Execution time" },
+            { key: "user", label: "User" },
+            { key: "version", label: "Version" },
+        ],
+    },
+    {
+        label: "Input & Output",
+        columns: [
+            { key: "variables", label: "Variables" },
+            { key: "output", label: "Output" },
+            { key: "artifacts", label: "Artifacts" },
+        ],
+    },
+    {
+        label: "Performance",
+        columns: [
+            { key: "status", label: "Status" },
+            { key: "duration", label: "Duration" },
+            { key: "evaluationScore", label: "Evaluation score" },
+        ],
+    },
+] as const;
+
+type ColumnKey = (typeof COLUMN_GROUPS)[number]["columns"][number]["key"];
+
+const ALL_COLUMN_KEYS: ColumnKey[] = COLUMN_GROUPS.flatMap((g) => g.columns.map((c) => c.key));
+
+function ExportLogsDialog({
+    open,
+    onOpenChange,
+    agentName,
+    executionCount,
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    agentName: string;
+    executionCount: number;
+}) {
+    const [columns, setColumns] = useState<Record<ColumnKey, boolean>>(
+        Object.fromEntries(ALL_COLUMN_KEYS.map((k) => [k, true])) as Record<ColumnKey, boolean>
+    );
+    const [format, setFormat] = useState<"CSV" | "XLSX">("CSV");
+
+    const allSelected = Object.values(columns).every(Boolean);
+    const toggleAll = () =>
+        setColumns(
+            Object.fromEntries(ALL_COLUMN_KEYS.map((k) => [k, !allSelected])) as Record<ColumnKey, boolean>
+        );
+    const toggleColumn = (key: ColumnKey) =>
+        setColumns((prev) => ({ ...prev, [key]: !prev[key] }));
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent size="md">
+                <DialogHeader>Export Execution Logs</DialogHeader>
+                <DialogBody>
+                    {/* Scope */}
+                    <Box
+                        px="12"
+                        py="10"
+                        bg="bg.secondary"
+                        rounded="sm"
+                        border="1"
+                        borderColor="border.tertiary"
+                        mb="20"
+                        fontSize="sm"
+                        color="fg.secondary"
+                    >
+                        Exporting{" "}
+                        <strong>{executionCount} executions</strong>{" "}
+                        for{" "}
+                        <strong>{agentName}</strong>
+                    </Box>
+
+                    {/* Columns header */}
+                    <Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
+                        <Text fontWeight="600">Columns</Text>
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            onClick={toggleAll}
+                            style={{ color: "var(--ax-colors-fg-accent)", padding: 0 }}
+                        >
+                            {allSelected ? "Deselect all" : "Select all"}
+                        </Button>
+                    </Box>
+
+                    {/* Column groups */}
+                    {COLUMN_GROUPS.map((group) => (
+                        <Box key={group.label} mb="16">
+                            <Text
+                                fontSize="xs"
+                                fontWeight="700"
+                                color="fg.tertiary"
+                                mb="6"
+                                style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
+                            >
+                                {group.label}
+                            </Text>
+                            <Box
+                                display="grid"
+                                gap="2"
+                                style={{ gridTemplateColumns: "1fr 1fr" }}
+                            >
+                                {group.columns.map((col) => (
+                                    <Box key={col.key} px="8" py="4" rounded="sm">
+                                        <Checkbox
+                                            checked={columns[col.key]}
+                                            onCheckedChange={() => toggleColumn(col.key)}
+                                        >
+                                            {col.label}
+                                        </Checkbox>
+                                    </Box>
+                                ))}
+                            </Box>
+                        </Box>
+                    ))}
+
+                    {/* Format */}
+                    <Box mt="4">
+                        <Text fontWeight="600" mb="10">
+                            Format
+                        </Text>
+                        <Select
+                            value={format}
+                            onValueChange={(v) => setFormat(v as "CSV" | "XLSX")}
+                            options={[
+                                { label: "CSV", value: "CSV" },
+                                { label: "XLSX", value: "XLSX" },
+                            ]}
+                        >
+                            <SelectTrigger mt="10" style={{ width: "160px" }}>
+                                {format}
+                            </SelectTrigger>
+                            <SelectContent />
+                        </Select>
+                    </Box>
+                </DialogBody>
+                <DialogFooter>
+                    <DialogClose>Cancel</DialogClose>
+                    <Button
+                        appearance="primary"
+                        icon={<IconDownload size={16} />}
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Export
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 
