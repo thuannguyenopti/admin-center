@@ -1,9 +1,0 @@
-name,slug,visibility
-Product Launch,product-launch,public
-Engineering Blog,engineering-blog,public
-Customer Success,customer-success,private
-Feature Update,feature-update,public
-Internal Announcement,internal-announcement,private
-Tutorial,tutorial,public
-Case Study,case-study,public
-Release Notes,release-notes,public

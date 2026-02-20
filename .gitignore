@@ -46,3 +46,4 @@ yarn.lock
 .env*.local
 package.json
 .npmrc
+DOJO_MIGRATION_ANALYSIS.md

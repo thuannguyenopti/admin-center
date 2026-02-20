@@ -540,8 +540,8 @@ Product Update,,public`;
           </Text>
         </DialogHeader>
         <DialogBody style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-          <Box display="flex" flexDirection="column" gap="24">
-            <Text fontSize="md">
+          <Box display="flex" flexDirection="column" gap="24" w="full">
+            <Text fontSize="md" maxW="full">
               Import multiple tags from different sources. Preview your changes before confirming.
             </Text>
 
