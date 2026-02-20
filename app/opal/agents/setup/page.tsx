@@ -1,6 +1,7 @@
 "use client";
 
 import {
+    Alert,
     Box,
     Heading,
     Text,
@@ -377,22 +378,9 @@ function ExportLogsDialog({
                 <DialogHeader>Export Execution Logs</DialogHeader>
                 <DialogBody>
                     {/* Scope */}
-                    <Box
-                        px="12"
-                        py="10"
-                        bg="bg.secondary"
-                        rounded="sm"
-                        border="1"
-                        borderColor="border.tertiary"
-                        mb="20"
-                        fontSize="sm"
-                        color="fg.secondary"
-                    >
-                        Exporting{" "}
-                        <strong>{executionCount} executions</strong>{" "}
-                        for{" "}
-                        <strong>{agentName}</strong>
-                    </Box>
+                    <Alert intent="neutral" mb="20">
+                        <Text>Exporting <strong>{executionCount} executions</strong> for <strong>{agentName}</strong></Text>
+                    </Alert>
 
                     {/* Columns header */}
                     <Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
@@ -411,18 +399,17 @@ function ExportLogsDialog({
                     {COLUMN_GROUPS.map((group) => (
                         <Box key={group.label} mb="16">
                             <Text
-                                fontSize="xs"
-                                fontWeight="700"
+                                fontSize="sm"
+                                fontWeight="500"
                                 color="fg.tertiary"
                                 mb="6"
-                                style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}
                             >
                                 {group.label}
                             </Text>
                             <Box
                                 display="grid"
                                 gap="2"
-                                style={{ gridTemplateColumns: "1fr 1fr" }}
+                                style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
                             >
                                 {group.columns.map((col) => (
                                     <Box key={col.key} px="8" py="4" rounded="sm">
