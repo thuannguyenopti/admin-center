@@ -1783,7 +1783,7 @@ function ExportLogsDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent size="md">
                 <DialogHeader>Export Execution Logs</DialogHeader>
-                <DialogBody>
+                <DialogBody className="no-scrollbar">
                     <Alert intent="neutral" mb="20">
                         <Text>Exporting <strong>{executionCount} executions</strong> for <strong>{agentName}</strong></Text>
                     </Alert>

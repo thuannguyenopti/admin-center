@@ -133,3 +133,12 @@ body {
   padding-top: 4px !important;
   padding-bottom: 4px !important;
 }
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
