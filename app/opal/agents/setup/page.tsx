@@ -1781,9 +1781,9 @@ function ExportLogsDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent size="md">
+            <DialogContent size="md" style={{ overflow: "hidden" }}>
                 <DialogHeader>Export Execution Logs</DialogHeader>
-                <DialogBody className="no-scrollbar">
+                <DialogBody className="no-scrollbar" style={{ overflowY: "auto" }}>
                     <Alert intent="neutral" mb="20">
                         <Text>Exporting <strong>{executionCount} executions</strong> for <strong>{agentName}</strong></Text>
                     </Alert>
