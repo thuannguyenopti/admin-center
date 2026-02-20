@@ -409,7 +409,7 @@ function ExportLogsDialog({
                             <Box
                                 display="grid"
                                 gap="2"
-                                style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+                                style={{ gridTemplateColumns: "repeat(auto-fill, minmax(clamp(130px, 33%, 100%), 1fr))" }}
                             >
                                 {group.columns.map((col) => (
                                     <Box key={col.key} px="8" py="4" rounded="sm">
