@@ -1,10 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, Dispatch, SetStateAction } from 'react';
 import { Category, CategoryFormRow } from '../types';
-import { generateSlug } from '../utils';
 
 export function useCategoryActions(
   categories: Category[],
-  setCategories: (categories: Category[]) => void
+  setCategories: Dispatch<SetStateAction<Category[]>>
 ) {
   const createCategories = useCallback(
     (formRows: CategoryFormRow[]): string[] => {
