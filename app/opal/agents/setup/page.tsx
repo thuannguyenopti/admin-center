@@ -708,8 +708,8 @@ function SpecializedAgentSetupContent() {
                                             />
                                         </Tooltip>
                                         <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" disabled={isReadOnly} />
+                                            <DropdownMenuTrigger asChild suppressHydrationWarning>
+                                                <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" disabled={isReadOnly} suppressHydrationWarning />
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem>Duplicate Agent</DropdownMenuItem>
@@ -1839,17 +1839,13 @@ function ExportLogsDialog({
                                 { label: "XLSX", value: "XLSX" },
                             ]}
                         >
-                            <SelectTrigger mt="10" style={{ width: "160px" }}>
-                                {format}
-                            </SelectTrigger>
+                            <SelectTrigger mt="10" style={{ width: "160px" }} />
                             <SelectContent />
                         </Select>
                     </Box>
                 </DialogBody>
                 <DialogFooter>
-                    <DialogClose>
-                        <Button appearance="subtle">Cancel</Button>
-                    </DialogClose>
+                    <DialogClose appearance="subtle" size="lg">Cancel</DialogClose>
                     <Button appearance="primary">Export</Button>
                 </DialogFooter>
             </DialogContent>
