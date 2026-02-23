@@ -15,7 +15,7 @@ export default function EditPageDetail() {
 	const params = useParams();
 	const resolvedParams = params instanceof Promise ? use(params) : params;
 	const id = (resolvedParams?.id ?? "") as string;
-	const [pages, setPages, isHydrated] = usePersistentState("pages_v3", initialPages) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,
