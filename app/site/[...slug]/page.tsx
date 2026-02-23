@@ -14,7 +14,7 @@ export default function SiteSlugPage() {
 	const resolvedParams = params instanceof Promise ? use(params) : params;
 	const slugSegments = (resolvedParams?.slug ?? []) as string[];
 
-	const [pages, , isHydrated] = usePersistentState("pages_v3", initialPages) as [
+	const [pages, , isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,
