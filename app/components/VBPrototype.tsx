@@ -39,6 +39,7 @@ import ExtensionPanel from "./ExtensionPanel";
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {Input} from "@/app/components/Input";
+import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -240,6 +241,8 @@ export default function VBPrototype({
 	onTrash,
 	onRenamePage,
 	onViewOnWebsite,
+	versionHistory,
+	onRestoreVersion,
 }: {
 	initialData?: PageInput;
 	onSave?: (page: PageInput) => void;
@@ -262,6 +265,8 @@ export default function VBPrototype({
 	onDeleteVariation?: (id: string) => void;
 	onRenameVariation?: (id: string, newName: string) => void;
 	onRenamePage?: (newName: string) => void;
+	versionHistory?: ReturnType<typeof useVersionHistory>;
+	onRestoreVersion?: (version: any) => void;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
@@ -2039,6 +2044,10 @@ export default function VBPrototype({
 					variations={variations}
 					pageOutlines={outlines}
 					onClose={() => setIsVersionHistoryOpen(false)}
+					initialPreviewMode={preview.mode === "fixed" || preview.mode === "scale" ? "fixed" : "responsive"}
+					versionHistory={versionHistory}
+					pageId={pageId}
+					onRestore={onRestoreVersion}
 				/>
 			)}
 		</div>
