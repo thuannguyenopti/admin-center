@@ -50,7 +50,6 @@ export function generateMockVersions(
 			variationId: v.id,
 			variationName: v.name,
 			outlines: baseOutlines,
-			customName: "Current version",
 			isCurrent: true,
 		});
 
