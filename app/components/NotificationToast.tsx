@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { Box, Text, Button } from "@optiaxiom/react";
+import { toaster } from "@optiaxiom/react";
 import { IconX, IconAlertCircle, IconCircleCheck, IconAlertTriangle, IconBell, IconPackage, IconPlug, IconUsers, IconSpeakerphone } from "@tabler/icons-react";
 import { useRouter, usePathname } from "next/navigation";
 import type { Notification } from "@/app/opal/notifications/mockData";
@@ -133,55 +134,38 @@ export function NotificationToastProvider({
 }: {
     children: ReactNode;
 }) {
-    const [toasts, setToasts] = useState<Toast[]>([]);
     const pathname = usePathname();
-
-    const dismiss = useCallback((id: string) => {
-        setToasts((prev) =>
-            prev.map((t) => (t.id === id ? { ...t, visible: false } : t))
-        );
-        setTimeout(() => {
-            setToasts((prev) => prev.filter((t) => t.id !== id));
-        }, 300);
-    }, []);
 
     const showToast = useCallback(
         (notification: Notification) => {
             if (!shouldShowToast(notification, pathname)) return;
 
-            const id = `toast-${Date.now()}-${Math.random()}`;
-            const toast: Toast = { id, notification, visible: false };
+            let intent: "success" | "danger" | "warning" | "information" | "neutral" = "neutral";
 
-            setToasts((prev) => [...prev.slice(-4), toast]);
+            if (notification.executionStatus === "failed" || notification.guardrailStatus === "terminated") {
+                intent = "danger";
+            } else if (notification.guardrailStatus === "warning" || notification.guardrailStatus === "triggered") {
+                intent = "warning";
+            } else if (notification.category === "directory" || notification.category === "system") {
+                intent = "information";
+            } else if (notification.executionStatus === "success") {
+                intent = "success";
+            }
 
-            // Animate in
-            requestAnimationFrame(() => {
-                setToasts((prev) =>
-                    prev.map((t) => (t.id === id ? { ...t, visible: true } : t))
-                );
+            toaster.create(notification.title, {
+                intent,
+                action: notification.actionRequired ? "Take Action" : "View Details",
+                onAction: () => {
+                    window.location.href = notification.deepLink;
+                }
             });
-
-            // Auto-dismiss after 5s
-            setTimeout(() => dismiss(id), 5000);
         },
-        [pathname, dismiss]
+        [pathname]
     );
 
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
-            {/* Toast Container */}
-            <Box
-                className="fixed z-50"
-                style={{ top: 16, right: 16 }}
-                display="flex"
-                flexDirection="column"
-                gap="8"
-            >
-                {toasts.map((toast) => (
-                    <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
-                ))}
-            </Box>
         </ToastContext.Provider>
     );
 }

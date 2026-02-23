@@ -29,7 +29,8 @@ export default function GlobalBar() {
 	return (
 		<Box
 			w="full"
-			py="12"
+			h="56"
+			py="8"
 			px="20"
 			bg="bg.default"
 			gridColumn="2"
@@ -199,36 +200,34 @@ export default function GlobalBar() {
 			>
 				<Button
 					appearance="subtle"
-					size="md"
-					icon={<IconSearch size={20} />}
+					size="lg"
+					style={{ width: 40, height: 40 }}
+					icon={<IconSearch size={20} style={{ width: 20, height: 20 }} />}
 					aria-label="Search"
 				/>
 				<Button
 					appearance="subtle"
-					size="md"
+					size="lg"
+					style={{ width: 40, height: 40 }}
 					aria-label="Opal AI Assistant"
-				>
-					<Image
-						src="/opal-orb.png"
-						alt="Opal"
-						width={20}
-						height={20}
-					/>
-				</Button>
+					icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} style={{ width: 20, height: 20 }} />}
+				/>
 				<NotificationDropdown />
 				<Button
 					appearance="subtle"
-					size="md"
-					icon={<IconHelp size={20} />}
+					size="lg"
+					style={{ width: 40, height: 40 }}
+					icon={<IconHelp size={20} style={{ width: 20, height: 20 }} />}
 					aria-label="Help"
 				/>
 				<Button
 					appearance="subtle"
-					size="md"
-					icon={<IconUser size={20} />}
+					size="lg"
+					style={{ width: 40, height: 40 }}
+					icon={<IconUser size={20} style={{ width: 20, height: 20 }} />}
 					aria-label="User profile"
 				/>
 			</Box>
-		</Box>
+		</Box >
 	);
 }

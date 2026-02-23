@@ -2,7 +2,8 @@
 
 import { Box, Button, Text, Badge, Separator, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconAdjustmentsHorizontal, IconCheck, IconChecks, IconTrash, IconUser, IconBrandOpenai, IconRobot } from "@tabler/icons-react";
+import { IconBell, IconX, IconSettings, IconAdjustmentsHorizontal, IconCheck, IconChecks, IconTrash, IconUser, IconBrandOpenai, IconRobot, IconPackage, IconSpeakerphone } from "@tabler/icons-react";
+import { IconCircleExclamation, IconTriangleExclamation, IconFileLines, IconCircleCheck as AxiomCircleCheck } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -26,39 +27,24 @@ function CompactNotificationCard({ notification }: { notification: Notification 
 
     // Helper for agent/system avatars
     const getAvatar = () => {
-        if (notification.category === "agent_execution") {
-            return (
-                <Box
-                    rounded="full"
-                    bg="bg.accent.subtle"
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    style={{ width: 32, height: 32, flexShrink: 0 }}
-                >
-                    <IconRobot size={18} color="var(--ax-colors-fg-accent)" />
-                </Box>
-            );
+        let icon;
+        if (notification.type === "agent_execution_failed") {
+            icon = <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+        } else if (notification.type === "approval_required" || notification.category === "directory") {
+            icon = <IconPackage size={16} color="var(--ax-colors-fg-information)" />;
+        } else if (notification.type === "agent_execution_chat" || notification.type === "agent_execution_autonomous") {
+            icon = <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+        } else if (notification.category === "agent_execution" || notification.category === "guardrail") {
+            icon = <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+        } else if (notification.category === "system" || notification.type === "system_announcement") {
+            icon = <IconSpeakerphone style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+        } else {
+            icon = <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
         }
-        if (notification.author?.avatar) {
-            return (
-                <img
-                    src={notification.author.avatar}
-                    alt=""
-                    style={{ width: 32, height: 32, borderRadius: "9999px", flexShrink: 0, objectFit: "cover" }}
-                />
-            );
-        }
+
         return (
-            <Box
-                rounded="full"
-                bg="bg.secondary"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                style={{ width: 32, height: 32, flexShrink: 0 }}
-            >
-                <IconUser size={18} color="var(--ax-colors-fg-tertiary)" />
+            <Box pt="2" style={{ flexShrink: 0 }}>
+                {icon}
             </Box>
         );
     };
@@ -82,15 +68,16 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                     <Box display="flex" alignItems="start" justifyContent="space-between" gap="8">
                         <Text
                             fontSize="sm"
-                            fontWeight={isUnread ? "600" : "500"}
+                            fontWeight={isUnread ? "700" : "500"}
                             color="fg.default"
                             className="line-clamp-2"
                             flex="1"
                         >
                             {notification.title}
                         </Text>
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap" pt="2">
+                        <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+                            {notification.actionRequired && <Badge intent="warning" variant="subtle">Action Required</Badge>}
+                            <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
                                 {notification.timestamp}
                             </Text>
                             {isUnread && <UnreadIndicator />}
@@ -118,7 +105,7 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                             </>
                         ) : (
                             <>
-                                <Button size="sm" appearance="default">
+                                <Button size="sm" appearance="inverse">
                                     {notification.category === "guardrail"
                                         ? "View Details"
                                         : notification.actionRequired
@@ -364,38 +351,38 @@ export default function NotificationDropdown() {
     };
 
     return (
-        <>
+        <Box style={{ position: "relative", display: "inline-flex" }}>
             <Button
                 appearance="subtle"
-                size="md"
-                icon={<IconBell size={20} />}
+                size="lg"
+                style={{ width: 40, height: 40 }}
+                icon={<IconBell size={20} style={{ width: 20, height: 20 }} />}
                 aria-label="Notifications"
-                className="relative"
                 onClick={togglePanel}
-            >
-                {mounted && unreadCount > 0 && (
-                    <Box
-                        rounded="full"
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        className="absolute"
-                        style={{
-                            top: 6,
-                            right: 6,
-                            backgroundColor: "#EF4444",
-                            width: 16,
-                            height: 16,
-                            fontSize: 9,
-                            fontWeight: 700,
-                            color: "white",
-                            zIndex: 10
-                        }}
-                    >
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                    </Box>
-                )}
-            </Button>
-        </>
+            />
+            {mounted && unreadCount > 0 && (
+                <Box
+                    rounded="full"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    className="absolute pointer-events-none"
+                    style={{
+                        top: 2,
+                        right: 0,
+                        backgroundColor: "#EF4444",
+                        minWidth: 14,
+                        padding: "0 4px",
+                        height: 14,
+                        fontSize: 9,
+                        fontWeight: 700,
+                        color: "white",
+                        zIndex: 10
+                    }}
+                >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                </Box>
+            )}
+        </Box>
     );
 }
