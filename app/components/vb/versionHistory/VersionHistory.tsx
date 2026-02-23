@@ -214,13 +214,7 @@ function VersionCard({
 			className="hover:bg-[var(--ax-bg-default-hover)] transition-colors"
 		>
 			<CardHeader
-				title={version.customName || version.label}
-				description={
-					<Flex flexDirection="column" gap="2">
-						<Text color="fg.default">{version.label}</Text>
-						<Text color="fg.secondary">{version.author}</Text>
-					</Flex>
-				}
+				description={version.customName ? `${version.label} • ${version.author}` : version.author}
 				addonAfter={
 					<Box display="flex" alignItems="center" gap="8">
 						{version.isCurrent && (
@@ -264,7 +258,9 @@ function VersionCard({
 						</Menu>
 					</Box>
 				}
-			/>
+			>
+				{version.customName || version.label}
+			</CardHeader>
 		</Card>
 	);
 }
@@ -306,7 +302,7 @@ function VersionSidebar({
 		if (items.length === 0) return null;
 		return (
 			<Box display="flex" flexDirection="column" gap="8">
-				<Text fontSize="xs" fontWeight="600" color="fg.tertiary">
+				<Text fontSize="sm" fontWeight="600" color="fg.tertiary">
 					{label}
 				</Text>
 				{items.map((v) => (
