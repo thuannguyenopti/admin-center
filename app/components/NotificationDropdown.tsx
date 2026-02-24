@@ -281,9 +281,6 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                                     padding: "10px 8px",
                                     margin: 0,
                                     cursor: "pointer",
-                                    fontSize: "13px",
-                                    fontWeight: activeTab === tab.key ? 600 : 400,
-                                    color: activeTab === tab.key ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
                                     whiteSpace: "nowrap",
                                     transition: "color 0.15s, border-color 0.15s",
                                     flexShrink: tab.key === "all" ? 0 : 1,
@@ -292,7 +289,13 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                                     minWidth: 0,
                                 }}
                             >
-                                {tab.label}{tab.count !== null ? ` (${tab.count})` : ""}
+                                <Text
+                                    fontSize="sm"
+                                    fontWeight={activeTab === tab.key ? "600" : "400"}
+                                    color={activeTab === tab.key ? "fg.default" : "fg.tertiary"}
+                                >
+                                    {tab.label}{tab.count !== null ? ` (${tab.count})` : ""}
+                                </Text>
                             </button>
                         ))}
                         <Box flex="1" style={{ minWidth: 8 }} />
@@ -401,7 +404,7 @@ export default function NotificationDropdown() {
                     style={{
                         top: 2,
                         right: 0,
-                        backgroundColor: "#EF4444",
+                        backgroundColor: "var(--ax-colors-fg-error)",
                         minWidth: 14,
                         padding: "0 4px",
                         height: 14,
