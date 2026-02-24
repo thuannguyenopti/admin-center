@@ -906,8 +906,10 @@ export default function NotificationDetailsPage({
         if (isFailedExecution) return <Badge intent="danger">Failed</Badge>;
         if (notification.guardrailStatus === "terminated")
             return <Badge intent="danger">Blocked</Badge>;
-        if (notification.guardrailStatus === "warning" || notification.guardrailStatus === "triggered")
+        if (notification.guardrailStatus === "warning")
             return <Badge intent="warning">Review</Badge>;
+        if (notification.guardrailStatus === "triggered")
+            return <Badge intent="neutral">Triggered</Badge>;
         if (isInstallRequest) return <Badge intent="information">Pending</Badge>;
         if (notification.executionStatus === "success")
             return <Badge intent="success">Success</Badge>;
@@ -1104,7 +1106,9 @@ export default function NotificationDetailsPage({
                                         ? "bg.error.subtle"
                                         : notification.guardrailStatus === "warning"
                                             ? "bg.warning.subtle"
-                                            : "bg.success.subtle"
+                                            : notification.guardrailStatus === "triggered"
+                                                ? "bg.secondary"
+                                                : "bg.success.subtle"
                                 }
                             >
                                 <Text
@@ -1114,7 +1118,9 @@ export default function NotificationDetailsPage({
                                             ? "fg.error"
                                             : notification.guardrailStatus === "warning"
                                                 ? "fg.warning"
-                                                : "fg.success"
+                                                : notification.guardrailStatus === "triggered"
+                                                    ? "fg.tertiary"
+                                                    : "fg.success"
                                     }
                                     fontSize="xs"
                                     fontWeight="600"
