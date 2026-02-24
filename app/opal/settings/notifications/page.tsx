@@ -183,7 +183,7 @@ export default function NotificationPreferencesPage() {
                                 }}
                             >
                                 <Text
-                                    fontSize="md"
+                                    fontSize="sm"
                                     fontWeight="400"
                                     color="fg.tertiary"
                                 >
