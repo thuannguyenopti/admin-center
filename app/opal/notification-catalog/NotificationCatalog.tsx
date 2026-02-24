@@ -749,7 +749,7 @@ function PreferencesSection() {
                             borderColor="border.tertiary"
                             bg="bg.default"
                         >
-                            <Text fontSize="sm">{key.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}</Text>
+                            <Text fontSize="md">{key.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}</Text>
                             <Switch
                                 checked={enabled}
                                 disabled={!globalEnabled}
