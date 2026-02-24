@@ -311,7 +311,7 @@ function NotificationItemSection() {
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
                         <Box display="flex" alignItems="center" gap="8">
-                            <Text fontWeight="700" fontSize="sm">Hypothesis Creator failed</Text>
+                            <Text fontWeight="700" fontSize="md">Hypothesis Creator failed</Text>
                         </Box>
                         <Text fontSize="sm" color="fg.tertiary">Execution b2953c08 hit a tool timeout after 62.45s.</Text>
                         <Box display="flex" alignItems="center" gap="4" mt="4">
@@ -342,7 +342,7 @@ function NotificationItemSection() {
                         <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
-                        <Text fontWeight="500" fontSize="sm">Content Localizer completed</Text>
+                        <Text fontWeight="500" fontSize="md">Content Localizer completed</Text>
                         <Text fontSize="sm" color="fg.tertiary">Chat-triggered execution finished. Campaign copy translated to 4 languages.</Text>
                         <Box display="flex" alignItems="center" gap="4" mt="4">
                             <Badge intent="primary" variant="subtle">Agent Execution</Badge>
@@ -371,7 +371,7 @@ function NotificationItemSection() {
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="8">
                         <Box>
-                            <Text fontWeight="700" fontSize="sm">Install request: Voice-of-Customer Analyzer</Text>
+                            <Text fontWeight="700" fontSize="md">Install request: Voice-of-Customer Analyzer</Text>
                             <Text fontSize="sm" color="fg.tertiary" mt="2">David Kim has requested to install this agent. Review permissions and approve or deny.</Text>
                         </Box>
                         <Box display="flex" gap="8">
@@ -402,7 +402,7 @@ function NotificationItemSection() {
                         <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
-                        <Text fontWeight="500" fontSize="sm">New agent available: Competitor Monitor</Text>
+                        <Text fontWeight="500" fontSize="md">New agent available: Competitor Monitor</Text>
                         <Text fontSize="sm" color="fg.tertiary">Tracks competitor pricing across 50+ sites.</Text>
                     </Box>
                     <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0 }}>
@@ -888,7 +888,7 @@ function NotificationTypesSection() {
                                 <Box pt="2" style={{ flexShrink: 0 }}>{item.icon}</Box>
                                 <Box flex="1" style={{ minWidth: 0 }}>
                                     <Box display="flex" alignItems="start" justifyContent="space-between" gap="8">
-                                        <Text fontWeight="600" fontSize="sm">{item.title}</Text>
+                                        <Text fontWeight="600" fontSize="md">{item.title}</Text>
                                         <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">{item.type}</Text>
                                     </Box>
                                     <Text fontSize="sm" color="fg.tertiary" mt="2">{item.message}</Text>
@@ -933,7 +933,7 @@ function GroupingSection() {
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
                         <Box display="flex" alignItems="center" gap="8">
-                            <Text fontWeight="700" fontSize="sm">Data Pipeline Agent failed 12 times</Text>
+                            <Text fontWeight="700" fontSize="md">Data Pipeline Agent failed 12 times</Text>
                             <Badge intent="warning" variant="subtle">Digest</Badge>
                         </Box>
                         <Text fontSize="sm" color="fg.tertiary">Multiple failures grouped in the last 2 hours. Latest: Memory limit exceeded.</Text>
@@ -951,7 +951,7 @@ function GroupingSection() {
                             <Box display="flex" flexDirection="column" gap="8" mt="4">
                                 {Array.from({ length: 3 }).map((_, i) => (
                                     <Box key={i} p="10" bg="bg.default" rounded="md" border="1" borderColor="border.tertiary">
-                                        <Text fontSize="xs" fontWeight="600">Execution ex-{100 + i} — Memory limit exceeded</Text>
+                                        <Text fontSize="sm" fontWeight="600">Execution ex-{100 + i} — Memory limit exceeded</Text>
                                         <Text fontSize="xs" color="fg.tertiary">{i === 0 ? "5 min ago" : i === 1 ? "32 min ago" : "1 hr ago"} · 90.00s</Text>
                                     </Box>
                                 ))}

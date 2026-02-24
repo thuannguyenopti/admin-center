@@ -640,6 +640,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                 <Box display="flex" alignItems="center" gap="8">
                                                     {getStatusIcon(n)}
                                                     <Box
+                                                        fontSize="md"
                                                         fontWeight={n.status === "unread" ? "600" : "400"}
                                                         color="fg.default"
                                                     >
@@ -666,7 +667,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                         </Td>
                                         <Td>
                                             <Box display="flex" flexDirection="column" gap="2">
-                                                <Text fontSize="sm" color="fg.default">
+                                                <Text fontSize="xs" color="fg.default">
                                                     {n.timestamp}
                                                 </Text>
                                                 <Text fontSize="xs" color="fg.tertiary">
@@ -737,7 +738,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {getStatusIcon(n)}
                                                     <CategoryBadge category={n.category} />
                                                 </div>
-                                                <Text fontWeight={n.status === "unread" ? "600" : "500"} className="line-clamp-1">
+                                                <Text fontSize="md" fontWeight={n.status === "unread" ? "600" : "500"} className="line-clamp-1">
                                                     {n.title}
                                                 </Text>
                                             </div>
@@ -868,7 +869,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                                 Action Required
                                                             </Badge>
                                                         )}
-                                                        <Text fontSize="sm" color="fg.tertiary" className="whitespace-nowrap">
+                                                        <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
                                                             {n.timestamp}
                                                         </Text>
                                                         <Box style={{ width: 8, height: 8, flexShrink: 0 }}>
