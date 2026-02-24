@@ -20,6 +20,12 @@ import {
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
+    Table,
+    TableHeader,
+    TableHeaderCell,
+    TableBody,
+    TableRow,
+    TableCell,
 } from "@optiaxiom/react";
 import { Pill } from "@optiaxiom/react/unstable";
 import {
@@ -751,29 +757,34 @@ function PreferencesSection() {
             </CatalogItem>
 
             <CatalogItem label="Delivery channel selector" description="Per-event choice: in-app, email, browser push, Slack, Teams">
-                <Box display="flex" flexDirection="column" gap="0" border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
-                    {/* Header */}
-                    <Box display="flex" px="16" py="10" bg="bg.secondary" borderB="1" borderColor="border.tertiary">
-                        <Text fontSize="xs" color="fg.tertiary" fontWeight="600" style={{ flex: 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>Event Type</Text>
-                        {["In-App", "Email", "Slack", "Teams", "Browser"].map((ch) => (
-                            <Text key={ch} fontSize="xs" color="fg.tertiary" fontWeight="600" textAlign="center" style={{ width: 64, textTransform: "uppercase", letterSpacing: "0.05em" }}>{ch}</Text>
-                        ))}
-                    </Box>
-                    {[
-                        { label: "Agent Execution Failed", channels: [true, true, true, false, false] },
-                        { label: "Guardrail Enforcer", channels: [true, true, false, false, false] },
-                        { label: "Directory Install Request", channels: [true, true, true, false, false] },
-                    ].map((row) => (
-                        <Box key={row.label} display="flex" px="16" py="12" borderB="1" borderColor="border.tertiary" alignItems="center">
-                            <Text fontSize="sm" style={{ flex: 1 }}>{row.label}</Text>
-                            {row.channels.map((active, ci) => (
-                                <Box key={ci} display="flex" justifyContent="center" style={{ width: 64 }}>
-                                    <Checkbox checked={active} onCheckedChange={() => { }} />
-                                </Box>
+                <Table layout="fixed">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHeaderCell style={{ width: "40%" }}>Event Type</TableHeaderCell>
+                            {["In-App", "Email", "Slack", "Teams", "Browser"].map((ch) => (
+                                <TableHeaderCell key={ch} textAlign="center">{ch}</TableHeaderCell>
                             ))}
-                        </Box>
-                    ))}
-                </Box>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {[
+                            { label: "Agent Execution Failed", channels: [true, true, true, false, false] },
+                            { label: "Guardrail Enforcer", channels: [true, true, false, false, false] },
+                            { label: "Directory Install Request", channels: [true, true, true, false, false] },
+                        ].map((row) => (
+                            <TableRow key={row.label}>
+                                <TableCell>{row.label}</TableCell>
+                                {row.channels.map((active, ci) => (
+                                    <TableCell key={ci} textAlign="center">
+                                        <Box display="flex" justifyContent="center">
+                                            <Checkbox checked={active} onCheckedChange={() => { }} />
+                                        </Box>
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </CatalogItem>
 
             <CatalogItem label="Watch / Unwatch agent control" description="Toggle on agent detail pages to subscribe/unsubscribe from agent notifications">
