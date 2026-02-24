@@ -590,15 +590,15 @@ function GuardrailView({ notification }: { notification: Notification }) {
                     <Box display="flex" gap="16">
                         <Box flex="1">
                             <Text fontSize="sm" fontWeight="600" color="fg.tertiary">Guardrail Type</Text>
-                            <Text mt="4">{notification.guardrailType}</Text>
+                            <Text fontSize="sm" mt="4">{notification.guardrailType}</Text>
                         </Box>
                         <Box flex="1">
                             <Text fontSize="sm" fontWeight="600" color="fg.tertiary">Mode</Text>
-                            <Text mt="4">{notification.type === "guardrail_enforcer" ? "Enforcer" : notification.type === "guardrail_observer" ? "Observer" : "Quality"}</Text>
+                            <Text fontSize="sm" mt="4">{notification.type === "guardrail_enforcer" ? "Enforcer" : notification.type === "guardrail_observer" ? "Observer" : "Quality"}</Text>
                         </Box>
                         <Box flex="1">
                             <Text fontSize="sm" fontWeight="600" color="fg.tertiary">Agent</Text>
-                            <Text mt="4">{notification.agentName || "—"}</Text>
+                            <Text fontSize="sm" mt="4">{notification.agentName || "—"}</Text>
                         </Box>
                     </Box>
                 </Box>
@@ -610,12 +610,12 @@ function GuardrailView({ notification }: { notification: Notification }) {
                     <Box p="12" bg="bg.secondary" borderB="1" borderColor="border.tertiary">
                         <Text fontWeight="600" fontSize="sm">Agent Output (Original)</Text>
                     </Box>
-                    <Box p="16" fontSize="sm" fontFamily="mono">
-                        <Text>The promotional email includes customer data:</Text>
-                        <Text color="fg.error" mt="4" style={{ textDecoration: "line-through" }}>
+                    <Box p="16">
+                        <Text fontSize="sm" fontFamily="mono">The promotional email includes customer data:</Text>
+                        <Text fontSize="sm" fontFamily="mono" color="fg.error" mt="4" style={{ textDecoration: "line-through" }}>
                             Contact john.doe@example.com for more info.
                         </Text>
-                        <Text color="fg.error" mt="4" style={{ textDecoration: "line-through" }}>
+                        <Text fontSize="sm" fontFamily="mono" color="fg.error" mt="4" style={{ textDecoration: "line-through" }}>
                             Call us at 555-0123 to claim your offer.
                         </Text>
                     </Box>
@@ -624,12 +624,12 @@ function GuardrailView({ notification }: { notification: Notification }) {
                     <Box p="12" bg="bg.success.subtle" borderB="1" borderColor="border.success">
                         <Text fontWeight="600" fontSize="sm" color="fg.success">Corrected Output</Text>
                     </Box>
-                    <Box p="16" fontSize="sm" fontFamily="mono">
-                        <Text>The promotional email includes customer data:</Text>
-                        <Text color="fg.success" mt="4">
+                    <Box p="16">
+                        <Text fontSize="sm" fontFamily="mono">The promotional email includes customer data:</Text>
+                        <Text fontSize="sm" fontFamily="mono" color="fg.success" mt="4">
                             Contact [EMAIL_REDACTED] for more info.
                         </Text>
-                        <Text color="fg.success" mt="4">
+                        <Text fontSize="sm" fontFamily="mono" color="fg.success" mt="4">
                             Call us at [PHONE_REDACTED] to claim your offer.
                         </Text>
                     </Box>
@@ -712,7 +712,7 @@ function InstallRequestView({ notification }: { notification: Notification }) {
                         <Text color="fg.tertiary">Requested by {notification.author?.name || notification.triggeredBy?.name || "Unknown"}</Text>
                     </Box>
                 </Box>
-                <Text>
+                <Text fontSize="sm">
                     This agent analyzes structured and unstructured data from multiple sources to provide actionable business insights.
                 </Text>
             </Box>
@@ -819,16 +819,16 @@ function GenericDetailView({ notification }: { notification: Notification }) {
                 <Box display="flex" flexDirection="column" gap="12">
                     <Box>
                         <Text fontSize="sm" fontWeight="600" color="fg.tertiary">Type</Text>
-                        <Text mt="4">{getNotificationTypeLabel(notification.type)}</Text>
+                        <Text fontSize="sm" mt="4">{getNotificationTypeLabel(notification.type)}</Text>
                     </Box>
                     <Box>
                         <Text fontSize="sm" fontWeight="600" color="fg.tertiary">Message</Text>
-                        <Text mt="4">{notification.message}</Text>
+                        <Text fontSize="sm" mt="4">{notification.message}</Text>
                     </Box>
                     {notification.agentName && (
                         <Box>
                             <Text fontSize="sm" fontWeight="600" color="fg.tertiary">Agent</Text>
-                            <Text mt="4">{notification.agentName} {notification.agentVersion || ""}</Text>
+                            <Text fontSize="sm" mt="4">{notification.agentName} {notification.agentVersion || ""}</Text>
                         </Box>
                     )}
                     {notification.deepLink && notification.deepLink !== `/opal/notifications/${notification.id}` && (

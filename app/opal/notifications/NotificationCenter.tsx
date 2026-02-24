@@ -737,17 +737,17 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {getStatusIcon(n)}
                                                     <CategoryBadge category={n.category} />
                                                 </div>
-                                                <div style={{ fontWeight: n.status === "unread" ? "600" : "500" }} className="line-clamp-1">
+                                                <Text fontWeight={n.status === "unread" ? "600" : "500"} className="line-clamp-1">
                                                     {n.title}
-                                                </div>
+                                                </Text>
                                             </div>
-                                            <div style={{ fontSize: "14px", color: "var(--ax-colors-fg-secondary)", minHeight: "40px" }} className="line-clamp-2">
+                                            <Text fontSize="sm" color="fg.secondary" style={{ minHeight: "40px" }} className="line-clamp-2">
                                                 {n.message}
-                                            </div>
+                                            </Text>
                                             <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                <p style={{ fontSize: "12px", color: "var(--ax-colors-fg-tertiary)", margin: 0 }}>
+                                                <Text fontSize="xs" color="fg.tertiary" style={{ margin: 0 }}>
                                                     {n.date}, {n.timestamp}
-                                                </p>
+                                                </Text>
                                                 {n.actionRequired && (
                                                     <div>
                                                         <span style={{
