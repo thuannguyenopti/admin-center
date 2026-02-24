@@ -767,14 +767,14 @@ function PreferencesSection() {
 
                         <DropdownMenuContent align="start" style={{ minWidth: 200 }}>
                             <DropdownMenuCheckboxItem checked={false}>
-                                <Text fontWeight="600">Select all</Text>
+                                <Text fontWeight="600" fontSize="md">Select all</Text>
                             </DropdownMenuCheckboxItem>
 
                             <DropdownMenuSeparator />
 
                             {["In-App", "Email", "Slack", "Teams", "Browser"].map((ch, i) => (
                                 <DropdownMenuCheckboxItem key={ch} checked={i < 3} onSelect={(e) => e.preventDefault()}>
-                                    {ch}
+                                    <Text fontSize="md">{ch}</Text>
                                 </DropdownMenuCheckboxItem>
                             ))}
 
