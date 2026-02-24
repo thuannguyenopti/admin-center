@@ -28,7 +28,6 @@ import {
     IconUsers,
     IconPlug,
     IconSpeakerphone,
-    IconPackage,
 } from "@tabler/icons-react";
 import {
     IconEllipsisStroke,
@@ -40,6 +39,7 @@ import {
     IconCheck,
     IconEnvelope,
     IconXmark,
+    IconAgent,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -313,10 +313,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                 return <IconLoader2 size={16} color="var(--ax-colors-fg-accent)" className="animate-spin" />;
             case "directory_new_agent":
             case "directory_update_available":
-                return <IconPackage size={16} color="var(--ax-colors-fg-information)" />;
+                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
             case "directory_install_request":
             case "approval_required":
-                return <IconPackage size={16} color="var(--ax-colors-fg-warning)" />;
+                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
             case "tools_new_available":
                 return <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
             case "tools_auth_required":

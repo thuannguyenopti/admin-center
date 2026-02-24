@@ -40,7 +40,6 @@ import {
     IconFilter,
     IconChevronDown,
     IconChevronRight,
-    IconPackage,
     IconPlug,
     IconUsers,
     IconSpeakerphone,
@@ -73,6 +72,7 @@ import {
     IconEnvelope,
     IconXmark,
     IconPen,
+    IconAgent,
 } from "@optimizely/axiom-icons";
 import { useState } from "react";
 import { Input } from "@/app/components/Input";
@@ -382,7 +382,7 @@ function NotificationItemSection() {
                     alignItems="start"
                 >
                     <Box pt="2" style={{ flexShrink: 0 }}>
-                        <IconPackage size={16} color="var(--ax-colors-fg-information)" />
+                        <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="8">
                         <Box>
@@ -857,9 +857,9 @@ const NOTIFICATION_TYPES = [
         group: "Agent Directory",
         intent: "information",
         items: [
-            { type: "New Agents in Agent Directory", title: "New agent available: Competitor Monitor", message: "Tracks competitor pricing and product changes across 50+ sites.", icon: <IconPackage style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
-            { type: "Agent Update Available", title: "Update available: Content Localizer V13", message: "Improved language detection and 40% faster translations.", icon: <IconPackage style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
-            { type: "Agent Install Request Submitted (Admin)", title: "Install request: Voice-of-Customer Analyzer", message: "David Kim has requested to install this agent. Review and approve or deny.", icon: <IconPackage style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />, actions: true },
+            { type: "New Agents in Agent Directory", title: "New agent available: Competitor Monitor", message: "Tracks competitor pricing and product changes across 50+ sites.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
+            { type: "Agent Update Available", title: "Update available: Content Localizer V13", message: "Improved language detection and 40% faster translations.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
+            { type: "Agent Install Request Submitted (Admin)", title: "Install request: Voice-of-Customer Analyzer", message: "David Kim has requested to install this agent. Review and approve or deny.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />, actions: true },
             { type: "Agent Install Request Approved (Requester)", title: "Install request approved: Data Analyzer", message: "Your request to install Data Analyzer was approved by the admin.", icon: <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} /> },
             { type: "Agent Install Request Denied (Requester)", title: "Install request denied: Customer Insights Engine", message: "Your request was denied. Contact your admin for more information.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
         ],

@@ -38,14 +38,16 @@ import {
     IconShieldCheck,
     IconEye,
     IconShieldOff,
-    IconPackage,
     IconUser,
     IconCheck,
     IconX,
     IconLink,
     IconAlertTriangle,
 } from "@tabler/icons-react";
-import { IconEllipsisStroke, IconSparkles } from "@optimizely/axiom-icons";
+import {
+    IconEllipsisStroke, IconSparkles, IconFileLines,
+    IconAgent,
+} from "@optimizely/axiom-icons";
 import NextLink from "next/link";
 import { use, useState, useEffect, useMemo } from "react";
 import { mockNotifications, type Notification, getNotificationTypeLabel, getCategoryLabel } from "../mockData";
@@ -704,8 +706,8 @@ function InstallRequestView({ notification }: { notification: Notification }) {
             {/* Agent Info Card */}
             <Box border="1" borderColor="border.tertiary" rounded="md" p="24">
                 <Box display="flex" alignItems="center" gap="16" mb="16">
-                    <Box p="12" bg="bg.information.subtle" rounded="md">
-                        <IconPackage size={24} color="var(--ax-colors-fg-information)" />
+                    <Box p="12" bg="bg.information" rounded="sm">
+                        <IconAgent style={{ width: 24, height: 24, color: "var(--ax-colors-fg-information)" }} />
                     </Box>
                     <Box>
                         <Heading level="3">{notification.agentName}</Heading>
