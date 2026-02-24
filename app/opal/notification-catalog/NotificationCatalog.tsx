@@ -108,7 +108,7 @@ function CatalogItem({ label, description, children }: { label: string; descript
         <Box mb="32">
             <Box mb="8">
                 <Text fontWeight="600" fontSize="sm">{label}</Text>
-                {description && <Text fontSize="xs" color="fg.tertiary" mt="2">{description}</Text>}
+                {description && <Text fontSize="sm" color="fg.tertiary" mt="2">{description}</Text>}
             </Box>
             <Box
                 p="24"
@@ -313,7 +313,7 @@ function NotificationItemSection() {
                         <Box display="flex" alignItems="center" gap="8">
                             <Text fontWeight="700" fontSize="sm">Hypothesis Creator failed</Text>
                         </Box>
-                        <Text fontSize="xs" color="fg.tertiary">Execution b2953c08 hit a tool timeout after 62.45s.</Text>
+                        <Text fontSize="sm" color="fg.tertiary">Execution b2953c08 hit a tool timeout after 62.45s.</Text>
                         <Box display="flex" alignItems="center" gap="4" mt="4">
                             <Badge intent="primary" variant="subtle">Agent Execution</Badge>
                         </Box>
@@ -343,7 +343,7 @@ function NotificationItemSection() {
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
                         <Text fontWeight="500" fontSize="sm">Content Localizer completed</Text>
-                        <Text fontSize="xs" color="fg.tertiary">Chat-triggered execution finished. Campaign copy translated to 4 languages.</Text>
+                        <Text fontSize="sm" color="fg.tertiary">Chat-triggered execution finished. Campaign copy translated to 4 languages.</Text>
                         <Box display="flex" alignItems="center" gap="4" mt="4">
                             <Badge intent="primary" variant="subtle">Agent Execution</Badge>
                         </Box>
@@ -372,7 +372,7 @@ function NotificationItemSection() {
                     <Box flex="1" display="flex" flexDirection="column" gap="8">
                         <Box>
                             <Text fontWeight="700" fontSize="sm">Install request: Voice-of-Customer Analyzer</Text>
-                            <Text fontSize="xs" color="fg.tertiary" mt="2">David Kim has requested to install this agent. Review permissions and approve or deny.</Text>
+                            <Text fontSize="sm" color="fg.tertiary" mt="2">David Kim has requested to install this agent. Review permissions and approve or deny.</Text>
                         </Box>
                         <Box display="flex" gap="8">
                             <Button size="sm" appearance="inverse">Approve</Button>
@@ -403,7 +403,7 @@ function NotificationItemSection() {
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
                         <Text fontWeight="500" fontSize="sm">New agent available: Competitor Monitor</Text>
-                        <Text fontSize="xs" color="fg.tertiary">Tracks competitor pricing across 50+ sites.</Text>
+                        <Text fontSize="sm" color="fg.tertiary">Tracks competitor pricing across 50+ sites.</Text>
                     </Box>
                     <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0 }}>
                         <Text fontSize="xs" color="fg.tertiary">12:00 PM</Text>
@@ -781,7 +781,7 @@ function PreferencesSection() {
                 <Box display="flex" alignItems="center" justifyContent="space-between" p="16" border="1" borderColor="border.tertiary" rounded="md" style={{ maxWidth: 480 }}>
                     <Box>
                         <Text fontWeight="600" fontSize="sm">Weekly wrap-up digest</Text>
-                        <Text fontSize="xs" color="fg.tertiary" mt="2">Receive a weekly summary of your team's agent activity every Monday morning.</Text>
+                        <Text fontSize="sm" color="fg.tertiary" mt="2">Receive a weekly summary of your team's agent activity every Monday morning.</Text>
                     </Box>
                     <Switch checked={true} onCheckedChange={() => { }} />
                 </Box>
@@ -891,7 +891,7 @@ function NotificationTypesSection() {
                                         <Text fontWeight="600" fontSize="sm">{item.title}</Text>
                                         <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">{item.type}</Text>
                                     </Box>
-                                    <Text fontSize="xs" color="fg.tertiary" mt="2">{item.message}</Text>
+                                    <Text fontSize="sm" color="fg.tertiary" mt="2">{item.message}</Text>
                                     {(item as any).actions && (
                                         <Box display="flex" gap="8" mt="8">
                                             <Button size="sm" appearance="inverse">Approve</Button>
@@ -936,7 +936,7 @@ function GroupingSection() {
                             <Text fontWeight="700" fontSize="sm">Data Pipeline Agent failed 12 times</Text>
                             <Badge intent="warning" variant="subtle">Digest</Badge>
                         </Box>
-                        <Text fontSize="xs" color="fg.tertiary">Multiple failures grouped in the last 2 hours. Latest: Memory limit exceeded.</Text>
+                        <Text fontSize="sm" color="fg.tertiary">Multiple failures grouped in the last 2 hours. Latest: Memory limit exceeded.</Text>
                         <Box>
                             <Button
                                 appearance="subtle"
@@ -1012,7 +1012,7 @@ function ErrorStatesSection() {
                         <Text fontWeight="600" fontSize="sm">Hypothesis Creator — Execution log</Text>
                         <Box p="10" bg="bg.error.subtle" rounded="md" border="1" borderColor="border.error" mt="4">
                             <Text fontSize="xs" color="fg.error" fontWeight="600">Page not found</Text>
-                            <Text fontSize="xs" color="fg.tertiary" mt="2">The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.</Text>
+                            <Text fontSize="sm" color="fg.tertiary" mt="2">The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.</Text>
                             <Box display="flex" gap="8" mt="8">
                                 <Button appearance="subtle" size="sm">Search for agent</Button>
                                 <Button appearance="subtle" size="sm">View all executions</Button>
@@ -1190,7 +1190,7 @@ function ExternalDeliverySection() {
                             </Box>
                             <Button size="sm" appearance="default">Save</Button>
                         </Box>
-                        <Text fontSize="xs" color="fg.tertiary" mt="8">Events will be sent as JSON POST requests. Supports retry with exponential backoff.</Text>
+                        <Text fontSize="sm" color="fg.tertiary" mt="8">Events will be sent as JSON POST requests. Supports retry with exponential backoff.</Text>
                     </Box>
                 </Box>
             </CatalogItem>
