@@ -24,6 +24,11 @@ import {
     IconLayoutGrid,
     IconList,
     IconLayoutList,
+    IconLoader2,
+    IconUsers,
+    IconPlug,
+    IconSpeakerphone,
+    IconPackage,
 } from "@tabler/icons-react";
 import {
     IconEllipsisStroke,
@@ -283,7 +288,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         setSelectedIds(new Set());
     }, [selectedIds]);
 
-    const handleBulkDismiss = useCallback(() => {
+    const handleBulkArchive = useCallback(() => {
         setNotifications((prev) => prev.filter((n) => !selectedIds.has(n.id)));
         setSelectedIds(new Set());
     }, [selectedIds]);
@@ -296,6 +301,39 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
     // Status icon
     const getStatusIcon = (n: Notification) => {
+        // Type-specific icons take priority
+        switch (n.type) {
+            case "agent_execution_chat":
+            case "agent_execution_autonomous":
+                return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+            case "agent_execution_failed":
+                return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+            case "agent_execution_long_running":
+                return <IconLoader2 size={16} color="var(--ax-colors-fg-accent)" className="animate-spin" />;
+            case "directory_new_agent":
+            case "directory_update_available":
+                return <IconPackage size={16} color="var(--ax-colors-fg-information)" />;
+            case "directory_install_request":
+            case "approval_required":
+                return <IconPackage size={16} color="var(--ax-colors-fg-warning)" />;
+            case "tools_new_available":
+                return <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
+            case "tools_auth_required":
+            case "tools_auth_expired":
+                return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+            case "tools_deprecated":
+                return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+            case "collaboration_agent_modified":
+                return <IconUsers size={16} color="var(--ax-colors-fg-information)" />;
+            case "collaboration_agent_activated":
+                return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+            case "collaboration_agent_deactivated":
+                return <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+            case "system_announcement":
+            case "system_maintenance":
+                return <IconSpeakerphone size={16} color="var(--ax-colors-fg-information)" />;
+        }
+        // Guardrail status fallback
         if (n.executionStatus === "failed" || n.guardrailStatus === "terminated" || n.guardrailStatus === "failed") {
             return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
         }
@@ -531,10 +569,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconXmark size={14} />}
-                        onClick={handleBulkDismiss}
+                        icon={<IconInbox size={14} />}
+                        onClick={handleBulkArchive}
                     >
-                        Dismiss
+                        Archive
                     </Button>
                 </Box>
             )}
