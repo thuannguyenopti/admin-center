@@ -183,7 +183,7 @@ export default function NotificationPreferencesPage() {
                                 }}
                             >
                                 <Text
-                                    fontSize="sm"
+                                    fontSize="md"
                                     fontWeight="400"
                                     color="fg.tertiary"
                                 >
@@ -235,7 +235,7 @@ export default function NotificationPreferencesPage() {
                                             {/* Type label */}
                                             <Box flex="1" py="8">
                                                 <Text
-                                                    fontSize="sm"
+                                                    fontSize="md"
                                                     color="fg.default"
                                                 >
                                                     {getNotificationTypeLabel(
