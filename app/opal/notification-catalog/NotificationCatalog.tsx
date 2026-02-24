@@ -6,6 +6,7 @@ import {
     Box,
     Heading,
     Text,
+    Link,
     Button,
     Badge,
     Checkbox,
@@ -1017,12 +1018,10 @@ function ErrorStatesSection() {
                             <Text fontWeight="600" fontSize="sm">Hypothesis Creator — Execution log</Text>
                             <Box mt="4">
                                 <Alert intent="neutral">
-                                    The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.
-                                    <Box mt="8">
-                                        <Text asChild color="fg.accent" fontWeight="500" style={{ cursor: "pointer" }}>
-                                            <span>Search for agents <IconArrowUpRightFromSquare style={{ display: "inline", width: 14, height: 14, verticalAlign: "text-bottom" }} /></span>
-                                        </Text>
-                                    </Box>
+                                    The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.{" "}
+                                    <Link href="#" display="inline">
+                                        Search for agents <IconArrowUpRightFromSquare style={{ display: "inline", width: 13, height: 13, verticalAlign: "text-bottom" }} />
+                                    </Link>
                                 </Alert>
                             </Box>
                         </Box>
@@ -1044,12 +1043,10 @@ function ErrorStatesSection() {
                             <Text fontWeight="600" fontSize="sm">Hypothesis Creator — Execution log</Text>
                             <Box mt="4">
                                 <Alert intent="danger">
-                                    The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.
-                                    <Box mt="8">
-                                        <Text asChild color="fg.accent" fontWeight="500" style={{ cursor: "pointer" }}>
-                                            <span>Search for agents <IconArrowUpRightFromSquare style={{ display: "inline", width: 14, height: 14, verticalAlign: "text-bottom" }} /></span>
-                                        </Text>
-                                    </Box>
+                                    The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.{" "}
+                                    <Link href="#" display="inline">
+                                        Search for agents <IconArrowUpRightFromSquare style={{ display: "inline", width: 13, height: 13, verticalAlign: "text-bottom" }} />
+                                    </Link>
                                 </Alert>
                             </Box>
                         </Box>
@@ -1065,9 +1062,9 @@ function ErrorStatesSection() {
 
             <CatalogItem label="External channel failure notice" description="Slack/Teams delivery failed; fallback to email used">
                 <Alert intent="warning">
-                    <Text asChild fontWeight="600"><span>Slack delivery failed.</span></Text>{" "}
+                    <strong>Slack delivery failed.</strong>{" "}
                     Notifications were sent to your email instead.{" "}
-                    <Text asChild color="fg.accent" fontWeight="600" style={{ cursor: "pointer" }}><span>Reconnect Slack →</span></Text>
+                    <Link href="#" display="inline">Reconnect Slack →</Link>
                 </Alert>
             </CatalogItem>
         </Box>
