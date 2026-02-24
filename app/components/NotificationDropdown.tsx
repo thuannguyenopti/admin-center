@@ -272,7 +272,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                                 <Disclosure key={category} defaultOpen={category === "agent_execution" || category === "guardrail"}>
                                     <DisclosureTrigger>
                                         <Box px="16" py="12" bg="bg.secondary" display="flex" alignItems="center" justifyContent="space-between">
-                                            <Text fontSize="sm" fontWeight="600" color="fg.secondary">
+                                            <Text fontSize="md" fontWeight="400" color="fg.secondary">
                                                 {getCategoryLabel(category)} ({ns.length})
                                             </Text>
                                         </Box>
