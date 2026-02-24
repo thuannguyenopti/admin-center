@@ -495,7 +495,7 @@ function BulkActionsSection() {
                         <Separator orientation="vertical" style={{ height: 16 }} />
                         <Button appearance="subtle" size="sm" icon={<IconCheck size={14} />}>Mark as read</Button>
                         <Button appearance="subtle" size="sm" icon={<IconEnvelope size={14} />}>Mark as unread</Button>
-                        <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />}>Dismiss</Button>
+                        <Button appearance="subtle" size="sm" icon={<IconInbox size={14} />}>Archive</Button>
                     </Box>
                 )}
                 <Box display="flex" flexDirection="column" gap="0" border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
