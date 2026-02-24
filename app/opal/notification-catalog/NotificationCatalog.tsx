@@ -430,10 +430,10 @@ function NotificationItemSection() {
                 <Box display="flex" gap="8" flexWrap="wrap">
                     <Badge intent="primary" variant="subtle">Agent Execution</Badge>
                     <Badge intent="warning" variant="subtle">Guardrails</Badge>
-                    <Badge intent="information" variant="subtle">Directory</Badge>
-                    <Badge intent="success" variant="subtle">Tools & Connections</Badge>
+                    <Badge intent="primary" variant="subtle">Agent Directory</Badge>
+                    <Badge intent="neutral" variant="strong">Tools & Connections</Badge>
                     <Badge intent="neutral" variant="subtle">System</Badge>
-                    <Badge intent="success" variant="subtle">Collaboration</Badge>
+                    <Badge intent="information" variant="subtle">Collaboration</Badge>
                 </Box>
             </CatalogItem>
 
@@ -825,7 +825,7 @@ const NOTIFICATION_TYPES = [
     },
     {
         group: "Collaborative / Multi-User",
-        intent: "success",
+        intent: "information",
         items: [
             { type: "Agent Modified by Another User", title: "Agent modified: Content Localizer", message: "Sarah Chen updated the prompt chain and added a new output format.", icon: <IconUsers style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} /> },
             { type: "Agent Activated", title: "Agent activated: Campaign Optimizer", message: "Mike Johnson activated Campaign Optimizer in the production environment.", icon: <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} /> },
@@ -845,7 +845,8 @@ const NOTIFICATION_TYPES = [
     },
     {
         group: "Tools & Connections",
-        intent: "success",
+        intent: "neutral",
+        variant: "strong",
         items: [
             { type: "New Tools Available", title: "New tool: Google Analytics 4 Connector", message: "Connect your analytics data to enable audience insights agents.", icon: <IconPlug style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
             { type: "New Connections Available", title: "New tool: Figma Design Importer", message: "Import Figma designs directly into your content workflows.", icon: <IconPlug style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
@@ -870,7 +871,7 @@ function NotificationTypesSection() {
             {NOTIFICATION_TYPES.map((group) => (
                 <Box key={group.group} mb="24">
                     <Box mb="12">
-                        <Badge intent={group.intent as any} variant="subtle">{group.group}</Badge>
+                        <Badge intent={group.intent as any} variant={(group as any).variant ?? "subtle"}>{group.group}</Badge>
                     </Box>
                     <Box display="flex" flexDirection="column" gap="8">
                         {group.items.map((item) => (

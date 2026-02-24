@@ -111,10 +111,10 @@ function CategoryBadge({ category }: { category: Notification["category"] }) {
     const colorMap: Record<string, { intent: string; variant: "subtle" | "strong" }> = {
         agent_execution: { intent: "primary", variant: "subtle" },
         guardrail: { intent: "warning", variant: "subtle" },
-        directory: { intent: "information", variant: "subtle" },
-        tools: { intent: "success", variant: "subtle" },
+        directory: { intent: "primary", variant: "subtle" },
+        tools: { intent: "neutral", variant: "strong" },
         system: { intent: "neutral", variant: "subtle" },
-        collaboration: { intent: "success", variant: "subtle" },
+        collaboration: { intent: "information", variant: "subtle" },
     };
     const config = colorMap[category] || { intent: "neutral", variant: "subtle" };
     return (
