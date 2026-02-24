@@ -55,7 +55,7 @@ const CATEGORY_GROUPS: { label: string; keys: string[] }[] = [
         ],
     },
     {
-        label: "Directory",
+        label: "Agent Directory",
         keys: [
             "directory_new_agent",
             "directory_update_available",
