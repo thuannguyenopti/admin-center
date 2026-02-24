@@ -77,6 +77,7 @@ const SECTIONS = [
     { id: "error-states", label: "10. Error & Fallback States" },
     { id: "accessibility", label: "11. Accessibility" },
     { id: "external-delivery", label: "12. External Delivery" },
+    { id: "unblocking-modal", label: "13. Opt-in Popover" },
 ];
 
 function SectionHeading({ id, number, title, subtitle }: { id: string; number: string; title: string; subtitle?: string }) {
@@ -671,49 +672,41 @@ function ToastSection() {
         <Box>
             <SectionHeading id="toast" number="6" title="Toast / In-App Notifications" subtitle="Use toaster.create() from @optiaxiom/react — auto-dismiss, manual dismiss, action CTA" />
 
-            <CatalogItem label="Toast variants — toaster.create()" description="Click Preview to fire each intent. Axiom handles the icon, layout, and dismiss automatically.">
+            <CatalogItem label="Toast variants — toaster.create()" description="Click Preview to fire each intent. Axiom's ToastProvider (via AxiomProvider) handles the floating UI, icon, and dismiss.">
                 <Box display="flex" flexDirection="column" gap="8">
                     {variants.map(({ intent, label, message }) => (
-                        <Alert key={intent} intent={intent} shadow="sm">
-                            <Box display="flex" alignItems="center" gap="12" w="full">
-                                <Box flex="1">
-                                    <Text fontSize="sm" fontWeight="600">{label}</Text>
-                                    <Text fontSize="sm" color="fg.secondary">{message}</Text>
-                                </Box>
-                                <Button
-                                    size="sm"
-                                    appearance="default"
-                                    onClick={() => toaster.create(message, { intent })}
-                                >
-                                    Preview ↗
-                                </Button>
-                            </Box>
-                        </Alert>
+                        <Box key={intent} display="flex" alignItems="center" gap="12" p="12" border="1" borderColor="border.tertiary" rounded="md" bg="bg.default">
+                            <Text fontSize="sm" fontWeight="600" style={{ width: 96, flexShrink: 0 }}>{label}</Text>
+                            <Text fontSize="sm" color="fg.tertiary" flex="1" className="line-clamp-1">{message}</Text>
+                            <Button
+                                size="sm"
+                                appearance="default"
+                                onClick={() => toaster.create(message, { intent })}
+                            >
+                                Preview ↗
+                            </Button>
+                        </Box>
                     ))}
                 </Box>
             </CatalogItem>
 
-            <CatalogItem label="Toast with action CTA" description="Pass action + onAction to render a clickable label button inside the toast">
-                <Alert intent="success" shadow="sm">
-                    <Box display="flex" alignItems="center" gap="12" w="full">
-                        <Box flex="1">
-                            <Text fontSize="sm" color="fg.secondary">SEO Analyzer completed — Found 14 optimization opportunities.</Text>
-                        </Box>
-                        <Button
-                            size="sm"
-                            appearance="default"
-                            onClick={() =>
-                                toaster.create("SEO Analyzer completed — Found 14 optimization opportunities.", {
-                                    intent: "success",
-                                    action: "View execution log",
-                                    onAction: () => { },
-                                })
-                            }
-                        >
-                            Preview ↗
-                        </Button>
-                    </Box>
-                </Alert>
+            <CatalogItem label="Toast with action CTA" description='Pass action + onAction to toaster.create() — Axiom renders a clickable label button inside the toast'>
+                <Box display="flex" alignItems="center" gap="12" p="12" border="1" borderColor="border.tertiary" rounded="md" bg="bg.default">
+                    <Text fontSize="sm" color="fg.tertiary" flex="1">SEO Analyzer completed — Found 14 optimization opportunities.</Text>
+                    <Button
+                        size="sm"
+                        appearance="default"
+                        onClick={() =>
+                            toaster.create("SEO Analyzer completed — Found 14 optimization opportunities.", {
+                                intent: "success",
+                                action: "View execution log",
+                                onAction: () => { },
+                            })
+                        }
+                    >
+                        Preview ↗
+                    </Button>
+                </Box>
             </CatalogItem>
 
             <CatalogItem label="Context-aware suppression" description="Toast is NOT shown if user is on the relevant page">
@@ -1233,6 +1226,50 @@ function ExternalDeliverySection() {
     );
 }
 
+/// ── Section 13: Opt-in Popover ────────────────────────────────────────────────
+
+function UnblockingModalSection() {
+    return (
+        <Box>
+            <SectionHeading
+                id="unblocking-modal"
+                number="13"
+                title="Opt-in Popover"
+                subtitle="Non-blocking contextual card prompting users to enable notifications when an agent starts running"
+            />
+
+            <CatalogItem
+                label="Stay in the loop — Popover card"
+                description="Rendered as a Popover anchored near its trigger. No scrim — page remains fully interactive."
+            >
+                <Box
+                    bg="bg.default"
+                    border="1"
+                    borderColor="border.secondary"
+                    rounded="lg"
+                    p="24"
+                    display="flex"
+                    flexDirection="column"
+                    gap="16"
+                    style={{ maxWidth: 320, boxShadow: "0 6px 18px rgba(0,0,0,0.08), 0 6px 12px -3px rgba(0,0,0,0.06), 0 4px 4px 1px rgba(0,0,0,0.05)" }}
+                >
+                    <Box display="flex" alignItems="center" gap="8">
+                        <IconBell size={18} />
+                        <Text fontWeight="600" fontSize="md">Stay in the loop</Text>
+                    </Box>
+                    <Text fontSize="sm" color="fg.secondary">
+                        Get notified when GEO Recommendations finishes its run. No need to stay on the page.
+                    </Text>
+                    <Box display="flex" justifyContent="flex-end" gap="8">
+                        <Button appearance="subtle" size="sm">Not now</Button>
+                        <Button appearance="inverse" size="sm">Turn on notifications</Button>
+                    </Box>
+                </Box>
+            </CatalogItem>
+        </Box>
+    );
+}
+
 // ── Main Catalog ──────────────────────────────────────────────────────────────
 
 export default function NotificationCatalog() {
@@ -1309,6 +1346,7 @@ export default function NotificationCatalog() {
                 <ErrorStatesSection />
                 <AccessibilitySection />
                 <ExternalDeliverySection />
+                <UnblockingModalSection />
             </Box>
         </Box>
     );
