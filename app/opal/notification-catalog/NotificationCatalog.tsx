@@ -938,37 +938,22 @@ function GroupingSection() {
             <SectionHeading id="grouping" number="9" title="Rate Limiting & Grouping" subtitle="Digest items, expand control, queued indicator" />
 
             <CatalogItem label="Grouped / digest notification item" description='"Agent X failed 10+ times" digest instead of individual items'>
-                <Box
-                    p="16"
-                    rounded="xl"
-                    border="1"
-                    borderColor="border.warning"
-                    bg="bg.warning.subtle"
-                    display="flex"
-                    gap="12"
-                    alignItems="start"
-                >
-                    <Box pt="2" style={{ flexShrink: 0 }}>
-                        <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />
-                    </Box>
-                    <Box flex="1" display="flex" flexDirection="column" gap="4">
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Text fontWeight="700" fontSize="md">Data Pipeline Agent failed 12 times</Text>
-                            <Badge intent="warning" variant="subtle">Digest</Badge>
-                        </Box>
-                        <Text fontSize="sm" color="fg.tertiary">Multiple failures grouped in the last 2 hours. Latest: Memory limit exceeded.</Text>
+                <Alert intent="warning">
+                    <Box display="flex" flexDirection="column" gap="4">
                         <Box>
-                            <Button
-                                appearance="subtle"
-                                size="sm"
-                                icon={expanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
-                                onClick={() => setExpanded(!expanded)}
-                            >
-                                {expanded ? "Collapse" : "Show 12 individual events"}
-                            </Button>
+                            <Text fontWeight="700" fontSize="md">Data Pipeline Agent failed 12 times. </Text>
+                            <Text fontSize="sm" color="fg.tertiary">Multiple failures grouped in the last 2 hours. Latest: Memory limit exceeded.</Text>
                         </Box>
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            icon={expanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+                            onClick={() => setExpanded(!expanded)}
+                        >
+                            {expanded ? "Collapse" : "Show 12 individual events"}
+                        </Button>
                         {expanded && (
-                            <Box display="flex" flexDirection="column" gap="8" mt="4">
+                            <Box display="flex" flexDirection="column" gap="8">
                                 {Array.from({ length: 3 }).map((_, i) => (
                                     <Box key={i} p="10" bg="bg.default" rounded="md" border="1" borderColor="border.tertiary">
                                         <Text fontSize="sm" fontWeight="600">Execution ex-{100 + i} — Memory limit exceeded</Text>
@@ -979,11 +964,7 @@ function GroupingSection() {
                             </Box>
                         )}
                     </Box>
-                    <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-                        <Text fontSize="xs" color="fg.tertiary">Today</Text>
-                        <UnreadDot />
-                    </Box>
-                </Box>
+                </Alert>
             </CatalogItem>
 
             <CatalogItem label="Queued notification indicator" description="Visual indicator when notifications are queued due to throttling">
