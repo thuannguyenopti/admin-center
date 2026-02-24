@@ -398,7 +398,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             {/* ── Header ────────────────────────────────────────────────────────── */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Box display="flex" alignItems="center" gap="12">
-                    <Heading level="2">Notifications</Heading>
+                    <Heading level="2">Inbox</Heading>
                     {unreadCount > 0 && (
                         <Badge intent="information">{unreadCount} unread</Badge>
                     )}

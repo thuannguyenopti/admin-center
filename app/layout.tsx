@@ -310,13 +310,13 @@ export default function RootLayout({
 				),
 			},
 			{
-				label: "Notifications",
+				label: "Inbox",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
 				icon: (
 					<img
 						src="/nav_icons/inbox.svg"
-						alt="Notifications"
+						alt="Inbox"
 						width={20}
 						height={20}
 					/>
