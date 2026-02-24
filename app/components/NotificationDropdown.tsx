@@ -2,7 +2,7 @@
 
 import { Box, Button, Text, Badge, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconChecks, IconPackage, IconSpeakerphone, IconLoader2, IconPlug, IconUsers } from "@tabler/icons-react";
+import { IconBell, IconX, IconSettings, IconChecks, IconPackage, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
 import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
@@ -77,6 +77,9 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                 } else {
                     icon = <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
                 }
+                break;
+            case "guardrail_support_ticket":
+                icon = <IconTicket size={16} color="var(--ax-colors-fg-information)" />;
                 break;
             case "system_announcement":
             case "system_maintenance":

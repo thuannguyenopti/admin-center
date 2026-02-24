@@ -9,6 +9,7 @@ export type NotificationType =
     | "guardrail_observer"
     | "guardrail_enforcer"
     | "guardrail_quality"
+    | "guardrail_support_ticket"
     | "directory_new_agent"
     | "directory_update_available"
     | "directory_install_request"
@@ -1302,6 +1303,28 @@ export const mockNotifications: Notification[] = [
         date: formatDate(m(42)),
         guardrailStatus: "triggered",
     },
+    {
+        id: "n-056",
+        userId: "u1",
+        type: "guardrail_support_ticket",
+        title: "Guardrail violation linked to ticket #OPT-4821",
+        message:
+            'The PII Detection guardrail block on Email Composer (execution ex-010) has been automatically linked to support ticket #OPT-4821. Track resolution and view details in your support portal.',
+        status: "unread",
+        priority: "high",
+        category: "guardrail",
+        agentId: "a4",
+        agentName: "Email Composer",
+        agentVersion: "V5",
+        executionId: "ex-010",
+        guardrailType: "PII Detection",
+        deepLink: "/opal/notifications/n-056",
+        actionRequired: true,
+        createdAt: m(6),
+        timestamp: formatTime(m(6)),
+        date: formatDate(m(6)),
+        guardrailStatus: "terminated",
+    },
 ];
 
 // ─── User Preferences ────────────────────────────────────────────────────────
@@ -1335,6 +1358,10 @@ export const mockUserPreferences: UserPreferences = {
         guardrail_quality: {
             enabled: true,
             channels: ["in-app", "email"],
+        },
+        guardrail_support_ticket: {
+            enabled: true,
+            channels: ["in-app", "email", "slack"],
         },
         directory_new_agent: {
             enabled: true,
@@ -1454,6 +1481,10 @@ export const mockOrgDefaultPreferences: UserPreferences = {
         guardrail_quality: {
             enabled: true,
             channels: ["in-app"],
+        },
+        guardrail_support_ticket: {
+            enabled: true,
+            channels: ["in-app", "email"],
         },
         directory_new_agent: {
             enabled: true,
@@ -1626,6 +1657,7 @@ export function getNotificationTypeLabel(type: NotificationType): string {
         guardrail_observer: "Guardrail Observer",
         guardrail_enforcer: "Guardrail Enforcer",
         guardrail_quality: "Quality Score",
+        guardrail_support_ticket: "Linked to Support Ticket",
         directory_new_agent: "New Agent",
         directory_update_available: "Update Available",
         directory_install_request: "Install Request",

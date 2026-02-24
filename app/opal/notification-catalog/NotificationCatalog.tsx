@@ -56,6 +56,7 @@ import {
     IconEyeOff,
     IconChevronUp,
     IconLoader2,
+    IconTicket,
 } from "@tabler/icons-react";
 import {
     IconCircleExclamation,
@@ -838,6 +839,7 @@ const NOTIFICATION_TYPES = [
             { type: "Guardrail Violation — Enforcer Mode (Warning)", title: "Guardrail enforcement — Content rewritten", message: "Social Media Publisher output modified by Compliance guardrail. Removed 2 unapproved claims.", icon: <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} /> },
             { type: "Guardrail Violation — Enforcer Mode (Terminated)", title: "Guardrail Blocked — Execution terminated", message: "Email Composer blocked by PII Detection guardrail. Found 3 unmasked email addresses.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
             { type: "Output Quality Score Below Threshold", title: "Quality score dropped below threshold", message: "Hypothesis Creator quality score fell to 58% (threshold: 70%).", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
+            { type: "Guardrail Violation — Linked to Support Ticket", title: "Guardrail violation linked to ticket #OPT-4821", message: "The PII Detection block on Email Composer (ex-010) has been linked to support ticket #OPT-4821. Track resolution in your support portal.", icon: <IconTicket size={16} color="var(--ax-colors-fg-information)" /> },
         ],
     },
     {
