@@ -1608,7 +1608,7 @@ export function getCategoryLabel(category: string): string {
     const labels: Record<string, string> = {
         agent_execution: "Agent Execution",
         guardrail: "Guardrails",
-        directory: "Directory",
+        directory: "Agent Directory",
         tools: "Tools & Connections",
         system: "System",
         collaboration: "Collaboration",
