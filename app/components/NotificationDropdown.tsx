@@ -1,8 +1,8 @@
 "use client";
 
-import { Box, Button, Text, Badge, Separator, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
+import { Box, Button, Text, Badge, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconAdjustmentsHorizontal, IconCheck, IconChecks, IconTrash, IconUser, IconBrandOpenai, IconRobot, IconPackage, IconSpeakerphone } from "@tabler/icons-react";
+import { IconBell, IconX, IconSettings, IconChecks, IconPackage, IconSpeakerphone } from "@tabler/icons-react";
 import { IconCircleExclamation, IconTriangleExclamation, IconFileLines, IconCircleCheck as AxiomCircleCheck } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
@@ -200,9 +200,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                     borderColor="border.tertiary"
                     addonAfter={
                         <Box display="flex" gap="4" alignItems="center">
-                            <Button icon={<IconAdjustmentsHorizontal size={16} />} appearance="subtle" size="sm" aria-label="Filters" />
                             <Button icon={<IconSettings size={16} />} appearance="subtle" size="sm" aria-label="Settings" />
-                            <Separator orientation="vertical" h="16" mx="4" />
                             <Button
                                 icon={<IconX size={16} />}
                                 appearance="subtle"
@@ -213,7 +211,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                         </Box>
                     }
                 >
-                    <Text fontWeight="600" fontSize="lg">Notifications</Text>
+                    <Text fontWeight="600" fontSize="md">Notifications</Text>
                 </DetailsPanelHeader>
 
                 <DetailsPanelBody p="0" overflowY="auto">
