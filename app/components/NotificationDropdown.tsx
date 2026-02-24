@@ -84,16 +84,9 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                         </Box>
                     </Box>
 
-                    {/* Subtitle: Category • Message style snippet */}
-                    <Box display="flex" alignItems="center" gap="4">
-                        <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
-                            {getCategoryLabel(notification.category)}
-                        </Text>
-                        <Text fontSize="xs" color="fg.tertiary">•</Text>
-                        <Text fontSize="xs" color="fg.tertiary" className="line-clamp-2">
-                            {notification.message}
-                        </Text>
-                    </Box>
+                    <Text fontSize="xs" color="fg.tertiary" className="line-clamp-2">
+                        {notification.message}
+                    </Text>
 
                     <Box display="flex" gap="8" pt="8">
                         {notification.approvalRequired ? (
