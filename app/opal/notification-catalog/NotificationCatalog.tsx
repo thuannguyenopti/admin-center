@@ -161,7 +161,7 @@ function EntryPointSection() {
                                     className="absolute pointer-events-none"
                                     style={{
                                         top: 2, right: 0,
-                                        backgroundColor: "#EF4444",
+                                        backgroundColor: "var(--ax-colors-fg-error)",
                                         minWidth: 14,
                                         padding: "0 4px",
                                         height: 14,
@@ -191,11 +191,10 @@ function NotificationCenterSection() {
             <CatalogItem label="Flyout panel header" description="Anchored to the bell icon; includes tabs, Mark All, close button">
                 <Box border="1" borderColor="border.tertiary" rounded="lg" overflow="hidden" style={{ maxWidth: 480 }}>
                     {/* Header */}
-                    <Box px="16" py="12" borderB="1" borderColor="border.tertiary" display="flex" alignItems="center" justifyContent="space-between" bg="bg.default">
-                        <Text fontWeight="600" fontSize="md">Notifications</Text>
+                    <Box px="16" py="12" display="flex" alignItems="center" justifyContent="space-between" bg="bg.default">
+                        <Text fontWeight="500" fontSize="lg">Notifications</Text>
                         <Box display="flex" gap="4" alignItems="center">
                             <Button icon={<IconSettings size={15} />} appearance="subtle" size="sm" aria-label="Settings" />
-                            <Separator orientation="vertical" style={{ height: 16 }} />
                             <Button icon={<IconXmark size={15} />} appearance="subtle" size="sm" aria-label="Close" />
                         </Box>
                     </Box>
@@ -213,13 +212,16 @@ function NotificationCenterSection() {
                                 style={{
                                     borderBottom: i === 0 ? "2px solid var(--ax-colors-fg-accent)" : "2px solid transparent",
                                     cursor: "pointer",
-                                    fontSize: 13,
-                                    fontWeight: i === 0 ? 600 : 400,
-                                    color: i === 0 ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
                                     whiteSpace: "nowrap",
                                 }}
                             >
-                                {tab.label}
+                                <Text
+                                    fontSize="sm"
+                                    fontWeight={i === 0 ? "600" : "400"}
+                                    color={i === 0 ? "fg.default" : "fg.tertiary"}
+                                >
+                                    {tab.label}
+                                </Text>
                             </Box>
                         ))}
                         <Box flex="1" />
