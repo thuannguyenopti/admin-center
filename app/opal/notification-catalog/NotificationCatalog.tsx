@@ -56,6 +56,7 @@ import {
     IconSpinner,
     IconCircleCheck as AxiomCircleCheck,
     IconFileLines,
+    IconArrowUpRightFromSquare,
 
     IconEllipsisStroke,
     IconCheck,
@@ -998,27 +999,58 @@ function ErrorStatesSection() {
             <SectionHeading id="error-states" number="10" title="Error & Fallback States" subtitle="Broken deeplinks, service outages, external channel failures" />
 
             <CatalogItem label="Broken deeplink state" description="Target page no longer exists; shows error with fallback action">
-                <Box
-                    p="16"
-                    rounded="xl"
-                    border="1"
-                    borderColor="border.tertiary"
-                    bg="bg.default"
-                    display="flex"
-                    gap="12"
-                    alignItems="start"
-                >
-                    <Box pt="2" style={{ flexShrink: 0 }}>
-                        <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />
+                <Box display="flex" flexDirection="column" gap="16">
+                    <Box
+                        p="16"
+                        rounded="xl"
+                        border="1"
+                        borderColor="border.tertiary"
+                        bg="bg.default"
+                        display="flex"
+                        gap="12"
+                        alignItems="start"
+                    >
+                        <Box pt="2" style={{ flexShrink: 0 }}>
+                            <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />
+                        </Box>
+                        <Box flex="1" display="flex" flexDirection="column" gap="4">
+                            <Text fontWeight="600" fontSize="sm">Hypothesis Creator — Execution log</Text>
+                            <Box mt="4">
+                                <Alert intent="neutral">
+                                    The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.
+                                    <Box mt="8">
+                                        <Text asChild color="fg.accent" fontWeight="500" style={{ cursor: "pointer" }}>
+                                            <span>Search for agents <IconArrowUpRightFromSquare style={{ display: "inline", width: 14, height: 14, verticalAlign: "text-bottom" }} /></span>
+                                        </Text>
+                                    </Box>
+                                </Alert>
+                            </Box>
+                        </Box>
                     </Box>
-                    <Box flex="1" display="flex" flexDirection="column" gap="4">
-                        <Text fontWeight="600" fontSize="sm">Hypothesis Creator — Execution log</Text>
-                        <Box p="10" bg="bg.error.subtle" rounded="md" border="1" borderColor="border.error" mt="4">
-                            <Text fontSize="xs" color="fg.error" fontWeight="600">Page not found</Text>
-                            <Text fontSize="sm" color="fg.tertiary" mt="2">The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.</Text>
-                            <Box display="flex" gap="8" mt="8">
-                                <Button appearance="subtle" size="sm">Search for agent</Button>
-                                <Button appearance="subtle" size="sm">View all executions</Button>
+                    <Box
+                        p="16"
+                        rounded="xl"
+                        border="1"
+                        borderColor="border.tertiary"
+                        bg="bg.default"
+                        display="flex"
+                        gap="12"
+                        alignItems="start"
+                    >
+                        <Box pt="2" style={{ flexShrink: 0 }}>
+                            <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />
+                        </Box>
+                        <Box flex="1" display="flex" flexDirection="column" gap="4">
+                            <Text fontWeight="600" fontSize="sm">Hypothesis Creator — Execution log</Text>
+                            <Box mt="4">
+                                <Alert intent="danger">
+                                    The execution log for ex-b2953c08 is no longer available. The agent or execution may have been deleted.
+                                    <Box mt="8">
+                                        <Text asChild color="fg.accent" fontWeight="500" style={{ cursor: "pointer" }}>
+                                            <span>Search for agents <IconArrowUpRightFromSquare style={{ display: "inline", width: 14, height: 14, verticalAlign: "text-bottom" }} /></span>
+                                        </Text>
+                                    </Box>
+                                </Alert>
                             </Box>
                         </Box>
                     </Box>
@@ -1033,7 +1065,7 @@ function ErrorStatesSection() {
             </CatalogItem>
 
             <CatalogItem label="External channel failure notice" description="Slack/Teams delivery failed; fallback to email used">
-                <Alert intent="neutral">
+                <Alert intent="warning">
                     <Text asChild fontWeight="600"><span>Slack delivery failed.</span></Text>{" "}
                     Notifications were sent to your email instead.{" "}
                     <Text asChild color="fg.accent" fontWeight="600" style={{ cursor: "pointer" }}><span>Reconnect Slack →</span></Text>
