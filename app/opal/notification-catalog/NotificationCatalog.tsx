@@ -20,6 +20,8 @@ import {
     DropdownMenuTrigger,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuCheckboxItem,
+    DropdownMenuSeparator,
     Table,
     TableHeader,
     TableHeaderCell,
@@ -70,6 +72,7 @@ import {
     IconCheck,
     IconEnvelope,
     IconXmark,
+    IconPen,
 } from "@optimizely/axiom-icons";
 import { useState } from "react";
 import { Input } from "@/app/components/Input";
@@ -758,34 +761,33 @@ function PreferencesSection() {
             </CatalogItem>
 
             <CatalogItem label="Delivery channel selector" description="Per-event choice: in-app, email, browser push, Slack, Teams">
-                <Table layout="fixed">
-                    <TableHeader>
-                        <TableRow>
-                            <TableHeaderCell style={{ width: "40%" }}>Event Type</TableHeaderCell>
-                            {["In-App", "Email", "Slack", "Teams", "Browser"].map((ch) => (
-                                <TableHeaderCell key={ch} textAlign="center">{ch}</TableHeaderCell>
+                <Box>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger appearance="subtle" icon={<IconPen />} size="sm" aria-label="Edit channels" />
+
+                        <DropdownMenuContent align="start" style={{ minWidth: 200 }}>
+                            <DropdownMenuCheckboxItem checked={false}>
+                                <Text fontWeight="600">Select all</Text>
+                            </DropdownMenuCheckboxItem>
+
+                            <DropdownMenuSeparator />
+
+                            {["In-App", "Email", "Slack", "Teams", "Browser"].map((ch, i) => (
+                                <DropdownMenuCheckboxItem key={ch} checked={i < 3} onSelect={(e) => e.preventDefault()}>
+                                    {ch}
+                                </DropdownMenuCheckboxItem>
                             ))}
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {[
-                            { label: "Agent Execution Failed", channels: [true, true, true, false, false] },
-                            { label: "Guardrail Enforcer", channels: [true, true, false, false, false] },
-                            { label: "Directory Install Request", channels: [true, true, true, false, false] },
-                        ].map((row) => (
-                            <TableRow key={row.label}>
-                                <TableCell>{row.label}</TableCell>
-                                {row.channels.map((active, ci) => (
-                                    <TableCell key={ci} textAlign="center">
-                                        <Box display="flex" justifyContent="center">
-                                            <Checkbox checked={active} onCheckedChange={() => { }} />
-                                        </Box>
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+
+                            <DropdownMenuSeparator />
+
+                            <Box px="8" py="8" display="flex" justifyContent="flex-end" gap="8">
+                                <Button size="sm" appearance="default">
+                                    Done
+                                </Button>
+                            </Box>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </Box>
             </CatalogItem>
 
             <CatalogItem label="Watch / Unwatch agent control" description="Toggle on agent detail pages to subscribe/unsubscribe from agent notifications">
