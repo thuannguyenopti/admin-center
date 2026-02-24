@@ -3,15 +3,15 @@
 import {
     Box,
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
     Heading,
     Switch,
     Text,
     Tooltip,
     Button,
-    Checkbox,
-    Separator,
 } from "@optiaxiom/react";
 import { IconBell, IconPen } from "@optimizely/axiom-icons";
 import { useState } from "react";
@@ -352,61 +352,35 @@ function ChannelSelectorMenuContent({
     };
 
     return (
-        <DropdownMenuContent align="end" style={{ minWidth: 220 }} p="0">
-            <Box p="4" display="flex" flexDirection="column">
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap="12"
-                    p="8"
-                    rounded="xs"
-                    style={{ cursor: "pointer" }}
-                    onClick={(e) => {
+        <DropdownMenuContent align="end" style={{ minWidth: 200 }}>
+            <DropdownMenuCheckboxItem
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                onSelect={(e) => {
+                    e.preventDefault();
+                }}
+            >
+                <Text fontWeight="600">Select all</Text>
+            </DropdownMenuCheckboxItem>
+
+            <DropdownMenuSeparator />
+
+            {CHANNELS.map((ch) => (
+                <DropdownMenuCheckboxItem
+                    key={ch}
+                    checked={localChannels.has(ch)}
+                    onCheckedChange={() => toggleChannel(ch)}
+                    onSelect={(e) => {
                         e.preventDefault();
-                        handleSelectAll(!isAllSelected);
                     }}
-                    className="hover:bg-bg-secondary transition-colors"
                 >
-                    <Checkbox
-                        checked={isAllSelected}
-                        onCheckedChange={handleSelectAll}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <Text fontSize="sm" fontWeight="600">
-                        Select all
-                    </Text>
-                </Box>
+                    {CHANNEL_LABELS[ch]}
+                </DropdownMenuCheckboxItem>
+            ))}
 
-                <Separator my="4" />
+            <DropdownMenuSeparator />
 
-                {CHANNELS.map((ch) => (
-                    <Box
-                        key={ch}
-                        display="flex"
-                        alignItems="center"
-                        gap="12"
-                        p="8"
-                        rounded="xs"
-                        style={{ cursor: "pointer" }}
-                        onClick={(e) => {
-                            e.preventDefault();
-                            toggleChannel(ch);
-                        }}
-                        className="hover:bg-bg-secondary transition-colors"
-                    >
-                        <Checkbox
-                            checked={localChannels.has(ch)}
-                            onCheckedChange={() => toggleChannel(ch)}
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                        <Text fontSize="sm">{CHANNEL_LABELS[ch]}</Text>
-                    </Box>
-                ))}
-            </Box>
-
-            <Separator />
-
-            <Box p="8" display="flex" justifyContent="flex-end" gap="8" bg="bg.secondary" style={{ borderBottomLeftRadius: 6, borderBottomRightRadius: 6 }}>
+            <Box px="8" py="8" display="flex" justifyContent="flex-end" gap="8">
                 <Button
                     size="sm"
                     appearance="subtle"
