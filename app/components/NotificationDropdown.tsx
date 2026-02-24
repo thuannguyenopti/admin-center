@@ -24,6 +24,7 @@ const UnreadIndicator = () => (
 // Compact notification card for sidebar
 function CompactNotificationCard({ notification }: { notification: Notification }) {
     const isUnread = notification.status === "unread";
+    const [isHovered, setIsHovered] = useState(false);
 
     // Helper for agent/system avatars
     const getAvatar = () => {
@@ -58,6 +59,8 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                 display="flex"
                 gap="12"
                 style={{ position: "relative", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
             >
                 {/* Avatar */}
                 {getAvatar()}
@@ -67,7 +70,7 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                     {/* Header: Title + Timestamp + Dot */}
                     <Box display="flex" alignItems="start" justifyContent="space-between" gap="8">
                         <Text
-                            fontSize="sm"
+                            fontSize="md"
                             fontWeight={isUnread ? "700" : "500"}
                             color="fg.default"
                             className="line-clamp-2"
@@ -75,42 +78,39 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                         >
                             {notification.title}
                         </Text>
-                        <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+                        <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0 }}>
                             {notification.actionRequired && <Badge intent="warning" variant="subtle">Action Required</Badge>}
-                            <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
-                                {notification.timestamp}
-                            </Text>
-                            {isUnread && <UnreadIndicator />}
+                            {isHovered ? (
+                                <Button
+                                    icon={<IconX size={14} />}
+                                    appearance="subtle"
+                                    size="sm"
+                                    aria-label="Dismiss"
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                />
+                            ) : (
+                                <>
+                                    <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
+                                        {notification.timestamp}
+                                    </Text>
+                                    {isUnread && <UnreadIndicator />}
+                                </>
+                            )}
                         </Box>
                     </Box>
 
-                    <Text fontSize="xs" color="fg.tertiary" className="line-clamp-2">
+                    <Text fontSize="sm" color="fg.tertiary" className="line-clamp-2">
                         {notification.message}
                     </Text>
 
-                    <Box display="flex" gap="8" pt="8">
-                        {notification.approvalRequired ? (
-                            <>
-                                <Button size="sm" appearance="inverse">Approve</Button>
-                                <Button size="sm" appearance="default">
-                                    {notification.approvalType === "opal_admin" ? "Deny" : "Send back"}
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button size="sm" appearance="inverse">
-                                    {notification.category === "guardrail"
-                                        ? "View Details"
-                                        : notification.actionRequired
-                                            ? "Take Action"
-                                            : "View"}
-                                </Button>
-                                {notification.actionRequired && (
-                                    <Button size="sm" appearance="default">Dismiss</Button>
-                                )}
-                            </>
-                        )}
-                    </Box>
+                    {notification.approvalRequired && (
+                        <Box display="flex" gap="8" pt="8">
+                            <Button size="sm" appearance="inverse">Approve</Button>
+                            <Button size="sm" appearance="default">
+                                {notification.approvalType === "opal_admin" ? "Deny" : "Send back"}
+                            </Button>
+                        </Box>
+                    )}
                 </Box>
             </Box>
         </NextLink>
@@ -195,9 +195,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
             >
                 <DetailsPanelHeader
                     px="16"
-                    py="8"
-                    borderB="1"
-                    borderColor="border.tertiary"
+                    py="12"
                     addonAfter={
                         <Box display="flex" gap="4" alignItems="center">
                             <Button icon={<IconSettings size={16} />} appearance="subtle" size="sm" aria-label="Settings" />
@@ -211,7 +209,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                         </Box>
                     }
                 >
-                    <Text fontWeight="600" fontSize="md">Notifications</Text>
+                    <Text fontWeight="500" fontSize="lg">Notifications</Text>
                 </DetailsPanelHeader>
 
                 <DetailsPanelBody p="0" overflowY="auto">
