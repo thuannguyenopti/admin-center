@@ -287,19 +287,6 @@ function UnreadDot() {
     );
 }
 
-// ⚠ Custom — no Axiom animated priority indicator; uses Box + Tailwind animate-ping for "critical"
-function PriorityDot({ priority }: { priority: "medium" | "high" | "critical" }) {
-    const colors = { medium: "#3B82F6", high: "#F97316", critical: "#EF4444" };
-    return (
-        <Box display="flex" alignItems="center" justifyContent="center" className="relative">
-            <Box rounded="full" style={{ width: 8, height: 8, backgroundColor: colors[priority], flexShrink: 0 }} />
-            {priority === "critical" && (
-                <Box rounded="full" className="absolute animate-ping" style={{ width: 8, height: 8, backgroundColor: colors.critical, opacity: 0.6 }} />
-            )}
-        </Box>
-    );
-}
-
 function NotificationItemSection() {
     return (
         <Box>
@@ -448,21 +435,6 @@ function NotificationItemSection() {
                 </Box>
             </CatalogItem>
 
-            <CatalogItem label="Priority dots" description="Visual severity indicator (medium=blue, high=orange, critical=red+ping)">
-                <Box display="flex" gap="32" alignItems="center">
-                    {(["medium", "high", "critical"] as const).map((p) => (
-                        <Box key={p} display="flex" alignItems="center" gap="8">
-                            <PriorityDot priority={p} />
-                            <Text fontSize="sm" textTransform="capitalize">{p}</Text>
-                        </Box>
-                    ))}
-                    <Box display="flex" alignItems="center" gap="8">
-                        <Box style={{ width: 8, height: 8 }} />
-                        <Text fontSize="sm" color="fg.tertiary">Low (no dot)</Text>
-                    </Box>
-                </Box>
-            </CatalogItem>
-
             <CatalogItem label="Status icons" description="Icon indicates execution or guardrail result">
                 <Box display="flex" gap="24" flexWrap="wrap">
                     {[
@@ -516,14 +488,12 @@ function BulkActionsSection() {
                         p="12"
                         bg="bg.secondary"
                         rounded="md"
-                        border="1"
-                        borderColor="border.default"
                     >
                         <Text fontWeight="600" fontSize="sm">{selected.size} selected</Text>
                         <Separator orientation="vertical" style={{ height: 16 }} />
                         <Button appearance="subtle" size="sm" icon={<IconCheck size={14} />}>Mark as read</Button>
-                        <Button appearance="subtle" size="sm" icon={<IconBellOff size={14} />}>Mark as unread</Button>
-                        <Button appearance="subtle" size="sm" icon={<IconTrash size={14} />}>Dismiss</Button>
+                        <Button appearance="subtle" size="sm" icon={<IconMail size={14} />}>Mark as unread</Button>
+                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />}>Dismiss</Button>
                     </Box>
                 )}
                 <Box display="flex" flexDirection="column" gap="0" border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">

@@ -25,6 +25,8 @@ import {
     IconLayoutGrid,
     IconList,
     IconLayoutList,
+    IconMail,
+    IconX,
 } from "@tabler/icons-react";
 import {
     IconEllipsisStroke,
@@ -134,7 +136,6 @@ const CATEGORY_OPTIONS = [
     "tools",
     "collaboration",
     "system",
-    "collaboration", // Fixed duplicate
 ];
 
 const STATUS_OPTIONS = ["All", "Unread", "Read"];
@@ -504,10 +505,8 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     alignItems="center"
                     gap="12"
                     p="12"
-                    bg="bg.information.subtle"
+                    bg="bg.secondary"
                     rounded="md"
-                    border="1"
-                    borderColor="border.default"
                 >
                     <Text fontWeight="600" fontSize="sm">
                         {selectedIds.size} selected
@@ -524,7 +523,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconBellOff size={14} />}
+                        icon={<IconMail size={14} />}
                         onClick={handleBulkMarkAsUnread}
                     >
                         Mark as unread
@@ -532,7 +531,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconTrash size={14} />}
+                        icon={<IconX size={14} />}
                         onClick={handleBulkDismiss}
                     >
                         Dismiss
@@ -724,14 +723,13 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                             borderRadius: "8px",
                                         }}
                                     >
-                                        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }} onClick={(e: any) => e.stopPropagation()}>
-                                            {isSelectionMode && (
-                                                <Checkbox
-                                                    checked={selectedIds.has(n.id)}
-                                                    onCheckedChange={() => toggleSelect(n.id)}
-                                                />
-                                            )}
-                                        </div>
+                                        {isSelectionMode && (
+                                            <div onClick={(e: any) => { e.preventDefault(); e.stopPropagation(); toggleSelect(n.id); }} style={{ zIndex: 10, cursor: "pointer" }}>
+                                                <div style={{ pointerEvents: "none" }}>
+                                                    <Checkbox checked={selectedIds.has(n.id)} />
+                                                </div>
+                                            </div>
+                                        )}
                                         {/* Content column */}
                                         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
                                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -829,14 +827,13 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     gap="16"
                                                     alignItems="start"
                                                 >
-                                                    <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }} onClick={(e: any) => e.stopPropagation()}>
-                                                        {isSelectionMode && (
-                                                            <Checkbox
-                                                                checked={selectedIds.has(n.id)}
-                                                                onCheckedChange={() => toggleSelect(n.id)}
-                                                            />
-                                                        )}
-                                                    </div>
+                                                    {isSelectionMode && (
+                                                        <div onClick={(e: any) => { e.preventDefault(); e.stopPropagation(); toggleSelect(n.id); }} style={{ paddingTop: 2, zIndex: 10, cursor: "pointer" }}>
+                                                            <div style={{ pointerEvents: "none" }}>
+                                                                <Checkbox checked={selectedIds.has(n.id)} />
+                                                            </div>
+                                                        </div>
+                                                    )}
 
                                                     {/* Status Icon */}
                                                     <Box style={{ flexShrink: 0 }} pt="4">
