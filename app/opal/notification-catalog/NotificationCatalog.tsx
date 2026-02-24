@@ -1057,11 +1057,10 @@ function ErrorStatesSection() {
                 </Box>
             </CatalogItem>
 
-            <CatalogItem label="Notification service outage banner" description="Full-width Banner at top of panel when the notification service is degraded">
-                <Banner intent="warning" onDismiss={() => { }}>
-                    <Text asChild fontWeight="600"><span>Notification service degraded.</span></Text>{" "}
-                    Some notifications may be delayed. We're working to resolve this.
-                </Banner>
+            <CatalogItem label="Notification service outage banner" description="Full-width Alert at top of panel when the notification service is degraded">
+                <Alert intent="warning">
+                    Notification service degraded. Some notifications may be delayed. We're working to resolve this.
+                </Alert>
             </CatalogItem>
 
             <CatalogItem label="External channel failure notice" description="Slack/Teams delivery failed; fallback to email used">
