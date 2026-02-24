@@ -357,7 +357,7 @@ function ChannelSelectorMenuContent({
                     e.preventDefault();
                 }}
             >
-                <Text fontWeight="600">Select all</Text>
+                <Text fontWeight="600" fontSize="md">Select all</Text>
             </DropdownMenuCheckboxItem>
 
             <DropdownMenuSeparator />
@@ -371,7 +371,7 @@ function ChannelSelectorMenuContent({
                         e.preventDefault();
                     }}
                 >
-                    {CHANNEL_LABELS[ch]}
+                    <Text fontSize="md">{CHANNEL_LABELS[ch]}</Text>
                 </DropdownMenuCheckboxItem>
             ))}
 

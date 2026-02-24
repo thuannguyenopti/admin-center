@@ -383,6 +383,7 @@ export default function RootLayout({
 				label: "Settings",
 				url: "/opal/settings",
 				highlight: "/opal/settings",
+				customLayout: true,
 				icon: (
 					<img
 						src="/nav_icons/gear.svg"
