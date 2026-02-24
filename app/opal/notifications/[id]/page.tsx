@@ -1032,7 +1032,7 @@ export default function NotificationDetailsPage({
                                     >
                                         <Text
                                             color="fg.tertiary"
-                                            fontSize="sm"
+                                            fontSize="xs"
                                             fontWeight="600"
                                         >
                                             {item.label}
@@ -1052,7 +1052,7 @@ export default function NotificationDetailsPage({
                                                         {item.icon}
                                                     </Box>
                                                 )}
-                                                <Text fontWeight="500">
+                                                <Text fontSize="sm" fontWeight="500">
                                                     {item.value}
                                                 </Text>
                                             </Box>
@@ -1071,7 +1071,7 @@ export default function NotificationDetailsPage({
                                     <Box p="12" display="flex" flexDirection="column" gap="4">
                                         <Text
                                             color="fg.tertiary"
-                                            fontSize="sm"
+                                            fontSize="xs"
                                             fontWeight="600"
                                         >
                                             Triggered By
@@ -1085,7 +1085,7 @@ export default function NotificationDetailsPage({
                                                 name={notification.triggeredBy.name}
                                                 size="xs"
                                             />
-                                            <Text fontWeight="500">
+                                            <Text fontSize="sm" fontWeight="500">
                                                 {notification.triggeredBy.name}
                                             </Text>
                                         </Box>
@@ -1116,7 +1116,7 @@ export default function NotificationDetailsPage({
                                                 ? "fg.warning"
                                                 : "fg.success"
                                     }
-                                    fontSize="sm"
+                                    fontSize="xs"
                                     fontWeight="600"
                                     textTransform="uppercase"
                                 >
