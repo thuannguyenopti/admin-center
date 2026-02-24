@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { Box, Text, Button } from "@optiaxiom/react";
 import { toaster } from "@optiaxiom/react";
-import { IconX, IconAlertCircle, IconCircleCheck, IconAlertTriangle, IconBell, IconPackage, IconPlug, IconUsers, IconSpeakerphone } from "@tabler/icons-react";
+import { IconX, IconAlertCircle, IconCircleCheck, IconAlertTriangle, IconBell, IconPlug, IconUsers, IconSpeakerphone } from "@tabler/icons-react";
+import { IconAgent } from "@optimizely/axiom-icons";
 import { useRouter, usePathname } from "next/navigation";
 import type { Notification } from "@/app/opal/notifications/mockData";
 
@@ -40,7 +41,7 @@ function getToastIcon(n: Notification) {
     if (n.guardrailStatus === "warning" || n.guardrailStatus === "triggered")
         return <IconAlertTriangle size={18} color="var(--ax-colors-fg-warning)" />;
     if (n.category === "directory")
-        return <IconPackage size={18} color="var(--ax-colors-fg-information)" />;
+        return <IconAgent size={18} color="var(--ax-colors-fg-information)" />;
     if (n.category === "tools")
         return <IconPlug size={18} color="var(--ax-colors-fg-tertiary)" />;
     if (n.category === "collaboration")

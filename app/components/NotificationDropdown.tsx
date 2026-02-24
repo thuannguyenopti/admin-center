@@ -2,8 +2,8 @@
 
 import { Box, Button, Text, Badge, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconChecks, IconPackage, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
-import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck } from "@optimizely/axiom-icons";
+import { IconBell, IconX, IconSettings, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
+import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck, IconAgent } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -42,11 +42,13 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                 break;
             case "directory_new_agent":
             case "directory_update_available":
-                icon = <IconPackage size={16} color="var(--ax-colors-fg-information)" />;
+                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
                 break;
             case "directory_install_request":
+                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+                break;
             case "approval_required":
-                icon = <IconPackage size={16} color="var(--ax-colors-fg-warning)" />;
+                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
                 break;
             case "tools_new_available":
                 icon = <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
