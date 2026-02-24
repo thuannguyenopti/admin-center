@@ -34,6 +34,7 @@ import {
     IconEllipsisStroke,
     IconCircleExclamation,
     IconTriangleExclamation,
+    IconSpinner,
     IconCircleCheck,
     IconFileLines,
     IconCheck,
@@ -337,7 +338,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         if (n.executionStatus === "failed" || n.guardrailStatus === "terminated" || n.guardrailStatus === "failed") {
             return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
         }
-        if (n.guardrailStatus === "warning" || n.guardrailStatus === "triggered") {
+        if (n.guardrailStatus === "triggered") {
+            return <IconSpinner style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} className="animate-spin" />;
+        }
+        if (n.guardrailStatus === "warning") {
             return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
         }
         if (n.executionStatus === "success" || n.guardrailStatus === "success") {

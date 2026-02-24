@@ -53,6 +53,7 @@ import {
 import {
     IconCircleExclamation,
     IconTriangleExclamation,
+    IconSpinner,
     IconCircleCheck as AxiomCircleCheck,
     IconFileLines,
 
@@ -441,7 +442,8 @@ function NotificationItemSection() {
                 <Box display="flex" gap="24" flexWrap="wrap">
                     {[
                         { icon: <IconCircleExclamation style={{ width: 18, height: 18, color: "var(--ax-colors-fg-error)" }} />, label: "Failed / Terminated" },
-                        { icon: <IconTriangleExclamation style={{ width: 18, height: 18, color: "var(--ax-colors-fg-warning)" }} />, label: "Warning / Triggered" },
+                        { icon: <IconTriangleExclamation style={{ width: 18, height: 18, color: "var(--ax-colors-fg-warning)" }} />, label: "Warning" },
+                        { icon: <IconSpinner style={{ width: 18, height: 18, color: "var(--ax-colors-fg-tertiary)" }} />, label: "Triggered" },
                         { icon: <AxiomCircleCheck style={{ width: 18, height: 18, color: "var(--ax-colors-fg-success)" }} />, label: "Success" },
                         { icon: <IconFileLines style={{ width: 18, height: 18, color: "var(--ax-colors-fg-tertiary)" }} />, label: "Informational" },
                     ].map(({ icon, label }) => (

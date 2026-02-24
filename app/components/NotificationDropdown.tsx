@@ -2,8 +2,8 @@
 
 import { Box, Button, Text, Badge, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconChecks, IconPackage, IconSpeakerphone } from "@tabler/icons-react";
-import { IconCircleExclamation, IconTriangleExclamation, IconFileLines, IconCircleCheck as AxiomCircleCheck } from "@optimizely/axiom-icons";
+import { IconBell, IconX, IconSettings, IconChecks, IconPackage, IconSpeakerphone, IconLoader2, IconPlug, IconUsers } from "@tabler/icons-react";
+import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
 import { useLayout } from "@/app/context/LayoutContext";
@@ -26,23 +26,65 @@ function CompactNotificationCard({ notification }: { notification: Notification 
     const isUnread = notification.status === "unread";
     const [isHovered, setIsHovered] = useState(false);
 
-    // Helper for agent/system avatars
+    // Status icon by notification type (matches Figma spec)
     const getAvatar = () => {
         let icon;
-        if (notification.type === "agent_execution_failed") {
-            icon = <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
-        } else if (notification.type === "approval_required" || notification.category === "directory") {
-            icon = <IconPackage size={16} color="var(--ax-colors-fg-information)" />;
-        } else if (notification.type === "agent_execution_chat" || notification.type === "agent_execution_autonomous") {
-            icon = <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
-        } else if (notification.category === "agent_execution" || notification.category === "guardrail") {
-            icon = <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
-        } else if (notification.category === "system" || notification.type === "system_announcement") {
-            icon = <IconSpeakerphone style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
-        } else {
-            icon = <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+        switch (notification.type) {
+            case "agent_execution_chat":
+            case "agent_execution_autonomous":
+                icon = <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+                break;
+            case "agent_execution_failed":
+                icon = <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+                break;
+            case "agent_execution_long_running":
+                icon = <IconLoader2 size={16} color="var(--ax-colors-fg-accent)" className="animate-spin" />;
+                break;
+            case "directory_new_agent":
+            case "directory_update_available":
+                icon = <IconPackage size={16} color="var(--ax-colors-fg-information)" />;
+                break;
+            case "directory_install_request":
+            case "approval_required":
+                icon = <IconPackage size={16} color="var(--ax-colors-fg-warning)" />;
+                break;
+            case "tools_new_available":
+                icon = <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
+                break;
+            case "tools_auth_required":
+            case "tools_auth_expired":
+                icon = <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+                break;
+            case "tools_deprecated":
+                icon = <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+                break;
+            case "collaboration_agent_modified":
+                icon = <IconUsers size={16} color="var(--ax-colors-fg-information)" />;
+                break;
+            case "collaboration_agent_activated":
+                icon = <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+                break;
+            case "collaboration_agent_deactivated":
+                icon = <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+                break;
+            case "guardrail_observer":
+            case "guardrail_enforcer":
+            case "guardrail_quality":
+                if (notification.guardrailStatus === "terminated" || notification.guardrailStatus === "failed") {
+                    icon = <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+                } else if (notification.guardrailStatus === "triggered") {
+                    icon = <IconSpinner style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} className="animate-spin" />;
+                } else {
+                    icon = <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+                }
+                break;
+            case "system_announcement":
+            case "system_maintenance":
+                icon = <IconSpeakerphone size={16} color="var(--ax-colors-fg-information)" />;
+                break;
+            default:
+                icon = <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
         }
-
         return (
             <Box pt="2" style={{ flexShrink: 0 }}>
                 {icon}

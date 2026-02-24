@@ -93,7 +93,7 @@ export function TestRunTray({
                         justifyContent="space-between"
                         alignItems="center"
                     >
-                        <Text fontWeight="600" fontSize="md">
+                        <Text fontWeight="500" fontSize="lg">
                             Test Run
                         </Text>
                         <Button
