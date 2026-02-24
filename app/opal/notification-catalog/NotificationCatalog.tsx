@@ -23,8 +23,6 @@ import {
 import { Pill } from "@optiaxiom/react/unstable";
 import {
     IconBell,
-    IconX,
-    IconCheck,
     IconChecks,
     IconTrash,
     IconBellOff,
@@ -57,7 +55,11 @@ import {
     IconTriangleExclamation,
     IconCircleCheck as AxiomCircleCheck,
     IconFileLines,
+
     IconEllipsisStroke,
+    IconCheck,
+    IconEnvelope,
+    IconXmark,
 } from "@optimizely/axiom-icons";
 import { useState } from "react";
 import { Input } from "@/app/components/Input";
@@ -191,7 +193,7 @@ function NotificationCenterSection() {
                         <Box display="flex" gap="4" alignItems="center">
                             <Button icon={<IconSettings size={15} />} appearance="subtle" size="sm" aria-label="Settings" />
                             <Separator orientation="vertical" style={{ height: 16 }} />
-                            <Button icon={<IconX size={15} />} appearance="subtle" size="sm" aria-label="Close" />
+                            <Button icon={<IconXmark size={15} />} appearance="subtle" size="sm" aria-label="Close" />
                         </Box>
                     </Box>
                     {/* Tab bar — ⚠ Custom; Axiom has no Tabs component — using styled Box elements */}
@@ -406,7 +408,7 @@ function NotificationItemSection() {
                     <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0 }}>
                         <Text fontSize="xs" color="fg.tertiary">12:00 PM</Text>
                         <Tooltip content="Dismiss">
-                            <Button appearance="subtle" size="sm" icon={<IconX size={14} />} aria-label="Dismiss" />
+                            <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />} aria-label="Dismiss" />
                         </Tooltip>
                     </Box>
                 </Box>
@@ -492,8 +494,8 @@ function BulkActionsSection() {
                         <Text fontWeight="600" fontSize="sm">{selected.size} selected</Text>
                         <Separator orientation="vertical" style={{ height: 16 }} />
                         <Button appearance="subtle" size="sm" icon={<IconCheck size={14} />}>Mark as read</Button>
-                        <Button appearance="subtle" size="sm" icon={<IconMail size={14} />}>Mark as unread</Button>
-                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />}>Dismiss</Button>
+                        <Button appearance="subtle" size="sm" icon={<IconEnvelope size={14} />}>Mark as unread</Button>
+                        <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />}>Dismiss</Button>
                     </Box>
                 )}
                 <Box display="flex" flexDirection="column" gap="0" border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
@@ -563,7 +565,7 @@ function SearchFilterSection() {
                             <Button
                                 appearance="subtle"
                                 size="sm"
-                                icon={<IconX size={14} />}
+                                icon={<IconXmark size={14} />}
                                 aria-label="Clear search"
                                 onClick={() => setQuery("")}
                             />

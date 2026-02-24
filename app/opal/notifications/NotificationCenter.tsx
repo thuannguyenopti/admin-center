@@ -17,7 +17,6 @@ import {
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
     IconClock,
-    IconCheck,
     IconChecks,
     IconTrash,
     IconBellOff,
@@ -25,8 +24,6 @@ import {
     IconLayoutGrid,
     IconList,
     IconLayoutList,
-    IconMail,
-    IconX,
 } from "@tabler/icons-react";
 import {
     IconEllipsisStroke,
@@ -34,6 +31,9 @@ import {
     IconTriangleExclamation,
     IconCircleCheck,
     IconFileLines,
+    IconCheck,
+    IconEnvelope,
+    IconXmark,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -523,7 +523,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconMail size={14} />}
+                        icon={<IconEnvelope size={14} />}
                         onClick={handleBulkMarkAsUnread}
                     >
                         Mark as unread
@@ -531,7 +531,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconX size={14} />}
+                        icon={<IconXmark size={14} />}
                         onClick={handleBulkDismiss}
                     >
                         Dismiss
