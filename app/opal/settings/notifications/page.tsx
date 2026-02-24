@@ -305,7 +305,6 @@ export default function NotificationPreferencesPage() {
                                                     }));
                                                     setOpenKey(null);
                                                 }}
-                                                onClose={() => setOpenKey(null)}
                                             />
                                         )}
                                     </DropdownMenu>
@@ -322,11 +321,9 @@ export default function NotificationPreferencesPage() {
 function ChannelSelectorMenuContent({
     channels,
     onApply,
-    onClose,
 }: {
     channels: Channel[];
     onApply: (channels: Channel[]) => void;
-    onClose: () => void;
 }) {
     const [localChannels, setLocalChannels] = useState<Set<Channel>>(
         new Set(channels)
@@ -383,23 +380,13 @@ function ChannelSelectorMenuContent({
             <Box px="8" py="8" display="flex" justifyContent="flex-end" gap="8">
                 <Button
                     size="sm"
-                    appearance="subtle"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        onClose();
-                    }}
-                >
-                    Cancel
-                </Button>
-                <Button
-                    size="sm"
-                    appearance="primary"
+                    appearance="default"
                     onClick={(e) => {
                         e.preventDefault();
                         onApply(Array.from(localChannels));
                     }}
                 >
-                    Apply
+                    Done
                 </Button>
             </Box>
         </DropdownMenuContent>
