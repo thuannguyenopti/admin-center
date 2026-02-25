@@ -9,7 +9,6 @@ import {useEffect, useState} from "react";
 import {Box, Heading} from "@optiaxiom/react";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
-import {ToastProvider} from "@/app/hooks/useToast";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -237,25 +236,23 @@ export default function EditPageDetail() {
 	};
 
 	return (
-		<ToastProvider>
-			<VBPrototype
-				key={id}
-				initialData={page}
-				onSave={handleSave}
-				onPublish={handlePublish}
-				pageName={page.name}
-				pageId={page.id}
-				pageStatus={page.status}
-				variations={page.variations}
-				onAddVariation={handleAddVariation}
-				onDeleteVariation={handleDeleteVariation}
-				onRenameVariation={handleRenameVariation}
-				onRenamePage={handleRenamePage}
-				onTrash={handleTrash}
-				onViewOnWebsite={handleViewOnWebsite}
-				versionHistory={versionHistory}
-				onRestoreVersion={handleRestoreVersion}
-			/>
-		</ToastProvider>
+		<VBPrototype
+			key={id}
+			initialData={page}
+			onSave={handleSave}
+			onPublish={handlePublish}
+			pageName={page.name}
+			pageId={page.id}
+			pageStatus={page.status}
+			variations={page.variations}
+			onAddVariation={handleAddVariation}
+			onDeleteVariation={handleDeleteVariation}
+			onRenameVariation={handleRenameVariation}
+			onRenamePage={handleRenamePage}
+			onTrash={handleTrash}
+			onViewOnWebsite={handleViewOnWebsite}
+			versionHistory={versionHistory}
+			onRestoreVersion={handleRestoreVersion}
+		/>
 	);
 }
