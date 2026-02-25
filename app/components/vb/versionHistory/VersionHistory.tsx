@@ -18,7 +18,7 @@ import {
 import AbstractDialog from "@/app/components/AbstractDialog";
 import { Input } from "@/app/components/Input";
 import { deepEqual, compareVersions, formatComparisonSummary } from "./utils";
-import { useToast } from "@/app/hooks/useToast";
+import { toaster } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import {
 	IconXmark,
@@ -1193,7 +1193,6 @@ export default function VersionHistory({
 	const [renameDialogVersion, setRenameDialogVersion] = useState<Version | null>(null);
 	const [renameInput, setRenameInput] = useState("");
 	const [deleteDialogVersion, setDeleteDialogVersion] = useState<Version | null>(null);
-	const toast = useToast();
 
 	// Use real version history if available, otherwise fall back to mock data
 	const versions = useMemo(() => {
@@ -1259,7 +1258,7 @@ export default function VersionHistory({
 
 	const handleRestoreVersion = (version: Version) => {
 		if (!versionHistory || !pageId) {
-			toast.error("Version history not available");
+			toaster.create("Version history not available", { intent: "danger" });
 			return;
 		}
 
@@ -1272,7 +1271,7 @@ export default function VersionHistory({
 		}
 
 		const versionName = version.customName || version.label;
-		toast.success(`Restored version: ${versionName}`);
+		toaster.create(`Restored version: ${versionName}`, { intent: "success" });
 
 		// Close version history after a brief delay
 		setTimeout(() => onClose(), 500);
@@ -1290,14 +1289,14 @@ export default function VersionHistory({
 		const success = versionHistory.deleteVersion(deleteDialogVersion.id);
 
 		if (success) {
-			toast.success(`Deleted version: ${versionName}`);
+			toaster.create(`Deleted version: ${versionName}`, { intent: "success" });
 			// If we deleted the selected version, select another
 			if (selectedVersion?.id === deleteDialogVersion.id) {
 				const remaining = versions.filter(v => v.id !== deleteDialogVersion.id);
 				setSelectedVersion(remaining[0] || null);
 			}
 		} else {
-			toast.error("Cannot delete the current version");
+			toaster.create("Cannot delete the current version", { intent: "danger" });
 		}
 
 		setDeleteDialogVersion(null);
@@ -1315,9 +1314,9 @@ export default function VersionHistory({
 		versionHistory.renameVersion(renameDialogVersion.id, renameInput);
 
 		if (renameInput.trim()) {
-			toast.success(`Version renamed to: ${renameInput}`);
+			toaster.create(`Version renamed to: ${renameInput}`, { intent: "success" });
 		} else {
-			toast.success("Version name cleared");
+			toaster.create("Version name cleared", { intent: "success" });
 		}
 
 		setRenameDialogVersion(null);
