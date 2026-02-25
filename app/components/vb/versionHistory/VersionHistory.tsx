@@ -185,6 +185,76 @@ function getChangedSectionIds(leftOutlines: Outline[], rightOutlines: Outline[])
 	return changed;
 }
 
+/**
+ * Build a set of element IDs that differ between two outlines.
+ * Used to show per-element change indicators in visual compare.
+ */
+function getChangedElementIds(leftOutlines: Outline[], rightOutlines: Outline[]): Set<string> {
+	const changed = new Set<string>();
+
+	const leftSections = new Map<string, any>();
+	const rightSections = new Map<string, any>();
+
+	for (const outline of leftOutlines) {
+		for (const section of outline.tree) {
+			const id = section.id ?? section.name ?? "";
+			leftSections.set(id, { section, elements: outline.elements });
+		}
+	}
+	for (const outline of rightOutlines) {
+		for (const section of outline.tree) {
+			const id = section.id ?? section.name ?? "";
+			rightSections.set(id, { section, elements: outline.elements });
+		}
+	}
+
+	// For sections in both, compare individual elements
+	for (const [id, left] of leftSections) {
+		const right = rightSections.get(id);
+		if (!right) continue;
+
+		// Collect element ids from section tree
+		const getEleIds = (section: any) => {
+			const ids: string[] = [];
+			for (const row of section.children || []) {
+				for (const col of row.children || []) {
+					for (const ele of col.elements || col.children || []) {
+						ids.push(ele.id);
+					}
+				}
+			}
+			return ids;
+		};
+
+		const leftEleIds = getEleIds(left.section);
+		const rightEleIds = getEleIds(right.section);
+
+		const leftSet = new Set(leftEleIds);
+		const rightSet = new Set(rightEleIds);
+
+		// Elements only in left or only in right
+		for (const eleId of leftEleIds) {
+			if (!rightSet.has(eleId)) changed.add(eleId);
+		}
+		for (const eleId of rightEleIds) {
+			if (!leftSet.has(eleId)) changed.add(eleId);
+		}
+
+		// Elements in both — compare data
+		for (const eleId of leftEleIds) {
+			if (rightSet.has(eleId)) {
+				const le = left.elements[eleId];
+				const re = right.elements[eleId];
+				if (!deepEqual(le, re)) {
+					changed.add(eleId);
+				}
+			}
+		}
+	}
+
+	return changed;
+}
+
 // ── Version Card ───────────────────────────────────────
 
 function VersionCard({
@@ -484,7 +554,11 @@ function renderSectionContent(outline: any, section: any, isMobile = false) {
 										if (!ele) return null;
 										const BlockComponent = BlockRegistry[ele.type];
 										if (!BlockComponent) return null;
-										return <BlockComponent key={element.id ?? eleIndex} properties={ele.properties} hasBgImage={hasBgImage} />;
+										return (
+											<div key={element.id ?? eleIndex} data-element-id={element.id}>
+												<BlockComponent properties={ele.properties} hasBgImage={hasBgImage} />
+											</div>
+										);
 									})}
 								</div>
 							);
@@ -550,8 +624,8 @@ function VisualCompare({
 		</Box>
 	);
 
-	const changedSections = useMemo(
-		() => getChangedSectionIds(leftVersion.outlines, rightVersion.outlines),
+	const changedElements = useMemo(
+		() => getChangedElementIds(leftVersion.outlines, rightVersion.outlines),
 		[leftVersion, rightVersion]
 	);
 
@@ -569,12 +643,20 @@ function VisualCompare({
 		return t === "aside" || t === "sidebar";
 	};
 
-	/** Collect all sections for a version with their outline context */
-	const collectSections = (version: Version) => {
-		const result: { outline: any; section: any; sId: string }[] = [];
+	/** Collect all elements for a version with their IDs */
+	const collectElements = (version: Version) => {
+		const result: { eleId: string; element: any }[] = [];
 		for (const outline of version.outlines) {
 			for (const section of outline.tree) {
-				result.push({ outline, section, sId: section.id ?? section.name ?? "" });
+				for (const row of section.children || []) {
+					for (const col of row.children || []) {
+						for (const ele of col.elements || col.children || []) {
+							if (ele.id) {
+								result.push({ eleId: ele.id, element: outline.elements[ele.id] });
+							}
+						}
+					}
+				}
 			}
 		}
 		return result;
@@ -582,21 +664,20 @@ function VisualCompare({
 
 	/** Render one side's website content with indicator strip on the inner edge */
 	const renderSide = (version: Version, side: "left" | "right", isMobile: boolean) => {
-		const color = side === "left"
-			? "var(--ax-colors-border-error, #DC2626)"
-			: "var(--ax-colors-border-success, #16A34A)";
-
 		const mainOutlines = version.outlines.filter((o) => !isAsideOutline(o));
 		const asideOutlines = version.outlines.filter((o) => isAsideOutline(o));
 		const hasAside = asideOutlines.length > 0 && mainOutlines.length > 0;
 		const useTwoCol = hasAside && !isMobile;
 
 		const renderOutlineSections = (outline: any) => {
-			return outline.tree.map((section: any, i: number) => (
-				<Box key={section.id || i} mb={i < outline.tree.length - 1 ? "24" : "0"}>
-					{renderSectionContent(outline, section, isMobile)}
-				</Box>
-			));
+			return outline.tree.map((section: any, i: number) => {
+				const sId = section.id ?? section.name ?? "";
+				return (
+					<Box key={section.id || i} mb={i < outline.tree.length - 1 ? "24" : "0"} data-section-id={sId}>
+						{renderSectionContent(outline, section, isMobile)}
+					</Box>
+				);
+			});
 		};
 
 		const websiteContent = (
@@ -639,43 +720,14 @@ function VisualCompare({
 			</Box>
 		);
 
-		const sections = collectSections(version);
-		const indicatorStrip = (
-			<Box display="flex" flexDirection="column" style={{ width: 6, paddingTop: 80 }}>
-				{/* Padding top accounts for the header height roughly */}
-				{sections.map(({ sId }, i) => {
-					const isChanged = changedSections.has(sId);
-					return (
-						<Box
-							key={sId || i}
-							flex="1"
-							mb={i < sections.length - 1 ? "24" : "0"}
-							style={{
-								background: isChanged ? color : "transparent",
-								borderRadius: 3,
-								transition: "background 0.2s",
-							}}
-						/>
-					);
-				})}
-			</Box>
-		);
-
-		return (
-			<Box display="flex" flex="1" gap="8" style={{ minWidth: 0 }}>
-				{side === "left" ? (
-					<>{websiteContent}{indicatorStrip}</>
-				) : (
-					<>{indicatorStrip}{websiteContent}</>
-				)}
-			</Box>
-		);
+	return websiteContent;
 	};
 
 	const leftContentRef = useRef<HTMLDivElement>(null);
 	const rightContentRef = useRef<HTMLDivElement>(null);
 	const [leftWidth, setLeftWidth] = useState(0);
 	const [rightWidth, setRightWidth] = useState(0);
+	const [elementHeights, setElementHeights] = useState<Map<string, number>>(new Map());
 
 	useEffect(() => {
 		const observers: ResizeObserver[] = [];
@@ -703,29 +755,84 @@ function VisualCompare({
 		return () => observers.forEach(o => o.disconnect());
 	}, []);
 
+	// Measure element heights from both sides
+	useEffect(() => {
+		const observers: ResizeObserver[] = [];
+		const heightMap = new Map<string, number>();
+
+		// Small delay to ensure DOM is fully rendered
+		const timer = setTimeout(() => {
+			// Measure left side elements
+			if (leftContentRef.current) {
+				const leftElements = leftContentRef.current.querySelectorAll('[data-element-id]');
+				leftElements.forEach((elementEl) => {
+					const elementId = elementEl.getAttribute('data-element-id');
+					if (!elementId) return;
+
+					const rect = elementEl.getBoundingClientRect();
+					heightMap.set(`left-${elementId}`, rect.height);
+
+					const observer = new ResizeObserver((entries) => {
+						for (const entry of entries) {
+							heightMap.set(`left-${elementId}`, entry.contentRect.height);
+							setElementHeights(new Map(heightMap));
+						}
+					});
+					observer.observe(elementEl);
+					observers.push(observer);
+				});
+			}
+
+			// Measure right side elements
+			if (rightContentRef.current) {
+				const rightElements = rightContentRef.current.querySelectorAll('[data-element-id]');
+				rightElements.forEach((elementEl) => {
+					const elementId = elementEl.getAttribute('data-element-id');
+					if (!elementId) return;
+
+					const rect = elementEl.getBoundingClientRect();
+					heightMap.set(`right-${elementId}`, rect.height);
+
+					const observer = new ResizeObserver((entries) => {
+						for (const entry of entries) {
+							heightMap.set(`right-${elementId}`, entry.contentRect.height);
+							setElementHeights(new Map(heightMap));
+						}
+					});
+					observer.observe(elementEl);
+					observers.push(observer);
+				});
+			}
+
+			setElementHeights(new Map(heightMap));
+		}, 500);
+
+		return () => {
+			clearTimeout(timer);
+			observers.forEach(o => o.disconnect());
+		};
+	}, [leftVersion, rightVersion, leftWidth, rightWidth]);
+
 	const isLeftMobile = previewMode === "fixed" || (leftWidth > 0 && leftWidth <= MOBILE_BREAKPOINT);
 	const isRightMobile = previewMode === "fixed" || (rightWidth > 0 && rightWidth <= MOBILE_BREAKPOINT);
 
 	return (
 		<Box flex="1" display="flex" flexDirection="column" overflow="hidden">
-			{/* Version selectors — fixed header row */}
-			<Box display="flex" style={{ borderBottom: "1px solid var(--ax-border-tertiary)" }}>
-				<Box flex="1">{renderSelector(leftVersion, onChangeLeft)}</Box>
-				<Box flex="1">{renderSelector(rightVersion, onChangeRight)}</Box>
-			</Box>
-
-			{/* Comparison Summary */}
-			<Box
-				display="flex"
-				alignItems="center"
-				justifyContent="center"
-				py="8"
-				px="16"
-				style={{ borderBottom: "1px solid var(--ax-border-tertiary)", background: "var(--ax-bg-subtle)" }}
-			>
-				<Text fontSize="sm" fontWeight="600" color="fg.secondary">
-					{formatComparisonSummary(comparisonSummary)}
-				</Text>
+			{/* Version selectors — centered with change summary */}
+			<Box display="flex" justifyContent="center" py="12" style={{ borderBottom: "2px solid var(--ax-border-tertiary)" }}>
+				<Box display="flex" alignItems="center" gap="16">
+					<Box style={{ minWidth: "280px" }}>
+						{renderSelector(leftVersion, onChangeLeft)}
+					</Box>
+					<Box px="12">
+						<Text fontSize="sm" fontWeight="600" color="fg.tertiary">
+							{formatComparisonSummary(comparisonSummary)}
+						</Text>
+					</Box>
+					<Box style={{ minWidth: "280px" }}>
+						{renderSelector(rightVersion, onChangeRight)}
+					</Box>
+				</Box>
 			</Box>
 
 			{/* Single scroll area for both sides */}
@@ -745,8 +852,51 @@ function VisualCompare({
 						</PreviewWrapper>
 					</Box>
 
-					{/* Center divider */}
-					<Box style={{ width: 1, background: "var(--ax-colors-border-default, #9CA3AF)", flexShrink: 0, margin: "0 4px" }} />
+					{/* Center indicator bars */}
+					<Box display="flex" gap="0" style={{ margin: "0 12px", flexShrink: 0 }}>
+						{/* Left (red) indicator */}
+						<Box display="flex" flexDirection="column" style={{ width: 8, gap: 0 }}>
+							{collectElements(leftVersion).map(({ eleId, element }, i) => {
+								const isChanged = changedElements.has(eleId);
+								const elementType = element?.type || "Element";
+								const height = elementHeights.get(`left-${eleId}`);
+								return (
+									<Box
+										key={eleId || i}
+										style={{
+											height: height ? `${height}px` : 'auto',
+											flex: height ? undefined : "1",
+											background: isChanged ? "#FCA5A5" : "#E5E7EB",
+											transition: "all 0.2s ease",
+											opacity: isChanged ? 1 : 0.4,
+										}}
+										title={isChanged ? `Changed: ${elementType}` : elementType}
+									/>
+								);
+							})}
+						</Box>
+						{/* Right (green) indicator */}
+						<Box display="flex" flexDirection="column" style={{ width: 8, gap: 0 }}>
+							{collectElements(rightVersion).map(({ eleId, element }, i) => {
+								const isChanged = changedElements.has(eleId);
+								const elementType = element?.type || "Element";
+								const height = elementHeights.get(`right-${eleId}`);
+								return (
+									<Box
+										key={eleId || i}
+										style={{
+											height: height ? `${height}px` : 'auto',
+											flex: height ? undefined : "1",
+											background: isChanged ? "#86EFAC" : "#E5E7EB",
+											transition: "all 0.2s ease",
+											opacity: isChanged ? 1 : 0.4,
+										}}
+										title={isChanged ? `Changed: ${elementType}` : elementType}
+									/>
+								);
+							})}
+						</Box>
+					</Box>
 
 					{/* Right */}
 					<Box flex="1" style={{ minWidth: 0 }}>
