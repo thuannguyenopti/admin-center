@@ -52,17 +52,11 @@ export default function OrderPage() {
 	return (
 		<>
 			<Box flex="1">
-				<Heading
-					level="4"
-					mb="16"
-				>
+				<Heading level="4" mb="16">
 					Order
 				</Heading>
 				<Field label="Method">
-					<RadioGroup
-						value={method}
-						onValueChange={setMethod}
-					>
+					<RadioGroup value={method} onValueChange={setMethod}>
 						<Radio
 							value="relevance"
 							description="Based on relevancy score and boost settings"
@@ -79,26 +73,14 @@ export default function OrderPage() {
 				</Field>
 				{method === "semantic" ? null : (
 					<>
-						<Flex
-							justifyContent="space-between"
-							alignItems="center"
-							mb="16"
-							mt="32"
-						>
+						<Flex justifyContent="space-between" alignItems="center" mb="16" mt="32">
 							<Heading level="4">Rules</Heading>
-							<Button
-								icon={<IconPlus size={16} />}
-								appearance="subtle"
-								size="lg"
-							>
+							<Button icon={<IconPlus size={16} />} appearance="subtle" size="lg">
 								Add Rule...
 							</Button>
 						</Flex>
 
-						<Flex
-							flexDirection="column"
-							gap="12"
-						>
+						<Flex flexDirection="column" gap="12">
 							{rules.map((rule, index) => (
 								<Box
 									key={rule.id}
@@ -108,37 +90,21 @@ export default function OrderPage() {
 									rounded="sm"
 									bg="bg.default"
 								>
-									<Flex
-										gap="12"
-										alignItems="start"
-									>
+									<Flex gap="12" alignItems="start">
 										<Text color="fg.tertiary">
 											<IconGripVertical size={20} />
 										</Text>
-										<Text
-											color="fg.secondary"
-											fontWeight="600"
-											w="16"
-										>
+										<Text color="fg.secondary" fontWeight="600" w="16">
 											{index + 1}
 										</Text>
 										<Box flex="1">
-											<Flex
-												gap="4"
-												mb="4"
-											>
+											<Flex gap="4" mb="4">
 												<Text fontWeight="600">{rule.type}:</Text>
-												<Text
-													color="fg.error"
-													fontFamily="mono"
-												>
+												<Text color="fg.error" fontFamily="mono">
 													{rule.property}
 												</Text>
 											</Flex>
-											<Text
-												color="fg.secondary"
-												fontSize="sm"
-											>
+											<Text color="fg.secondary" fontSize="sm">
 												{rule.description}
 											</Text>
 										</Box>

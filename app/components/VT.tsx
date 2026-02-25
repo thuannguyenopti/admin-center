@@ -18,9 +18,11 @@ export default function VT({
 	items,
 	backLink,
 	title,
+	description,
 }: Readonly<{
 	backLink?: {label: string; url?: string};
 	title?: string;
+	description?: string;
 	items: Array<{label: string; url?: string}> | undefined;
 }>) {
 	const router = useRouter();
@@ -44,7 +46,11 @@ export default function VT({
 					<Box px="12" py="16">
 						{backLink && (
 							<Link href={backLink.url as Url}>
-								<Text color="fg.secondary" fontSize="sm">
+								<Text
+									color="fg.secondary"
+									fontSize="sm"
+									className="hover:!text-black"
+								>
 									← {backLink.label}
 								</Text>
 							</Link>
@@ -52,6 +58,11 @@ export default function VT({
 						{title && (
 							<Text fontSize="lg" fontWeight="600" color="fg.default">
 								{title}
+							</Text>
+						)}
+						{description && (
+							<Text fontSize="sm" color="fg.tertiary" mt="4">
+								{description}
 							</Text>
 						)}
 					</Box>
