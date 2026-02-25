@@ -727,7 +727,7 @@ function VisualCompare({
 	const rightContentRef = useRef<HTMLDivElement>(null);
 	const [leftWidth, setLeftWidth] = useState(0);
 	const [rightWidth, setRightWidth] = useState(0);
-	const [elementHeights, setElementHeights] = useState<Map<string, number>>(new Map());
+	const [elementMetrics, setElementMetrics] = useState<Map<string, { height: number; top: number }>>(new Map());
 
 	useEffect(() => {
 		const observers: ResizeObserver[] = [];
@@ -755,56 +755,73 @@ function VisualCompare({
 		return () => observers.forEach(o => o.disconnect());
 	}, []);
 
-	// Measure element heights from both sides
+	// Measure element heights and positions from both sides
 	useEffect(() => {
 		const observers: ResizeObserver[] = [];
-		const heightMap = new Map<string, number>();
+		const metricsMap = new Map<string, { height: number; top: number }>();
 
-		// Small delay to ensure DOM is fully rendered
-		const timer = setTimeout(() => {
+		const updateMetrics = () => {
 			// Measure left side elements
 			if (leftContentRef.current) {
+				const containerRect = leftContentRef.current.getBoundingClientRect();
 				const leftElements = leftContentRef.current.querySelectorAll('[data-element-id]');
 				leftElements.forEach((elementEl) => {
 					const elementId = elementEl.getAttribute('data-element-id');
 					if (!elementId) return;
 
 					const rect = elementEl.getBoundingClientRect();
-					heightMap.set(`left-${elementId}`, rect.height);
-
-					const observer = new ResizeObserver((entries) => {
-						for (const entry of entries) {
-							heightMap.set(`left-${elementId}`, entry.contentRect.height);
-							setElementHeights(new Map(heightMap));
-						}
+					metricsMap.set(`left-${elementId}`, {
+						height: rect.height,
+						top: rect.top - containerRect.top
 					});
-					observer.observe(elementEl);
-					observers.push(observer);
 				});
 			}
 
 			// Measure right side elements
 			if (rightContentRef.current) {
+				const containerRect = rightContentRef.current.getBoundingClientRect();
 				const rightElements = rightContentRef.current.querySelectorAll('[data-element-id]');
 				rightElements.forEach((elementEl) => {
 					const elementId = elementEl.getAttribute('data-element-id');
 					if (!elementId) return;
 
 					const rect = elementEl.getBoundingClientRect();
-					heightMap.set(`right-${elementId}`, rect.height);
+					metricsMap.set(`right-${elementId}`, {
+						height: rect.height,
+						top: rect.top - containerRect.top
+					});
+				});
+			}
 
-					const observer = new ResizeObserver((entries) => {
-						for (const entry of entries) {
-							heightMap.set(`right-${elementId}`, entry.contentRect.height);
-							setElementHeights(new Map(heightMap));
-						}
+			setElementMetrics(new Map(metricsMap));
+		};
+
+		// Small delay to ensure DOM is fully rendered
+		const timer = setTimeout(() => {
+			updateMetrics();
+
+			// Set up observers for dynamic updates
+			if (leftContentRef.current) {
+				const leftElements = leftContentRef.current.querySelectorAll('[data-element-id]');
+				leftElements.forEach((elementEl) => {
+					const observer = new ResizeObserver(() => {
+						updateMetrics();
 					});
 					observer.observe(elementEl);
 					observers.push(observer);
 				});
 			}
 
-			setElementHeights(new Map(heightMap));
+			if (rightContentRef.current) {
+				const rightElements = rightContentRef.current.querySelectorAll('[data-element-id]');
+				rightElements.forEach((elementEl) => {
+					const observer = new ResizeObserver(() => {
+						updateMetrics();
+					});
+					observer.observe(elementEl);
+					observers.push(observer);
+				});
+			}
 		}, 500);
 
 		return () => {
@@ -853,19 +870,22 @@ function VisualCompare({
 					</Box>
 
 					{/* Center indicator bars */}
-					<Box display="flex" gap="0" style={{ margin: "0 12px", flexShrink: 0 }}>
+					<Box display="flex" gap="0" style={{ margin: "0 12px", flexShrink: 0, position: "relative" }}>
 						{/* Left (red) indicator */}
-						<Box display="flex" flexDirection="column" style={{ width: 8, gap: 0 }}>
+						<Box style={{ width: 8, position: "relative" }}>
 							{collectElements(leftVersion).map(({ eleId, element }, i) => {
 								const isChanged = changedElements.has(eleId);
 								const elementType = element?.type || "Element";
-								const height = elementHeights.get(`left-${eleId}`);
+								const metrics = elementMetrics.get(`left-${eleId}`);
+								if (!metrics) return null;
 								return (
 									<Box
 										key={eleId || i}
 										style={{
-											height: height ? `${height}px` : 'auto',
-											flex: height ? undefined : "1",
+											position: "absolute",
+											top: `${metrics.top}px`,
+											height: `${metrics.height}px`,
+											width: "100%",
 											background: isChanged ? "#FCA5A5" : "#E5E7EB",
 											transition: "all 0.2s ease",
 											opacity: isChanged ? 1 : 0.4,
@@ -876,17 +896,20 @@ function VisualCompare({
 							})}
 						</Box>
 						{/* Right (green) indicator */}
-						<Box display="flex" flexDirection="column" style={{ width: 8, gap: 0 }}>
+						<Box style={{ width: 8, position: "relative" }}>
 							{collectElements(rightVersion).map(({ eleId, element }, i) => {
 								const isChanged = changedElements.has(eleId);
 								const elementType = element?.type || "Element";
-								const height = elementHeights.get(`right-${eleId}`);
+								const metrics = elementMetrics.get(`right-${eleId}`);
+								if (!metrics) return null;
 								return (
 									<Box
 										key={eleId || i}
 										style={{
-											height: height ? `${height}px` : 'auto',
-											flex: height ? undefined : "1",
+											position: "absolute",
+											top: `${metrics.top}px`,
+											height: `${metrics.height}px`,
+											width: "100%",
 											background: isChanged ? "#86EFAC" : "#E5E7EB",
 											transition: "all 0.2s ease",
 											opacity: isChanged ? 1 : 0.4,
