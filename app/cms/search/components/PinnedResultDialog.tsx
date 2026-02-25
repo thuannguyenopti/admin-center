@@ -1,11 +1,19 @@
 import AbstractDialog from "@/app/components/AbstractDialog";
-import {Field, Select, SelectTrigger, SelectContent, Switch, Textarea, Box} from "@optiaxiom/react";
+import {
+	Field,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	LabelMenuButton,
+	Switch,
+	Textarea,
+	Box,
+} from "@optiaxiom/react";
 import {Flex} from "@/app/components/Flex";
-import {useState, useEffect, useMemo} from "react";
+import {useState, useEffect} from "react";
 import searchResults from "@/app/db/searchResults.json";
-import {getSelectValueInOptions} from "@/utils/selectValue";
 import {Button} from "@/app/components/Button";
-import {IconSparkles} from "@tabler/icons-react";
+import {IconFile, IconSparkles} from "@tabler/icons-react";
 
 interface PinnedResultDialogProps {
 	open: boolean;
@@ -98,19 +106,6 @@ export default function PinnedResultDialog({
 		setOpen(false);
 	};
 
-	const destinationOptions = useMemo(
-		() => [
-			{label: "Select destination", value: ""},
-			...searchResults.map((r) => ({label: r.title, value: r.url})),
-		],
-		[]
-	);
-	const safeDestinationValue = getSelectValueInOptions(
-		destination,
-		destinationOptions,
-		""
-	);
-
 	return (
 		<AbstractDialog
 			title={mode === "create" ? "Create Pinned Result" : "Edit Pinned Result"}
@@ -125,32 +120,32 @@ export default function PinnedResultDialog({
 			footerPrimaryAction={handleSave}
 			footerAppearance="primary"
 		>
-			<Flex
-				flexDirection="column"
-				gap="16"
-			>
-				<Field
-					label="Destination"
-					required
-				>
-					<Select
-						value={safeDestinationValue}
-						onValueChange={setDestination}
-						options={destinationOptions}
+			<Flex flexDirection="column" gap="16">
+				<Field label="Destination" required>
+					<Menu
+						options={
+							searchResults?.map((r) => ({
+								addon: <IconFile size={16} />,
+								label: r?.title || "Unknown",
+								execute: () => setDestination(r?.url || ""),
+							})) || []
+						}
 					>
-						<SelectTrigger size="lg">
-							{destination
-								? searchResults.find((r) => r.url === destination)?.title ||
-								  destination
-								: "Select Destination"}
-						</SelectTrigger>
-						<SelectContent />
-					</Select>
+						<MenuTrigger size="lg">
+							{destination ? (
+								<Flex gap="8">
+									<IconFile size={16} />{" "}
+									{searchResults?.find((r) => r.url === destination)?.title ||
+										destination}
+								</Flex>
+							) : (
+								"Select Destination"
+							)}
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 				</Field>
-				<Field
-					label="Phrases"
-					required
-				>
+				<Field label="Phrases" required>
 					<Textarea
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
@@ -169,10 +164,7 @@ export default function PinnedResultDialog({
 					</Box>
 				</Field>
 				{showStatus && (
-					<Field
-						label="Status"
-						required
-					>
+					<Field label="Status" required>
 						<Switch
 							checked={status === "Active"}
 							onCheckedChange={(checked) =>

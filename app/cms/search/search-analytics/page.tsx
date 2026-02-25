@@ -68,18 +68,6 @@ export default function SearchAnalytics() {
 						</MenuTrigger>
 						<MenuContent />
 					</Menu>
-					<Menu
-						options={[
-							{label: "Production", execute: () => {}},
-							{label: "Staging", execute: () => {}},
-							{label: "Development", execute: () => {}},
-						]}
-					>
-						<MenuTrigger asChild>
-							<LabelMenuButton label="Environment">Production</LabelMenuButton>
-						</MenuTrigger>
-						<MenuContent />
-					</Menu>
 				</Flex>
 				<Button icon={<IconSparkles />} appearance="primary-opal">
 					Suggest Optimization

@@ -38,6 +38,7 @@ import ExtensionPanel from "./ExtensionPanel";
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {Input} from "@/app/components/Input";
+import DragHandle from "@/app/components/DragHandle";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -230,6 +231,7 @@ export default function VBPrototype({
 	onSave,
 	onPublish,
 	pageName,
+	pageId,
 	pageStatus,
 	variations,
 	onAddVariation,
@@ -237,13 +239,16 @@ export default function VBPrototype({
 	onRenameVariation,
 	onTrash,
 	onRenamePage,
+	onViewOnWebsite,
 }: {
 	initialData?: PageInput;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
 	onTrash?: () => void;
 	pageName?: string;
+	pageId?: string;
 	pageStatus?: string;
+	onViewOnWebsite?: () => void;
 	variations?: {
 		id: string;
 		name: string;
@@ -1200,9 +1205,11 @@ export default function VBPrototype({
 				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
+						pageId={pageId}
 						lastSaved={lastSaved}
 						pageStatus={pageStatus}
 						onPublish={onPublish}
+						onViewOnWebsite={onViewOnWebsite}
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
@@ -1224,38 +1231,7 @@ export default function VBPrototype({
 						bg="bg.page"
 						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 					>
-						{/* Resizable handle (kept consistent) */}
-						<div
-							className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
-							onMouseDown={(e) => {
-								e.preventDefault();
-								const startX = e.clientX;
-								const outlineBox = e.currentTarget.parentElement as HTMLElement;
-								const startWidth = outlineBox.offsetWidth;
-
-								const onMouseMove = (moveEvent: MouseEvent) => {
-									const newWidth = Math.max(
-										180,
-										Math.min(600, startWidth + (moveEvent.clientX - startX))
-									);
-									outlineBox.style.width = newWidth + "px";
-								};
-
-								const onMouseUp = () => {
-									window.removeEventListener("mousemove", onMouseMove);
-									window.removeEventListener("mouseup", onMouseUp);
-								};
-
-								window.addEventListener("mousemove", onMouseMove);
-								window.addEventListener("mouseup", onMouseUp);
-							}}
-						>
-							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-							<Box color="fg.secondary">
-								<IconArrowBarBoth size="16" />
-							</Box>
-							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-						</div>
+						<DragHandle position="right" minWidth={180} maxWidth={600} />
 
 						<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
 							<div className="pl-6 pt-4 pb-2">
@@ -1339,9 +1315,11 @@ export default function VBPrototype({
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
+					pageId={pageId}
 					lastSaved={lastSaved}
 					pageStatus={pageStatus}
 					onPublish={onPublish}
+					onViewOnWebsite={onViewOnWebsite}
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
@@ -1367,38 +1345,7 @@ export default function VBPrototype({
 					bg="bg.page"
 					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 				>
-					{/* Resizable handle */}
-					<div
-						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-2 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
-						onMouseDown={(e) => {
-							e.preventDefault();
-							const startX = e.clientX;
-							const outlineBox = e.currentTarget.parentElement as HTMLElement;
-							const startWidth = outlineBox.offsetWidth;
-
-							const onMouseMove = (moveEvent: MouseEvent) => {
-								const newWidth = Math.max(
-									180,
-									Math.min(600, startWidth + (moveEvent.clientX - startX))
-								);
-								outlineBox.style.width = newWidth + "px";
-							};
-
-							const onMouseUp = () => {
-								window.removeEventListener("mousemove", onMouseMove);
-								window.removeEventListener("mouseup", onMouseUp);
-							};
-
-							window.addEventListener("mousemove", onMouseMove);
-							window.addEventListener("mouseup", onMouseUp);
-						}}
-					>
-						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-						<Box color="fg.secondary">
-							<IconArrowBarBoth size="16" />
-						</Box>
-						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-					</div>
+					<DragHandle position="right" minWidth={180} maxWidth={600} />
 
 					<div className="h-full flex flex-col">
 						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
