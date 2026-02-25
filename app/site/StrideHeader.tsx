@@ -9,13 +9,16 @@ const HIDE_AUTH_BREAKPOINT = 1200;
 /**
  * The Stride website header for real pages (uses window resize detection).
  */
-export default function StrideHeader({editPageId}: {editPageId?: string}) {
-	const [isMobile, setIsMobile] = useState(false);
+export default function StrideHeader({editPageId, isMobile: isMobileProp}: {editPageId?: string; isMobile?: boolean}) {
+	const [isMobileState, setIsMobileState] = useState(false);
 	const [hideAuth, setHideAuth] = useState(false);
 
 	useEffect(() => {
+		// Skip window resize detection if isMobile is provided as a prop
+		if (isMobileProp !== undefined) return;
+
 		const handleResize = () => {
-			setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+			setIsMobileState(window.innerWidth <= MOBILE_BREAKPOINT);
 			setHideAuth(window.innerWidth <= HIDE_AUTH_BREAKPOINT);
 		};
 
@@ -24,7 +27,10 @@ export default function StrideHeader({editPageId}: {editPageId?: string}) {
 
 		window.addEventListener("resize", handleResize);
 		return () => window.removeEventListener("resize", handleResize);
-	}, []);
+	}, [isMobileProp]);
+
+	// Use prop if provided, otherwise use state
+	const isMobile = isMobileProp !== undefined ? isMobileProp : isMobileState;
 
 	return (
 		<header className="w-full bg-white px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-gray-100 shrink-0 sticky top-0 z-50 shadow-sm">

@@ -511,7 +511,7 @@ function VersionPreview({
 					height="fill"
 				>
 					<div ref={contentRef} style={{ minHeight: "100%", background: "#fff", borderRadius: 12, overflow: "hidden" }}>
-						<StrideHeader />
+						<StrideHeader isMobile={isMobileViewport} />
 						<SitePageRenderer outlines={version.outlines} isMobile={isMobileViewport} />
 					</div>
 				</PreviewWrapper>
@@ -684,7 +684,7 @@ function VisualCompare({
 			<Box flex="1" style={{ minWidth: 0 }}>
 				{/* Header */}
 				<Box bg="bg.default" style={{ borderRadius: "12px 12px 0 0", overflow: "hidden" }}>
-					<StrideHeader />
+					<StrideHeader isMobile={isMobile} />
 				</Box>
 				{/* Sections */}
 				<Box p="24" style={{ background: "var(--ax-colors-bg-secondary, #F3F4F6)" }}>
