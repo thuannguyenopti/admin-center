@@ -35,12 +35,15 @@ import {
 	IconArrowForwardUp,
 	IconHistory,
 	IconRestore,
+	IconSparkles,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
 import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
 import Link from "next/link";
+import usePersistentState from "@/app/usePersistentState";
+import {OpalAction} from "@/app/cms/settings/opal-actions/mockData";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -161,6 +164,12 @@ export default function CMSToolbar({
 	];
 
 	const isVariation = selectedVariation !== "original";
+
+	// Get enabled Opal Actions for Improve button
+	const [opalActions] = usePersistentState("opal-actions", []) as [OpalAction[], any];
+	const improveActions = opalActions.filter(
+		(action) => action.enabled && action.locations.toolbar.improveButton
+	);
 
 	return (
 		<Box
@@ -310,6 +319,33 @@ export default function CMSToolbar({
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
+
+				{/* Improve Button with Opal Actions */}
+				{improveActions.length > 0 && (
+					<Menu
+						options={improveActions.map((action) => ({
+							label: action.name,
+							execute: () => {
+								// This would trigger the Opal action
+								console.log("Execute Opal Action:", action.name);
+							},
+						}))}
+					>
+						<MenuTrigger asChild>
+							<Button
+								appearance="default"
+								icon={<IconChevronDown size={12} />}
+								iconPosition="end"
+							>
+								<Box display="flex" alignItems="center" gap="4">
+									<IconSparkles size={16} />
+									Improve
+								</Box>
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				)}
 
 				{/* Publish Button with Menu */}
 				<Menu

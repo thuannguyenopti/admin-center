@@ -203,6 +203,8 @@ export default function RootLayout({
 								: [],
 						},
 					},
+					{label: "AI & Automation"},
+					{label: "Opal Actions", url: "/cms/settings/opal-actions"},
 					{label: "Config"},
 					{label: "Languages", url: "/cms/settings/languages"},
 					{label: "Edit Tabs", url: "/cms/settings/edit-tabs"},
