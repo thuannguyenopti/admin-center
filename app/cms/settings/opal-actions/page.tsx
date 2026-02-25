@@ -19,10 +19,11 @@ import {
 import {Button} from "@/app/components/Button";
 import {Table, Th, Tr, Td} from "@/app/components/Table";
 import {opalActions as initialOpalActions, OpalAction} from "./mockData";
-import {IconDots} from "@tabler/icons-react";
+import {IconDots, IconSparkles} from "@tabler/icons-react";
 import {useRouter} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import OpalActionDialog from "./OpalActionDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 export default function OpalActionsPage() {
 	const router = useRouter();
@@ -104,6 +105,44 @@ export default function OpalActionsPage() {
 		if (action.locations.assetPanel) locations.push("Asset Panel");
 		return locations.join(", ") || "None";
 	};
+
+	// Show empty state when no actions exist
+	if (opalActions.length === 0) {
+		return (
+			<>
+				<EmptyList
+					heading="No Opal Actions"
+					body="Enable Opal agents in the CMS by adding them to a location."
+				>
+					<Box
+						display="flex"
+						alignItems="center"
+						justifyContent="center"
+						bg="bg.accent.subtle"
+						color="fg.secondary"
+						rounded="full"
+						mb="16"
+						style={{
+							width: "80px",
+							height: "80px",
+						}}
+					>
+						<IconSparkles size={40} stroke={1.5} />
+					</Box>
+					<Button appearance="primary" onClick={handleAdd}>
+						Add Opal Action
+					</Button>
+				</EmptyList>
+
+				<OpalActionDialog
+					open={isDialogOpen}
+					onOpenChange={setIsDialogOpen}
+					action={editingAction}
+					onSave={handleSave}
+				/>
+			</>
+		);
+	}
 
 	return (
 		<>
