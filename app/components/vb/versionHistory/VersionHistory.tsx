@@ -502,11 +502,11 @@ function VersionPreview({
 				overflow="auto"
 				rounded="lg"
 				mx="24"
-				style={{ maxWidth: previewMode === "fixed" ? 768 : undefined }}
+				style={{ maxWidth: previewMode === "fixed" ? 390 : undefined }}
 			>
 				<PreviewWrapper
 					mode={previewMode === "fixed" ? "scale" : "responsive"}
-					width={previewMode === "fixed" ? 768 : 1100}
+					width={previewMode === "fixed" ? 390 : 1100}
 					maxWidth={1100}
 					height="fill"
 				>
@@ -859,7 +859,7 @@ function VisualCompare({
 					<Box flex="1" style={{ minWidth: 0 }}>
 						<PreviewWrapper
 							mode={previewMode === "fixed" ? "scale" : "responsive"}
-							width={previewMode === "fixed" ? 768 : 1100}
+							width={previewMode === "fixed" ? 390 : 1100}
 							maxWidth={1100}
 							height="auto"
 						>
@@ -925,7 +925,7 @@ function VisualCompare({
 					<Box flex="1" style={{ minWidth: 0 }}>
 						<PreviewWrapper
 							mode={previewMode === "fixed" ? "scale" : "responsive"}
-							width={previewMode === "fixed" ? 768 : 1100}
+							width={previewMode === "fixed" ? 390 : 1100}
 							maxWidth={1100}
 							height="auto"
 						>
