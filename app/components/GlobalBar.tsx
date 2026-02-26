@@ -1,18 +1,33 @@
 "use client";
 
-import { Box, Heading, Menu, MenuContent, MenuTrigger, Button } from "@optiaxiom/react";
+import { Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator } from "@optiaxiom/react";
 import { Text } from "./Text";
 import { ReactNode, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { IconSearch, IconBell, IconHelp, IconUser } from "@tabler/icons-react";
+import {
+	IconSearch,
+	IconBell,
+	IconHelp,
+	IconUser,
+	IconSunFilled,
+	IconWashMachine,
+	IconMoon,
+	IconDeviceDesktop,
+} from "@tabler/icons-react";
 import NotificationDropdown from "./NotificationDropdown";
 import Image from "next/image";
 import Link from "next/link";
+import {useTheme} from "@/app/hooks/useTheme";
 
-export default function GlobalBar() {
+type GlobalBarProps = {
+	onOpalClick?: () => void;
+};
+
+export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const [mounted, setMounted] = useState(false);
+	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
 
 	useEffect(() => {
 		setMounted(true);
@@ -40,10 +55,7 @@ export default function GlobalBar() {
 			alignItems="center"
 			justifyContent="space-between"
 		>
-			<Box
-				display="flex"
-				alignItems="center"
-			>
+			<Box display="flex" alignItems="center">
 				<Link href={"/"}>
 					<svg
 						width="24"
@@ -73,17 +85,8 @@ export default function GlobalBar() {
 						/>
 					</svg>
 				</Link>
-				<Box
-					ml="32"
-					display="flex"
-					alignItems={"center"}
-					gap="8"
-				>
-					<Text
-						fontSize="md"
-						fontWeight="500"
-						color="fg.default"
-					>
+				<Box ml="32" display="flex" alignItems={"center"} gap="8">
+					<Text fontSize="md" fontWeight="500" color="fg.default">
 						Stride
 					</Text>
 					<svg
@@ -193,11 +196,48 @@ export default function GlobalBar() {
 					</Box>
 				)}
 			</Box>
-			<Box
-				display="flex"
-				alignItems="center"
-				gap="8"
-			>
+			<Box display="flex" alignItems="center" gap="8">
+				<Menu
+					options={[
+						{
+							label: "Light",
+							addon: <IconSunFilled size={16} />,
+							...(themePreference === "light" && {selected: true}),
+							execute: () => setThemePreference("light"),
+						},
+						{
+							label: "Dark",
+							addon: <IconMoon size={16} />,
+							...(themePreference === "dark" && {selected: true}),
+							execute: () => setThemePreference("dark"),
+						},
+						{
+							label: "System",
+							addon: <IconDeviceDesktop size={16} />,
+							...(themePreference === "system" && {selected: true}),
+							execute: () => setThemePreference("system"),
+						},
+					]}
+				>
+					<MenuTrigger asChild>
+						<Button
+							appearance="subtle"
+							size="md"
+							icon={
+								{
+									system: <IconDeviceDesktop />,
+									light: <IconSunFilled />,
+									dark: <IconMoon />,
+								}[themePreference]
+							}
+							aria-label="Theme"
+							className="capitalize"
+						>
+							{themePreference}
+						</Button>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 				<Button
 					appearance="subtle"
 					size="lg"
@@ -210,6 +250,7 @@ export default function GlobalBar() {
 					size="lg"
 					style={{ width: 40, height: 40 }}
 					aria-label="Opal AI Assistant"
+					onClick={onOpalClick}
 					icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} style={{ width: 20, height: 20 }} />}
 				/>
 				<NotificationDropdown />

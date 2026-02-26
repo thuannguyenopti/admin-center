@@ -1086,7 +1086,16 @@ function SpecializedAgentSetupContent() {
                                                         />
                                                     ) : (
                                                         <Select
-                                                            value={inferenceLevel}
+                                                            value={(() => {
+                                                                const opts = [
+                                                                    { label: "Fast", value: "fast" },
+                                                                    { label: "Balanced (Default)", value: "balanced" },
+                                                                    { label: "Advanced", value: "advanced" },
+                                                                ];
+                                                                return opts.some((o) => o.value === inferenceLevel)
+                                                                    ? inferenceLevel
+                                                                    : "balanced";
+                                                            })()}
                                                             onValueChange={setInferenceLevel}
                                                             disabled={isReadOnly}
                                                             options={[
@@ -1095,7 +1104,13 @@ function SpecializedAgentSetupContent() {
                                                                 { label: "Advanced", value: "advanced" },
                                                             ]}
                                                         >
-                                                            <SelectTrigger size="md" suppressHydrationWarning />
+                                                            <SelectTrigger size="md" suppressHydrationWarning>
+                                                                {inferenceLevel === "fast"
+                                                                    ? "Fast"
+                                                                    : inferenceLevel === "advanced"
+                                                                      ? "Advanced"
+                                                                      : "Balanced (Default)"}
+                                                            </SelectTrigger>
                                                             <SelectContent suppressHydrationWarning />
                                                         </Select>
                                                     )}

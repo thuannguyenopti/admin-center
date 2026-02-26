@@ -15,6 +15,8 @@ import {
     Textarea,
     Link,
     Switch,
+    Indicator,
+    Breadcrumb,
 } from "@optiaxiom/react";
 import {
     IconAlertCircle,
@@ -179,6 +181,7 @@ function FailedExecutionView({ notification }: { notification: Notification }) {
         },
     ]);
     const [newComment, setNewComment] = useState("");
+    const [activeTab, setActiveTab] = useState("details");
 
     const handleAddComment = () => {
         if (!newComment.trim()) return;
@@ -930,14 +933,13 @@ export default function NotificationDetailsPage({
         >
             {/* Header */}
             <Box display="flex" flexDirection="column" gap="16">
-                <Box display="flex" alignItems="center" gap="8">
-                    <Link asChild color="fg.tertiary">
-                        <NextLink href="/opal/notifications">
-                            <Box display="flex" alignItems="center" gap="4">
-                                <IconChevronLeft size={16} /> Notifications
-                            </Box>
-                        </NextLink>
-                    </Link>
+                <Box display="flex" alignItems="center">
+                    <Breadcrumb
+                        items={[
+                            { label: "Notifications", href: "/opal/notifications" },
+                            { label: "" }
+                        ]}
+                    />
                 </Box>
                 <Box
                     display="flex"
@@ -969,21 +971,173 @@ export default function NotificationDetailsPage({
             <Box display="flex" gap="32" alignItems="start">
                 {/* Main Content */}
                 <Box flex="1" display="flex" flexDirection="column">
-                    {isFailedExecution && (
-                        <FailedExecutionView notification={notification} />
-                    )}
-                    {isGuardrail && (
-                        <GuardrailView notification={notification} />
-                    )}
-                    {isInstallRequest && (
-                        <InstallRequestView notification={notification} />
-                    )}
-                    {!isFailedExecution && !isGuardrail && !isInstallRequest && (
-                        <GenericDetailView notification={notification} />
-                    )}
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                        <TabsList>
+                            <TabsTrigger value="details">Details</TabsTrigger>
+                            <TabsTrigger value="trace">Trace</TabsTrigger>
+                            <TabsTrigger value="ticket">
+                                <Box style={{ position: 'relative' }} display="flex" alignItems="center">
+                                    Messages
+                                    {activeTab !== "ticket" && (
+                                        <Box
+                                            style={{
+                                                position: 'absolute',
+                                                top: '2px',
+                                                right: '-8px',
+                                                height: '8px',
+                                                width: '8px',
+                                                border: '1.5px solid #FFFFFF'
+                                            }}
+                                            bg="bg.error"
+                                            rounded="full"
+                                        />
+                                    )}
+                                </Box>
+                            </TabsTrigger>
+                        </TabsList>
 
-                    {/* Related Notifications */}
-                    <RelatedNotifications current={notification} all={mockNotifications} />
+                        <TabsContent value="details" mt="24">
+                            <Box display="flex" flexDirection="column" gap="24">
+                                {/* Visual Graph Reference */}
+                                <Box
+                                    border="1"
+                                    borderColor="border.tertiary"
+                                    rounded="lg"
+                                    overflow="hidden"
+                                    style={{
+                                        background: 'radial-gradient(circle, #E5E7EB 1px, transparent 1px)',
+                                        backgroundSize: '20px 20px',
+                                        backgroundColor: '#F9FAFB'
+                                    }}
+                                >
+                                    <Box p="12" bg="bg.default" borderB="1" borderColor="border.tertiary" display="flex" justifyContent="space-between" alignItems="center">
+                                        <Text fontWeight="600" fontSize="sm">Workflow Map</Text>
+                                        <Badge variant="subtle">Execution View</Badge>
+                                    </Box>
+
+                                    <Box p="32" style={{ position: 'relative', height: '400px', overflow: 'hidden' }}>
+
+                                        {/* Simple representative graph layout */}
+                                        <Box display="flex" gap="48" alignItems="center" h="full" style={{ position: 'relative', zIndex: 10 }} className="w-max">
+                                            {/* Column 1: Triggers */}
+                                            <Box display="flex" flexDirection="column" gap="24">
+                                                <WorkflowNode icon={IconCalendar} title="Scheduler" description="Runs 7 AM everyday" />
+                                                <WorkflowNode icon={IconMessage} title="Chat Input" description="When message is sent" status="success" />
+                                            </Box>
+
+                                            <Box w="48" />
+
+                                            {/* Column 2: Data Agents */}
+                                            <Box display="flex" flexDirection="column" gap="24">
+                                                <WorkflowNode icon={IconWorld} title="Web Crawler" description="Extracts website data" status="success" />
+                                                <WorkflowNode icon={IconCube} title="Test Idea Agent" description="Ideation for experiments" status="success" />
+                                            </Box>
+
+                                            <Box w="48" />
+
+                                            {/* Column 3: Analysis & Final Steps */}
+                                            <Box display="flex" flexDirection="column" gap="24">
+                                                <WorkflowNode icon={IconAnalyze} title="Web Analytics" description="All website activities" />
+                                                <WorkflowNode icon={IconSparkles} title="Hypothesis Creator" description="Final hypothesis generation" status="error" />
+                                                <WorkflowNode icon={IconBell} title="Set Notifications" description="Notify team via email" />
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                </Box>
+
+                                {/* Summary Cards */}
+                                <Box display="flex" gap="16">
+                                    <Box flex="1" p="16" border="1" borderColor="border.tertiary" rounded="md" bg="bg.default">
+                                        <Text color="fg.tertiary" fontSize="sm" fontWeight="600">Failed Node</Text>
+                                        <Box display="flex" alignItems="center" gap="8" mt="8">
+                                            <IconSparkles size={18} className="text-fg-accent" />
+                                            <Text fontWeight="600">{failingAgent}</Text>
+                                        </Box>
+                                    </Box>
+                                    <Box flex="1" p="16" border="1" borderColor="border.error" rounded="md" bg="bg.error.subtle">
+                                        <Text color="fg.error" fontSize="sm" fontWeight="600">Root Cause</Text>
+                                        <Box display="flex" alignItems="center" gap="8" mt="8">
+                                            <IconAlertCircle size={18} className="text-fg-error" />
+                                            <Text color="fg.error" fontWeight="600">Computation Timeout (40s)</Text>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </TabsContent>
+
+                        <TabsContent value="trace" mt="24">
+                            <Box border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
+                                <Box p="16" bg="bg.secondary" borderB="1" borderColor="border.tertiary" display="flex" justifyContent="space-between" alignItems="center">
+                                    <Heading level="4" fontSize="md">Full Execution Trace</Heading>
+                                    <Badge variant="subtle">Node: {failingAgent}</Badge>
+                                </Box>
+                                <Box p="0" bg="bg.default" fontFamily="mono" fontSize="sm" display="flex" flexDirection="column" className="h-[500px]" overflowY="auto">
+                                    {[
+                                        { time: "14:14:50", type: "system", msg: "Workflow Execution Started: ID b2953c08" },
+                                        { time: "14:14:51", type: "agent", msg: "Entering Agent: 'Web Crawler'", status: "success" },
+                                        { time: "14:14:54", type: "system", msg: "Agent 'Web Crawler' completed. Output passed to 'Test Idea Agent'." },
+                                        { time: "14:14:55", type: "agent", msg: "Entering Agent: 'Test Idea Agent'", status: "success" },
+                                        { time: "14:14:58", type: "system", msg: "Agent 'Test Idea Agent' completed. Data ready for hypothesis generation." },
+                                        { time: "14:14:59", type: "agent", msg: "Entering Agent: 'Hypothesis Creator'", status: "failed" },
+                                        { time: "14:15:00", type: "call", msg: "  ↳  Processing large context buffer (1.2MB)" },
+                                        { time: "14:15:40", type: "error", msg: "  ↳  Error: Node timeout reached (40,000ms)" },
+                                        { time: "14:15:40", type: "system", msg: "Critical: Workflow halted at 'Hypothesis Creator'." },
+                                    ].map((step, i) => (
+                                        <Box key={i} display="flex" gap="16" p="12" borderB="1" borderColor="border.tertiary" bg={step.status === 'failed' || step.type === 'error' ? 'bg.error.subtle' : undefined}>
+                                            <Text color="fg.tertiary" style={{ width: '80px', flexShrink: 0 }}>{step.time}</Text>
+                                            <Box flex="1" display="flex" alignItems="center" gap="8">
+                                                {step.type === 'agent' && (step.status === 'success' ? <IconCircleCheck size={14} className="text-fg-success" /> : <IconAlertCircle size={14} className="text-fg-error" />)}
+                                                {step.type === 'call' && <IconSparkles size={14} className="text-fg-accent" />}
+                                                <Text color={step.type === 'error' ? 'fg.error' : step.type === 'agent' && step.status === 'success' ? 'fg.success' : 'fg.default'}>
+                                                    {step.msg}
+                                                </Text>
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            </Box>
+                        </TabsContent>
+
+                        <TabsContent value="ticket" mt="24">
+                            <Box border="1" borderColor="border.tertiary" rounded="md" p="24" display="flex" flexDirection="column" gap="24">
+                                <Box display="flex" justifyContent="space-between" alignItems="center">
+                                    <Box>
+                                        <Heading level="4">Messages</Heading>
+                                        <Text color="fg.tertiary">Workflow ID: {id}</Text>
+                                    </Box>
+                                    <Badge intent="success">Open</Badge>
+                                </Box>
+
+                                <Box display="flex" flexDirection="column" gap="16">
+                                    {comments.map((comment, index) => (
+                                        <Box key={index} display="flex" gap="12">
+                                            <Avatar name={comment.author} size="sm" />
+                                            <Box flex="1">
+                                                <Box display="flex" justifyContent="space-between">
+                                                    <Text fontWeight="600">{comment.author}</Text>
+                                                    <Text fontSize="sm" color="fg.tertiary">{comment.time}</Text>
+                                                </Box>
+                                                <Text mt="4">{comment.text}</Text>
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </Box>
+
+                                <Separator />
+
+                                <Box display="flex" gap="12" flexDirection="column">
+                                    <Textarea
+                                        placeholder="Leave a comment..."
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                    />
+                                    <Box display="flex" justifyContent="flex-end">
+                                        <Button onClick={handleAddComment}>Comment</Button>
+                                    </Box>
+                                </Box>
+                            </Box>
+                        </TabsContent>
+                    </Tabs>
                 </Box>
 
                 {/* Sidebar */}

@@ -70,10 +70,7 @@ export default function ClickThroughRatePage() {
 				gap="16"
 				mb="24"
 			>
-				<Flex
-					gap="8"
-					flexDirection="row"
-				>
+				<Flex gap="8" flexDirection="row">
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."

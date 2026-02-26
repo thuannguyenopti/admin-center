@@ -1,7 +1,7 @@
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {IconTrash, IconPencil, IconDots, IconAbc} from "@tabler/icons-react";
-import {Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
+import {Menu, MenuTrigger, MenuContent, Box, Pagination} from "@optiaxiom/react";
 import {AutocompletePhrase} from "@/app/db/initialData";
 
 interface AutocompletePhrasesTableProps {
@@ -9,6 +9,11 @@ interface AutocompletePhrasesTableProps {
 	onEdit: (phrase: AutocompletePhrase) => void;
 	onRemove: (id: string) => void;
 	showOwner?: boolean;
+	pagination?: {
+		total: number;
+		page: number;
+		onPageChange: (page: number) => void;
+	};
 }
 
 export default function AutocompletePhrasesTable({
@@ -16,59 +21,65 @@ export default function AutocompletePhrasesTable({
 	onEdit,
 	onRemove,
 	showOwner = true,
+	pagination,
 }: AutocompletePhrasesTableProps) {
 	return (
-		<Table>
-			<thead>
-				<Tr>
-					<Th>Phrase</Th>
-					{showOwner && <Th>Owner</Th>}
-					<Th></Th>
-				</Tr>
-			</thead>
-			<tbody>
-				{phrases.map((phrase) => (
-					<Tr
-						key={phrase.id}
-						onClick={() => onEdit(phrase)}
-					>
-						<Td type="header">
-							<Item
-								icon={<IconAbc size={16} />}
-								title={phrase.phrase}
-							/>
-						</Td>
-						{showOwner && <Td type="avatar">{phrase.owner}</Td>}
-						<Td type="button">
-							<div onClick={(e) => e.stopPropagation()}>
-								<Menu
-									options={[
-										{
-											label: "Edit",
-											addon: <IconPencil size={16} />,
-											execute: () => onEdit(phrase),
-										},
-										{
-											label: "Remove",
-											addon: <IconTrash size={16} />,
-											intent: "danger",
-											execute: () => onRemove(phrase.id),
-										},
-									]}
-								>
-									<MenuTrigger
-										aria-label="Actions"
-										icon={<IconDots size={16} />}
-										appearance="subtle"
-										size="md"
-									/>
-									<MenuContent />
-								</Menu>
-							</div>
-						</Td>
+		<>
+			<Table>
+				<thead>
+					<Tr>
+						<Th>Phrase</Th>
+						{showOwner && <Th>Owner</Th>}
+						<Th></Th>
 					</Tr>
-				))}
-			</tbody>
-		</Table>
+				</thead>
+				<tbody>
+					{phrases.map((phrase) => (
+						<Tr key={phrase.id} onClick={() => onEdit(phrase)}>
+							<Td type="header">
+								<Item icon={<IconAbc size={16} />} title={phrase.phrase} />
+							</Td>
+							{showOwner && <Td type="avatar">{phrase.owner}</Td>}
+							<Td type="button">
+								<div onClick={(e) => e.stopPropagation()}>
+									<Menu
+										options={[
+											{
+												label: "Edit",
+												addon: <IconPencil size={16} />,
+												execute: () => onEdit(phrase),
+											},
+											{
+												label: "Remove",
+												addon: <IconTrash size={16} />,
+												intent: "danger",
+												execute: () => onRemove(phrase.id),
+											},
+										]}
+									>
+										<MenuTrigger
+											aria-label="Actions"
+											icon={<IconDots size={16} />}
+											appearance="subtle"
+											size="md"
+										/>
+										<MenuContent />
+									</Menu>
+								</div>
+							</Td>
+						</Tr>
+					))}
+				</tbody>
+			</Table>
+			{pagination && (
+				<Box display="flex" justifyContent="center" mt="16">
+					<Pagination
+						total={pagination.total}
+						page={pagination.page}
+						onPageChange={pagination.onPageChange}
+					/>
+				</Box>
+			)}
+		</>
 	);
 }

@@ -28,6 +28,7 @@ import {
     Layout,
 } from "@optiaxiom/react/unstable";
 import { Input } from "@/app/components/Input";
+import { getSelectValueInOptions } from "@/utils/selectValue";
 import {
     IconX,
     IconDots,
@@ -53,7 +54,8 @@ import {
     IconChevronRight,
     IconCode,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useReactFlow, MarkerType } from "@xyflow/react";
+import { useState, useEffect } from "react";
 
 // Helper to describe basic cron expressions
 function describeCron(expression: string) {
@@ -97,6 +99,7 @@ function describeCron(expression: string) {
 interface PanelProps {
     onClose: () => void;
     onSave?: () => void;
+    node?: any;
 }
 
 const PanelContainer = ({
@@ -150,7 +153,7 @@ const PanelContainer = ({
                 </Box>
             }
         >
-            <Heading level="4">{title}</Heading>
+            <Text fontWeight="600" fontSize="lg">{title}</Text>
         </DetailsPanelHeader>
 
         <DetailsPanelBody p="20">
@@ -227,7 +230,100 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
     );
 }
 
-export function ConditionPanel({ onClose }: PanelProps) {
+const MATCH_TYPES = [
+    { label: "Equals", value: "equals" },
+    { label: "Not Equals", value: "not_equals" },
+    { label: "Contains", value: "contains" },
+    { label: "Not Contains", value: "not_contains" },
+    { label: "Greater Than", value: "greater_than" },
+    { label: "Less Than", value: "less_than" },
+    { label: "Greater Than or Equals", value: "greater_than_or_equals" },
+    { label: "Less Than or Equals", value: "less_than_or_equals" },
+    { label: "Regex", value: "regex" },
+];
+
+export function ConditionPanel({ onClose, node }: PanelProps & { node: any }) {
+    const { setNodes, setEdges } = useReactFlow();
+
+    // Initialize conditions from node data or use defaults
+    const [conditions, setConditions] = useState<{ matchType: string, value: string }[]>(
+        node?.data?.conditions?.map((c: any, i: number) => typeof c === 'string' ? { matchType: 'equals', value: c } : c) ||
+        [{ matchType: "equals", value: "" }, { matchType: "equals", value: "" }]
+    );
+
+    useEffect(() => {
+        if (!node) return;
+
+        // Update Node Data
+        setNodes((nds) => nds.map(n => n.id === node.id ? {
+            ...n,
+            data: { ...n.data, conditions: conditions }
+        } : n));
+
+        // Update Edge Labels
+        setEdges((eds) => eds.map(e => {
+            if (e.source === node.id) {
+                const targetNodeId = e.target;
+                // Rely on the suffix -1, -2, -3...
+                const match = targetNodeId.match(/-(\d+)$/);
+                if (match) {
+                    const index = parseInt(match[1]) - 1;
+                    if (conditions[index]) {
+                        return { ...e, label: conditions[index].value };
+                    }
+                }
+            }
+            return e;
+        }));
+    }, [conditions, node?.id, setNodes, setEdges]);
+
+    const handleAddCondition = () => {
+        const newIndex = conditions.length + 1;
+        const newPlaceholderId = `placeholder-${Date.now()}-${newIndex}`;
+
+        // Find current condition node to position new placeholder
+        setNodes((nds) => {
+            const currentNode = nds.find(n => n.id === node.id);
+            if (!currentNode) return nds;
+
+            // Positioning logic to spread nodes symmetrically (Index 1: -140, 2: 140, 3: -420, 4: 420...)
+            const offset = (Math.ceil(newIndex / 2) * 280) - 140;
+            const x = currentNode.position.x + (newIndex % 2 === 0 ? offset : -offset);
+
+            const newPlaceholder = {
+                id: newPlaceholderId,
+                type: 'stepPlaceholder',
+                data: { label: 'Drag and drop step' },
+                position: {
+                    x,
+                    y: currentNode.position.y + 160
+                },
+            };
+            return [...nds, newPlaceholder];
+        });
+
+        setEdges((eds) => [
+            ...eds,
+            {
+                id: `e-${node.id}-${newPlaceholderId}`,
+                source: node.id,
+                target: newPlaceholderId,
+                type: 'condition',
+                label: '',
+                markerEnd: { type: MarkerType.ArrowClosed },
+                style: { strokeDasharray: '5,5' }
+            }
+        ]);
+
+        setConditions([...conditions, { matchType: "equals", value: "" }]);
+    };
+
+    const updateCondition = (index: number, fields: Partial<{ matchType: string, value: string }>) => {
+        const newConditions = [...conditions];
+        newConditions[index] = { ...newConditions[index], ...fields };
+        setConditions(newConditions);
+    };
+
     return (
         <PanelContainer
             title="Condition"
@@ -235,45 +331,51 @@ export function ConditionPanel({ onClose }: PanelProps) {
             iconBg="bg.accent.subtle"
             onClose={onClose}
         >
-            <Box bg="bg.tertiary" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
-                <Text fontWeight="600" fontSize="md">Condition 1</Text>
-                <Field label="Match type" required>
-                    <Select defaultValue="equals" options={[{ label: "Equals", value: "equals" }]}>
-                        <SelectTrigger>
-                            Equals
-                        </SelectTrigger>
-                        <SelectContent />
-                    </Select>
-                </Field>
-                <Field label="Condition" required>
-                    <Input defaultValue="CV" />
-                </Field>
-                <Button appearance="subtle" icon={<IconPlus />} alignSelf="start" size="sm">
-                    Add Rule
+            <Box display="flex" flexDirection="column" gap="32">
+                {conditions.map((condition, index) => (
+                    <Box key={index} display="flex" flexDirection="column" gap="16">
+                        <Text fontWeight="600" fontSize="md" color="fg.secondary">Condition {index + 1}</Text>
+                        <Field label="Match type" required>
+                            {(() => {
+                                const matchTypeValue = getSelectValueInOptions(
+                                    condition.matchType,
+                                    MATCH_TYPES,
+                                    "equals"
+                                );
+                                return (
+                                    <Select
+                                        value={matchTypeValue}
+                                        onValueChange={(val) =>
+                                            updateCondition(index, { matchType: val })
+                                        }
+                                        options={MATCH_TYPES}
+                                    >
+                                        <SelectTrigger size="lg">
+                                            {MATCH_TYPES.find((m) => m.value === matchTypeValue)
+                                                ?.label}
+                                        </SelectTrigger>
+                                        <SelectContent />
+                                    </Select>
+                                );
+                            })()}
+                        </Field>
+                        <Field label="Condition" required>
+                            <Input
+                                value={condition.value}
+                                onChange={(e) => updateCondition(index, { value: e.target.value })}
+                                placeholder="Enter condition"
+                            />
+                        </Field>
+                        <Button appearance="subtle" icon={<IconPlus size={16} />} alignSelf="start" size="sm" p="0">
+                            Add Rule
+                        </Button>
+                    </Box>
+                ))}
+
+                <Button appearance="default" icon={<IconPlus />} alignSelf="start" onClick={handleAddCondition}>
+                    Add Condition
                 </Button>
             </Box>
-
-            <Box bg="bg.tertiary" p="16" rounded="sm" display="flex" flexDirection="column" gap="12">
-                <Text fontWeight="600" fontSize="md">Condition 2</Text>
-                <Field label="Match type" required>
-                    <Select defaultValue="equals" options={[{ label: "Equals", value: "equals" }]}>
-                        <SelectTrigger>
-                            Equals
-                        </SelectTrigger>
-                        <SelectContent />
-                    </Select>
-                </Field>
-                <Field label="Condition" required>
-                    <Input defaultValue="OAS" />
-                </Field>
-                <Button appearance="subtle" icon={<IconPlus />} alignSelf="start" size="sm">
-                    Add Rule
-                </Button>
-            </Box>
-
-            <Button appearance="subtle" icon={<IconPlus />}>
-                Add Condition
-            </Button>
         </PanelContainer>
     );
 }
@@ -297,7 +399,7 @@ export function InAppEventPanel({ onClose }: PanelProps) {
 
                 <Field label="Product" required>
                     <Select defaultValue="cmp" options={[{ label: "Content Marketing Platform (CMP)", value: "cmp" }]}>
-                        <SelectTrigger>
+                        <SelectTrigger size="lg">
                             Content Marketing Platform (CMP)
                         </SelectTrigger>
                         <SelectContent />
@@ -306,7 +408,7 @@ export function InAppEventPanel({ onClose }: PanelProps) {
 
                 <Field label="Event Type" required>
                     <Select defaultValue="select" options={[{ label: "Select type", value: "select" }, { label: "Click", value: "click" }]}>
-                        <SelectTrigger>
+                        <SelectTrigger size="lg">
                             Select type
                         </SelectTrigger>
                         <SelectContent />
@@ -428,15 +530,33 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
                     <Field label="Trigger Time">
                         <Box display="flex" gap="4">
-                            <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startHour, [{ label: "9", value: "9" }], "9")}
+                                onValueChange={setStartHour}
+                                options={[{ label: "9", value: "9" }]}
+                            >
                                 <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                 <SelectContent />
                             </Select>
-                            <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startMinute, [{ label: "00", value: "00" }], "00")}
+                                onValueChange={setStartMinute}
+                                options={[{ label: "00", value: "00" }]}
+                            >
                                 <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                 <SelectContent />
                             </Select>
-                            <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startPeriod, [
+                                    { label: "AM", value: "AM" },
+                                    { label: "PM", value: "PM" },
+                                ], "AM")}
+                                onValueChange={setStartPeriod}
+                                options={[
+                                    { label: "AM", value: "AM" },
+                                    { label: "PM", value: "PM" },
+                                ]}
+                            >
                                 <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                 <SelectContent />
                             </Select>
@@ -482,9 +602,25 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             <Input value={recurValue} onChange={(e) => setRecurValue(e.target.value)} />
                                         </Box>
                                         <Box style={{ flex: 2 }}>
-                                            <Select value={recurUnit} onValueChange={setRecurUnit} options={recurUnitOptions}>
+                                            <Select
+                                                value={getSelectValueInOptions(
+                                                    recurUnit,
+                                                    recurUnitOptions,
+                                                    "week"
+                                                )}
+                                                onValueChange={setRecurUnit}
+                                                options={recurUnitOptions}
+                                            >
                                                 <SelectTrigger size="lg">
-                                                    {recurUnitOptions.find(o => o.value === recurUnit)?.label}
+                                                    {recurUnitOptions.find(
+                                                        (o) =>
+                                                            o.value ===
+                                                            getSelectValueInOptions(
+                                                                recurUnit,
+                                                                recurUnitOptions,
+                                                                "week"
+                                                            )
+                                                    )?.label}
                                                 </SelectTrigger>
                                                 <SelectContent />
                                             </Select>
@@ -519,15 +655,45 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
                                 <Field label="Start time">
                                     <Box display="flex" gap="4">
-                                        <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startHour,
+                                                [{ label: "9", value: "9" }],
+                                                "9"
+                                            )}
+                                            onValueChange={setStartHour}
+                                            options={[{ label: "9", value: "9" }]}
+                                        >
                                             <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
-                                        <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startMinute,
+                                                [{ label: "00", value: "00" }],
+                                                "00"
+                                            )}
+                                            onValueChange={setStartMinute}
+                                            options={[{ label: "00", value: "00" }]}
+                                        >
                                             <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
-                                        <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startPeriod,
+                                                [
+                                                    { label: "AM", value: "AM" },
+                                                    { label: "PM", value: "PM" },
+                                                ],
+                                                "AM"
+                                            )}
+                                            onValueChange={setStartPeriod}
+                                            options={[
+                                                { label: "AM", value: "AM" },
+                                                { label: "PM", value: "PM" },
+                                            ]}
+                                        >
                                             <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
@@ -666,7 +832,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
                         >
                             {node?.data?.icon}
                         </Box>
-                        <Heading level="4">{name}</Heading>
+                        <Text fontWeight="600" fontSize="lg">{name}</Text>
                     </Box>
                     <Button
                         icon={<IconXmark size={16} />}

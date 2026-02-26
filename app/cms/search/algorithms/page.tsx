@@ -33,6 +33,7 @@ import {useRouter} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
+import {getSelectValueInOptions} from "@/utils/selectValue";
 
 export default function OptimizeSearchPage() {
 	const router = useRouter();
@@ -236,7 +237,14 @@ export default function OptimizeSearchPage() {
 						required
 					>
 						<Select
-							value={newAlgorithmType}
+							value={getSelectValueInOptions(
+								newAlgorithmType,
+								[
+									{label: "Search", value: "Search"},
+									{label: "Custom", value: "Custom"},
+								],
+								"Search"
+							)}
 							onValueChange={(val) => setNewAlgorithmType(val as "Search" | "Custom")}
 							options={[
 								{label: "Search", value: "Search"},

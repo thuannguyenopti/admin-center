@@ -18,9 +18,11 @@ export default function VT({
 	items,
 	backLink,
 	title,
+	description,
 }: Readonly<{
 	backLink?: {label: string; url?: string};
 	title?: string;
+	description?: string;
 	items: Array<{label: string; url?: string}> | undefined;
 }>) {
 	const router = useRouter();
@@ -31,30 +33,36 @@ export default function VT({
 	};
 
 	return (
-		<NavBody style={{maxWidth: "224px"}}>
+		<NavBody
+			style={{
+				maxWidth: "224px",
+				minHeight: "100%",
+				overflow: "auto",
+				height: "calc(100vh - 80px)",
+			}}
+		>
 			<NavList className="appear">
 				{(backLink || title) && (
-					<Box
-						px="12"
-						py="16"
-					>
+					<Box px="12" py="16">
 						{backLink && (
 							<Link href={backLink.url as Url}>
 								<Text
 									color="fg.secondary"
 									fontSize="sm"
+									className="hover:!text-black"
 								>
 									← {backLink.label}
 								</Text>
 							</Link>
 						)}
 						{title && (
-							<Text
-								fontSize="lg"
-								fontWeight="600"
-								color="fg.default"
-							>
+							<Text fontSize="lg" fontWeight="600" color="fg.default">
 								{title}
+							</Text>
+						)}
+						{description && (
+							<Text fontSize="sm" color="fg.tertiary" mt="4">
+								{description}
 							</Text>
 						)}
 					</Box>
@@ -64,13 +72,13 @@ export default function VT({
 						<NavItem
 							onClick={() => menuClick(menuItem.url || "")}
 							active={menuItem.url === path}
-							key={menuItem.label}
+							key={`${menuItem.label}-${menuItem.url}`}
 							aria-label={menuItem.label}
 						>
 							{menuItem.label}
 						</NavItem>
 					) : (
-						<Fragment key={menuItem.label}>
+						<Fragment key={`${menuItem.label}-group-${i}`}>
 							{i !== 0 && <NavSeparator />}
 							<NavGroupTrigger>{menuItem.label}</NavGroupTrigger>
 						</Fragment>
