@@ -47,7 +47,7 @@ export function OpalChat({ messages, onSuggestionClick, hideSuggestions, variant
       style={{
         flex: 1,
         overflowY: 'auto',
-        minHeight: '300px',
+        minHeight: 0,
         width: '100%',
       }}
     >

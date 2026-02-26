@@ -6,8 +6,9 @@ import { OpalInput } from "./OpalInput";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { ReactNode } from "react";
-import { OpalHomeHeader } from "./OpalHomeHeader";
+import { OpalHeader } from "./OpalHeader";
 import { OpalHistorySidebar } from "./OpalHistorySidebar";
+import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
 
 type OpalChatViewProps = {
     messages: ChatMessage[];
@@ -81,9 +82,10 @@ export function OpalChatView({
                 />
                 <Box display="flex" flexDirection="column" h="full" style={{ flex: 1, minWidth: 0 }}>
                     <Box style={{ flexShrink: 0, width: '100%' }}>
-                        <OpalHomeHeader
+                        <OpalHeader
                             onToggleHistory={onToggleHistory || (() => { })}
                             onNewChat={onNewChat || (() => { })}
+                            sticky
                         />
                     </Box>
                     <Box
@@ -108,6 +110,7 @@ export function OpalChatView({
                         {emptyState}
                     </Box>
                 </Box>
+                <OpalLoaderDevPanel />
             </Box>
         );
     }
@@ -121,7 +124,8 @@ export function OpalChatView({
             w="full"
             overflow="hidden"
             style={{
-                position: 'relative'
+                position: 'relative',
+                minHeight: 0,
             }}
         >
             {variant === 'home' && (
@@ -144,9 +148,10 @@ export function OpalChatView({
             >
                 {variant === 'home' && (
                     <Box style={{ flexShrink: 0, width: '100%' }}>
-                        <OpalHomeHeader
+                        <OpalHeader
                             onToggleHistory={onToggleHistory || (() => { })}
                             onNewChat={onNewChat || (() => { })}
+                            sticky
                         />
                     </Box>
                 )}
@@ -157,7 +162,7 @@ export function OpalChatView({
                     w="full"
                     style={{
                         flex: 1,
-                        overflowY: 'hidden',
+                        overflow: 'hidden',
                         width: '100%',
                         alignItems: variant === 'home' ? 'center' : 'stretch',
                         paddingTop: variant === 'home' ? '16px' : '0',
@@ -196,6 +201,7 @@ export function OpalChatView({
                     />
                 </Box>
             </Box>
+            <OpalLoaderDevPanel />
         </Box>
     );
 }
