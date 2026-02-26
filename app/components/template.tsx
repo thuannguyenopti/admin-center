@@ -190,7 +190,7 @@ function TemplateContent({
 				<Box
 					flex="1"
 					className="min-w-0 relative"
-					overflow={customLayout ? "hidden" : "auto"}
+					overflow="auto"
 				>
 					{customLayout ? (
 						children
