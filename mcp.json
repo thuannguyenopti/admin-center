@@ -12,6 +12,9 @@
       "args": [
         "cursor-talk-to-figma-mcp@latest"
       ]
+    },
+    "Figma": {
+      "url": "http://localhost:3001"
     }
   }
 }

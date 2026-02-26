@@ -1,20 +1,8 @@
 "use client";
 
-import {
-	Box,
-	Heading,
-	Menu,
-	MenuTrigger,
-	MenuContent,
-	LabelMenuButton,
-	Card,
-	Separator,
-} from "@optiaxiom/react";
-import {Text} from "@/app/components/Text";
-import {Input} from "@/app/components/Input";
+import {Box, Heading, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
 import {useState, useMemo} from "react";
 import MetricCard from "../../../components/MetricCard";
-import Link from "next/link";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import {metricsData, topQueries} from "@/app/db/analyticsData";
 import {Flex} from "@/app/components/Flex";
@@ -63,10 +51,7 @@ export default function SearchAnalytics() {
 		<Box>
 			{/* Filters */}
 
-			<Flex
-				mb="24"
-				justifyContent="space-between"
-			>
+			<Flex mb="24" justifyContent="space-between">
 				<Flex gap="8">
 					<Menu
 						options={[
@@ -83,82 +68,55 @@ export default function SearchAnalytics() {
 						</MenuTrigger>
 						<MenuContent />
 					</Menu>
-					<Menu
-						options={[
-							{label: "Production", execute: () => {}},
-							{label: "Staging", execute: () => {}},
-							{label: "Development", execute: () => {}},
-						]}
-					>
-						<MenuTrigger asChild>
-							<LabelMenuButton label="Environment">Production</LabelMenuButton>
-						</MenuTrigger>
-						<MenuContent />
-					</Menu>
 				</Flex>
-				<Button
-					icon={<IconSparkles />}
-					appearance="primary-opal"
-				>
+				<Button icon={<IconSparkles />} appearance="primary-opal">
 					Suggest Optimization
 				</Button>
 			</Flex>
 
 			{/* Metric Cards */}
-			<Box
-				display="grid"
-				style={{gridTemplateColumns: "repeat(4, 1fr)"}}
-				gap="16"
-				mb="32"
-			>
-				<Link href="/cms/search/search-analytics/total-queries">
-					<MetricCard
-						label="Total Queries"
-						unit=""
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.totalQueries}
-						aggregation="sum"
-						previousValue={prevTotalQueries}
-					/>
-				</Link>
-				<Link href="/cms/search/search-analytics/click-through-rate">
-					<MetricCard
-						label="Click-Through Rate"
-						unit="%"
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.ctr}
-						aggregation="average"
-						previousValue={prevCtr}
-					/>
-				</Link>
-				<Link href="/cms/search/search-analytics/zero-result">
-					<MetricCard
-						label="Zero-Result Rate"
-						unit="%"
-						desiredDirection="down"
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.zeroResult}
-						aggregation="average"
-						previousValue={prevZeroResult}
-					/>
-				</Link>
-				<Link href="/cms/search/search-analytics/reformulation-rate">
-					<MetricCard
-						label="Reformulation Rate"
-						unit="%"
-						desiredDirection="down"
-						interval={intervalMap[timeRange]}
-						data={currentMetrics.reformulation}
-						aggregation="average"
-						previousValue={prevReformulation}
-					/>
-				</Link>
+			<Box display="grid" style={{gridTemplateColumns: "repeat(4, 1fr)"}} gap="16" mb="32">
+				<MetricCard
+					href="/cms/search/search-analytics/total-queries"
+					label="Total Queries"
+					unit=""
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.totalQueries}
+					aggregation="sum"
+					previousValue={prevTotalQueries}
+				/>
+				<MetricCard
+					href="/cms/search/search-analytics/click-through-rate"
+					label="Click-Through Rate"
+					unit="%"
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.ctr}
+					aggregation="average"
+					previousValue={prevCtr}
+				/>
+				<MetricCard
+					href="/cms/search/search-analytics/zero-result"
+					label="Zero-Result Rate"
+					unit="%"
+					desiredDirection="down"
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.zeroResult}
+					aggregation="average"
+					previousValue={prevZeroResult}
+				/>
+				<MetricCard
+					href="/cms/search/search-analytics/reformulation-rate"
+					label="Reformulation Rate"
+					unit="%"
+					desiredDirection="down"
+					interval={intervalMap[timeRange]}
+					data={currentMetrics.reformulation}
+					aggregation="average"
+					previousValue={prevReformulation}
+				/>
 			</Box>
 			{/* Problematic Queries Table */}
-			<Heading
-				level="4"
-				mb="16"
-			>
+			<Heading level="4" mb="16">
 				Problematic Queries
 			</Heading>
 			<Table>

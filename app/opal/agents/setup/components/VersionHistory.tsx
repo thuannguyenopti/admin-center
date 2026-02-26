@@ -92,8 +92,11 @@ export function VersionHistory({
                         display="flex"
                         justifyContent="space-between"
                         alignItems="center"
+                        style={{
+                            borderBottom: "1px solid var(--ax-colors-border-secondary)",
+                        }}
                     >
-                        <Text fontWeight="500" fontSize="lg">
+                        <Text fontWeight="600" fontSize="md">
                             Version History
                         </Text>
                         <Button

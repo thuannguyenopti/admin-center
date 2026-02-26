@@ -1,60 +1,33 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox, Input, Badge, Popover, PopoverTrigger, PopoverContent } from "@optiaxiom/react";
-import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto, IconEye, IconPencil, IconCheck } from "@tabler/icons-react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Checkbox, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip, Skeleton } from "@optiaxiom/react";
+import { IconX, IconFile, IconShoppingBag, IconBlocks, IconPhoto, IconEye, IconPencil, IconCheck, IconSparkles } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useDetailsMetadata } from "./useDetailsMetadata";
 import MultiSelectDetailsPane from "./MultiSelectDetailsPane";
 import Image from "next/image";
-import { useState } from "react";
-
-// Mock cycling/exercise tags
-const AVAILABLE_TAGS = [
-  "Cycling Training",
-  "Cycling Performance",
-  "Exercise Routine",
-  "Cardio Workout",
-  "Mountain Biking",
-  "Road Cycling",
-  "Indoor Training",
-  "Fitness Tracking",
-  "Endurance Training",
-  "Sprint Training"
-];
+import { useState, useEffect, useRef } from "react";
+import { useGlobalTags } from "../hooks/useGlobalTags";
+import { useGlobalCategories } from "../hooks/useGlobalCategories";
+import type { Tag } from "../settings/tags/types";
+import { getThumbnailForContent } from "./contentThumbnails";
 
 interface DetailsPaneProps {
   content?: ContentItem;
   selectedIds?: Set<string>;
+  selectedItems?: ContentItem[];
   allContent?: ContentItem[];
+  detailsPaneTags: string[] | null;
+  setDetailsPaneTags: (tags: string[] | null) => void;
+  detailsPaneCategories: string[] | null;
+  setDetailsPaneCategories: (categories: string[] | null) => void;
+  onTagsChange?: (contentId: string, tags: string[]) => void;
+  onTagsChangeBatch?: (updates: Array<{ id: string; tags: string[] }>) => void;
+  onCategoriesChange?: (contentId: string, categories: string[]) => void;
+  onCategoriesChangeBatch?: (updates: Array<{ id: string; categories: string[] }>) => void;
   onClose: () => void;
 }
-
-const getThumbnailImage = (id: string): string | null => {
-  const thumbnails: { [key: string]: string } = {
-    "1": "https://images.unsplash.com/photo-1634084462412-b54873c0a56d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjB3ZWJzaXRlJTIwZmVhdHVyZXMlMjBwYWdlJTIwZGVzaWduJTIwc2hvd2Nhc2V8ZW58MHwwfHx8MTc2NTc1MDc5MXww&ixlib=rb-4.1.0&q=85",
-    "2": "https://images.unsplash.com/photo-1637578371283-d9076f66ba8e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxM3x8Zml0bmVzcyUyMHRyYWluaW5nJTIwd29ya291dCUyMHBsYW5zJTIwaW50ZXJmYWNlJTIwZGVzaWdufGVufDB8MHx8fDE3NjU3NTA3OTF8MA&ixlib=rb-4.1.0&q=85",
-    "3": "https://images.pexels.com/photos/19961775/pexels-photo-19961775.jpeg",
-    "4": "https://images.pexels.com/photos/4531875/pexels-photo-4531875.jpeg",
-    "5": "https://images.pexels.com/photos/8970688/pexels-photo-8970688.jpeg",
-    "6": "https://images.unsplash.com/photo-1659823300663-93084f1795d7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHxwcmVtaXVtJTIwc3Vic2NyaXB0aW9uJTIwc2VydmljZSUyMHVwZ3JhZGUlMjBvZmZlcmluZ3xlbnwwfDB8fHwxNzY1NzUxMDQxfDA&ixlib=rb-4.1.0&q=85",
-    "7": "https://images.pexels.com/photos/13870890/pexels-photo-13870890.jpeg",
-    "8": "https://images.unsplash.com/photo-1759661966728-4a02e3c6ed91?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxfHxkYXNoYm9hcmQlMjBhbmFseXRpY3MlMjBkYXRhJTIwdmlzdWFsaXphdGlvbiUyMG1ldHJpY3N8ZW58MHwwfHx8MTc2NTc1MTA0MXww&ixlib=rb-4.1.0&q=85",
-    "9": "https://images.unsplash.com/photo-1756639748717-4fa715709a39?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwyfHxjeWNsaW5nJTIwbW91bnRhaW4lMjBiaWtlJTIwYmljeWNsZSUyMGhlcm8lMjBhY3Rpb258ZW58MHwwfHx8MTc2NTc1MTA0Mnww&ixlib=rb-4.1.0&q=85",
-    "10": "https://images.pexels.com/photos/8867207/pexels-photo-8867207.jpeg",
-    "11": "https://images.unsplash.com/photo-1722890571919-f59b75a92c92?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxfHxjeWNsaW5nJTIwcm91dGUlMjBwbGFubmluZyUyMG1hcCUyMG5hdmlnYXRpb258ZW58MHwwfHx8MTc2NTc1MTA3Nnww&ixlib=rb-4.1.0&q=85",
-    "12": "https://images.unsplash.com/photo-1637578371283-d9076f66ba8e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxM3x8Zml0bmVzcyUyMHRyYWluaW5nJTIwd29ya291dCUyMHBsYW5zJTIwaW50ZXJmYWNlJTIwZGVzaWdufGVufDB8MHx8fDE3NjU3NTA3OTF8MA&ixlib=rb-4.1.0&q=85",
-    "13": "https://images.unsplash.com/photo-1756639748717-4fa715709a39?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwyfHxjeWNsaW5nJTIwbW91bnRhaW4lMjBiaWtlJTIwYmljeWNsZSUyMGhlcm8lMjBhY3Rpb258ZW58MHwwfHx8MTc2NTc1MTA0Mnww&ixlib=rb-4.1.0&q=85",
-    "14": "https://images.unsplash.com/photo-1759661966728-4a02e3c6ed91?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxfHxkYXNoYm9hcmQlMjBhbmFseXRpY3MlMjBkYXRhJTIwdmlzdWFsaXphdGlvbiUyMG1ldHJpY3N8ZW58MHwwfHx8MTc2NTc1MTA0MXww&ixlib=rb-4.1.0&q=85",
-    "15": "https://images.pexels.com/photos/4531875/pexels-photo-4531875.jpeg",
-    "16": "https://images.unsplash.com/photo-1756639748717-4fa715709a39?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwyfHxjeWNsaW5nJTIwbW91bnRhaW4lMjBiaWtlJTIwYmljeWNsZSUyMGhlcm8lMjBhY3Rpb258ZW58MHwwfHx8MTc2NTc1MTA0Mnww&ixlib=rb-4.1.0&q=85",
-    "17": "https://images.pexels.com/photos/4498478/pexels-photo-4498478.jpeg",
-    "18": "https://images.pexels.com/photos/8867207/pexels-photo-8867207.jpeg",
-    "19": "https://images.unsplash.com/photo-1722890571919-f59b75a92c92?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxfHxjeWNsaW5nJTIwcm91dGUlMjBwbGFubmluZyUyMG1hcCUyMG5hdmlnYXRpb258ZW58MHwwfHx8MTc2NTc1MTA3Nnww&ixlib=rb-4.1.0&q=85",
-    "20": "https://images.unsplash.com/photo-1759661966728-4a02e3c6ed91?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTAwNDR8MHwxfHNlYXJjaHwxfHxkYXNoYm9hcmQlMjBhbmFseXRpY3MlMjBkYXRhJTIwdmlzdWFsaXphdGlvbiUyMG1ldHJpY3N8ZW58MHwwfHx8MTc2NTc1MTA0MXww&ixlib=rb-4.1.0&q=85",
-  };
-  return thumbnails[id] || null;
-};
 
 const getIconForType = (type: ContentItem["baseType"], size: number = 16) => {
   switch (type) {
@@ -70,53 +43,326 @@ const getIconForType = (type: ContentItem["baseType"], size: number = 16) => {
   }
 };
 
-export default function DetailsPane({ content, selectedIds, allContent, onClose }: DetailsPaneProps) {
-  // Show multi-select view if multiple items selected
+export default function DetailsPane({
+  content,
+  selectedIds,
+  selectedItems = [],
+  allContent,
+  detailsPaneTags,
+  setDetailsPaneTags,
+  detailsPaneCategories,
+  setDetailsPaneCategories,
+  onTagsChange,
+  onTagsChangeBatch,
+  onCategoriesChange,
+  onCategoriesChangeBatch,
+  onClose,
+}: DetailsPaneProps) {
+  // Show multi-select view when 2+ items selected
   if (selectedIds && selectedIds.size > 1 && allContent) {
-    const selectedItems = allContent.filter(item => selectedIds.has(item.id));
-    return <MultiSelectDetailsPane items={selectedItems} onClose={onClose} />;
+    const multiItems = allContent.filter((item) => selectedIds.has(item.id));
+    return (
+      <MultiSelectDetailsPane
+        items={multiItems}
+        controlledTags={detailsPaneTags}
+        setControlledTags={setDetailsPaneTags}
+        controlledCategories={detailsPaneCategories}
+        setControlledCategories={setDetailsPaneCategories}
+        onTagsChange={onTagsChange}
+        onTagsChangeBatch={onTagsChangeBatch}
+        onCategoriesChange={onCategoriesChange}
+        onCategoriesChangeBatch={onCategoriesChangeBatch}
+        onClose={onClose}
+      />
+    );
   }
 
-  // Show single-select view
+  // Show single-select view (1 item or pane opened with 1 selected)
   if (!content) return null;
 
   const metadata = useDetailsMetadata(content);
-  
-  // Tags state management
-  const [tags, setTags] = useState<string[]>(["Cycling Training", "Fitness Tracking"]);
-  const [newTag, setNewTag] = useState("");
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+  // Get global tags and categories from centralized repositories
+  const { tags: globalTags, addTag: addGlobalTag, tagExists } = useGlobalTags();
+  const { categories: globalCategoriesFull, categoriesWithSlugs: globalCategories, addCategory: addGlobalCategory, categoryExists } = useGlobalCategories();
+
+  // Helpers: slug ↔ display name (UnifiedContentItem uses slugs)
+  const getTagBySlug = (slug: string): Tag | undefined =>
+    globalTags.find((t: Tag) => t.slug === slug);
+  const slugToDisplayName = (slug: string): string =>
+    slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  const getDisplayName = (slug: string): string =>
+    getTagBySlug(slug)?.name ?? slugToDisplayName(slug);
+  const getSlugByName = (name: string): string => {
+    const t = globalTags.find((tag: Tag) => tag.name.toLowerCase() === name.toLowerCase());
+    return t?.slug ?? nameToSlug(name);
   };
 
-  const handleAddTag = (tagValue: string) => {
-    if (tagValue.trim() && !tags.includes(tagValue)) {
-      setTags([...tags, tagValue]);
+  // Use lifted tag state (same as multi-select so 1↔2 switch preserves edits)
+  const tags = detailsPaneTags ?? content.tags ?? [];
+  const setTags = (next: string[] | ((prev: string[]) => string[])) => {
+    setDetailsPaneTags(typeof next === "function" ? next(tags) : next);
+  };
+  const [newTag, setNewTag] = useState("");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [categoriesHoveredIndex, setCategoriesHoveredIndex] = useState<number | null>(null);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+  const [suggestedSlugs, setSuggestedSlugs] = useState<string[]>([]);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  const [suggestEmpty, setSuggestEmpty] = useState(false);
+  const [suggestCategoriesLoading, setSuggestCategoriesLoading] = useState(false);
+  const [suggestedCategorySlugs, setSuggestedCategorySlugs] = useState<string[]>([]);
+  const [suggestCategoryError, setSuggestCategoryError] = useState<string | null>(null);
+  const [suggestCategoryEmpty, setSuggestCategoryEmpty] = useState(false);
+
+  const TAGS_INITIAL_VISIBLE = 10;
+  const visibleTags = tagsExpanded ? tags : tags.slice(0, TAGS_INITIAL_VISIBLE);
+  const hasMoreTags = tags.length > TAGS_INITIAL_VISIBLE;
+  const hiddenCount = tags.length - TAGS_INITIAL_VISIBLE;
+
+  // Categories: same pattern as tags (lifted state, slug ↔ name from global repo)
+  const categories = detailsPaneCategories ?? content.categories ?? [];
+  const setCategories = (next: string[] | ((prev: string[]) => string[])) => {
+    setDetailsPaneCategories(typeof next === "function" ? next(categories) : next);
+  };
+  const getCategoryBySlug = (slug: string): { name: string; slug: string } | undefined =>
+    globalCategories.find((c) => c.slug === slug);
+  const categorySlugToDisplayName = (slug: string): string =>
+    getCategoryBySlug(slug)?.name ?? slug.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+  const getCategorySlugByName = (name: string): string => {
+    const c = globalCategories.find((cat) => cat.name.toLowerCase() === name.toLowerCase());
+    return c?.slug ?? nameToSlug(name);
+  };
+  const CATEGORIES_INITIAL_VISIBLE = 10;
+  const visibleCategories = categoriesExpanded ? categories : categories.slice(0, CATEGORIES_INITIAL_VISIBLE);
+  const hasMoreCategories = categories.length > CATEGORIES_INITIAL_VISIBLE;
+  const hiddenCategoriesCount = categories.length - CATEGORIES_INITIAL_VISIBLE;
+
+  const handleRemoveTag = (slugToRemove: string) => {
+    setTags(tags.filter((slug) => slug !== slugToRemove));
+  };
+
+  const handleAddTag = (value: string) => {
+    if (!value.trim()) return;
+    const isSlug = globalTags.some((t: Tag) => t.slug === value);
+    const slug = isSlug ? value : getSlugByName(value);
+    if (tags.includes(slug)) {
       setNewTag("");
+      return;
+    }
+    if (!isSlug && !tagExists(value)) addGlobalTag(value);
+    setTags([...tags, slug]);
+    setNewTag("");
+  };
+
+  const nameToSlug = (name: string) =>
+    name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+  const handleSuggestTags = async () => {
+    if (!content?.name || globalTags.length === 0) return;
+    setSuggestLoading(true);
+    setSuggestError(null);
+    setSuggestEmpty(false);
+    setSuggestedSlugs([]);
+    try {
+      const imageUrl = getThumbnailForContent({
+        id: content.id,
+        name: content.name,
+        baseType: content.baseType,
+      });
+      const res = await fetch("/api/tags/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemName: content.name,
+          contentTypeId: content.contentTypeId,
+          tagTaxonomy: globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug })),
+          imageUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSuggestError(data.error || "Tag suggestion isn't available");
+        return;
+      }
+      const existingSlugs: string[] = data.suggestedSlugs ?? [];
+      const newNames: string[] = data.suggestedNewNames ?? [];
+      newNames.forEach((name: string) => {
+        if (name.trim() && !tagExists(name)) addGlobalTag(name.trim());
+      });
+      const newSlugs = newNames.map((n: string) => nameToSlug(n)).filter(Boolean);
+      const merged = Array.from(
+        new Set([...existingSlugs, ...newSlugs])
+      );
+      const notAlreadyApplied = merged.filter((s: string) => !tags.includes(s));
+      setSuggestedSlugs(notAlreadyApplied);
+      setSuggestEmpty(notAlreadyApplied.length === 0);
+    } catch {
+      setSuggestError("Tag suggestion isn't available");
+    } finally {
+      setSuggestLoading(false);
     }
   };
 
-  // Filter available tags based on input
-  const filteredTags = AVAILABLE_TAGS
-    .filter(tag => !newTag || tag.toLowerCase().includes(newTag.toLowerCase()));
+  const handleAddSuggestedTag = (slug: string) => {
+    handleAddTag(slug);
+    setSuggestedSlugs((prev) => prev.filter((s) => s !== slug));
+  };
 
-  // Create options for autocomplete dropdown
-  const autocompleteOptions = filteredTags.map(tag => ({
-    label: tag,
-    value: tag,
-    isSelected: tags.includes(tag)
+  const handleAddAllSuggested = () => {
+    const combined = [...tags];
+    suggestedSlugs.forEach((slug) => {
+      if (!combined.includes(slug)) combined.push(slug);
+    });
+    setTags(combined);
+    setSuggestedSlugs([]);
+  };
+
+  const handleRemoveCategory = (slugToRemove: string) => {
+    setCategories(categories.filter((slug) => slug !== slugToRemove));
+  };
+
+  const handleAddCategory = (value: string) => {
+    if (!value.trim()) return;
+    const isSlug = globalCategories.some((c) => c.slug === value);
+    const slug = isSlug ? value : getCategorySlugByName(value);
+    if (categories.includes(slug)) {
+      setNewCategory("");
+      return;
+    }
+    if (!isSlug && !categoryExists(value)) addGlobalCategory(value);
+    setCategories([...categories, slug]);
+    setNewCategory("");
+  };
+
+  const handleSuggestCategories = async () => {
+    if (!content?.name || !globalCategoriesFull?.length) return;
+    setSuggestCategoriesLoading(true);
+    setSuggestCategoryError(null);
+    setSuggestCategoryEmpty(false);
+    setSuggestedCategorySlugs([]);
+    try {
+      const categoryTaxonomy = globalCategoriesFull.map((c: { id: string; name: string; slug: string; parentId: string | null }) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        parentId: c.parentId ?? null,
+      }));
+      const res = await fetch("/api/categories/suggest-for-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemName: content.name, categoryTaxonomy }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSuggestCategoryError(data.error || "Category suggestion isn't available");
+        return;
+      }
+      const slugs: string[] = data.suggestedSlugs ?? [];
+      const notAlreadyApplied = slugs.filter((s: string) => !categories.includes(s));
+      setSuggestedCategorySlugs(notAlreadyApplied);
+      setSuggestCategoryEmpty(notAlreadyApplied.length === 0);
+    } catch {
+      setSuggestCategoryError("Category suggestion isn't available");
+    } finally {
+      setSuggestCategoriesLoading(false);
+    }
+  };
+
+  const handleAddSuggestedCategory = (slug: string) => {
+    handleAddCategory(slug);
+    setSuggestedCategorySlugs((prev) => prev.filter((s) => s !== slug));
+  };
+
+  const handleAddAllSuggestedCategories = () => {
+    const combined = [...categories];
+    suggestedCategorySlugs.forEach((slug) => {
+      if (!combined.includes(slug)) combined.push(slug);
+    });
+    setCategories(combined);
+    setSuggestedCategorySlugs([]);
+  };
+
+  // Persist tag changes (debounced) for single item
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!onTagsChange || !content?.id) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      onTagsChange(content.id, tags);
+      debounceRef.current = null;
+    }, 400);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [tags, content?.id, onTagsChange]);
+
+  // Filter global tags by input (by name)
+  const filteredTags = globalTags.filter(
+    (tag: Tag) => !newTag || tag.name.toLowerCase().includes(newTag.toLowerCase())
+  );
+
+  // Autocomplete options: value = slug for existing, value = name for custom
+  const autocompleteOptions = filteredTags.map((tag: Tag) => ({
+    label: tag.name,
+    value: tag.slug,
+    isSelected: tags.includes(tag.slug),
   }));
 
-  // Add custom tag option if input doesn't match any available tag
-  if (newTag.trim() && !AVAILABLE_TAGS.includes(newTag)) {
+  const customTagName = newTag.trim();
+  const hasCustomOption =
+    customTagName && !globalTags.some((t: Tag) => t.name.toLowerCase() === customTagName.toLowerCase());
+  if (hasCustomOption) {
     autocompleteOptions.push({
-      label: `+ Add "${newTag}" tag`,
-      value: newTag,
-      isSelected: false
+      label: `+ Add "${customTagName}" tag`,
+      value: customTagName,
+      isSelected: tags.some(s => getDisplayName(s) === customTagName),
     });
   }
+
+  // Category autocomplete options
+  const filteredCategories = globalCategories.filter(
+    (c) => !newCategory || c.name.toLowerCase().includes(newCategory.toLowerCase())
+  );
+  const categoryAutocompleteOptions = filteredCategories.map((c) => ({
+    label: c.name,
+    value: c.slug,
+    isSelected: categories.includes(c.slug),
+  }));
+  const customCategoryName = newCategory.trim();
+  const hasCustomCategoryOption =
+    customCategoryName && !globalCategories.some((c) => c.name.toLowerCase() === customCategoryName.toLowerCase());
+  if (hasCustomCategoryOption) {
+    categoryAutocompleteOptions.push({
+      label: `+ Add "${customCategoryName}" category`,
+      value: customCategoryName,
+      isSelected: categories.some((s) => categorySlugToDisplayName(s) === customCategoryName),
+    });
+  }
+
+  // Persist category changes (debounced) for single item
+  const categoriesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!onCategoriesChange || !content?.id) return;
+    if (categoriesDebounceRef.current) clearTimeout(categoriesDebounceRef.current);
+    categoriesDebounceRef.current = setTimeout(() => {
+      onCategoriesChange(content.id, categories);
+      categoriesDebounceRef.current = null;
+    }, 400);
+    return () => {
+      if (categoriesDebounceRef.current) clearTimeout(categoriesDebounceRef.current);
+    };
+  }, [categories, content?.id, onCategoriesChange]);
 
   return (
     <Box
@@ -159,54 +405,59 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
         px="24"
         py="24"
       >
-        {/* Preview Icon/Thumbnail */}
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          style={{
-            borderRadius: "4px",
-            backgroundColor: "var(--ax-colors-bg-subtle)",
-            height: "180px",
-            color: "var(--ax-colors-fg-secondary)",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          {getThumbnailImage(content.id) ? (
-            <Image
-              src={getThumbnailImage(content.id)!}
-              alt={content.name}
-              fill
-              style={{ objectFit: "cover" }}
-            />
-          ) : (
-            <Box style={{ display: "flex", alignItems: "center" }}>
-              {getIconForType(content.baseType, 80)}
-            </Box>
-          )}
-        </Box>
-
-        {/* Name with Icon */}
-        <Box display="flex" flexDirection="column" gap="8">
-          <Text fontSize="xs" color="fg.secondary" style={{ lineHeight: "14px" }}>
-            Name
-          </Text>
-          <Box display="flex" gap="8" alignItems="center">
-            <Box style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
-              {getIconForType(content.baseType, 16)}
-            </Box>
-            <Text fontSize="md" fontWeight="600" style={{ wordBreak: "break-word" }}>
-              {content.name}
+        {/* Item (thumbnail + name) – disclosable like other metadata */}
+        <Disclosure defaultOpen>
+          <DisclosureTrigger chevronPosition="start">
+            <Text asChild fontSize="sm" fontWeight="600" color="fg.default">
+              <span>Item</span>
             </Text>
-          </Box>
-        </Box>
+          </DisclosureTrigger>
+          <DisclosureContent asChild>
+            <Box display="flex" flexDirection="column" gap="12" mt="8" style={{ paddingLeft: "20px" }}>
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                style={{
+                  borderRadius: "4px",
+                  backgroundColor: "var(--ax-colors-bg-subtle)",
+                  height: "180px",
+                  color: "var(--ax-colors-fg-secondary)",
+                  overflow: "hidden",
+                  position: "relative",
+                }}
+              >
+                <Image
+                  src={getThumbnailForContent({ id: content.id, name: content.name, baseType: content.baseType })}
+                  alt={content.name}
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              </Box>
+              <Box display="flex" flexDirection="column" gap="8">
+                <Text fontSize="xs" color="fg.secondary" fontWeight="600" style={{ lineHeight: "14px" }}>
+                  Name
+                </Text>
+                <Box display="flex" gap="8" alignItems="center">
+                  <Box style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                    {getIconForType(content.baseType, 16)}
+                  </Box>
+                  <Text fontSize="md" fontWeight="600" style={{ wordBreak: "break-word" }}>
+                    {content.name}
+                  </Text>
+                </Box>
+              </Box>
+            </Box>
+          </DisclosureContent>
+        </Disclosure>
 
         {/* Dynamic Disclosure Sections */}
         {metadata.sections.map((section, index) => (
           <Disclosure key={index}>
-            <DisclosureTrigger>
-              {section.title}
+            <DisclosureTrigger chevronPosition="start">
+              <Text asChild fontSize="sm" fontWeight="600" color="fg.default">
+                <span>{section.title}</span>
+              </Text>
             </DisclosureTrigger>
             <DisclosureContent asChild>
               <Box
@@ -271,8 +522,10 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
 
         {/* Tags */}
         <Disclosure defaultOpen>
-          <DisclosureTrigger>
-            Tags
+          <DisclosureTrigger chevronPosition="start">
+            <Text asChild fontSize="sm" fontWeight="600" color="fg.default">
+              <span>Tags</span>
+            </Text>
           </DisclosureTrigger>
           <DisclosureContent asChild>
             <Box
@@ -282,61 +535,46 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
               mt="8"
               style={{ paddingLeft: "20px" }}
             >
-              {/* Tags Display */}
-              <Box
-                display="flex"
-                flexWrap="wrap"
-                gap="8"
-              >
-                {tags.map(tag => (
-                  <Badge key={tag} intent="neutral">
-                    <Box display="flex" alignItems="center" gap="4">
-                      <span>{tag}</span>
-                      <button
-                        onClick={() => handleRemoveTag(tag)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "0",
-                          display: "flex",
-                          alignItems: "center",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                          lineHeight: "1",
-                          color: "inherit",
-                        }}
-                        aria-label={`Remove tag ${tag}`}
-                      >
-                        ×
-                      </button>
-                    </Box>
-                  </Badge>
-                ))}
-              </Box>
-
-              {/* Add Tag Input with Custom Autocomplete */}
-              <Popover 
+              <Popover
                 open={newTag.length > 0 && autocompleteOptions.length > 0}
-                onOpenChange={() => {}}
+                onOpenChange={() => { }}
               >
                 <PopoverTrigger asChild>
                   <Box>
                     <Input
                       value={newTag}
-                      onChange={e => setNewTag(e.target.value)}
-                      onKeyPress={e => {
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyPress={(e) => {
                         if (e.key === "Enter" && autocompleteOptions.length > 0) {
                           handleAddTag(autocompleteOptions[0].value);
                         }
                       }}
-                      placeholder="Add tag..."
+                      placeholder="Search..."
                       size="md"
+                      addonAfter={
+                        <Tooltip content="Generate tag suggestions for this content using Opal">
+                          <Button
+                            appearance="default-opal"
+                            size="sm"
+                            rounded="sm"
+                            px="8"
+                            className="opalGenerateButton"
+                            icon={<IconSparkles />}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleSuggestTags();
+                            }}
+                            disabled={suggestLoading || globalTags.length === 0}
+                            loading={suggestLoading}
+                            aria-label="Suggest tags with Opal"
+                          />
+                        </Tooltip>
+                      }
                     />
                   </Box>
                 </PopoverTrigger>
-                <PopoverContent 
-                  side="bottom" 
+                <PopoverContent
+                  side="bottom"
                   sideOffset={4}
                   align="start"
                   style={{ width: "var(--radix-popover-trigger-width)" }}
@@ -346,19 +584,19 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
                   <Box
                     display="flex"
                     flexDirection="column"
-                    gap="2"
-                    p="4"
+                    gap="0"
+                    py="2"
                     style={{ maxHeight: "200px" }}
                     overflow="auto"
                   >
-                    {autocompleteOptions.map((option, index) => (
+                    {autocompleteOptions.map((option: { value: string; label: string; isSelected: boolean }, index: number) => (
                       <Box
                         key={option.value}
                         display="flex"
                         alignItems="center"
                         gap="8"
-                        px="12"
-                        py="8"
+                        px="8"
+                        py="6"
                         rounded="sm"
                         cursor="pointer"
                         transition="colors"
@@ -368,10 +606,9 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
                         onMouseLeave={() => setHoveredIndex(null)}
                       >
                         {option.isSelected && (
-                          <IconCheck size={16} color="var(--ax-colors-fg-secondary)" />
+                          <IconCheck size={14} style={{ flexShrink: 0 }} />
                         )}
-                        {!option.isSelected && <Box w="16" />}
-                        <Text fontSize="sm" color="fg.default">
+                        <Text fontSize="sm" color="fg.default" style={{ marginLeft: option.isSelected ? 0 : undefined }}>
                           {option.label}
                         </Text>
                       </Box>
@@ -379,6 +616,345 @@ export default function DetailsPane({ content, selectedIds, allContent, onClose 
                   </Box>
                 </PopoverContent>
               </Popover>
+              {suggestError && (
+                <Text fontSize="xs" color="fg.error">
+                  {suggestError}
+                </Text>
+              )}
+              {suggestEmpty && !suggestLoading && (
+                <Text fontSize="xs" color="fg.secondary">
+                  No related tags found for this content.
+                </Text>
+              )}
+              {suggestLoading && (
+                <Box display="flex" flexDirection="column" gap="4">
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Suggested
+                  </Text>
+                  <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton
+                        key={i}
+                        h="24"
+                        style={{ width: `${60 + i * 24}px`, borderRadius: '4px' }}
+                        className="opal-skeleton-shimmer"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              {!suggestLoading && suggestedSlugs.length > 0 && (
+                <Box display="flex" flexDirection="column" gap="4">
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Suggested
+                  </Text>
+                  <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                    {suggestedSlugs.map((slug) => (
+                      <Badge
+                        key={slug}
+                        variant="subtle"
+                        style={{
+                          backgroundColor: "var(--ax-colors-bg-accent-subtle)",
+                          color: "var(--ax-colors-fg-accent)",
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap="4">
+                          <span>{getDisplayName(slug)}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddSuggestedTag(slug)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              lineHeight: 1,
+                              color: "inherit",
+                            }}
+                            aria-label={`Add ${getDisplayName(slug)}`}
+                          >
+                            +
+                          </button>
+                        </Box>
+                      </Badge>
+                    ))}
+                    <Button
+                      appearance="subtle"
+                      size="sm"
+                      onClick={handleAddAllSuggested}
+                      aria-label="Add all suggested tags"
+                    >
+                      Add all
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+
+              <Box display="flex" flexDirection="column" gap="8">
+                {suggestedSlugs.length > 0 && tags.length > 0 && (
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Existing
+                  </Text>
+                )}
+                <Box display="flex" flexWrap="wrap" gap="8">
+                  {visibleTags.map((slug) => (
+                    <Badge key={slug} intent="neutral">
+                      <Box display="flex" alignItems="center" gap="4">
+                        <span>{getDisplayName(slug)}</span>
+                        <button
+                          onClick={() => handleRemoveTag(slug)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: "0",
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            lineHeight: "1",
+                            color: "inherit",
+                          }}
+                          aria-label={`Remove tag ${getDisplayName(slug)}`}
+                        >
+                          ×
+                        </button>
+                      </Box>
+                    </Badge>
+                  ))}
+                </Box>
+                {hasMoreTags && (
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    onClick={() => setTagsExpanded(!tagsExpanded)}
+                    aria-expanded={tagsExpanded}
+                  >
+                    {tagsExpanded ? "Show less" : `Show ${hiddenCount} more`}
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          </DisclosureContent>
+        </Disclosure>
+
+        {/* Categories */}
+        <Disclosure defaultOpen>
+          <DisclosureTrigger chevronPosition="start">
+            <Text asChild fontSize="sm" fontWeight="600" color="fg.default">
+              <span>Categories</span>
+            </Text>
+          </DisclosureTrigger>
+          <DisclosureContent asChild>
+            <Box
+              display="flex"
+              flexDirection="column"
+              gap="8"
+              mt="8"
+              style={{ paddingLeft: "20px" }}
+            >
+              <Popover
+                open={newCategory.length > 0 && categoryAutocompleteOptions.length > 0}
+                onOpenChange={() => {}}
+              >
+                <PopoverTrigger asChild>
+                  <Box>
+                    <Input
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter" && categoryAutocompleteOptions.length > 0) {
+                          handleAddCategory(categoryAutocompleteOptions[0].value);
+                        }
+                      }}
+                      placeholder="Search..."
+                      size="md"
+                      addonAfter={
+                        <Tooltip content="Generate category suggestions for this content using Opal">
+                          <Button
+                            appearance="default-opal"
+                            size="sm"
+                            rounded="sm"
+                            px="8"
+                            className="opalGenerateButton"
+                            icon={<IconSparkles />}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleSuggestCategories();
+                            }}
+                            disabled={suggestCategoriesLoading || globalCategories.length === 0}
+                            loading={suggestCategoriesLoading}
+                            aria-label="Suggest categories with Opal"
+                          />
+                        </Tooltip>
+                      }
+                    />
+                  </Box>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="bottom"
+                  sideOffset={4}
+                  align="start"
+                  style={{ width: "var(--radix-popover-trigger-width)" }}
+                  onOpenAutoFocus={(e) => e.preventDefault()}
+                  onCloseAutoFocus={(e) => e.preventDefault()}
+                >
+                  <Box
+                    display="flex"
+                    flexDirection="column"
+                    gap="0"
+                    py="2"
+                    style={{ maxHeight: "200px" }}
+                    overflow="auto"
+                  >
+                    {categoryAutocompleteOptions.map((option: { value: string; label: string; isSelected: boolean }, index: number) => (
+                      <Box
+                        key={option.value}
+                        display="flex"
+                        alignItems="center"
+                        gap="8"
+                        px="8"
+                        py="6"
+                        rounded="sm"
+                        cursor="pointer"
+                        transition="colors"
+                        bg={categoriesHoveredIndex === index ? "bg.secondary" : "transparent"}
+                        onClick={() => handleAddCategory(option.value)}
+                        onMouseEnter={() => setCategoriesHoveredIndex(index)}
+                        onMouseLeave={() => setCategoriesHoveredIndex(null)}
+                      >
+                        {option.isSelected && (
+                          <IconCheck size={14} style={{ flexShrink: 0 }} />
+                        )}
+                        <Text fontSize="sm" color="fg.default" style={{ marginLeft: option.isSelected ? 0 : undefined }}>
+                          {option.label}
+                        </Text>
+                      </Box>
+                    ))}
+                  </Box>
+                </PopoverContent>
+              </Popover>
+              {suggestCategoryError && (
+                <Text fontSize="xs" color="fg.error">
+                  {suggestCategoryError}
+                </Text>
+              )}
+              {suggestCategoryEmpty && !suggestCategoriesLoading && (
+                <Text fontSize="xs" color="fg.secondary">
+                  No related categories found for this content.
+                </Text>
+              )}
+              {suggestCategoriesLoading && (
+                <Box display="flex" flexDirection="column" gap="4">
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Suggested
+                  </Text>
+                  <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                    {[1, 2, 3, 4].map((i) => (
+                      <Skeleton
+                        key={i}
+                        h="24"
+                        style={{ width: `${60 + i * 24}px`, borderRadius: "4px" }}
+                        className="opal-skeleton-shimmer"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+              {!suggestCategoriesLoading && suggestedCategorySlugs.length > 0 && (
+                <Box display="flex" flexDirection="column" gap="4">
+                  <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                    Suggested
+                  </Text>
+                  <Box display="flex" flexWrap="wrap" gap="4" alignItems="center">
+                    {suggestedCategorySlugs.map((slug) => (
+                      <Badge
+                        key={slug}
+                        variant="subtle"
+                        style={{
+                          backgroundColor: "var(--ax-colors-bg-accent-subtle)",
+                          color: "var(--ax-colors-fg-accent)",
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap="4">
+                          <span>{categorySlugToDisplayName(slug)}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddSuggestedCategory(slug)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              padding: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              lineHeight: 1,
+                              color: "inherit",
+                            }}
+                            aria-label={`Add ${categorySlugToDisplayName(slug)}`}
+                          >
+                            +
+                          </button>
+                        </Box>
+                      </Badge>
+                    ))}
+                    <Button
+                      appearance="subtle"
+                      size="sm"
+                      onClick={handleAddAllSuggestedCategories}
+                      aria-label="Add all suggested categories"
+                    >
+                      Add all
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+
+              <Box display="flex" flexDirection="column" gap="8">
+                <Box display="flex" flexWrap="wrap" gap="8">
+                  {visibleCategories.map((slug) => (
+                    <Badge key={slug} intent="neutral">
+                      <Box display="flex" alignItems="center" gap="4">
+                        <span>{categorySlugToDisplayName(slug)}</span>
+                        <button
+                          onClick={() => handleRemoveCategory(slug)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: "0",
+                            display: "flex",
+                            alignItems: "center",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            lineHeight: "1",
+                            color: "inherit",
+                          }}
+                          aria-label={`Remove category ${categorySlugToDisplayName(slug)}`}
+                        >
+                          ×
+                        </button>
+                      </Box>
+                    </Badge>
+                  ))}
+                </Box>
+                {hasMoreCategories && (
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    onClick={() => setCategoriesExpanded(!categoriesExpanded)}
+                    aria-expanded={categoriesExpanded}
+                  >
+                    {categoriesExpanded ? "Show less" : `Show ${hiddenCategoriesCount} more`}
+                  </Button>
+                )}
+              </Box>
             </Box>
           </DisclosureContent>
         </Disclosure>

@@ -10,6 +10,7 @@ import {
     Menu,
     MenuTrigger,
     MenuContent,
+    LabelMenuButton,
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
@@ -22,102 +23,109 @@ import {
     IconChevronDown,
 } from "@tabler/icons-react";
 import { IconAgent, IconCodeBranch, IconFileImport } from "@optimizely/axiom-icons";
+import { Input } from "@/app/components/Input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const agents = [
     {
+        id: "content-localizer",
         icon: <IconAgent />,
         url: "/opal/agents/setup?mode=edit",
         name: "Content Localizer",
         handle: "@content_localizer",
         creator: { name: "User Name", avatar: "/avatars/user.png" }, // Mock avatar
-        category: "Category B",
+        category: "Marketing",
         categoryColor: "primary",
-        description: "Localize your content with specific regional context.",
+        description: "Localize your content with specific regional context while maintaining brand voice.",
         activity: "1 Run",
         lastModified: { date: "Dec 1, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "heatmap-analysis",
         icon: <IconAgent />,
         url: "/opal/agents/setup?mode=edit",
         name: "Heatmap Analysis",
         handle: "@heatmap_analysis",
         creator: { name: "Optimizely", type: "system" },
-        category: "Option A",
+        category: "Optimization",
         categoryColor: "primary",
         description:
-            "Transforms a provided heatmap image and url into precise, tailored test ideas. It eliminates the burden of manual analysis, converting c...",
+            "Transforms a provided heatmap image and url into precise, tailored test ideas. It eliminates the burden of manual analysis, converting data into insights.",
         activity: "3 Runs",
         lastModified: { date: "Sep 15, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "experiment-planning",
         icon: <IconAgent />,
         url: "/opal/agents/setup?mode=edit",
         name: "Experiment Planning Agent",
         handle: "@test_planning",
         creator: { name: "Optimizely", type: "system" },
-        category: "Option B",
+        category: "Product",
         categoryColor: "primary",
         description:
-            "Transforms your raw ideas into a fully-formed test plan, complete with suggested hypotheses, key metrics, identified risks, an...",
+            "Transforms your raw ideas into a fully-formed test plan, complete with suggested hypotheses, key metrics, identified risks, and more.",
         activity: "6 Runs",
         lastModified: { date: "Jul 29, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "geo-recommendations",
         icon: <IconCodeBranch />,
         url: "/opal/agents/workflow",
         name: "GEO Recommendations",
         handle: "@opti_geo_recommendati...",
         tag: "Updated",
         creator: { name: "Optimizely", type: "system" },
-        category: "Option C",
+        category: "SEO",
         categoryColor: "primary",
         description:
-            "Audits webpages for LLM discoverability, retrievability, and understandability to deliver actionable recommendations to optimize co...",
+            "Audits webpages for LLM discoverability, retrievability, and understandability to deliver actionable recommendations to optimize conversion.",
         activity: "4 Runs",
         lastModified: { date: "Oct 10, 2025", user: "John Smith" },
         status: "Inactive",
     },
     {
+        id: "resource-manager",
         icon: <IconCodeBranch />,
         url: "/opal/agents/workflow",
         name: "Resource Manager",
         handle: "@rm",
         creator: { name: "Optimizely", type: "system" },
-        category: "Category B",
+        category: "Project Mgmt",
         categoryColor: "primary",
-        description: "Look up available team members for task assignment.",
+        description: "Look up available team members for task assignment based on workload and expertise.",
         activity: "7 Runs",
         lastModified: { date: "Jul 30, 2025", user: "John Smith" },
         status: "Inactive",
     },
     {
+        id: "seo-keyword-research",
         icon: <IconCodeBranch />,
         url: "/opal/agents/workflow",
         name: "SEO Keyword Research",
         handle: "@seo_keyword_resaerch",
         creator: { name: "Optimizely", type: "system" },
-        category: "Category C",
+        category: "Marketing",
         categoryColor: "primary",
         description:
-            "Takes a topic, leverages data from Idea Lab and the broader web, and returns a curated list of keywords designed to maximize conte...",
+            "Takes a topic, leverages data from Idea Lab and the broader web, and returns a curated list of keywords designed to maximize content reach.",
         activity: "2 Runs",
         lastModified: { date: "Nov 3, 2025", user: "John Smith" },
         status: "Active",
     },
     {
+        id: "meeting-synthesizer",
         icon: <IconAgent />,
-        url: "/opal/agents/setup?mode=edit",
-        name: "Synthesize Agent",
+        name: "Meeting Synthesizer",
         handle: "@meeting_synthesizer",
         creator: { name: "User Name", avatar: "/avatars/user.png" },
-        category: "All Products",
+        category: "Productivity",
         categoryColor: "primary",
-        description: "Summarize your meeting.",
+        description: "Summarize your meeting transcripts into actionable items and key takeaways.",
         activity: "5 Runs",
         lastModified: { date: "Aug 20, 2025", user: "John Smith" },
         status: "Inactive",
@@ -131,15 +139,9 @@ export default function AgentsPage() {
     return (
         <Box p="24" display="flex" flexDirection="column" gap="24">
             {/* Header */}
-            <Box>
-                <Heading level="2">Agents</Heading>
-                <Box display="flex" gap="8" alignItems="center" mt="4">
-                    <Text color="fg.secondary">
-                        Empower your marketing team by customizing Opal agents to meet your
-                        specific needs.
-                    </Text>
-                    <Link href="#">Learn more.</Link>
-                </Box>
+            <Box display="flex" flexDirection="column" gap="8">
+                <Heading level="1" fontSize="2xl">Agents</Heading>
+                <Text color="fg.secondary">Empower your marketing team by customizing Opal agents to meet your specific needs.</Text>
             </Box>
 
             {/* Tabs */}
@@ -166,42 +168,21 @@ export default function AgentsPage() {
 
             {/* Toolbar */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Box display="flex" gap="12">
-                    <Box style={{ width: "240px", position: "relative" }}>
-                        <Box style={{ position: "absolute", left: "8px", top: "8px", zIndex: 20 }} color="fg.tertiary">
-                            <IconSearch size={16} />
-                        </Box>
-                        <Box asChild>
-                            <input
-                                placeholder="Enter name or description"
-                                style={{
-                                    width: "100%",
-                                    paddingLeft: "32px",
-                                    paddingRight: "12px",
-                                    paddingTop: "6px",
-                                    paddingBottom: "6px",
-                                    borderRadius: "6px",
-                                    border: "1px solid var(--ax-colors-border-default)",
-                                    outline: "none",
-                                    fontSize: "14px",
-                                    height: "32px",
-                                    backgroundColor: "var(--ax-colors-bg-default)"
-                                }}
-                            />
-                        </Box>
+                <Box display="flex" gap="12" alignItems="center">
+                    <Box className="w-[300px]">
+                        <Input placeholder="Enter name or description" />
                     </Box>
 
                     {["Type", "Category", "Created by", "Modified by"].map((filter) => (
-                        <Menu key={filter} options={[{ label: "All" }]}>
+                        <Menu
+                            key={filter}
+                            placeholder={`Search ${filter.toLowerCase()}...`}
+                            options={[{ label: "All" }]}
+                        >
                             <MenuTrigger asChild>
-                                <Button appearance="subtle" iconPosition="end" icon={<IconChevronDown />} className="menu-label-button">
-                                    <Box display="flex" flexDirection="column" alignItems="start" textAlign="start">
-                                        <Text fontSize="xs" color="fg.tertiary">
-                                            {filter}
-                                        </Text>
-                                        <Text fontSize="sm">All</Text>
-                                    </Box>
-                                </Button>
+                                <LabelMenuButton label={filter} h="40">
+                                    All
+                                </LabelMenuButton>
                             </MenuTrigger>
                             <MenuContent />
                         </Menu>
@@ -261,7 +242,7 @@ export default function AgentsPage() {
                 </thead>
                 <tbody>
                     {agents.map((agent, index) => (
-                        <Tr key={index} url={agent.url}>
+                        <Tr key={index} url={`/opal/agents/setup?id=${agent.id}&mode=edit`}>
                             <Td>
                                 <Box color="fg.secondary">{agent.icon}</Box>
                             </Td>

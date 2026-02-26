@@ -2,64 +2,58 @@
 
 import React, { useEffect, useRef } from "react";
 
-// V3: dots are placed in globe formation (concentric rings, same size as V1/V2).
-//     They appear in spiral-sweep order (ring by ring, rotating), then dissolve
-//     from the starting point (center-out, same direction as appearance).
+// V3: same ring positions as V1/V2, spiral appearance/dissolve order.
+// Each dot reappears in spiral order during the overlap window of the same
+// cycle, so the next fill sweeps outward continuously without a reset gap.
 
 const SIZE = 20;
 const CENTER = SIZE / 2;
+const MAX_DIST = 8.3;
 
-const TOTAL = 2800;
-const FILL_WINDOW = 900;     // total time for all dots to appear
-const HOLD_UNTIL = 1800;     // when dissolve begins
-const DISSOLVE_WINDOW = 700; // total time for all dots to dissolve
-const APPEAR_FADE = 130;
-const DISAPPEAR_FADE = 130;
+const TOTAL = 1500;
+const HOLD_UNTIL = 300;
+const DISSOLVE_WINDOW = 700;
+const DISAPPEAR_FADE = 160;
+const APPEAR_FADE = 160;
+const LOOP_OVERLAP = 550;
+const OVERLAP_FILL_WINDOW = 700;
+const MIN_GAP = 30;
 
-const DOT_R = 0.9; // uniform dot size
-
-// Build dots in concentric rings — same globe layout as OpalLoader (V1/V2)
-const RING_DEFS = [
-  { count: 1, radius: 0 },    // center dot
-  { count: 5, radius: 2.8 },  // ring 1
-  { count: 9, radius: 5.5 },  // ring 2
-  { count: 12, radius: 8.3 },  // ring 3
-];
-
-// Assign an order index that traces a spiral sweep:
-// We sort dots by (ringIndex + angle / (2π)) so the sweep goes
-// ring-0 → ring-1 (0°→360°) → ring-2 (0°→360°) → ring-3 (0°→360°)
-// giving a continuous outward spiral-like trace.
-const GLOBE_DOTS = (() => {
-  const result: { cx: number; cy: number; r: number; order: number }[] = [];
-  let orderIdx = 0;
-
-  for (let ri = 0; ri < RING_DEFS.length; ri++) {
-    const { count, radius } = RING_DEFS[ri];
-    const offset = ri % 2 === 0 ? 0 : 0.3; // slight phase offset per ring
-    for (let j = 0; j < count; j++) {
-      const angle = radius === 0 ? 0 : (j / count) * Math.PI * 2 + offset - Math.PI / 2;
-      result.push({
-        cx: radius === 0 ? CENTER : CENTER + radius * Math.cos(angle),
-        cy: radius === 0 ? CENTER : CENTER + radius * Math.sin(angle),
-        r: DOT_R,
-        order: orderIdx++,
-      });
-    }
+// Same ring layout as V1/V2
+const BASE_DOTS = (() => {
+  const dots: { cx: number; cy: number; r: number; dn: number }[] = [];
+  dots.push({ cx: CENTER, cy: CENTER, r: 0.9, dn: 0 });
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    dots.push({ cx: CENTER + 2.8 * Math.cos(a), cy: CENTER + 2.8 * Math.sin(a), r: 0.9, dn: 2.8 / MAX_DIST });
   }
-
-  return result;
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2 + 0.3;
+    dots.push({ cx: CENTER + 5.5 * Math.cos(a), cy: CENTER + 5.5 * Math.sin(a), r: 0.9, dn: 5.5 / MAX_DIST });
+  }
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    dots.push({ cx: CENTER + 8.3 * Math.cos(a), cy: CENTER + 8.3 * Math.sin(a), r: 0.9, dn: 1 });
+  }
+  return dots;
 })();
 
-const TOTAL_DOTS = GLOBE_DOTS.length; // 1 + 5 + 9 + 12 = 27
+// Spiral order: angle fraction + ring fraction × weight → normalised [0, 1]
+const DOTS = (() => {
+  const withOrder = BASE_DOTS.map(dot => {
+    let theta = Math.atan2(dot.cy - CENTER, dot.cx - CENTER);
+    if (theta < 0) theta += Math.PI * 2;
+    const spiralT = theta / (Math.PI * 2) + dot.dn * 0.75;
+    return { ...dot, spiralT };
+  });
+  const max = Math.max(...withOrder.map(d => d.spiralT));
+  const min = Math.min(...withOrder.map(d => d.spiralT));
+  return withOrder.map(d => ({ ...d, spiralOrder: (d.spiralT - min) / (max - min) }));
+})();
 
-interface OpalLoaderV3Props {
-  size?: number;
-  color?: string;
-  className?: string;
-}
+interface Props { size?: number; color?: string; className?: string; }
 
-export function OpalLoaderV3({ size = 20, color = "currentColor", className }: OpalLoaderV3Props) {
+export function OpalLoaderV3({ size = 20, color = "currentColor", className }: Props) {
   const dotRefs = useRef<(SVGCircleElement | null)[]>([]);
 
   useEffect(() => {
@@ -68,56 +62,37 @@ export function OpalLoaderV3({ size = 20, color = "currentColor", className }: O
 
     dotRefs.current.forEach((el, i) => {
       if (!el) return;
-      const { order } = GLOBE_DOTS[i];
-      // normalized 0→1 across all dots in spiral order
-      const t = order / (TOTAL_DOTS - 1);
+      const { spiralOrder } = DOTS[i];
 
-      // Appear: spiral outward (center first, outer last)
-      const appearAt = t * FILL_WINDOW;
-      // Dissolve: same direction — center first (t=0 → HOLD_UNTIL), outer last
-      const disappearAt = HOLD_UNTIL + t * DISSOLVE_WINDOW;
+      const disappearAt = HOLD_UNTIL + spiralOrder * DISSOLVE_WINDOW;
+      const dissolveEnd = disappearAt + DISAPPEAR_FADE;
 
+      // Reappear in spiral order after this dot's dissolve finishes.
+      const overlapStart = Math.max(dissolveEnd + MIN_GAP, LOOP_OVERLAP + spiralOrder * OVERLAP_FILL_WINDOW);
+      const overlapEnd = overlapStart + APPEAR_FADE;
+
+      // All dots start fully visible at offset:0 (from previous cycle's overlap).
       const keyframes: Keyframe[] = [
-        { opacity: 0, offset: 0 },
-        ...(appearAt > 0 ? [{ opacity: 0, offset: off(appearAt) }] : []),
-        { opacity: 1, offset: off(appearAt + APPEAR_FADE) },
-        { opacity: 1, offset: off(disappearAt) },
-        { opacity: 0, offset: off(disappearAt + DISAPPEAR_FADE) },
-        { opacity: 0, offset: 1 },
+        { opacity: 1, offset: 0 },
+        { opacity: 1, offset: off(disappearAt) },   // hold
+        { opacity: 0, offset: off(dissolveEnd) },   // dissolve out
+        { opacity: 0, offset: off(overlapStart) },  // wait (gap)
+        { opacity: 1, offset: off(overlapEnd) },    // reappear (next fill wave)
+        { opacity: 1, offset: 1 },                  // stay visible → seamless loop
       ];
 
-      const anim = el.animate(keyframes, {
-        duration: TOTAL,
-        iterations: Infinity,
-        easing: "ease-in-out",
-      });
-
-      animations.push(anim);
+      animations.push(el.animate(keyframes, { duration: TOTAL, iterations: Infinity, easing: "ease-in-out" }));
     });
 
-    return () => animations.forEach((a) => a.cancel());
+    return () => animations.forEach(a => a.cancel());
   }, []);
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${SIZE} ${SIZE}`}
-      fill="none"
-      aria-label="Loading"
-      role="status"
-      className={className}
-    >
-      {GLOBE_DOTS.map((dot, i) => (
-        <circle
-          key={i}
-          ref={(el) => { dotRefs.current[i] = el; }}
-          cx={dot.cx}
-          cy={dot.cy}
-          r={dot.r}
-          fill={color}
-          style={{ opacity: 0 }}
-        />
+    <svg width={size} height={size} viewBox={`0 0 ${SIZE} ${SIZE}`} fill="none" aria-label="Loading" role="status" className={className}>
+      {DOTS.map((dot, i) => (
+        <circle key={i} ref={el => { dotRefs.current[i] = el; }}
+          cx={dot.cx} cy={dot.cy} r={dot.r} fill={color}
+          style={{ opacity: 0 }} />
       ))}
     </svg>
   );

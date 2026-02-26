@@ -1,8 +1,8 @@
-import { ReactNode, isValidElement } from "react";
-import { Badge, Box, Avatar, Tooltip } from "@optiaxiom/react";
-import { Text } from "./Text";
-import { Button } from "./Button";
-import { IconDots as IconMenu } from "@tabler/icons-react";
+import {ReactNode, isValidElement} from "react";
+import {Badge, Box, Avatar, Tooltip} from "@optiaxiom/react";
+import {Text} from "./Text";
+import {Button} from "./Button";
+import {IconDots as IconMenu} from "@tabler/icons-react";
 
 export const Table = ({
 	children,
@@ -27,7 +27,7 @@ export const Table = ({
 	);
 };
 
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
 export const Tr = ({
 	children,
 	url,
@@ -53,8 +53,8 @@ export const Tr = ({
 				"relative" +
 				(url || onClick
 					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
-					: "")
-				+ (className ? ` ${className}` : "")
+					: "") +
+				(className ? ` ${className}` : "")
 			}
 			style={style}
 		>
@@ -62,7 +62,19 @@ export const Tr = ({
 		</tr>
 	);
 };
-export const Th = ({ children, align, style, className }: { children?: ReactNode; align?: any; style?: React.CSSProperties; className?: string }) => {
+export const Th = ({
+	children,
+	align,
+	style,
+	className,
+	onClick,
+}: {
+	children?: ReactNode;
+	align?: any;
+	style?: React.CSSProperties;
+	className?: string;
+	onClick?: () => void;
+}) => {
 	return (
 		<th
 			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${className || ""}`}
@@ -70,6 +82,7 @@ export const Th = ({ children, align, style, className }: { children?: ReactNode
 				textAlign: align,
 				...style,
 			}}
+			onClick={onClick}
 		>
 			{children}
 		</th>
@@ -107,17 +120,10 @@ export const Td = ({
 					{isValidElement(children) && !Array.isArray(children) ? (
 						children
 					) : (
-						<Box
-							color="fg.default"
-						>
-							{children}
-						</Box>
+						<Box color="fg.default">{children}</Box>
 					)}
 					{description && (
-						<Text
-							fontSize="sm"
-							color="fg.secondary"
-						>
+						<Text fontSize="sm" color="fg.secondary">
 							{description}
 						</Text>
 					)}
@@ -125,36 +131,25 @@ export const Td = ({
 			)}
 			{type === "header" && (
 				<>
-					<Text
-						asChild
-						color="fg.default"
-						fontWeight="500"
-					>
+					<Text asChild color="fg.default" fontWeight="500">
 						<span>{children}</span>
 					</Text>
 					{description && (
-						<Text
-							fontSize="sm"
-							color="fg.tertiary"
-						>
+						<Text fontSize="sm" color="fg.tertiary">
 							{description}
 						</Text>
 					)}
 				</>
 			)}
 			{type === "badge" && (
-				<Box style={{ height: "20px", marginTop: "-4px" }}>
+				<Box style={{height: "20px", marginTop: "-4px"}}>
 					<Badge intent={data}>{children}</Badge>
 				</Box>
 			)}
 			{type === "avatar" && (
-				<Box style={{ height: "20px", marginTop: "-6px" }}>
+				<Box style={{height: "20px", marginTop: "-6px"}}>
 					<Tooltip content={children}>
-						<Avatar
-							src={data}
-							size="md"
-							name={children as string}
-						/>
+						<Avatar src={data} size="md" name={children as string} />
 					</Tooltip>
 				</Box>
 			)}
@@ -164,7 +159,7 @@ export const Td = ({
 					display="flex"
 					alignItems="center"
 					justifyContent="end"
-					style={{ height: "20px" }}
+					style={{height: "20px"}}
 				>
 					{children ? (
 						children
@@ -180,10 +175,7 @@ export const Td = ({
 				</Box>
 			)}
 			{type === "numeric" && (
-				<Text
-					color="fg.default"
-					textAlign="end"
-				>
+				<Text color="fg.default" textAlign="end">
 					{children}
 				</Text>
 			)}
