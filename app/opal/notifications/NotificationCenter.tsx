@@ -17,6 +17,7 @@ import {
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
     IconClock,
+    IconCheck,
     IconChecks,
     IconTrash,
     IconBellOff,
@@ -24,22 +25,11 @@ import {
     IconLayoutGrid,
     IconList,
     IconLayoutList,
-    IconLoader2,
-    IconUsers,
-    IconPlug,
-    IconSpeakerphone,
 } from "@tabler/icons-react";
 import {
     IconEllipsisStroke,
     IconCircleExclamation,
     IconTriangleExclamation,
-    IconSpinner,
-    IconCircleCheck,
-    IconFileLines,
-    IconCheck,
-    IconEnvelope,
-    IconXmark,
-    IconAgent,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -117,10 +107,10 @@ function CategoryBadge({ category }: { category: Notification["category"] }) {
     const colorMap: Record<string, { intent: string; variant: "subtle" | "strong" }> = {
         agent_execution: { intent: "primary", variant: "subtle" },
         guardrail: { intent: "warning", variant: "subtle" },
-        directory: { intent: "primary", variant: "subtle" },
-        tools: { intent: "neutral", variant: "strong" },
+        directory: { intent: "information", variant: "subtle" },
+        tools: { intent: "success", variant: "subtle" },
         system: { intent: "neutral", variant: "subtle" },
-        collaboration: { intent: "information", variant: "subtle" },
+        collaboration: { intent: "success", variant: "subtle" },
     };
     const config = colorMap[category] || { intent: "neutral", variant: "subtle" };
     return (
@@ -142,6 +132,7 @@ const CATEGORY_OPTIONS = [
     "tools",
     "collaboration",
     "system",
+    "collaboration", // Fixed duplicate
 ];
 
 const STATUS_OPTIONS = ["All", "Unread", "Read"];
@@ -170,7 +161,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
     const [viewMode, setViewMode] = useState<"list" | "card" | "detailed">("detailed");
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [hoveredId, setHoveredId] = useState<string | null>(null);
 
     // Simulate loading
     useEffect(() => {
@@ -290,7 +280,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         setSelectedIds(new Set());
     }, [selectedIds]);
 
-    const handleBulkArchive = useCallback(() => {
+    const handleBulkDismiss = useCallback(() => {
         setNotifications((prev) => prev.filter((n) => !selectedIds.has(n.id)));
         setSelectedIds(new Set());
     }, [selectedIds]);
@@ -303,52 +293,13 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
     // Status icon
     const getStatusIcon = (n: Notification) => {
-        // Type-specific icons take priority
-        switch (n.type) {
-            case "agent_execution_chat":
-            case "agent_execution_autonomous":
-                return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
-            case "agent_execution_failed":
-                return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
-            case "agent_execution_long_running":
-                return <IconLoader2 size={16} color="var(--ax-colors-fg-accent)" className="animate-spin" />;
-            case "directory_new_agent":
-            case "directory_update_available":
-                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
-            case "directory_install_request":
-            case "approval_required":
-                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
-            case "tools_new_available":
-                return <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
-            case "tools_auth_required":
-            case "tools_auth_expired":
-                return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
-            case "tools_deprecated":
-                return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
-            case "collaboration_agent_modified":
-                return <IconUsers size={16} color="var(--ax-colors-fg-information)" />;
-            case "collaboration_agent_activated":
-                return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
-            case "collaboration_agent_deactivated":
-                return <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
-            case "system_announcement":
-            case "system_maintenance":
-                return <IconSpeakerphone size={16} color="var(--ax-colors-fg-information)" />;
-        }
-        // Guardrail status fallback
         if (n.executionStatus === "failed" || n.guardrailStatus === "terminated" || n.guardrailStatus === "failed") {
             return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
         }
-        if (n.guardrailStatus === "triggered") {
-            return <IconSpinner style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} className="animate-spin" />;
-        }
-        if (n.guardrailStatus === "warning") {
+        if (n.guardrailStatus === "warning" || n.guardrailStatus === "triggered") {
             return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
         }
-        if (n.executionStatus === "success" || n.guardrailStatus === "success") {
-            return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
-        }
-        return <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+        return null;
     };
 
     // ── Loading Skeleton ────────────────────────────────────────────────────
@@ -548,8 +499,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     alignItems="center"
                     gap="12"
                     p="12"
-                    bg="bg.secondary"
+                    bg="bg.information.subtle"
                     rounded="md"
+                    border="1"
+                    borderColor="border.default"
                 >
                     <Text fontWeight="600" fontSize="sm">
                         {selectedIds.size} selected
@@ -566,7 +519,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconEnvelope size={14} />}
+                        icon={<IconBellOff size={14} />}
                         onClick={handleBulkMarkAsUnread}
                     >
                         Mark as unread
@@ -574,10 +527,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconInbox size={14} />}
-                        onClick={handleBulkArchive}
+                        icon={<IconTrash size={14} />}
+                        onClick={handleBulkDismiss}
                     >
-                        Archive
+                        Dismiss
                     </Button>
                 </Box>
             )}
@@ -665,8 +618,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     ? "var(--ax-colors-bg-secondary)"
                                                     : undefined,
                                         }}
-                                        onMouseEnter={() => setHoveredId(n.id)}
-                                        onMouseLeave={() => setHoveredId(null)}
                                     >
                                         <Td style={{ width: 40 }}>
                                             <Box onClick={(e) => e.stopPropagation()}>
@@ -685,7 +636,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                 <Box display="flex" alignItems="center" gap="8">
                                                     {getStatusIcon(n)}
                                                     <Box
-                                                        fontSize="md"
                                                         fontWeight={n.status === "unread" ? "600" : "400"}
                                                         color="fg.default"
                                                     >
@@ -712,7 +662,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                         </Td>
                                         <Td>
                                             <Box display="flex" flexDirection="column" gap="2">
-                                                <Text fontSize="xs" color="fg.default">
+                                                <Text fontSize="sm" color="fg.default">
                                                     {n.timestamp}
                                                 </Text>
                                                 <Text fontSize="xs" color="fg.tertiary">
@@ -738,22 +688,12 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                         </Td>
                                         <Td style={{ width: 40 }}>
                                             <Box onClick={(e) => e.stopPropagation()}>
-                                                {hoveredId === n.id ? (
-                                                    <Button
-                                                        appearance="subtle"
-                                                        icon={<IconInbox size={14} />}
-                                                        size="sm"
-                                                        aria-label="Archive"
-                                                        onClick={() => setNotifications(prev => prev.filter(x => x.id !== n.id))}
-                                                    />
-                                                ) : (
-                                                    <Button
-                                                        appearance="subtle"
-                                                        icon={<IconEllipsisStroke />}
-                                                        size="sm"
-                                                        aria-label="Options"
-                                                    />
-                                                )}
+                                                <Button
+                                                    appearance="subtle"
+                                                    icon={<IconEllipsisStroke />}
+                                                    size="sm"
+                                                    aria-label="Options"
+                                                />
                                             </Box>
                                         </Td>
                                     </Tr>
@@ -779,13 +719,14 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                             borderRadius: "8px",
                                         }}
                                     >
-                                        {isSelectionMode && (
-                                            <div onClick={(e: any) => { e.preventDefault(); e.stopPropagation(); toggleSelect(n.id); }} style={{ zIndex: 10, cursor: "pointer" }}>
-                                                <div style={{ pointerEvents: "none" }}>
-                                                    <Checkbox checked={selectedIds.has(n.id)} />
-                                                </div>
-                                            </div>
-                                        )}
+                                        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }} onClick={(e: any) => e.stopPropagation()}>
+                                            {isSelectionMode && (
+                                                <Checkbox
+                                                    checked={selectedIds.has(n.id)}
+                                                    onCheckedChange={() => toggleSelect(n.id)}
+                                                />
+                                            )}
+                                        </div>
                                         {/* Content column */}
                                         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
                                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -793,17 +734,17 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {getStatusIcon(n)}
                                                     <CategoryBadge category={n.category} />
                                                 </div>
-                                                <Text fontSize="md" fontWeight={n.status === "unread" ? "600" : "500"} className="line-clamp-1">
+                                                <div style={{ fontWeight: n.status === "unread" ? "600" : "500" }} className="line-clamp-1">
                                                     {n.title}
-                                                </Text>
+                                                </div>
                                             </div>
-                                            <Text fontSize="sm" color="fg.secondary" style={{ minHeight: "40px" }} className="line-clamp-2">
+                                            <div style={{ fontSize: "14px", color: "var(--ax-colors-fg-secondary)", minHeight: "40px" }} className="line-clamp-2">
                                                 {n.message}
-                                            </Text>
+                                            </div>
                                             <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                <Text fontSize="xs" color="fg.tertiary" style={{ margin: 0 }}>
+                                                <p style={{ fontSize: "12px", color: "var(--ax-colors-fg-tertiary)", margin: 0 }}>
                                                     {n.date}, {n.timestamp}
-                                                </Text>
+                                                </p>
                                                 {n.actionRequired && (
                                                     <div>
                                                         <span style={{
@@ -883,17 +824,18 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     gap="16"
                                                     alignItems="start"
                                                 >
-                                                    {isSelectionMode && (
-                                                        <div onClick={(e: any) => { e.preventDefault(); e.stopPropagation(); toggleSelect(n.id); }} style={{ paddingTop: 2, zIndex: 10, cursor: "pointer" }}>
-                                                            <div style={{ pointerEvents: "none" }}>
-                                                                <Checkbox checked={selectedIds.has(n.id)} />
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                    <div style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }} onClick={(e: any) => e.stopPropagation()}>
+                                                        {isSelectionMode && (
+                                                            <Checkbox
+                                                                checked={selectedIds.has(n.id)}
+                                                                onCheckedChange={() => toggleSelect(n.id)}
+                                                            />
+                                                        )}
+                                                    </div>
 
                                                     {/* Status Icon */}
                                                     <Box style={{ flexShrink: 0 }} pt="4">
-                                                        {getStatusIcon(n)}
+                                                        {getStatusIcon(n) || <IconInbox style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />}
                                                     </Box>
 
                                                     {/* Content Column */}
@@ -920,11 +862,11 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {/* Meta Column */}
                                                     <Box display="flex" alignItems="center" gap="8" pt="6" style={{ flexShrink: 0 }}>
                                                         {n.actionRequired && (
-                                                            <Badge intent="warning" variant="subtle" className="whitespace-nowrap">
+                                                            <Badge intent="warning" variant="subtle" size="sm" className="whitespace-nowrap">
                                                                 Action Required
                                                             </Badge>
                                                         )}
-                                                        <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
+                                                        <Text fontSize="sm" color="fg.tertiary" className="whitespace-nowrap">
                                                             {n.timestamp}
                                                         </Text>
                                                         <Box style={{ width: 8, height: 8, flexShrink: 0 }}>
