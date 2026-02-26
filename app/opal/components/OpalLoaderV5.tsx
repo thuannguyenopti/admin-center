@@ -10,8 +10,8 @@ const SIZE = 20;
 const CENTER = SIZE / 2;
 const MAX_DIST = 8.3;
 
-const TOTAL = 1800; // extended to fit next-cycle pops for all dots
-const HOLD_UNTIL = 500; // ms until center starts dissolving
+const TOTAL = 1400; // 400ms shorter cycle for earlier loop
+const HOLD_UNTIL = 100; // ms until center starts dissolving (max nextPopSettle = 1370ms < 1400ms)
 const RING_SPREAD = 350;  // outer ring dissolves later by this much
 const JITTER = 320;  // per-dot random jitter within ring window
 const DISSOLVE_SNAP = 40;   // ms: snap from 1× to 3× (halfway opacity)
@@ -77,11 +77,11 @@ export function OpalLoaderV5({ size = 20, color = "currentColor", className }: P
         { opacity: 1, transform: "scale(1)", offset: 0 },
         { opacity: 1, transform: "scale(1)", offset: off(dissolveStart) },         // hold
         { opacity: 0.5, transform: "scale(3)", offset: off(dissolveStart + DISSOLVE_SNAP) }, // snap-expand
-        { opacity: 0, transform: "scale(5)", offset: off(dissolveEnd) },            // gone
-        { opacity: 0, transform: "scale(0.5)", offset: off(nextPopStart) },           // ready to pop
-        { opacity: 1, transform: "scale(1.4)", offset: off(nextPopPeak) },            // burst
-        { opacity: 1, transform: "scale(1)", offset: off(nextPopSettle) },          // settle
-        { opacity: 1, transform: "scale(1)", offset: 1 },                           // stay → seamless loop
+        { opacity: 0, transform: "scale(5)", offset: off(dissolveEnd) },           // gone
+        { opacity: 0, transform: "scale(0.5)", offset: off(nextPopStart) },        // ready to pop
+        { opacity: 1, transform: "scale(1.4)", offset: off(nextPopPeak) },         // burst
+        { opacity: 1, transform: "scale(1)", offset: off(nextPopSettle) },         // settle
+        { opacity: 1, transform: "scale(1)", offset: 1 },                          // stay → seamless loop
       ];
 
       animations.push(el.animate(keyframes, {
