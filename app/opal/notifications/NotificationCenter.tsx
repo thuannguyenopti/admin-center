@@ -170,6 +170,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
     const [viewMode, setViewMode] = useState<"list" | "card" | "detailed">("detailed");
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
 
     // Simulate loading
     useEffect(() => {
@@ -313,10 +314,10 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                 return <IconLoader2 size={16} color="var(--ax-colors-fg-accent)" className="animate-spin" />;
             case "directory_new_agent":
             case "directory_update_available":
-                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
             case "directory_install_request":
             case "approval_required":
-                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
             case "tools_new_available":
                 return <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
             case "tools_auth_required":
@@ -664,6 +665,8 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     ? "var(--ax-colors-bg-secondary)"
                                                     : undefined,
                                         }}
+                                        onMouseEnter={() => setHoveredId(n.id)}
+                                        onMouseLeave={() => setHoveredId(null)}
                                     >
                                         <Td style={{ width: 40 }}>
                                             <Box onClick={(e) => e.stopPropagation()}>
@@ -735,12 +738,22 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                         </Td>
                                         <Td style={{ width: 40 }}>
                                             <Box onClick={(e) => e.stopPropagation()}>
-                                                <Button
-                                                    appearance="subtle"
-                                                    icon={<IconEllipsisStroke />}
-                                                    size="sm"
-                                                    aria-label="Options"
-                                                />
+                                                {hoveredId === n.id ? (
+                                                    <Button
+                                                        appearance="subtle"
+                                                        icon={<IconInbox size={14} />}
+                                                        size="sm"
+                                                        aria-label="Archive"
+                                                        onClick={() => setNotifications(prev => prev.filter(x => x.id !== n.id))}
+                                                    />
+                                                ) : (
+                                                    <Button
+                                                        appearance="subtle"
+                                                        icon={<IconEllipsisStroke />}
+                                                        size="sm"
+                                                        aria-label="Options"
+                                                    />
+                                                )}
                                             </Box>
                                         </Td>
                                     </Tr>

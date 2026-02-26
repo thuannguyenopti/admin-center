@@ -1,11 +1,11 @@
 "use client";
 
-import { Box, Button, Text, Badge, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
+import { Box, Button, Text, Badge } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
 import { IconBell, IconX, IconSettings, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
 import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck, IconAgent } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
-import { mockNotifications, getUnreadCount, getCategoryLabel, type Notification } from "@/app/opal/notifications/mockData";
+import { mockNotifications, getUnreadCount, type Notification } from "@/app/opal/notifications/mockData";
 import { useLayout } from "@/app/context/LayoutContext";
 import NextLink from "next/link";
 
@@ -22,8 +22,8 @@ const UnreadIndicator = () => (
 );
 
 // Compact notification card for sidebar
-function CompactNotificationCard({ notification }: { notification: Notification }) {
-    const isUnread = notification.status === "unread";
+function CompactNotificationCard({ notification, onDismiss, readIds }: { notification: Notification; onDismiss: (id: string) => void; readIds: Set<string> }) {
+    const isUnread = notification.status === "unread" && !readIds.has(notification.id);
     const [isHovered, setIsHovered] = useState(false);
 
     // Status icon by notification type (matches Figma spec)
@@ -42,13 +42,13 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                 break;
             case "directory_new_agent":
             case "directory_update_available":
-                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
                 break;
             case "directory_install_request":
-                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
                 break;
             case "approval_required":
-                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+                icon = <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />;
                 break;
             case "tools_new_available":
                 icon = <IconPlug size={16} color="var(--ax-colors-fg-tertiary)" />;
@@ -125,24 +125,25 @@ function CompactNotificationCard({ notification }: { notification: Notification 
                         >
                             {notification.title}
                         </Text>
-                        <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0 }}>
+                        <Box display="flex" alignItems="center" gap="4" style={{ flexShrink: 0, position: "relative" }}>
                             {notification.actionRequired && <Badge intent="warning" variant="subtle">Action Required</Badge>}
-                            {isHovered ? (
+                            {/* Always in flow to hold height */}
+                            <Box display="flex" alignItems="center" gap="4" style={{ visibility: isHovered ? "hidden" : "visible" }}>
+                                <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
+                                    {notification.timestamp}
+                                </Text>
+                                {isUnread && <UnreadIndicator />}
+                            </Box>
+                            {/* Dismiss button overlaid so it doesn't affect layout */}
+                            <Box style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)", opacity: isHovered ? 1 : 0, pointerEvents: isHovered ? "auto" : "none" }}>
                                 <Button
                                     icon={<IconX size={14} />}
                                     appearance="subtle"
                                     size="sm"
                                     aria-label="Dismiss"
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDismiss(notification.id); }}
                                 />
-                            ) : (
-                                <>
-                                    <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">
-                                        {notification.timestamp}
-                                    </Text>
-                                    {isUnread && <UnreadIndicator />}
-                                </>
-                            )}
+                            </Box>
                         </Box>
                     </Box>
 
@@ -152,7 +153,7 @@ function CompactNotificationCard({ notification }: { notification: Notification 
 
                     {notification.approvalRequired && (
                         <Box display="flex" gap="8" pt="8">
-                            <Button size="sm" appearance="inverse">Approve</Button>
+                            <Button size="sm" appearance="inverse">Review</Button>
                             <Button size="sm" appearance="default">
                                 {notification.approvalType === "opal_admin" ? "Deny" : "Send back"}
                             </Button>
@@ -164,8 +165,8 @@ function CompactNotificationCard({ notification }: { notification: Notification 
     );
 }
 
-export function NotificationPanel({ onClose }: { onClose: () => void }) {
-    const [activeTab, setActiveTab] = useState<"all" | "action_required" | "unread">("all");
+export function NotificationPanel({ onClose, initialActiveTab, onTabChange, dismissedIds, onDismiss, readIds, onMarkAllRead }: { onClose: () => void; initialActiveTab: "all" | "action_required" | "unread"; onTabChange: (tab: "all" | "action_required" | "unread") => void; dismissedIds: Set<string>; onDismiss: (id: string) => void; readIds: Set<string>; onMarkAllRead: (ids: string[]) => void }) {
+    const [activeTab, setActiveTab] = useState(initialActiveTab);
     const [panelWidth, setPanelWidth] = useState(560);
     const resizingStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
 
@@ -201,23 +202,15 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
         document.body.style.userSelect = "none";
     };
 
-    const actionRequiredCount = useMemo(() => mockNotifications.filter(n => n.actionRequired).length, []);
-    const unreadCount = useMemo(() => mockNotifications.filter(n => n.status === "unread").length, []);
+    const visible = useMemo(() => mockNotifications.filter(n => !dismissedIds.has(n.id)), [dismissedIds]);
+    const actionRequiredCount = useMemo(() => visible.filter(n => n.actionRequired).length, [visible]);
+    const unreadCount = useMemo(() => visible.filter(n => n.status === "unread" && !readIds.has(n.id)).length, [visible, readIds]);
 
     const filtered = useMemo(() => {
-        if (activeTab === "action_required") return mockNotifications.filter(n => n.actionRequired);
-        if (activeTab === "unread") return mockNotifications.filter(n => n.status === "unread");
-        return mockNotifications;
-    }, [activeTab]);
-
-    const groups = useMemo(() => {
-        const g: Record<string, Notification[]> = {};
-        filtered.forEach(n => {
-            if (!g[n.category]) g[n.category] = [];
-            g[n.category].push(n);
-        });
-        return g;
-    }, [filtered]);
+        if (activeTab === "action_required") return visible.filter(n => n.actionRequired);
+        if (activeTab === "unread") return visible.filter(n => n.status === "unread");
+        return visible;
+    }, [activeTab, visible]);
 
     return (
         <Box h="full" style={{ width: panelWidth, position: "relative" }}>
@@ -278,7 +271,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                             <button
                                 key={tab.key}
                                 type="button"
-                                onClick={() => setActiveTab(tab.key)}
+                                onClick={() => { setActiveTab(tab.key); onTabChange(tab.key); }}
                                 style={{
                                     background: "transparent",
                                     border: "none",
@@ -310,6 +303,7 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
                             icon={<IconChecks size={16} />}
                             aria-label="Mark all as read"
                             style={{ flexShrink: 0 }}
+                            onClick={() => onMarkAllRead(filtered.map(n => n.id))}
                         >
                             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Mark all as read</span>
                         </Button>
@@ -317,27 +311,14 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
 
 
                     <Box display="flex" flexDirection="column">
-                        {Object.entries(groups).length > 0 ? (
-                            Object.entries(groups).map(([category, ns]) => (
-                                <Disclosure key={category} defaultOpen={category === "agent_execution" || category === "guardrail"}>
-                                    <DisclosureTrigger>
-                                        <Box px="16" py="12" bg="bg.secondary" display="flex" alignItems="center" justifyContent="space-between">
-                                            <Text fontSize="md" fontWeight="400" color="fg.secondary">
-                                                {getCategoryLabel(category)} ({ns.length})
-                                            </Text>
-                                        </Box>
-                                    </DisclosureTrigger>
-                                    <DisclosureContent>
-                                        <Box display="flex" flexDirection="column">
-                                            {ns.slice(0, 5).map((notification) => (
-                                                <CompactNotificationCard
-                                                    key={notification.id}
-                                                    notification={notification}
-                                                />
-                                            ))}
-                                        </Box>
-                                    </DisclosureContent>
-                                </Disclosure>
+                        {filtered.length > 0 ? (
+                            filtered.map((notification) => (
+                                <CompactNotificationCard
+                                    key={notification.id}
+                                    notification={notification}
+                                    onDismiss={onDismiss}
+                                    readIds={readIds}
+                                />
                             ))
                         ) : (
                             <Box p="40" display="flex" flexDirection="column" alignItems="center" gap="12">
@@ -371,21 +352,40 @@ export function NotificationPanel({ onClose }: { onClose: () => void }) {
 export default function NotificationDropdown() {
     const { asideContent, setAsideContent } = useLayout();
     const [mounted, setMounted] = useState(false);
+    const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+    const [readIds, setReadIds] = useState<Set<string>>(new Set());
+    // Persist selected tab across panel open/close without triggering re-renders
+    const lastActiveTabRef = useRef<"all" | "action_required" | "unread">("all");
+
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const unreadCount = useMemo(() => getUnreadCount(mockNotifications), []);
+    const onDismiss = (id: string) => setDismissedIds(prev => new Set([...prev, id]));
+    const onMarkAllRead = (ids: string[]) => setReadIds(prev => new Set([...prev, ...ids]));
+    const onTabChange = (tab: "all" | "action_required" | "unread") => { lastActiveTabRef.current = tab; };
+
+    const unreadCount = useMemo(() =>
+        mockNotifications.filter(n => !dismissedIds.has(n.id) && n.status === "unread" && !readIds.has(n.id)).length,
+    [dismissedIds, readIds]);
+
+    const buildPanel = (dismissed: Set<string>, dismiss: (id: string) => void, read: Set<string>, markAllRead: (ids: string[]) => void) => (
+        <Box h="full" style={{ position: "sticky", top: 0 }}>
+            <NotificationPanel onClose={() => setAsideContent(null)} initialActiveTab={lastActiveTabRef.current} onTabChange={onTabChange} dismissedIds={dismissed} onDismiss={dismiss} readIds={read} onMarkAllRead={markAllRead} />
+        </Box>
+    );
+
+    // Re-sync panel when dismissedIds or readIds changes while open (React reconciles in-place, preserving local tab state)
+    useEffect(() => {
+        if (!asideContent) return;
+        setAsideContent(buildPanel(dismissedIds, onDismiss, readIds, onMarkAllRead));
+    }, [dismissedIds, readIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const togglePanel = () => {
         if (asideContent) {
             setAsideContent(null);
         } else {
-            setAsideContent(
-                <Box h="full" style={{ position: "sticky", top: 0 }}>
-                    <NotificationPanel onClose={() => setAsideContent(null)} />
-                </Box>
-            );
+            setAsideContent(buildPanel(dismissedIds, onDismiss, readIds, onMarkAllRead));
         }
     };
 
