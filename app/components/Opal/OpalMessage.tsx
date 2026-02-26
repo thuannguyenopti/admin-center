@@ -9,6 +9,13 @@ import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
 import { IconCopy, IconPen, IconArrowsRotate, IconThumbsUp, IconThumbsDown } from "@optimizely/axiom-icons";
 import { useState, useEffect, useRef } from "react";
+import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
+import { OpalLoader } from "@/app/opal/components/OpalLoader";
+import { OpalLoaderV2 } from "@/app/opal/components/OpalLoaderV2";
+import { OpalLoaderV3 } from "@/app/opal/components/OpalLoaderV3";
+import { OpalLoaderV4 } from "@/app/opal/components/OpalLoaderV4";
+import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
+import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
 
 type OpalMessageProps = {
   message: ChatMessage;
@@ -77,11 +84,104 @@ const MarkdownContent = ({ content }: { content: string }) => {
   );
 };
 
+// ── Dev-mode loading sequence ─────────────────────────────────────────────────
+
+const PURPLE = "#7C3AED";
+const PHASE1_MS = 4000;      // how long to show the big V5 loader
+const ACTIVITY_INTERVAL = 3500; // ms between each activity row appearing
+const SHIMMER_PURPLE_1 = "#7C3AED";
+const SHIMMER_PURPLE_2 = "#9D74F5";
+const SHIMMER_PURPLE_3 = "#C2A8FA";
+
+const ACTIVITY_LABELS = [
+  "thinking",
+  "Fetching user instructions",
+  "Searching knowledge base",
+  "Analyzing context",
+  "Generating response",
+] as const;
+
+function getLoaderForSequence(sequence: LoaderSequenceOption, rowIndex: number) {
+  if (sequence === "V4") return OpalLoaderV4;
+  if (sequence === "V2_TO_V3") {
+    return rowIndex === 0 ? OpalLoaderV2 : OpalLoaderV3;
+  }
+  return rowIndex === 0 ? OpalLoader : OpalLoaderV2;
+}
+
+function ShimmerText({ text }: { text: string }) {
+  return (
+    <span style={{
+      backgroundImage: `linear-gradient(90deg,${SHIMMER_PURPLE_1} 0%,${SHIMMER_PURPLE_2} 30%,${SHIMMER_PURPLE_3} 50%,${SHIMMER_PURPLE_2} 70%,${SHIMMER_PURPLE_1} 100%)`,
+      backgroundSize: "300% auto",
+      backgroundClip: "text",
+      WebkitBackgroundClip: "text",
+      color: "transparent",
+      animation: "shimmer-text-msg 3s linear infinite",
+      fontSize: "13px",
+    }}>
+      <style>{`@keyframes shimmer-text-msg{0%{background-position:200% center}100%{background-position:-100% center}}`}</style>
+      {text}
+    </span>
+  );
+}
+
+function DevLoadingState({ sequence }: { sequence: LoaderSequenceOption }) {
+  const [phase, setPhase] = useState<1 | 2>(1);
+  const [activeActivityIndex, setActiveActivityIndex] = useState(0);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(2), PHASE1_MS);
+    return () => clearTimeout(t1);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 2) return;
+    setActiveActivityIndex(0);
+    const timers = ACTIVITY_LABELS.map((_, idx) => {
+      if (idx === 0) return null;
+      return setTimeout(() => setActiveActivityIndex(idx), ACTIVITY_INTERVAL * idx);
+    });
+    return () => timers.forEach(t => t && clearTimeout(t));
+  }, [phase]);
+
+  if (phase === 1) {
+    return (
+      <div style={{ display: "flex", justifyContent: "flex-start", padding: "12px 0 8px" }}>
+        <OpalLoaderV5 size={20} color={PURPLE} />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "4px 0" }}>
+      <div
+        key={activeActivityIndex}
+        style={{
+          display: "flex", alignItems: "center", gap: "8px",
+          animation: "activity-in 0.3s ease forwards",
+          opacity: 0,
+        }}
+      >
+        <style>{`@keyframes activity-in{to{opacity:1;transform:translateY(0)}from{opacity:0;transform:translateY(4px)}}`}</style>
+        {(() => {
+          const Loader = getLoaderForSequence(sequence, activeActivityIndex);
+          return <Loader size={16} color={PURPLE} />;
+        })()}
+        <ShimmerText text={ACTIVITY_LABELS[activeActivityIndex]} />
+      </div>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+
 export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
   const isSavingRef = useRef(false);
+  const { enabled: devMode, sequence } = useLoaderDev();
 
   const isUser = message.role === 'user';
   const isLoading = message.isLoading;
@@ -217,29 +317,22 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
               </Box>
             ) : (
               isLoading ? (
-                <Box display="flex" alignItems="center" gap="12" py="4">
-                  <Box
-                    className="opal-loading-spinner"
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid currentColor',
-                      borderTopColor: 'transparent',
-                      opacity: 0.5,
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite',
-                    }}
-                  />
-                  <Text
-                    style={{
-                      ...opalTypography.body,
-                      color: 'fg.tertiary',
-                      margin: 0,
-                    }}
-                  >
-                    Opal is thinking...
-                  </Text>
-                </Box>
+                devMode ? (
+                  <DevLoadingState key={`${message.id}-${sequence}`} sequence={sequence} />
+                ) : (
+                  <Box display="flex" alignItems="center" gap="12" py="4">
+                    <OpalLoaderV5 size={16} color="currentColor" />
+                    <Text
+                      style={{
+                        ...opalTypography.body,
+                        color: 'fg.tertiary',
+                        margin: 0,
+                      }}
+                    >
+                      Opal is thinking...
+                    </Text>
+                  </Box>
+                )
               ) : (
                 isUser ? (
                   <Text
