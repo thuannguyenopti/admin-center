@@ -873,6 +873,19 @@ export default function NotificationDetailsPage({
         [id]
     );
 
+    const [activeTab, setActiveTab] = useState("details");
+    const [comments, setComments] = useState([
+        { author: "System", text: "Ticket auto-created. Workflow halted.", time: "2h ago" },
+        { author: "Support Team", text: "Investigating the timeout. Likely caused by large context payload.", time: "1h ago" },
+    ]);
+    const [newComment, setNewComment] = useState("");
+
+    const handleAddComment = () => {
+        if (!newComment.trim()) return;
+        setComments(prev => [...prev, { author: "Me", text: newComment, time: "Just now" }]);
+        setNewComment("");
+    };
+
     // Auto-mark as read
     useEffect(() => {
         // In a real app this would call an API
@@ -891,6 +904,8 @@ export default function NotificationDetailsPage({
             </Box>
         );
     }
+
+    const failingAgent = notification.agentName || "Hypothesis Creator";
 
     // Determine which view to show
     const isFailedExecution =

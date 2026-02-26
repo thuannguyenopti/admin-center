@@ -261,7 +261,8 @@ export function NotificationPanel({ onClose, initialActiveTab, onTabChange, dism
                         gap="0"
                         borderB="1"
                         borderColor="border.tertiary"
-                        style={{ minHeight: 40 }}
+                        bg="bg.page"
+                        style={{ minHeight: 40, position: "sticky", top: 0, zIndex: 10 }}
                     >
                         {([
                             { key: "all" as const, label: "All", count: null },
