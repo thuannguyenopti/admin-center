@@ -272,7 +272,7 @@ export function TestRunTray({
                                             // Phase 2 & 3: V5 loader, with skeleton appearing in Phase 3
                                             <Box display="flex" flexDirection="column" gap="12">
                                                 <Box display="flex" justifyContent="center" alignItems="center" style={{ height: "80px" }}>
-                                                    <OpalLoaderV5 size={20} color="#7C3AED" />
+                                                    <OpalLoaderV5 size={32} color="#7C3AED" />
                                                 </Box>
                                                 {showSkeleton && (
                                                     <div className="animate-pulse flex flex-col gap-3">
