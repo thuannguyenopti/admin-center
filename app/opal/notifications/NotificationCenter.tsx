@@ -519,6 +519,9 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                 </Box>
             )}
 
+            {/* ── Scrollable content area ───────────────────────────────────────── */}
+            <Box flex="1" overflow="auto" display="flex" flexDirection="column" gap="16" style={{ minHeight: 0 }}>
+
             {/* ── Bulk Actions Bar ──────────────────────────────────────────────── */}
             {selectedIds.size > 0 && (
                 <Box
@@ -615,7 +618,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
             {/* ── Notification Table / Grid ─────────────────────────────────────── */}
             {filteredNotifications.length > 0 && (
-                <Box overflow="hidden" flex="1">
+                <Box>
                     {viewMode === "list" ? (
                         <Table>
                             <thead>
@@ -924,6 +927,8 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     </Box >
                 )
             }
+
+            </Box>{/* end scrollable content area */}
         </Box >
     );
 }
