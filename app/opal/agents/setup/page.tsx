@@ -72,6 +72,7 @@ import {
     IconPlus,
     IconTrashCan,
     IconMessages,
+    IconArrowRotateLeft,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -244,7 +245,7 @@ function SpecializedAgentSetupContent() {
     }, []);
 
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
-    const activeTab = isMounted ? (searchParams.get("tab") || "setup") : "setup";
+    const activeTab = isMounted ? (searchParams.get("tab") || "setup3") : "setup3";
     const qualitySubTab = isMounted ? (searchParams.get("subtab") || "evaluation") : "evaluation";
 
     const handleTabChange = (value: string) => {
@@ -814,9 +815,9 @@ function SpecializedAgentSetupContent() {
                         {/* Tabs List */}
                         <Box px="24">
                             <TabsList suppressHydrationWarning>
-                                <TabsTrigger value="setup" suppressHydrationWarning>Setup</TabsTrigger>
+                                <TabsTrigger value="setup3" suppressHydrationWarning>Setup</TabsTrigger>
                                 <TabsTrigger value="setup2" suppressHydrationWarning>Setup 2</TabsTrigger>
-                                <TabsTrigger value="setup3" suppressHydrationWarning>Setup 3</TabsTrigger>
+                                <TabsTrigger value="setup" suppressHydrationWarning>Setup 3</TabsTrigger>
                                 <TabsTrigger value="triggers" suppressHydrationWarning>In-app Triggers</TabsTrigger>
                                 <TabsTrigger value="quality" suppressHydrationWarning>Quality</TabsTrigger>
                                 <TabsTrigger value="logs" suppressHydrationWarning>Logs</TabsTrigger>
@@ -935,21 +936,21 @@ function SpecializedAgentSetupContent() {
                                                     <Text fontSize="sm" color="fg.secondary" mb="12">Configure how users interact with this agent</Text>
 
                                                     <Box display="flex" flexDirection="column" gap="16">
-                                                        {/* Support back-and-forth dialogue */}
+                                                        {/* Support multi-turn conversation */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
                                                             <Box display="flex" alignItems="center" gap="4">
-                                                                <Text fontWeight="500">Support back-and-forth dialogue</Text>
+                                                                <Text fontWeight="500">Support multi-turn conversation</Text>
                                                                 <Tooltip delayDuration={300} content="Select this option for multi-turn conversations for this agent, facilitating interactive guidance, clarification, and personalized user experiences.">
                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                 </Tooltip>
                                                             </Box>
                                                         </Box>
 
-                                                        {/* Enable in Chat */}
+                                                        {/* Trigger from Chat */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
-                                                            <Text fontWeight="500">Enable in Chat</Text>
+                                                            <Text fontWeight="500">Trigger from Chat</Text>
                                                         </Box>
                                                     </Box>
                                                 </Box>
@@ -1037,55 +1038,59 @@ function SpecializedAgentSetupContent() {
                                                     )}
                                                 </Field>
 
-                                                {/* System Prompt Template - Visible only when multiTurnMode is true */}
+                                                {/* Advanced Settings - Visible only when multiTurnMode is true */}
                                                 {multiTurnMode && (
-                                                    <>
-                                                        <Box>
-                                                            <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-                                                                <Box display="flex" alignItems="center" gap="4">
-                                                                    <Text fontSize="md">Recurring Prompt</Text>
-                                                                    <Tooltip delayDuration={300} content="Defines the agent’s persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
-                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                    </Tooltip>
-                                                                </Box>
-                                                                <Box display="flex" gap="12">
-                                                                    <Button appearance="subtle" size="sm" icon={<IconTrashCan size={16} />} onClick={() => setSystemPrompt("")}>Clear</Button>
-                                                                    <Button
-                                                                        appearance="subtle"
-                                                                        size="sm"
-                                                                        icon={<IconClockRotateLeft size={16} />}
-                                                                        onClick={() => {
-                                                                            if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
-                                                                                setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
-                                                                            }
+                                                    <Disclosure defaultOpen={chatConfigOpen} onOpenChange={setChatConfigOpen} bg="transparent" p="0">
+                                                        <DisclosureTrigger>
+                                                            <Text fontWeight="500">Advanced Settings</Text>
+                                                        </DisclosureTrigger>
+                                                        <DisclosureContent pt="16" pb="0">
+                                                            <Box display="flex" flexDirection="column" gap="24">
+                                                                <Box>
+                                                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                                        <Box display="flex" alignItems="center" gap="4">
+                                                                            <Text fontSize="md">System Prompt</Text>
+                                                                            <Tooltip delayDuration={300} content="Defines the agent’s persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
+                                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                            </Tooltip>
+                                                                        </Box>
+                                                                        <Box display="flex" gap="12">
+                                                                                                                                                        <Button
+                                                                                appearance="subtle"
+                                                                                size="sm"
+                                                                                icon={<IconArrowRotateLeft size={16} />}
+                                                                                onClick={() => {
+                                                                                    if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
+                                                                                        setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                Reset
+                                                                            </Button>
+                                                                        </Box>
+                                                                    </Box>
+                                                                    <AutoResizeTextarea
+                                                                        value={systemPrompt}
+                                                                        onChange={(e: any) => setSystemPrompt(e.target.value)}
+                                                                        placeholder="You are a conversational agent interacting with a user..."
+                                                                        style={{
+                                                                            minHeight: "200px",
+                                                                            maxHeight: "calc(100vh - 240px)",
+                                                                            resize: "none",
+                                                                            overflowY: "auto"
                                                                         }}
-                                                                    >
-                                                                        Reset
-                                                                    </Button>
+                                                                        readOnly={isReadOnly}
+                                                                    />
+                                                                    <Text fontSize="sm" color="fg.tertiary" mt="8">
+                                                                        Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
+                                                                    </Text>
+                                                                </Box>
+                                                                <Box>
+                                                                    <Button appearance="default" icon={<IconSettings />} onClick={() => setCustomizeChatModalOpen(true)}>Advanced Chat Settings</Button>
                                                                 </Box>
                                                             </Box>
-
-                                                            <AutoResizeTextarea
-                                                                value={systemPrompt}
-                                                                onChange={(e: any) => setSystemPrompt(e.target.value)}
-                                                                placeholder="You are a conversational agent interacting with a user..."
-                                                                style={{
-                                                                    minHeight: "200px",
-                                                                    maxHeight: "calc(100vh - 240px)",
-                                                                    resize: "none",
-                                                                    overflowY: "auto"
-                                                                }}
-                                                                readOnly={isReadOnly}
-                                                            />
-                                                            <Text fontSize="sm" color="fg.tertiary" mt="8">
-                                                                Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
-                                                            </Text>
-                                                        </Box>
-
-                                                        <Box>
-                                                            <Button appearance="default" icon={<IconSettings />} onClick={() => setCustomizeChatModalOpen(true)}>Advanced Chat Settings</Button>
-                                                        </Box>
-                                                    </>
+                                                        </DisclosureContent>
+                                                    </Disclosure>
                                                 )}
 
 
@@ -1186,22 +1191,23 @@ function SpecializedAgentSetupContent() {
                                                             </Box>
                                                         ) : (
                                                             <Box
-                                                                border="2"
-                                                                borderColor="border.tertiary"
+                                                                border="1"
+                                                                borderColor="border.secondary"
                                                                 style={{ borderStyle: "dashed" }}
                                                                 rounded="md"
                                                                 p="32"
+                                                                mt="4"
                                                                 display="flex"
                                                                 flexDirection="column"
                                                                 alignItems="center"
                                                                 justifyContent="center"
                                                                 gap="16"
-                                                                bg="transparent"
+                                                                bg="bg.secondary"
                                                             >
                                                                 <Text color="fg.secondary" textAlign="center">
                                                                     Specify the tools via <span style={{ color: "var(--ax-colors-fg-default)", backgroundColor: "var(--ax-colors-bg-tertiary)", padding: "2px 4px", borderRadius: "4px", border: "1px solid var(--ax-colors-border-secondary)" }}>`tool_name`</span> in your prompt template.
                                                                 </Text>
-                                                                <Button icon={<IconPlus />} appearance="default" size="sm">Add Tool</Button>
+                                                                <Button icon={<IconPlus />} appearance="default">Add Tool</Button>
                                                             </Box>
                                                         )
                                                     )}
@@ -1255,51 +1261,109 @@ function SpecializedAgentSetupContent() {
                                         </Text>
                                     </Box>
 
-                                    {/* Details Section - Same as Setup 1 */}
-                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                    {/* Details Section */}
+                                    <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Details
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
-                                            <Text fontSize="sm" color="fg.secondary">
-                                                (Same as Setup 1 - Name, Description, Icon, Category)
-                                            </Text>
-                                        </DisclosureContent>
-                                    </Disclosure>
+                                            <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
+                                                <Field label="Name" required>
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            previousValue={comparisonData.name}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].name}
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={agentName}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].name}
+                                                            mode="stacked"
+                                                        />
+                                                    ) : (
+                                                        <Box display="flex" gap="12" alignItems="center">
+                                                            <Box flex="1">
+                                                                <Input
+                                                                    value={agentName}
+                                                                    onChange={(e) => setAgentName(e.target.value)}
+                                                                    placeholder="e.g. Email Creation"
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Box>
+                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                <Switch checked={isActive} onCheckedChange={setIsActive} disabled={isReadOnly} tabIndex={isReadOnly ? -1 : 0} />
+                                                                <Text color={isReadOnly ? "fg.tertiary" : "fg.default"}>{isActive ? "Active" : "Inactive"}</Text>
+                                                            </Box>
+                                                        </Box>
+                                                    )}
+                                                </Field>
 
-                                    {/* Interaction Mode Section */}
-                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
-                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
-                                            <Box display="flex" alignItems="center" gap="4">
-                                                Interaction Mode
-                                                <Tooltip delayDuration={300} content="Configure how users interact with this agent">
-                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                </Tooltip>
-                                            </Box>
-                                        </DisclosureTrigger>
-                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
-                                            <Box display="flex" flexDirection="column" gap="24">
-                                                {/* Interaction Mode Toggle */}
+                                                <Field label="Id" required>
+                                                    <Box display="flex" gap="8" alignItems="center">
+                                                        <Box flex="1">
+                                                            <Input
+                                                                value={agentId}
+                                                                onChange={(e) => setAgentId(e.target.value)}
+                                                                placeholder="e.g. email_creation"
+                                                                readOnly={isReadOnly}
+                                                                tabIndex={isReadOnly ? -1 : 0}
+                                                            />
+                                                        </Box>
+                                                        <Text color="fg.secondary">@{agentId || "email_creation"}</Text>
+                                                    </Box>
+                                                </Field>
+
+                                                <Field label="Description" info="What does this agent do?">
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            previousValue={comparisonData.description}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].description}
+                                                            multiline
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={description}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].description}
+                                                            multiline
+                                                            mode="stacked"
+                                                        />
+                                                    ) : (
+                                                        <Textarea
+                                                            value={description}
+                                                            onChange={(e) => setDescription(e.target.value)}
+                                                            placeholder="What is the goal for this agent?"
+                                                            className="h-24"
+                                                            readOnly={isReadOnly}
+                                                        />
+                                                    )}
+                                                </Field>
+
+                                                {/* Interaction Mode */}
                                                 <Box>
-                                                    <Text fontWeight="500" fontSize="md" mb="4">Interaction Mode</Text>
+                                                    <Box display="flex" alignItems="center" gap="4" mb="4">
+                                                        <Text fontWeight="500" fontSize="md">Interaction Mode</Text>
+                                                        <Tooltip delayDuration={300} content="Configure how users interact with this agent">
+                                                            <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                        </Tooltip>
+                                                    </Box>
                                                     <Text fontSize="sm" color="fg.secondary" mb="12">Configure how users interact with this agent</Text>
 
                                                     <Box display="flex" flexDirection="column" gap="16">
-                                                        {/* Support back-and-forth dialogue */}
+                                                        {/* Support multi-turn conversation */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
                                                             <Box display="flex" alignItems="center" gap="4">
-                                                                <Text fontWeight="500">Support back-and-forth dialogue</Text>
+                                                                <Text fontWeight="500">Support multi-turn conversation</Text>
                                                                 <Tooltip delayDuration={300} content="Select this option for multi-turn conversations for this agent, facilitating interactive guidance, clarification, and personalized user experiences.">
                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                 </Tooltip>
                                                             </Box>
                                                         </Box>
 
-                                                        {/* Enable in Chat */}
+                                                        {/* Trigger from Chat */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
-                                                            <Text fontWeight="500">Enable in Chat</Text>
+                                                            <Text fontWeight="500">Trigger from Chat</Text>
                                                         </Box>
                                                     </Box>
                                                 </Box>
@@ -1334,51 +1398,9 @@ function SpecializedAgentSetupContent() {
                                                     />
                                                 </Field>
 
-                                                {/* System Prompt Template - Visible only when multiTurnMode is true */}
+                                                {/* Advanced Chat Settings Toggle - Visible only when multiTurnMode is true */}
                                                 {multiTurnMode && (
                                                     <>
-                                                        <Box>
-                                                            <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-                                                                <Box display="flex" alignItems="center" gap="4">
-                                                                    <Text fontSize="md">System Prompt</Text>
-                                                                    <Tooltip delayDuration={300} content="Defines the agent’s persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
-                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                    </Tooltip>
-                                                                </Box>
-                                                                <Box display="flex" gap="12">
-                                                                    <Button appearance="subtle" size="sm" icon={<IconTrashCan size={16} />} onClick={() => setSystemPrompt("")}>Clear</Button>
-                                                                    <Button
-                                                                        appearance="subtle"
-                                                                        size="sm"
-                                                                        icon={<IconClockRotateLeft size={16} />}
-                                                                        onClick={() => {
-                                                                            if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
-                                                                                setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        Reset
-                                                                    </Button>
-                                                                </Box>
-                                                            </Box>
-
-                                                            <AutoResizeTextarea
-                                                                value={systemPrompt}
-                                                                onChange={(e: any) => setSystemPrompt(e.target.value)}
-                                                                placeholder="You are a conversational agent interacting with a user..."
-                                                                style={{
-                                                                    minHeight: "200px",
-                                                                    maxHeight: "calc(100vh - 240px)",
-                                                                    resize: "none",
-                                                                    overflowY: "auto"
-                                                                }}
-                                                                readOnly={isReadOnly}
-                                                            />
-                                                            <Text fontSize="sm" color="fg.tertiary" mt="8">
-                                                                Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
-                                                            </Text>
-                                                        </Box>
-
                                                         {/* Advanced Chat Settings Toggle */}
                                                         <Box>
                                                             {!chatConfigOpen ? (
@@ -1392,16 +1414,74 @@ function SpecializedAgentSetupContent() {
                                                                         <Switch checked={true} onCheckedChange={() => setChatConfigOpen(false)} />
                                                                         <Text fontWeight="500">Advanced Chat Settings</Text>
                                                                     </Box>
-                                                                    <Box ml="20" pl="32" display="flex" flexDirection="column" gap="16" borderL="2" borderColor="border.tertiary">
+                                                                    <Box ml="20" pl="32" display="flex" flexDirection="column" gap="24" borderL="2" borderColor="border.tertiary">
                                                                         {/* Advanced Chat Settings Content */}
-                                                                        <Box display="flex" flexDirection="column" gap="16">
+                                                                        <Box display="flex" flexDirection="column" gap="24">
+
+                                                                            <Box>
+                                                                                <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                                                    <Box display="flex" alignItems="center" gap="4">
+                                                                                        <Text fontSize="md">System Prompt</Text>
+                                                                                        <Tooltip delayDuration={300} content="Defines the agent's persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
+                                                                                            <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                        </Tooltip>
+                                                                                    </Box>
+                                                                                    <Box display="flex" gap="12">
+                                                                                                                                                                                <Button
+                                                                                            appearance="subtle"
+                                                                                            size="sm"
+                                                                                            icon={<IconArrowRotateLeft size={16} />}
+                                                                                            onClick={() => {
+                                                                                                if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
+                                                                                                    setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
+                                                                                                }
+                                                                                            }}
+                                                                                        >
+                                                                                            Reset
+                                                                                        </Button>
+                                                                                    </Box>
+                                                                                </Box>
+                                                                                <AutoResizeTextarea
+                                                                                    value={systemPrompt}
+                                                                                    onChange={(e: any) => setSystemPrompt(e.target.value)}
+                                                                                    placeholder="You are a conversational agent interacting with a user..."
+                                                                                    style={{
+                                                                                        minHeight: "200px",
+                                                                                        maxHeight: "calc(100vh - 240px)",
+                                                                                        resize: "none",
+                                                                                        overflowY: "auto"
+                                                                                    }}
+                                                                                    readOnly={isReadOnly}
+                                                                                />
+                                                                                <Text fontSize="sm" color="fg.tertiary" mt="8">
+                                                                                    Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
+                                                                                </Text>
+                                                                            </Box>
 
                                                                             <Box style={{ maxWidth: "360px" }}>
                                                                                 <Box display="flex" alignItems="center" gap="4" mb="8">
                                                                                     <Text fontSize="md">Memory Token Limit</Text>
-                                                                                    <Tooltip delayDuration={300} content="Defines the maximum token count for the agent's conversation memory. This limit ensures Opal's context window remains manageable by trimming older messages as the conversation grows.">
-                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                    </Tooltip>
+                                                                                    <HoverCard openDelay={200}>
+                                                                                        <HoverCardTrigger>
+                                                                                            <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" style={{ cursor: "pointer" }} />
+                                                                                        </HoverCardTrigger>
+                                                                                        <HoverCardContent>
+                                                                                            <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                <Box>
+                                                                                                    <Text fontWeight="600" fontSize="sm">Low</Text>
+                                                                                                    <Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text>
+                                                                                                </Box>
+                                                                                                <Box>
+                                                                                                    <Text fontWeight="600" fontSize="sm">Medium</Text>
+                                                                                                    <Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text>
+                                                                                                </Box>
+                                                                                                <Box>
+                                                                                                    <Text fontWeight="600" fontSize="sm">High</Text>
+                                                                                                    <Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text>
+                                                                                                </Box>
+                                                                                            </Box>
+                                                                                        </HoverCardContent>
+                                                                                    </HoverCard>
                                                                                 </Box>
                                                                                 <Box display="flex" alignItems="center" gap="16">
                                                                                     <Box flex="1">
@@ -1409,20 +1489,64 @@ function SpecializedAgentSetupContent() {
                                                                                             value={memoryTokenLimit}
                                                                                             onValueChange={setMemoryTokenLimit}
                                                                                             max={700000}
-                                                                                            min={100000}
+                                                                                            min={10000}
                                                                                             step={1000}
                                                                                             marks={[
-                                                                                                { value: 100000, label: "Low" },
-                                                                                                { value: 400000, label: "Medium" },
-                                                                                                { value: 700000, label: "High" },
+                                                                                                { value: 10000 },
+                                                                                                { value: 400000 },
+                                                                                                { value: 700000 },
                                                                                             ]}
                                                                                         />
+                                                                                        <Box style={{ position: "relative", height: "20px", marginTop: "-30px" }}>
+                                                                                            <Box style={{ position: "absolute", left: 0 }}>
+                                                                                                <HoverCard openDelay={200}>
+                                                                                                    <HoverCardTrigger asChild>
+                                                                                                        <Text fontSize="md" color="fg.tertiary" style={{ cursor: "default" }}>Low</Text>
+                                                                                                    </HoverCardTrigger>
+                                                                                                    <HoverCardContent>
+                                                                                                        <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">Low</Text><Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text></Box>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">Medium</Text><Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text></Box>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">High</Text><Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text></Box>
+                                                                                                        </Box>
+                                                                                                    </HoverCardContent>
+                                                                                                </HoverCard>
+                                                                                            </Box>
+                                                                                            <Box style={{ position: "absolute", left: "56.52%", transform: "translateX(-50%)" }}>
+                                                                                                <HoverCard openDelay={200}>
+                                                                                                    <HoverCardTrigger asChild>
+                                                                                                        <Text fontSize="md" color="fg.tertiary" style={{ cursor: "default" }}>Medium</Text>
+                                                                                                    </HoverCardTrigger>
+                                                                                                    <HoverCardContent>
+                                                                                                        <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">Low</Text><Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text></Box>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">Medium</Text><Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text></Box>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">High</Text><Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text></Box>
+                                                                                                        </Box>
+                                                                                                    </HoverCardContent>
+                                                                                                </HoverCard>
+                                                                                            </Box>
+                                                                                            <Box style={{ position: "absolute", right: 0 }}>
+                                                                                                <HoverCard openDelay={200}>
+                                                                                                    <HoverCardTrigger asChild>
+                                                                                                        <Text fontSize="md" color="fg.tertiary" style={{ cursor: "default" }}>High</Text>
+                                                                                                    </HoverCardTrigger>
+                                                                                                    <HoverCardContent>
+                                                                                                        <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">Low</Text><Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text></Box>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">Medium</Text><Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text></Box>
+                                                                                                            <Box><Text fontWeight="600" fontSize="sm">High</Text><Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text></Box>
+                                                                                                        </Box>
+                                                                                                    </HoverCardContent>
+                                                                                                </HoverCard>
+                                                                                            </Box>
+                                                                                        </Box>
                                                                                     </Box>
                                                                                     <Input
                                                                                         type="number"
                                                                                         value={memoryTokenLimit}
                                                                                         onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)}
-                                                                                        style={{ width: "100px", height: "32px", marginBottom: "20px" }}
+                                                                                        style={{ width: "100px", height: "32px", marginBottom: "40px" }}
                                                                                     />
                                                                                 </Box>
                                                                             </Box>
@@ -1552,22 +1676,23 @@ function SpecializedAgentSetupContent() {
 
                                                 <Field label="Tools" info="Select tools for the agent">
                                                     <Box
-                                                        border="2"
-                                                        borderColor="border.tertiary"
+                                                        border="1"
+                                                        borderColor="border.secondary"
                                                         style={{ borderStyle: "dashed" }}
                                                         rounded="md"
                                                         p="32"
+                                                        mt="4"
                                                         display="flex"
                                                         flexDirection="column"
                                                         alignItems="center"
                                                         justifyContent="center"
                                                         gap="16"
-                                                        bg="transparent"
+                                                        bg="bg.secondary"
                                                     >
                                                         <Text color="fg.secondary" textAlign="center">
                                                             Specify the tools via <span style={{ color: "var(--ax-colors-fg-default)", backgroundColor: "var(--ax-colors-bg-tertiary)", padding: "2px 4px", borderRadius: "4px", border: "1px solid var(--ax-colors-border-secondary)" }}>`tool_name`</span> in your prompt template.
                                                         </Text>
-                                                        <Button icon={<IconPlus />} appearance="default" size="sm">Add Tool</Button>
+                                                        <Button icon={<IconPlus />} appearance="default">Add Tool</Button>
                                                     </Box>
                                                 </Field>
 
@@ -1595,59 +1720,109 @@ function SpecializedAgentSetupContent() {
                                 }}
                             >
                                 <Box p="24" display="flex" flexDirection="column" gap="16">
-                                    {/* Banner explaining this is alternative layout */}
-                                    <Box p="16" bg="bg.information.subtle" rounded="md" borderL="2" style={{ borderLeftColor: "var(--ax-colors-border-information)", borderLeftWidth: "4px" }}>
-                                        <Text fontWeight="600" mb="4">Alternative Layout (Setup 3)</Text>
-                                        <Text fontSize="sm" color="fg.secondary">
-                                            This layout is identical to Setup 2 but uses a Disclosure component for Advanced Settings instead of a toggle switch.
-                                        </Text>
-                                    </Box>
-
-                                    {/* Details Section - Same as Setup 1 */}
-                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
+                                    {/* Details Section */}
+                                    <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Details
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
-                                            <Text fontSize="sm" color="fg.secondary">
-                                                (Same as Setup 1 - Name, Description, Icon, Category)
-                                            </Text>
-                                        </DisclosureContent>
-                                    </Disclosure>
+                                            <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
+                                                <Field label="Name" required>
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            previousValue={comparisonData.name}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].name}
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={agentName}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].name}
+                                                            mode="stacked"
+                                                        />
+                                                    ) : (
+                                                        <Box display="flex" gap="12" alignItems="center">
+                                                            <Box flex="1">
+                                                                <Input
+                                                                    value={agentName}
+                                                                    onChange={(e) => setAgentName(e.target.value)}
+                                                                    placeholder="e.g. Email Creation"
+                                                                    readOnly={isReadOnly}
+                                                                />
+                                                            </Box>
+                                                            <Box display="flex" alignItems="center" gap="8">
+                                                                <Switch checked={isActive} onCheckedChange={setIsActive} disabled={isReadOnly} tabIndex={isReadOnly ? -1 : 0} />
+                                                                <Text color={isReadOnly ? "fg.tertiary" : "fg.default"}>{isActive ? "Active" : "Inactive"}</Text>
+                                                            </Box>
+                                                        </Box>
+                                                    )}
+                                                </Field>
 
-                                    {/* Interaction Mode Section */}
-                                    <Disclosure defaultOpen={true} bg="bg.secondary" rounded="md" pl="8" py="4" suppressHydrationWarning>
-                                        <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
-                                            <Box display="flex" alignItems="center" gap="4">
-                                                Interaction Mode
-                                                <Tooltip delayDuration={300} content="Configure how users interact with this agent">
-                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                </Tooltip>
-                                            </Box>
-                                        </DisclosureTrigger>
-                                        <DisclosureContent pl="24" pb="32" suppressHydrationWarning>
-                                            <Box display="flex" flexDirection="column" gap="24">
-                                                {/* Interaction Mode Toggle */}
+                                                <Field label="Id" required>
+                                                    <Box display="flex" gap="8" alignItems="center">
+                                                        <Box flex="1">
+                                                            <Input
+                                                                value={agentId}
+                                                                onChange={(e) => setAgentId(e.target.value)}
+                                                                placeholder="e.g. email_creation"
+                                                                readOnly={isReadOnly}
+                                                                tabIndex={isReadOnly ? -1 : 0}
+                                                            />
+                                                        </Box>
+                                                        <Text color="fg.secondary">@{agentId || "email_creation"}</Text>
+                                                    </Box>
+                                                </Field>
+
+                                                <Field label="Description" info="What does this agent do?">
+                                                    {isComparing && comparisonData ? (
+                                                        <FieldComparison
+                                                            previousValue={comparisonData.description}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].description}
+                                                            multiline
+                                                        />
+                                                    ) : showDiffs && viewingVersion ? (
+                                                        <FieldComparison
+                                                            previousValue={description}
+                                                            currentValue={MOCK_AGENTS_DATA["content-localizer"].description}
+                                                            multiline
+                                                            mode="stacked"
+                                                        />
+                                                    ) : (
+                                                        <Textarea
+                                                            value={description}
+                                                            onChange={(e) => setDescription(e.target.value)}
+                                                            placeholder="What is the goal for this agent?"
+                                                            className="h-24"
+                                                            readOnly={isReadOnly}
+                                                        />
+                                                    )}
+                                                </Field>
+
+                                                {/* Interaction Mode */}
                                                 <Box>
-                                                    <Text fontWeight="500" fontSize="md" mb="4">Interaction Mode</Text>
+                                                    <Box display="flex" alignItems="center" gap="4" mb="4">
+                                                        <Text fontWeight="500" fontSize="md">Interaction Mode</Text>
+                                                        <Tooltip delayDuration={300} content="Configure how users interact with this agent">
+                                                            <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                        </Tooltip>
+                                                    </Box>
                                                     <Text fontSize="sm" color="fg.secondary" mb="12">Configure how users interact with this agent</Text>
 
                                                     <Box display="flex" flexDirection="column" gap="16">
-                                                        {/* Support back-and-forth dialogue */}
+                                                        {/* Support multi-turn conversation */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
                                                             <Box display="flex" alignItems="center" gap="4">
-                                                                <Text fontWeight="500">Support back-and-forth dialogue</Text>
+                                                                <Text fontWeight="500">Support multi-turn conversation</Text>
                                                                 <Tooltip delayDuration={300} content="Select this option for multi-turn conversations for this agent, facilitating interactive guidance, clarification, and personalized user experiences.">
                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                 </Tooltip>
                                                             </Box>
                                                         </Box>
 
-                                                        {/* Enable in Chat */}
+                                                        {/* Trigger from Chat */}
                                                         <Box display="flex" alignItems="center" gap="12">
                                                             <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
-                                                            <Text fontWeight="500">Enable in Chat</Text>
+                                                            <Text fontWeight="500">Trigger from Chat</Text>
                                                         </Box>
                                                     </Box>
                                                 </Box>
@@ -1682,51 +1857,9 @@ function SpecializedAgentSetupContent() {
                                                     />
                                                 </Field>
 
-                                                {/* System Prompt Template - Visible only when multiTurnMode is true */}
+                                                {/* Advanced Settings - Visible only when multiTurnMode is true */}
                                                 {multiTurnMode && (
                                                     <>
-                                                        <Box>
-                                                            <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-                                                                <Box display="flex" alignItems="center" gap="4">
-                                                                    <Text fontSize="md">Recurring Prompt</Text>
-                                                                    <Tooltip delayDuration={300} content="Defines the agent’s persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
-                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                    </Tooltip>
-                                                                </Box>
-                                                                <Box display="flex" gap="12">
-                                                                    <Button appearance="subtle" size="sm" icon={<IconTrashCan size={16} />} onClick={() => setSystemPrompt("")}>Clear</Button>
-                                                                    <Button
-                                                                        appearance="subtle"
-                                                                        size="sm"
-                                                                        icon={<IconClockRotateLeft size={16} />}
-                                                                        onClick={() => {
-                                                                            if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
-                                                                                setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
-                                                                            }
-                                                                        }}
-                                                                    >
-                                                                        Reset
-                                                                    </Button>
-                                                                </Box>
-                                                            </Box>
-
-                                                            <AutoResizeTextarea
-                                                                value={systemPrompt}
-                                                                onChange={(e: any) => setSystemPrompt(e.target.value)}
-                                                                placeholder="You are a conversational agent interacting with a user..."
-                                                                style={{
-                                                                    minHeight: "200px",
-                                                                    maxHeight: "calc(100vh - 240px)",
-                                                                    resize: "none",
-                                                                    overflowY: "auto"
-                                                                }}
-                                                                readOnly={isReadOnly}
-                                                            />
-                                                            <Text fontSize="sm" color="fg.tertiary" mt="8">
-                                                                Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
-                                                            </Text>
-                                                        </Box>
-
                                                         {/* Advanced Settings Disclosure */}
                                                         <Disclosure defaultOpen={chatConfigOpen} onOpenChange={setChatConfigOpen} bg="transparent" p="0">
                                                             <DisclosureTrigger>
@@ -1738,16 +1871,74 @@ function SpecializedAgentSetupContent() {
                                                                 </Box>
                                                             </DisclosureTrigger>
                                                             <DisclosureContent pt="16" pb="0">
-                                                                <Box ml="20" pl="32" display="flex" flexDirection="column" gap="16" borderL="2" borderColor="border.tertiary">
+                                                                <Box ml="20" pl="32" display="flex" flexDirection="column" gap="24" borderL="2" borderColor="border.tertiary">
                                                                     {/* Advanced Chat Settings Content */}
-                                                                    <Box display="flex" flexDirection="column" gap="16">
+                                                                    <Box display="flex" flexDirection="column" gap="24">
+
+                                                                        <Box>
+                                                                            <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
+                                                                                <Box display="flex" alignItems="center" gap="4">
+                                                                                    <Text fontSize="md">System Prompt</Text>
+                                                                                    <Tooltip delayDuration={300} content="Defines the agent's persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
+                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                    </Tooltip>
+                                                                                </Box>
+                                                                                <Box display="flex" gap="12">
+                                                                                                                                                                        <Button
+                                                                                        appearance="subtle"
+                                                                                        size="sm"
+                                                                                        icon={<IconArrowRotateLeft size={16} />}
+                                                                                        onClick={() => {
+                                                                                            if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
+                                                                                                setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
+                                                                                            }
+                                                                                        }}
+                                                                                    >
+                                                                                        Reset
+                                                                                    </Button>
+                                                                                </Box>
+                                                                            </Box>
+                                                                            <AutoResizeTextarea
+                                                                                value={systemPrompt}
+                                                                                onChange={(e: any) => setSystemPrompt(e.target.value)}
+                                                                                placeholder="You are a conversational agent interacting with a user..."
+                                                                                style={{
+                                                                                    minHeight: "200px",
+                                                                                    maxHeight: "calc(100vh - 240px)",
+                                                                                    resize: "none",
+                                                                                    overflowY: "auto"
+                                                                                }}
+                                                                                readOnly={isReadOnly}
+                                                                            />
+                                                                            <Text fontSize="sm" color="fg.tertiary" mt="8">
+                                                                                Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
+                                                                            </Text>
+                                                                        </Box>
 
                                                                         <Box style={{ maxWidth: "360px" }}>
                                                                             <Box display="flex" alignItems="center" gap="4" mb="8">
                                                                                 <Text fontSize="md">Memory Token Limit</Text>
-                                                                                <Tooltip delayDuration={300} content="Defines the maximum token count for the agent's conversation memory. This limit ensures Opal's context window remains manageable by trimming older messages as the conversation grows.">
-                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                </Tooltip>
+                                                                                <HoverCard openDelay={200}>
+                                                                                    <HoverCardTrigger>
+                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" style={{ cursor: "pointer" }} />
+                                                                                    </HoverCardTrigger>
+                                                                                    <HoverCardContent>
+                                                                                        <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                            <Box>
+                                                                                                <Text fontWeight="600" fontSize="sm">Low</Text>
+                                                                                                <Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text>
+                                                                                            </Box>
+                                                                                            <Box>
+                                                                                                <Text fontWeight="600" fontSize="sm">Medium</Text>
+                                                                                                <Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text>
+                                                                                            </Box>
+                                                                                            <Box>
+                                                                                                <Text fontWeight="600" fontSize="sm">High</Text>
+                                                                                                <Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text>
+                                                                                            </Box>
+                                                                                        </Box>
+                                                                                    </HoverCardContent>
+                                                                                </HoverCard>
                                                                             </Box>
                                                                             <Box display="flex" alignItems="center" gap="16">
                                                                                 <Box flex="1">
@@ -1755,20 +1946,64 @@ function SpecializedAgentSetupContent() {
                                                                                         value={memoryTokenLimit}
                                                                                         onValueChange={setMemoryTokenLimit}
                                                                                         max={700000}
-                                                                                        min={100000}
+                                                                                        min={10000}
                                                                                         step={1000}
                                                                                         marks={[
-                                                                                            { value: 100000, label: "Low" },
-                                                                                            { value: 400000, label: "Medium" },
-                                                                                            { value: 700000, label: "High" },
+                                                                                            { value: 10000 },
+                                                                                            { value: 400000 },
+                                                                                            { value: 700000 },
                                                                                         ]}
                                                                                     />
+                                                                                    <Box style={{ position: "relative", height: "20px", marginTop: "-30px" }}>
+                                                                                        <Box style={{ position: "absolute", left: 0 }}>
+                                                                                            <HoverCard openDelay={200}>
+                                                                                                <HoverCardTrigger asChild>
+                                                                                                    <Text fontSize="md" color="fg.tertiary" style={{ cursor: "default" }}>Low</Text>
+                                                                                                </HoverCardTrigger>
+                                                                                                <HoverCardContent>
+                                                                                                    <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">Low</Text><Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text></Box>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">Medium</Text><Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text></Box>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">High</Text><Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text></Box>
+                                                                                                    </Box>
+                                                                                                </HoverCardContent>
+                                                                                            </HoverCard>
+                                                                                        </Box>
+                                                                                        <Box style={{ position: "absolute", left: "56.52%", transform: "translateX(-50%)" }}>
+                                                                                            <HoverCard openDelay={200}>
+                                                                                                <HoverCardTrigger asChild>
+                                                                                                    <Text fontSize="md" color="fg.tertiary" style={{ cursor: "default" }}>Medium</Text>
+                                                                                                </HoverCardTrigger>
+                                                                                                <HoverCardContent>
+                                                                                                    <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">Low</Text><Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text></Box>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">Medium</Text><Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text></Box>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">High</Text><Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text></Box>
+                                                                                                    </Box>
+                                                                                                </HoverCardContent>
+                                                                                            </HoverCard>
+                                                                                        </Box>
+                                                                                        <Box style={{ position: "absolute", right: 0 }}>
+                                                                                            <HoverCard openDelay={200}>
+                                                                                                <HoverCardTrigger asChild>
+                                                                                                    <Text fontSize="md" color="fg.tertiary" style={{ cursor: "default" }}>High</Text>
+                                                                                                </HoverCardTrigger>
+                                                                                                <HoverCardContent>
+                                                                                                    <Box display="flex" flexDirection="column" gap="12" style={{ maxWidth: "280px" }}>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">Low</Text><Text fontSize="sm" color="fg.secondary">Keeps a smaller amount of conversation context. Best for short, straightforward, or stateless tasks with limited back-and-forth.</Text></Box>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">Medium</Text><Text fontSize="sm" color="fg.secondary">Retains more conversation history and instructions. Best for multi-step tasks that need awareness of earlier decisions.</Text></Box>
+                                                                                                        <Box><Text fontWeight="600" fontSize="sm">High</Text><Text fontSize="sm" color="fg.secondary">Preserves extensive conversation history and supporting context. Best for long, exploratory sessions or agents that refine outputs over many turns.</Text></Box>
+                                                                                                    </Box>
+                                                                                                </HoverCardContent>
+                                                                                            </HoverCard>
+                                                                                        </Box>
+                                                                                    </Box>
                                                                                 </Box>
                                                                                 <Input
                                                                                     type="number"
                                                                                     value={memoryTokenLimit}
                                                                                     onChange={(e) => setMemoryTokenLimit(parseInt(e.target.value) || 0)}
-                                                                                    style={{ width: "100px", height: "32px", marginBottom: "20px" }}
+                                                                                    style={{ width: "100px", height: "32px", marginBottom: "40px" }}
                                                                                 />
                                                                             </Box>
                                                                         </Box>
@@ -1903,22 +2138,23 @@ function SpecializedAgentSetupContent() {
                                                         </Box>
                                                     ) : (
                                                         <Box
-                                                            border="2"
-                                                            borderColor="border.tertiary"
+                                                            border="1"
+                                                            borderColor="border.secondary"
                                                             style={{ borderStyle: "dashed" }}
                                                             rounded="md"
                                                             p="32"
+                                                            mt="4"
                                                             display="flex"
                                                             flexDirection="column"
                                                             alignItems="center"
                                                             justifyContent="center"
                                                             gap="16"
-                                                            bg="transparent"
+                                                            bg="bg.secondary"
                                                         >
                                                             <Text color="fg.secondary" textAlign="center">
                                                                 Specify the tools via <span style={{ color: "var(--ax-colors-fg-default)", backgroundColor: "var(--ax-colors-bg-tertiary)", padding: "2px 4px", borderRadius: "4px", border: "1px solid var(--ax-colors-border-secondary)" }}>`tool_name`</span> in your prompt template.
                                                             </Text>
-                                                            <Button icon={<IconPlus />} appearance="default" size="sm">Add Tool</Button>
+                                                            <Button icon={<IconPlus />} appearance="default">Add Tool</Button>
                                                         </Box>
                                                     )}
                                                 </Field>
