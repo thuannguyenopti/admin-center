@@ -979,43 +979,78 @@ export default function MultiSelectDetailsPane({
                 </Box>
               </PopoverContent>
             </Popover>
-            <Box display="flex" flexDirection="column" gap="8">
-              {categories.map((slug) => {
-                const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
-                const count = itemsWithCategory.length;
-                const isAddedInBatch = addedCategoriesInBatch.includes(slug);
-                return (
-                  <Box key={slug} display="flex" alignItems="center" gap="4">
-                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
-                      <Box display="flex" alignItems="center" gap="4">
-                        <span>{getCategoryDisplayName(slug)}</span>
-                        <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
-                          on {count} {count === 1 ? "item" : "items"}
-                        </Text>
-                        <button
-                          onClick={() => handleRemoveCategory(slug)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            lineHeight: "1",
-                            color: "inherit",
-                          }}
-                          aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
-                        >
-                          ×
-                        </button>
-                      </Box>
-                    </Badge>
+            {categories.length > 0 && (
+              <Disclosure open={batchCategoriesExpanded} onOpenChange={setBatchCategoriesExpanded}>
+                <DisclosureTrigger asChild>
+                  <button
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      padding: '8px 0',
+                      border: 'none',
+                      background: 'transparent',
+                      width: '100%',
+                    }}
+                  >
+                    <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                      Batch categories ({categories.length})
+                    </Text>
+                    <Box
+                      style={{
+                        transform: batchCategoriesExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <IconChevronRight size={14} />
+                    </Box>
+                  </button>
+                </DisclosureTrigger>
+                <DisclosureContent>
+                  <Box display="flex" flexDirection="column" gap="8" pt="8">
+                    {categories.map((slug) => {
+                      const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
+                      const count = itemsWithCategory.length;
+                      const isAddedInBatch = addedCategoriesInBatch.includes(slug);
+                      return (
+                        <Box key={slug} display="flex" alignItems="center" gap="4">
+                          <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
+                            <Box display="flex" alignItems="center" gap="4">
+                              <span>{getCategoryDisplayName(slug)}</span>
+                              <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                                on {count} {count === 1 ? "item" : "items"}
+                              </Text>
+                              <button
+                                onClick={() => handleRemoveCategory(slug)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  lineHeight: "1",
+                                  color: "inherit",
+                                }}
+                                aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
+                              >
+                                ×
+                              </button>
+                            </Box>
+                          </Badge>
+                        </Box>
+                      );
+                    })}
                   </Box>
-                );
-              })}
-            </Box>
+                </DisclosureContent>
+              </Disclosure>
+            )}
           </Box>
           {/* Category preview (fills remaining height, scrolls within) */}
           <Box
