@@ -135,11 +135,11 @@ function TemplateContent({
 													<Box
 														style={{
 															position: "absolute",
-															top: "-2px",
-															right: "-2px",
-															height: "8px",
-															width: "8px",
-															border: "1.5px solid #FFFFFF",
+															top: "-3px",
+															right: "-3px",
+															height: "10px",
+															width: "10px",
+															border: "2px solid #FFFFFF",
 														}}
 														bg="bg.error"
 														rounded="full"
