@@ -863,7 +863,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                         </Box>
                                                         {n.actionRequired && (
                                                             <Box pt="4">
-                                                                <Badge intent="warning" variant="subtle" size="sm" className="whitespace-nowrap">
+                                                                <Badge intent="warning" variant="subtle" className="whitespace-nowrap">
                                                                     Action Required
                                                                 </Badge>
                                                             </Box>
