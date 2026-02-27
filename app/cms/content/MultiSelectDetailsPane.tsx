@@ -1021,9 +1021,11 @@ export default function MultiSelectDetailsPane({
                           <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
                             <Box display="flex" alignItems="center" gap="4">
                               <span>{getCategoryDisplayName(slug)}</span>
-                              <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
-                                on {count} {count === 1 ? "item" : "items"}
-                              </Text>
+                              {!isAddedInBatch && (
+                                <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                                  on {count} {count === 1 ? "item" : "items"}
+                                </Text>
+                              )}
                               <button
                                 onClick={() => handleRemoveCategory(slug)}
                                 style={{
