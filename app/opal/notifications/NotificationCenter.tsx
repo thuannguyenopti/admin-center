@@ -431,6 +431,17 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                     )}
                 </Box>
                 <Box display="flex" gap="8">
+                    {!sidebarMode && (
+                        <NextLink href="/opal/notification-catalog" style={{ textDecoration: "none" }}>
+                            <Button
+                                appearance="subtle"
+                                size="sm"
+                                icon={<IconList size={16} />}
+                            >
+                                Notification catalog
+                            </Button>
+                        </NextLink>
+                    )}
                     <Button
                         appearance="subtle"
                         size="sm"

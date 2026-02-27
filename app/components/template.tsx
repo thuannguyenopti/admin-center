@@ -128,7 +128,7 @@ function TemplateContent({
 										key={menuItem.label}
 										aria-label={menuItem.label}
 										icon={
-											menuItem.label === "Notifications" &&
+											menuItem.badge &&
 												!path.startsWith("/opal/notifications") ? (
 												<Box style={{ position: "relative" }}>
 													{menuItem.icon}
