@@ -125,6 +125,7 @@ export default function MultiSelectDetailsPane({
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestEmpty, setSuggestEmpty] = useState(false);
   const [batchTagsExpanded, setBatchTagsExpanded] = useState(false);
+  const [batchCategoriesExpanded, setBatchCategoriesExpanded] = useState(true);
   const initialTagsRef = useRef<string[]>([]);
   const initialCategoriesRef = useRef<string[]>([]);
   const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
