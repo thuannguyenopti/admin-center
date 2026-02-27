@@ -40,9 +40,7 @@ import {
     IconFilter,
     IconChevronDown,
     IconChevronRight,
-    IconPlug,
     IconUsers,
-    IconSpeakerphone,
     IconRobot,
     IconClock,
     IconUser,
@@ -66,13 +64,15 @@ import {
     IconCircleCheck as AxiomCircleCheck,
     IconFileLines,
     IconArrowUpRightFromSquare,
-
     IconEllipsisStroke,
     IconCheck,
     IconEnvelope,
     IconXmark,
     IconPen,
     IconAgent,
+    IconScrewdriverWrench,
+    IconMegaphone,
+    IconCirclePause,
 } from "@optimizely/axiom-icons";
 import { useState } from "react";
 import { Input } from "@/app/components/Input";
@@ -820,7 +820,7 @@ const NOTIFICATION_TYPES = [
             { type: "Chat Trigger — Agent Execution Success", title: "Content Localizer completed", message: "Chat-triggered execution finished. Campaign copy translated to 4 languages.", icon: <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} /> },
             { type: "Chat Trigger — Agent Execution Failed", title: "Hypothesis Creator failed", message: "Execution b2953c08 hit a tool timeout after 62.45s.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
             { type: "Chat Trigger — Long-Running Agent Progress", title: "Data Pipeline Agent in progress", message: "Processing 2.3M records. Currently at 72% completion.", icon: <IconLoader2 style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
-            { type: "Chat Trigger — Agent Paused", title: "Data Pipeline Agent paused", message: "Agent paused awaiting user input. Resume or abandon the session.", icon: <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} /> },
+            { type: "Chat Trigger — Agent Paused", title: "Data Pipeline Agent paused", message: "Agent paused awaiting user input. Resume or abandon the session.", icon: <IconCirclePause style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
         ],
     },
     {
@@ -830,7 +830,7 @@ const NOTIFICATION_TYPES = [
             { type: "Autonomous — Execution Started", title: "Email Composer started autonomously", message: "Scheduled autonomous run started. Generating email variants for Spring Sale.", icon: <IconLoader2 style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
             { type: "Autonomous — Execution Success", title: "Email Composer ran autonomously", message: "Scheduled autonomous run completed. Generated 12 email variants.", icon: <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} /> },
             { type: "Autonomous — Execution Failed", title: "Social Media Publisher failed", message: "API rate limit exceeded on X/Twitter. 3 of 8 posts were not published.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
-            { type: "Autonomous — Agent Paused", title: "Data Pipeline Agent paused after failures", message: "System automatically paused agent after 3 consecutive failures.", icon: <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} /> },
+            { type: "Autonomous — Agent Paused", title: "Data Pipeline Agent paused after failures", message: "System automatically paused agent after 3 consecutive failures.", icon: <IconCirclePause style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
         ],
     },
     {
@@ -857,9 +857,9 @@ const NOTIFICATION_TYPES = [
         group: "Agent Directory",
         intent: "information",
         items: [
-            { type: "New Agents in Agent Directory", title: "New agent available: Competitor Monitor", message: "Tracks competitor pricing and product changes across 50+ sites.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} /> },
-            { type: "Agent Update Available", title: "Update available: Content Localizer V13", message: "Improved language detection and 40% faster translations.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} /> },
-            { type: "Agent Install Request Submitted (Admin)", title: "Install request: Voice-of-Customer Analyzer", message: "David Kim has requested to install this agent. Review and approve or deny.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-default)" }} />, actions: true },
+            { type: "New Agents in Agent Directory", title: "New agent available: Competitor Monitor", message: "Tracks competitor pricing and product changes across 50+ sites.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} /> },
+            { type: "Agent Update Available", title: "Update available: Content Localizer V13", message: "Improved language detection and 40% faster translations.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} /> },
+            { type: "Agent Install Request Submitted (Admin)", title: "Install request: Voice-of-Customer Analyzer", message: "David Kim has requested to install this agent. Review and approve or deny.", icon: <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} />, actions: true },
             { type: "Agent Install Request Approved (Requester)", title: "Install request approved: Data Analyzer", message: "Your request to install Data Analyzer was approved by the admin.", icon: <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} /> },
             { type: "Agent Install Request Denied (Requester)", title: "Install request denied: Customer Insights Engine", message: "Your request was denied. Contact your admin for more information.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
         ],
@@ -869,8 +869,8 @@ const NOTIFICATION_TYPES = [
         intent: "neutral",
         variant: "strong",
         items: [
-            { type: "New Tools Available", title: "New tool: Google Analytics 4 Connector", message: "Connect your analytics data to enable audience insights agents.", icon: <IconPlug style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
-            { type: "New Connections Available", title: "New tool: Figma Design Importer", message: "Import Figma designs directly into your content workflows.", icon: <IconPlug style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
+            { type: "New Tools Available", title: "New tool: Google Analytics 4 Connector", message: "Connect your analytics data to enable audience insights agents.", icon: <IconScrewdriverWrench style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
+            { type: "New Connections Available", title: "New tool: Figma Design Importer", message: "Import Figma designs directly into your content workflows.", icon: <IconScrewdriverWrench style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
             { type: "Tool Authentication Required", title: "Authentication required: Salesforce", message: "The Salesforce connection requires re-authentication. 3 agents depend on this.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
             { type: "Connection Authentication Expired", title: "Auth expired: Slack Integration", message: "Your Slack OAuth token has expired. Notification delivery to Slack is paused.", icon: <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
             { type: "Tool Deprecation Notice", title: "Tool deprecation notice: Legacy CRM Connector", message: "Will be deprecated on March 1, 2026. Please migrate to CRM v2.", icon: <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} /> },
@@ -880,7 +880,7 @@ const NOTIFICATION_TYPES = [
         group: "System",
         intent: "neutral",
         items: [
-            { type: "System Announcement (role-specific)", title: "New feature: Workflow Builder V2", message: "Drag-and-drop, branching logic, and real-time collaboration are now available.", icon: <IconSpeakerphone style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
+            { type: "System Announcement (role-specific)", title: "New feature: Workflow Builder V2", message: "Drag-and-drop, branching logic, and real-time collaboration are now available.", icon: <IconMegaphone style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} /> },
         ],
     },
 ];

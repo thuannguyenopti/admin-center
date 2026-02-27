@@ -32,7 +32,10 @@ import {
     IconTriangleExclamation,
     IconUserGroup,
     IconCheck as IconCheckAxiom,
-    IconToggleOff,
+    IconCirclePause,
+    IconScrewdriverWrench,
+    IconMegaphone,
+    IconAgent,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -304,7 +307,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         return null;
     };
 
-    // Type icon (collaboration subtypes)
+    // Type icon (per notification type)
     const getTypeIcon = (n: Notification) => {
         switch (n.type) {
             case "collaboration_agent_modified":
@@ -312,7 +315,15 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             case "collaboration_agent_activated":
                 return <IconCheckAxiom style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
             case "collaboration_agent_deactivated":
-                return <IconToggleOff style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+                return <IconCirclePause style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+            case "tools_new_available":
+                return <IconScrewdriverWrench style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+            case "system_announcement":
+                return <IconMegaphone style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+            case "directory_new_agent":
+            case "directory_update_available":
+            case "directory_install_request":
+                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} />;
             default:
                 return null;
         }
