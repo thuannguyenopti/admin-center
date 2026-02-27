@@ -762,21 +762,9 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     {n.date}, {n.timestamp}
                                                 </p>
                                                 {n.actionRequired && (
-                                                    <div>
-                                                        <span style={{
-                                                            display: "inline-flex",
-                                                            alignItems: "center",
-                                                            padding: "2px 8px",
-                                                            borderRadius: "9999px",
-                                                            backgroundColor: "var(--ax-colors-bg-warning-subtle)",
-                                                            color: "var(--ax-colors-fg-warning)",
-                                                            fontSize: "12px",
-                                                            fontWeight: 500,
-                                                            whiteSpace: "nowrap"
-                                                        }}>
-                                                            Action Required
-                                                        </span>
-                                                    </div>
+                                                    <Badge intent="warning" variant="subtle">
+                                                        Action Required
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </div>
@@ -873,15 +861,17 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                                 {n.message}
                                                             </Text>
                                                         </Box>
+                                                        {n.actionRequired && (
+                                                            <Box pt="4">
+                                                                <Badge intent="warning" variant="subtle" size="sm" className="whitespace-nowrap">
+                                                                    Action Required
+                                                                </Badge>
+                                                            </Box>
+                                                        )}
                                                     </Box>
 
                                                     {/* Meta Column */}
-                                                    <Box display="flex" alignItems="center" gap="8" pt="6" style={{ flexShrink: 0 }}>
-                                                        {n.actionRequired && (
-                                                            <Badge intent="warning" variant="subtle" size="sm" className="whitespace-nowrap">
-                                                                Action Required
-                                                            </Badge>
-                                                        )}
+                                                    <Box display="flex" alignItems="center" gap="8" pt="4" style={{ flexShrink: 0 }}>
                                                         <Text fontSize="sm" color="fg.tertiary" className="whitespace-nowrap">
                                                             {n.timestamp}
                                                         </Text>
