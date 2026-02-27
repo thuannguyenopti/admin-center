@@ -6,6 +6,7 @@ import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
 import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData";
+import {mockNotifications} from "@/app/opal/notifications/mockData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
@@ -30,6 +31,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const path = usePathname() ?? "";
+	const hasUnreadNotifications = mockNotifications.some((n) => n.status === "unread");
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
@@ -396,6 +398,7 @@ export default function RootLayout({
 				label: "Inbox",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
+				badge: hasUnreadNotifications,
 				icon: (
 					<img
 						src="/nav_icons/inbox.svg"
@@ -455,13 +458,6 @@ export default function RootLayout({
 						height={20}
 					/>
 				),
-			},
-			{
-				label: "Notification Catalog",
-				url: "/opal/notification-catalog",
-				highlight: "/opal/notification-catalog",
-				icon: <IconList />,
-				customLayout: true,
 			},
 		],
 	};

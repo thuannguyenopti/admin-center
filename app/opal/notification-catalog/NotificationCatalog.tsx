@@ -850,7 +850,7 @@ const NOTIFICATION_TYPES = [
         items: [
             { type: "Agent Modified by Another User", title: "Agent modified: Content Localizer", message: "Sarah Chen updated the prompt chain and added a new output format.", icon: <IconUsers style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} /> },
             { type: "Agent Activated", title: "Agent activated: Campaign Optimizer", message: "Mike Johnson activated Campaign Optimizer in the production environment.", icon: <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} /> },
-            { type: "Agent Deactivated", title: "Agent deactivated: Legacy Email Writer", message: "Admin deactivated Legacy Email Writer. Reason: replaced by Email Composer V5.", icon: <IconFileLines style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} /> },
+            { type: "Agent Deactivated", title: "Agent deactivated: Legacy Email Writer", message: "Admin deactivated Legacy Email Writer. Reason: replaced by Email Composer V5.", icon: <IconCirclePause style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} /> },
         ],
     },
     {
@@ -909,9 +909,11 @@ function NotificationTypesSection() {
                             >
                                 <Box pt="2" style={{ flexShrink: 0 }}>{item.icon}</Box>
                                 <Box flex="1" style={{ minWidth: 0 }}>
-                                    <Box display="flex" alignItems="start" justifyContent="space-between" gap="8">
-                                        <Text fontWeight="600" fontSize="md">{item.title}</Text>
-                                        <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap">{item.type}</Text>
+                                    <Box display="flex" flexWrap="wrap" alignItems="center" gap="8">
+                                        <Box flex="1" style={{ minWidth: "8rem" }}>
+                                            <Text fontWeight="600" fontSize="md">{item.title}</Text>
+                                        </Box>
+                                        <Text fontSize="xs" color="fg.tertiary" className="whitespace-nowrap" style={{ flexShrink: 0 }}>{item.type}</Text>
                                     </Box>
                                     <Text fontSize="sm" color="fg.tertiary" mt="2">{item.message}</Text>
                                     {(item as any).actions && (
