@@ -1,3 +1,5 @@
+import { BaseParsedRow } from '@/app/shared/components/ImportModal/types';
+
 export type CategoryStatus = 'draft' | 'published' | 'in-review';
 export type CategoryVisibility = 'public' | 'private';
 
@@ -41,6 +43,14 @@ export interface ParsedCSVRow {
   status: 'valid' | 'error' | 'duplicate-in-csv' | 'exists-in-system';
   error?: string;
   conflictType?: 'exact-match' | 'slug-match';
+  existingCategory?: Category;
+  depth?: number;
+}
+
+// Extend BaseParsedRow for category-specific parsed CSV row
+export interface CategoryParsedRow extends BaseParsedRow<Category> {
+  parentSlug: string | null;
+  categoryStatus: CategoryStatus;
   existingCategory?: Category;
   depth?: number;
 }

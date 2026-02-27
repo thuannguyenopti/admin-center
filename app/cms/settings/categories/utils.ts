@@ -364,18 +364,16 @@ export function detectOrphans(
   const orphans: OrphanedCategory[] = [];
 
   for (const row of rows) {
-    if (!row.parentSlug) continue; // Root categories can't be orphaned
+    // Skip rows that already have errors - those are shown separately
+    if (row.status === 'error') continue;
 
-    // Check if parent exists in existing categories
-    const parentExistsInSystem = existingCategories.some(
-      (c) => c.slug === row.parentSlug
-    );
+    if (!row.parentSlug) continue; // Root categories can't be orphaned
 
     // Check if parent exists in CSV rows
     const parentInCSV = rows.find((r) => r.slug === row.parentSlug);
 
     if (parentInCSV) {
-      // Parent is in CSV - check resolution
+      // Parent is in CSV - only flag orphans if parent will be skipped due to conflict resolution
       if (parentInCSV.status === 'exists-in-system') {
         const resolution = resolutions.get(parentInCSV.slug);
         if (resolution?.action === 'skip') {
@@ -386,22 +384,8 @@ export function detectOrphans(
             reason: 'parent-skipped',
           });
         }
-      } else if (parentInCSV.status === 'error') {
-        orphans.push({
-          slug: row.slug,
-          name: row.name,
-          parentSlug: row.parentSlug,
-          reason: 'parent-error',
-        });
       }
-    } else if (!parentExistsInSystem) {
-      // Parent doesn't exist anywhere
-      orphans.push({
-        slug: row.slug,
-        name: row.name,
-        parentSlug: row.parentSlug,
-        reason: 'parent-missing',
-      });
+      // Don't flag orphans for parent-error or parent-missing - those rows already have error status
     }
   }
 

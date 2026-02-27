@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -156,6 +156,15 @@ export default function CategoriesSettings() {
     setCurrentPage(1);
   }, [searchQuery]);
 
+  // Manage page header visibility based on categories and modal state
+  useEffect(() => {
+    if (categoriesWithUsage.length === 0 && !isModalOpen) {
+      setHidePageHeader(true);
+    } else {
+      setHidePageHeader(false);
+    }
+  }, [categoriesWithUsage.length, isModalOpen, setHidePageHeader]);
+
   const handleCreateClick = () => {
     setModalMode('create');
     setEditingCategories([]);
@@ -233,9 +242,6 @@ export default function CategoriesSettings() {
 
   // Show empty state if no categories
   if (categoriesWithUsage.length === 0 && !isModalOpen) {
-    // Hide the page header for empty state
-    setHidePageHeader(true);
-
     return (
       <>
         <Box
@@ -323,9 +329,6 @@ export default function CategoriesSettings() {
       </>
     );
   }
-
-  // Show page header when there are categories
-  setHidePageHeader(false);
 
   // Show full categories interface when there are categories
   return (
