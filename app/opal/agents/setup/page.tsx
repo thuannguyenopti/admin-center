@@ -1038,64 +1038,11 @@ function SpecializedAgentSetupContent() {
                                                     )}
                                                 </Field>
 
-                                                {/* Advanced Settings - Visible only when multiTurnMode is true */}
                                                 {multiTurnMode && (
-                                                    <Disclosure defaultOpen={chatConfigOpen} onOpenChange={setChatConfigOpen} bg="transparent" p="0">
-                                                        <DisclosureTrigger>
-                                                            <Text fontWeight="500">Advanced Settings</Text>
-                                                        </DisclosureTrigger>
-                                                        <DisclosureContent pt="16" pb="0">
-                                                            <Box display="flex" flexDirection="column" gap="24">
-                                                                <Box>
-                                                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb="8">
-                                                                        <Box display="flex" alignItems="center" gap="4">
-                                                                            <Text fontSize="md">System Prompt</Text>
-                                                                            <Tooltip delayDuration={300} content="Defines the agent’s persona and behavioral guidelines. It supports variables and directives for dynamic instruction and customization.">
-                                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                            </Tooltip>
-                                                                        </Box>
-                                                                        <Box display="flex" gap="12">
-                                                                                                                                                        <Button
-                                                                                appearance="subtle"
-                                                                                size="sm"
-                                                                                icon={<IconArrowRotateLeft size={16} />}
-                                                                                onClick={() => {
-                                                                                    if (MOCK_AGENTS_DATA[agentId]?.systemPrompt) {
-                                                                                        setSystemPrompt(MOCK_AGENTS_DATA[agentId].systemPrompt);
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                Reset
-                                                                            </Button>
-                                                                        </Box>
-                                                                    </Box>
-                                                                    <AutoResizeTextarea
-                                                                        value={systemPrompt}
-                                                                        onChange={(e: any) => setSystemPrompt(e.target.value)}
-                                                                        placeholder="You are a conversational agent interacting with a user..."
-                                                                        style={{
-                                                                            minHeight: "200px",
-                                                                            maxHeight: "calc(100vh - 240px)",
-                                                                            resize: "none",
-                                                                            overflowY: "auto"
-                                                                        }}
-                                                                        readOnly={isReadOnly}
-                                                                    />
-                                                                    <Text fontSize="sm" color="fg.tertiary" mt="8">
-                                                                        Wrap dynamic variables in double brackets and tools in backticks, e.g. [[variable_name]] or `tool_name`.
-                                                                    </Text>
-                                                                </Box>
-                                                                <Box>
-                                                                    <Button appearance="default" icon={<IconSettings />} onClick={() => setCustomizeChatModalOpen(true)}>Advanced Chat Settings</Button>
-                                                                </Box>
-                                                            </Box>
-                                                        </DisclosureContent>
-                                                    </Disclosure>
+                                                    <Box>
+                                                        <Button appearance="default" icon={<IconSettings />} onClick={() => setCustomizeChatModalOpen(true)}>Advanced Chat Settings</Button>
+                                                    </Box>
                                                 )}
-
-
-
-
 
                                                 <Box>
                                                     <Box display="flex" justifyContent="space-between" mb="8">
