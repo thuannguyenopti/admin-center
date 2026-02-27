@@ -1439,9 +1439,9 @@ function SpecializedAgentSetupContent() {
                                                                                             min={10000}
                                                                                             step={1000}
                                                                                             marks={[
-                                                                                                { value: 10000 },
-                                                                                                { value: 400000 },
-                                                                                                { value: 700000 },
+                                                                                                { value: 10000, label: "" },
+                                                                                                { value: 400000, label: "" },
+                                                                                                { value: 700000, label: "" },
                                                                                             ]}
                                                                                         />
                                                                                         <Box style={{ position: "relative", height: "20px", marginTop: "-30px" }}>
@@ -1896,9 +1896,9 @@ function SpecializedAgentSetupContent() {
                                                                                         min={10000}
                                                                                         step={1000}
                                                                                         marks={[
-                                                                                            { value: 10000 },
-                                                                                            { value: 400000 },
-                                                                                            { value: 700000 },
+                                                                                            { value: 10000, label: "" },
+                                                                                            { value: 400000, label: "" },
+                                                                                            { value: 700000, label: "" },
                                                                                         ]}
                                                                                     />
                                                                                     <Box style={{ position: "relative", height: "20px", marginTop: "-30px" }}>
