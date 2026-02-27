@@ -678,7 +678,7 @@ export default function MultiSelectDetailsPane({
                     }}
                   >
                     <Text fontSize="xs" color="fg.secondary" fontWeight="600">
-                      {suggestedSlugs.length > 0 ? 'Existing' : 'Common tags'} ({tags.length})
+                      Batch tags ({tags.length})
                     </Text>
                     <Box
                       style={{
