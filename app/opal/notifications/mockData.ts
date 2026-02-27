@@ -1642,7 +1642,7 @@ export function getCategoryLabel(category: string): string {
         directory: "Agent Directory",
         tools: "Tools & Connections",
         system: "System",
-        collaboration: "Collaboration",
+        collaboration: "Collaborative",
     };
     return labels[category] || category;
 }

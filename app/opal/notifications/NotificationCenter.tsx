@@ -30,6 +30,9 @@ import {
     IconEllipsisStroke,
     IconCircleExclamation,
     IconTriangleExclamation,
+    IconUserGroup,
+    IconCheck as IconCheckAxiom,
+    IconToggleOff,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -132,7 +135,6 @@ const CATEGORY_OPTIONS = [
     "tools",
     "collaboration",
     "system",
-    "collaboration", // Fixed duplicate
 ];
 
 const STATUS_OPTIONS = ["All", "Unread", "Read"];
@@ -300,6 +302,20 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
             return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
         }
         return null;
+    };
+
+    // Type icon (collaboration subtypes)
+    const getTypeIcon = (n: Notification) => {
+        switch (n.type) {
+            case "collaboration_agent_modified":
+                return <IconUserGroup style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+            case "collaboration_agent_activated":
+                return <IconCheckAxiom style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
+            case "collaboration_agent_deactivated":
+                return <IconToggleOff style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+            default:
+                return null;
+        }
     };
 
     // ── Loading Skeleton ────────────────────────────────────────────────────
@@ -835,7 +851,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
                                                     {/* Status Icon */}
                                                     <Box style={{ flexShrink: 0 }} pt="4">
-                                                        {getStatusIcon(n) || <IconInbox style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />}
+                                                        {getStatusIcon(n) || getTypeIcon(n) || <IconInbox style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />}
                                                     </Box>
 
                                                     {/* Content Column */}
