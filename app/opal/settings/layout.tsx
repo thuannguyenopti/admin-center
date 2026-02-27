@@ -52,7 +52,7 @@ function OpalSettingsSubNav() {
                 <Nav>
                     <NavBody>
                         {/* Title */}
-                        <Box px="24" py="16" textAlign="start">
+                        <Box px="12" py="16">
                             <Text fontSize="md" fontWeight="600" color="fg.default">
                                 Opal Configurations
                             </Text>
