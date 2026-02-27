@@ -21,7 +21,6 @@ import {
     IconChecks,
     IconTrash,
     IconBellOff,
-    IconInbox,
     IconLayoutGrid,
     IconList,
     IconLayoutList,
@@ -36,6 +35,12 @@ import {
     IconScrewdriverWrench,
     IconMegaphone,
     IconAgent,
+    IconCircleCheck,
+    IconCircleInfo,
+    IconSpinner,
+    IconFileLines,
+    IconInboxFull,
+    IconGear,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import NextLink from "next/link";
@@ -296,34 +301,77 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
         );
     };
 
-    // Status icon
+    // Status icon — matches Figma status icon spec (circle-exclamation / triangle-exclamation / spinner / circle-check)
     const getStatusIcon = (n: Notification) => {
         if (n.executionStatus === "failed" || n.guardrailStatus === "terminated" || n.guardrailStatus === "failed") {
             return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
         }
-        if (n.guardrailStatus === "warning" || n.guardrailStatus === "triggered") {
+        if (n.guardrailStatus === "warning") {
             return <IconTriangleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-warning)" }} />;
+        }
+        if (n.guardrailStatus === "triggered") {
+            return <IconSpinner style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} className="animate-spin" />;
+        }
+        if (n.executionStatus === "success" || n.guardrailStatus === "success") {
+            return <IconCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
         }
         return null;
     };
 
-    // Type icon (per notification type)
+    // Type icon — covers every NotificationType so the IconInbox fallback is never reached
     const getTypeIcon = (n: Notification) => {
         switch (n.type) {
+            // ── Agent Directory ──────────────────────────────────────────────────
+            case "directory_new_agent":
+            case "directory_update_available":
+            case "directory_install_request":
+                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} />;
+
+            // ── Approval (routes by category) ────────────────────────────────────
+            case "approval_required":
+                if (n.category === "directory")
+                    return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} />;
+                if (n.category === "tools")
+                    return <IconScrewdriverWrench style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+                return <IconCircleInfo style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+
+            // ── Agent Execution ──────────────────────────────────────────────────
+            case "agent_execution_chat":
+            case "agent_execution_autonomous":
+                return <IconCircleInfo style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+            case "agent_execution_failed":
+                return <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
+            case "agent_execution_long_running":
+                return <IconSpinner style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} className="animate-spin" />;
+
+            // ── Guardrail ────────────────────────────────────────────────────────
+            case "guardrail_observer":
+            case "guardrail_enforcer":
+            case "guardrail_quality":
+            case "guardrail_support_ticket":
+                return <IconCircleInfo style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
+
+            // ── Tools ────────────────────────────────────────────────────────────
+            case "tools_new_available":
+            case "tools_deprecated":
+            case "tools_auth_required":
+            case "tools_auth_expired":
+                return <IconScrewdriverWrench style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+
+            // ── Collaboration ────────────────────────────────────────────────────
             case "collaboration_agent_modified":
                 return <IconUserGroup style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
             case "collaboration_agent_activated":
                 return <IconCheckAxiom style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />;
             case "collaboration_agent_deactivated":
                 return <IconCirclePause style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />;
-            case "tools_new_available":
-                return <IconScrewdriverWrench style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+
+            // ── System ───────────────────────────────────────────────────────────
             case "system_announcement":
                 return <IconMegaphone style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />;
-            case "directory_new_agent":
-            case "directory_update_available":
-            case "directory_install_request":
-                return <IconAgent style={{ width: 16, height: 16, color: "var(--ax-colors-fg-accent)" }} />;
+            case "system_maintenance":
+                return <IconGear style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />;
+
             default:
                 return null;
         }
@@ -583,7 +631,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                         alignItems="center"
                         justifyContent="center"
                     >
-                        <IconInbox size={40} color="var(--ax-colors-fg-tertiary)" />
+                        <IconInboxFull style={{ width: 40, height: 40, color: "var(--ax-colors-fg-tertiary)" }} />
                     </Box>
                     <Heading level="3" color="fg.secondary">
                         No notifications found
@@ -853,7 +901,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
                                                     {/* Status Icon */}
                                                     <Box style={{ flexShrink: 0 }} pt="4">
-                                                        {getStatusIcon(n) || getTypeIcon(n) || <IconInbox style={{ width: 16, height: 16, color: "var(--ax-colors-fg-tertiary)" }} />}
+                                                        {getStatusIcon(n) || getTypeIcon(n) || <IconCircleInfo style={{ width: 16, height: 16, color: "var(--ax-colors-fg-information)" }} />}
                                                     </Box>
 
                                                     {/* Content Column */}
