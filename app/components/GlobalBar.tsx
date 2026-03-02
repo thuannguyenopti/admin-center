@@ -4,7 +4,16 @@ import {Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator} from "@
 import {Text} from "./Text";
 import {ReactNode} from "react";
 import {useRouter, usePathname} from "next/navigation";
-import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
+import {
+	IconSearch,
+	IconBell,
+	IconHelp,
+	IconUser,
+	IconSunFilled,
+	IconWashMachine,
+	IconMoon,
+	IconDeviceDesktop,
+} from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
@@ -151,26 +160,20 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					options={[
 						{
 							label: "Light",
-							addon:
-								themePreference === "light" ? (
-									<Indicator intent="success" />
-								) : undefined,
+							addon: <IconSunFilled size={16} />,
+							...(themePreference === "light" && {selected: true}),
 							execute: () => setThemePreference("light"),
 						},
 						{
 							label: "Dark",
-							addon:
-								themePreference === "dark" ? (
-									<Indicator intent="success" />
-								) : undefined,
+							addon: <IconMoon size={16} />,
+							...(themePreference === "dark" && {selected: true}),
 							execute: () => setThemePreference("dark"),
 						},
 						{
 							label: "System",
-							addon:
-								themePreference === "system" ? (
-									<Indicator intent="success" />
-								) : undefined,
+							addon: <IconDeviceDesktop size={16} />,
+							...(themePreference === "system" && {selected: true}),
 							execute: () => setThemePreference("system"),
 						},
 					]}
@@ -180,29 +183,17 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							appearance="subtle"
 							size="md"
 							icon={
-								<svg
-									width="20"
-									height="20"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								>
-									<circle cx="12" cy="12" r="4" />
-									<path d="M12 2v2" />
-									<path d="M12 20v2" />
-									<path d="m4.93 4.93 1.41 1.41" />
-									<path d="m17.66 17.66 1.41 1.41" />
-									<path d="M2 12h2" />
-									<path d="M20 12h2" />
-									<path d="m6.34 17.66-1.41 1.41" />
-									<path d="m19.07 4.93-1.41 1.41" />
-								</svg>
+								{
+									system: <IconDeviceDesktop />,
+									light: <IconSunFilled />,
+									dark: <IconMoon />,
+								}[themePreference]
 							}
 							aria-label="Theme"
-						/>
+							className="capitalize"
+						>
+							{themePreference}
+						</Button>
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>

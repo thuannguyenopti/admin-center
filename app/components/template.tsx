@@ -3,7 +3,6 @@
 import {Box, Sidebar, NavBody, NavFooter, NavItem, NavList, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
 import {Button} from "./Button";
 import {Text} from "./Text";
-import Link from "next/link";
 import {useEffect, useState, Suspense} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
@@ -219,7 +218,12 @@ function TemplateContent({
 							style={{overflowY: "auto", overflowX: "hidden"}}
 						>
 							<SubNav
-								style={{height: "100%", overflowY: "auto", overflowX: "hidden"}}
+								style={{
+									height: "100%",
+									overflowY: "auto",
+									overflowX: "hidden",
+									borderRight: 0,
+								}}
 							>
 								<div
 									className="flex w-[500%]"
@@ -236,6 +240,7 @@ function TemplateContent({
 										<VT
 											backLink={undefined}
 											title={highlight1?.children?.title || highlight1?.label}
+											description={highlight1?.children?.description}
 											items={highlight1?.children}
 										/>
 									)}
@@ -243,6 +248,7 @@ function TemplateContent({
 										<VT
 											backLink={lvl2}
 											title={lvl2.children?.title}
+											description={lvl2.children?.description}
 											items={lvl2.children?.children}
 										/>
 									)}
@@ -250,6 +256,7 @@ function TemplateContent({
 										<VT
 											backLink={lvl3}
 											title={lvl3.children?.title}
+											description={lvl3.children?.description}
 											items={lvl3.children?.children}
 										/>
 									)}
@@ -289,7 +296,8 @@ function TemplateContent({
 							}}
 							color="fg.default"
 							overflow="auto"
-							p="24"
+							px="32"
+							py="24"
 						>
 							<>
 								{!hidePageHeader && (
@@ -330,6 +338,7 @@ function TemplateContent({
 						bg="bg.default"
 						h="full"
 						overflow="auto"
+						style={{width: "384px", minWidth: "384px"}}
 					>
 						{asideContent}
 					</Box>

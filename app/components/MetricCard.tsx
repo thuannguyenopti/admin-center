@@ -77,13 +77,14 @@ export default function MetricCard({
 		const percentChange = ((value - previousValue) / previousValue) * 100;
 		const isIncreasing = percentChange >= 0;
 
-		// Determine overall trend by comparing first and last values
-		const trendUp = value > (explicitPreviousValue ?? data[0]);
+		// Use consistent logic for both arrow direction and color
+		// Both should be based on the same comparison (current vs previous)
+		const isGoodTrend = desiredDirection === "up" ? isIncreasing : !isIncreasing;
 
 		return {
 			value: Math.abs(percentChange).toFixed(1) + "%",
-			isPositive: percentChange >= 0,
-			isGood: desiredDirection === "up" ? trendUp : !trendUp, // Green if overall trend is up, red if down
+			isPositive: isIncreasing,
+			isGood: isGoodTrend,
 		};
 	};
 
@@ -247,7 +248,7 @@ export default function MetricCard({
 				<Text
 					fontSize="3xl"
 					fontWeight="600"
-					color="fg.accent.strong"
+					color="fg.information"
 					style={{lineHeight: 1}}
 				>
 					{formatValue(value)}
@@ -257,7 +258,7 @@ export default function MetricCard({
 			{(previousValue !== undefined || changeData) && (
 				<Box display="flex" gap="12" justifyContent="space-between" w="full">
 					{previousValue !== undefined && (
-						<Text fontSize="sm" color="fg.information.light">
+						<Text fontSize="sm" color="fg.information">
 							Prev: {formatValue(previousValue)}
 						</Text>
 					)}
