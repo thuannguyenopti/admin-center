@@ -7,6 +7,7 @@ import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page} from "@/app/db/initialData";
 import {useEffect, useState} from "react";
 import {Box, Heading} from "@optiaxiom/react";
+import {buildPageSlug} from "@/app/site/resolveSlug";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -163,6 +164,13 @@ export default function EditPageDetail() {
 		return <Box p="24">Loading...</Box>;
 	}
 
+	const handleViewOnWebsite = () => {
+		if (!page) return;
+		const slug = buildPageSlug(page, pages);
+		const url = slug ? `/site/${slug}` : `/site`;
+		window.open(url, "_blank");
+	};
+
 	return (
 		<VBPrototype
 			key={id}
@@ -170,6 +178,7 @@ export default function EditPageDetail() {
 			onSave={handleSave}
 			onPublish={handlePublish}
 			pageName={page.name}
+			pageId={page.id}
 			pageStatus={page.status}
 			variations={page.variations}
 			onAddVariation={handleAddVariation}
@@ -177,6 +186,7 @@ export default function EditPageDetail() {
 			onRenameVariation={handleRenameVariation}
 			onRenamePage={handleRenamePage}
 			onTrash={handleTrash}
+			onViewOnWebsite={handleViewOnWebsite}
 		/>
 	);
 }

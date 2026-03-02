@@ -4,7 +4,7 @@ import "./globals.css";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
+import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
 import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
@@ -35,12 +35,17 @@ export default function RootLayout({
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
 	const webhookId = webhookMatch ? webhookMatch[1] : null;
+	const contentTypeMatch = path.match(/\/cms\/settings\/content-types\/([^/]+)/);
+	const contentTypeId = contentTypeMatch ? contentTypeMatch[1] : null;
 
 	const [algorithmsState] = usePersistentState("algorithms", initialAlgorithms) as [
 		Algorithm[] | undefined,
 	];
 	const [webhooksState] = usePersistentState("webhooks", initialWebhooks) as [
 		typeof initialWebhooks | undefined,
+	];
+	const [contentTypesState] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[] | undefined,
 	];
 
 	const safeAlgorithms =
@@ -49,9 +54,14 @@ export default function RootLayout({
 			: initialAlgorithms;
 	const safeWebhooks =
 		Array.isArray(webhooksState) && webhooksState.length > 0 ? webhooksState : initialWebhooks;
+	const safeContentTypes =
+		Array.isArray(contentTypesState) && contentTypesState.length > 0
+			? contentTypesState
+			: initialContentTypes;
 
 	const currentAlgorithm = safeAlgorithms.find((a) => a.id === algorithmId);
 	const currentWebhook = safeWebhooks.find((w) => w.id === webhookId);
+	const currentContentType = safeContentTypes.find((ct) => ct.id === contentTypeId);
 
 	const structure = {
 		cms: [
@@ -125,7 +135,57 @@ export default function RootLayout({
 						},
 					},
 					{label: "Blueprints", url: "/cms/settings/blueprints"},
-					{label: "Content Types", url: "/cms/settings/content-types"},
+					{
+						label: "Content Types",
+						url: "/cms/settings/content-types",
+						children: currentContentType
+							? {
+									title: currentContentType.displayName || currentContentType.name,
+									description: currentContentType.baseType === "Page" ? "Page Type" : 
+										currentContentType.baseType === "Block" ? "Block Type" :
+										currentContentType.baseType === "Experience" ? "Experience Type" :
+										currentContentType.baseType === "Media" ? "Media Type" :
+										currentContentType.baseType === "Product" ? "Product Type" :
+										currentContentType.baseType,
+									children: [
+										{label: "Define"},
+										{
+											label: "Properties",
+											url: `/cms/settings/content-types/${contentTypeId}/properties`,
+										},
+										{
+											label: "Contracts",
+											url: `/cms/settings/content-types/${contentTypeId}/contracts`,
+										},
+										{
+											label: "Mappings",
+											url: `/cms/settings/content-types/${contentTypeId}/mappings`,
+										},
+										{label: "Setup"},
+										{
+											label: "Details",
+											url: `/cms/settings/content-types/${contentTypeId}/details`,
+										},
+										{
+											label: "Default Values",
+											url: `/cms/settings/content-types/${contentTypeId}/default-values`,
+										},
+										{
+											label: "Child Content Types",
+											url: `/cms/settings/content-types/${contentTypeId}/child-types`,
+										},
+										{
+											label: "Permissions",
+											url: `/cms/settings/content-types/${contentTypeId}/permissions`,
+										},
+										{
+											label: "Settings",
+											url: `/cms/settings/content-types/${contentTypeId}/settings`,
+										},
+									],
+							  }
+							: undefined,
+					},
 					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
 					{label: "Access Rights", url: "/cms/settings/access-rights"},
 					{label: "API Clients", url: "/cms/settings/api-clients"},
