@@ -52,12 +52,35 @@ function describeContentContext(contentContext) {
 }
 
 function buildPromptText(categoryTaxonomy, contentContext) {
+	const hasTaxonomy = categoryTaxonomy && categoryTaxonomy.length > 0;
+	const hasContent = contentContext && contentContext.length > 0;
 	const treeDesc = describeTaxonomyTree(categoryTaxonomy);
 	const contentDesc = describeContentContext(contentContext);
 	const existingSlugs =
-		categoryTaxonomy.length > 0
+		hasTaxonomy
 			? categoryTaxonomy.map((c) => c.slug).join(", ")
 			: "none";
+
+	if (!hasTaxonomy && !hasContent) {
+		// No taxonomy and no content: generate general CMS categories
+		return `You are a taxonomy assistant for a CMS. Suggest useful categories for organizing content in a content management system.
+
+Rules:
+- Maximum depth is ${MAX_DEPTH} levels (root = level 1, then 2, 3, 4).
+- New categories can reference another suggested category as parent using parentSlug, or be root-level (parentSlug: null).
+- Suggest a mix of root-level and child categories to create a useful taxonomy structure.
+- Use short, title-case names. Slugs must be lowercase, hyphenated, no spaces.
+- Suggest categories that would be commonly useful for a CMS: topic areas, content types, organizational themes, etc.
+
+Return valid JSON only, no other text:
+{
+  "suggestedCategories": [
+    { "name": "Category Name", "slug": "category-slug", "parentSlug": null },
+    { "name": "Child Category", "slug": "child-category", "parentSlug": "category-slug" }
+  ]
+}
+- suggestedCategories: array of 8–15 new categories. Each has name (title-case), slug (lowercase-hyphenated), parentSlug (null for root, or another suggested slug for child categories). Order can be any; parents may appear after children.`;
+	}
 
 	return `You are a taxonomy assistant for a CMS. Suggest new categories that fit the existing taxonomy and the content that will be organised under them.
 

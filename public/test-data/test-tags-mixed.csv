@@ -1,0 +1,7 @@
+name,slug,visibility
+Beginner Friendly,beginner-friendly,public
+Cycling Training,cycling-training,public
+,missing-name,private
+Advanced Techniques,advanced-techniques,public
+Duplicate Advanced,advanced-techniques,private
+Valid New Tag,valid-new-tag,public
