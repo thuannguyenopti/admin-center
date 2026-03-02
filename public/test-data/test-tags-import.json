@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Beginner Friendly",
+    "slug": "beginner-friendly",
+    "visibility": "public"
+  },
+  {
+    "name": "Advanced Techniques",
+    "slug": "advanced-techniques",
+    "visibility": "public"
+  },
+  {
+    "name": "Nutrition Tips",
+    "slug": "nutrition-tips",
+    "visibility": "public"
+  },
+  {
+    "name": "Recovery Methods",
+    "slug": "recovery-methods",
+    "visibility": "private"
+  },
+  {
+    "name": "Race Preparation",
+    "slug": "race-preparation",
+    "visibility": "public"
+  },
+  {
+    "name": "Winter Training",
+    "slug": "winter-training",
+    "visibility": "public"
+  }
+]

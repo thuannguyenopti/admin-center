@@ -60,6 +60,16 @@ export function MergeTagsModal({
   const tagsToMergeIds = tagsToMerge.map((t) => t.id);
   const allTagsExcludingMerged = allTags.filter((t) => !tagsToMergeIds.includes(t.id));
 
+  // Lock page scroll when modal is open so only the modal body scrolls (single scrollbar)
+  useEffect(() => {
+    if (open) {
+      document.body.dataset.modalOpen = 'true';
+      return () => {
+        delete document.body.dataset.modalOpen;
+      };
+    }
+  }, [open]);
+
   const handlePrimaryChange = useCallback(
     (_index: number, field: keyof TagFormRow, value: string) => {
       setPrimaryRow((prev) => ({ ...prev, [field]: value }));
@@ -113,7 +123,11 @@ export function MergeTagsModal({
         size="lg"
         style={{
           maxWidth: '736px',
+          maxHeight: '80vh',
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <DialogHeader
@@ -126,7 +140,13 @@ export function MergeTagsModal({
         >
           Merge tags
         </DialogHeader>
-        <DialogBody>
+        <DialogBody
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
           {step === 1 ? (
             <Box display="flex" flexDirection="column" gap="16">
               <Text

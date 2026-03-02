@@ -6,7 +6,7 @@ export function useTagActions(
   setTags: (tags: Tag[]) => void
 ) {
   const createTags = useCallback(
-    (formRows: TagFormRow[]) => {
+    (formRows: TagFormRow[]): string[] => {
       const newTags: Tag[] = formRows.map((row) => ({
         id: `tag-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: row.name,
@@ -22,15 +22,18 @@ export function useTagActions(
       }));
 
       setTags([...tags, ...newTags]);
+      return newTags.map(tag => tag.id);
     },
     [tags, setTags]
   );
 
   const updateTags = useCallback(
-    (formRows: TagFormRow[]) => {
+    (formRows: TagFormRow[]): string[] => {
+      const updatedIds: string[] = [];
       const updatedTags = tags.map((tag) => {
         const formRow = formRows.find((row) => row.id === tag.id);
         if (formRow) {
+          updatedIds.push(tag.id);
           return {
             ...tag,
             name: formRow.name,
@@ -47,6 +50,7 @@ export function useTagActions(
       });
 
       setTags(updatedTags);
+      return updatedIds;
     },
     [tags, setTags]
   );

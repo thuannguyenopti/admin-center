@@ -1,0 +1,9 @@
+name,slug,parentSlug,status,visibility
+Bikes,bikes,equipment,published,public
+Road Bikes,road-bikes,bikes,published,public
+Mountain Bikes,mountain-bikes,bikes,published,public
+Accessories,accessories,equipment,published,public
+Helmets,helmets,accessories,published,public
+Lights,lights,accessories,published,public
+Nutrition,nutrition,training,published,public
+Plans,plans,training,published,public
