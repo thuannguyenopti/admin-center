@@ -78,7 +78,7 @@ const serializeDoc = (doc: TipTapDoc | string): string => {
     return (doc.content || []).map(serializeNode).join("") || "";
 };
 
-export function RichTextBlock({ properties, hasBgImage }: { properties: any; hasBgImage?: boolean }) {
+export const RichTextBlock = React.memo(function RichTextBlock({ properties, hasBgImage }: { properties: any; hasBgImage?: boolean }) {
     const richTextValue = getProperty(properties, "richtext", "Rich Text") ?? "";
     const html = serializeDoc(richTextValue) || "&nbsp;";
 
@@ -88,4 +88,4 @@ export function RichTextBlock({ properties, hasBgImage }: { properties: any; has
             dangerouslySetInnerHTML={{ __html: html }}
         />
     );
-}
+});

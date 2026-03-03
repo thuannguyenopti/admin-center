@@ -3,7 +3,7 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function ProductBlock({ properties, hasBgImage }: { properties: any; hasBgImage?: boolean }) {
+export const ProductBlock = React.memo(function ProductBlock({ properties, hasBgImage }: { properties: any; hasBgImage?: boolean }) {
     const name = getProperty(properties, "name", "Name") || "Product";
     const price = getProperty(properties, "price", "Price") || "";
     const description = getProperty(properties, "description", "Description") || "";
@@ -19,4 +19,4 @@ export function ProductBlock({ properties, hasBgImage }: { properties: any; hasB
             <p className={hasBgImage ? "text-white/80 text-sm leading-relaxed" : "text-gray-600 text-sm leading-relaxed"}>{description}</p>
         </div>
     );
-}
+});

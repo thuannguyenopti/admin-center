@@ -1,14 +1,13 @@
 "use client";
 
-import React, { forwardRef, useRef, useImperativeHandle, useMemo, useCallback, useLayoutEffect, useState, useEffect } from "react";
-import type { InputProps } from "@optiaxiom/react";
+import React, { forwardRef, useRef, useImperativeHandle, useCallback, useLayoutEffect, useState, useEffect } from "react";
+import type { TextareaProps } from "@optiaxiom/react";
 import { useProofreading } from "./useProofreading";
-import { textToNodes } from "./utils/textToNodes";
 import { getCursorOffset, setCursorOffset } from "./utils/cursorUtils";
 import type { GrammarError } from "./ProofreadingProvider";
 import styles from "./AIInputField.module.css";
 
-export interface AIInputFieldProps extends Omit<InputProps, "onChange" | "value"> {
+export interface AIInputFieldProps extends Omit<TextareaProps, "onChange" | "value"> {
 	value: string;
 	onChange: (e: { currentTarget: { value: string }; target: { value: string } }) => void;
 	placeholder?: string;
@@ -36,41 +35,40 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 		const editorRef = useRef<HTMLDivElement>(null);
 		const [isTyping, setIsTyping] = useState(false);
 		const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+		const isUserTypingRef = useRef(false);
+		const onChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+		const pendingValueRef = useRef<string | null>(null);
 
 		// Only check for errors when not actively typing
 		const { errors, checkNow } = useProofreading(enableGrammarCheck && !isTyping ? value : "");
-		const cursorPosRef = useRef<number | null>(null);
-		const isInputtingRef = useRef(false);
-		const previousValueRef = useRef(value);
 
 		// Expose ref to parent
 		useImperativeHandle(ref, () => editorRef.current!);
 
-		// Cleanup typing timeout on unmount
+		// Cleanup timeouts on unmount
 		useEffect(() => {
 			return () => {
-				if (typingTimeoutRef.current) {
-					clearTimeout(typingTimeoutRef.current);
-				}
+				if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+				if (onChangeTimeoutRef.current) clearTimeout(onChangeTimeoutRef.current);
 			};
 		}, []);
 
-		// Restore cursor position after React updates content
+		// Initialize and sync DOM content
 		useLayoutEffect(() => {
-			// Only restore cursor if value actually changed (not just errors)
-			const valueChanged = previousValueRef.current !== value;
-			previousValueRef.current = value;
+			if (!editorRef.current) return;
 
-			if (isInputtingRef.current && valueChanged && cursorPosRef.current !== null && editorRef.current) {
-				// Restore cursor synchronously before browser paint
-				setCursorOffset(editorRef.current, cursorPosRef.current);
-				cursorPosRef.current = null;
-				isInputtingRef.current = false;
+			// Never update DOM while user is actively typing
+			if (isUserTypingRef.current) return;
+
+			const currentText = editorRef.current.textContent || "";
+
+			// Update if value changed
+			if (currentText !== value) {
+				editorRef.current.textContent = value;
 			}
-		}, [value, errors]);
+		}, [value]);
 
 		const handleFocus = useCallback(() => {
-			// Run proofreading check when focused
 			if (enableGrammarCheck && value) {
 				checkNow();
 			}
@@ -79,42 +77,51 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 		const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
 			if (!editorRef.current) return;
 
-			// Save cursor position before updating
-			cursorPosRef.current = getCursorOffset(editorRef.current);
-			isInputtingRef.current = true;
-
-			// Mark as typing to disable error checking
+			// Set typing flags
+			isUserTypingRef.current = true;
 			setIsTyping(true);
 
-			// Clear any existing timeout
+			// Clear any existing timeouts
 			if (typingTimeoutRef.current) {
 				clearTimeout(typingTimeoutRef.current);
 			}
-
-			// Set timeout to re-enable error checking after user stops typing
-			typingTimeoutRef.current = setTimeout(() => {
-				setIsTyping(false);
-			}, 500);
+			if (onChangeTimeoutRef.current) {
+				clearTimeout(onChangeTimeoutRef.current);
+			}
 
 			const newValue = e.currentTarget.textContent || "";
 
 			// Prevent line breaks in single-line input
 			const sanitizedValue = newValue.replace(/[\r\n]/g, "");
 
-			if (sanitizedValue !== newValue) {
+			if (sanitizedValue !== newValue && editorRef.current) {
+				const cursorPos = getCursorOffset(editorRef.current);
 				editorRef.current.textContent = sanitizedValue;
-				// Update cursor position for the sanitized text
-				cursorPosRef.current = Math.min(cursorPosRef.current, sanitizedValue.length);
+				setCursorOffset(editorRef.current, Math.min(cursorPos, sanitizedValue.length));
 			}
 
-			onChange({
-				currentTarget: { value: sanitizedValue },
-				target: { value: sanitizedValue }
-			});
+			// Store the pending value
+			pendingValueRef.current = sanitizedValue;
+
+			// Debounce onChange calls to avoid blocking main thread
+			onChangeTimeoutRef.current = setTimeout(() => {
+				if (pendingValueRef.current !== null) {
+					onChange({
+						currentTarget: { value: pendingValueRef.current },
+						target: { value: pendingValueRef.current }
+					});
+					pendingValueRef.current = null;
+				}
+			}, 150);
+
+			// Set timeout to mark typing as complete
+			typingTimeoutRef.current = setTimeout(() => {
+				isUserTypingRef.current = false;
+				setIsTyping(false);
+			}, 500);
 		}, [onChange]);
 
 		const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-			// Prevent Enter key in single-line input
 			if (e.key === "Enter") {
 				e.preventDefault();
 			}
@@ -122,21 +129,18 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 
 		const handlePaste = useCallback((e: React.ClipboardEvent) => {
 			e.preventDefault();
-			const text = e.clipboardData.getData("text/plain").replace(/[\r\n]/g, " ");
-			document.execCommand("insertText", false, text);
+			const text = e.clipboardData.getData("text/plain");
+			const sanitized = text.replace(/[\r\n]/g, " ");
+			document.execCommand("insertText", false, sanitized);
 		}, []);
 
 		const handleApplySuggestion = useCallback((error: GrammarError) => {
 			if (!editorRef.current) return;
 
-			// Get current cursor position
 			const cursorOffset = getCursorOffset(editorRef.current);
-
-			// Get current value from DOM to avoid stale closure
 			const currentValue = editorRef.current.textContent || "";
 			const newValue = currentValue.substring(0, error.start) + error.suggestion + currentValue.substring(error.end);
 
-			// Calculate new cursor position
 			let newCursorOffset = cursorOffset;
 			if (cursorOffset > error.end) {
 				const lengthDiff = error.suggestion.length - (error.end - error.start);
@@ -145,25 +149,17 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 				newCursorOffset = error.start + error.suggestion.length;
 			}
 
-			// Apply change
 			onChange({
 				currentTarget: { value: newValue },
 				target: { value: newValue }
 			});
 
-			// Restore cursor after React updates DOM
 			requestAnimationFrame(() => {
 				if (editorRef.current) {
 					setCursorOffset(editorRef.current, newCursorOffset);
 				}
 			});
 		}, [onChange]);
-
-		// Render content with error highlighting
-		const contentNodes = useMemo(
-			() => textToNodes(value, errors, handleApplySuggestion),
-			[value, errors, handleApplySuggestion]
-		);
 
 		const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -185,9 +181,7 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 				aria-disabled={disabled}
 				aria-invalid={error}
 				{...restProps}
-			>
-				{contentNodes}
-			</div>
+			/>
 		);
 	}
 );

@@ -3,7 +3,7 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function TextBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+export const TextBlock = React.memo(function TextBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const textValue = getProperty(properties, "text", "Text") || "";
     const variant = getProperty(properties, "variant", "Variant");
     const isStat = variant === "stat";
@@ -55,4 +55,4 @@ export function TextBlock({ properties, hasBgImage }: { properties: any, hasBgIm
             {textValue || <>&nbsp;</>}
         </p>
     );
-}
+});
