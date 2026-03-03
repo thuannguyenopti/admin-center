@@ -260,11 +260,10 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 							left: 0,
 							right: 0,
 							bottom: 0,
-							pointerEvents: "auto",
+							pointerEvents: "none",
 							zIndex: 1,
 							background: "transparent",
 						}}
-						onClick={() => editorRef.current?.focus()}
 					>
 						{renderTextWithErrors(currentText, errors, handleApplySuggestion)}
 					</div>
