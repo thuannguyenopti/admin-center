@@ -3,7 +3,7 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function HeadingBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+export const HeadingBlock = React.memo(function HeadingBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const text = getProperty(properties, "text", "Text");
     const variant = getProperty(properties, "variant", "Variant");
     const isStat = variant === "stat";
@@ -16,4 +16,4 @@ export function HeadingBlock({ properties, hasBgImage }: { properties: any, hasB
             {text || <>&nbsp;</>}
         </h1>
     );
-}
+});

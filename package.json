@@ -28,6 +28,7 @@
 	},
 	"devDependencies": {
 		"@svgr/webpack": "^8.1.0",
+		"@tanstack/table-core": "^8.21.3",
 		"@types/classnames": "^2.3.1",
 		"@types/node": "^24.10.1",
 		"@types/react": "^19.2.7",
