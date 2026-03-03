@@ -46,6 +46,7 @@ const Input: React.FC<{ label: string; placeholder?: string; value: any; onChang
           placeholder={placeholder || ""}
           value={value || ""}
           onChange={(e: any) => onChange(e.currentTarget.value)}
+          enableAutoComplete={true}
         />
       </FieldWithAIActions>
     </div>
@@ -149,6 +150,7 @@ const RichTextInput: React.FC<{ label: string; value: any; onChange: any }> = ({
           value={markdownValue}
           onChange={(e: any) => onChange(markdownToTipTap(e.currentTarget.value))}
           rows={4}
+          enableAutoComplete={true}
         />
       </FieldWithAIActions>
     </div>

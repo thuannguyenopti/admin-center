@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import OpenAI from "openai";
 
+// Keep OpenAI client for future auto-completion features
 const openai = process.env.OPENAI_API_KEY
 	? new OpenAI({
 			apiKey: process.env.OPENAI_API_KEY,
@@ -14,169 +15,106 @@ interface GrammarError {
 	message: string;
 	suggestion: string;
 	severity?: "error" | "warning" | "info";
-	errorText?: string; // The actual text that has the error
+	errorText?: string;
 }
 
-interface GrammarCheckResponse {
-	errors: GrammarError[];
+interface LanguageToolMatch {
+	message: string;
+	shortMessage: string;
+	offset: number;
+	length: number;
+	replacements: Array<{ value: string }>;
+	rule: {
+		id: string;
+		description: string;
+		issueType: string;
+		category: { id: string; name: string };
+	};
+	context: {
+		text: string;
+		offset: number;
+		length: number;
+	};
 }
 
-function buildProofreadingPrompt(text: string): string {
-	// Add character position markers to help the AI count correctly
-	const textWithPositions = text.split('').map((char, i) => `${char}[${i}]`).join('');
-
-	return `You are a professional proofreading assistant. Analyze the following text for grammar and spelling errors.
-
-Text to check: "${text}"
-
-Character positions (for reference): ${textWithPositions}
-
-Return ONLY valid JSON in this exact format (no markdown code blocks):
-{
-  "errors": [
-    {
-      "type": "grammar",
-      "start": 5,
-      "end": 8,
-      "errorText": "are",
-      "message": "Subject-verb agreement error",
-      "suggestion": "is",
-      "severity": "error"
-    }
-  ]
+interface LanguageToolResponse {
+	matches: LanguageToolMatch[];
 }
 
-CRITICAL RULES FOR CHARACTER POSITIONS:
-1. Count characters from position 0 (first character is 0, second is 1, etc.)
-2. "start" is the index of the FIRST character of the error (NOT any leading spaces)
-3. "end" is the index AFTER the LAST character (so text[start:end] extracts the error)
-4. "errorText" must be EXACTLY what appears at text[start:end] - the exact erroneous text
-5. Do NOT include leading or trailing spaces in start/end positions
-6. Use the character position reference above to count accurately
-7. The "suggestion" field must contain ONLY the corrected word/phrase
-8. Do NOT include surrounding context in the suggestion
-
-Examples with counting:
-
-Example 1 - Single word error:
-Text: "This are wrong"
-Positions: T[0]h[1]i[2]s[3] [4]a[5]r[6]e[7] [8]w[9]...
-Error: "are" is at positions 5-8 (the word "are" starts at 5, ends at 8)
-Response: {"errors": [{"type": "grammar", "start": 5, "end": 8, "errorText": "are", "message": "Subject-verb agreement", "suggestion": "is"}]}
-
-Example 2 - Multi-word error (two words becoming one):
-Text: "world wide web"
-Positions: w[0]o[1]r[2]l[3]d[4] [5]w[6]i[7]d[8]e[9] [10]w[11]...
-Error: "world wide" (two words at positions 0-10)
-Important: Do NOT include the trailing space! Positions 0-9 covers "world wid", but we need 0-10 to get "world wide"
-Response: {"errors": [{"type": "spelling", "start": 0, "end": 10, "errorText": "world wide", "message": "Should be one word", "suggestion": "worldwide"}]}
-
-Example 3 - Error not at start:
-Text: "Join users world wide today"
-Positions: J[0]o[1]i[2]n[3] [4]u[5]s[6]e[7]r[8]s[9] [10]w[11]o[12]r[13]l[14]d[15] [16]w[17]i[18]d[19]e[20] [21]...
-Error: "world wide" at positions 11-21
-Response: {"errors": [{"type": "spelling", "start": 11, "end": 21, "errorText": "world wide", "message": "Should be one word", "suggestion": "worldwide"}]}
-
-Common errors to check:
-- Spelling mistakes (e.g., "teh" → "the")
-- Two words that should be one (e.g., "world wide" → "worldwide")
-- Subject-verb agreement (e.g., "they was" → "they were")
-- Wrong word form (e.g., "good" when "well" is needed)
-
-If no errors found, return {"errors": []}
-Return ONLY the JSON object, no explanations`;
-}
-
-function parseProofreadingResponse(content: string | null | undefined, originalText: string): GrammarError[] {
-	if (!content) return [];
-
-	let text = content.trim();
-
-	// Remove markdown code blocks if present
-	const codeMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-	if (codeMatch) {
-		text = codeMatch[1].trim();
-	}
+async function checkWithLanguageTool(text: string): Promise<GrammarError[]> {
+	console.log("[LanguageTool] Calling LanguageTool API for text:", text);
 
 	try {
-		const parsed = JSON.parse(text);
+		const response = await fetch("https://api.languagetool.org/v2/check", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+				"Accept": "application/json",
+			},
+			body: new URLSearchParams({
+				text: text,
+				language: "en-US",
+				enabledOnly: "false",
+			}),
+		});
 
-		if (!parsed || typeof parsed !== "object") {
+		if (!response.ok) {
+			console.error("[LanguageTool] API error:", response.statusText);
 			return [];
 		}
 
-		const errors = Array.isArray(parsed.errors) ? parsed.errors : [];
+		const data: LanguageToolResponse = await response.json();
+		console.log("[LanguageTool] Raw response:", JSON.stringify(data, null, 2));
 
-		// Validate and normalize each error
-		return errors
-			.filter((err: any) => {
-				return (
-					err &&
-					typeof err === "object" &&
-					(err.type === "grammar" || err.type === "spelling") &&
-					typeof err.start === "number" &&
-					typeof err.end === "number" &&
-					typeof err.message === "string" &&
-					typeof err.suggestion === "string" &&
-					err.start >= 0 &&
-					err.end > err.start
-				);
-			})
-			.map((err: any) => {
-				let start = err.start;
-				let end = err.end;
-				const errorText = err.errorText?.trim();
+		// Transform LanguageTool matches to our GrammarError format
+		const errors: GrammarError[] = data.matches
+			.filter((match) => match.replacements.length > 0) // Only errors with suggestions
+			.map((match) => {
+				const start = match.offset;
+				const end = match.offset + match.length;
+				const errorText = text.substring(start, end);
+				const suggestion = match.replacements[0].value;
 
-				// Validate positions match the error text
-				if (errorText) {
-					const extractedText = originalText.substring(start, end);
+				// Determine type based on rule category
+				const type: "grammar" | "spelling" =
+					match.rule.category.id === "TYPOS" || match.rule.issueType === "misspelling"
+						? "spelling"
+						: "grammar";
 
-					// If positions don't match, try to find the correct positions
-					if (extractedText !== errorText && extractedText.trim() === errorText) {
-						// Positions include leading/trailing spaces - adjust them
-						const trimStart = extractedText.length - extractedText.trimStart().length;
-						const trimEnd = extractedText.length - extractedText.trimEnd().length;
-						start += trimStart;
-						end -= trimEnd;
-
-						console.log(`Adjusted positions for "${errorText}": ${err.start}-${err.end} → ${start}-${end}`);
-					} else if (extractedText !== errorText) {
-						// Positions are completely wrong - try to find the error text
-						const foundIndex = originalText.indexOf(errorText, Math.max(0, start - 10));
-						if (foundIndex !== -1) {
-							start = foundIndex;
-							end = foundIndex + errorText.length;
-							console.log(`Corrected positions for "${errorText}": ${err.start}-${err.end} → ${start}-${end}`);
-						} else {
-							console.warn(`Could not verify positions for error: "${errorText}" not found near position ${start}`);
-						}
-					}
+				// Map severity
+				let severity: "error" | "warning" | "info" = "error";
+				if (match.rule.issueType === "style" || match.rule.issueType === "typographical") {
+					severity = "warning";
 				}
 
 				return {
-					type: err.type,
-					start: start,
-					end: end,
-					message: err.message.trim(),
-					suggestion: err.suggestion.trim(),
-					severity: err.severity || "error",
-					errorText: errorText,
+					type,
+					start,
+					end,
+					message: match.message,
+					suggestion,
+					severity,
+					errorText,
 				};
 			});
+
+		console.log("[LanguageTool] Transformed errors:", JSON.stringify(errors, null, 2));
+		return errors;
 	} catch (error) {
-		console.error("Failed to parse proofreading response:", error);
+		console.error("[LanguageTool] Error calling API:", error);
 		return [];
 	}
 }
 
 export async function POST(request: Request) {
 	try {
-		if (!openai) {
-			return NextResponse.json({error: "OpenAI API key not configured"}, {status: 500});
-		}
-
 		const body = await request.json();
 		const {text} = body;
+
+		console.log("[Proofreading API] Request received:", {
+			textLength: text?.length,
+			text: text?.substring(0, 100),
+		});
 
 		// Validation
 		if (!text || typeof text !== "string" || !text.trim()) {
@@ -191,25 +129,17 @@ export async function POST(request: Request) {
 			return NextResponse.json({errors: []});
 		}
 
-		const promptText = buildProofreadingPrompt(text.trim());
+		console.log("[Proofreading API] Using LanguageTool for grammar checking");
+		const errors = await checkWithLanguageTool(text.trim());
 
-		console.log("Proofreading request for text:", text.trim());
-
-		const completion = await openai.chat.completions.create({
-			model: "gpt-4o",
-			messages: [{role: "user", content: promptText}],
-			temperature: 0.3, // Lower temperature for consistent grammar checking
-		});
-
-		const content = completion.choices[0]?.message?.content;
-		console.log("OpenAI response:", content);
-
-		const errors = parseProofreadingResponse(content, text.trim());
-		console.log("Parsed errors:", errors);
-
+		console.log("[Proofreading API] Returning", errors.length, "errors to client");
 		return NextResponse.json({errors});
 	} catch (error) {
-		console.error("Proofreading API Error:", error);
+		console.error("[Proofreading API] Error occurred:", error);
+		if (error instanceof Error) {
+			console.error("[Proofreading API] Error message:", error.message);
+			console.error("[Proofreading API] Error stack:", error.stack);
+		}
 		return NextResponse.json({error: "Internal Server Error"}, {status: 500});
 	}
 }

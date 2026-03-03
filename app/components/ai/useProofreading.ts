@@ -28,20 +28,24 @@ export function useProofreading(value: string): UseProofreadingResult {
 
 		// Throttling: skip if checked too recently
 		if (now - lastCheckTime.current < MIN_CHECK_INTERVAL) {
+			console.log("[useProofreading] Skipping check - throttled (checked too recently)");
 			return;
 		}
 
 		// Skip if text too short or unchanged
 		if (value.trim().length < MIN_TEXT_LENGTH || value === lastCheckedValue.current) {
+			console.log("[useProofreading] Skipping check - text too short or unchanged");
 			return;
 		}
 
 		lastCheckTime.current = now;
 		lastCheckedValue.current = value;
 
+		console.log("[useProofreading] Starting grammar check:", { text: value, length: value.length });
 		setIsChecking(true);
 		try {
 			const result = await checkGrammar(value);
+			console.log("[useProofreading] Grammar check complete:", { errorCount: result.length, errors: result });
 			setErrors(result);
 		} catch (error) {
 			console.error("Grammar check failed:", error);
@@ -65,6 +69,7 @@ export function useProofreading(value: string): UseProofreadingResult {
 		}
 
 		// Set new timer
+		console.log("[useProofreading] Debounce timer set - will check in", GRAMMAR_CHECK_DELAY, "ms");
 		debounceTimer.current = setTimeout(() => {
 			performCheck();
 		}, GRAMMAR_CHECK_DELAY);
