@@ -52,16 +52,22 @@ export function ProofreadingProvider({children}: ProofreadingProviderProps) {
 	};
 
 	const checkGrammar = async (text: string): Promise<GrammarError[]> => {
+		console.log("[ProofreadingProvider] checkGrammar called:", { text, length: text.length, isEnabled });
+
 		if (!isEnabled || !text || text.trim().length < 10) {
+			console.log("[ProofreadingProvider] Skipping - disabled or text too short");
 			return [];
 		}
 
 		// Check cache first
 		const cacheKey = hashText(text);
 		if (grammarCache.current.has(cacheKey)) {
-			return grammarCache.current.get(cacheKey)!;
+			const cachedErrors = grammarCache.current.get(cacheKey)!;
+			console.log("[ProofreadingProvider] Cache hit:", { errorCount: cachedErrors.length });
+			return cachedErrors;
 		}
 
+		console.log("[ProofreadingProvider] Cache miss - calling API");
 		setIsChecking(true);
 
 		try {
@@ -73,13 +79,17 @@ export function ProofreadingProvider({children}: ProofreadingProviderProps) {
 				body: JSON.stringify({text}),
 			});
 
+			console.log("[ProofreadingProvider] API response status:", response.status);
+
 			if (!response.ok) {
 				console.error("Grammar check failed:", response.statusText);
 				return [];
 			}
 
 			const data = await response.json();
+			console.log("[ProofreadingProvider] API response data:", data);
 			const errors: GrammarError[] = data.errors || [];
+			console.log("[ProofreadingProvider] Parsed errors:", { errorCount: errors.length, errors });
 
 			// Update cache (limit to 50 entries)
 			if (grammarCache.current.size >= 50) {

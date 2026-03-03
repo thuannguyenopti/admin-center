@@ -3,8 +3,10 @@
 import React, { forwardRef, useRef, useImperativeHandle, useCallback, useLayoutEffect, useState, useEffect } from "react";
 import type { TextareaProps } from "@optiaxiom/react";
 import { useProofreading } from "./useProofreading";
+import { useAutoComplete } from "./useAutoComplete";
 import { getCursorOffset, setCursorOffset } from "./utils/cursorUtils";
 import type { GrammarError } from "./ProofreadingProvider";
+import { renderTextWithErrors } from "./utils/renderTextWithErrors";
 import styles from "./AITextArea.module.css";
 
 export interface AITextAreaProps extends Omit<TextareaProps, "onChange" | "value"> {
@@ -16,6 +18,7 @@ export interface AITextAreaProps extends Omit<TextareaProps, "onChange" | "value
 	rows?: number;
 	resize?: "none" | "vertical" | "horizontal" | "both";
 	enableGrammarCheck?: boolean;
+	enableAutoComplete?: boolean;
 }
 
 export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
@@ -29,6 +32,7 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 			rows = 4,
 			resize = "vertical",
 			enableGrammarCheck = true,
+			enableAutoComplete = false,
 			className,
 			style,
 			...restProps
@@ -36,13 +40,39 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 
 		const editorRef = useRef<HTMLDivElement>(null);
 		const [isTyping, setIsTyping] = useState(false);
+		const [currentText, setCurrentText] = useState(value);
+		const [textToCheck, setTextToCheck] = useState("");
 		const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 		const isUserTypingRef = useRef(false);
 		const onChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 		const pendingValueRef = useRef<string | null>(null);
 
 		// Only check for errors when not actively typing
-		const { errors, checkNow } = useProofreading(enableGrammarCheck && !isTyping ? value : "");
+		const { errors, checkNow } = useProofreading(textToCheck);
+
+		// Auto-completion (only when not typing and enabled)
+		const { completion, clearCompletion } = useAutoComplete(
+			currentText,
+			enableAutoComplete && !isTyping
+		);
+
+		// Update textToCheck only when typing stops
+		useEffect(() => {
+			if (!isTyping && currentText && enableGrammarCheck) {
+				console.log("[AITextArea] User stopped typing - enabling proofreading for:", currentText);
+				setTextToCheck(currentText);
+			} else if (isTyping && textToCheck !== "") {
+				console.log("[AITextArea] User is typing - clearing proofreading text");
+				setTextToCheck("");
+			}
+		}, [isTyping, currentText, enableGrammarCheck]);
+
+		// Debug: Log when proofreading is triggered
+		useEffect(() => {
+			if (textToCheck && textToCheck.trim().length > 0) {
+				console.log("[AITextArea] Proofreading triggered:", { textToCheck, errorCount: errors.length, errors });
+			}
+		}, [textToCheck, errors]);
 
 		// Expose ref to parent
 		useImperativeHandle(ref, () => editorRef.current!);
@@ -55,6 +85,9 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 			};
 		}, []);
 
+		// Track if we should show error underlines
+		const showErrors = !isTyping && errors.length > 0;
+
 		// Initialize and sync DOM content
 		useLayoutEffect(() => {
 			if (!editorRef.current) return;
@@ -62,19 +95,20 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 			// Never update DOM while user is actively typing
 			if (isUserTypingRef.current) return;
 
-			const currentText = editorRef.current.textContent || "";
+			const currentDOMText = editorRef.current.textContent || "";
 
 			// Update if value changed
-			if (currentText !== value) {
+			if (currentDOMText !== value) {
 				editorRef.current.textContent = value;
+				setCurrentText(value);
 			}
 		}, [value]);
 
 		const handleFocus = useCallback(() => {
-			if (enableGrammarCheck && value) {
+			if (enableGrammarCheck && currentText) {
 				checkNow();
 			}
-		}, [enableGrammarCheck, value, checkNow]);
+		}, [enableGrammarCheck, currentText, checkNow]);
 
 		const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
 			if (!editorRef.current) return;
@@ -93,6 +127,9 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 
 			const newValue = e.currentTarget.textContent || "";
 
+			// Update current text immediately for proofreading later
+			setCurrentText(newValue);
+
 			// Store the pending value
 			pendingValueRef.current = newValue;
 
@@ -107,12 +144,37 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 				}
 			}, 150);
 
-			// Set timeout to mark typing as complete
+			// Set timeout to mark typing as complete and trigger proofreading
 			typingTimeoutRef.current = setTimeout(() => {
 				isUserTypingRef.current = false;
 				setIsTyping(false);
+				console.log("[AITextArea] Typing stopped - proofreading will trigger");
 			}, 500);
 		}, [onChange]);
+
+		const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+			// Handle Tab to accept completion
+			if (e.key === "Tab" && completion && !e.shiftKey) {
+				e.preventDefault();
+				const newValue = currentText + completion;
+				setCurrentText(newValue);
+				onChange({
+					currentTarget: { value: newValue },
+					target: { value: newValue }
+				});
+				clearCompletion();
+				// Update DOM
+				if (editorRef.current) {
+					editorRef.current.textContent = newValue;
+				}
+			}
+
+			// Handle Esc to dismiss completion
+			if (e.key === "Escape" && completion) {
+				e.preventDefault();
+				clearCompletion();
+			}
+		}, [completion, currentText, onChange, clearCompletion]);
 
 		const handlePaste = useCallback((e: React.ClipboardEvent) => {
 			e.preventDefault();
@@ -135,6 +197,9 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 				newCursorOffset = error.start + error.suggestion.length;
 			}
 
+			// Update currentText immediately
+			setCurrentText(newValue);
+
 			onChange({
 				currentTarget: { value: newValue },
 				target: { value: newValue }
@@ -153,23 +218,74 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 		const minHeight = rows * 24;
 
 		return (
-			<div
-				ref={editorRef}
-				contentEditable={!disabled}
-				suppressContentEditableWarning
-				spellCheck={true}
-				className={`${styles.editor} ${resizeClass} ${error ? styles.error : ""} ${disabled ? styles.disabled : ""} ${className || ""}`}
-				style={{ ...style, minHeight: `${minHeight}px` }}
-				data-placeholder={!value ? placeholder : undefined}
-				onInput={handleInput}
-				onPaste={handlePaste}
-				onFocus={handleFocus}
-				role="textbox"
-				aria-multiline="true"
-				aria-disabled={disabled}
-				aria-invalid={error}
-				{...restProps}
-			/>
+			<div style={{ position: "relative", ...style, minHeight: `${minHeight}px` }}>
+				<div
+					ref={editorRef}
+					contentEditable={!disabled}
+					suppressContentEditableWarning
+					spellCheck={true}
+					className={`${styles.editor} ${resizeClass} ${error ? styles.error : ""} ${disabled ? styles.disabled : ""} ${className || ""}`}
+					style={{
+					position: "relative",
+					minHeight: `${minHeight}px`,
+					zIndex: showErrors ? 0 : 1,
+					color: showErrors ? "transparent" : undefined,
+					caretColor: showErrors ? "black" : undefined,
+				}}
+					data-placeholder={!value ? placeholder : undefined}
+					onInput={handleInput}
+					onKeyDown={handleKeyDown}
+					onPaste={handlePaste}
+					onFocus={handleFocus}
+					role="textbox"
+					aria-multiline="true"
+					aria-disabled={disabled}
+					aria-invalid={error}
+					{...restProps}
+				/>
+				{showErrors && (
+					<div
+						className={`${styles.editor} ${resizeClass}`}
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							right: 0,
+							bottom: 0,
+							pointerEvents: "auto",
+							zIndex: 1,
+							background: "transparent",
+							minHeight: `${minHeight}px`,
+						}}
+						onClick={() => editorRef.current?.focus()}
+					>
+						{renderTextWithErrors(currentText, errors, handleApplySuggestion)}
+					</div>
+				)}
+				{completion && !showErrors && (
+					<div
+						className={`${styles.editor} ${resizeClass}`}
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							right: 0,
+							bottom: 0,
+							pointerEvents: "none",
+							zIndex: 1,
+							color: "rgba(0, 0, 0, 0.4)",
+							whiteSpace: "pre-wrap",
+							overflow: "hidden",
+							minHeight: `${minHeight}px`,
+							background: "transparent",
+							border: "none",
+						}}
+					>
+						<span style={{ visibility: "hidden" }}>{currentText}</span>
+						<span>{completion}</span>
+					</div>
+				)}
+			</div>
 		);
 	}
 );
