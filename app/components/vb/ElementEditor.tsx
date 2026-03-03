@@ -3,6 +3,9 @@
 import React, { Fragment, useEffect, useRef } from "react";
 import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea } from "@optiaxiom/react";
 import { BLOCK_SCHEMAS } from "./blocks/schemas";
+import { AIInputField } from "@/app/components/ai/AIInputField";
+import { AITextArea } from "@/app/components/ai/AITextArea";
+import { FieldWithAIActions } from "./FieldWithAIActions";
 
 type Props = {
   currentEle: string;
@@ -19,15 +22,32 @@ const Input: React.FC<{ label: string; placeholder?: string; value: any; onChang
   value,
   onChange,
 }) => {
+  const aiActions = [
+    {
+      label: "My Tone of Voice",
+      onClick: () => {
+        console.log("Apply tone of voice to:", value);
+        // TODO: Implement tone of voice action
+      }
+    },
+    {
+      label: "Proofread",
+      onClick: () => {
+        console.log("Proofread:", value);
+        // TODO: Implement proofreading action
+      }
+    }
+  ];
+
   return (
     <div className=" pr-1 py-2">
-      <Field label={label}>
-        <AxiomInput
+      <FieldWithAIActions label={label} aiActions={aiActions}>
+        <AIInputField
           placeholder={placeholder || ""}
           value={value || ""}
           onChange={(e: any) => onChange(e.currentTarget.value)}
         />
-      </Field>
+      </FieldWithAIActions>
     </div>
   );
 };
@@ -104,15 +124,33 @@ const markdownToTipTap = (text: string) => {
 
 const RichTextInput: React.FC<{ label: string; value: any; onChange: any }> = ({ label, value, onChange }) => {
   const markdownValue = isTipTapDoc(value) ? tiptapToMarkdown(value) : (value || "");
+
+  const aiActions = [
+    {
+      label: "My Tone of Voice",
+      onClick: () => {
+        console.log("Apply tone of voice to:", markdownValue);
+        // TODO: Implement tone of voice action
+      }
+    },
+    {
+      label: "Proofread",
+      onClick: () => {
+        console.log("Proofread:", markdownValue);
+        // TODO: Implement proofreading action
+      }
+    }
+  ];
+
   return (
     <div className="pr-1 py-2">
-      <Field label={label}>
-        <Textarea
+      <FieldWithAIActions label={label} aiActions={aiActions}>
+        <AITextArea
           value={markdownValue}
           onChange={(e: any) => onChange(markdownToTipTap(e.currentTarget.value))}
           rows={4}
         />
-      </Field>
+      </FieldWithAIActions>
     </div>
   );
 };
