@@ -10,6 +10,7 @@
 	border: none;
 	font: inherit;
 	color: inherit;
+	pointer-events: auto;
 }
 
 .errorMark:hover {
