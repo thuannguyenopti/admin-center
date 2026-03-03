@@ -24,7 +24,7 @@ const Input: React.FC<{ label: string; placeholder?: string; value: any; onChang
 }) => {
   const aiActions = [
     {
-      label: "My Tone of Voice",
+      label: "Brand Tone of Voice Audit",
       onClick: () => {
         console.log("Apply tone of voice to:", value);
         // TODO: Implement tone of voice action
@@ -128,7 +128,7 @@ const RichTextInput: React.FC<{ label: string; value: any; onChange: any }> = ({
 
   const aiActions = [
     {
-      label: "My Tone of Voice",
+      label: "Brand Tone of Voice Audit",
       onClick: () => {
         console.log("Apply tone of voice to:", markdownValue);
         // TODO: Implement tone of voice action
