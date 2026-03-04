@@ -213,6 +213,14 @@ body {
 	height: 100%;
 }
 
+/* Prevent page scroll when a modal is open (single scrollbar inside modal only) */
+body[data-modal-open] {
+	overflow: hidden !important;
+}
+body[data-modal-open] .main-scroll-area {
+	overflow: hidden !important;
+}
+
 .parent {
 	display: grid;
 	grid-template-columns: 0fr 1fr;
@@ -370,4 +378,50 @@ body.dark ::-webkit-scrollbar-thumb:hover {
 	height: auto !important;
 	padding-top: 4px !important;
 	padding-bottom: 4px !important;
+}
+
+/* Opal Generate button: sparkle icon turns purple on hover (details panel + modals) */
+.opalGenerateButton:hover svg {
+	color: #7C3AED;
+}
+
+/* Newly imported item highlight animation */
+.newly-imported {
+	animation: highlight-fade 2s ease-out;
+}
+
+@keyframes highlight-fade {
+	0% {
+		background-color: #d1fae5;
+	}
+	100% {
+		background-color: transparent;
+	}
+}
+
+/* Dark mode variant */
+@media (prefers-color-scheme: dark) {
+	@keyframes highlight-fade {
+		0% {
+			background-color: rgba(16, 185, 129, 0.2);
+		}
+		100% {
+			background-color: transparent;
+		}
+	}
+}
+
+[data-theme="dark"] .newly-imported,
+html.dark .newly-imported,
+body.dark .newly-imported {
+	animation: highlight-fade-dark 2s ease-out;
+}
+
+@keyframes highlight-fade-dark {
+	0% {
+		background-color: rgba(16, 185, 129, 0.2);
+	}
+	100% {
+		background-color: transparent;
+	}
 }

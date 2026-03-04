@@ -1,0 +1,7 @@
+name,slug,parentSlug,status,visibility
+Bikes,bikes,equipment,published,public
+Equipment,equipment,,published,public
+,missing-name,,published,public
+Road Bikes,road-bikes,bikes,published,public
+Duplicate Bikes,bikes,equipment,published,private
+Invalid Parent,orphan,nonexistent,published,public
