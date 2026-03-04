@@ -18,10 +18,10 @@ async function analyzePageFields(fields: PageField[]) {
 		return NextResponse.json({error: "OpenAI API key not configured"}, {status: 500});
 	}
 
-	console.log("[Brand Tone API] Analyzing page fields");
+	console.log("[Brand Tone API] Analyzing page fields:", fields.map(f => ({ id: f.fieldId, label: f.fieldLabel })));
 
-	// Analyze all fields together for context
-	const combinedText = fields.map((f) => `${f.fieldLabel}: ${f.text}`).join("\n\n");
+	// Create a mapping for reference
+	const fieldsList = fields.map((f) => `Field ID: "${f.fieldId}"\nLabel: ${f.fieldLabel}\nText: ${f.text}`).join("\n\n---\n\n");
 
 	const completion = await openai.chat.completions.create({
 		model: "gpt-4o",
@@ -43,7 +43,7 @@ Respond with a JSON object containing:
   "score": <number 0-100>,
   "issues": [
     {
-      "fieldId": "field identifier that this issue applies to",
+      "fieldId": "EXACT field ID from the input (use the exact string provided after 'Field ID:')",
       "fieldLabel": "human-readable field name",
       "type": "tone" | "voice" | "clarity" | "style",
       "severity": "high" | "medium" | "low",
@@ -56,11 +56,11 @@ Respond with a JSON object containing:
   "strengths": ["List of things done well across all fields"]
 }
 
-IMPORTANT: Each issue must include the fieldId so we know which field it applies to.`,
+CRITICAL: You MUST use the exact fieldId string provided in the input. Do not create new IDs or modify them.`,
 			},
 			{
 				role: "user",
-				content: `Analyze this page content for brand tone. Each field is labeled:\n\n${combinedText}`,
+				content: `Analyze this page content for brand tone:\n\n${fieldsList}`,
 			},
 		],
 		temperature: 0.3,

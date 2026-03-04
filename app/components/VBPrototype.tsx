@@ -24,6 +24,7 @@ import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import VersionHistory from "./vb/versionHistory/VersionHistory";
+import {useBrandTone} from "./ai/BrandToneProvider";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -283,6 +284,9 @@ export default function VBPrototype({
 
 	const [isRenamePageDialogOpen, setIsRenamePageDialogOpen] = useState(false);
 	const [newPageName, setNewPageName] = useState("");
+
+	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
+	const brandTone = useBrandTone();
 
 	const handleCreateVariation = () => {
 		if (newVariationName && onAddVariation) {
@@ -563,8 +567,10 @@ export default function VBPrototype({
 		return null;
 	};
 
-	const setCurrentEleSmart = (value: React.SetStateAction<string>) => {
+	const setCurrentEleSmart = useCallback((value: React.SetStateAction<string>) => {
 		const eleId = typeof value === "function" ? value(currentEle) : value;
+
+		console.log("[VBPrototype] setCurrentEleSmart called with:", eleId);
 
 		setCurrentEle(eleId);
 
@@ -579,9 +585,16 @@ export default function VBPrototype({
 
 		const owner = findOutlineIdForElement(eleId);
 		if (owner && owner !== activeOutlineId) {
+			console.log("[VBPrototype] Switching to outline:", owner);
 			setActiveOutlineId(owner);
 		}
-	};
+	}, [currentEle, isMulti, activeOutlineId, findOutlineIdForElement]);
+
+	// Wire up Brand Tone provider with scroll-to functionality
+	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Brand Tone");
+		brandTone.registerScrollFunction(setCurrentEleSmart);
+	}, [brandTone, setCurrentEleSmart]);
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
@@ -661,6 +674,31 @@ export default function VBPrototype({
 			};
 		});
 	}, [currentEle, setTheEles]);
+
+	// Update element by ID (for Brand Tone suggestions)
+	const onUpdateElementById = useCallback((elementId: string, propertyKey: string, value: string) => {
+		console.log("[VBPrototype] Updating element:", elementId, propertyKey, value);
+
+		setTheEles((prev) => {
+			if (!prev[elementId]) {
+				console.warn("[VBPrototype] Element not found:", elementId);
+				return prev;
+			}
+
+			const ele = prev[elementId];
+			const properties = {...(ele.properties || {})};
+
+			properties[propertyKey] = {...properties[propertyKey], value};
+
+			return {
+				...prev,
+				[elementId]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [setTheEles]);
 
 	// Header actions (Generate only in Categories & Tags + plus-menu)
 	const showGenerateInHeader =
@@ -1232,6 +1270,8 @@ export default function VBPrototype({
 							setNewPageName(pageName || "");
 							setIsRenamePageDialogOpen(true);
 						}}
+						pageElements={{}}
+						onUpdateElement={onUpdateElementById}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1346,6 +1386,8 @@ export default function VBPrototype({
 						setNewPageName(pageName || "");
 						setIsRenamePageDialogOpen(true);
 					}}
+					pageElements={theEles}
+					onUpdateElement={onUpdateElementById}
 				/>
 
 				{/* LEFT SIDEBAR */}
