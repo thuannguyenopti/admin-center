@@ -8,17 +8,19 @@ import {initialPages, Page} from "@/app/db/initialData";
 import {useEffect, useState} from "react";
 import {Box, Heading} from "@optiaxiom/react";
 import {buildPageSlug} from "@/app/site/resolveSlug";
+import {useVersionHistory} from "@/app/hooks/useVersionHistory";
 
 export default function EditPageDetail() {
 	const params = useParams();
 	const resolvedParams = params instanceof Promise ? use(params) : params;
 	const id = (resolvedParams?.id ?? "") as string;
-	const [pages, setPages, isHydrated] = usePersistentState("pages_v3", initialPages) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,
 	];
 	const [page, setPage] = useState<Page | null>(null);
+	const versionHistory = useVersionHistory(id);
 
 	useEffect(() => {
 		if (pages && isHydrated) {
@@ -64,6 +66,26 @@ export default function EditPageDetail() {
 
 	const handlePublish = () => {
 		if (!page) return;
+
+		// Create version snapshot before publishing
+		// Get the current variation's data
+		const currentVariation = page.variations?.find(v => v.id === "original") || null;
+		const outlines = currentVariation?.outlines || page.outlines || [];
+		const properties = currentVariation?.data || page.data || {};
+
+		// Create version snapshot
+		versionHistory.createVersion({
+			author: "Current User", // TODO: Get from auth context
+			status: "published",
+			variationId: "original",
+			variationName: "Original",
+			isCurrent: true,
+			changeSummary: "Published version",
+			outlines: JSON.parse(JSON.stringify(outlines)), // Deep clone
+			properties: JSON.parse(JSON.stringify(properties)), // Deep clone
+		});
+
+		// Update page status
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
 				return {...p, status: "Published"};
@@ -160,6 +182,48 @@ export default function EditPageDetail() {
 		setPage(updatedPage);
 	};
 
+	const handleRestoreVersion = (version: any) => {
+		if (!page) return;
+
+		// Restore the version's content to the current page
+		const variationId = version.variationId || "original";
+
+		let nextVariations = page.variations ? [...page.variations] : [];
+		let nextOutlines = page.outlines;
+		let nextData = page.data;
+
+		// Update the variation with the restored content
+		if (variationId === "original") {
+			nextOutlines = version.outlines;
+			nextData = version.properties;
+		} else {
+			const idx = nextVariations.findIndex((v) => v.id === variationId);
+			if (idx !== -1) {
+				nextVariations[idx] = {
+					...nextVariations[idx],
+					outlines: version.outlines,
+					data: version.properties,
+				};
+			}
+		}
+
+		const nextPage: Page = {
+			...page,
+			outlines: nextOutlines,
+			variations: nextVariations,
+			data: nextData,
+			status: "Changed" as const,
+		};
+
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
+		setPage(nextPage);
+
+		// Mark version as current in history
+		versionHistory.markAsCurrent(version.id);
+
+		console.log(`Restored version: ${version.id}`);
+	};
+
 	if (!isHydrated || !page) {
 		return <Box p="24">Loading...</Box>;
 	}
@@ -187,6 +251,8 @@ export default function EditPageDetail() {
 			onRenamePage={handleRenamePage}
 			onTrash={handleTrash}
 			onViewOnWebsite={handleViewOnWebsite}
+			versionHistory={versionHistory}
+			onRestoreVersion={handleRestoreVersion}
 		/>
 	);
 }

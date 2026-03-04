@@ -13,12 +13,13 @@ import {Button} from "@/app/components/Button";
 import {Flex} from "@/app/components/Flex";
 import {Input} from "@/app/components/Input";
 import {useParams, useRouter} from "next/navigation";
-import {useEffect, useState, use} from "react";
+import {useEffect, useState, use, useMemo} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, initialUsers} from "@/app/db/initialData";
 import {IconArrowLeft} from "@tabler/icons-react";
 import {Aside} from "@/app/context/LayoutContext";
 import Preview from "../order/Preview";
+import {getSelectValueInOptions} from "@/utils/selectValue";
 
 export default function EditAlgorithmPage() {
 	const params = useParams();
@@ -64,6 +65,22 @@ export default function EditAlgorithmPage() {
 		return <Box p="24">Loading...</Box>;
 	}
 
+	const publishOptions = [
+		{label: "Draft", value: "Draft"},
+		{label: "Testing", value: "Testing"},
+		{label: "Published", value: "Published"},
+		{label: "Archived", value: "Archived"},
+	];
+	const ownerOptions = useMemo(
+		() => [
+			{label: "Select Owner", value: ""},
+			...initialUsers.map((u) => ({label: u.name, value: u.name})),
+		],
+		[]
+	);
+	const safePublishState = getSelectValueInOptions(publishState, publishOptions, "Draft");
+	const safeOwner = getSelectValueInOptions(owner, ownerOptions, "");
+
 	return (
 		<>
 			<Box maxW="lg">
@@ -86,17 +103,12 @@ export default function EditAlgorithmPage() {
 						required
 					>
 						<Select
-							value={publishState}
+							value={safePublishState}
 							onValueChange={(val) => setPublishState(val)}
-							options={[
-								{label: "Draft", value: "Draft"},
-								{label: "Testing", value: "Testing"},
-								{label: "Published", value: "Published"},
-								{label: "Archived", value: "Archived"},
-							]}
+							options={publishOptions}
 						>
 							<SelectTrigger size="lg">
-								{publishState || "Select Publish State"}
+								{safePublishState || "Select Publish State"}
 							</SelectTrigger>
 							<SelectContent />
 						</Select>
@@ -107,11 +119,13 @@ export default function EditAlgorithmPage() {
 						required
 					>
 						<Select
-							value={owner}
+							value={safeOwner}
 							onValueChange={(val) => setOwner(val)}
-							options={initialUsers.map((u) => ({label: u.name, value: u.name}))}
+							options={ownerOptions}
 						>
-							<SelectTrigger size="lg">{owner || "Select Owner"}</SelectTrigger>
+							<SelectTrigger size="lg">
+								{owner || "Select Owner"}
+							</SelectTrigger>
 							<SelectContent />
 						</Select>
 					</Field>

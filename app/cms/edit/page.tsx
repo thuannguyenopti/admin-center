@@ -118,7 +118,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 };
 
 export default function EditPage() {
-	const [pages, , isHydrated] = usePersistentState("pages_v3", initialPages) as [
+	const [pages, , isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,

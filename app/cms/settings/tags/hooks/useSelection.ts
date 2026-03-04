@@ -38,6 +38,22 @@ export function useSelection(tags: Tag[]) {
     }
   }, [selectedIds.size, tags.length, selectAll, deselectAll]);
 
+  /** Toggle selection for a subset of tags (e.g. current page). Use for table header "select all". */
+  const toggleAllForTags = useCallback((tagsToToggle: Tag[]) => {
+    setSelectedIds((prev) => {
+      const allInSubsetSelected =
+        tagsToToggle.length > 0 &&
+        tagsToToggle.every((t) => prev.has(t.id));
+      const next = new Set(prev);
+      if (allInSubsetSelected) {
+        tagsToToggle.forEach((t) => next.delete(t.id));
+      } else {
+        tagsToToggle.forEach((t) => next.add(t.id));
+      }
+      return next;
+    });
+  }, []);
+
   const selectedTags = tags.filter((t) => selectedIds.has(t.id));
 
   return {
@@ -47,6 +63,7 @@ export function useSelection(tags: Tag[]) {
     selectAll,
     deselectAll,
     toggleAll,
+    toggleAllForTags,
     selectedTags,
     selectedCount: selectedIds.size,
   };

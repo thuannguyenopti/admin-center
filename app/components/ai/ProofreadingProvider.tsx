@@ -93,8 +93,8 @@ export function ProofreadingProvider({children}: ProofreadingProviderProps) {
 
 			// Update cache (limit to 50 entries)
 			if (grammarCache.current.size >= 50) {
-				const firstKey = grammarCache.current.keys().next().value as string;
-				if (firstKey) {
+				const firstKey = grammarCache.current.keys().next().value;
+				if (firstKey !== undefined) {
 					grammarCache.current.delete(firstKey);
 				}
 			}

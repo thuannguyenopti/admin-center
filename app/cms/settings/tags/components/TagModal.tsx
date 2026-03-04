@@ -7,14 +7,20 @@ import {
   DialogClose,
   Box,
   Button,
+  Tooltip,
 } from '@optiaxiom/react';
-import { Button as LegacyButton } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import { TagFormRow as FormRowType, Tag } from '../types';
 import { TagFormRow } from './TagFormRow';
 import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique } from '../utils';
-import { IconSparkles } from '@optimizely/axiom-icons';
+import { IconSparkles, IconCircleInfo } from '@optimizely/axiom-icons';
+
+export interface ContentContextItem {
+  name: string;
+  baseType?: string;
+  tagSlugs: string[];
+}
 
 interface TagModalProps {
   open: boolean;
@@ -22,6 +28,8 @@ interface TagModalProps {
   mode: 'create' | 'edit';
   initialTags?: Tag[];
   allTags: Tag[];
+  /** Content (e.g. pages) to infer tags from: name, type, and current tag slugs. */
+  contentContext?: ContentContextItem[];
   onSave: (formRows: FormRowType[]) => void;
 }
 
@@ -31,6 +39,7 @@ export function TagModal({
   mode,
   initialTags = [],
   allTags,
+  contentContext = [],
   onSave,
 }: TagModalProps) {
   const [formRows, setFormRows] = useState<FormRowType[]>([]);
@@ -59,6 +68,16 @@ export function TagModal({
     }
   }, [open, mode, initialTags]);
 
+  // Lock page scroll when modal is open so only the modal body scrolls (single scrollbar)
+  useEffect(() => {
+    if (open) {
+      document.body.dataset.modalOpen = 'true';
+      return () => {
+        delete document.body.dataset.modalOpen;
+      };
+    }
+  }, [open]);
+
   const toTagName = (str: string): string =>
     str
       .trim()
@@ -70,17 +89,26 @@ export function TagModal({
       .trim();
 
   const handleGenerate = useCallback(async () => {
-    if (allTags.length === 0) return;
     setGenerateLoading(true);
     setGenerateError(null);
     try {
+      const payload: any = {
+        itemName: allTags.length > 0
+          ? 'Suggest new tag names that fit the existing taxonomy'
+          : contentContext.length > 0
+            ? 'Suggest tag names based on the content items listed'
+            : 'Suggest useful tag names for a content management system',
+      };
+      if (allTags.length > 0) {
+        payload.tagTaxonomy = allTags.map((t) => ({ name: t.name, slug: t.slug }));
+      }
+      if (contentContext.length > 0) {
+        payload.contentContext = contentContext;
+      }
       const res = await fetch('/api/tags/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          itemName: 'Suggest new tag names that fit the existing taxonomy',
-          tagTaxonomy: allTags.map((t) => ({ name: t.name, slug: t.slug })),
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -109,7 +137,7 @@ export function TagModal({
     } finally {
       setGenerateLoading(false);
     }
-  }, [allTags]);
+  }, [allTags, contentContext]);
 
   const handleChange = useCallback(
     (index: number, field: keyof FormRowType, value: string) => {
@@ -225,25 +253,30 @@ export function TagModal({
   const title = mode === 'create' ? 'Create tags' : 'Edit tags';
   const buttonText = mode === 'create' ? 'Create' : 'Save';
 
+  const canSubmitCreate =
+    mode !== 'create' ||
+    formRows.some(
+      (row) => row.name.trim().length >= 2 && row.slug.trim().length > 0
+    );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         size="lg"
         style={{
           maxWidth: '736px',
-          maxHeight: '90vh',
+          maxHeight: '80vh',
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <DialogHeader
-          style={{
-            fontSize: '22.99px',
-            fontWeight: 300,
-            letterSpacing: '-0.44px',
-            color: '#080736',
-          }}
+          description="Add and manage tags to label and filter your content."
+          fontSize="xl"
+          fontWeight="400"
+          color="fg.default"
         >
           {title}
         </DialogHeader>
@@ -256,55 +289,48 @@ export function TagModal({
           }}
         >
           <Box display="flex" flexDirection="column" gap="8">
-            {/* Subtitle */}
-            <Text
-              style={{
-                fontSize: '14px',
-                fontWeight: 400,
-                letterSpacing: '-0.15px',
-                color: '#080736',
-              }}
-            >
-              Add and manage tags to label and filter your content.
-            </Text>
+            {mode === 'create' && generateError && (
+              <Text fontSize="xs" color="fg.error">
+                {generateError}
+              </Text>
+            )}
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Tags
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Slug
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
-                  Visibility
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
+                  <Box display="inline-flex" alignItems="center" gap="4">
+                    <span>Visibility</span>
+                    <Tooltip
+                      aria-label="Visibility help"
+                      content={
+                        <Box display="flex" flexDirection="column" gap="8" fontSize="sm" style={{ maxWidth: 280 }}>
+                          <Text m="0">
+                            Public tags appear in filters and APIs. Private tags are visible only in the CMS.
+                          </Text>
+                          <Text m="0" fontWeight="600">
+                            Examples:
+                          </Text>
+                          <Text m="0">
+                            Public: topic tags for search, faceted filters.
+                          </Text>
+                          <Text m="0">
+                            Private: internal labels, review status.
+                          </Text>
+                        </Box>
+                      }
+                      delayDuration={300}
+                    >
+                      <span style={{ display: 'inline-flex', cursor: 'help' }}>
+                        <IconCircleInfo size={14} color="var(--ax-colors-fg-secondary)" />
+                      </span>
+                    </Tooltip>
+                  </Box>
                 </Box>
                 <Box style={{ width: '30px', flexShrink: 0 }} />
               </Box>
@@ -324,59 +350,41 @@ export function TagModal({
                     loading={mode === 'create' && generateLoading}
                   />
                   {errors[index] && (
-                    <Box
-                      style={{
-                        color: '#dc2626',
-                        fontSize: '12px',
-                        marginTop: '4px',
-                      }}
-                    >
+                    <Box color="fg.error" fontSize="xs" mt="2">
                       {errors[index]}
                     </Box>
                   )}
                 </Box>
               ))}
             </Box>
-            {mode === 'create' && (
-              <Box display="flex" justifyContent="flex-start" alignItems="center">
-                <Button
-                  appearance="primary-opal"
-                  size="sm"
-                  rounded="sm"
-                  px="8"
-                  icon={<IconSparkles size={16} />}
-                  iconPosition="start"
-                  onClick={handleGenerate}
-                  disabled={generateLoading || allTags.length === 0}
-                  loading={generateLoading}
-                  aria-label="Generate tag suggestions with Opal"
-                >
-                  Generate
-                </Button>
-              </Box>
-            )}
-            {mode === 'create' && generateError && (
-              <Box>
-                <Text fontSize="xs" color="fg.error">
-                  {generateError}
-                </Text>
-              </Box>
-            )}
           </Box>
         </DialogBody>
-        <DialogFooter style={{ gap: '16px' }}>
+        <DialogFooter style={{ gap: '16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          {mode === 'create' && (
+            <Button
+              appearance="default-opal"
+              size="lg"
+              className="opalGenerateButton"
+              icon={<IconSparkles size={16} />}
+              iconPosition="start"
+              onClick={handleGenerate}
+              disabled={generateLoading}
+              loading={generateLoading}
+              aria-label="Generate tag suggestions with Opal"
+            >
+              Generate
+            </Button>
+          )}
+          <Box style={{ flex: 1 }} />
           <DialogClose size="lg">Cancel</DialogClose>
-          <LegacyButton
+          <Button
             appearance="primary"
             size="lg"
             onClick={handleSave}
-            style={{
-              backgroundColor: '#0037ff',
-              color: '#ffffff',
-            }}
+            disabled={mode === 'create' && !canSubmitCreate}
           >
             {buttonText}
-          </LegacyButton>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

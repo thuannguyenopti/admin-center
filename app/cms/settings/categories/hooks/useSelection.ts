@@ -42,6 +42,22 @@ export function useSelection(categories: Category[]) {
     }
   }, [selectedIds.size, categories.length, selectAll, deselectAll]);
 
+  /** Toggle selection for a subset of categories (e.g. current page). Use for table header "select all". */
+  const toggleAllForCategories = useCallback((categoriesToToggle: Category[]) => {
+    setSelectedIds((prev) => {
+      const allInSubsetSelected =
+        categoriesToToggle.length > 0 &&
+        categoriesToToggle.every((c) => prev.has(c.id));
+      const next = new Set(prev);
+      if (allInSubsetSelected) {
+        categoriesToToggle.forEach((c) => next.delete(c.id));
+      } else {
+        categoriesToToggle.forEach((c) => next.add(c.id));
+      }
+      return next;
+    });
+  }, []);
+
   const selectedCategories = categories.filter((c) => selectedIds.has(c.id));
 
   return {
@@ -51,6 +67,7 @@ export function useSelection(categories: Category[]) {
     selectAll,
     deselectAll,
     toggleAll,
+    toggleAllForCategories,
     selectedCategories,
     selectedCount: selectedIds.size,
   };

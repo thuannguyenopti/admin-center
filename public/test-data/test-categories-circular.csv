@@ -1,0 +1,4 @@
+name,slug,parentSlug,status,visibility
+Category A,cat-a,cat-c,published,public
+Category B,cat-b,cat-a,published,public
+Category C,cat-c,cat-b,published,public
