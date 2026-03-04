@@ -9,6 +9,7 @@ export interface MultiSelectMetadata {
   };
   totalFileSize: string;
   tags: string[];
+  categories: string[];
   typeDistribution: {
     Page: number;
     Product: number;
@@ -25,6 +26,7 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
       dateRange: { earliest: "", latest: "" },
       totalFileSize: "0 MB",
       tags: [],
+      categories: [],
       typeDistribution: { Page: 0, Product: 0, Block: 0, Media: 0 },
     };
   }
@@ -46,8 +48,18 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
     Media: items.filter(i => i.baseType === "Media").length,
   };
 
-  // Union of all selected items' tags (slugs) for display and edit
-  const tags = [...new Set(items.flatMap((i) => i.tags ?? []))];
+  // Intersection of all selected items' tags (only tags ALL items share)
+  const tags = items.length > 0
+    ? (items[0].tags ?? []).filter(tag =>
+        items.every(item => (item.tags ?? []).includes(tag))
+      )
+    : [];
+  // Intersection of all selected items' categories (only categories ALL items share)
+  const categories = items.length > 0
+    ? (items[0].categories ?? []).filter(category =>
+        items.every(item => (item.categories ?? []).includes(category))
+      )
+    : [];
 
   // Calculate total file size (mock)
   const totalFileSize = (items.length * 11.42).toFixed(1); // Mock calculation
@@ -61,6 +73,7 @@ export function useMultiSelectMetadata(items: ContentItem[]): MultiSelectMetadat
     },
     totalFileSize: `${totalFileSize} MB`,
     tags,
+    categories,
     typeDistribution,
   };
 }

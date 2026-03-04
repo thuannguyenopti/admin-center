@@ -14,6 +14,7 @@ interface TagsTableProps {
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   onSort?: (column: string) => void;
+  newlyImportedIds?: Set<string>;
 }
 
 export function TagsTable({
@@ -26,9 +27,12 @@ export function TagsTable({
   sortColumn,
   sortDirection,
   onSort,
+  newlyImportedIds = new Set(),
 }: TagsTableProps) {
-  const allSelected = tags.length > 0 && selectedIds.size === tags.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < tags.length;
+  const allSelected =
+    tags.length > 0 && tags.every((tag) => selectedIds.has(tag.id));
+  const someSelected =
+    tags.some((tag) => selectedIds.has(tag.id)) && !allSelected;
 
   const renderSortIcon = (column: string) => {
     const isActive = sortColumn === column;
@@ -119,6 +123,7 @@ export function TagsTable({
             onToggleSelection={onToggleSelection}
             onEdit={onEdit}
             onDelete={onDelete}
+            isNewlyImported={newlyImportedIds.has(tag.id)}
           />
         ))}
       </tbody>

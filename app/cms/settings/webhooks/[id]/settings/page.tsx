@@ -10,6 +10,7 @@ import {use, useState, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {Flex} from "@/app/components/Flex";
 import Flow from "@/app/components/Flow";
+import {getSelectValueInOptions} from "@/utils/selectValue";
 
 const eventTypes = [
 	{
@@ -164,10 +165,16 @@ export default function WebhookSettings({params}: {params: Promise<{id: string}>
 				<Field label="Event Type" fontWeight="400">
 					<Select
 						options={selectOptions}
-						value={selectedType}
-						onChange={(e: any) => handleTypeChange(e.target.value)}
+						value={getSelectValueInOptions(
+							selectedType,
+							selectOptions,
+							selectOptions[0]?.value
+						)}
+						onValueChange={handleTypeChange}
 					>
-						<SelectTrigger size="lg" />
+						<SelectTrigger size="lg">
+							{selectOptions.find((o) => o.value === selectedType)?.label ?? selectedType}
+						</SelectTrigger>
 						<SelectContent />
 					</Select>
 				</Field>

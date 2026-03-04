@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Bikes",
+    "slug": "bikes",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Road Bikes",
+    "slug": "road-bikes",
+    "parentSlug": "bikes",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Racing Bikes",
+    "slug": "racing-bikes",
+    "parentSlug": "road-bikes",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Professional Racing",
+    "slug": "professional-racing",
+    "parentSlug": "racing-bikes",
+    "status": "published",
+    "visibility": "public"
+  }
+]
