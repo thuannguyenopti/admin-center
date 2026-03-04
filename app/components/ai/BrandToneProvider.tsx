@@ -1,7 +1,8 @@
 "use client";
 
-import React, {createContext, useContext, useState, useCallback} from "react";
-import {BrandTonePanel, BrandToneResult} from "./BrandTonePanel";
+import React, {createContext, useContext, useState, useCallback, useRef} from "react";
+import {BrandToneSidePanel, BrandToneResult} from "./BrandToneSidePanel";
+import {Aside} from "@/app/context/LayoutContext";
 import {toaster} from "@optiaxiom/react";
 
 interface PageField {
@@ -18,10 +19,12 @@ interface BrandToneContextValue {
 	) => Promise<void>;
 	analyzePage: (
 		fields: PageField[],
+		fieldToElementMap: Record<string, string>,
 		onApplyField?: (fieldId: string, suggestion: string) => void,
 		onApplyAll?: (changes: Array<{fieldId: string; suggestion: string}>) => void
 	) => Promise<void>;
 	isAnalyzing: boolean;
+	registerScrollFunction: (fn: (elementId: string) => void) => void;
 }
 
 const BrandToneContext = createContext<BrandToneContextValue | null>(null);
@@ -35,11 +38,17 @@ export function useBrandTone() {
 }
 
 export function BrandToneProvider({children}: {children: React.ReactNode}) {
-	const [isPanelOpen, setIsPanelOpen] = useState(false);
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
 	const [result, setResult] = useState<BrandToneResult | null>(null);
 	const [onApplyCallback, setOnApplyCallback] = useState<((suggestion: string, fieldId?: string) => void) | undefined>();
 	const [onApplyAllCallback, setOnApplyAllCallback] = useState<((changes: Array<{fieldId: string; suggestion: string}>) => void) | undefined>();
+	const [fieldToElementMap, setFieldToElementMap] = useState<Record<string, string>>({});
+	const scrollFunctionRef = useRef<((elementId: string) => void) | null>(null);
+
+	const registerScrollFunction = useCallback((fn: (elementId: string) => void) => {
+		console.log("[BrandToneProvider] Scroll function registered");
+		scrollFunctionRef.current = fn;
+	}, []);
 
 	const analyzeText = useCallback(async (
 		text: string,
@@ -48,10 +57,10 @@ export function BrandToneProvider({children}: {children: React.ReactNode}) {
 	) => {
 		console.log("[BrandTone] Starting analysis for:", context);
 		setIsAnalyzing(true);
-		setIsPanelOpen(true);
 		setResult(null);
 		setOnApplyCallback(() => onApply);
 		setOnApplyAllCallback(undefined);
+		setFieldToElementMap({});
 
 		try {
 			const response = await fetch("/api/ai/brand-tone", {
@@ -86,13 +95,14 @@ export function BrandToneProvider({children}: {children: React.ReactNode}) {
 
 	const analyzePage = useCallback(async (
 		fields: PageField[],
+		fieldToElementMap: Record<string, string>,
 		onApplyField?: (fieldId: string, suggestion: string) => void,
 		onApplyAll?: (changes: Array<{fieldId: string; suggestion: string}>) => void
 	) => {
 		console.log("[BrandTone] Starting page analysis for", fields.length, "fields");
 		setIsAnalyzing(true);
-		setIsPanelOpen(true);
 		setResult(null);
+		setFieldToElementMap(fieldToElementMap);
 		setOnApplyCallback(onApplyField ? (suggestion, fieldId) => {
 			if (fieldId) {
 				onApplyField(fieldId, suggestion);
@@ -141,20 +151,54 @@ export function BrandToneProvider({children}: {children: React.ReactNode}) {
 	const handleApplyAll = useCallback((changes: Array<{fieldId: string; suggestion: string}>) => {
 		if (onApplyAllCallback) {
 			onApplyAllCallback(changes);
+			toaster.create(`Applied ${changes.length} change${changes.length !== 1 ? "s" : ""}`, { intent: "success" });
 		}
 	}, [onApplyAllCallback]);
 
+	const handleSelectField = useCallback((fieldId: string) => {
+		console.log("[BrandToneProvider] handleSelectField called:", {
+			fieldId,
+			mappingKeys: Object.keys(fieldToElementMap),
+			mapping: fieldToElementMap,
+			hasScrollFunction: !!scrollFunctionRef.current,
+		});
+
+		const elementId = fieldToElementMap[fieldId];
+
+		if (!elementId) {
+			console.warn("[BrandToneProvider] No element mapping found for field:", fieldId, "Available keys:", Object.keys(fieldToElementMap));
+			return;
+		}
+
+		if (!scrollFunctionRef.current) {
+			console.warn("[BrandToneProvider] Scroll function not registered");
+			return;
+		}
+
+		console.log("[BrandToneProvider] Calling scroll function with element:", elementId);
+		scrollFunctionRef.current(elementId);
+	}, [fieldToElementMap]);
+
+	const handleClose = useCallback(() => {
+		setResult(null);
+		setIsAnalyzing(false);
+	}, []);
+
 	return (
-		<BrandToneContext.Provider value={{analyzeText, analyzePage, isAnalyzing}}>
+		<BrandToneContext.Provider value={{analyzeText, analyzePage, isAnalyzing, registerScrollFunction}}>
 			{children}
-			<BrandTonePanel
-				open={isPanelOpen}
-				onOpenChange={setIsPanelOpen}
-				result={result}
-				isLoading={isAnalyzing}
-				onApply={onApplyCallback ? handleApply : undefined}
-				onApplyAll={onApplyAllCallback ? handleApplyAll : undefined}
-			/>
+			{(isAnalyzing || result) && (
+				<Aside>
+					<BrandToneSidePanel
+						result={result}
+						isLoading={isAnalyzing}
+						onClose={handleClose}
+						onApply={onApplyCallback ? handleApply : undefined}
+						onApplyAll={onApplyAllCallback ? handleApplyAll : undefined}
+						onSelectField={handleSelectField}
+					/>
+				</Aside>
+			)}
 		</BrandToneContext.Provider>
 	);
 }

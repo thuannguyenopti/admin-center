@@ -94,6 +94,10 @@ interface CMSToolbarProps {
 	onPreviewChange?: (patch: Partial<PreviewSettings>) => void;
 
 	contentTypeIcon?: React.ReactNode;
+
+	// Page elements for Brand Tone analysis
+	pageElements?: Record<string, {type: string; properties: any}>;
+	onUpdateElement?: (elementId: string, propertyKey: string, newValue: string) => void;
 }
 
 const getStatusIntent = (
@@ -156,6 +160,8 @@ export default function CMSToolbar({
 	onPreviewChange = () => {},
 
 	contentTypeIcon,
+	pageElements,
+	onUpdateElement,
 }: CMSToolbarProps) {
 	const currentLanguage = languageOptions.find((opt) => opt.value === selectedLanguage);
 	const currentVariation = variationOptions.find((opt) => opt.value === selectedVariation);
@@ -195,48 +201,98 @@ export default function CMSToolbar({
 		(action) => action.enabled && action.locations.toolbar.contextMenu
 	);
 
-	// Mock page fields data - in a real implementation, this would come from the page state
-	const getPageFields = () => [
-		{
-			fieldId: "page-title",
-			fieldLabel: "Page Title",
-			text: "Welcome to Our Amazing Product",
-		},
-		{
-			fieldId: "hero-heading",
-			fieldLabel: "Hero Heading",
-			text: "Discover the power of our revolutionary solution",
-		},
-		{
-			fieldId: "description",
-			fieldLabel: "Description",
-			text: "This product has been designed to meet all your needs. It offers unprecedented performance and reliability.",
-		},
-		{
-			fieldId: "cta-text",
-			fieldLabel: "Call to Action",
-			text: "Click here to learn more about our offering",
-		},
-	];
+	// Extract text content from page elements
+	const getPageFields = () => {
+		if (!pageElements) {
+			return [];
+		}
+
+		const fields: Array<{fieldId: string; fieldLabel: string; text: string}> = [];
+
+		Object.entries(pageElements).forEach(([elementId, element]) => {
+			// Extract text from various property types
+			let text = "";
+			let label = element.type || "Element";
+
+			// Common text properties
+			if (element.properties.text?.value) {
+				text = element.properties.text.value;
+				label = element.type === "heading" ? "Heading" :
+				        element.type === "text" ? "Text" :
+				        element.type === "button" ? "Button" :
+				        element.type;
+			} else if (element.properties.content?.value) {
+				text = element.properties.content.value;
+			} else if (element.properties.label?.value) {
+				text = element.properties.label.value;
+				label = "Label";
+			} else if (element.properties.title?.value) {
+				text = element.properties.title.value;
+				label = "Title";
+			}
+
+			// Only include elements with actual text content
+			if (text && text.trim()) {
+				fields.push({
+					fieldId: elementId,
+					fieldLabel: label,
+					text: text.trim(),
+				});
+			}
+		});
+
+		return fields;
+	};
 
 	// Handlers for applying brand tone suggestions
 	const handleApplyField = (fieldId: string, suggestion: string) => {
 		console.log(`[CMSToolbar] Apply to field ${fieldId}:`, suggestion);
-		// TODO: Implement actual field update logic
-		toaster.create(`Applied suggestion to field`, { intent: "success" });
+
+		if (onUpdateElement && pageElements?.[fieldId]) {
+			const element = pageElements[fieldId];
+
+			// Find which property contains the text and update it
+			if (element.properties.text?.value) {
+				onUpdateElement(fieldId, "text", suggestion);
+			} else if (element.properties.content?.value) {
+				onUpdateElement(fieldId, "content", suggestion);
+			} else if (element.properties.label?.value) {
+				onUpdateElement(fieldId, "label", suggestion);
+			} else if (element.properties.title?.value) {
+				onUpdateElement(fieldId, "title", suggestion);
+			}
+		}
 	};
 
 	const handleApplyAll = (changes: Array<{fieldId: string; suggestion: string}>) => {
 		console.log("[CMSToolbar] Apply all changes:", changes);
-		// TODO: Implement batch field update logic
-		const count = changes.length;
-		const noun = count === 1 ? 'change' : 'changes';
-		toaster.create(`Applied ${count} ${noun}`, { intent: "success" });
+
+		changes.forEach(({fieldId, suggestion}) => {
+			handleApplyField(fieldId, suggestion);
+		});
 	};
 
 	const handleBrandToneAnalysis = () => {
 		const fields = getPageFields();
-		analyzePage(fields, handleApplyField, handleApplyAll);
+
+		if (fields.length === 0) {
+			toaster.create("No text content found on the page", { intent: "warning" });
+			return;
+		}
+
+		// Create field-to-element mapping (fieldId is already the elementId)
+		const fieldToElementMap: Record<string, string> = {};
+		fields.forEach(field => {
+			fieldToElementMap[field.fieldId] = field.fieldId;
+		});
+
+		console.log("[CMSToolbar] Brand tone analysis:", {
+			fieldsCount: fields.length,
+			fields: fields.map(f => ({ id: f.fieldId, label: f.fieldLabel, textLength: f.text.length })),
+			mapping: fieldToElementMap,
+		});
+
+		analyzePage(fields, fieldToElementMap, handleApplyField, handleApplyAll);
 	};
 
 	return (

@@ -10,6 +10,7 @@ import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
+import {BrandToneProvider} from "../components/ai/BrandToneProvider";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
@@ -395,9 +396,11 @@ function TemplateWrapper(props: any) {
 export default function Template(props: any) {
 	return (
 		<LayoutProvider>
-			<OpalContextProvider navigationStructure={props.structure}>
-				<TemplateWrapper {...props} />
-			</OpalContextProvider>
+			<BrandToneProvider>
+				<OpalContextProvider navigationStructure={props.structure}>
+					<TemplateWrapper {...props} />
+				</OpalContextProvider>
+			</BrandToneProvider>
 		</LayoutProvider>
 	);
 }
