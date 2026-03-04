@@ -12,6 +12,7 @@ import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
+import {MigrationRunner} from "@/app/components/MigrationRunner";
 import {
 	IconChartBar,
 	IconDashboard,
