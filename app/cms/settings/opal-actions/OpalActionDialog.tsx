@@ -13,6 +13,9 @@ import {
 	Checkbox,
 	Text,
 	Heading,
+	Disclosure,
+	DisclosureContent,
+	DisclosureTrigger,
 } from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
@@ -37,15 +40,11 @@ export default function OpalActionDialog({
 	const [contextMenu, setContextMenu] = useState(false);
 	const [improveButton, setImproveButton] = useState(false);
 	const [assetPanel, setAssetPanel] = useState(false);
-	const [propertyEditorEnabled, setPropertyEditorEnabled] = useState(false);
 	const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
 	const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 	const [visibleAt, setVisibleAt] = useState<"Everyone" | "Editors" | "Administrators">(
 		"Everyone"
 	);
-	const [toolbarExpanded, setToolbarExpanded] = useState(true);
-	const [assetPanelExpanded, setAssetPanelExpanded] = useState(false);
-	const [propertyEditorExpanded, setPropertyEditorExpanded] = useState(false);
 
 	// Reset form when dialog opens/closes or action changes
 	useEffect(() => {
@@ -56,7 +55,6 @@ export default function OpalActionDialog({
 			setContextMenu(action.locations.toolbar.contextMenu);
 			setImproveButton(action.locations.toolbar.improveButton);
 			setAssetPanel(action.locations.assetPanel);
-			setPropertyEditorEnabled(action.locations.propertyEditor.enabled);
 			setPropertyTypes(action.locations.propertyEditor.propertyTypes);
 			setSelectedAgents(action.agents);
 			setVisibleAt(action.visibleAt);
@@ -67,7 +65,6 @@ export default function OpalActionDialog({
 			setContextMenu(false);
 			setImproveButton(false);
 			setAssetPanel(false);
-			setPropertyEditorEnabled(false);
 			setPropertyTypes([]);
 			setSelectedAgents([]);
 			setVisibleAt("Everyone");
@@ -88,7 +85,7 @@ export default function OpalActionDialog({
 				},
 				assetPanel,
 				propertyEditor: {
-					enabled: propertyEditorEnabled,
+					enabled: propertyTypes.length > 0,
 					propertyTypes: propertyTypes as PropertyType[],
 				},
 			},
@@ -119,7 +116,7 @@ export default function OpalActionDialog({
 		let count = 0;
 		if (contextMenu || improveButton) count++;
 		if (assetPanel) count++;
-		if (propertyEditorEnabled) count++;
+		if (propertyTypes.length > 0) count++;
 		return count;
 	};
 
@@ -131,48 +128,49 @@ export default function OpalActionDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent size="md">
+			<DialogContent size="lg" style={{maxWidth: "1156px", height: "calc(100vh - 128px)", maxHeight: "800px", margin: "auto"}}>
 				<DialogHeader>{action ? "Edit Opal Action" : "Add Opal Action"}</DialogHeader>
 				<DialogBody>
-					<Box display="flex" flexDirection="column" gap="16">
-						{/* Name field */}
-						<Field label="Name" required>
-							<Input
-								placeholder="e.g. GEO Optimization"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-							/>
-						</Field>
+					<Box display="flex" gap="24">
+						{/* Left Column - Basic Info */}
+						<Box display="flex" flexDirection="column" gap="16" flex="1" pr="24" borderR="1" borderColor="border.secondary">
+							<Heading level="4">Basic Information</Heading>
 
-						{/* Enabled checkbox */}
-						<Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(!!checked)}>
-							Enabled
-						</Checkbox>
+							{/* Name field */}
+							<Field label="Name" required>
+								<Input
+									placeholder="e.g. GEO Optimization"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+								/>
+							</Field>
 
-						{/* Help Text field */}
-						<Field label="Help Text" description="Optional description shown to users">
-							<Input
-								placeholder="e.g. Improve your content for search engines"
-								value={helpText}
-								onChange={(e) => setHelpText(e.target.value)}
-							/>
-						</Field>
+							{/* Enabled checkbox */}
+							<Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(!!checked)}>
+								Enabled
+							</Checkbox>
 
-						{/* Locations section */}
-						<Box>
-							<Heading level="4" mb="8">
-								Locations
-							</Heading>
-							<Text fontSize="sm" color="fg.secondary" mb="12">
+							{/* Help Text field */}
+							<Field label="Help Text" description="Optional description shown to users">
+								<Input
+									placeholder="e.g. Improve your content for search engines"
+									value={helpText}
+									onChange={(e) => setHelpText(e.target.value)}
+								/>
+							</Field>
+						</Box>
+
+						{/* Middle Column - Locations */}
+						<Box display="flex" flexDirection="column" gap="0" flex="1" pr="24" borderR="1" borderColor="border.secondary">
+							<Heading level="4"  mb="16">Location(s)</Heading>
+							<Text fontSize="sm" color="fg.secondary" mb="16">
 								Choose where this Opal Action CTA should appear ({getLocationCount()}{" "}
 								location(s) selected)
 							</Text>
 
+						{/* Locations section */}
 							{/* Visual diagram */}
 							<Box
-								bg="bg.secondary"
-								p="16"
-								rounded="md"
 								mb="12"
 								display="flex"
 								alignItems="center"
@@ -324,7 +322,7 @@ export default function OpalActionDialog({
 										fill="#E8EAF0"
 									/>
 									{/* Property Editor blue circle indicators when selected */}
-									{propertyEditorEnabled && (
+									{propertyTypes.length > 0 && (
 										<>
 											<circle cx="268" cy="106" r="3" fill="#0037FF" />
 											<circle cx="268" cy="120" r="3" fill="#0037FF" />
@@ -459,125 +457,68 @@ export default function OpalActionDialog({
 							</Box>
 
 							{/* Toolbar section */}
-							<Box
-								bg="bg.page"
-								rounded="md"
-								border="1"
-								borderColor="border.tertiary"
-								mb="8"
-							>
-								<Box
-									p="12"
-									display="flex"
-									justifyContent="space-between"
-									alignItems="center"
-									cursor="pointer"
-									onClick={() => setToolbarExpanded(!toolbarExpanded)}
-								>
+							<Disclosure defaultOpen mb="0">
+								<DisclosureTrigger>
 									<Box display="flex" alignItems="center" gap="8">
 										<Text fontWeight="500">Toolbar</Text>
 										<Text fontSize="sm" color="fg.secondary">
 											{contextMenu || improveButton ? "2 locations" : "0 locations"}
 										</Text>
 									</Box>
-									<Text fontSize="sm">{toolbarExpanded ? "▼" : "▶"}</Text>
-								</Box>
-								{toolbarExpanded && (
-									<Box px="12" pb="12" display="flex" flexDirection="column" gap="8">
-										<Checkbox
-											checked={contextMenu}
-											onCheckedChange={(checked) => setContextMenu(!!checked)}
-										>
-											Context Menu
-										</Checkbox>
-										<Checkbox
-											checked={improveButton}
-											onCheckedChange={(checked) => setImproveButton(!!checked)}
-										>
-											Improve Button
-										</Checkbox>
-									</Box>
-								)}
-							</Box>
+								</DisclosureTrigger>
+								<DisclosureContent display="flex" flexDirection="column" gap="8">
+									<Checkbox
+										checked={contextMenu}
+										onCheckedChange={(checked) => setContextMenu(!!checked)}
+									>
+										Context Menu
+									</Checkbox>
+									<Checkbox
+										checked={improveButton}
+										onCheckedChange={(checked) => setImproveButton(!!checked)}
+									>
+										Improve Button
+									</Checkbox>
+								</DisclosureContent>
+							</Disclosure>
 
 							{/* Asset Panel section */}
-							<Box
-								bg="bg.page"
-								rounded="md"
-								border="1"
-								borderColor="border.tertiary"
-							>
-								<Box
-									p="12"
-									display="flex"
-									justifyContent="space-between"
-									alignItems="center"
-									cursor="pointer"
-									onClick={() => setAssetPanelExpanded(!assetPanelExpanded)}
-								>
+							<Disclosure mb="0">
+								<DisclosureTrigger>
 									<Box display="flex" alignItems="center" gap="8">
 										<Text fontWeight="500">Asset panel</Text>
 										<Text fontSize="sm" color="fg.secondary">
 											{assetPanel ? "3 locations" : "0 locations"}
 										</Text>
 									</Box>
-									<Text fontSize="sm">{assetPanelExpanded ? "▼" : "▶"}</Text>
-								</Box>
-								{assetPanelExpanded && (
-									<Box px="12" pb="12">
-										<Checkbox
-											checked={assetPanel}
-											onCheckedChange={(checked) => setAssetPanel(!!checked)}
-										>
-											Show in Asset Panel
-										</Checkbox>
-									</Box>
-								)}
-							</Box>
+								</DisclosureTrigger>
+								<DisclosureContent>
+									<Checkbox
+										checked={assetPanel}
+										onCheckedChange={(checked) => setAssetPanel(!!checked)}
+									>
+										Show in Asset Panel
+									</Checkbox>
+								</DisclosureContent>
+							</Disclosure>
 
 							{/* Property Editor section */}
-							<Box
-								bg="bg.page"
-								rounded="md"
-								border="1"
-								borderColor="border.tertiary"
-							>
-								<Box
-									p="12"
-									display="flex"
-									justifyContent="space-between"
-									alignItems="center"
-									cursor="pointer"
-									onClick={() => setPropertyEditorExpanded(!propertyEditorExpanded)}
-								>
-									<Box display="flex" alignItems="center" gap="8">
-										<Text fontWeight="500">Properties</Text>
-										<Text fontSize="sm" color="fg.secondary">
-											{propertyEditorEnabled
-												? `${propertyTypes.length} type(s)`
-												: "0 types"}
+							<Disclosure>
+									<DisclosureTrigger>
+										<Box display="flex" alignItems="center" gap="8">
+											<Text fontWeight="500">Properties</Text>
+											<Text fontSize="sm" color="fg.secondary">
+												{propertyTypes.length > 0
+													? `${propertyTypes.length} type(s)`
+													: "0 types"}
+											</Text>
+										</Box>
+									</DisclosureTrigger>
+									<DisclosureContent display="flex" flexDirection="column" gap="12">
+										<Text fontSize="sm" color="fg.secondary" mb="8">
+											Select which property types show this action
 										</Text>
-									</Box>
-									<Text fontSize="sm">{propertyEditorExpanded ? "▼" : "▶"}</Text>
-								</Box>
-								{propertyEditorExpanded && (
-									<Box px="12" pb="12" display="flex" flexDirection="column" gap="12">
-										<Checkbox
-											checked={propertyEditorEnabled}
-											onCheckedChange={(checked) => setPropertyEditorEnabled(!!checked)}
-										>
-											Show in Property Editor
-										</Checkbox>
-
-										{propertyEditorEnabled && (
-											<Box>
-												<Text fontSize="sm" fontWeight="500" mb="8">
-													Property Types
-												</Text>
-												<Text fontSize="sm" color="fg.secondary" mb="8">
-													Select which property types show this action
-												</Text>
-												<Box display="flex" flexDirection="column" gap="8">
+										<Box display="flex" flexDirection="column" gap="8">
 													{/* Text types */}
 													<Box>
 														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
@@ -737,19 +678,14 @@ export default function OpalActionDialog({
 														</Box>
 													</Box>
 												</Box>
-											</Box>
-										)}
-									</Box>
-								)}
-							</Box>
+									</DisclosureContent>
+							</Disclosure>
 						</Box>
 
-						{/* Agents section */}
-						<Box>
-							<Heading level="4" mb="8">
-								Agent(s)
-							</Heading>
-							<Text fontSize="sm" color="fg.secondary" mb="12">
+						{/* Right Column - Agents */}
+						<Box display="flex" flexDirection="column" gap="16" flex="1">
+							<Heading level="4">Agent(s)</Heading>
+							<Text fontSize="sm" color="fg.secondary">
 								Select the agents to include in this action
 							</Text>
 
