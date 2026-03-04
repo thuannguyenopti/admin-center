@@ -1,0 +1,6 @@
+name,slug,parentSlug,status,visibility
+,missing-name,,published,public
+Bikes,bikes,equipment,published,public
+A,short,equipment,published,public
+Invalid Parent,invalid-parent,nonexistent,published,public
+Road Bikes,road-bikes,bikes,invalid-status,public

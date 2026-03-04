@@ -17,6 +17,8 @@ export interface AITextAreaProps extends Omit<TextareaProps, "onChange" | "value
 	error?: boolean;
 	rows?: number;
 	resize?: "none" | "vertical" | "horizontal" | "both";
+	className?: string;
+	style?: React.CSSProperties;
 	enableGrammarCheck?: boolean;
 	enableAutoComplete?: boolean;
 }
@@ -35,7 +37,6 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 			enableAutoComplete = false,
 			className,
 			style,
-			...restProps
 		} = props;
 
 		const editorRef = useRef<HTMLDivElement>(null);

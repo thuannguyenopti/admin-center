@@ -478,6 +478,7 @@ export default function RootLayout({
 					<ProofreadingProvider>
 						<BrandToneProvider>
 							<HydrationErrorSuppressor />
+							<MigrationRunner />
 							{menu ? <Template structure={menu}>{children}</Template> : children}
 							{activeEffect === "snow" && <SnowEffect />}
 							{activeEffect === "newyear" && <NewYearEffect />}

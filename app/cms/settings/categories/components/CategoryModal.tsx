@@ -7,14 +7,14 @@ import {
   DialogClose,
   Box,
   Button,
+  Tooltip,
 } from '@optiaxiom/react';
-import { Button as LegacyButton } from '@/app/components/Button';
 import { Text } from '@/app/components/Text';
 import { CategoryFormRow as FormRowType, Category } from '../types';
 import { CategoryFormRow } from './CategoryFormRow';
 import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique, isValidParent } from '../utils';
-import { IconSparkles } from '@optimizely/axiom-icons';
+import { IconSparkles, IconCircleInfo } from '@optimizely/axiom-icons';
 
 export interface ContentContextItem {
   name: string;
@@ -69,6 +69,16 @@ export function CategoryModal({
     }
   }, [open, mode, initialCategories]);
 
+  // Lock page scroll when modal is open so only the modal body scrolls (single scrollbar)
+  useEffect(() => {
+    if (open) {
+      document.body.dataset.modalOpen = 'true';
+      return () => {
+        delete document.body.dataset.modalOpen;
+      };
+    }
+  }, [open]);
+
   const toCategoryName = (str: string): string =>
     str
       .trim()
@@ -80,25 +90,25 @@ export function CategoryModal({
       .trim();
 
   const handleGenerate = useCallback(async () => {
-    const hasTaxonomy = allCategories.length > 0;
-    const hasContent = contentContext.length > 0;
-    if (!hasTaxonomy && !hasContent) return;
     setGenerateLoading(true);
     setGenerateError(null);
     try {
-      const categoryTaxonomy = allCategories.map((c) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        parentId: c.parentId,
-      }));
+      const payload: any = {};
+      if (allCategories.length > 0) {
+        payload.categoryTaxonomy = allCategories.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          parentId: c.parentId,
+        }));
+      }
+      if (contentContext.length > 0) {
+        payload.contentContext = contentContext;
+      }
       const res = await fetch('/api/categories/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoryTaxonomy,
-          contentContext,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -258,25 +268,30 @@ export function CategoryModal({
   const title = mode === 'create' ? 'Create categories' : 'Edit categories';
   const buttonText = mode === 'create' ? 'Create' : 'Save';
 
+  const canSubmitCreate =
+    mode !== 'create' ||
+    formRows.some(
+      (row) => row.name.trim().length >= 2 && row.slug.trim().length > 0
+    );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         size="lg"
         style={{
           maxWidth: '736px',
-          maxHeight: '90vh',
+          maxHeight: '80vh',
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <DialogHeader
-          style={{
-            fontSize: '22.99px',
-            fontWeight: 300,
-            letterSpacing: '-0.44px',
-            color: '#080736',
-          }}
+          description="Define categories to organise your content."
+          fontSize="xl"
+          fontWeight="400"
+          color="fg.default"
         >
           {title}
         </DialogHeader>
@@ -289,67 +304,51 @@ export function CategoryModal({
           }}
         >
           <Box display="flex" flexDirection="column" gap="8">
-            {/* Subtitle */}
-            <Text
-              style={{
-                fontSize: '14px',
-                fontWeight: 400,
-                letterSpacing: '-0.15px',
-                color: '#080736',
-              }}
-            >
-              Define categories to organise your content.
-            </Text>
+            {mode === 'create' && generateError && (
+              <Text fontSize="xs" color="fg.error">
+                {generateError}
+              </Text>
+            )}
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Category
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Slug
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
                   Category parent
                 </Box>
-                <Box
-                  flex="1"
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 400,
-                    letterSpacing: '-0.15px',
-                    color: '#080736',
-                    minWidth: 0,
-                  }}
-                >
-                  Visibility
+                <Box flex="1" fontSize="sm" fontWeight="400" color="fg.default" style={{ minWidth: 0 }}>
+                  <Box display="inline-flex" alignItems="center" gap="4">
+                    <span>Visibility</span>
+                    <Tooltip
+                      aria-label="Visibility help"
+                      content={
+                        <Box display="flex" flexDirection="column" gap="8" fontSize="sm" style={{ maxWidth: 280 }}>
+                          <Text m="0">
+                            Public categories appear in filters and APIs. Private categories are visible only in the CMS.
+                          </Text>
+                          <Text m="0" fontWeight="600">
+                            Examples:
+                          </Text>
+                          <Text m="0">
+                            Public: site navigation, product taxonomy.
+                          </Text>
+                          <Text m="0">
+                            Private: internal workflow, draft groupings.
+                          </Text>
+                        </Box>
+                      }
+                      delayDuration={300}
+                    >
+                      <span style={{ display: 'inline-flex', cursor: 'help' }}>
+                        <IconCircleInfo size={14} color="var(--ax-colors-fg-secondary)" />
+                      </span>
+                    </Tooltip>
+                  </Box>
                 </Box>
                 {/* Spacer for icon column */}
                 <Box style={{ width: '30px', flexShrink: 0 }} />
@@ -371,59 +370,41 @@ export function CategoryModal({
                     loading={mode === 'create' && generateLoading}
                   />
                   {errors[index] && (
-                    <Box
-                      style={{
-                        color: '#dc2626',
-                        fontSize: '12px',
-                        marginTop: '4px',
-                      }}
-                    >
+                    <Box color="fg.error" fontSize="xs" mt="2">
                       {errors[index]}
                     </Box>
                   )}
                 </Box>
               ))}
             </Box>
-            {mode === 'create' && (
-              <Box display="flex" justifyContent="flex-start" alignItems="center">
-                <Button
-                  appearance="primary-opal"
-                  size="sm"
-                  rounded="sm"
-                  px="8"
-                  icon={<IconSparkles size={16} />}
-                  iconPosition="start"
-                  onClick={handleGenerate}
-                  disabled={generateLoading || (allCategories.length === 0 && contentContext.length === 0)}
-                  loading={generateLoading}
-                  aria-label="Generate category suggestions with Opal"
-                >
-                  Generate
-                </Button>
-              </Box>
-            )}
-            {mode === 'create' && generateError && (
-              <Box>
-                <Text fontSize="xs" color="fg.error">
-                  {generateError}
-                </Text>
-              </Box>
-            )}
           </Box>
         </DialogBody>
-        <DialogFooter style={{ gap: '16px' }}>
+        <DialogFooter style={{ gap: '16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          {mode === 'create' && (
+            <Button
+              appearance="default-opal"
+              size="lg"
+              className="opalGenerateButton"
+              icon={<IconSparkles size={16} />}
+              iconPosition="start"
+              onClick={handleGenerate}
+              disabled={generateLoading}
+              loading={generateLoading}
+              aria-label="Generate category suggestions with Opal"
+            >
+              Generate
+            </Button>
+          )}
+          <Box style={{ flex: 1 }} />
           <DialogClose size="lg">Cancel</DialogClose>
-          <LegacyButton
+          <Button
             appearance="primary"
             size="lg"
             onClick={handleSave}
-            style={{
-              backgroundColor: '#0037ff',
-              color: '#ffffff',
-            }}
+            disabled={mode === 'create' && !canSubmitCreate}
           >
             {buttonText}
-          </LegacyButton>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

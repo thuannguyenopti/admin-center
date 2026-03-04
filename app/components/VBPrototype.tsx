@@ -2,7 +2,7 @@
 
 import type {SEOBlock} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
+import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
@@ -23,6 +23,7 @@ import PreviewCanvas from "./vb/PreviewCanvas";
 import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
+import VersionHistory from "./vb/versionHistory/VersionHistory";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -38,6 +39,7 @@ import ExtensionPanel from "./ExtensionPanel";
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {Input} from "@/app/components/Input";
+import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
 
 /** -----------------------------
@@ -240,6 +242,8 @@ export default function VBPrototype({
 	onTrash,
 	onRenamePage,
 	onViewOnWebsite,
+	versionHistory,
+	onRestoreVersion,
 }: {
 	initialData?: PageInput;
 	onSave?: (page: PageInput) => void;
@@ -262,6 +266,8 @@ export default function VBPrototype({
 	onDeleteVariation?: (id: string) => void;
 	onRenameVariation?: (id: string, newName: string) => void;
 	onRenamePage?: (newName: string) => void;
+	versionHistory?: ReturnType<typeof useVersionHistory>;
+	onRestoreVersion?: (version: any) => void;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
@@ -271,6 +277,7 @@ export default function VBPrototype({
 	const [isDeleteVariationDialogOpen, setIsDeleteVariationDialogOpen] = useState(false);
 	const [isRenameVariationDialogOpen, setIsRenameVariationDialogOpen] = useState(false);
 	const [isTrashDialogOpen, setIsTrashDialogOpen] = useState(false);
+	const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 	const [newVariationName, setNewVariationName] = useState("");
 	const [renameVariationName, setRenameVariationName] = useState("");
 
@@ -655,22 +662,27 @@ export default function VBPrototype({
 		});
 	}, [currentEle, setTheEles]);
 
-	// Header actions (Generate + plus-menu)
+	// Header actions (Generate only in Categories & Tags + plus-menu)
+	const showGenerateInHeader =
+		sidebarTab === "properties" && activePropertiesSection === "categories-tags";
 	const HeaderActions = (
 		<Box display="flex" alignItems="center" gap="2" className="relative">
-			<Button
-				onClick={() => {
-					setSidebarTab("properties");
-					setActivePropertiesSection("categories-tags");
-					generateTriggerRef.current?.();
-				}}
-				appearance="subtle"
-				size="sm"
-				aria-label="Generate tags and categories"
-				icon={<IconSparkles size={16} />}
-				disabled={generateLoading}
-				loading={generateLoading}
-			/>
+			{showGenerateInHeader && (
+				<Tooltip content="Generate tag and category suggestions using Opal">
+					<Button
+						onClick={() => generateTriggerRef.current?.()}
+						appearance="default-opal"
+						size="sm"
+						rounded="sm"
+						px="8"
+						className="opalGenerateButton"
+						aria-label="Generate tags and categories"
+						icon={<IconSparkles size={16} />}
+						disabled={generateLoading}
+						loading={generateLoading}
+					/>
+				</Tooltip>
+			)}
 
 			<Menu
 				options={[
@@ -1208,6 +1220,7 @@ export default function VBPrototype({
 						pageStatus={pageStatus}
 						onPublish={onPublish}
 						onViewOnWebsite={onViewOnWebsite}
+						onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
@@ -1318,6 +1331,7 @@ export default function VBPrototype({
 					pageStatus={pageStatus}
 					onPublish={onPublish}
 					onViewOnWebsite={onViewOnWebsite}
+					onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
@@ -1971,6 +1985,18 @@ export default function VBPrototype({
 			>
 				<Text>This action will unpublish the page and move it to the trash.</Text>
 			</AbstractDialog>
+
+			{isVersionHistoryOpen && (
+				<VersionHistory
+					variations={variations}
+					pageOutlines={outlines}
+					onClose={() => setIsVersionHistoryOpen(false)}
+					initialPreviewMode={preview.mode === "fixed" || preview.mode === "scale" ? "fixed" : "responsive"}
+					versionHistory={versionHistory}
+					pageId={pageId}
+					onRestore={onRestoreVersion}
+				/>
+			)}
 		</div>
 	);
 }

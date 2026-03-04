@@ -16,6 +16,8 @@ export interface AIInputFieldProps extends Omit<TextareaProps, "onChange" | "val
 	disabled?: boolean;
 	error?: boolean;
 	size?: "md" | "lg" | "xl";
+	className?: string;
+	style?: React.CSSProperties;
 	enableGrammarCheck?: boolean;
 	enableAutoComplete?: boolean;
 }
@@ -33,7 +35,6 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 			enableAutoComplete = false,
 			className,
 			style,
-			...restProps
 		} = props;
 
 		const editorRef = useRef<HTMLDivElement>(null);

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Bikes",
+    "slug": "bikes",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Road Bikes",
+    "slug": "road-bikes",
+    "parentSlug": "bikes",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Duplicate Bikes",
+    "slug": "bikes",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "private"
+  },
+  {
+    "name": "Accessories",
+    "slug": "accessories",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  }
+]
