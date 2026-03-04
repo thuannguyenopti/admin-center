@@ -103,6 +103,12 @@ export default function OpalActionsPage() {
 		if (action.locations.toolbar.contextMenu) locations.push("Context Menu");
 		if (action.locations.toolbar.improveButton) locations.push("Toolbar");
 		if (action.locations.assetPanel) locations.push("Asset Panel");
+		if (action.locations.propertyEditor?.enabled) {
+			const typeCount = action.locations.propertyEditor.propertyTypes.length;
+			locations.push(
+				typeCount > 0 ? `Properties (${typeCount} types)` : "Properties (all types)"
+			);
+		}
 		return locations.join(", ") || "None";
 	};
 

@@ -16,7 +16,7 @@ import {
 } from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
-import {OpalAction, availableAgents} from "./mockData";
+import {OpalAction, availableAgents, PropertyType} from "./mockData";
 
 interface OpalActionDialogProps {
 	open: boolean;
@@ -37,12 +37,15 @@ export default function OpalActionDialog({
 	const [contextMenu, setContextMenu] = useState(false);
 	const [improveButton, setImproveButton] = useState(false);
 	const [assetPanel, setAssetPanel] = useState(false);
+	const [propertyEditorEnabled, setPropertyEditorEnabled] = useState(false);
+	const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
 	const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 	const [visibleAt, setVisibleAt] = useState<"Everyone" | "Editors" | "Administrators">(
 		"Everyone"
 	);
 	const [toolbarExpanded, setToolbarExpanded] = useState(true);
 	const [assetPanelExpanded, setAssetPanelExpanded] = useState(false);
+	const [propertyEditorExpanded, setPropertyEditorExpanded] = useState(false);
 
 	// Reset form when dialog opens/closes or action changes
 	useEffect(() => {
@@ -53,6 +56,8 @@ export default function OpalActionDialog({
 			setContextMenu(action.locations.toolbar.contextMenu);
 			setImproveButton(action.locations.toolbar.improveButton);
 			setAssetPanel(action.locations.assetPanel);
+			setPropertyEditorEnabled(action.locations.propertyEditor.enabled);
+			setPropertyTypes(action.locations.propertyEditor.propertyTypes);
 			setSelectedAgents(action.agents);
 			setVisibleAt(action.visibleAt);
 		} else {
@@ -62,6 +67,8 @@ export default function OpalActionDialog({
 			setContextMenu(false);
 			setImproveButton(false);
 			setAssetPanel(false);
+			setPropertyEditorEnabled(false);
+			setPropertyTypes([]);
 			setSelectedAgents([]);
 			setVisibleAt("Everyone");
 		}
@@ -80,6 +87,10 @@ export default function OpalActionDialog({
 					improveButton,
 				},
 				assetPanel,
+				propertyEditor: {
+					enabled: propertyEditorEnabled,
+					propertyTypes: propertyTypes as PropertyType[],
+				},
 			},
 			agents: selectedAgents,
 			visibleAt,
@@ -108,7 +119,14 @@ export default function OpalActionDialog({
 		let count = 0;
 		if (contextMenu || improveButton) count++;
 		if (assetPanel) count++;
+		if (propertyEditorEnabled) count++;
 		return count;
+	};
+
+	const togglePropertyType = (type: string) => {
+		setPropertyTypes((prev) =>
+			prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+		);
 	};
 
 	return (
@@ -305,6 +323,14 @@ export default function OpalActionDialog({
 										d="M143 222C143 220.343 144.343 219 146 219H238.398C240.055 219 241.398 220.343 241.398 222C241.398 223.657 240.055 225 238.398 225H146C144.343 225 143 223.657 143 222Z"
 										fill="#E8EAF0"
 									/>
+									{/* Property Editor blue circle indicators when selected */}
+									{propertyEditorEnabled && (
+										<>
+											<circle cx="268" cy="106" r="3" fill="#0037FF" />
+											<circle cx="268" cy="120" r="3" fill="#0037FF" />
+											<circle cx="268" cy="208" r="3" fill="#0037FF" />
+										</>
+									)}
 									{/* Asset Panel */}
 									<mask id="path-37-inside-5" fill="white">
 										<path d="M278 75H358V257H278V75Z" />
@@ -505,6 +531,214 @@ export default function OpalActionDialog({
 										>
 											Show in Asset Panel
 										</Checkbox>
+									</Box>
+								)}
+							</Box>
+
+							{/* Property Editor section */}
+							<Box
+								bg="bg.page"
+								rounded="md"
+								border="1"
+								borderColor="border.tertiary"
+							>
+								<Box
+									p="12"
+									display="flex"
+									justifyContent="space-between"
+									alignItems="center"
+									cursor="pointer"
+									onClick={() => setPropertyEditorExpanded(!propertyEditorExpanded)}
+								>
+									<Box display="flex" alignItems="center" gap="8">
+										<Text fontWeight="500">Properties</Text>
+										<Text fontSize="sm" color="fg.secondary">
+											{propertyEditorEnabled
+												? `${propertyTypes.length} type(s)`
+												: "0 types"}
+										</Text>
+									</Box>
+									<Text fontSize="sm">{propertyEditorExpanded ? "▼" : "▶"}</Text>
+								</Box>
+								{propertyEditorExpanded && (
+									<Box px="12" pb="12" display="flex" flexDirection="column" gap="12">
+										<Checkbox
+											checked={propertyEditorEnabled}
+											onCheckedChange={(checked) => setPropertyEditorEnabled(!!checked)}
+										>
+											Show in Property Editor
+										</Checkbox>
+
+										{propertyEditorEnabled && (
+											<Box>
+												<Text fontSize="sm" fontWeight="500" mb="8">
+													Property Types
+												</Text>
+												<Text fontSize="sm" color="fg.secondary" mb="8">
+													Select which property types show this action
+												</Text>
+												<Box display="flex" flexDirection="column" gap="8">
+													{/* Text types */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Text
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("String")}
+																onCheckedChange={() => togglePropertyType("String")}
+															>
+																String (≤255)
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("LongString")}
+																onCheckedChange={() => togglePropertyType("LongString")}
+															>
+																String ({">"}255)
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("XhtmlString")}
+																onCheckedChange={() => togglePropertyType("XhtmlString")}
+															>
+																XHTML String
+															</Checkbox>
+														</Box>
+													</Box>
+
+													{/* Number types */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Number
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("Int")}
+																onCheckedChange={() => togglePropertyType("Int")}
+															>
+																Integer
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("Double")}
+																onCheckedChange={() => togglePropertyType("Double")}
+															>
+																Decimal
+															</Checkbox>
+														</Box>
+													</Box>
+
+													{/* Boolean */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Boolean
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("Boolean")}
+																onCheckedChange={() => togglePropertyType("Boolean")}
+															>
+																Boolean
+															</Checkbox>
+														</Box>
+													</Box>
+
+													{/* Date/Time */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Date/Time
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("DateTime")}
+																onCheckedChange={() => togglePropertyType("DateTime")}
+															>
+																Date/Time
+															</Checkbox>
+														</Box>
+													</Box>
+
+													{/* Reference types */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Reference
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("ContentReference")}
+																onCheckedChange={() => togglePropertyType("ContentReference")}
+															>
+																Content Reference
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("PageReference")}
+																onCheckedChange={() => togglePropertyType("PageReference")}
+															>
+																Page Reference
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("ImageReference")}
+																onCheckedChange={() => togglePropertyType("ImageReference")}
+															>
+																Image Reference
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("VideoReference")}
+																onCheckedChange={() => togglePropertyType("VideoReference")}
+															>
+																Video Reference
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("Url")}
+																onCheckedChange={() => togglePropertyType("Url")}
+															>
+																URL
+															</Checkbox>
+														</Box>
+													</Box>
+
+													{/* Selection types */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Selection
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("SelectOne")}
+																onCheckedChange={() => togglePropertyType("SelectOne")}
+															>
+																Selection (single)
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("SelectMany")}
+																onCheckedChange={() => togglePropertyType("SelectMany")}
+															>
+																Selection (multiple)
+															</Checkbox>
+														</Box>
+													</Box>
+
+													{/* Content types */}
+													<Box>
+														<Text fontSize="xs" fontWeight="500" color="fg.secondary" mb="4">
+															Content
+														</Text>
+														<Box display="flex" flexDirection="column" gap="4" pl="8">
+															<Checkbox
+																checked={propertyTypes.includes("ContentArea")}
+																onCheckedChange={() => togglePropertyType("ContentArea")}
+															>
+																Content Area
+															</Checkbox>
+															<Checkbox
+																checked={propertyTypes.includes("LinkItemCollection")}
+																onCheckedChange={() => togglePropertyType("LinkItemCollection")}
+															>
+																Link Collection
+															</Checkbox>
+														</Box>
+													</Box>
+												</Box>
+											</Box>
+										)}
 									</Box>
 								)}
 							</Box>

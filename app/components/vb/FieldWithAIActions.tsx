@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Field, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, Button, Text } from "@optiaxiom/react";
+import { Field, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, Button, Text } from "@optiaxiom/react";
 import { IconSparkles } from "@tabler/icons-react";
 
 interface AIAction {
 	label: string;
 	onClick: () => void;
+	group?: {
+		label: string;
+		hidden: boolean;
+	};
 }
 
 interface FieldWithAIActionsProps {
@@ -48,16 +52,24 @@ export const FieldWithAIActions: React.FC<FieldWithAIActionsProps> = ({
 						/>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
-						{aiActions.map((action, index) => (
-							<DropdownMenuItem
-								key={index}
-								onSelect={() => {
-									action.onClick();
-								}}
-							>
-								{action.label}
-							</DropdownMenuItem>
-						))}
+						{aiActions.map((action, index) => {
+							const needsSeparator = index > 0 && action.group && !action.group.hidden;
+							return (
+								<React.Fragment key={index}>
+									{needsSeparator && <DropdownMenuSeparator />}
+									{action.group && !action.group.hidden && (
+										<DropdownMenuLabel>{action.group.label}</DropdownMenuLabel>
+									)}
+									<DropdownMenuItem
+										onSelect={() => {
+											action.onClick();
+										}}
+									>
+										{action.label}
+									</DropdownMenuItem>
+								</React.Fragment>
+							);
+						})}
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
