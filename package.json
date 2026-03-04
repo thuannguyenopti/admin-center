@@ -22,7 +22,7 @@
 		"framer-motion": "^12.0.1",
 		"next": "^16.0.7",
 		"openai": "^6.10.0",
-		"papaparse": "^5.4.1",
+		"papaparse": "^5.5.3",
 		"react": "^19.2.1",
 		"react-dom": "^19.2.1",
 		"tailwind-merge": "^2.6.1"
@@ -32,7 +32,7 @@
 		"@tanstack/table-core": "^8.21.3",
 		"@types/classnames": "^2.3.1",
 		"@types/node": "^24.10.1",
-		"@types/papaparse": "^5.3.14",
+		"@types/papaparse": "^5.5.2",
 		"@types/react": "^19.2.7",
 		"@types/react-dom": "^19.2.3",
 		"css-loader": "^7.1.2",
