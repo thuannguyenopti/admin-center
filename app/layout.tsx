@@ -3,6 +3,7 @@ import Template from "./components/template";
 import "./globals.css";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
+import {BrandToneProvider} from "@/app/components/ai/BrandToneProvider";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
@@ -475,10 +476,12 @@ export default function RootLayout({
 			<body suppressHydrationWarning>
 				<ThemeProvider>
 					<ProofreadingProvider>
-						<HydrationErrorSuppressor />
-						{menu ? <Template structure={menu}>{children}</Template> : children}
-						{activeEffect === "snow" && <SnowEffect />}
-						{activeEffect === "newyear" && <NewYearEffect />}
+						<BrandToneProvider>
+							<HydrationErrorSuppressor />
+							{menu ? <Template structure={menu}>{children}</Template> : children}
+							{activeEffect === "snow" && <SnowEffect />}
+							{activeEffect === "newyear" && <NewYearEffect />}
+						</BrandToneProvider>
 					</ProofreadingProvider>
 				</ThemeProvider>
 			</body>

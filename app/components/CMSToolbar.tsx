@@ -61,6 +61,7 @@ import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-i
 import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
 import {OpalAction, availableAgents} from "@/app/cms/settings/opal-actions/mockData";
+import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -184,12 +185,56 @@ export default function CMSToolbar({
 
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalActions] = usePersistentState("opal-actions", []) as [OpalAction[], any];
+	const {analyzePage} = useBrandTone();
+
 	const improveActions = opalActions.filter(
 		(action) => action.enabled && action.locations.toolbar.improveButton
 	);
 	const contextMenuActions = opalActions.filter(
 		(action) => action.enabled && action.locations.toolbar.contextMenu
 	);
+
+	// Mock page fields data - in a real implementation, this would come from the page state
+	const getPageFields = () => [
+		{
+			fieldId: "page-title",
+			fieldLabel: "Page Title",
+			text: "Welcome to Our Amazing Product",
+		},
+		{
+			fieldId: "hero-heading",
+			fieldLabel: "Hero Heading",
+			text: "Discover the power of our revolutionary solution",
+		},
+		{
+			fieldId: "description",
+			fieldLabel: "Description",
+			text: "This product has been designed to meet all your needs. It offers unprecedented performance and reliability.",
+		},
+		{
+			fieldId: "cta-text",
+			fieldLabel: "Call to Action",
+			text: "Click here to learn more about our offering",
+		},
+	];
+
+	// Handlers for applying brand tone suggestions
+	const handleApplyField = (fieldId: string, suggestion: string) => {
+		console.log(`[CMSToolbar] Apply to field ${fieldId}:`, suggestion);
+		// TODO: Implement actual field update logic
+		alert(`Applied to ${fieldId}: ${suggestion}`);
+	};
+
+	const handleApplyAll = (changes: Array<{fieldId: string; suggestion: string}>) => {
+		console.log("[CMSToolbar] Apply all changes:", changes);
+		// TODO: Implement batch field update logic
+		alert(`Applied ${changes.length} changes to the page`);
+	};
+
+	const handleBrandToneAnalysis = () => {
+		const fields = getPageFields();
+		analyzePage(fields, handleApplyField, handleApplyAll);
+	};
 
 	return (
 		<Box
@@ -352,22 +397,31 @@ export default function CMSToolbar({
 										label: agent?.name || agentId,
 										group: {label: action.name, hidden: index > 0},
 										execute: () => {
-											console.log(
-												"Execute Opal Action:",
-												action.name,
-												"- Agent:",
-												agent?.name
-											);
+											if (agentId === "brand-tone-audit") {
+												handleBrandToneAnalysis();
+											} else {
+												console.log(
+													"Execute Opal Action:",
+													action.name,
+													"- Agent:",
+													agent?.name
+												);
+											}
 										},
 									};
 								});
 							}
 							// Single agent, just show the action name
+							const agentId = action.agents[0];
 							return [
 								{
 									label: action.name,
 									execute: () => {
-										console.log("Execute Opal Action:", action.name);
+										if (agentId === "brand-tone-audit") {
+											handleBrandToneAnalysis();
+										} else {
+											console.log("Execute Opal Action:", action.name);
+										}
 									},
 								},
 							];
@@ -479,12 +533,16 @@ export default function CMSToolbar({
 																	<DropdownMenuItem
 																		key={agentId}
 																		onSelect={() => {
-																			console.log(
-																				"Execute Opal Action:",
-																				action.name,
-																				"- Agent:",
-																				agent?.name
-																			);
+																			if (agentId === "brand-tone-audit") {
+																				handleBrandToneAnalysis();
+																			} else {
+																				console.log(
+																					"Execute Opal Action:",
+																					action.name,
+																					"- Agent:",
+																					agent?.name
+																				);
+																			}
 																		}}
 																	>
 																		{agent?.name || agentId}
@@ -496,11 +554,16 @@ export default function CMSToolbar({
 												);
 											}
 											// Single agent, just show the action name
+											const agentId = action.agents[0];
 											return (
 												<DropdownMenuItem
 													key={action.id}
 													onSelect={() => {
-														console.log("Execute Opal Action:", action.name);
+														if (agentId === "brand-tone-audit") {
+															handleBrandToneAnalysis();
+														} else {
+															console.log("Execute Opal Action:", action.name);
+														}
 													}}
 												>
 													{action.name}

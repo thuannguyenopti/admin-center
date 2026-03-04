@@ -9,7 +9,7 @@ import type { GrammarError } from "./ProofreadingProvider";
 import { renderTextWithErrors } from "./utils/renderTextWithErrors";
 import styles from "./AIInputField.module.css";
 
-export interface AIInputFieldProps extends Omit<TextareaProps, "onChange" | "value"> {
+export interface AIInputFieldProps extends Omit<TextareaProps, "onChange" | "value" | "size" | "onInput" | "onKeyDown" | "onPaste" | "onFocus"> {
 	value: string;
 	onChange: (e: { currentTarget: { value: string }; target: { value: string } }) => void;
 	placeholder?: string;
@@ -251,7 +251,6 @@ export const AIInputField = forwardRef<HTMLDivElement, AIInputFieldProps>(
 					aria-multiline="false"
 					aria-disabled={disabled}
 					aria-invalid={error}
-					{...restProps}
 				/>
 				{showErrors && (
 					<div

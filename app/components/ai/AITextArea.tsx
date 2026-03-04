@@ -9,7 +9,7 @@ import type { GrammarError } from "./ProofreadingProvider";
 import { renderTextWithErrors } from "./utils/renderTextWithErrors";
 import styles from "./AITextArea.module.css";
 
-export interface AITextAreaProps extends Omit<TextareaProps, "onChange" | "value"> {
+export interface AITextAreaProps extends Omit<TextareaProps, "onChange" | "value" | "resize" | "onInput" | "onKeyDown" | "onPaste" | "onFocus"> {
 	value: string;
 	onChange: (e: { currentTarget: { value: string }; target: { value: string } }) => void;
 	placeholder?: string;
@@ -243,7 +243,6 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 					aria-multiline="true"
 					aria-disabled={disabled}
 					aria-invalid={error}
-					{...restProps}
 				/>
 				{showErrors && (
 					<div
