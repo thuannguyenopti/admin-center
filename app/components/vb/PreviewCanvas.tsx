@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState, useMemo, useCallback} from "react";
 import PreviewWrapper from "./PreviewWrapper";
 import type {PreviewSettings} from "./PreviewSettings"; // adjust path
 import {siteConfig} from "../../db/initialData";
@@ -124,7 +124,7 @@ export default function PreviewCanvas({
 		root.scrollTo({top: root.scrollTop + delta, behavior: "smooth"});
 	}, [currentEle]);
 
-	const moveElementInOutlines = (eleId: string, dp: DropPosition) => {
+	const moveElementInOutlines = useCallback((eleId: string, dp: DropPosition) => {
 		if (!dp) return;
 
 		setOutlines((prev) => {
@@ -189,9 +189,9 @@ export default function PreviewCanvas({
 				return {...outline, tree: nextTree, elements: nextElements};
 			});
 		});
-	};
+	}, [setOutlines]);
 
-	const insertImageIntoOutline = (
+	const insertImageIntoOutline = useCallback((
 		dp: NonNullable<DropPosition>,
 		imageUrl: string,
 		imageAlt: string
@@ -235,18 +235,18 @@ export default function PreviewCanvas({
 				return {...o, elements: nextElements, tree: nextTree};
 			})
 		);
-	};
+	}, [setOutlines]);
 
 	// Outline-level aside detection
-	const isAsideOutline = (o: any) => {
+	const isAsideOutline = useCallback((o: any) => {
 		if (!o || typeof o !== "object") return false;
 		if (o.role === "aside") return true;
 		if (o.isAside === true) return true;
 		const t = (o.title ?? "").toString().trim().toLowerCase();
 		return t === "aside" || t === "sidebar";
-	};
+	}, []);
 
-	const renderOutlineTree = (outline: Outline) => {
+	const renderOutlineTree = useCallback((outline: Outline) => {
 		const isAside = isAsideOutline(outline);
 		return outline.tree.map((section: any, sindex: number) => {
 			const hasBgImage = !!section.bgImage;
@@ -500,14 +500,14 @@ export default function PreviewCanvas({
 				</section>
 			);
 		});
-	};
+	}, [isAsideOutline, isMobileViewport, currentEle, currentHoverEle, setCurrentEle, setCurrentHoverEle, dragOverColumn, dropPosition, setDragOverColumn, setDropPosition]);
 
-	const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
-	const asideOutlines = outlines.filter((o) => isAsideOutline(o));
-	const hasAside = asideOutlines.length > 0 && mainOutlines.length > 0;
+	const mainOutlines = useMemo(() => outlines.filter((o) => !isAsideOutline(o)), [outlines, isAsideOutline]);
+	const asideOutlines = useMemo(() => outlines.filter((o) => isAsideOutline(o)), [outlines, isAsideOutline]);
+	const hasAside = useMemo(() => asideOutlines.length > 0 && mainOutlines.length > 0, [asideOutlines.length, mainOutlines.length]);
 
 	// ✅ only break into 1 column on "mobile" preview widths
-	const useTwoCol = hasAside && !isMobileViewport;
+	const useTwoCol = useMemo(() => hasAside && !isMobileViewport, [hasAside, isMobileViewport]);
 
 	return (
 		<Box
