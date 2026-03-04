@@ -1,5 +1,6 @@
 import usePersistentState from "@/app/usePersistentState";
 import {OpalAction, availableAgents, PropertyType} from "@/app/cms/settings/opal-actions/mockData";
+import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 
 interface AIAction {
 	label: string;
@@ -10,8 +11,35 @@ interface AIAction {
 	};
 }
 
-export function usePropertyEditorActions(propertyType: PropertyType): AIAction[] {
+interface UsePropertyEditorActionsParams {
+	propertyType: PropertyType;
+	text?: string;
+	onApply?: (suggestion: string) => void;
+}
+
+export function usePropertyEditorActions(
+	propertyType: PropertyType,
+	text?: string,
+	onApply?: (suggestion: string) => void
+): AIAction[];
+export function usePropertyEditorActions(params: UsePropertyEditorActionsParams): AIAction[];
+export function usePropertyEditorActions(
+	propertyTypeOrParams: PropertyType | UsePropertyEditorActionsParams,
+	text?: string,
+	onApply?: (suggestion: string) => void
+): AIAction[] {
 	const [opalActions] = usePersistentState("opal-actions", []) as [OpalAction[], any];
+	const {analyzeText} = useBrandTone();
+
+	// Handle both call signatures
+	const propertyType =
+		typeof propertyTypeOrParams === "string"
+			? propertyTypeOrParams
+			: propertyTypeOrParams.propertyType;
+	const currentText =
+		typeof propertyTypeOrParams === "string" ? text : propertyTypeOrParams.text;
+	const currentOnApply =
+		typeof propertyTypeOrParams === "string" ? onApply : propertyTypeOrParams.onApply;
 
 	// Filter actions that:
 	// 1. Are enabled
@@ -38,19 +66,26 @@ export function usePropertyEditorActions(propertyType: PropertyType): AIAction[]
 					label: agent?.name || agentId,
 					group: {label: action.name, hidden: index > 0},
 					onClick: () => {
-						console.log("Execute Opal Action:", action.name, "- Agent:", agent?.name);
-						// TODO: Implement actual action execution
+						if (agentId === "brand-tone-audit" && currentText) {
+							analyzeText(currentText, "property", currentOnApply);
+						} else {
+							console.log("Execute Opal Action:", action.name, "- Agent:", agent?.name);
+						}
 					},
 				};
 			});
 		}
 		// Single agent - just show action name without group
+		const agentId = action.agents[0];
 		return [
 			{
 				label: action.name,
 				onClick: () => {
-					console.log("Execute Opal Action:", action.name);
-					// TODO: Implement actual action execution
+					if (agentId === "brand-tone-audit" && currentText) {
+						analyzeText(currentText, "property", currentOnApply);
+					} else {
+						console.log("Execute Opal Action:", action.name);
+					}
 				},
 			},
 		];

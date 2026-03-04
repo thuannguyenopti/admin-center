@@ -25,7 +25,9 @@ const Input: React.FC<{ label: string; placeholder?: string; value: any; onChang
   onChange,
   propertyType = "String",
 }) => {
-  const aiActions = usePropertyEditorActions(propertyType);
+  const aiActions = usePropertyEditorActions(propertyType, value || "", (suggestion: string) => {
+    onChange(suggestion);
+  });
 
   return (
     <div className=" pr-1 py-2">
@@ -113,7 +115,9 @@ const markdownToTipTap = (text: string) => {
 
 const RichTextInput: React.FC<{ label: string; value: any; onChange: any; propertyType?: PropertyType }> = ({ label, value, onChange, propertyType = "XhtmlString" }) => {
   const markdownValue = isTipTapDoc(value) ? tiptapToMarkdown(value) : (value || "");
-  const aiActions = usePropertyEditorActions(propertyType);
+  const aiActions = usePropertyEditorActions(propertyType, markdownValue, (suggestion: string) => {
+    onChange(markdownToTipTap(suggestion));
+  });
 
   return (
     <div className="pr-1 py-2">
