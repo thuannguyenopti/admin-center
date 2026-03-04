@@ -533,6 +533,7 @@ export default function PropertiesPanel({
 						</Field>
 						<Field label="Status">
 							<Select
+								value="draft"
 								options={[
 									{ label: "Draft", value: "draft" },
 									{ label: "Published", value: "published" },

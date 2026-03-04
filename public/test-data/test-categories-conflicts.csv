@@ -1,0 +1,4 @@
+name,slug,parentSlug,status,visibility
+Equipment,equipment,,published,public
+Cycling,cycling,,published,public
+Training,training,,published,public

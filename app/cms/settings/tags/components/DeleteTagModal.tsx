@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,16 @@ export function DeleteTagModal({
 
   const hasContent = contentAffected.pages > 0 || contentAffected.images > 0;
 
+  // Lock page scroll when modal is open so only the modal body scrolls (single scrollbar)
+  useEffect(() => {
+    if (open) {
+      document.body.dataset.modalOpen = 'true';
+      return () => {
+        delete document.body.dataset.modalOpen;
+      };
+    }
+  }, [open]);
+
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => {
       const next = new Set(prev);
@@ -77,7 +87,11 @@ export function DeleteTagModal({
         size="lg"
         style={{
           maxWidth: '1088px',
+          maxHeight: '80vh',
           boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.25)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <DialogHeader
@@ -91,7 +105,13 @@ export function DeleteTagModal({
           Delete tag
         </DialogHeader>
 
-        <DialogBody>
+        <DialogBody
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
           <Box display="flex" flexDirection="column" gap="24">
             {/* Warning Alert */}
             <Alert

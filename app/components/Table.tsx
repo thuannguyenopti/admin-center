@@ -34,12 +34,14 @@ export const Tr = ({
 	onClick,
 	style,
 	className,
+	...props
 }: {
 	children: ReactNode;
 	url?: string;
 	onClick?: () => void;
 	style?: React.CSSProperties;
 	className?: string;
+	[key: string]: any;
 }) => {
 	const router = useRouter();
 	const rowClick = (href: string) => {
@@ -57,6 +59,7 @@ export const Tr = ({
 				(className ? ` ${className}` : "")
 			}
 			style={style}
+			{...props}
 		>
 			{children}
 		</tr>
