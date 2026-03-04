@@ -71,14 +71,16 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 	const hasFieldLevelIssues = result?.issues.some((issue) => issue.fieldId);
 	const canApplyAll = hasFieldLevelIssues && onApplyAll && result && result.issues.length > 0;
 
-	// Checkbox state - default all to checked
+	// Checkbox state - start with none checked (user must explicitly select)
 	const [checkedIssues, setCheckedIssues] = useState<Set<number>>(new Set());
 
-	// Initialize all checkboxes as checked when result changes
+	// Track which issues have been applied
+	const [appliedIssues, setAppliedIssues] = useState<Set<number>>(new Set());
+
+	// Reset checkboxes and applied issues when result changes
 	useEffect(() => {
-		if (result?.issues) {
-			setCheckedIssues(new Set(result.issues.map((_, index) => index)));
-		}
+		setCheckedIssues(new Set());
+		setAppliedIssues(new Set());
 	}, [result]);
 
 	const getScoreColor = (score: number) => {
@@ -163,6 +165,39 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 			});
 		}
 	}, [onSelectField]);
+
+	const handleApplyClick = useCallback((index: number, suggestion: string, fieldId?: string) => {
+		if (onApply) {
+			onApply(suggestion, fieldId);
+			setAppliedIssues(prev => new Set(prev).add(index));
+		}
+	}, [onApply]);
+
+	const handleApplyAllClick = useCallback(() => {
+		if (!result || !onApplyAll) return;
+
+		const changes = result.issues
+			.filter((issue, index) => issue.fieldId && checkedIssues.has(index) && !appliedIssues.has(index))
+			.map((issue) => ({
+				fieldId: issue.fieldId!,
+				suggestion: issue.suggestion,
+			}));
+
+		if (changes.length > 0) {
+			onApplyAll(changes);
+
+			// Mark all checked issues as applied
+			setAppliedIssues(prev => {
+				const newApplied = new Set(prev);
+				result.issues.forEach((issue, index) => {
+					if (issue.fieldId && checkedIssues.has(index)) {
+						newApplied.add(index);
+					}
+				});
+				return newApplied;
+			});
+		}
+	}, [result, onApplyAll, checkedIssues, appliedIssues]);
 
 	return (
 		<Box
@@ -339,15 +374,17 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 										{sortedIssues.map((issue, index) => {
 											const originalIndex = result!.issues.indexOf(issue);
 											const isChecked = checkedIssues.has(originalIndex);
+											const isApplied = appliedIssues.has(originalIndex);
 											const isClickable = issue.fieldId && onSelectField;
 											return (
 												<Card
 													key={index}
 													p="12"
 													border="1"
-													borderColor={isChecked ? "border.accent" : "border.default"}
+													borderColor={isApplied ? "border.success" : isChecked ? "border.accent" : "border.default"}
 													style={{
 														cursor: isClickable ? "pointer" : "default",
+														opacity: isApplied ? 0.7 : 1,
 													}}
 													onClick={() => handleIssueCardClick(issue.fieldId)}
 													_hover={isClickable ? {
@@ -355,7 +392,12 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 													} : undefined}
 												>
 													<Box display="flex" alignItems="center" gap="8" mb="8">
-														{canApplyAll && (
+														{isApplied ? (
+															<Box display="flex" alignItems="center" gap="4">
+																<IconCheck size={16} color="var(--ax-colors-fg-success)" />
+																<Badge variant="subtle" intent="success">Applied</Badge>
+															</Box>
+														) : canApplyAll && (
 															<Checkbox
 																checked={isChecked}
 																onClick={(e) => e.stopPropagation()}
@@ -397,7 +439,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 															</Text>
 															<Card
 																p="8"
-																bg="bg.error.subtle"
+																bg={isApplied ? "bg.default" : "bg.error.subtle"}
 																fontSize="md"
 																color="fg.default"
 															>
@@ -406,7 +448,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 														</Box>
 														<Box>
 															<Text fontSize="xs" color="fg.secondary" mb="2">
-																Suggestion:
+																{isApplied ? "Applied:" : "Suggestion:"}
 															</Text>
 															<Box
 																display="flex"
@@ -417,23 +459,28 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 																<Card
 																	flex="1"
 																	p="8"
-																	bg="bg.success.subtle"
+																	bg={isApplied ? "bg.default" : "bg.success.subtle"}
 																	fontSize="md"
 																	color="fg.default"
 																>
 																	{issue.suggestion}
 																</Card>
-																{onApply && (
+																{onApply && !isApplied && (
 																	<Button
 																		size="sm"
 																		appearance="primary"
 																		onClick={(e) => {
 																			e.stopPropagation();
-																			onApply(issue.suggestion, issue.fieldId);
+																			handleApplyClick(originalIndex, issue.suggestion, issue.fieldId);
 																		}}
 																	>
 																		Apply
 																	</Button>
+																)}
+																{isApplied && (
+																	<Box display="flex" alignItems="center" gap="4" px="8">
+																		<IconCheck size={16} color="var(--ax-colors-fg-success)" />
+																	</Box>
 																)}
 															</Box>
 														</Box>
@@ -466,42 +513,42 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 			</Box>
 
 			{/* Footer (sticky) */}
-			{!isLoading && result && (
-				<Box
-					p="16"
-					borderT="1"
-					borderColor="border.tertiary"
-					bg="bg.default"
-					display="flex"
-					justifyContent="flex-end"
-					gap="8"
-					flexShrink={0}
-				>
-					<Button
-						appearance="subtle"
-						onClick={onClose}
+			{!isLoading && result && (() => {
+				// Calculate how many checked issues are not yet applied
+				const unappliedCheckedCount = Array.from(checkedIssues).filter(
+					index => !appliedIssues.has(index)
+				).length;
+
+				const showApplyButton = canApplyAll && unappliedCheckedCount > 0;
+
+				return (
+					<Box
+						p="16"
+						borderT="1"
+						borderColor="border.tertiary"
+						bg="bg.default"
+						display="flex"
+						justifyContent="flex-end"
+						gap="8"
+						flexShrink={0}
 					>
-						Close
-					</Button>
-					{canApplyAll && (
 						<Button
-							appearance="primary"
-							disabled={checkedIssues.size === 0}
-							onClick={() => {
-								const changes = result!.issues
-									.filter((issue, index) => issue.fieldId && checkedIssues.has(index))
-									.map((issue) => ({
-										fieldId: issue.fieldId!,
-										suggestion: issue.suggestion,
-									}));
-								onApplyAll!(changes);
-							}}
+							appearance="subtle"
+							onClick={onClose}
 						>
-							Apply {checkedIssues.size > 0 ? `${checkedIssues.size} ` : ""}Change{checkedIssues.size !== 1 ? "s" : ""}
+							Close
 						</Button>
-					)}
-				</Box>
-			)}
+						{showApplyButton && (
+							<Button
+								appearance="primary"
+								onClick={handleApplyAllClick}
+							>
+								Apply {unappliedCheckedCount} Change{unappliedCheckedCount !== 1 ? "s" : ""}
+							</Button>
+						)}
+					</Box>
+				);
+			})()}
 		</Box>
 	);
 };
