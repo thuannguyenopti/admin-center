@@ -14,6 +14,10 @@ import {
 	DialogFooter,
 	DialogClose,
 	Checkbox,
+	Spinner,
+	Skeleton,
+	Card,
+	Alert,
 } from "@optiaxiom/react";
 import {IconCheck, IconAlertCircle, IconSparkles} from "@tabler/icons-react";
 
@@ -82,9 +86,27 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 		}
 	};
 
+	const getSeverityOrder = (severity: string) => {
+		switch (severity) {
+			case "high":
+				return 0;
+			case "medium":
+				return 1;
+			case "low":
+				return 2;
+			default:
+				return 3;
+		}
+	};
+
+	// Sort issues by severity (most severe first)
+	const sortedIssues = result?.issues ? [...result.issues].sort((a, b) => {
+		return getSeverityOrder(a.severity) - getSeverityOrder(b.severity);
+	}) : [];
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent size="lg">
+			<DialogContent style={{width: '720px', maxWidth: '100%'}}>
 				<DialogHeader>
 					<Box display="flex" alignItems="center" gap="8">
 						<IconSparkles size={20} />
@@ -93,21 +115,27 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 				</DialogHeader>
 				<DialogBody>
 					{isLoading && (
-						<Box display="flex" alignItems="center" justifyContent="center" py="32">
-							<Text color="fg.secondary">Analyzing brand tone...</Text>
+						<Box display="flex" flexDirection="column" gap="16">
+							<Box display="flex" alignItems="center" justifyContent="center" gap="12" py="24">
+								<Spinner />
+								<Text color="fg.secondary">Analyzing brand tone...</Text>
+							</Box>
+							<Skeleton h="80" rounded="md" />
+							<Skeleton h="64" rounded="md" />
+							<Skeleton h="224" rounded="md" />
 						</Box>
 					)}
 
 					{!isLoading && result && (
-						<Box display="flex" flexDirection="column" gap="16">
+						<Box display="flex" flexDirection="column" gap="24">
 							{/* Score */}
-							<Box
+							<Card
 								display="flex"
-								alignItems="center"
+								flexDirection="row"
+								alignItems="start"
 								gap="16"
 								p="16"
 								bg="bg.secondary"
-								rounded="md"
 							>
 								<Box
 									style={{
@@ -124,15 +152,15 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 										{result.score}
 									</Text>
 								</Box>
-								<Box flex="1">
-									<Heading level="4" mb="4">
-										Brand Alignment Score
+								<Box flex="1" display="flex" flexDirection="column" gap="8">
+									<Heading level="4" fontSize="md" fontWeight="700">
+										Brand Alignment Score:
 									</Heading>
 									<Text fontSize="sm" color="fg.secondary">
 										{result.summary}
 									</Text>
 								</Box>
-							</Box>
+							</Card>
 
 							{/* Strengths */}
 							{result.strengths.length > 0 && (
@@ -140,18 +168,9 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 									<Heading level="4" mb="8">
 										Strengths
 									</Heading>
-									<Box display="flex" flexDirection="column" gap="4">
+									<Box as="ul" pl="20" style={{listStyleType: 'disc', display: 'block'}}>
 										{result.strengths.map((strength, index) => (
-											<Box
-												key={index}
-												display="flex"
-												alignItems="start"
-												gap="8"
-												p="8"
-												bg="bg.success.subtle"
-												rounded="sm"
-											>
-												<IconCheck size={16} color="var(--ax-fg-success)" />
+											<Box as="li" key={index} mb="4" style={{display: 'list-item'}}>
 												<Text fontSize="sm">{strength}</Text>
 											</Box>
 										))}
@@ -160,41 +179,43 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 							)}
 
 							{/* Issues */}
-							{result.issues.length > 0 && (
+							{sortedIssues.length > 0 && (
 								<Box>
 									<Heading level="4" mb="8">
 										Issues & Suggestions
 									</Heading>
 									<Box display="flex" flexDirection="column" gap="12">
-										{result.issues.map((issue, index) => (
-											<Box
+										{sortedIssues.map((issue, index) => {
+											const originalIndex = result!.issues.indexOf(issue);
+											const isChecked = checkedIssues.has(originalIndex);
+											return (
+											<Card
 												key={index}
 												p="12"
 												border="1"
-												borderColor="border.tertiary"
-												rounded="md"
+												borderColor={isChecked ? "border.accent" : "border.default"}
 											>
 												<Box display="flex" alignItems="center" gap="8" mb="8">
 													{canApplyAll && (
 														<Checkbox
-															checked={checkedIssues.has(index)}
+															checked={isChecked}
 															onChange={(e) => {
 																const newChecked = new Set(checkedIssues);
 																if (e.currentTarget.checked) {
-																	newChecked.add(index);
+																	newChecked.add(originalIndex);
 																} else {
-																	newChecked.delete(index);
+																	newChecked.delete(originalIndex);
 																}
 																setCheckedIssues(newChecked);
 															}}
 														/>
 													)}
-													<Badge intent={getSeverityIntent(issue.severity) as any}>
+													<Badge variant="subtle" intent={getSeverityIntent(issue.severity) as any}>
 														{issue.severity}
 													</Badge>
-													<Badge variant="subtle">{issue.type}</Badge>
+													<Badge variant="subtle" intent="neutral">{issue.type}</Badge>
 													{issue.fieldLabel && (
-														<Badge variant="subtle" intent="information">
+														<Badge variant="subtle" intent="neutral">
 															{issue.fieldLabel}
 														</Badge>
 													)}
@@ -213,15 +234,14 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 														<Text fontSize="xs" color="fg.secondary" mb="2">
 															Original:
 														</Text>
-														<Box
+														<Card
 															p="8"
 															bg="bg.error.subtle"
-															rounded="sm"
-															fontFamily="mono"
-															fontSize="sm"
+															fontSize="md"
+															color="fg.default"
 														>
 															{issue.original}
-														</Box>
+														</Card>
 													</Box>
 													<Box>
 														<Text fontSize="xs" color="fg.secondary" mb="2">
@@ -233,16 +253,15 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 															justifyContent="space-between"
 															gap="8"
 														>
-															<Box
+															<Card
 																flex="1"
 																p="8"
 																bg="bg.success.subtle"
-																rounded="sm"
-																fontFamily="mono"
-																fontSize="sm"
+																fontSize="md"
+																color="fg.default"
 															>
 																{issue.suggestion}
-															</Box>
+															</Card>
 															{onApply && (
 																<Button
 																	size="sm"
@@ -255,8 +274,9 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 														</Box>
 													</Box>
 												</Box>
-											</Box>
-										))}
+											</Card>
+											);
+										})}
 									</Box>
 								</Box>
 							)}
