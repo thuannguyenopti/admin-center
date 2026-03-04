@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuContent,
   Pagination,
+  toaster,
 } from '@optiaxiom/react';
 import { Button as AppButton } from '@/app/components/Button';
 import { Text as AppText } from '@/app/components/Text';
@@ -21,21 +22,26 @@ import { Category, CategoryFormRow } from './types';
 import { initialCategories, getAllContentItems, initialPages, type Page } from '@/app/db/initialData';
 import { CategoriesTable } from './components/CategoriesTable';
 import { CategoryModal } from './components/CategoryModal';
+import { UploadCategoriesModal } from './components/UploadCategoriesModal';
 import { useSelection } from './hooks/useSelection';
 import { useCategoryActions } from './hooks/useCategoryActions';
 import { filterCategoriesWithHierarchy } from './utils';
 import EmptyStateIllustration from './empty-state.svg';
+import { useLayout } from '@/app/context/LayoutContext';
 
 export default function CategoriesSettings() {
+  const { setHidePageHeader } = useLayout();
   const [categories, setCategories] = usePersistentState('categories', initialCategories);
   const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editingCategories, setEditingCategories] = useState<Category[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [newlyImportedIds, setNewlyImportedIds] = useState<Set<string>>(new Set());
 
   // Calculate actual category usage from content items
   const contentItems = useMemo(() => getAllContentItems(pages || initialPages), [pages]);
@@ -74,6 +80,7 @@ export default function CategoriesSettings() {
     isSelected,
     toggleSelection,
     toggleAll,
+    toggleAllForCategories,
     deselectAll,
     selectedCategories,
     selectedCount,
@@ -149,6 +156,15 @@ export default function CategoriesSettings() {
     setCurrentPage(1);
   }, [searchQuery]);
 
+  // Manage page header visibility based on categories and modal state
+  useEffect(() => {
+    if (categoriesWithUsage.length === 0 && !isModalOpen) {
+      setHidePageHeader(true);
+    } else {
+      setHidePageHeader(false);
+    }
+  }, [categoriesWithUsage.length, isModalOpen, setHidePageHeader]);
+
   const handleCreateClick = () => {
     setModalMode('create');
     setEditingCategories([]);
@@ -189,6 +205,28 @@ export default function CategoriesSettings() {
       updateCategories(formRows);
     }
     deselectAll();
+  };
+
+  const handleImport = async (toCreate: CategoryFormRow[], toUpdate: CategoryFormRow[]) => {
+    const importedIds: string[] = [];
+    if (toCreate.length > 0) importedIds.push(...createCategories(toCreate));
+    if (toUpdate.length > 0) importedIds.push(...updateCategories(toUpdate));
+
+    const count = toCreate.length + toUpdate.length;
+    if (count > 0) {
+      const noun = count === 1 ? 'category' : 'categories';
+      toaster.create(`${count} ${noun} imported successfully.`, { intent: 'success' });
+    }
+
+    // Track newly imported IDs for highlighting
+    setNewlyImportedIds(new Set(importedIds));
+
+    // Clear the highlight after animation completes (2 seconds)
+    setTimeout(() => {
+      setNewlyImportedIds(new Set());
+    }, 2000);
+
+    setShowImportModal(false);
   };
 
   const handleSort = (column: string) => {
@@ -245,8 +283,7 @@ export default function CategoriesSettings() {
                 color: '#2e3442',
               }}
             >
-              Categories help you classify and organise your content, making it easier to
-              filter, search, and navigate. Create your first category to begin.{' '}
+              Categories organise your content into a hierarchy (e.g. Sport &gt; Cycling). Use them to structure navigation, filter content, and group related items. Assign categories to content when editing, and create parent categories to build a taxonomy.{' '}
               <a
                 href="#"
                 style={{
@@ -274,7 +311,7 @@ export default function CategoriesSettings() {
               }}
               onClick={handleCreateClick}
             >
-              Create categories
+              Create
             </AppButton>
           </Box>
         </Box>
@@ -334,8 +371,15 @@ export default function CategoriesSettings() {
               </DropdownMenu>
             </>
           )}
+          <Button
+            appearance="default"
+            size="md"
+            onClick={() => setShowImportModal(true)}
+          >
+            Import
+          </Button>
           <Button appearance="primary" size="md" onClick={handleCreateClick}>
-            Create categories
+            Create
           </Button>
         </Box>
       </Box>
@@ -345,13 +389,14 @@ export default function CategoriesSettings() {
         categories={paginatedCategories}
         selectedIds={selectedIds}
         onToggleSelection={toggleSelection}
-        onToggleAll={toggleAll}
+        onToggleAll={toggleAllForCategories}
         onToggleExpand={toggleExpanded}
         onEdit={handleEditCategory}
         onDelete={handleDeleteCategory}
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        newlyImportedIds={newlyImportedIds}
       />
 
       {/* Pagination */}
@@ -373,6 +418,14 @@ export default function CategoriesSettings() {
         allCategories={categoriesWithUsage}
         contentContext={contentContext}
         onSave={handleSave}
+      />
+
+      {/* Import Modal */}
+      <UploadCategoriesModal
+        open={showImportModal}
+        onOpenChange={setShowImportModal}
+        allCategories={categoriesWithUsage}
+        onImport={handleImport}
       />
     </>
   );

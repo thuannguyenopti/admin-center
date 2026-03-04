@@ -1,9 +1,10 @@
 import { Select, SelectTrigger, SelectContent, Box } from '@optiaxiom/react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Input } from '@/app/components/Input';
 import { CategoryFormRow as FormRowType, Category } from '../types';
 import { generateSlug, buildParentOptions, getParentPath } from '../utils';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { getSelectValueInOptions } from '@/utils/selectValue';
 
 const SHIMMER_INSET = 2;
 
@@ -73,14 +74,36 @@ export function CategoryFormRow({
   // Display slug with "/" prefix
   const displaySlug = formRow.slug ? `/${formRow.slug}` : '';
 
-  const parentOptions = buildParentOptions(
-    allCategories,
-    formRow.id ? [formRow.id] : []
-  );
+  const visibilityOptions = [
+    { label: 'Public', value: 'public' },
+    { label: 'Private', value: 'private' },
+  ];
+
+  // Normalize to plain { label, value } so Axiom/downshift never sees extra props (e.g. depth)
+  // and ensure options is never empty so getItemProps always has a valid item
+  const parentOptions = useMemo(() => {
+    const raw = buildParentOptions(
+      allCategories,
+      formRow.id ? [formRow.id] : []
+    );
+    const normalized = raw.length > 0 ? raw : [{ label: 'None (Root level)', value: '' }];
+    return normalized.map((o) => ({ label: o.label, value: o.value }));
+  }, [allCategories, formRow.id]);
 
   const parentPath = formRow.parentId
     ? getParentPath(formRow.parentId, allCategories)
     : 'None (Root level)';
+
+  const parentValue = getSelectValueInOptions(
+    formRow.parentId ?? '',
+    parentOptions,
+    ''
+  );
+  const visibilityValue = getSelectValueInOptions(
+    formRow.visibility,
+    visibilityOptions,
+    'public'
+  );
 
   return (
     <Box display="flex" gap="10" alignItems="center">
@@ -90,14 +113,15 @@ export function CategoryFormRow({
             value={formRow.name}
             onChange={handleNameChange}
             placeholder="Category name"
+            color="fg.default"
+            border="1"
+            borderColor="border.control"
+            rounded="sm"
             style={{
               width: '100%',
-              border: '1px solid #9e9e9e',
-              borderRadius: '4px',
               fontSize: '14px',
               fontWeight: 400,
               letterSpacing: '-0.15px',
-              color: '#080736',
             }}
           />
         </ShimmerFieldWrapper>
@@ -109,14 +133,15 @@ export function CategoryFormRow({
             onChange={handleSlugChange}
             onBlur={() => onSlugBlur(index)}
             placeholder="/slug"
+            color="fg.secondary"
+            border="1"
+            borderColor="border.control"
+            rounded="sm"
             style={{
               width: '100%',
-              border: '1px solid #9e9e9e',
-              borderRadius: '4px',
               fontSize: '14px',
               fontWeight: 400,
               letterSpacing: '-0.15px',
-              color: '#707070',
               fontFamily: 'Hack, monospace',
             }}
           />
@@ -125,7 +150,7 @@ export function CategoryFormRow({
       <Box flex="1" style={{ minWidth: 0 }}>
         <ShimmerFieldWrapper loading={loading}>
           <Select
-            value={formRow.parentId || ''}
+            value={parentValue}
             onValueChange={(value) =>
               onChange(index, 'parentId', value === '' ? null : value)
             }
@@ -133,15 +158,16 @@ export function CategoryFormRow({
           >
             <SelectTrigger
               size="lg"
+              color="fg.default"
+              border="1"
+              borderColor="border.control"
+              rounded="sm"
               style={{
                 width: '100%',
                 minWidth: 0,
-                border: '1px solid #9e9e9e',
-                borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: 400,
                 letterSpacing: '-0.15px',
-                color: '#080736',
                 justifyContent: 'space-between',
               }}
             >
@@ -152,7 +178,7 @@ export function CategoryFormRow({
                   whiteSpace: 'nowrap',
                 }}
               >
-                {parentPath}
+                {parentValue === '' ? 'None (Root level)' : parentPath}
               </span>
             </SelectTrigger>
             <SelectContent />
@@ -162,29 +188,27 @@ export function CategoryFormRow({
       <Box flex="1" style={{ minWidth: 0 }}>
         <ShimmerFieldWrapper loading={loading}>
           <Select
-            value={formRow.visibility}
+            value={visibilityValue}
             onValueChange={(value) =>
               onChange(index, 'visibility', value as 'public' | 'private')
             }
-            options={[
-              { label: 'Public', value: 'public' },
-              { label: 'Private', value: 'private' },
-            ]}
+            options={visibilityOptions}
           >
             <SelectTrigger
               size="lg"
+              color="fg.default"
+              border="1"
+              borderColor="border.control"
+              rounded="sm"
               style={{
                 width: '100%',
                 minWidth: 0,
-                border: '1px solid #9e9e9e',
-                borderRadius: '4px',
                 fontSize: '14px',
                 fontWeight: 400,
                 letterSpacing: '-0.15px',
-                color: '#080736',
               }}
             >
-              {formRow.visibility.charAt(0).toUpperCase() + formRow.visibility.slice(1)}
+              {visibilityValue.charAt(0).toUpperCase() + visibilityValue.slice(1)}
             </SelectTrigger>
             <SelectContent />
           </Select>
@@ -195,14 +219,14 @@ export function CategoryFormRow({
         {showDelete && (
           <IconTrash
             size={14}
-            style={{ color: '#0037ff', cursor: 'pointer' }}
+            style={{ color: 'var(--ax-colors-fg-accent)', cursor: 'pointer' }}
             onClick={onDelete}
           />
         )}
         {showAdd && (
           <IconPlus
             size={13}
-            style={{ color: '#0037ff', cursor: 'pointer' }}
+            style={{ color: 'var(--ax-colors-fg-accent)', cursor: 'pointer' }}
             onClick={onAdd}
           />
         )}

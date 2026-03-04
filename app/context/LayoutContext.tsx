@@ -5,15 +5,18 @@ import {createContext, useContext, useState, useEffect, ReactNode} from "react";
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	hidePageHeader: boolean;
+	setHidePageHeader: (hide: boolean) => void;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({children}: {children: ReactNode}) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent}}>
+		<LayoutContext.Provider value={{asideContent, setAsideContent, hidePageHeader, setHidePageHeader}}>
 			{children}
 		</LayoutContext.Provider>
 	);

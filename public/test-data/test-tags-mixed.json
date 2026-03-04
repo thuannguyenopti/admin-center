@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Beginner Friendly",
+    "slug": "beginner-friendly",
+    "visibility": "public"
+  },
+  {
+    "name": "Cycling Training",
+    "slug": "cycling-training",
+    "visibility": "public"
+  },
+  {
+    "name": "",
+    "slug": "missing-name",
+    "visibility": "private"
+  },
+  {
+    "name": "Advanced Techniques",
+    "slug": "advanced-techniques",
+    "visibility": "public"
+  },
+  {
+    "name": "Duplicate Advanced",
+    "slug": "advanced-techniques",
+    "visibility": "private"
+  },
+  {
+    "name": "Valid New Tag",
+    "slug": "valid-new-tag",
+    "visibility": "public"
+  }
+]
