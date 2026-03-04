@@ -2,6 +2,7 @@
 
 import React, {createContext, useContext, useState, useCallback} from "react";
 import {BrandTonePanel, BrandToneResult} from "./BrandTonePanel";
+import {toaster} from "@optiaxiom/react";
 
 interface PageField {
 	fieldId: string;
@@ -133,9 +134,15 @@ export function BrandToneProvider({children}: {children: React.ReactNode}) {
 	const handleApply = useCallback((suggestion: string, fieldId?: string) => {
 		if (onApplyCallback) {
 			onApplyCallback(suggestion, fieldId);
-			setIsPanelOpen(false);
+			toaster.create("Suggestion applied", { intent: "success" });
 		}
 	}, [onApplyCallback]);
+
+	const handleApplyAll = useCallback((changes: Array<{fieldId: string; suggestion: string}>) => {
+		if (onApplyAllCallback) {
+			onApplyAllCallback(changes);
+		}
+	}, [onApplyAllCallback]);
 
 	return (
 		<BrandToneContext.Provider value={{analyzeText, analyzePage, isAnalyzing}}>
@@ -146,7 +153,7 @@ export function BrandToneProvider({children}: {children: React.ReactNode}) {
 				result={result}
 				isLoading={isAnalyzing}
 				onApply={onApplyCallback ? handleApply : undefined}
-				onApplyAll={onApplyAllCallback}
+				onApplyAll={onApplyAllCallback ? handleApplyAll : undefined}
 			/>
 		</BrandToneContext.Provider>
 	);

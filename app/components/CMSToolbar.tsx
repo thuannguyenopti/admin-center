@@ -18,6 +18,7 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSeparator,
 	DropdownMenuLabel,
+	toaster,
 } from "@optiaxiom/react";
 import {Button} from "./Button";
 import {
@@ -222,13 +223,15 @@ export default function CMSToolbar({
 	const handleApplyField = (fieldId: string, suggestion: string) => {
 		console.log(`[CMSToolbar] Apply to field ${fieldId}:`, suggestion);
 		// TODO: Implement actual field update logic
-		alert(`Applied to ${fieldId}: ${suggestion}`);
+		toaster.create(`Applied suggestion to field`, { intent: "success" });
 	};
 
 	const handleApplyAll = (changes: Array<{fieldId: string; suggestion: string}>) => {
 		console.log("[CMSToolbar] Apply all changes:", changes);
 		// TODO: Implement batch field update logic
-		alert(`Applied ${changes.length} changes to the page`);
+		const count = changes.length;
+		const noun = count === 1 ? 'change' : 'changes';
+		toaster.create(`Applied ${count} ${noun}`, { intent: "success" });
 	};
 
 	const handleBrandToneAnalysis = () => {
