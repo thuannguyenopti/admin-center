@@ -3,7 +3,7 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+export const ImageBlock = React.memo(function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const imageUrlRaw = getProperty(properties, "imageUrl", "Image URL");
     const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
     const imageAlt = getProperty(properties, "altText", "Alt Text");
@@ -30,4 +30,4 @@ export function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgI
             )}
         </div>
     );
-}
+});

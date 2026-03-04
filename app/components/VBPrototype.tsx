@@ -3,7 +3,7 @@
 import type {SEOBlock} from "@/app/db/initialData";
 
 import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
 	IconArrowBarBoth,
@@ -631,26 +631,29 @@ export default function VBPrototype({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [activeRightTool, setActiveRightTool] = usePersistentState("active-right-tool", null);
 
-	const onInputChange = (value: any, keyOrIndex: string | number) => {
-		if (currentEle !== "none" && currentEle in theEles) {
-			setTheEles((prev) => {
-				const ele = prev[currentEle];
-				const properties = {...(ele.properties || {})};
+	const onInputChange = useCallback((value: any, keyOrIndex: string | number) => {
+		if (currentEle === "none") return;
 
-				if (typeof keyOrIndex === "string") {
-					properties[keyOrIndex] = {...properties[keyOrIndex], value};
-				}
+		setTheEles((prev) => {
+			// Check if currentEle exists in the previous state
+			if (!prev[currentEle]) return prev;
 
-				return {
-					...prev,
-					[currentEle]: {
-						...ele,
-						properties,
-					},
-				};
-			});
-		}
-	};
+			const ele = prev[currentEle];
+			const properties = {...(ele.properties || {})};
+
+			if (typeof keyOrIndex === "string") {
+				properties[keyOrIndex] = {...properties[keyOrIndex], value};
+			}
+
+			return {
+				...prev,
+				[currentEle]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [currentEle, setTheEles]);
 
 	// Header actions (Generate only in Categories & Tags + plus-menu)
 	const showGenerateInHeader =

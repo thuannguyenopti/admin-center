@@ -1,0 +1,30 @@
+.errorMark {
+	text-decoration: underline wavy;
+	text-decoration-color: var(--ax-colors-fg-information);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+	cursor: pointer;
+	background: transparent;
+	transition: background-color 0.15s ease;
+	padding: 0;
+	border: none;
+	font: inherit;
+	color: inherit;
+	pointer-events: auto;
+}
+
+.errorMark:hover {
+	background: var(--ax-colors-bg-information-subtle);
+}
+
+.errorSeverityError {
+	text-decoration-color: var(--ax-colors-fg-error);
+}
+
+.errorSeverityWarning {
+	text-decoration-color: var(--ax-colors-fg-warning);
+}
+
+.errorSeverityInfo {
+	text-decoration-color: var(--ax-colors-fg-information);
+}

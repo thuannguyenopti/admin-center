@@ -3,7 +3,7 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function ButtonBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+export const ButtonBlock = React.memo(function ButtonBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const label = getProperty(properties, "label", "Label") || "";
     const isJoinNow = label === "Join Now";
 
@@ -14,4 +14,4 @@ export function ButtonBlock({ properties, hasBgImage }: { properties: any, hasBg
             </div>
         </div>
     );
-}
+});

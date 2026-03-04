@@ -1,7 +1,24 @@
 "use client";
 
 import React from "react";
-import {Box, Text, Badge, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@optiaxiom/react";
+import {
+	Box,
+	Text,
+	Badge,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	LabelMenuButton,
+	DropdownMenu,
+	DropdownMenuTrigger,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSub,
+	DropdownMenuSubTrigger,
+	DropdownMenuSubContent,
+	DropdownMenuSeparator,
+	DropdownMenuLabel,
+} from "@optiaxiom/react";
 import {Button} from "./Button";
 import {
 	IconListTree,
@@ -35,12 +52,15 @@ import {
 	IconArrowForwardUp,
 	IconHistory,
 	IconRestore,
+	IconSparkles,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
 import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
 import Link from "next/link";
+import usePersistentState from "@/app/usePersistentState";
+import {OpalAction, availableAgents} from "@/app/cms/settings/opal-actions/mockData";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -161,6 +181,15 @@ export default function CMSToolbar({
 	];
 
 	const isVariation = selectedVariation !== "original";
+
+	// Get enabled Opal Actions for Improve button and context menu
+	const [opalActions] = usePersistentState("opal-actions", []) as [OpalAction[], any];
+	const improveActions = opalActions.filter(
+		(action) => action.enabled && action.locations.toolbar.improveButton
+	);
+	const contextMenuActions = opalActions.filter(
+		(action) => action.enabled && action.locations.toolbar.contextMenu
+	);
 
 	return (
 		<Box
@@ -311,6 +340,55 @@ export default function CMSToolbar({
 					<MenuContent />
 				</Menu>
 
+				{/* Improve Button with Opal Actions */}
+				{improveActions.length > 0 && (
+					<Menu
+						options={improveActions.flatMap((action) => {
+							// If action has multiple agents, create submenu items
+							if (action.agents.length > 1) {
+								return action.agents.map((agentId, index) => {
+									const agent = availableAgents.find((a) => a.id === agentId);
+									return {
+										label: agent?.name || agentId,
+										group: {label: action.name, hidden: index > 0},
+										execute: () => {
+											console.log(
+												"Execute Opal Action:",
+												action.name,
+												"- Agent:",
+												agent?.name
+											);
+										},
+									};
+								});
+							}
+							// Single agent, just show the action name
+							return [
+								{
+									label: action.name,
+									execute: () => {
+										console.log("Execute Opal Action:", action.name);
+									},
+								},
+							];
+						})}
+					>
+						<MenuTrigger asChild>
+							<Button
+								appearance="default"
+								icon={<IconChevronDown size={12} />}
+								iconPosition="end"
+							>
+								<Box display="flex" alignItems="center" gap="4">
+									<IconSparkles size={16} />
+									Improve
+								</Box>
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				)}
+
 				{/* Publish Button with Menu */}
 				<Menu
 					options={[
@@ -366,47 +444,111 @@ export default function CMSToolbar({
 				</Menu>
 
 				{/* Options */}
-				<Menu
-					options={[
-						{
-							group: {label: "Page"},
-							label: "Rename",
-							addon: <IconPencil size={16} />,
-							execute: onRenamePage,
-						},
-						{
-							group: {label: "Page"},
-							label: "Move to trash",
-							addon: <IconTrash size={16} />,
-							intent: "danger" as const,
-							execute: onTrash,
-						},
-						...(isVariation
-							? [
-									{
-										group: {label: "Variation"},
-										label: "Rename Variation",
-										addon: <IconStack2 size={16} />,
-										execute: onRenameVariation,
-									},
-									{
-										group: {label: "Variation"},
-										label: "Delete Variation",
-										intent: "danger" as const,
-										addon: <IconTrash size={16} />,
-										execute: onDeleteVariationRequest,
-									},
-								]
-							: []),
-					]}
-				>
-					<MenuTrigger
+				<DropdownMenu>
+					<DropdownMenuTrigger
 						aria-label={"Status " + pageStatus}
 						size="lg"
 						icon={<IconDots size={16} />}
 					/>
-					<MenuContent />
-				</Menu>
+					<DropdownMenuContent>
+						{/* Opal Actions Submenu */}
+						{contextMenuActions.length > 0 && (
+							<>
+								<DropdownMenuSub>
+									<DropdownMenuSubTrigger>
+										<Box display="flex" alignItems="center" gap="8">
+											<IconSparkles size={16} />
+											Opal Actions
+										</Box>
+									</DropdownMenuSubTrigger>
+									<DropdownMenuSubContent>
+										{contextMenuActions.map((action) => {
+											// If action has multiple agents, create nested submenu
+											if (action.agents.length > 1) {
+												return (
+													<DropdownMenuSub key={action.id}>
+														<DropdownMenuSubTrigger>
+															{action.name}
+														</DropdownMenuSubTrigger>
+														<DropdownMenuSubContent>
+															{action.agents.map((agentId) => {
+																const agent = availableAgents.find(
+																	(a) => a.id === agentId
+																);
+																return (
+																	<DropdownMenuItem
+																		key={agentId}
+																		onSelect={() => {
+																			console.log(
+																				"Execute Opal Action:",
+																				action.name,
+																				"- Agent:",
+																				agent?.name
+																			);
+																		}}
+																	>
+																		{agent?.name || agentId}
+																	</DropdownMenuItem>
+																);
+															})}
+														</DropdownMenuSubContent>
+													</DropdownMenuSub>
+												);
+											}
+											// Single agent, just show the action name
+											return (
+												<DropdownMenuItem
+													key={action.id}
+													onSelect={() => {
+														console.log("Execute Opal Action:", action.name);
+													}}
+												>
+													{action.name}
+												</DropdownMenuItem>
+											);
+										})}
+									</DropdownMenuSubContent>
+								</DropdownMenuSub>
+								<DropdownMenuSeparator />
+							</>
+						)}
+
+						{/* Page Actions */}
+						<DropdownMenuLabel>Page</DropdownMenuLabel>
+						<DropdownMenuItem onSelect={onRenamePage}>
+							<Box display="flex" alignItems="center" gap="8">
+								<IconPencil size={16} />
+								Rename
+							</Box>
+						</DropdownMenuItem>
+						<DropdownMenuItem intent="danger" onSelect={onTrash}>
+							<Box display="flex" alignItems="center" gap="8">
+								<IconTrash size={16} />
+								Move to trash
+							</Box>
+						</DropdownMenuItem>
+
+						{/* Variation Actions */}
+						{isVariation && (
+							<>
+								<DropdownMenuSeparator />
+								<DropdownMenuLabel>Variation</DropdownMenuLabel>
+								<DropdownMenuItem onSelect={onRenameVariation}>
+									<Box display="flex" alignItems="center" gap="8">
+										<IconStack2 size={16} />
+										Rename Variation
+									</Box>
+								</DropdownMenuItem>
+								<DropdownMenuItem intent="danger" onSelect={onDeleteVariationRequest}>
+									<Box display="flex" alignItems="center" gap="8">
+										<IconTrash size={16} />
+										Delete Variation
+									</Box>
+								</DropdownMenuItem>
+							</>
+						)}
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</Box>
 		</Box>
 	);
