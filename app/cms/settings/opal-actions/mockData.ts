@@ -15,19 +15,40 @@ export interface OpalAction {
 			improveButton: boolean;
 		};
 		assetPanel: boolean;
+		propertyEditor: {
+			enabled: boolean;
+			propertyTypes: PropertyType[];
+		};
 	};
 	agents: string[]; // Agent IDs
 	visibleAt: "Everyone" | "Editors" | "Administrators";
 	modified: string;
 }
 
+export type PropertyType =
+	| "String"
+	| "LongString"
+	| "XhtmlString"
+	| "Int"
+	| "Double"
+	| "Boolean"
+	| "DateTime"
+	| "ContentReference"
+	| "PageReference"
+	| "ImageReference"
+	| "VideoReference"
+	| "Url"
+	| "SelectOne"
+	| "SelectMany"
+	| "ContentArea"
+	| "LinkItemCollection";
+
 export const availableAgents: Agent[] = [
 	// Content category
 	{id: "content-model-creation", name: "Content Model Creation", category: "Content"},
 	{id: "content-refresh-analysis", name: "Content Refresh Analysis", category: "Content"},
 	{id: "content-translation", name: "Content Translation", category: "Content"},
-	{id: "content-sentiment", name: "Content Sentiment Analysis", category: "Content"},
-	{id: "content-readability", name: "Content Readability Check", category: "Content"},
+	{id: "brand-tone-audit", name: "Brand Tone of Voice Audit", category: "Content"},
 
 	// GEO category
 	{id: "geo-recommendations", name: "GEO Recommendations", category: "GEO"},
@@ -60,6 +81,10 @@ export const opalActions: OpalAction[] = [
 				improveButton: true,
 			},
 			assetPanel: false,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
 		},
 		agents: ["geo-recommendations", "geo-schema-optimization"],
 		visibleAt: "Everyone",
@@ -76,6 +101,10 @@ export const opalActions: OpalAction[] = [
 				improveButton: true,
 			},
 			assetPanel: false,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
 		},
 		agents: ["seo-audit", "seo-keyword-research", "seo-meta-optimization"],
 		visibleAt: "Everyone",
@@ -92,6 +121,10 @@ export const opalActions: OpalAction[] = [
 				improveButton: true,
 			},
 			assetPanel: false,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
 		},
 		agents: ["a11y-wcag-audit", "a11y-aria-check"],
 		visibleAt: "Everyone",
@@ -108,6 +141,10 @@ export const opalActions: OpalAction[] = [
 				improveButton: true,
 			},
 			assetPanel: true,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
 		},
 		agents: ["content-translation"],
 		visibleAt: "Editors",
@@ -124,8 +161,12 @@ export const opalActions: OpalAction[] = [
 				improveButton: true,
 			},
 			assetPanel: true,
+			propertyEditor: {
+				enabled: true,
+				propertyTypes: ["String", "LongString", "XhtmlString"],
+			},
 		},
-		agents: ["content-refresh-analysis", "content-sentiment", "content-readability"],
+		agents: ["content-refresh-analysis", "brand-tone-audit"],
 		visibleAt: "Everyone",
 		modified: "2026-02-18 16:45:00",
 	},
@@ -140,6 +181,10 @@ export const opalActions: OpalAction[] = [
 				improveButton: false,
 			},
 			assetPanel: true,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
 		},
 		agents: ["ga4-traffic-report", "conversion-analysis"],
 		visibleAt: "Administrators",

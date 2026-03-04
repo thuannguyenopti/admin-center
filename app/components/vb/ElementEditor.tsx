@@ -6,6 +6,8 @@ import { BLOCK_SCHEMAS } from "./blocks/schemas";
 import { AIInputField } from "@/app/components/ai/AIInputField";
 import { AITextArea } from "@/app/components/ai/AITextArea";
 import { FieldWithAIActions } from "./FieldWithAIActions";
+import { usePropertyEditorActions } from "@/app/hooks/usePropertyEditorActions";
+import { PropertyType } from "@/app/cms/settings/opal-actions/mockData";
 
 type Props = {
   currentEle: string;
@@ -16,28 +18,14 @@ type Props = {
   outlineTitle?: string;
 };
 
-const Input: React.FC<{ label: string; placeholder?: string; value: any; onChange: any }> = ({
+const Input: React.FC<{ label: string; placeholder?: string; value: any; onChange: any; propertyType?: PropertyType }> = ({
   label,
   placeholder,
   value,
   onChange,
+  propertyType = "String",
 }) => {
-  const aiActions = [
-    {
-      label: "Brand Tone of Voice Audit",
-      onClick: () => {
-        console.log("Apply tone of voice to:", value);
-        // TODO: Implement tone of voice action
-      }
-    },
-    {
-      label: "Proofread",
-      onClick: () => {
-        console.log("Proofread:", value);
-        // TODO: Implement proofreading action
-      }
-    }
-  ];
+  const aiActions = usePropertyEditorActions(propertyType);
 
   return (
     <div className=" pr-1 py-2">
@@ -123,25 +111,9 @@ const markdownToTipTap = (text: string) => {
   };
 };
 
-const RichTextInput: React.FC<{ label: string; value: any; onChange: any }> = ({ label, value, onChange }) => {
+const RichTextInput: React.FC<{ label: string; value: any; onChange: any; propertyType?: PropertyType }> = ({ label, value, onChange, propertyType = "XhtmlString" }) => {
   const markdownValue = isTipTapDoc(value) ? tiptapToMarkdown(value) : (value || "");
-
-  const aiActions = [
-    {
-      label: "Brand Tone of Voice Audit",
-      onClick: () => {
-        console.log("Apply tone of voice to:", markdownValue);
-        // TODO: Implement tone of voice action
-      }
-    },
-    {
-      label: "Proofread",
-      onClick: () => {
-        console.log("Proofread:", markdownValue);
-        // TODO: Implement proofreading action
-      }
-    }
-  ];
+  const aiActions = usePropertyEditorActions(propertyType);
 
   return (
     <div className="pr-1 py-2">
@@ -233,6 +205,20 @@ export default function ElementEditor({
           const propData = properties ? properties[key] : null;
           const value = propData ? propData.value : (def.default ?? "");
 
+          // Map schema type to PropertyType
+          const getPropertyType = (schemaType: string): PropertyType => {
+            switch (schemaType) {
+              case "text":
+                return "String";
+              case "textarea":
+                return "LongString";
+              case "richtext":
+                return "XhtmlString";
+              default:
+                return "String";
+            }
+          };
+
           return (
             <Fragment key={key}>
               {(def.type === "text" || def.type === "textarea") && (
@@ -240,6 +226,7 @@ export default function ElementEditor({
                   label={def.label}
                   value={value}
                   onChange={(val: any) => onInputChange(val, key)}
+                  propertyType={getPropertyType(def.type)}
                 />
               )}
               {def.type === "richtext" && (
@@ -247,6 +234,7 @@ export default function ElementEditor({
                   label={def.label}
                   value={value}
                   onChange={(val: any) => onInputChange(val, key)}
+                  propertyType="XhtmlString"
                 />
               )}
               {def.type === "checkbox" && (
