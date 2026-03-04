@@ -22,7 +22,7 @@ function isAsideOutline(o: any): boolean {
 	return t === "aside" || t === "sidebar";
 }
 
-function renderOutlineTree(outline: Outline) {
+function renderOutlineTree(outline: Outline, isMobile = false) {
 	return outline.tree.map((section: any, sindex: number) => {
 		const hasBgImage = !!section.bgImage;
 
@@ -49,7 +49,7 @@ function renderOutlineTree(outline: Outline) {
 				>
 					{(section.children || []).map((row: any, rIndex: number) => (
 						<div
-							className={`grid grid-flow-col auto-cols-fr gap-4 ${
+							className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-flow-col md:auto-cols-fr"} gap-4 ${
 								hasBgImage ? "text-white" : "text-[#05051F]"
 							}`}
 							key={row.id ?? rIndex}
@@ -85,7 +85,7 @@ function renderOutlineTree(outline: Outline) {
 	});
 }
 
-export default function SitePageRenderer({outlines}: {outlines: Outline[]}) {
+export default function SitePageRenderer({outlines, isMobile = false}: {outlines: Outline[]; isMobile?: boolean}) {
 	const mainOutlines = outlines.filter((o) => !isAsideOutline(o));
 	const asideOutlines = outlines.filter((o) => isAsideOutline(o));
 	const hasAside = asideOutlines.length > 0 && mainOutlines.length > 0;
@@ -93,22 +93,22 @@ export default function SitePageRenderer({outlines}: {outlines: Outline[]}) {
 	return (
 		<div className="w-full p-6 md:p-6 flex-1" style={{background: "#F3F4F6"}}>
 			{hasAside ? (
-				<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 items-start">
+				<div className={isMobile ? "flex flex-col gap-6" : "flex flex-col md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 md:items-start"}>
 					<div className="space-y-6">
 						{mainOutlines.map((outline) => (
-							<div key={outline.id}>{renderOutlineTree(outline)}</div>
+							<div key={outline.id}>{renderOutlineTree(outline, isMobile)}</div>
 						))}
 					</div>
 					<aside className="space-y-6">
 						{asideOutlines.map((outline) => (
-							<div key={outline.id}>{renderOutlineTree(outline)}</div>
+							<div key={outline.id}>{renderOutlineTree(outline, isMobile)}</div>
 						))}
 					</aside>
 				</div>
 			) : (
 				<div className="space-y-6">
 					{[...mainOutlines, ...asideOutlines].map((outline) => (
-						<div key={outline.id}>{renderOutlineTree(outline)}</div>
+						<div key={outline.id}>{renderOutlineTree(outline, isMobile)}</div>
 					))}
 				</div>
 			)}
