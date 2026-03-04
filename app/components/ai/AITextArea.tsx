@@ -156,7 +156,9 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 			// Handle Tab to accept completion
 			if (e.key === "Tab" && completion && !e.shiftKey) {
 				e.preventDefault();
-				const newValue = currentText + completion;
+				// Add space if needed before appending completion
+				const needsSpace = currentText && !currentText.endsWith(" ") && !completion.startsWith(" ");
+				const newValue = currentText + (needsSpace ? " " : "") + completion;
 				setCurrentText(newValue);
 				onChange({
 					currentTarget: { value: newValue },
@@ -281,7 +283,11 @@ export const AITextArea = forwardRef<HTMLDivElement, AITextAreaProps>(
 						}}
 					>
 						<span style={{ visibility: "hidden" }}>{currentText}</span>
-						<span>{completion}</span>
+						<span>
+							{/* Add space if current text doesn't end with space and completion doesn't start with space */}
+							{currentText && !currentText.endsWith(" ") && !completion.startsWith(" ") ? " " : ""}
+							{completion}
+						</span>
 					</div>
 				)}
 			</div>
