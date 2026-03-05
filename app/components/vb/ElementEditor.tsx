@@ -218,6 +218,8 @@ export default function ElementEditor({
                 return "LongString";
               case "richtext":
                 return "XhtmlString";
+              case "link":
+                return "Url";
               default:
                 return "String";
             }
@@ -225,7 +227,7 @@ export default function ElementEditor({
 
           return (
             <Fragment key={key}>
-              {(def.type === "text" || def.type === "textarea") && (
+              {(def.type === "text" || def.type === "textarea" || def.type === "link") && (
                 <Input
                   label={def.label}
                   value={value}
