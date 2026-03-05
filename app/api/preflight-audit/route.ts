@@ -35,24 +35,46 @@ export async function checkBrokenLinks(pageUrl: string, fields: PageField[]): Pr
 }
 
 export async function checkMissingImages(fields: PageField[]): Promise<PreflightAuditIssue[]> {
-	// Mock: Return sample missing image issue using a real field ID
-	if (fields.length < 2) return [];
+	const issues: PreflightAuditIssue[] = [];
 
-	const field = fields[Math.min(4, fields.length - 1)]; // Use 5th field or last
-	return [
-		{
-			fieldId: field.fieldId,
-			fieldLabel: field.fieldLabel,
-			type: "missing-image",
-			severity: "critical",
-			message: "Hero image is missing or cannot be loaded",
-			original: "",
-			suggestion: "Upload a hero image (recommended size: 1920x1080px)",
-			metadata: {
-				imageUrl: "",
-			},
-		},
-	];
+	// Check all fields with imageUrl for broken/missing images
+	for (const field of fields) {
+		if (field.imageUrl !== undefined) {
+			const imageUrl = field.imageUrl.trim();
+
+			// Check if image URL is empty or obviously broken
+			if (!imageUrl) {
+				issues.push({
+					fieldId: field.fieldId,
+					fieldLabel: field.fieldLabel,
+					type: "missing-image",
+					severity: "critical",
+					message: "Image URL is empty",
+					original: "",
+					suggestion: "Upload an image or provide a valid image URL",
+					metadata: {
+						imageUrl: "",
+					},
+				});
+			} else if (imageUrl.includes("missing") || imageUrl.includes("404") || imageUrl.includes("example.com")) {
+				// Detect common patterns for broken/test images
+				issues.push({
+					fieldId: field.fieldId,
+					fieldLabel: field.fieldLabel,
+					type: "missing-image",
+					severity: "critical",
+					message: "Image cannot be loaded (broken URL or missing file)",
+					original: imageUrl,
+					suggestion: "Upload a valid image or update the image URL",
+					metadata: {
+						imageUrl,
+					},
+				});
+			}
+		}
+	}
+
+	return issues;
 }
 
 export async function checkRequiredFields(fields: PageField[]): Promise<PreflightAuditIssue[]> {
