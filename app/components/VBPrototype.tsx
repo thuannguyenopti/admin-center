@@ -25,6 +25,7 @@ import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import VersionHistory from "./vb/versionHistory/VersionHistory";
 import {useBrandTone} from "./ai/BrandToneProvider";
+import {usePreflightContext} from "./ai/PreflightContext";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -288,7 +289,8 @@ export default function VBPrototype({
 	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
 	const brandTone = useBrandTone();
 
-	// Preflight Audit integration removed - now handled via Opal chat
+	// Preflight Audit integration - provide scroll function to PreflightContext
+	const {registerScrollFunction: registerPreflightScroll} = usePreflightContext();
 
 	const handleCreateVariation = () => {
 		if (newVariationName && onAddVariation) {
@@ -598,7 +600,11 @@ export default function VBPrototype({
 		brandTone.registerScrollFunction(setCurrentEleSmart);
 	}, [brandTone, setCurrentEleSmart]);
 
-	// Preflight Audit integration removed - now uses Opal chat with PreflightContext
+	// Wire up Preflight Audit context with scroll-to functionality
+	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Preflight Audit");
+		registerPreflightScroll(setCurrentEleSmart);
+	}, [registerPreflightScroll, setCurrentEleSmart]);
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {

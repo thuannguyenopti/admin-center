@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useState, useCallback, useEffect} from "react";
-import {Box, Button, Checkbox, Badge, Text, Flex} from "@optiaxiom/react";
+import {Box, Button, Checkbox, Badge, Text, Group, toaster} from "@optiaxiom/react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import {usePreflightContext} from "./PreflightContext";
 import {useLayout} from "@/app/context/LayoutContext";
@@ -31,7 +31,7 @@ function truncate(text: string, maxLength: number): string {
  * Groups issues by type for better organization
  */
 export function PreflightResultsTable({result, messageId}: PreflightResultsTableProps) {
-	const {contextData, clearContext} = usePreflightContext();
+	const {contextData, clearContext, scrollToField} = usePreflightContext();
 	const {opalPanelControls} = useLayout();
 	const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set());
 	const [appliedIssues, setAppliedIssues] = useState<Set<number>>(new Set());
@@ -139,6 +139,9 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 		if (changes.length > 0) {
 			contextData.onApplyAll(changes);
 
+			// Show success toast
+			toaster.create(`Applied ${changes.length} change${changes.length !== 1 ? 's' : ''}`, { intent: "success" });
+
 			// Mark selected issues as applied
 			setAppliedIssues((prev) => {
 				const newApplied = new Set(prev);
@@ -193,6 +196,14 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 		clearContext();
 	}, [opalPanelControls, messageId, clearContext]);
 
+	// Handle row click to scroll to element
+	const handleRowClick = useCallback((issue: PreflightAuditIssue) => {
+		if (issue.fieldId) {
+			console.log('[PreflightResultsTable] Row clicked, scrolling to field:', issue.fieldId);
+			scrollToField(issue.fieldId);
+		}
+	}, [scrollToField]);
+
 	// Calculate selection state for header checkbox
 	const selectableIssues = result.issues.filter(
 		(issue, idx) => issue.fieldId && !appliedIssues.has(idx)
@@ -219,7 +230,7 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 		<Box>
 			{/* Select All Header - only show if there are selectable issues */}
 			{!allIssuesApplied && (
-				<Flex mb="12" gap="8" style={{flexDirection: "row", alignItems: "center"}}>
+				<Group mb="12" gap="8">
 					<Checkbox
 						checked={allSelected}
 						indeterminate={someSelected}
@@ -228,7 +239,7 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 					<Text fontSize="sm" fontWeight="500">
 						Select all issues
 					</Text>
-				</Flex>
+				</Group>
 			)}
 
 			{/* Grouped Issues */}
@@ -240,8 +251,8 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 					<Table>
 						<thead>
 							<Tr>
-								<Th style={{width: "24px"}}></Th>
-								<Th style={{width: "100px"}}>Severity</Th>
+								<Th></Th>
+								<Th>Severity</Th>
 								<Th>Issue</Th>
 								<Th>Current</Th>
 								<Th>Suggestion</Th>
@@ -254,8 +265,12 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 								const isSelected = selectedIssues.has(originalIndex);
 
 								return (
-									<Tr key={originalIndex}>
-										<Td style={{width: "24px"}}>
+									<Tr
+										key={originalIndex}
+										onClick={() => handleRowClick(issue)}
+										style={{cursor: issue.fieldId ? 'pointer' : 'default'}}
+									>
+										<Td>
 											{isApplied ? (
 												<IconCheck size={16} style={{color: "#22c55e"}} />
 											) : (
@@ -297,7 +312,7 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 
 			{/* Action Buttons - only show if there are selectable issues */}
 			{!allIssuesApplied && (
-				<Flex mt="12" gap="8" style={{flexDirection: "row"}}>
+				<Group mt="12" gap="8">
 					<Button
 						onClick={handleApplySelected}
 						disabled={selectedIssues.size === 0}
@@ -308,7 +323,7 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 					<Button onClick={handleDismiss} appearance="subtle">
 						Dismiss
 					</Button>
-				</Flex>
+				</Group>
 			)}
 		</Box>
 	);
