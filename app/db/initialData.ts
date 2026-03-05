@@ -1411,6 +1411,7 @@ export const initialPages: Page[] = [
 													{ id: "ele-landing-hero-badge" },
 													{ id: "ele-landing-hero-sub" },
 													{ id: "ele-landing-hero-heading" },
+													{ id: "ele-landing-hero-broken-image" },
 												],
 											},
 										],
@@ -1760,6 +1761,13 @@ export const initialPages: Page[] = [
 									text: {
 										value: "Join thousands of runners in the most iconic triathlon of the year. Challenge yourself and cross the finish line!",
 									},
+								},
+							},
+							"ele-landing-hero-broken-image": {
+								type: "ct-image",
+								properties: {
+									src: { value: "https://example.com/missing-image-404.jpg" },
+									alt: { value: "" },
 								},
 							},
 							"ele-landing-hero-cta-primary": {
