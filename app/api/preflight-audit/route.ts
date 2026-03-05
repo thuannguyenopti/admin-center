@@ -12,7 +12,7 @@ import type {
  * Will be replaced with real implementations in Phase 2
  */
 
-async function checkBrokenLinks(pageUrl: string, fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkBrokenLinks(pageUrl: string, fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Mock: Return sample broken link issue using a real field ID
 	if (fields.length === 0) return [];
 
@@ -34,7 +34,7 @@ async function checkBrokenLinks(pageUrl: string, fields: PageField[]): Promise<P
 	];
 }
 
-async function checkMissingImages(fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkMissingImages(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Mock: Return sample missing image issue using a real field ID
 	if (fields.length < 2) return [];
 
@@ -55,7 +55,7 @@ async function checkMissingImages(fields: PageField[]): Promise<PreflightAuditIs
 	];
 }
 
-async function checkRequiredFields(fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkRequiredFields(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Real implementation: Check for empty required fields
 	const issues: PreflightAuditIssue[] = [];
 
@@ -87,7 +87,7 @@ async function checkRequiredFields(fields: PageField[]): Promise<PreflightAuditI
 	return issues;
 }
 
-async function checkAltText(fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkAltText(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Real implementation: Check for images without alt-text
 	const issues: PreflightAuditIssue[] = [];
 
@@ -131,7 +131,7 @@ async function checkAltText(fields: PageField[]): Promise<PreflightAuditIssue[]>
 	return issues;
 }
 
-async function checkContentFreshness(fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkContentFreshness(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Mock: Return sample freshness issue using a real field ID
 	if (fields.length < 3) return [];
 
@@ -149,7 +149,7 @@ async function checkContentFreshness(fields: PageField[]): Promise<PreflightAudi
 	];
 }
 
-async function checkSEO(fields: PageField[], pageUrl: string): Promise<PreflightAuditIssue[]> {
+export async function checkSEO(fields: PageField[], pageUrl: string): Promise<PreflightAuditIssue[]> {
 	// Mock: Return sample SEO issue that opens Properties panel
 	return [
 		{
@@ -167,7 +167,7 @@ async function checkSEO(fields: PageField[], pageUrl: string): Promise<Preflight
 	];
 }
 
-async function checkGEO(fields: PageField[], pageUrl: string): Promise<PreflightAuditIssue[]> {
+export async function checkGEO(fields: PageField[], pageUrl: string): Promise<PreflightAuditIssue[]> {
 	// Mock: Return sample GEO issue that opens Properties panel
 	return [
 		{
@@ -185,7 +185,7 @@ async function checkGEO(fields: PageField[], pageUrl: string): Promise<Preflight
 	];
 }
 
-async function checkProofreading(fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkProofreading(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Real implementation: Call LanguageTool API via existing proofreading endpoint
 	const issues: PreflightAuditIssue[] = [];
 
@@ -233,7 +233,7 @@ async function checkProofreading(fields: PageField[]): Promise<PreflightAuditIss
 	return issues;
 }
 
-async function checkBrandTone(fields: PageField[]): Promise<PreflightAuditIssue[]> {
+export async function checkBrandTone(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	// Real implementation: Call existing brand tone API
 	try {
 		const response = await fetch("http://localhost:3000/api/ai/brand-tone", {

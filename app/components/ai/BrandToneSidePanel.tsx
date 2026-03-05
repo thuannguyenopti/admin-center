@@ -255,7 +255,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 				display="flex"
 				alignItems="center"
 				justifyContent="space-between"
-				flexShrink={0}
+				style={{flexShrink: 0}}
 			>
 				<Box display="flex" alignItems="center" gap="8">
 					{result && (
@@ -527,7 +527,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 						display="flex"
 						justifyContent="flex-end"
 						gap="8"
-						flexShrink={0}
+						style={{flexShrink: 0}}
 					>
 						<Button
 							appearance="subtle"
