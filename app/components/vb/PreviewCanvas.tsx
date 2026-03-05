@@ -202,8 +202,8 @@ export default function PreviewCanvas({
 					[uKey]: {
 						type: "ct-image",
 						properties: {
-							imageUrl: {value: imageUrl},
-							altText: {value: imageAlt || "Untitled Image"},
+							src: {value: imageUrl},
+							alt: {value: imageAlt || "Untitled Image"},
 							width: {value: "auto"},
 							height: {value: "auto"},
 						},
