@@ -62,6 +62,8 @@ export interface PageField {
 	fieldId: string;
 	fieldLabel: string;
 	text: string;
+	imageUrl?: string;
+	altText?: string;
 }
 
 /**

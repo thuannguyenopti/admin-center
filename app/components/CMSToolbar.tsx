@@ -212,15 +212,24 @@ export default function CMSToolbar({
 			return [];
 		}
 
-		const fields: Array<{fieldId: string; fieldLabel: string; text: string}> = [];
+		const fields: Array<{fieldId: string; fieldLabel: string; text: string; imageUrl?: string; altText?: string}> = [];
 
 		Object.entries(pageElements).forEach(([elementId, element]) => {
 			// Extract text from various property types
 			let text = "";
 			let label = element.type || "Element";
+			let imageUrl: string | undefined;
+			let altText: string | undefined;
 
+			// Check for image elements
+			if (element.type === "ct-image") {
+				imageUrl = element.properties.src?.value || "";
+				altText = element.properties.alt?.value || "";
+				text = altText || imageUrl || "Image";
+				label = "Image";
+			}
 			// Common text properties
-			if (element.properties.text?.value) {
+			else if (element.properties.text?.value) {
 				text = element.properties.text.value;
 				label = element.type === "heading" ? "Heading" :
 				        element.type === "text" ? "Text" :
@@ -236,12 +245,14 @@ export default function CMSToolbar({
 				label = "Title";
 			}
 
-			// Only include elements with actual text content
-			if (text && text.trim()) {
+			// Include elements with text content or image elements
+			if ((text && text.trim()) || imageUrl !== undefined) {
 				fields.push({
 					fieldId: elementId,
 					fieldLabel: label,
 					text: text.trim(),
+					imageUrl,
+					altText,
 				});
 			}
 		});
