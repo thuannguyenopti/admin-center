@@ -61,8 +61,9 @@ import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
 import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
-import {OpalAction, availableAgents} from "@/app/cms/settings/opal-actions/mockData";
+import {OpalAction, availableAgents, opalActions as initialOpalActions} from "@/app/cms/settings/opal-actions/mockData";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
+import {usePreflightAudit} from "@/app/components/ai/PreflightAuditProvider";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -191,8 +192,9 @@ export default function CMSToolbar({
 	const isVariation = selectedVariation !== "original";
 
 	// Get enabled Opal Actions for Improve button and context menu
-	const [opalActions] = usePersistentState("opal-actions", []) as [OpalAction[], any];
+	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
 	const {analyzePage} = useBrandTone();
+	const {runAudit} = usePreflightAudit();
 
 	const improveActions = opalActions.filter(
 		(action) => action.enabled && action.locations.toolbar.improveButton
@@ -293,6 +295,32 @@ export default function CMSToolbar({
 		});
 
 		analyzePage(fields, fieldToElementMap, handleApplyField, handleApplyAll);
+	};
+
+	const handlePreflightAudit = () => {
+		const fields = getPageFields();
+
+		if (fields.length === 0) {
+			toaster.create("No text content found on the page", { intent: "warning" });
+			return;
+		}
+
+		// Create field-to-element mapping (fieldId is already the elementId)
+		const fieldToElementMap: Record<string, string> = {};
+		fields.forEach(field => {
+			fieldToElementMap[field.fieldId] = field.fieldId;
+		});
+
+		// Get current page URL (or construct it)
+		const pageUrl = window.location.href;
+
+		console.log("[CMSToolbar] Starting preflight audit:", {
+			fieldsCount: fields.length,
+			pageUrl,
+			mapping: fieldToElementMap,
+		});
+
+		runAudit(fields, pageUrl, fieldToElementMap, handleApplyField, handleApplyAll);
 	};
 
 	return (
@@ -456,7 +484,9 @@ export default function CMSToolbar({
 										label: agent?.name || agentId,
 										group: {label: action.name, hidden: index > 0},
 										execute: () => {
-											if (agentId === "brand-tone-audit") {
+											if (agentId === "preflight-audit") {
+												handlePreflightAudit();
+											} else if (agentId === "brand-tone-audit") {
 												handleBrandToneAnalysis();
 											} else {
 												console.log(
@@ -476,7 +506,9 @@ export default function CMSToolbar({
 								{
 									label: action.name,
 									execute: () => {
-										if (agentId === "brand-tone-audit") {
+										if (agentId === "preflight-audit") {
+											handlePreflightAudit();
+										} else if (agentId === "brand-tone-audit") {
 											handleBrandToneAnalysis();
 										} else {
 											console.log("Execute Opal Action:", action.name);

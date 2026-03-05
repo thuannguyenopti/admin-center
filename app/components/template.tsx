@@ -11,6 +11,7 @@ import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
 import {BrandToneProvider} from "../components/ai/BrandToneProvider";
+import {PreflightAuditProvider} from "../components/ai/PreflightAuditProvider";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
@@ -397,9 +398,11 @@ export default function Template(props: any) {
 	return (
 		<LayoutProvider>
 			<BrandToneProvider>
-				<OpalContextProvider navigationStructure={props.structure}>
-					<TemplateWrapper {...props} />
-				</OpalContextProvider>
+				<PreflightAuditProvider>
+					<OpalContextProvider navigationStructure={props.structure}>
+						<TemplateWrapper {...props} />
+					</OpalContextProvider>
+				</PreflightAuditProvider>
 			</BrandToneProvider>
 		</LayoutProvider>
 	);

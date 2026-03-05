@@ -1,5 +1,5 @@
 import usePersistentState from "@/app/usePersistentState";
-import {OpalAction, availableAgents, PropertyType} from "@/app/cms/settings/opal-actions/mockData";
+import {OpalAction, availableAgents, PropertyType, opalActions as initialOpalActions} from "@/app/cms/settings/opal-actions/mockData";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 
 interface AIAction {
@@ -28,7 +28,7 @@ export function usePropertyEditorActions(
 	text?: string,
 	onApply?: (suggestion: string) => void
 ): AIAction[] {
-	const [opalActions] = usePersistentState("opal-actions", []) as [OpalAction[], any];
+	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
 	const {analyzeText} = useBrandTone();
 
 	// Handle both call signatures
