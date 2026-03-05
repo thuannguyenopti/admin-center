@@ -377,6 +377,7 @@ function TemplateContent({
 				inputValue={inputValue}
 				isLoading={isLoading}
 				error={error}
+				isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
 				groupedHistory={groupedHistory}
