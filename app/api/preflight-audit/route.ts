@@ -37,10 +37,10 @@ export async function checkBrokenLinks(pageUrl: string, fields: PageField[]): Pr
 export async function checkMissingImages(fields: PageField[]): Promise<PreflightAuditIssue[]> {
 	const issues: PreflightAuditIssue[] = [];
 
-	// Check all fields with imageUrl for broken/missing images
+	// Check all fields with src for broken/missing images
 	for (const field of fields) {
-		if (field.imageUrl !== undefined) {
-			const imageUrl = field.imageUrl.trim();
+		if (field.src !== undefined) {
+			const imageUrl = field.src.trim();
 
 			// Check if image URL is empty or obviously broken
 			if (!imageUrl) {

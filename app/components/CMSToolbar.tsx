@@ -212,20 +212,20 @@ export default function CMSToolbar({
 			return [];
 		}
 
-		const fields: Array<{fieldId: string; fieldLabel: string; text: string; imageUrl?: string; altText?: string}> = [];
+		const fields: Array<{fieldId: string; fieldLabel: string; text: string; src?: string; alt?: string}> = [];
 
 		Object.entries(pageElements).forEach(([elementId, element]) => {
 			// Extract text from various property types
 			let text = "";
 			let label = element.type || "Element";
-			let imageUrl: string | undefined;
-			let altText: string | undefined;
+			let src: string | undefined;
+			let alt: string | undefined;
 
 			// Check for image elements
 			if (element.type === "ct-image") {
-				imageUrl = element.properties.src?.value || "";
-				altText = element.properties.alt?.value || "";
-				text = altText || imageUrl || "Image";
+				src = element.properties.src?.value || "";
+				alt = element.properties.alt?.value || "";
+				text = alt || src || "Image";
 				label = "Image";
 			}
 			// Common text properties
@@ -246,13 +246,13 @@ export default function CMSToolbar({
 			}
 
 			// Include elements with text content or image elements
-			if ((text && text.trim()) || imageUrl !== undefined) {
+			if ((text && text.trim()) || src !== undefined) {
 				fields.push({
 					fieldId: elementId,
 					fieldLabel: label,
 					text: text.trim(),
-					imageUrl,
-					altText,
+					src,
+					alt,
 				});
 			}
 		});
