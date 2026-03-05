@@ -10,9 +10,10 @@ type MetricCardProps = {
 	data: number[];
 	smooth?: boolean;
 	desiredDirection?: "up" | "down";
-	interval?: "hour" | "day" | "week" | "month";
+	interval?: "minute" | "hour" | "day" | "week" | "month";
 	aggregation?: "sum" | "average" | "last";
 	previousValue?: number;
+	showComparison?: boolean;
 	height?: number;
 	href?: string;
 };
@@ -27,6 +28,7 @@ export default function MetricCard({
 	aggregation = "last",
 	height = 60,
 	previousValue: explicitPreviousValue,
+	showComparison = true,
 	href,
 }: MetricCardProps) {
 	// Get current value based on aggregation type
@@ -43,8 +45,9 @@ export default function MetricCard({
 		}
 	})();
 
-	const previousValue =
-		explicitPreviousValue !== undefined
+	const previousValue = !showComparison
+		? undefined
+		: explicitPreviousValue !== undefined
 			? explicitPreviousValue
 			: data.length > 1
 				? data[data.length - 2]
@@ -61,7 +64,7 @@ export default function MetricCard({
 			);
 		}
 		return (
-			val.toLocaleString(undefined, {
+			val.toLocaleString("en-US", {
 				maximumFractionDigits: 1,
 				minimumFractionDigits: 0,
 			}) + unit
@@ -155,6 +158,9 @@ export default function MetricCard({
 		const date = new Date();
 
 		switch (interval) {
+			case "minute":
+				date.setMinutes(date.getMinutes() - diff);
+				return date.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
 			case "hour":
 				date.setHours(date.getHours() - diff);
 				return date.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
