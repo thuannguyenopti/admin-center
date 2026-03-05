@@ -25,6 +25,7 @@ import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import VersionHistory from "./vb/versionHistory/VersionHistory";
 import {useBrandTone} from "./ai/BrandToneProvider";
+import {usePreflightAudit} from "./ai/PreflightAuditProvider";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -287,6 +288,9 @@ export default function VBPrototype({
 
 	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
 	const brandTone = useBrandTone();
+
+	// Preflight Audit integration - provide setCurrentEle to PreflightAuditProvider
+	const preflightAudit = usePreflightAudit();
 
 	const handleCreateVariation = () => {
 		if (newVariationName && onAddVariation) {
@@ -595,6 +599,29 @@ export default function VBPrototype({
 		console.log("[VBPrototype] Registering scroll function with Brand Tone");
 		brandTone.registerScrollFunction(setCurrentEleSmart);
 	}, [brandTone, setCurrentEleSmart]);
+
+	// Wire up Preflight Audit provider with scroll-to functionality
+	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Preflight Audit");
+		preflightAudit.registerScrollFunction(setCurrentEleSmart);
+	}, [preflightAudit, setCurrentEleSmart]);
+
+	// Wire up Preflight Audit provider with open-properties functionality
+	const openPropertiesToSection = useCallback((section: PropertySection) => {
+		console.log("[VBPrototype] Opening properties panel to section:", section);
+		setSidebarTab("properties");
+		setEditingSectionId(null);
+		// Use setTimeout to ensure tab changes first, then section navigation happens
+		setTimeout(() => {
+			console.log("[VBPrototype] Navigating to section:", section);
+			setActivePropertiesSection(section);
+		}, 50);
+	}, []);
+
+	useEffect(() => {
+		console.log("[VBPrototype] Registering openProperties function with Preflight Audit");
+		preflightAudit.registerOpenPropertiesFunction(openPropertiesToSection);
+	}, [preflightAudit, openPropertiesToSection]);
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {

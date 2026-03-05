@@ -168,13 +168,13 @@ export const BrandTonePanel: React.FC<BrandTonePanelProps> = ({
 									<Heading level="4" mb="8">
 										Strengths
 									</Heading>
-									<Box as="ul" pl="20" style={{listStyleType: 'disc', display: 'block'}}>
+									<ul style={{listStyleType: 'disc', display: 'block', paddingLeft: '20px'}}>
 										{result.strengths.map((strength, index) => (
-											<Box as="li" key={index} mb="4" style={{display: 'list-item'}}>
+											<li key={index} style={{display: 'list-item', marginBottom: '4px'}}>
 												<Text fontSize="sm">{strength}</Text>
-											</Box>
+											</li>
 										))}
-									</Box>
+									</ul>
 								</Box>
 							)}
 

@@ -55,6 +55,7 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 	const [panelWidth, setPanelWidth] = usePersistentState("brandTonePanelWidth", 384);
 	const [isResizing, setIsResizing] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
+	const [isResizeHandleHovered, setIsResizeHandleHovered] = useState(false);
 
 	// Detect mobile screen size
 	useEffect(() => {
@@ -230,19 +231,18 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 					}}
 					onMouseDown={handleMouseDown}
 				>
-					<Box
+					<div
 						style={{
 							position: "absolute",
 							left: "1px",
 							top: 0,
 							bottom: 0,
 							width: "2px",
-							backgroundColor: isResizing ? "var(--ax-colors-border-accent)" : "transparent",
+							backgroundColor: (isResizing || isResizeHandleHovered) ? "var(--ax-colors-border-accent)" : "transparent",
 							transition: "background-color 0.2s",
 						}}
-						_hover={{
-							backgroundColor: "var(--ax-colors-border-accent)",
-						}}
+						onMouseEnter={() => setIsResizeHandleHovered(true)}
+						onMouseLeave={() => setIsResizeHandleHovered(false)}
 					/>
 				</Box>
 			)}
@@ -348,13 +348,13 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 									</Button>
 								</DisclosureTrigger>
 								<DisclosureContent>
-									<Box as="ul" pl="20" mt="8" style={{listStyleType: 'disc', display: 'block'}}>
+									<ul style={{listStyleType: 'disc', display: 'block', paddingLeft: '20px', marginTop: '8px'}}>
 										{result.strengths.map((strength, index) => (
-											<Box as="li" key={index} mb="4" style={{display: 'list-item'}}>
+											<li key={index} style={{display: 'list-item', marginBottom: '4px'}}>
 												<Text fontSize="sm">{strength}</Text>
-											</Box>
+											</li>
 										))}
-									</Box>
+									</ul>
 								</DisclosureContent>
 							</Disclosure>
 						)}
@@ -387,9 +387,6 @@ export const BrandToneSidePanel: React.FC<BrandToneSidePanelProps> = ({
 														opacity: isApplied ? 0.7 : 1,
 													}}
 													onClick={() => handleIssueCardClick(issue.fieldId)}
-													_hover={isClickable ? {
-														boxShadow: "var(--ax-shadow-sm)",
-													} : undefined}
 												>
 													<Box display="flex" alignItems="center" gap="8" mb="8">
 														{isApplied ? (
