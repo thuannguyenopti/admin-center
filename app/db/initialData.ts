@@ -208,6 +208,7 @@ export type PropertyType =
 	| "ContentReference"
 	| "ContentArea"
 	| "Url"
+	| "LinkItem"
 	| "LinkItemCollection"
 	| "PageReference"
 	| "ImageReference"
@@ -218,6 +219,7 @@ export type PropertyType =
 	| "text"
 	| "textarea"
 	| "richtext"
+	| "link"
 	| "reference"
 	| "address"
 	| "outline"
@@ -427,7 +429,7 @@ export const initialContentTypes: ContentType[] = [
 		description: "A button block",
 		properties: [
 			{ id: "label", name: "Label", type: "text", required: true },
-			{ id: "url", name: "URL", type: "text" },
+			{ id: "url", name: "URL", type: "link" },
 		],
 	},
 	{
@@ -2083,6 +2085,7 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: { value: "Join Now" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-challenges-heading": {

@@ -65,6 +65,8 @@ const subTypesByCategory: Record<TypeCategory, { value: PropertyType; label: str
 		{ value: "ImageReference", label: "Image Reference" },
 		{ value: "VideoReference", label: "Video Reference" },
 		{ value: "Url", label: "URL" },
+		{ value: "LinkItem", label: "Link Item" },
+		{ value: "link", label: "Link (legacy)" },
 	],
 	Selection: [
 		{ value: "SelectOne", label: "Selection (single)" },
@@ -87,7 +89,7 @@ const getCategoryFromType = (type: PropertyType): TypeCategory => {
 	const numberTypes = ["Int", "Double"];
 	const booleanTypes = ["Boolean", "checkbox"];
 	const dateTypes = ["DateTime"];
-	const referenceTypes = ["ContentReference", "PageReference", "ImageReference", "VideoReference", "reference", "Url"];
+	const referenceTypes = ["ContentReference", "PageReference", "ImageReference", "VideoReference", "reference", "Url", "LinkItem", "link"];
 	const selectionTypes = ["SelectOne", "SelectMany"];
 	const contentTypes = ["ContentArea", "LinkItemCollection"];
 
@@ -109,6 +111,7 @@ const normalizeType = (type: PropertyType): PropertyType => {
 		richtext: "XhtmlString",
 		checkbox: "Boolean",
 		reference: "ContentReference",
+		link: "Url",
 	};
 	return typeMap[type] || type;
 };
