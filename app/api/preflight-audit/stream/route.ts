@@ -62,6 +62,10 @@ export async function POST(request: Request) {
 					controller.enqueue(encoder.encode(message));
 				};
 
+				// Helper to add minimum delay between tasks (100-200ms)
+				const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+				const taskDelay = () => delay(100 + Math.random() * 100); // Random 100-200ms
+
 				// Initial checklist with all audits pending
 				const checklist: ChecklistItem[] = [
 					{label: "Proofreading", status: "pending"},
@@ -99,10 +103,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["proofreading"] = "success";
 						updateChecklist(0, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Proofreading failed:", error);
 						auditStatuses["proofreading"] = "failed";
 						updateChecklist(0, "failed");
+						await taskDelay();
 					}
 
 					// Audit 1: Brand Tone
@@ -115,10 +121,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["brand-tone"] = "success";
 						updateChecklist(1, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Brand Tone failed:", error);
 						auditStatuses["brand-tone"] = "failed";
 						updateChecklist(1, "failed");
+						await taskDelay();
 					}
 
 					// Audit 2: Required Fields
@@ -131,10 +139,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["required-field"] = "success";
 						updateChecklist(2, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Required Fields failed:", error);
 						auditStatuses["required-field"] = "failed";
 						updateChecklist(2, "failed");
+						await taskDelay();
 					}
 
 					// Audit 3: Missing Alt-Text
@@ -147,10 +157,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["missing-alt-text"] = "success";
 						updateChecklist(3, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Alt-Text failed:", error);
 						auditStatuses["missing-alt-text"] = "failed";
 						updateChecklist(3, "failed");
+						await taskDelay();
 					}
 
 					// Audit 4: Broken Links
@@ -163,10 +175,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["broken-link"] = "success";
 						updateChecklist(4, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Broken Links failed:", error);
 						auditStatuses["broken-link"] = "failed";
 						updateChecklist(4, "failed");
+						await taskDelay();
 					}
 
 					// Audit 5: Missing Images
@@ -179,10 +193,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["missing-image"] = "success";
 						updateChecklist(5, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Missing Images failed:", error);
 						auditStatuses["missing-image"] = "failed";
 						updateChecklist(5, "failed");
+						await taskDelay();
 					}
 
 					// Audit 6: SEO
@@ -195,10 +211,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["seo"] = "success";
 						updateChecklist(6, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] SEO failed:", error);
 						auditStatuses["seo"] = "failed";
 						updateChecklist(6, "failed");
+						await taskDelay();
 					}
 
 					// Audit 7: GEO
@@ -211,10 +229,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["geo"] = "success";
 						updateChecklist(7, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] GEO failed:", error);
 						auditStatuses["geo"] = "failed";
 						updateChecklist(7, "failed");
+						await taskDelay();
 					}
 
 					// Audit 8: Content Freshness
@@ -227,10 +247,12 @@ export async function POST(request: Request) {
 						issues.push(...filtered);
 						auditStatuses["content-freshness"] = "success";
 						updateChecklist(8, "completed");
+						await taskDelay();
 					} catch (error) {
 						console.error("[Stream] Content Freshness failed:", error);
 						auditStatuses["content-freshness"] = "failed";
 						updateChecklist(8, "failed");
+						await taskDelay();
 					}
 
 					// Sort issues by severity (critical first, then high)

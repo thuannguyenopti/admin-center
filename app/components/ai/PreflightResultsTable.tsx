@@ -1,17 +1,20 @@
 "use client";
 
-import React, {useState, useCallback} from "react";
-import {Box, Button, Checkbox, Badge, Text} from "@optiaxiom/react";
+import React, {useState, useCallback, useEffect} from "react";
+import {Box, Button, Checkbox, Badge, Text, Flex} from "@optiaxiom/react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import {usePreflightContext} from "./PreflightContext";
+import {useLayout} from "@/app/context/LayoutContext";
 import type {
 	PreflightAuditResult,
 	PreflightAuditIssue,
 } from "./PreflightAuditTypes";
 import {SeverityIntent, AuditTypeLabels} from "./PreflightAuditTypes";
+import {IconCheck} from "@tabler/icons-react";
 
 interface PreflightResultsTableProps {
 	result: PreflightAuditResult;
+	messageId: string;
 }
 
 /**
@@ -25,11 +28,63 @@ function truncate(text: string, maxLength: number): string {
 /**
  * Interactive table component displaying preflight audit results
  * Supports checkbox selection and batch applying changes
+ * Groups issues by type for better organization
  */
-export function PreflightResultsTable({result}: PreflightResultsTableProps) {
-	const {contextData} = usePreflightContext();
+export function PreflightResultsTable({result, messageId}: PreflightResultsTableProps) {
+	const {contextData, clearContext} = usePreflightContext();
+	const {opalPanelControls} = useLayout();
 	const [selectedIssues, setSelectedIssues] = useState<Set<number>>(new Set());
 	const [appliedIssues, setAppliedIssues] = useState<Set<number>>(new Set());
+
+	// Group issues by type
+	const groupedIssues = result.issues.reduce((acc, issue, idx) => {
+		const type = issue.type;
+		if (!acc[type]) {
+			acc[type] = [];
+		}
+		acc[type].push({issue, originalIndex: idx});
+		return acc;
+	}, {} as Record<string, Array<{issue: PreflightAuditIssue; originalIndex: number}>>);
+
+	// Log component mount and context data
+	useEffect(() => {
+		console.log('[PreflightResultsTable] Component mounted', {
+			hasContextData: !!contextData,
+			hasOnApplyAll: !!contextData?.onApplyAll,
+			hasOnApplyField: !!contextData?.onApplyField,
+			fieldsCount: contextData?.fields?.length || 0,
+			issuesCount: result.issues.length,
+			hasOpalControls: !!opalPanelControls,
+		});
+	}, []);
+
+	// Disable input when results are shown, enable when dismissed or all applied
+	useEffect(() => {
+		opalPanelControls?.setInputDisabled(true);
+		return () => {
+			opalPanelControls?.setInputDisabled(false);
+		};
+	}, [opalPanelControls]);
+
+	// Select all selectable issues by default on mount
+	useEffect(() => {
+		const allSelectable = result.issues
+			.map((_, idx) => idx)
+			.filter((idx) => result.issues[idx].fieldId && !appliedIssues.has(idx));
+		setSelectedIssues(new Set(allSelectable));
+	}, [result.issues, appliedIssues]);
+
+	// Check if all issues have been applied
+	const allIssuesApplied = result.issues.every((issue, idx) =>
+		!issue.fieldId || appliedIssues.has(idx)
+	);
+
+	// Re-enable input when all issues are applied
+	useEffect(() => {
+		if (allIssuesApplied) {
+			opalPanelControls?.setInputDisabled(false);
+		}
+	}, [allIssuesApplied, opalPanelControls]);
 
 	// Toggle individual issue selection
 	const handleToggleIssue = useCallback((index: number) => {
@@ -61,7 +116,16 @@ export function PreflightResultsTable({result}: PreflightResultsTableProps) {
 
 	// Apply selected changes
 	const handleApplySelected = useCallback(() => {
-		if (!contextData?.onApplyAll) return;
+		console.log('[PreflightResultsTable] Apply selected clicked', {
+			hasContextData: !!contextData,
+			hasOnApplyAll: !!contextData?.onApplyAll,
+			selectedCount: selectedIssues.size,
+		});
+
+		if (!contextData?.onApplyAll) {
+			console.error('[PreflightResultsTable] No onApplyAll callback available');
+			return;
+		}
 
 		const changes = Array.from(selectedIssues)
 			.filter((idx) => !appliedIssues.has(idx) && result.issues[idx].fieldId)
@@ -69,6 +133,8 @@ export function PreflightResultsTable({result}: PreflightResultsTableProps) {
 				fieldId: result.issues[idx].fieldId!,
 				suggestion: result.issues[idx].suggestion,
 			}));
+
+		console.log('[PreflightResultsTable] Applying changes:', changes);
 
 		if (changes.length > 0) {
 			contextData.onApplyAll(changes);
@@ -81,13 +147,51 @@ export function PreflightResultsTable({result}: PreflightResultsTableProps) {
 						newApplied.add(idx);
 					}
 				});
+
+				// Update message content with new applied count
+				const totalApplied = newApplied.size;
+				const totalIssues = result.issues.filter(issue => issue.fieldId).length;
+				const remainingIssues = totalIssues - totalApplied;
+
+				if (totalApplied === totalIssues) {
+					// All issues applied
+					opalPanelControls?.updateMessage(messageId, {
+						content: `Applied ${totalApplied} change${totalApplied !== 1 ? 's' : ''}.`
+					});
+				} else {
+					// Some issues still pending
+					const criticalRemaining = result.issues.filter((issue, idx) =>
+						issue.severity === "critical" && !newApplied.has(idx)
+					).length;
+					const highRemaining = result.issues.filter((issue, idx) =>
+						issue.severity === "high" && !newApplied.has(idx)
+					).length;
+
+					opalPanelControls?.updateMessage(messageId, {
+						content: `Found ${remainingIssues} issue${remainingIssues !== 1 ? 's' : ''} (${criticalRemaining} critical, ${highRemaining} high). Applied ${totalApplied} change${totalApplied !== 1 ? 's' : ''}.`
+					});
+				}
+
 				return newApplied;
 			});
 
 			// Clear selection
 			setSelectedIssues(new Set());
+		} else {
+			console.log('[PreflightResultsTable] No changes to apply');
 		}
-	}, [contextData, selectedIssues, appliedIssues, result.issues]);
+	}, [contextData, selectedIssues, appliedIssues, result.issues, opalPanelControls, messageId]);
+
+	// Dismiss results and re-enable input
+	const handleDismiss = useCallback(() => {
+		console.log('[PreflightResultsTable] Dismiss clicked', {
+			messageId,
+			hasOpalControls: !!opalPanelControls,
+		});
+		opalPanelControls?.setInputDisabled(false);
+		opalPanelControls?.removeMessage(messageId);
+		clearContext();
+	}, [opalPanelControls, messageId, clearContext]);
 
 	// Calculate selection state for header checkbox
 	const selectableIssues = result.issues.filter(
@@ -113,72 +217,99 @@ export function PreflightResultsTable({result}: PreflightResultsTableProps) {
 
 	return (
 		<Box>
-			<Table>
-				<thead>
-					<Tr>
-						<Th style={{width: "56px"}}>
-							<Checkbox
-								checked={allSelected}
-								indeterminate={someSelected}
-								onCheckedChange={handleToggleAll}
-							/>
-						</Th>
-						<Th>Type</Th>
-						<Th>Field</Th>
-						<Th>Issue</Th>
-						<Th>Current</Th>
-						<Th>Suggestion</Th>
-					</Tr>
-				</thead>
-				<tbody>
-					{result.issues.map((issue, idx) => {
-						const isApplied = appliedIssues.has(idx);
-						const isSelectable = !!issue.fieldId && !isApplied;
-						const isSelected = selectedIssues.has(idx);
+			{/* Select All Header - only show if there are selectable issues */}
+			{!allIssuesApplied && (
+				<Flex mb="12" gap="8" style={{flexDirection: "row", alignItems: "center"}}>
+					<Checkbox
+						checked={allSelected}
+						indeterminate={someSelected}
+						onCheckedChange={handleToggleAll}
+					/>
+					<Text fontSize="sm" fontWeight="500">
+						Select all issues
+					</Text>
+				</Flex>
+			)}
 
-						return (
-							<Tr key={idx} style={{opacity: isApplied ? 0.5 : 1}}>
-								<Td>
-									<Checkbox
-										checked={isSelected}
-										disabled={!isSelectable}
-										onCheckedChange={() => handleToggleIssue(idx)}
-									/>
-								</Td>
-								<Td>
-									<Badge
-										intent={SeverityIntent[issue.severity as keyof typeof SeverityIntent]}
-										variant="subtle"
-									>
-										{AuditTypeLabels[issue.type]}
-									</Badge>
-								</Td>
-								<Td>
-									<Text fontSize="sm">{issue.fieldLabel || "—"}</Text>
-								</Td>
-								<Td>
-									<Text fontSize="sm">{truncate(issue.message, 60)}</Text>
-								</Td>
-								<Td>
-									<Text fontSize="sm" fontFamily="mono" color="fg.secondary">
-										{truncate(issue.original || "—", 40)}
-									</Text>
-								</Td>
-								<Td>
-									<Text fontSize="sm" fontFamily="mono" color="fg.secondary">
-										{truncate(issue.suggestion, 40)}
-									</Text>
-								</Td>
+			{/* Grouped Issues */}
+			{Object.entries(groupedIssues).map(([type, issuesInGroup]) => (
+				<Box key={type} mb="16">
+					<Text fontSize="sm" fontWeight="600" mb="8" style={{color: "#374151"}}>
+						{AuditTypeLabels[type as keyof typeof AuditTypeLabels]}
+					</Text>
+					<Table>
+						<thead>
+							<Tr>
+								<Th style={{width: "24px"}}></Th>
+								<Th style={{width: "100px"}}>Severity</Th>
+								<Th>Issue</Th>
+								<Th>Current</Th>
+								<Th>Suggestion</Th>
 							</Tr>
-						);
-					})}
-				</tbody>
-			</Table>
-			<Box mt="12">
-				<Button onClick={handleApplySelected} disabled={selectedIssues.size === 0}>
-					Apply {selectedIssues.size} Change{selectedIssues.size !== 1 ? "s" : ""}
-				</Button>
-			</Box>
+						</thead>
+						<tbody>
+							{issuesInGroup.map(({issue, originalIndex}) => {
+								const isApplied = appliedIssues.has(originalIndex);
+								const isSelectable = !!issue.fieldId && !isApplied;
+								const isSelected = selectedIssues.has(originalIndex);
+
+								return (
+									<Tr key={originalIndex}>
+										<Td style={{width: "24px"}}>
+											{isApplied ? (
+												<IconCheck size={16} style={{color: "#22c55e"}} />
+											) : (
+												<Checkbox
+													checked={isSelected}
+													disabled={!isSelectable}
+													onCheckedChange={() => handleToggleIssue(originalIndex)}
+												/>
+											)}
+										</Td>
+										<Td>
+											<Badge
+												intent={SeverityIntent[issue.severity as keyof typeof SeverityIntent]}
+												variant="subtle"
+											>
+												{issue.severity.charAt(0).toUpperCase() + issue.severity.slice(1)}
+											</Badge>
+										</Td>
+										<Td>
+											<Text fontSize="sm">{truncate(issue.message, 60)}</Text>
+										</Td>
+										<Td>
+											<Text fontSize="sm" fontFamily="mono" color="fg.secondary">
+												{truncate(issue.original || "—", 40)}
+											</Text>
+										</Td>
+										<Td>
+											<Text fontSize="sm" fontFamily="mono" color="fg.secondary">
+												{truncate(issue.suggestion, 40)}
+											</Text>
+										</Td>
+									</Tr>
+								);
+							})}
+						</tbody>
+					</Table>
+				</Box>
+			))}
+
+			{/* Action Buttons - only show if there are selectable issues */}
+			{!allIssuesApplied && (
+				<Flex mt="12" gap="8" style={{flexDirection: "row"}}>
+					<Button
+						onClick={handleApplySelected}
+						disabled={selectedIssues.size === 0}
+						appearance="primary-opal"
+					>
+						Apply {selectedIssues.size} Change{selectedIssues.size !== 1 ? "s" : ""}
+					</Button>
+					<Button onClick={handleDismiss} appearance="subtle">
+						Dismiss
+					</Button>
+				</Flex>
+			)}
 		</Box>
 	);
 }

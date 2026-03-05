@@ -122,6 +122,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   // Load chat messages when activeChatId changes
   useEffect(() => {
@@ -324,10 +325,12 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     inputValue,
     isLoading,
     error,
+    isInputDisabled,
     togglePanel,
     closePanel,
     openPanel,
     setInputValue,
+    setInputDisabled: setIsInputDisabled,
     sendMessage,
     clearHistory,
     addMessage,
