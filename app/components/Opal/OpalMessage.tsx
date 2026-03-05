@@ -86,7 +86,7 @@ export function OpalMessage({ message }: OpalMessageProps) {
               >
                 {message.content}
               </Text>
-              <PreflightResultsTable result={message.metadata.auditResult} />
+              <PreflightResultsTable result={message.metadata.auditResult} messageId={message.id} />
             </>
           ) : (
             <Text

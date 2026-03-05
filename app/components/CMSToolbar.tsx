@@ -63,7 +63,7 @@ import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
 import {OpalAction, availableAgents, opalActions as initialOpalActions} from "@/app/cms/settings/opal-actions/mockData";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
-import {useOpalState} from "@/app/hooks/useOpalState";
+import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
 
@@ -196,7 +196,7 @@ export default function CMSToolbar({
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
 	const {analyzePage} = useBrandTone();
-	const {openPanel, addMessage, updateMessage, removeMessage} = useOpalState();
+	const {opalPanelControls} = useLayout();
 	const {initializeContext} = usePreflightContext();
 
 	const improveActions = opalActions.filter(
@@ -301,6 +301,12 @@ export default function CMSToolbar({
 	};
 
 	const handlePreflightAudit = async () => {
+		if (!opalPanelControls) {
+			console.error("[CMSToolbar] Opal panel controls not available");
+			toaster.create("Opal panel is not ready. Please try again.", {intent: "danger"});
+			return;
+		}
+
 		const fields = getPageFields();
 
 		if (fields.length === 0) {
@@ -332,16 +338,16 @@ export default function CMSToolbar({
 		});
 
 		// 2. Open Opal chat panel
-		openPanel();
+		opalPanelControls.openPanel();
 
 		// 3. Add user message showing @preflight workflow
-		addMessage({
+		opalPanelControls.addMessage({
 			role: "user",
 			content: "@preflight workflow",
 		});
 
 		// 4. Add initial progress message (checklist with all pending)
-		const progressMessage = addMessage({
+		const progressMessage = opalPanelControls.addMessage({
 			role: "assistant",
 			content: "Running preflight audit...",
 			messageType: "preflight-progress",
@@ -404,13 +410,13 @@ export default function CMSToolbar({
 
 						if (eventType === "checklist") {
 							// Update progress message with new checklist state
-							updateMessage(progressMessage.id, {
+							opalPanelControls.updateMessage(progressMessage.id, {
 								metadata: {checklist: data},
 							});
 						} else if (eventType === "results") {
 							// Remove progress message, add results message
-							removeMessage(progressMessage.id);
-							addMessage({
+							opalPanelControls.removeMessage(progressMessage.id);
+							opalPanelControls.addMessage({
 								role: "assistant",
 								content: `Found ${data.totalIssues} issue${data.totalIssues !== 1 ? "s" : ""} (${data.criticalCount} critical, ${data.highCount} high).`,
 								messageType: "preflight-results",
@@ -422,7 +428,7 @@ export default function CMSToolbar({
 			}
 		} catch (error) {
 			console.error("[CMSToolbar] Preflight audit failed:", error);
-			updateMessage(progressMessage.id, {
+			opalPanelControls.updateMessage(progressMessage.id, {
 				content: "❌ Preflight audit failed. Please try again.",
 				messageType: undefined,
 				metadata: undefined,

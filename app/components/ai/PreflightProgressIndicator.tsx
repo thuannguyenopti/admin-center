@@ -28,7 +28,7 @@ interface PreflightProgressIndicatorProps {
 export function PreflightProgressIndicator({checklist}: PreflightProgressIndicatorProps) {
 	return (
 		<Box p="12" bg="bg.secondary" style={{borderRadius: "8px"}}>
-			<Flex gap="8" alignItems="center" mb="8">
+			<Flex gap="8" alignItems="center" mb="8" style={{flexDirection: "row"}}>
 				<IconChecklist size={20} style={{color: "#6B7280"}} />
 				<Heading level="4" fontSize="md" fontWeight="600" m="0">
 					Running Preflight Audit...
@@ -36,7 +36,7 @@ export function PreflightProgressIndicator({checklist}: PreflightProgressIndicat
 			</Flex>
 			<ul style={{padding: 0, margin: 0, listStyle: "none"}}>
 				{checklist.map((item, idx) => (
-					<Flex key={idx} gap="8" alignItems="center" py="4">
+					<Flex key={idx} gap="8" alignItems="center" py="4" style={{flexDirection: "row"}}>
 						{item.status === "pending" && (
 							<IconCircle size={16} style={{color: "#9CA3AF"}} />
 						)}
