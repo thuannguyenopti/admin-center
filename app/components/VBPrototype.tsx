@@ -119,7 +119,7 @@ const normalizePage = (input: any): NormalizeResult => {
 							: p.label.toLowerCase().includes("label")
 								? "label"
 								: p.label.toLowerCase().includes("image")
-									? "imageUrl"
+									? "src"
 									: p.label.toLowerCase().replace(/\s+/g, "");
 					properties[key] = {value: p.value};
 				});
