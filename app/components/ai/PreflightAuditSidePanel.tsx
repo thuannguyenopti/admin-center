@@ -141,7 +141,11 @@ export const PreflightAuditSidePanel: React.FC<PreflightAuditSidePanelProps> = (
 		(index: number, suggestion: string, fieldId?: string) => {
 			if (onApply) {
 				onApply(suggestion, fieldId);
-				setAppliedIssues((prev) => new Set(prev).add(index));
+				setAppliedIssues((prev) => {
+					const newApplied = new Set(prev).add(index);
+					console.log("[PreflightAuditSidePanel] Applied issue:", index, "Total applied:", newApplied.size);
+					return newApplied;
+				});
 			}
 		},
 		[onApply]
@@ -262,20 +266,32 @@ export const PreflightAuditSidePanel: React.FC<PreflightAuditSidePanelProps> = (
 				flexShrink={0}
 			>
 				<Box display="flex" alignItems="center" gap="8">
-					{result && (
-						<>
-							{result.criticalCount > 0 && (
-								<Badge variant="subtle" intent="danger">
-									{result.criticalCount} Critical
-								</Badge>
-							)}
-							{result.highCount > 0 && (
-								<Badge variant="subtle" intent="warning">
-									{result.highCount} High
-								</Badge>
-							)}
-						</>
-					)}
+					{result && (() => {
+						// Calculate remaining unapplied issues
+						const remainingCritical = result.issues.filter((issue, idx) =>
+							issue.severity === "critical" && !appliedIssues.has(idx)
+						).length;
+						const remainingHigh = result.issues.filter((issue, idx) =>
+							issue.severity === "high" && !appliedIssues.has(idx)
+						).length;
+
+						console.log("[PreflightAuditSidePanel] Header badges - Critical:", remainingCritical, "High:", remainingHigh, "Applied count:", appliedIssues.size);
+
+						return (
+							<>
+								{remainingCritical > 0 && (
+									<Badge variant="subtle" intent="danger">
+										{remainingCritical} Critical
+									</Badge>
+								)}
+								{remainingHigh > 0 && (
+									<Badge variant="subtle" intent="warning">
+										{remainingHigh} High
+									</Badge>
+								)}
+							</>
+						);
+					})()}
 					<Box display="flex" alignItems="center" gap="8">
 						<IconClipboardCheck size={20} />
 						<Text fontWeight="600">Preflight Audit</Text>
@@ -314,23 +330,38 @@ export const PreflightAuditSidePanel: React.FC<PreflightAuditSidePanelProps> = (
 							p="16"
 							bg="bg.secondary"
 						>
-							<Box display="flex" alignItems="center" gap="8">
-								{result.totalIssues === 0 ? (
-									<IconCheck size={24} style={{color: "#22c55e"}} />
-								) : result.criticalCount > 0 ? (
-									<IconAlertCircle size={24} style={{color: "#ef4444"}} />
-								) : (
-									<IconAlertTriangle size={24} style={{color: "#f59e0b"}} />
-								)}
-								<Heading level="4" fontSize="md" fontWeight="700" m="0">
-									{result.totalIssues === 0
-										? "All Checks Passed"
-										: `${result.totalIssues} Issue${result.totalIssues !== 1 ? "s" : ""} Found`}
-								</Heading>
-							</Box>
-							<Text fontSize="sm" color="fg.secondary">
-								{result.summary}
-							</Text>
+							{(() => {
+								// Calculate remaining unapplied issues
+								const remainingIssues = result.issues.filter((_, idx) => !appliedIssues.has(idx));
+								const remainingCount = remainingIssues.length;
+								const remainingCritical = remainingIssues.filter(i => i.severity === "critical").length;
+
+								console.log("[PreflightAuditSidePanel] Summary card - Remaining:", remainingCount, "Applied count:", appliedIssues.size);
+
+								return (
+									<>
+										<Box display="flex" alignItems="center" gap="8">
+											{remainingCount === 0 ? (
+												<IconCheck size={24} style={{color: "#22c55e"}} />
+											) : remainingCritical > 0 ? (
+												<IconAlertCircle size={24} style={{color: "#ef4444"}} />
+											) : (
+												<IconAlertTriangle size={24} style={{color: "#f59e0b"}} />
+											)}
+											<Heading level="4" fontSize="md" fontWeight="700" m="0">
+												{remainingCount === 0
+													? "No Issues Found"
+													: `${remainingCount} Issue${remainingCount !== 1 ? "s" : ""} Found`}
+											</Heading>
+										</Box>
+										<Text fontSize="sm" color="fg.secondary">
+											{remainingCount === 0
+												? "All issues have been addressed. Your content is ready to publish."
+												: result.summary}
+										</Text>
+									</>
+								);
+							})()}
 						</Card>
 
 						{/* Issues Grouped by Audit Type */}
@@ -401,7 +432,7 @@ export const PreflightAuditSidePanel: React.FC<PreflightAuditSidePanelProps> = (
 																)}
 																<Badge
 																	variant="subtle"
-																	intent={SeverityIntent[issue.severity]}
+																	intent={SeverityIntent[issue.severity as keyof typeof SeverityIntent]}
 																>
 																	{issue.severity}
 																</Badge>
