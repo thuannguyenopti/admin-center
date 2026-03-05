@@ -31,13 +31,21 @@ const PreflightContext = createContext<PreflightContextValue | null>(null);
  */
 export function PreflightProvider({children}: {children: ReactNode}) {
 	const [contextData, setContextData] = useState<PreflightContextData | null>(null);
+	const contextDataRef = useRef<PreflightContextData | null>(null);
 	const scrollFunctionRef = useRef<((elementId: string) => void) | null>(null);
 
 	const initializeContext = useCallback((data: PreflightContextData) => {
+		console.log("[PreflightContext] Initializing context with data:", {
+			fieldsCount: data.fields.length,
+			mappingKeys: Object.keys(data.fieldToElementMap),
+		});
+		contextDataRef.current = data;
 		setContextData(data);
 	}, []);
 
 	const clearContext = useCallback(() => {
+		console.log("[PreflightContext] Clearing context");
+		contextDataRef.current = null;
 		setContextData(null);
 	}, []);
 
@@ -47,18 +55,19 @@ export function PreflightProvider({children}: {children: ReactNode}) {
 	}, []);
 
 	const scrollToField = useCallback((fieldId: string) => {
+		const currentData = contextDataRef.current;
 		console.log("[PreflightContext] scrollToField called:", {
 			fieldId,
-			hasContextData: !!contextData,
+			hasContextData: !!currentData,
 			hasScrollFunction: !!scrollFunctionRef.current,
 		});
 
-		if (!contextData) {
+		if (!currentData) {
 			console.warn("[PreflightContext] No context data available");
 			return;
 		}
 
-		const elementId = contextData.fieldToElementMap[fieldId];
+		const elementId = currentData.fieldToElementMap[fieldId];
 
 		if (!elementId) {
 			console.warn("[PreflightContext] No element mapping found for field:", fieldId);
@@ -72,7 +81,7 @@ export function PreflightProvider({children}: {children: ReactNode}) {
 
 		console.log("[PreflightContext] Calling scroll function with element:", elementId);
 		scrollFunctionRef.current(elementId);
-	}, [contextData]);
+	}, []);
 
 	return (
 		<PreflightContext.Provider value={{contextData, initializeContext, clearContext, registerScrollFunction, scrollToField}}>
