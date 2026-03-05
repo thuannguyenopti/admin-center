@@ -388,8 +388,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "imageUrl", name: "Image URL", type: "text", required: true },
-			{ id: "altText", name: "Alt Text", type: "text" },
+			{ id: "src", name: "Image URL", type: "text", required: true },
+			{ id: "alt", name: "Alt Text", type: "text" },
 			{ id: "width", name: "Width", type: "text" },
 			{ id: "height", name: "Height", type: "text" },
 		],
@@ -425,7 +425,10 @@ export const initialContentTypes: ContentType[] = [
 		name: "Button",
 		baseType: "Block",
 		description: "A button block",
-		properties: [{ id: "label", name: "Label", type: "text", required: true }],
+		properties: [
+			{ id: "label", name: "Label", type: "text", required: true },
+			{ id: "url", name: "URL", type: "text" },
+		],
 	},
 	{
 		id: "ct-input",
@@ -1774,12 +1777,14 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: { value: "Register for your bib" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Learn More" },
+									url: { value: "/about" },
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
