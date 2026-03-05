@@ -63,7 +63,9 @@ import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
 import {OpalAction, availableAgents, opalActions as initialOpalActions} from "@/app/cms/settings/opal-actions/mockData";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
-import {usePreflightAudit} from "@/app/components/ai/PreflightAuditProvider";
+import {useOpalState} from "@/app/hooks/useOpalState";
+import {usePreflightContext} from "@/app/components/ai/PreflightContext";
+import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -194,7 +196,8 @@ export default function CMSToolbar({
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
 	const {analyzePage} = useBrandTone();
-	const {runAudit} = usePreflightAudit();
+	const {openPanel, addMessage, updateMessage, removeMessage} = useOpalState();
+	const {initializeContext} = usePreflightContext();
 
 	const improveActions = opalActions.filter(
 		(action) => action.enabled && action.locations.toolbar.improveButton
@@ -297,30 +300,134 @@ export default function CMSToolbar({
 		analyzePage(fields, fieldToElementMap, handleApplyField, handleApplyAll);
 	};
 
-	const handlePreflightAudit = () => {
+	const handlePreflightAudit = async () => {
 		const fields = getPageFields();
 
 		if (fields.length === 0) {
-			toaster.create("No text content found on the page", { intent: "warning" });
+			toaster.create("No text content found on the page", {intent: "warning"});
 			return;
 		}
 
 		// Create field-to-element mapping (fieldId is already the elementId)
 		const fieldToElementMap: Record<string, string> = {};
-		fields.forEach(field => {
+		fields.forEach((field) => {
 			fieldToElementMap[field.fieldId] = field.fieldId;
 		});
 
-		// Get current page URL (or construct it)
+		// Get current page URL
 		const pageUrl = window.location.href;
 
 		console.log("[CMSToolbar] Starting preflight audit:", {
 			fieldsCount: fields.length,
 			pageUrl,
-			mapping: fieldToElementMap,
 		});
 
-		runAudit(fields, pageUrl, fieldToElementMap, handleApplyField, handleApplyAll);
+		// 1. Initialize PreflightContext (makes data available to chat components)
+		initializeContext({
+			fields,
+			pageUrl,
+			fieldToElementMap,
+			onApplyField: handleApplyField,
+			onApplyAll: handleApplyAll,
+		});
+
+		// 2. Open Opal chat panel
+		openPanel();
+
+		// 3. Add user message showing @preflight workflow
+		addMessage({
+			role: "user",
+			content: "@preflight workflow",
+		});
+
+		// 4. Add initial progress message (checklist with all pending)
+		const progressMessage = addMessage({
+			role: "assistant",
+			content: "Running preflight audit...",
+			messageType: "preflight-progress",
+			metadata: {
+				checklist: [
+					{label: "Proofreading", status: "pending"},
+					{label: "Brand Tone", status: "pending"},
+					{label: "Required Fields", status: "pending"},
+					{label: "Missing Alt-Text", status: "pending"},
+					{label: "Broken Links", status: "pending"},
+					{label: "Missing Images", status: "pending"},
+					{label: "SEO Audit", status: "pending"},
+					{label: "GEO Audit", status: "pending"},
+					{label: "Content Freshness", status: "pending"},
+				],
+			},
+		});
+
+		// 5. Connect to SSE stream
+		try {
+			const response = await fetch("/api/preflight-audit/stream", {
+				method: "POST",
+				headers: {"Content-Type": "application/json"},
+				body: JSON.stringify({fields, pageUrl}),
+			});
+
+			if (!response.ok) {
+				throw new Error("Failed to start preflight audit");
+			}
+
+			const reader = response.body?.getReader();
+			const decoder = new TextDecoder();
+
+			if (!reader) {
+				throw new Error("No response body");
+			}
+
+			let buffer = "";
+
+			while (true) {
+				const {done, value} = await reader.read();
+
+				if (done) break;
+
+				buffer += decoder.decode(value, {stream: true});
+
+				// Process complete SSE messages
+				const lines = buffer.split("\n\n");
+				buffer = lines.pop() || ""; // Keep incomplete message in buffer
+
+				for (const line of lines) {
+					if (!line.trim()) continue;
+
+					const eventMatch = line.match(/^event: (.+)$/m);
+					const dataMatch = line.match(/^data: (.+)$/m);
+
+					if (eventMatch && dataMatch) {
+						const eventType = eventMatch[1];
+						const data = JSON.parse(dataMatch[1]);
+
+						if (eventType === "checklist") {
+							// Update progress message with new checklist state
+							updateMessage(progressMessage.id, {
+								metadata: {checklist: data},
+							});
+						} else if (eventType === "results") {
+							// Remove progress message, add results message
+							removeMessage(progressMessage.id);
+							addMessage({
+								role: "assistant",
+								content: `Found ${data.totalIssues} issue${data.totalIssues !== 1 ? "s" : ""} (${data.criticalCount} critical, ${data.highCount} high).`,
+								messageType: "preflight-results",
+								metadata: {auditResult: data},
+							});
+						}
+					}
+				}
+			}
+		} catch (error) {
+			console.error("[CMSToolbar] Preflight audit failed:", error);
+			updateMessage(progressMessage.id, {
+				content: "❌ Preflight audit failed. Please try again.",
+				messageType: undefined,
+				metadata: undefined,
+			});
+		}
 	};
 
 	return (
