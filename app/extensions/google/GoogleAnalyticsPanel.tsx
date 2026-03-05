@@ -15,6 +15,11 @@ import {
 	TabsTrigger,
 	TabsContent,
 	FieldLabel,
+	Separator,
+	Spinner,
+	Disclosure,
+	DisclosureContent,
+	DisclosureTrigger,
 } from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {useState, useMemo} from "react";
@@ -22,6 +27,15 @@ import {Flex} from "@/app/components/Flex";
 import MetricCard from "@/app/components/MetricCard";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Property from "@/app/components/Property";
+import {Button} from "@/app/components/Button";
+import {
+	IconSparkles,
+	IconArrowLeft,
+	IconX,
+	IconChevronDown,
+	IconChevronUp,
+} from "@tabler/icons-react";
+import Flow from "@/app/components/Flow";
 
 type TimeRange = "7d" | "28d" | "90d";
 
@@ -116,6 +130,8 @@ export default function GoogleAnalyticsPanel() {
 	const [range, setRange] = useState<TimeRange>("28d");
 	const [filterText, setFilterText] = useState("");
 	const [value, setValue] = useState<string>("performance");
+	const [summaryState, setSummaryState] = useState<"initial" | "loading" | "result">("initial");
+	const [summaryData, setSummaryData] = useState<any>(null);
 
 	const currentData = DATA_SETS[range];
 
@@ -134,6 +150,20 @@ export default function GoogleAnalyticsPanel() {
 		};
 	}, [currentData]);
 
+	// Calculate conversion rates for each day
+	const conversionRates = useMemo(() => {
+		return currentData.sessions.map((sessions, i) => {
+			const conversions = currentData.conversions[i];
+			return sessions > 0 ? (conversions / sessions) * 100 : 0;
+		});
+	}, [currentData]);
+
+	const previousConversionRate = useMemo(() => {
+		const prevSessions = previousValues.sessions;
+		const prevConversions = previousValues.conversions;
+		return prevSessions > 0 ? (prevConversions / prevSessions) * 100 : 0;
+	}, [previousValues]);
+
 	// Traffic Sources filtering
 	const filteredTraffic = useMemo(() => {
 		const ratio = TRAFFIC_RATIOS[range];
@@ -149,8 +179,12 @@ export default function GoogleAnalyticsPanel() {
 					row.channel.toLowerCase().includes(filterText.toLowerCase()) ||
 					row.source.toLowerCase().includes(filterText.toLowerCase())
 			)
-			.sort((a, b) => b.users - a.users);
+			.sort((a, b) => b.sessions - a.sessions);
 	}, [filterText, range]);
+
+	const totalSessions = useMemo(() => {
+		return filteredTraffic.reduce((sum, row) => sum + row.sessions, 0);
+	}, [filteredTraffic]);
 
 	const realtimeData = useMemo(() => {
 		return [
@@ -161,202 +195,405 @@ export default function GoogleAnalyticsPanel() {
 
 	const graphHeight = 32;
 
+	const handleGenerateSummary = async () => {
+		setSummaryState("loading");
+
+		// Prepare data for analysis
+		const totalUsers = currentData.users.reduce((a, b) => a + b, 0);
+		const totalSessions = currentData.sessions.reduce((a, b) => a + b, 0);
+		const totalViews = currentData.views.reduce((a, b) => a + b, 0);
+		const totalConversions = currentData.conversions.reduce((a, b) => a + b, 0);
+		const avgConversionRate =
+			conversionRates.reduce((a, b) => a + b, 0) / conversionRates.length;
+
+		const prompt = `Analyze this Google Analytics data for the last ${range} and provide a concise executive summary in JSON format with the following structure:
+{
+  "headline": "One-sentence overall performance headline",
+  "keyInsights": ["insight 1", "insight 2", "insight 3"],
+  "topPerformer": "Which traffic channel is performing best",
+  "recommendation": "One key recommendation for improvement"
+}
+
+Data:
+- Time Range: ${range}
+- Total Users: ${totalUsers} (${previousValues.users} previous period, ${(((totalUsers - previousValues.users) / previousValues.users) * 100).toFixed(1)}% change)
+- Total Sessions: ${totalSessions} (${previousValues.sessions} previous period, ${(((totalSessions - previousValues.sessions) / previousValues.sessions) * 100).toFixed(1)}% change)
+- Total Views: ${totalViews} (${previousValues.views} previous period, ${(((totalViews - previousValues.views) / previousValues.views) * 100).toFixed(1)}% change)
+- Total Conversions: ${totalConversions} (${previousValues.conversions} previous period, ${(((totalConversions - previousValues.conversions) / previousValues.conversions) * 100).toFixed(1)}% change)
+- Average Conversion Rate: ${avgConversionRate.toFixed(1)}% (${previousConversionRate.toFixed(1)}% previous period)
+
+Traffic Sources (by sessions):
+${filteredTraffic.map((row) => `- ${row.channel}: ${row.sessions} sessions (${((row.sessions / totalSessions) * 100).toFixed(1)}%), ${((row.conversions / row.sessions) * 100).toFixed(1)}% conversion rate`).join("\n")}
+
+Provide actionable insights based on trends and performance.`;
+
+		try {
+			const response = await fetch("/api/llm", {
+				method: "POST",
+				headers: {"Content-Type": "application/json"},
+				body: JSON.stringify({
+					messages: [
+						{
+							role: "system",
+							content:
+								"You are a Google Analytics expert. Provide insights in the exact JSON format requested. Be concise and actionable.",
+						},
+						{
+							role: "user",
+							content: prompt,
+						},
+					],
+					response_format: {type: "json_object"},
+				}),
+			});
+
+			const data = await response.json();
+
+			// Strip markdown code blocks if present
+			let content = data.content;
+			if (content.startsWith("```")) {
+				content = content.replace(/^```(?:json)?\s*\n/, "").replace(/\n```\s*$/, "");
+			}
+
+			const summary = JSON.parse(content);
+			setSummaryData(summary);
+			setSummaryState("result");
+		} catch (error) {
+			console.error("Error generating summary:", error);
+			setSummaryState("initial");
+		}
+	};
+
+	const handleBackToData = () => {
+		setSummaryState("initial");
+	};
+
 	return (
-		<Tabs
-			onValueChange={setValue}
-			value={value}
-			display="flex"
-			flexDirection="column"
-			flex="1"
-			maxH="full"
-		>
-			<Box>
-				<TabsList mb="16">
-					<TabsTrigger value="performance">Performance</TabsTrigger>
-					<TabsTrigger value="traffic">Traffic</TabsTrigger>
-					<TabsTrigger value="realtime">Realtime</TabsTrigger>
-				</TabsList>
-			</Box>
-			<Box flex="1" overflow="auto" style={{margin: "0 -24px", padding: "0 24px"}}>
-				<TabsContent value="performance">
-					{/* RANGE SELECTOR */}
-					<Card
-						mb="8"
-						display="flex"
-						py="8"
-						pr="8"
-						justifyContent="space-between"
-						alignItems="center"
-						flexDirection="row"
-						gap="16"
-					>
-						<FieldLabel>Time Range</FieldLabel>
-						<SegmentedControl
-							defaultValue={range}
-							onValueChange={(value: string) => {
-								if (value) setRange(value as TimeRange);
-							}}
+		<>
+			<Box
+				display="flex"
+				flexDirection="column"
+				flex="1"
+				maxH="full"
+				style={{position: "relative"}}
+			>
+				<Tabs
+					onValueChange={setValue}
+					value={value}
+					display="flex"
+					flexDirection="column"
+					flex="1"
+					maxH="full"
+				>
+					<Box className="relative" pt="8">
+						<Button
+							className="!absolute right-0 bottom-6"
+							appearance="default"
+							size="md"
+							icon={<IconSparkles />}
+							onClick={handleGenerateSummary}
+							loading={summaryState === "loading"}
+							disabled={summaryState !== "initial"}
 						>
-							<Tooltip content="Last 7 days">
-								<SegmentedControlItem value="7d">7d</SegmentedControlItem>
-							</Tooltip>
-							<Tooltip content="Last 28 days">
-								<SegmentedControlItem value="28d">28d</SegmentedControlItem>
-							</Tooltip>
-							<Tooltip content="Last 90 days">
-								<SegmentedControlItem value="90d">90d</SegmentedControlItem>
-							</Tooltip>
-						</SegmentedControl>
-					</Card>
-					{/* 1) KPI CARDS */}
-					<Grid gridTemplateColumns="1" gap="8">
-						<MetricCard
-							label="Active Users"
-							data={currentData.users}
-							interval={currentData.interval}
-							height={graphHeight}
-							aggregation="sum"
-							previousValue={previousValues.users}
-						/>
-						<MetricCard
-							label="Sessions"
-							data={currentData.sessions}
-							interval={currentData.interval}
-							height={graphHeight}
-							aggregation="sum"
-							previousValue={previousValues.sessions}
-						/>
-						<MetricCard
-							label="Page Views"
-							data={currentData.views}
-							interval={currentData.interval}
-							height={graphHeight}
-							aggregation="sum"
-							previousValue={previousValues.views}
-						/>
-						<MetricCard
-							label="Conversions"
-							data={currentData.conversions}
-							interval={currentData.interval}
-							height={graphHeight}
-							aggregation="sum"
-							previousValue={previousValues.conversions}
-						/>
-					</Grid>
-				</TabsContent>
-				<TabsContent value="traffic">
-					{/* 2) TRAFFIC SOURCES */}
-					{/* RANGE SELECTOR */}
-					<Card
-						mb="8"
-						display="flex"
-						py="8"
-						pr="8"
-						justifyContent="space-between"
-						alignItems="center"
-						flexDirection="row"
-						gap="16"
-					>
-						<FieldLabel>Time Range</FieldLabel>
-						<SegmentedControl
-							defaultValue={range}
-							onValueChange={(value: string) => {
-								if (value) setRange(value as TimeRange);
-							}}
-						>
-							<Tooltip content="Last 7 days">
-								<SegmentedControlItem value="7d">7d</SegmentedControlItem>
-							</Tooltip>
-							<Tooltip content="Last 28 days">
-								<SegmentedControlItem value="28d">28d</SegmentedControlItem>
-							</Tooltip>
-							<Tooltip content="Last 90 days">
-								<SegmentedControlItem value="90d">90d</SegmentedControlItem>
-							</Tooltip>
-						</SegmentedControl>
-					</Card>
-					<Box>
-						<Box mb="12">
-							<SearchInput
-								value={filterText}
-								onChange={(e) => setFilterText(e.target.value)}
-								placeholder="Filter channel or source..."
-								size="lg"
-							/>
-						</Box>
-						<Table>
-							<thead>
-								<Tr>
-									<Th>Channel</Th>
-									<Th align="right">Users</Th>
-									<Th align="right">Conv.</Th>
-								</Tr>
-							</thead>
-							<tbody>
-								{filteredTraffic.map((row, i) => (
-									<Tr key={i}>
-										<Td type="header" description={row.source}>
-											{row.channel}
-										</Td>
-										<Td type="numeric">{formatNumber(row.users)}</Td>
-										<Td type="numeric">{formatNumber(row.conversions)}</Td>
-									</Tr>
-								))}
-							</tbody>
-						</Table>
+							Summary
+						</Button>
+						<TabsList mb="16">
+							<TabsTrigger value="performance">Performance</TabsTrigger>
+							<TabsTrigger value="traffic">Traffic</TabsTrigger>
+						</TabsList>
 					</Box>
-				</TabsContent>
-				<TabsContent value="realtime">
-					{/* 3) REALTIME */}
-					<Box>
-						<Flex alignItems="start" mb="16">
-							<Text>Last 30 minutes</Text>
-							<Badge intent="success">Live</Badge>
-						</Flex>
-						<Flex gap="16" mb="16" alignItems="end">
-							<Box flex="1" pb="4">
+					<Box flex="1" overflow="auto" style={{margin: "0 -24px", padding: "0 24px"}}>
+						<TabsContent value="performance">
+							{/* REALTIME */}
+							<Box>
 								<MetricCard
-									label="Active Users"
+									label="Active Users (Last 30 min)"
 									data={realtimeData}
-									interval="hour"
-									smooth
+									interval="minute"
 									aggregation="last"
+									showComparison={false}
+									height={graphHeight}
 								/>
 							</Box>
-						</Flex>
-						<div className="grid grid-cols-2 gap-4">
+							<Disclosure maxW="sm" w="full">
+								<DisclosureTrigger>Details</DisclosureTrigger>
+								<DisclosureContent>
+									<Box mb="8" className="grid grid-cols-2 gap-4">
+										<Box>
+											<Text fontWeight="600" mb="8" fontSize="sm">
+												Top Events
+											</Text>
+											<Flex flexDirection="column" gap="12">
+												{MOCK_REALTIME_EVENTS.map((evt) => (
+													<Property
+														key={evt.name}
+														title={evt.name}
+														description={formatNumber(evt.count)}
+													/>
+												))}
+											</Flex>
+										</Box>
+										<Box>
+											<Text fontWeight="600" mb="8" fontSize="sm">
+												Top Countries
+											</Text>
+											<Flex flexDirection="column" gap="12">
+												{MOCK_COUNTRIES.map((c) => (
+													<Property
+														key={c.name}
+														title={c.name}
+														description={formatNumber(c.count)}
+													/>
+												))}
+											</Flex>
+										</Box>
+									</Box>
+								</DisclosureContent>
+							</Disclosure>
+							<Separator mb="16" mt="0" />
+							{/* RANGE SELECTOR */}
+							<Card
+								mb="8"
+								display="flex"
+								py="8"
+								pr="8"
+								justifyContent="space-between"
+								alignItems="center"
+								flexDirection="row"
+								gap="16"
+							>
+								<Text fontWeight="600">Time Range</Text>
+								<SegmentedControl
+									defaultValue={range}
+									onValueChange={(value: string) => {
+										if (value) setRange(value as TimeRange);
+									}}
+								>
+									<Tooltip content="Last 7 days">
+										<SegmentedControlItem value="7d">7d</SegmentedControlItem>
+									</Tooltip>
+									<Tooltip content="Last 28 days">
+										<SegmentedControlItem value="28d">28d</SegmentedControlItem>
+									</Tooltip>
+									<Tooltip content="Last 90 days">
+										<SegmentedControlItem value="90d">90d</SegmentedControlItem>
+									</Tooltip>
+								</SegmentedControl>
+							</Card>
+
+							{/* 1) KPI CARDS */}
+							<Grid gridTemplateColumns="1" gap="8">
+								<MetricCard
+									label="Total Users"
+									data={currentData.users}
+									interval={currentData.interval}
+									height={graphHeight}
+									aggregation="sum"
+									previousValue={previousValues.users}
+								/>
+								<MetricCard
+									label="Sessions"
+									data={currentData.sessions}
+									interval={currentData.interval}
+									height={graphHeight}
+									aggregation="sum"
+									previousValue={previousValues.sessions}
+								/>
+								<MetricCard
+									label="Views"
+									data={currentData.views}
+									interval={currentData.interval}
+									height={graphHeight}
+									aggregation="sum"
+									previousValue={previousValues.views}
+								/>
+								<MetricCard
+									label="Conversion Rate"
+									data={conversionRates}
+									interval={currentData.interval}
+									height={graphHeight}
+									aggregation="average"
+									previousValue={previousConversionRate}
+									unit="%"
+								/>
+							</Grid>
+						</TabsContent>
+						<TabsContent value="traffic">
+							{/* 2) TRAFFIC SOURCES */}
+							{/* RANGE SELECTOR */}
+							<Card
+								mb="8"
+								display="flex"
+								py="8"
+								pr="8"
+								justifyContent="space-between"
+								alignItems="center"
+								flexDirection="row"
+								gap="16"
+							>
+								<Text fontWeight="600">Time Range</Text>
+								<SegmentedControl
+									defaultValue={range}
+									onValueChange={(value: string) => {
+										if (value) setRange(value as TimeRange);
+									}}
+								>
+									<Tooltip content="Last 7 days">
+										<SegmentedControlItem value="7d">7d</SegmentedControlItem>
+									</Tooltip>
+									<Tooltip content="Last 28 days">
+										<SegmentedControlItem value="28d">28d</SegmentedControlItem>
+									</Tooltip>
+									<Tooltip content="Last 90 days">
+										<SegmentedControlItem value="90d">90d</SegmentedControlItem>
+									</Tooltip>
+								</SegmentedControl>
+							</Card>
 							<Box>
-								<Text fontWeight="600" mb="8">
-									Top Events
-								</Text>
-								<Flex flexDirection="column" gap="12">
-									{MOCK_REALTIME_EVENTS.map((evt) => (
-										<Property
-											key={evt.name}
-											title={evt.name}
-											description={formatNumber(evt.count)}
-										/>
-									))}
-								</Flex>
+								<Box mb="12">
+									<SearchInput
+										value={filterText}
+										onChange={(e) => setFilterText(e.target.value)}
+										placeholder="Filter channel or source..."
+										size="lg"
+									/>
+								</Box>
+								<Table>
+									<thead>
+										<Tr>
+											<Th>Channel</Th>
+											<Th align="right">Sessions</Th>
+											<Th align="right">% of Total</Th>
+											<Th align="right">Conv. Rate</Th>
+										</Tr>
+									</thead>
+									<tbody>
+										{filteredTraffic.map((row, i) => {
+											const conversionRate =
+												row.sessions > 0
+													? (
+															(row.conversions / row.sessions) *
+															100
+														).toFixed(1)
+													: "0.0";
+											const percentOfTotal =
+												totalSessions > 0
+													? (
+															(row.sessions / totalSessions) *
+															100
+														).toFixed(1)
+													: "0.0";
+											return (
+												<Tr key={i}>
+													<Td type="header" description={row.source}>
+														{row.channel}
+													</Td>
+													<Td type="numeric">
+														{formatNumber(row.sessions)}
+													</Td>
+													<Td type="numeric">{percentOfTotal}%</Td>
+													<Td type="numeric">{conversionRate}%</Td>
+												</Tr>
+											);
+										})}
+									</tbody>
+								</Table>
 							</Box>
-							<Box>
-								<Text fontWeight="600" mb="8">
-									Top Countries
-								</Text>
-								<Flex flexDirection="column" gap="12">
-									{MOCK_COUNTRIES.map((c) => (
-										<Property
-											key={c.name}
-											title={c.name}
-											description={formatNumber(c.count)}
-										/>
-									))}
-								</Flex>
-							</Box>
-						</div>
+						</TabsContent>
 					</Box>
-				</TabsContent>
+				</Tabs>
 			</Box>
-		</Tabs>
+			{/* SUMMARY OVERLAY */}
+			{summaryState !== "initial" && (
+				<Box
+					bg="bg.default"
+					style={{
+						position: "absolute",
+						top: "12px",
+						left: "12px",
+						right: "12px",
+						bottom: "12px",
+						borderRadius: "12px",
+						boxShadow: "0 4px 24px rgba(0, 0, 0, 0.15)",
+						zIndex: 1000,
+						display: "flex",
+						flexDirection: "column",
+						overflow: "hidden",
+					}}
+				>
+					<Box flex="1" overflow="auto" p="24">
+						{summaryState === "loading" && (
+							<Box
+								display="flex"
+								flexDirection="column"
+								alignItems="center"
+								justifyContent="center"
+								style={{minHeight: "400px"}}
+							>
+								<Spinner size="lg" mb="16" />
+								<Text fontSize="lg" fontWeight="600" mb="8">
+									Analyzing your data...
+								</Text>
+								<Text color="fg.secondary">
+									Generating insights from your analytics
+								</Text>
+							</Box>
+						)}
+
+						{summaryState === "result" && summaryData && (
+							<Box>
+								<Box
+									mb="24"
+									display="flex"
+									justifyContent="space-between"
+									alignItems="center"
+								>
+									<Heading level="3">Analytics Summary</Heading>
+									<Button
+										appearance="subtle"
+										icon={<IconX />}
+										onClick={handleBackToData}
+										aria-label="close"
+									/>
+								</Box>
+
+								<Flow>
+									<Heading level="4" mb="8">
+										Overall Performance
+									</Heading>
+									<Text>{summaryData.headline}</Text>
+
+									<Heading level="4" mb="12">
+										Key Insights
+									</Heading>
+									<Flex flexDirection="column" gap="8">
+										{summaryData.keyInsights?.map(
+											(insight: string, i: number) => (
+												<Box key={i} display="flex" gap="8">
+													<Text color="fg.secondary">•</Text>
+													<Text>{insight}</Text>
+												</Box>
+											)
+										)}
+									</Flex>
+
+									<Heading level="4" mb="8">
+										Top Performer
+									</Heading>
+									<Text>{summaryData.topPerformer}</Text>
+
+									<Card p="16" bg="bg.accent.subtle">
+										<Heading level="4" mb="8">
+											Recommendation
+										</Heading>
+										<Text>{summaryData.recommendation}</Text>
+									</Card>
+								</Flow>
+							</Box>
+						)}
+					</Box>
+				</Box>
+			)}
+		</>
 	);
 }
