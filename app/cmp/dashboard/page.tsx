@@ -179,7 +179,7 @@ export default function CMPDashboardPage() {
           <Avatar
             src="/avatars/tiffany.jpg"
             name="Tiffany"
-            size="2xl"
+            size="3xl"
             style={{ width: 80, height: 80 }}
           />
           <Box>
@@ -313,7 +313,7 @@ export default function CMPDashboardPage() {
       <Box
         style={{ width: 320, flexShrink: 0 }}
         bg="bg.default"
-        borderRadius="md"
+        rounded="md"
         border="1"
         borderColor="border.tertiary"
         overflow="hidden"

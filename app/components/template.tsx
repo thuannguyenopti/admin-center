@@ -3,7 +3,7 @@
 import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Button, Menu, MenuTrigger, MenuContent} from "@optiaxiom/react";
 import {Text} from "./Text";
 import Link from "next/link";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useId} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
@@ -24,6 +24,11 @@ function TemplateContent({
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded] = usePersistentState("sidebarExpanded", true);
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -57,6 +62,22 @@ function TemplateContent({
 	const showSecondarySidebar = isContentManager || showVT;
 
 	const customLayout = highlight1?.customLayout;
+
+	// Don't render sidebar until mounted to avoid hydration mismatch with Radix IDs
+	if (!mounted) {
+		return (
+			<Box
+				className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-[100vh]"
+				bg="bg.page"
+			>
+				<GlobalBar />
+				<Box display="flex" z="10">
+					<Box w="224" bg="bg.default" />
+				</Box>
+				<Box />
+			</Box>
+		);
+	}
 
 	return (
 		<Box
