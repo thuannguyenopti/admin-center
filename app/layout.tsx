@@ -308,22 +308,10 @@ export default function RootLayout({
 				icon: <CMPHomeIcon />,
 			},
 			{
-				label: "Plan View",
+				label: "Plan",
 				url: "/cmp/plan-view",
 				highlight: "/cmp/plan-view",
 				icon: <CMPPlanIcon />,
-			},
-			{
-				label: "Dashboard",
-				url: "/cmp/reports",
-				highlight: "/cmp/reports",
-				icon: <CMPDashboardIcon />,
-			},
-			{
-				label: "Resource Management",
-				url: "/cmp/resource-management",
-				highlight: "/cmp/resource-management",
-				icon: <CMPResourceManagementIcon />,
 			},
 			{
 				label: "Library",
@@ -332,13 +320,25 @@ export default function RootLayout({
 				icon: <CMPLibraryIcon />,
 			},
 			{
-				label: "Market Place",
-				url: "/cmp/marketplace",
-				highlight: "/cmp/marketplace",
+				label: "Stock Images",
+				url: "/cmp/stock-images",
+				highlight: "/cmp/stock-images",
 				icon: <CMPMarketplaceIcon />,
 			},
 			{
-				label: "Work Request",
+				label: "Idea Lab",
+				url: "/cmp/idea-lab",
+				highlight: "/cmp/idea-lab",
+				icon: <CMPResourceManagementIcon />,
+			},
+			{
+				label: "Analytics",
+				url: "/cmp/reports",
+				highlight: "/cmp/reports",
+				icon: <CMPDashboardIcon />,
+			},
+			{
+				label: "Requests",
 				url: "/cmp/work-request",
 				highlight: "/cmp/work-request",
 				icon: <CMPWorkRequestIcon />,
