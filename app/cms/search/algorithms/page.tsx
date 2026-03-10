@@ -40,7 +40,7 @@ export default function OptimizeSearchPage() {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [algorithms, setAlgorithms] = usePersistentState("algorithms", initialAlgorithms) as [
 		Algorithm[],
-		(val: Algorithm[]) => void
+		(val: Algorithm[]) => void,
 	];
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [newAlgorithmName, setNewAlgorithmName] = useState("");
@@ -112,7 +112,6 @@ export default function OptimizeSearchPage() {
 				<Input
 					addonBefore={<IconSearch size={16} />}
 					placeholder="Search algorithms..."
-					style={{width: "320px"}}
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
 				/>
@@ -218,24 +217,15 @@ export default function OptimizeSearchPage() {
 				footerPrimaryAction={handleCreateAlgorithm}
 				footerAppearance="primary"
 			>
-				<Flex
-					flexDirection="column"
-					gap="16"
-				>
-					<Field
-						label="Name"
-						required
-					>
+				<Flex flexDirection="column" gap="16">
+					<Field label="Name" required>
 						<Input
 							placeholder="e.g. Seasonal Boost"
 							value={newAlgorithmName}
 							onChange={(e) => setNewAlgorithmName(e.target.value)}
 						/>
 					</Field>
-					<Field
-						label="Type"
-						required
-					>
+					<Field label="Type" required>
 						<Select
 							value={getSelectValueInOptions(
 								newAlgorithmType,
