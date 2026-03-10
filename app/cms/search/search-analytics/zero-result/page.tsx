@@ -156,7 +156,6 @@ export default function ZeroResultPage() {
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
-						style={{width: "320px"}}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>

@@ -72,7 +72,6 @@ export default function TotalQueriesPage() {
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
-						style={{width: "320px"}}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>

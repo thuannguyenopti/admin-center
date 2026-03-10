@@ -1,6 +1,6 @@
 "use client";
 
-import {Box} from "@optiaxiom/react";
+import {Box, SearchInput} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
@@ -115,12 +115,11 @@ export default function RelatedQueriesPage() {
 				gap="16"
 				mb="24"
 			>
-				<Input
-					addonBefore={<IconSearch size={16} />}
-					placeholder="Search related queries..."
-					style={{width: "320px"}}
+				<SearchInput
+					size="lg"
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
+					placeholder="Search related queries..."
 				/>
 				<Button
 					icon={<IconPlus size={16} />}
