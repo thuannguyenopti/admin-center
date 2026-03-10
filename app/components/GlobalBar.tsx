@@ -1,8 +1,7 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
+import {Box, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
-import {ReactNode} from "react";
 import {useRouter, usePathname} from "next/navigation";
 import {IconSearch, IconBell, IconHelp, IconUser} from "@tabler/icons-react";
 import Image from "next/image";
@@ -11,6 +10,7 @@ import Link from "next/link";
 export default function GlobalBar() {
 	const router = useRouter();
 	const pathname = usePathname();
+	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
@@ -78,7 +78,7 @@ export default function GlobalBar() {
 						fontWeight="500"
 						color="fg.default"
 					>
-						Stride
+						{isCmpTaskDetail ? "Optimizely" : "Stride"}
 					</Text>
 					<svg
 						width="14"
@@ -166,21 +166,28 @@ export default function GlobalBar() {
 				<Button
 					appearance="subtle"
 					size="md"
-					icon={<IconSearch size={20} />}
-					aria-label="Search"
-				/>
+					aria-label="Opal AI Assistant"
+				>
+					<Box display="flex" alignItems="center" gap="8">
+						<Image
+							src="/opal-orb.png"
+							alt="Opal"
+							width={20}
+							height={20}
+						/>
+						{isCmpTaskDetail && (
+							<Text fontSize="md" fontWeight="500" color="fg.default">
+								Ask Opal
+							</Text>
+						)}
+					</Box>
+				</Button>
 				<Button
 					appearance="subtle"
 					size="md"
-					aria-label="Opal AI Assistant"
-				>
-					<Image
-						src="/opal-orb.png"
-						alt="Opal"
-						width={20}
-						height={20}
-					/>
-				</Button>
+					icon={<IconSearch size={20} />}
+					aria-label="Search"
+				/>
 				<Button
 					appearance="subtle"
 					size="md"
@@ -196,9 +203,20 @@ export default function GlobalBar() {
 				<Button
 					appearance="subtle"
 					size="md"
-					icon={<IconUser size={20} />}
 					aria-label="User profile"
-				/>
+				>
+					{isCmpTaskDetail ? (
+						<Image
+							src="/avatars/aamr-fakhry.png"
+							alt="User profile"
+							width={24}
+							height={24}
+							style={{borderRadius: 999}}
+						/>
+					) : (
+						<IconUser size={20} />
+					)}
+				</Button>
 			</Box>
 		</Box>
 	);

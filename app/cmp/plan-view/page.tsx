@@ -49,7 +49,7 @@ const avatarImages = [
 const planData = [
 	{
 		id: "1",
-		title: "David Hours Tracking",
+		title: "Ironman Miami triathlon 2026 Sponsor Package task",
 		type: "Task",
 		reference: "TSK-2702",
 		owner: {name: "David Steinberg", src: avatarImages[0]},

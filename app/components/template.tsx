@@ -37,6 +37,10 @@ function TemplateContent({
 	const menuItems = structure;
 
 	const highlight1 = menuItems.find((item: any) => path.includes(item.highlight));
+	const isCmpTaskDetail = path.startsWith("/cmp/task/");
+	const routeHighlight = isCmpTaskDetail
+		? menuItems.find((item: any) => item.label === "Plan") || highlight1
+		: highlight1;
 	const lvl2 = highlight1?.children
 		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
@@ -54,14 +58,14 @@ function TemplateContent({
 	const isContentManager = path.includes('/cms/content');
 	
 	const showVT =
-		highlight1?.children?.length > 1 ||
+		routeHighlight?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
 	
 	// Show secondary sidebar for Content Manager or hierarchical navigation
 	const showSecondarySidebar = isContentManager || showVT;
 
-	const customLayout = highlight1?.customLayout;
+	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail;
 
 	// Don't render sidebar until mounted to avoid hydration mismatch with Radix IDs
 	if (!mounted) {
@@ -118,7 +122,7 @@ function TemplateContent({
 									) : (
 										<NavItem
 											onClick={() => menuClick(menuItem.url)}
-											active={path.includes(menuItem.highlight)}
+											active={routeHighlight?.label === menuItem.label || path.includes(menuItem.highlight)}
 											aria-label={menuItem.label}
 											icon={menuItem.icon}
 										>
@@ -176,8 +180,8 @@ function TemplateContent({
 									{showVT && lvl2 && (
 										<VT
 											backLink={undefined}
-											title={highlight1?.children?.title || highlight1?.label}
-											items={highlight1?.children}
+											title={routeHighlight?.children?.title || routeHighlight?.label}
+											items={routeHighlight?.children}
 										/>
 									)}
 									{showVT && lvl3 && (
@@ -228,7 +232,7 @@ function TemplateContent({
 							p="24"
 						>
 							<>
-								<Heading level="3">{heading || highlight1?.label}</Heading>
+								<Heading level="3">{heading || routeHighlight?.label}</Heading>
 								{desc && <Text mt="4">{desc}</Text>}
 								<Box
 									mt="16"
