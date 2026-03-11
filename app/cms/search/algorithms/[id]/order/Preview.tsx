@@ -133,13 +133,13 @@ export default function Preview({
 
 	const [localGlobalSynonyms] = usePersistentState("synonyms", initialSynonyms) as [
 		Synonym[],
-		any
+		any,
 	];
 	const globalSynonyms = externalGlobalSynonyms ?? localGlobalSynonyms;
 
 	const [localAlgorithmSynonyms] = usePersistentState(`algorithm_synonyms_${id}`, []) as [
 		AlgorithmSynonymReference[],
-		any
+		any,
 	];
 	const algorithmSynonyms = externalAlgorithmSynonyms ?? localAlgorithmSynonyms;
 
@@ -346,30 +346,16 @@ export default function Preview({
 					bb.query
 						.split(";")
 						.some((phrase) => phrase.trim().toLowerCase().includes(query.toLowerCase()))
-		  )
+			)
 		: [];
 
 	return (
-		<Box
-			h="full"
-			className="w-[420px]"
-			display="flex"
-			flexDirection="column"
-			overflowY="auto"
-		>
+		<Box h="full" display="flex" flexDirection="column" overflowY="auto">
 			<Box pb="0">
-				<Heading
-					level="4"
-					mb="16"
-					p="24"
-					pb="0"
-				>
+				<Heading level="4" mb="16" p="24" pb="0">
 					Preview
 				</Heading>
-				<Tabs
-					value={activeTab as string}
-					onValueChange={setActiveTab}
-				>
+				<Tabs value={activeTab as string} onValueChange={setActiveTab}>
 					<Box px="24">
 						{searchBar && (
 							<TabsList>
@@ -379,14 +365,8 @@ export default function Preview({
 						)}
 						<Box mt="16">
 							{searchBar && (
-								<Flex
-									gap="8"
-									flexDirection="row"
-								>
-									<Box
-										flex="1"
-										asChild
-									>
+								<Flex gap="8" flexDirection="row">
+									<Box flex="1" asChild>
 										<div style={{position: "relative"}}>
 											<Input
 												placeholder="Search Preview"
@@ -497,49 +477,21 @@ export default function Preview({
 							)}
 						</Box>
 						{activeRelatedQueryTerms.length > 0 && (
-							<Box
-								mt="16"
-								bg="bg.accent.subtle"
-								p="8"
-								rounded="sm"
-							>
-								<Text
-									fontSize="md"
-									fontWeight="600"
-									mb="4"
-								>
+							<Box mt="16" bg="bg.accent.subtle" p="8" rounded="sm">
+								<Text fontSize="md" fontWeight="600" mb="4">
 									Related Queries Applied
 								</Text>
-								<Flex
-									gap="8"
-									flexWrap="wrap"
-									color="fg.secondary"
-									fontSize="sm"
-								>
+								<Flex gap="8" flexWrap="wrap" color="fg.secondary" fontSize="sm">
 									{activeRelatedQueryTerms.join(", ")}
 								</Flex>
 							</Box>
 						)}
 						{activeSynonyms.length > 0 && (
-							<Box
-								mt="16"
-								bg="bg.accent.subtle"
-								p="8"
-								rounded="sm"
-							>
-								<Text
-									fontSize="md"
-									fontWeight="600"
-									mb="4"
-								>
+							<Box mt="16" bg="bg.accent.subtle" p="8" rounded="sm">
+								<Text fontSize="md" fontWeight="600" mb="4">
 									Synonyms Applied
 								</Text>
-								<Flex
-									gap="8"
-									flexWrap="wrap"
-									color="fg.secondary"
-									fontSize="sm"
-								>
+								<Flex gap="8" flexWrap="wrap" color="fg.secondary" fontSize="sm">
 									{activeSynonyms.join(", ")}
 								</Flex>
 							</Box>
@@ -547,15 +499,8 @@ export default function Preview({
 					</Box>
 
 					<TabsContent value="search demo">
-						<Box
-							flex="1"
-							px="16"
-							py="24"
-						>
-							<Flex
-								flexDirection="column"
-								gap="4"
-							>
+						<Box flex="1" px="16" py="24">
+							<Flex flexDirection="column" gap="4">
 								{activePinnedResults.map((bb, i) => {
 									const result = searchResults.find(
 										(r) => r.url === bb.destination
@@ -591,6 +536,7 @@ export default function Preview({
 												<Button
 													size="lg"
 													icon={<IconPlus />}
+													appearance="primary"
 													onClick={() =>
 														onCreatePinnedResult(debouncedQuery)
 													}
@@ -611,14 +557,8 @@ export default function Preview({
 					</TabsContent>
 
 					<TabsContent value="detailed">
-						<Box
-							flex="1"
-							mt="24"
-						>
-							<Flex
-								flexDirection="column"
-								gap="0"
-							>
+						<Box flex="1" mt="24">
+							<Flex flexDirection="column" gap="0">
 								{activePinnedResults.map((bb, i) => {
 									const result = searchResults.find(
 										(r) => r.url === bb.destination
@@ -698,10 +638,7 @@ function DetailedResultItem({
 		const parts = text.split(new RegExp(`(${query})`, "gi"));
 		return parts.map((part, i) =>
 			part.toLowerCase() === query.toLowerCase() ? (
-				<span
-					key={i}
-					style={{color: "#0066CC", fontWeight: "bold"}}
-				>
+				<span key={i} style={{color: "#0066CC", fontWeight: "bold"}}>
 					{part}
 				</span>
 			) : (
@@ -711,34 +648,15 @@ function DetailedResultItem({
 	};
 
 	return (
-		<Box
-			bg="bg.default"
-			style={{borderBottom: "1px solid #e2e8f0"}}
-		>
-			<Flex
-				flexDirection="row"
-				justifyContent="space-between"
-				alignItems="start"
-				mb="8"
-			>
-				<Flex
-					flexDirection="column"
-					gap="4"
-				>
+		<Box bg="bg.default" style={{borderBottom: "1px solid #e2e8f0"}}>
+			<Flex flexDirection="row" justifyContent="space-between" alignItems="start" mb="8">
+				<Flex flexDirection="column" gap="4">
 					{isPinnedResult && (
-						<Text
-							color="fg.accent"
-							fontWeight="600"
-							fontSize="sm"
-						>
+						<Text color="fg.accent" fontWeight="600" fontSize="sm">
 							Pinned Result
 						</Text>
 					)}
-					<Flex
-						flexDirection="row"
-						gap="8"
-						alignItems="center"
-					>
+					<Flex flexDirection="row" gap="8" alignItems="center">
 						<Text
 							color="fg.secondary"
 							fontSize="sm"
@@ -746,45 +664,22 @@ function DetailedResultItem({
 						>
 							SCORE:
 						</Text>
-						<Text
-							fontWeight="700"
-							fontSize="md"
-						>
+						<Text fontWeight="700" fontSize="md">
 							{score.toFixed(1)}
 						</Text>
 					</Flex>
 				</Flex>
-				<Text
-					color="fg.tertiary"
-					fontSize="sm"
-				>
+				<Text color="fg.tertiary" fontSize="sm">
 					ID: {id}
 				</Text>
 			</Flex>
 
 			<Box pl="24">
-				<GridRow
-					label="title"
-					value={highlight(data.title)}
-					multiplier={3}
-				/>
-				<GridRow
-					label="description"
-					value={highlight(data.description)}
-				/>
-				<GridRow
-					label="author"
-					value={highlight(data.author)}
-					multiplier={5}
-				/>
-				<GridRow
-					label="array"
-					value={highlight(data.array)}
-				/>
-				<GridRow
-					label="_fulltext"
-					value={highlight(data._fulltext)}
-				/>
+				<GridRow label="title" value={highlight(data.title)} multiplier={3} />
+				<GridRow label="description" value={highlight(data.description)} />
+				<GridRow label="author" value={highlight(data.author)} multiplier={5} />
+				<GridRow label="array" value={highlight(data.array)} />
+				<GridRow label="_fulltext" value={highlight(data._fulltext)} />
 			</Box>
 		</Box>
 	);
@@ -800,39 +695,18 @@ function GridRow({
 	multiplier?: number;
 }) {
 	return (
-		<Flex
-			flexDirection="row"
-			gap="8"
-			mb="4"
-		>
-			<Flex
-				style={{width: "100px"}}
-				justifyContent="flex-end"
-				alignItems="center"
-				gap="4"
-			>
+		<Flex flexDirection="row" gap="8" mb="4">
+			<Flex style={{width: "100px"}} justifyContent="flex-end" alignItems="center" gap="4">
 				{multiplier && (
-					<Badge
-						intent="information"
-						size="sm"
-						variant="subtle"
-					>
+					<Badge intent="information" size="sm" variant="subtle">
 						x{multiplier}
 					</Badge>
 				)}
-				<Text
-					color="fg.secondary"
-					fontSize="sm"
-					textAlign="end"
-				>
+				<Text color="fg.secondary" fontSize="sm" textAlign="end">
 					{label}:
 				</Text>
 			</Flex>
-			<Text
-				color="fg.default"
-				fontSize="sm"
-				fontWeight={label === "title" ? "600" : "400"}
-			>
+			<Text color="fg.default" fontSize="sm" fontWeight={label === "title" ? "600" : "400"}>
 				{value}
 			</Text>
 		</Flex>
@@ -851,44 +725,20 @@ function ResultItem({
 	url: string;
 }) {
 	return (
-		<Box
-			bg={isPinnedResult ? "bg.accent.subtle" : "bg.default"}
-			p="8"
-			rounded="sm"
-		>
-			<Flex
-				flexDirection="row"
-				justifyContent="space-between"
-			>
-				<Text
-					color="fg.default"
-					fontWeight="600"
-					fontSize="md"
-					mb="4"
-				>
+		<Box bg={isPinnedResult ? "bg.accent.subtle" : "bg.default"} p="8" rounded="sm">
+			<Flex flexDirection="row" justifyContent="space-between">
+				<Text color="fg.default" fontWeight="600" fontSize="md" mb="4">
 					{title}
 				</Text>
-				<Flex
-					justifyContent="end"
-					alignItems="start"
-					flexDirection="row"
-					mb="4"
-				>
+				<Flex justifyContent="end" alignItems="start" flexDirection="row" mb="4">
 					{isPinnedResult && <Badge intent="information">Pinned Result</Badge>}
 				</Flex>
 			</Flex>
-			<Text
-				fontSize="sm"
-				color="fg.secondary"
-				mb="4"
-			>
+			<Text fontSize="sm" color="fg.secondary" mb="4">
 				{description}
 			</Text>
 			<Flex>
-				<Text
-					fontSize="xs"
-					color="fg.tertiary"
-				>
+				<Text fontSize="xs" color="fg.tertiary">
 					{url}
 				</Text>
 			</Flex>

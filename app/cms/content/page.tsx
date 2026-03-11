@@ -1,17 +1,37 @@
 "use client";
 
-import { SearchInput, Checkbox, Pagination } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
-import { Button } from "@/app/components/Button";
-import { IconFilter, IconFile, IconBox, IconLayoutGrid, IconPhoto } from "@tabler/icons-react";
-import { Table, Tr, Th, Td } from "@/app/components/Table";
+import {
+	SearchInput,
+	Checkbox,
+	Pagination,
+	Box,
+	Select,
+	SelectTrigger,
+	SelectContent,
+	Text as AxiomText,
+} from "@optiaxiom/react";
+import {Text} from "@/app/components/Text";
+import {Button} from "@/app/components/Button";
+import {
+	IconFilter,
+	IconFile,
+	IconBox,
+	IconLayoutGrid,
+	IconPhoto,
+	IconChevronUp,
+	IconChevronDown,
+} from "@tabler/icons-react";
+import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
-import { Flex } from "@/app/components/Flex";
-import { Aside } from "@/app/context/LayoutContext";
+import {Flex} from "@/app/components/Flex";
+import {Aside} from "@/app/context/LayoutContext";
 import DetailsPane from "./DetailsPane";
-import { useState } from "react";
-import { getAllContentItems, type UnifiedContentItem, initialPages, Page } from "@/app/db/initialData";
-import usePersistentState from "@/app/usePersistentState";
+import {useState, useEffect, useMemo, useRef, useCallback} from "react";
+import {type UnifiedContentItem} from "@/app/db/initialData";
+import FilterPills from "./components/FilterPills";
+import TagsColumnCell from "./components/TagsColumnCell";
+import {useFilterPanel} from "./context/FilterPanelContext";
+import {useContentManagerLayout} from "./context/ContentManagerLayoutContext";
 
 export type ContentItem = UnifiedContentItem & {
 	status: "Draft" | "Published";
@@ -36,32 +56,181 @@ function getStatusIntent(status: ContentItem["status"]) {
 }
 
 export default function ContentPage() {
-	const [pages] = usePersistentState("pages", initialPages) as [Page[], any, boolean];
-	const allContentItems = getAllContentItems(pages || initialPages);
-	const contentItems: ContentItem[] = allContentItems.map(item => ({
-		...item,
-		status: item.publishStatus
-	})).sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
+	// Filter management - now from context (single source of truth)
+	const {
+		isFilterPanelOpen,
+		setIsFilterPanelOpen,
+		filters,
+		filteredContent,
+		activePills,
+		hasActiveFilters,
+		removeFilter,
+		clearAllFilters,
+		getCategoryNameBySlug,
+		onTagsChange,
+		onTagsChangeBatch,
+		onCategoriesChange,
+		onCategoriesChangeBatch,
+	} = useFilterPanel();
 
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [currentPage, setCurrentPage] = useState(1);
 	const [selectedContentId, setSelectedContentId] = useState<string | null>(null);
-	const itemsPerPage = 10;
-	const totalPages = Math.ceil(contentItems.length / itemsPerPage);
-	const paginatedItems = contentItems.slice(
-		(currentPage - 1) * itemsPerPage,
-		currentPage * itemsPerPage
+	const [sortColumn, setSortColumn] = useState<string>("name");
+	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+	const [itemsPerPage, setItemsPerPage] = useState(10);
+
+	const PAGE_SIZE_OPTIONS = [
+		{label: "10", value: "10"},
+		{label: "25", value: "25"},
+		{label: "50", value: "50"},
+		{label: "100", value: "100"},
+	];
+
+	// Ensure value is always in options so downshift getItemProps receives a valid item
+	const itemsPerPageValue = useMemo(() => {
+		const str = String(itemsPerPage);
+		return PAGE_SIZE_OPTIONS.some((o) => o.value === str)
+			? str
+			: PAGE_SIZE_OPTIONS[0].value;
+	}, [itemsPerPage]);
+
+	// Sort filtered content (guard undefined from context/hydration)
+	const sortedContent = useMemo(() => {
+		const source = filteredContent ?? [];
+		const sorted = [...source];
+		sorted.sort((a: ContentItem, b: ContentItem) => {
+			let aValue: any;
+			let bValue: any;
+
+			switch (sortColumn) {
+				case "name":
+					aValue = a.name?.toLowerCase() || "";
+					bValue = b.name?.toLowerCase() || "";
+					break;
+				case "type":
+					aValue = a.baseType?.toLowerCase() || "";
+					bValue = b.baseType?.toLowerCase() || "";
+					break;
+				case "status":
+					aValue = a.status || "";
+					bValue = b.status || "";
+					break;
+				case "modifiedBy":
+					aValue = a.modifiedBy?.toLowerCase() || "";
+					bValue = b.modifiedBy?.toLowerCase() || "";
+					break;
+				case "language":
+					aValue = a.language?.toLowerCase() || "";
+					bValue = b.language?.toLowerCase() || "";
+					break;
+				case "lastModified":
+					aValue = new Date(a.lastModified || 0).getTime();
+					bValue = new Date(b.lastModified || 0).getTime();
+					break;
+				default:
+					return 0;
+			}
+
+			if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+			if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+			return 0;
+		});
+		return sorted;
+	}, [filteredContent, sortColumn, sortDirection]);
+
+	// Use sorted content instead of filtered content (always array)
+	const displayContent = sortedContent ?? [];
+	const effectiveItemsPerPage = Number(itemsPerPageValue);
+	const totalPages = Math.ceil(displayContent.length / effectiveItemsPerPage);
+	const paginatedItems = displayContent.slice(
+		(currentPage - 1) * effectiveItemsPerPage,
+		currentPage * effectiveItemsPerPage
 	);
-	const selectedContent = contentItems.find(item => item.id === selectedContentId);
+	const selectedContent = displayContent.find((item) => item.id === selectedContentId);
+
+	// Lifted tag and category state for details pane so 1↔2 selection switch doesn't lose edits
+	const [detailsPaneTags, setDetailsPaneTags] = useState<string[] | null>(null);
+	const [detailsPaneCategories, setDetailsPaneCategories] = useState<string[] | null>(null);
+	const [batchEditMode, setBatchEditMode] = useState<{ tags: boolean; categories: boolean }>({ tags: false, categories: false });
+	const lastSyncedTagsSelectionKeyRef = useRef<string>("");
+	const lastSyncedCategoriesSelectionKeyRef = useRef<string>("");
+	const prevPaneOpenRef = useRef(false);
+	const paneOpen = !!(selectedContentId || selectedRows.size >= 1);
+	const { contentSubNavExpanded, setContentSubNavExpanded, contentSubNavPinned } = useContentManagerLayout();
+
+	const handleFilterToggle = () => {
+		const next = !isFilterPanelOpen;
+		setIsFilterPanelOpen(next);
+		if (next) setContentSubNavExpanded(true);
+	};
+
+	// Collapse sub-navigation only when details panel *first* opens (not when user manually expands while pane is open)
+	useEffect(() => {
+		const paneJustOpened = paneOpen && !prevPaneOpenRef.current;
+		prevPaneOpenRef.current = paneOpen;
+		if (paneJustOpened && contentSubNavExpanded && !contentSubNavPinned && !isFilterPanelOpen) {
+			setContentSubNavExpanded(false);
+		}
+	}, [paneOpen, contentSubNavExpanded, contentSubNavPinned, isFilterPanelOpen, setContentSubNavExpanded]);
+	const selectedItems = useMemo(
+		() => (displayContent ?? []).filter((item) => selectedRows.has(item.id)),
+		[displayContent, selectedRows]
+	);
+	const selectedItemsTagUnion = useMemo(
+		() => [...new Set(selectedItems.flatMap((i) => i.tags ?? []))],
+		[selectedItems]
+	);
+	const selectedItemsCategoryUnion = useMemo(
+		() => [...new Set(selectedItems.flatMap((i) => i.categories ?? []))],
+		[selectedItems]
+	);
+	// Selection key: only sync pane from union when this changes and we're not in batch edit (avoids overwriting after Apply / green on subsequent selections)
+	const selectionKey = useMemo(
+		() => (selectedItems.length > 0 ? [...selectedItems.map((i) => i.id)].sort().join(",") : ""),
+		[selectedItems]
+	);
+	useEffect(() => {
+		if (paneOpen && selectedItems.length > 0 && !batchEditMode.tags && selectionKey !== lastSyncedTagsSelectionKeyRef.current) {
+			lastSyncedTagsSelectionKeyRef.current = selectionKey;
+			setDetailsPaneTags(selectedItemsTagUnion);
+		}
+	}, [paneOpen, selectedItems.length, batchEditMode.tags, selectionKey, selectedItemsTagUnion]);
+	useEffect(() => {
+		if (paneOpen && selectedItems.length > 0 && !batchEditMode.categories && selectionKey !== lastSyncedCategoriesSelectionKeyRef.current) {
+			lastSyncedCategoriesSelectionKeyRef.current = selectionKey;
+			setDetailsPaneCategories(selectedItemsCategoryUnion);
+		}
+	}, [paneOpen, selectedItems.length, batchEditMode.categories, selectionKey, selectedItemsCategoryUnion]);
+	// When exiting batch edit, mark current selection as "synced" so we don't overwrite the pane's applied/reverted state
+	const handleBatchEditModeChange = useCallback((mode: { tags: boolean; categories: boolean }) => {
+		if (!mode.tags && selectionKey) lastSyncedTagsSelectionKeyRef.current = selectionKey;
+		if (!mode.categories && selectionKey) lastSyncedCategoriesSelectionKeyRef.current = selectionKey;
+		setBatchEditMode(mode);
+	}, [selectionKey]);
+
+	// Reset pagination when filters or page size change
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [filters, itemsPerPage]);
 
 	const handleSelectAll = (checked: boolean) => {
-		const newSet = new Set(selectedRows);
-		if (checked) {
+		// Check if we're currently in indeterminate state (some but not all selected)
+		const currentlyAllSelected = displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
+		const currentlyIndeterminate = selectedRows.size > 0 && !currentlyAllSelected;
+
+		// If clicking from indeterminate state, always deselect all
+		if (currentlyIndeterminate) {
+			setSelectedRows(new Set());
+		} else if (checked) {
+			// Select all items on current page
+			const newSet = new Set(selectedRows);
 			paginatedItems.forEach((item) => newSet.add(item.id));
+			setSelectedRows(newSet);
 		} else {
-			paginatedItems.forEach((item) => newSet.delete(item.id));
+			// Deselect all items across all pages
+			setSelectedRows(new Set());
 		}
-		setSelectedRows(newSet);
 		setSelectedContentId(null);
 	};
 
@@ -88,11 +257,46 @@ export default function ContentPage() {
 		}
 	};
 
+	// Check selection state across ALL items (not just current page)
 	const isAllSelected =
-		paginatedItems.length > 0 &&
-		paginatedItems.every((item) => selectedRows.has(item.id));
+		displayContent.length > 0 && displayContent.every((item) => selectedRows.has(item.id));
 	const isSomeSelected =
-		paginatedItems.some((item) => selectedRows.has(item.id)) && !isAllSelected;
+		selectedRows.size > 0 && !isAllSelected;
+
+	const handleSort = (column: string) => {
+		if (sortColumn === column) {
+			// Toggle direction if same column
+			setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+		} else {
+			// Set new column with ascending as default
+			setSortColumn(column);
+			setSortDirection("asc");
+		}
+	};
+
+	const renderSortIcon = (column: string) => {
+		const isActive = sortColumn === column;
+		return (
+			<span
+				style={{
+					visibility: isActive ? "visible" : "hidden",
+					display: "inline-flex",
+					alignItems: "center",
+					justifyContent: "center",
+					marginLeft: "4px",
+					width: "14px",
+					height: "14px",
+					verticalAlign: "middle",
+				}}
+			>
+				{sortDirection === "asc" ? (
+					<IconChevronUp size={14} />
+				) : (
+					<IconChevronDown size={14} />
+				)}
+			</span>
+		);
+	};
 
 	return (
 		<>
@@ -101,25 +305,75 @@ export default function ContentPage() {
 			</Text>
 			<Flex mb="24" gap="8">
 				<SearchInput size="lg" placeholder="Search content..." />
-				<Button aria-label="Filter content" icon={<IconFilter />} />
+				<Button
+					aria-label="Filter content"
+					icon={<IconFilter />}
+					onClick={handleFilterToggle}
+					style={{
+						backgroundColor: isFilterPanelOpen ? "#0037ff" : undefined,
+						borderColor: isFilterPanelOpen ? "#0037ff" : undefined,
+						color: isFilterPanelOpen ? "#ffffff" : undefined,
+					}}
+				/>
 			</Flex>
+			{hasActiveFilters && (
+				<Flex mb="16" gap="8">
+					<FilterPills
+						pills={activePills}
+						onRemoveFilter={removeFilter}
+						onClearAll={clearAllFilters}
+						getCategoryNameBySlug={getCategoryNameBySlug}
+					/>
+				</Flex>
+			)}
 			<Table>
 				<thead>
 					<Tr>
-						<Th style={{ width: "40px" }}>
+						<Th style={{width: "40px"}}>
 							<Checkbox
 								checked={isAllSelected}
 								indeterminate={isSomeSelected}
 								onCheckedChange={handleSelectAll}
 							/>
 						</Th>
-						<Th>Name</Th>
-						<Th>Type</Th>
-						<Th>Status</Th>
-						<Th>Modified by</Th>
-						<Th>Language</Th>
-						<Th>Last Modified</Th>
-						<Th style={{ width: "56px" }} />
+						<Th
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("name")}
+						>
+							Name{renderSortIcon("name")}
+						</Th>
+						<Th
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("type")}
+						>
+							Type{renderSortIcon("type")}
+						</Th>
+						<Th
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("status")}
+						>
+							Status{renderSortIcon("status")}
+						</Th>
+						<Th
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("modifiedBy")}
+						>
+							Modified by{renderSortIcon("modifiedBy")}
+						</Th>
+						<Th
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("language")}
+						>
+							Language{renderSortIcon("language")}
+						</Th>
+						<Th style={{width: "180px", minWidth: "180px"}}>Tags</Th>
+						<Th
+							style={{cursor: "pointer", userSelect: "none"}}
+							onClick={() => handleSort("lastModified")}
+						>
+							Last Modified{renderSortIcon("lastModified")}
+						</Th>
+						<Th style={{width: "56px"}} />
 					</Tr>
 				</thead>
 				<tbody>
@@ -133,9 +387,9 @@ export default function ContentPage() {
 									setSelectedContentId(item.id);
 								}
 							}}
-							style={{ cursor: "pointer" }}
+							style={{cursor: "pointer"}}
 						>
-							<Td type="raw" style={{ width: "40px" }}>
+							<Td type="raw" style={{width: "40px"}}>
 								<Checkbox
 									checked={selectedRows.has(item.id)}
 									onCheckedChange={(checked) => {
@@ -152,29 +406,79 @@ export default function ContentPage() {
 							</Td>
 							<Td>{item.modifiedBy}</Td>
 							<Td>{item.language}</Td>
+							<Td style={{width: "180px", minWidth: "180px"}}>
+								<TagsColumnCell tags={item.tags ?? []} />
+							</Td>
 							<Td>{item.lastModified}</Td>
 							<Td type="button" />
 						</Tr>
 					))}
 				</tbody>
 			</Table>
-			<Pagination
-				total={totalPages}
-				page={currentPage}
-				onPageChange={setCurrentPage}
-				mt="24"
-			/>
+			<Box display="flex" alignItems="center" mt="24" flexWrap="wrap">
+				{totalPages > 0 && (
+					<Pagination
+						total={totalPages}
+						page={currentPage}
+						onPageChange={setCurrentPage}
+					/>
+				)}
+				<Box
+					flex="1"
+					display="flex"
+					justifyContent="center"
+					alignItems="center"
+					overflow="hidden"
+				>
+					<AxiomText fontSize="sm" color="fg.secondary">
+						{displayContent.length === 0
+							? "0 items"
+							: `Showing ${(currentPage - 1) * effectiveItemsPerPage + 1}–${Math.min(
+									currentPage * effectiveItemsPerPage,
+									displayContent.length
+							  )} of ${displayContent.length}`}
+					</AxiomText>
+				</Box>
+				<Box display="flex" alignItems="center" gap="8">
+					<AxiomText fontSize="sm" color="fg.secondary">
+						Rows per page
+					</AxiomText>
+					<Select
+						value={itemsPerPageValue}
+						onValueChange={(value) => setItemsPerPage(Number(value))}
+						options={PAGE_SIZE_OPTIONS}
+					>
+						<SelectTrigger w="80" size="sm">
+							{itemsPerPageValue}
+						</SelectTrigger>
+						<SelectContent />
+					</Select>
+				</Box>
+			</Box>
 
-			{(selectedContentId || selectedRows.size > 1) && (
+			{(selectedContentId || selectedRows.size >= 1) && (
 				<Aside>
 					<DetailsPane
 						content={selectedContent}
 						selectedIds={selectedRows}
+						selectedItems={selectedItems}
 						allContent={paginatedItems}
+						detailsPaneTags={detailsPaneTags}
+						setDetailsPaneTags={setDetailsPaneTags}
+						detailsPaneCategories={detailsPaneCategories}
+						setDetailsPaneCategories={setDetailsPaneCategories}
+						onTagsChange={onTagsChange}
+						onTagsChangeBatch={onTagsChangeBatch}
+						onCategoriesChange={onCategoriesChange}
+						onCategoriesChangeBatch={onCategoriesChangeBatch}
 						onClose={() => {
 							setSelectedContentId(null);
 							setSelectedRows(new Set());
+							setDetailsPaneTags(null);
+							setDetailsPaneCategories(null);
+							setBatchEditMode({ tags: false, categories: false });
 						}}
+						onBatchEditModeChange={handleBatchEditModeChange}
 					/>
 				</Aside>
 			)}

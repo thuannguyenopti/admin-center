@@ -1,7 +1,8 @@
 import {Box, Card, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
-import Link from "next/link";
 import {useMemo} from "react";
+import {cn} from "@/utils/cn";
+import Link from "next/link";
 
 type MetricCardProps = {
 	label: string;
@@ -9,9 +10,12 @@ type MetricCardProps = {
 	data: number[];
 	smooth?: boolean;
 	desiredDirection?: "up" | "down";
-	interval?: "hour" | "day" | "week" | "month";
+	interval?: "minute" | "hour" | "day" | "week" | "month";
 	aggregation?: "sum" | "average" | "last";
 	previousValue?: number;
+	showComparison?: boolean;
+	height?: number;
+	href?: string;
 };
 
 export default function MetricCard({
@@ -22,7 +26,10 @@ export default function MetricCard({
 	desiredDirection = "up",
 	interval,
 	aggregation = "last",
+	height = 60,
 	previousValue: explicitPreviousValue,
+	showComparison = true,
+	href,
 }: MetricCardProps) {
 	// Get current value based on aggregation type
 	const value = (() => {
@@ -38,17 +45,26 @@ export default function MetricCard({
 		}
 	})();
 
-	const previousValue =
-		explicitPreviousValue !== undefined
+	const previousValue = !showComparison
+		? undefined
+		: explicitPreviousValue !== undefined
 			? explicitPreviousValue
 			: data.length > 1
-			? data[data.length - 2]
-			: undefined;
+				? data[data.length - 2]
+				: undefined;
 
 	// Format value with unit
 	const formatValue = (val: number) => {
+		if (val >= 10000) {
+			return (
+				new Intl.NumberFormat("en-US", {
+					notation: "compact",
+					maximumFractionDigits: 1,
+				}).format(val) + unit
+			);
+		}
 		return (
-			val.toLocaleString(undefined, {
+			val.toLocaleString("en-US", {
 				maximumFractionDigits: 1,
 				minimumFractionDigits: 0,
 			}) + unit
@@ -64,13 +80,14 @@ export default function MetricCard({
 		const percentChange = ((value - previousValue) / previousValue) * 100;
 		const isIncreasing = percentChange >= 0;
 
-		// Determine overall trend by comparing first and last values
-		const trendUp = value > (explicitPreviousValue ?? data[0]);
+		// Use consistent logic for both arrow direction and color
+		// Both should be based on the same comparison (current vs previous)
+		const isGoodTrend = desiredDirection === "up" ? isIncreasing : !isIncreasing;
 
 		return {
 			value: Math.abs(percentChange).toFixed(1) + "%",
-			isPositive: percentChange >= 0,
-			isGood: desiredDirection === "up" ? trendUp : !trendUp, // Green if overall trend is up, red if down
+			isPositive: isIncreasing,
+			isGood: isGoodTrend,
 		};
 	};
 
@@ -141,6 +158,9 @@ export default function MetricCard({
 		const date = new Date();
 
 		switch (interval) {
+			case "minute":
+				date.setMinutes(date.getMinutes() - diff);
+				return date.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
 			case "hour":
 				date.setHours(date.getHours() - diff);
 				return date.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
@@ -161,35 +181,23 @@ export default function MetricCard({
 		}
 	};
 
-	return (
+	const cardContent = (
 		<Card
-			p="20"
+			p="16"
 			color="fg.disabled"
-			className="hover:shadow-[currentColor_0_0_0_2px] transition-all duration-200"
+			className={cn("transition-all duration-200", {
+				"cursor-pointer hover:shadow-[currentColor_0_0_0_2px]": !!href,
+			})}
 		>
-			<Text
-				fontSize="md"
-				fontWeight="600"
-				mb="16"
-				color="fg.default"
-			>
+			<Text fontSize="md" fontWeight="600" color="fg.default">
 				{label}
 			</Text>
 
-			<Box
-				display="flex"
-				alignItems="end"
-				gap="12"
-				mb="12"
-				w="full"
-			>
-				<Box
-					style={{flex: 1, minWidth: 0, position: "relative"}}
-					color="fg.disabled"
-				>
+			<Box display="flex" alignItems="end" gap="12" mb="12" w="full">
+				<Box style={{flex: 1, minWidth: 0, position: "relative"}} color="fg.disabled">
 					<svg
 						width="100%"
-						height="60"
+						height={height}
 						viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
 						preserveAspectRatio="none"
 						style={{display: "block"}}
@@ -198,7 +206,8 @@ export default function MetricCard({
 							d={pathData}
 							fill="none"
 							stroke="currentColor"
-							strokeWidth="1"
+							vectorEffect="non-scaling-stroke"
+							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round"
 						/>
@@ -232,8 +241,8 @@ export default function MetricCard({
 									left: `${(point.x / viewBoxWidth) * 100}%`,
 									top: `${(point.y / viewBoxHeight) * 100}%`,
 									borderRadius: "50%",
-									width: index === points.length - 1 ? "8px" : "4px",
-									height: index === points.length - 1 ? "8px" : "4px",
+									width: index === points.length - 1 ? "8px" : "6px",
+									height: index === points.length - 1 ? "8px" : "6px",
 									backgroundColor: "currentcolor",
 									transform: "translate(-50%, -50%)",
 									cursor: "pointer",
@@ -245,7 +254,7 @@ export default function MetricCard({
 				<Text
 					fontSize="3xl"
 					fontWeight="600"
-					color="fg.accent.strong"
+					color="fg.information"
 					style={{lineHeight: 1}}
 				>
 					{formatValue(value)}
@@ -253,17 +262,9 @@ export default function MetricCard({
 			</Box>
 
 			{(previousValue !== undefined || changeData) && (
-				<Box
-					display="flex"
-					gap="12"
-					justifyContent="space-between"
-					w="full"
-				>
+				<Box display="flex" gap="12" justifyContent="space-between" w="full">
 					{previousValue !== undefined && (
-						<Text
-							fontSize="sm"
-							color="fg.information.light"
-						>
+						<Text fontSize="sm" color="fg.information">
 							Prev: {formatValue(previousValue)}
 						</Text>
 					)}
@@ -280,4 +281,6 @@ export default function MetricCard({
 			)}
 		</Card>
 	);
+
+	return href ? <Link href={href}>{cardContent}</Link> : cardContent;
 }

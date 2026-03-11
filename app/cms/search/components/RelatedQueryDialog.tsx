@@ -104,35 +104,22 @@ export default function RelatedQueryDialog({
 			footerPrimaryAction={handleSave}
 			footerAppearance="primary"
 		>
-			<Flex
-				flexDirection="column"
-				gap="16"
-			>
-				<Field
-					label="Query"
-					required
-				>
+			<Flex flexDirection="column" gap="16">
+				<Field label="Query" required>
 					<Input
 						placeholder="e.g. sneakers"
 						value={query}
 						onChange={(e) => setQuery(e.target.value)}
 					/>
 				</Field>
-				<Field
-					label="Synonyms (comma separated)"
-					required
-					alignItems="start"
-				>
+				<Field label="Synonyms (comma separated)" required alignItems="start">
 					<Textarea
 						placeholder="e.g. shoes, trainers, kicks"
 						value={synonyms}
 						w="full"
 						onChange={(e) => setSynonyms(e.target.value)}
 					/>
-					<Flex
-						gap="8"
-						alignItems="center"
-					>
+					<Flex gap="8" alignItems="center">
 						<Button
 							size="md"
 							icon={<IconSparkles size={16} />}

@@ -1,16 +1,12 @@
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {
-	IconRocket,
 	IconTrash,
 	IconPencil,
 	IconDots,
 	IconPlus,
-	IconSwitch,
-	IconActivity,
 	IconPower,
 	IconFile,
-	IconPinnedOff,
 	IconPinned,
 } from "@tabler/icons-react";
 import {
@@ -20,8 +16,8 @@ import {
 	Select,
 	SelectTrigger,
 	SelectContent,
-	Separator,
-	Switch,
+	Box,
+	Pagination,
 } from "@optiaxiom/react";
 import {PinnedResult, AlgorithmPinnedResult} from "@/app/db/initialData";
 import searchResults from "@/app/db/searchResults.json";
@@ -36,6 +32,11 @@ interface PinnedResultsTableProps {
 	onAdd?: (bet: PinnedResult) => void;
 	onCreate?: () => void;
 	onToggleStatus?: (bet: AlgorithmPinnedResult, newStatus: "Active" | "Inactive") => void;
+	pagination?: {
+		total: number;
+		page: number;
+		onPageChange: (page: number) => void;
+	};
 }
 
 export default function PinnedResultsTable({
@@ -48,6 +49,7 @@ export default function PinnedResultsTable({
 	onAdd,
 	onCreate,
 	onToggleStatus,
+	pagination,
 }: PinnedResultsTableProps) {
 	const handleValueChange = (value: string) => {
 		if (value === "__create__") {
@@ -68,7 +70,7 @@ export default function PinnedResultsTable({
 						group: {label: "", hidden: true, separator: true},
 						execute: () => handleValueChange("__create__"),
 					},
-			  ]
+				]
 			: []),
 		...(availablePinnedResults?.map((b) => ({
 			label: searchResults.find((r) => r.url === b.destination)?.title || b.destination,
@@ -92,10 +94,7 @@ export default function PinnedResultsTable({
 				</thead>
 				<tbody>
 					{pinnedResults.map((bet) => (
-						<Tr
-							key={bet.query}
-							onClick={() => onEdit(bet)}
-						>
+						<Tr key={bet.query} onClick={() => onEdit(bet)}>
 							<Td type="header">
 								<Item
 									icon={<IconPinned size={16} />}
@@ -143,7 +142,7 @@ export default function PinnedResultsTable({
 															selected: bet.status === "Active",
 															switch: true,
 														},
-												  ]
+													]
 												: []),
 											{
 												label: "Edit",
@@ -172,13 +171,18 @@ export default function PinnedResultsTable({
 					))}
 				</tbody>
 			</Table>
+			{pagination && (
+				<Box display="flex" justifyContent="center" mt="16">
+					<Pagination
+						total={pagination.total}
+						page={pagination.page}
+						onPageChange={pagination.onPageChange}
+					/>
+				</Box>
+			)}
 			{availablePinnedResults && onAdd && (
 				<Menu options={selectOptions}>
-					<MenuTrigger
-						size="lg"
-						mt="16"
-						addonBefore={<IconPlus size={16} />}
-					>
+					<MenuTrigger size="lg" mt="16" addonBefore={<IconPlus size={16} />}>
 						Add Pinned Result...
 					</MenuTrigger>
 					<MenuContent />

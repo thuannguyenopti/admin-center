@@ -1,0 +1,61 @@
+.editor {
+	background: var(--ax-colors-bg-default);
+	color: var(--ax-colors-fg-default);
+	border: 1px solid var(--ax-colors-border-control);
+	border-radius: 6px;
+	padding: 8px 12px;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	overflow-y: auto;
+	min-height: 80px;
+	outline: none;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editor:focus {
+	border-color: var(--ax-colors-border-focus);
+	box-shadow: 0 0 0 3px var(--ax-colors-bg-accent-subtle);
+}
+
+.editor:hover:not(:focus):not(.disabled) {
+	border-color: var(--ax-colors-border-control);
+}
+
+.editor.disabled {
+	background: var(--ax-colors-bg-disabled);
+	color: var(--ax-colors-fg-disabled);
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.editor.error {
+	border-color: var(--ax-colors-border-error);
+}
+
+.editor[data-placeholder]:empty:before {
+	content: attr(data-placeholder);
+	color: var(--ax-colors-fg-tertiary);
+	pointer-events: none;
+	position: absolute;
+}
+
+/* Resize handling */
+.resizeNone {
+	resize: none;
+}
+
+.resizeVertical {
+	resize: vertical;
+}
+
+.resizeHorizontal {
+	resize: horizontal;
+}
+
+.resizeBoth {
+	resize: both;
+}

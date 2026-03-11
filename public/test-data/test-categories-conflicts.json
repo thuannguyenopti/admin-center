@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Equipment",
+    "slug": "equipment",
+    "parentSlug": "",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Cycling",
+    "slug": "cycling",
+    "parentSlug": "",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Training",
+    "slug": "training",
+    "parentSlug": "",
+    "status": "published",
+    "visibility": "public"
+  }
+]
