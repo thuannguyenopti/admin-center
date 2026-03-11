@@ -78,7 +78,7 @@ export default function GlobalBar() {
 						fontWeight="500"
 						color="fg.default"
 					>
-						{isCmpTaskDetail ? "Optimizely" : "Stride"}
+						Stride
 					</Text>
 					<svg
 						width="14"
