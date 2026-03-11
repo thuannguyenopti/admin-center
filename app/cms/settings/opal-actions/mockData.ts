@@ -44,6 +44,9 @@ export type PropertyType =
 	| "LinkItemCollection";
 
 export const availableAgents: Agent[] = [
+	// Quality category
+	{id: "preflight-audit", name: "Preflight Audit", category: "Quality"},
+
 	// Content category
 	{id: "content-model-creation", name: "Content Model Creation", category: "Content"},
 	{id: "content-refresh-analysis", name: "Content Refresh Analysis", category: "Content"},
@@ -70,6 +73,26 @@ export const availableAgents: Agent[] = [
 ];
 
 export const opalActions: OpalAction[] = [
+	{
+		id: "0",
+		name: "Preflight Audit",
+		enabled: true,
+		helpText: "Run all pre-publish checks to ensure content quality",
+		locations: {
+			toolbar: {
+				contextMenu: false,
+				improveButton: true,
+			},
+			assetPanel: false,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
+		},
+		agents: ["preflight-audit"],
+		visibleAt: "Everyone",
+		modified: "2026-03-04 10:00:00",
+	},
 	{
 		id: "1",
 		name: "GEO",

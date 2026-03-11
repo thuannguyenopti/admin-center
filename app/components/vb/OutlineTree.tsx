@@ -970,6 +970,15 @@ export default function OutlineTree({
 																										"name",
 																										"Name"
 																									) ||
+																									getProperty(
+																										theEles[
+																											element
+																												.id
+																										]
+																											?.properties,
+																										"alt",
+																										"Alt Text"
+																									) ||
 																									extractPlainText(
 																										getProperty(
 																											theEles[

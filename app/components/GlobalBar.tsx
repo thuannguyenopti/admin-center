@@ -47,6 +47,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			display="flex"
 			alignItems="center"
 			justifyContent="space-between"
+			className="global-bar"
 		>
 			<Box display="flex" alignItems="center">
 				<Link href={"/"}>

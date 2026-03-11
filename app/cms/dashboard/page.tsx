@@ -14,6 +14,8 @@ import {
   MenuContent,
   LabelMenuButton,
   Pagination,
+  Alert,
+  Link,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Input } from "@/app/components/Input";
@@ -29,6 +31,9 @@ import { BrokenLinksWidget } from "./components/BrokenLinksWidget";
 import { WorkflowStatus, TabConfig } from "./types";
 import PageIcon from "@/app/assets/page-icon.svg";
 import BlockIcon from "@/app/assets/block-icon.svg";
+import usePersistentState from "@/app/usePersistentState";
+import { availableAgents, opalActions as initialOpalActions } from "@/app/cms/settings/opal-actions/mockData";
+import type { OpalAction } from "@/app/cms/settings/opal-actions/mockData";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<WorkflowStatus>("draft");
@@ -37,6 +42,23 @@ export default function DashboardPage() {
   const [language, setLanguage] = useState("english");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Get opal actions from persistent state
+  const [opalActionsState] = usePersistentState("opalActions", initialOpalActions) as [
+    OpalAction[] | undefined,
+  ];
+  const safeOpalActions = Array.isArray(opalActionsState) && opalActionsState.length > 0
+    ? opalActionsState
+    : initialOpalActions;
+
+  // Calculate unconfigured agents
+  const unconfiguredAgents = useMemo(() => {
+    const configuredAgentIds = new Set<string>();
+    safeOpalActions.forEach(action => {
+      action.agents.forEach(agentId => configuredAgentIds.add(agentId));
+    });
+    return availableAgents.filter(agent => !configuredAgentIds.has(agent.id));
+  }, [safeOpalActions]);
 
   // Calculate tab counts
   const tabCounts = useMemo(() => {
@@ -115,6 +137,19 @@ export default function DashboardPage() {
     <Box display="flex" gap="32" w="full">
       {/* Main Content */}
       <Box flex="1" style={{ minWidth: 0 }}>
+        {unconfiguredAgents.length > 0 && (
+          <Alert intent="opal" mb="24">
+            <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+              <Text>
+                {unconfiguredAgents.length} agent{unconfiguredAgents.length === 1 ? '' : 's'} not configured in Opal Actions.
+              </Text>
+              <Link href="/cms/settings/opal-actions">
+                <Button appearance="primary" size="sm">Configure now</Button>
+              </Link>
+            </Box>
+          </Alert>
+        )}
+
         <Text fontSize="xl" fontWeight="700" color="fg.default" mb="24">
           Workflow Status
         </Text>

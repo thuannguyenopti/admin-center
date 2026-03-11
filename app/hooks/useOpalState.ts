@@ -9,6 +9,14 @@ export type ChatMessage = {
   content: string;
   timestamp: number;
   isLoading?: boolean;
+  messageType?: 'preflight-progress' | 'preflight-results';
+  metadata?: {
+    checklist?: Array<{
+      label: string;
+      status: 'pending' | 'running' | 'completed' | 'failed';
+    }>;
+    auditResult?: any; // Will be typed as PreflightAuditResult when imported
+  };
 };
 
 export type OpalState = {
@@ -114,6 +122,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   // Load chat messages when activeChatId changes
   useEffect(() => {
@@ -229,6 +238,10 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     ));
   }, []);
 
+  const removeMessage = useCallback((id: string) => {
+    setMessages(prev => prev.filter(msg => msg.id !== id));
+  }, []);
+
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
 
@@ -312,11 +325,16 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     inputValue,
     isLoading,
     error,
+    isInputDisabled,
     togglePanel,
     closePanel,
     openPanel,
     setInputValue,
+    setInputDisabled: setIsInputDisabled,
     sendMessage,
     clearHistory,
+    addMessage,
+    updateMessage,
+    removeMessage,
   };
 }

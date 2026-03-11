@@ -1,6 +1,7 @@
 "use client";
 
 import React, { forwardRef, useRef, useImperativeHandle, useCallback, useLayoutEffect, useState, useEffect } from "react";
+import type { TextareaProps } from "@optiaxiom/react";
 import { useProofreading } from "./useProofreading";
 import { useAutoComplete } from "./useAutoComplete";
 import { getCursorOffset, setCursorOffset } from "./utils/cursorUtils";
@@ -8,7 +9,7 @@ import type { GrammarError } from "./ProofreadingProvider";
 import { renderTextWithErrors } from "./utils/renderTextWithErrors";
 import styles from "./AIInputField.module.css";
 
-export interface AIInputFieldProps {
+export interface AIInputFieldProps extends Omit<TextareaProps, "onChange" | "value" | "size" | "onInput" | "onKeyDown" | "onPaste" | "onFocus"> {
 	value: string;
 	onChange: (e: { currentTarget: { value: string }; target: { value: string } }) => void;
 	placeholder?: string;

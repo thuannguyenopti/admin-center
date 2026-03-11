@@ -81,9 +81,9 @@ export default function VariationsPanel({
                                             },
                                             "ele-id-4": {
                                                 "type": "ct-image",
-                                                "properties": { 
-                                                    "imageUrl": { "value": "https://..." },
-                                                    "altText": { "value": "Description" }
+                                                "properties": {
+                                                    "src": { "value": "https://..." },
+                                                    "alt": { "value": "Description" }
                                                 }
                                             },
                                             "ele-id-5": {
