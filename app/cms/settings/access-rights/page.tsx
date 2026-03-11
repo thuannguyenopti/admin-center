@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button as AxiomButton, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import { Box, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Input } from "@/app/components/Input";
 import { Button } from "@/app/components/Button";
@@ -146,9 +146,9 @@ export default function AccessRightsPage() {
 						<IconSearch size={16} color="var(--ax-colors-fg-tertiary)" />
 					</Box>
 				</Box>
-				<AxiomButton appearance="default" size="lg">
+				<Button appearance="default" size="lg">
 					Add User/Group
-				</AxiomButton>
+				</Button>
 			</Box>
 
 			{/* Permissions Table */}
@@ -290,12 +290,12 @@ export default function AccessRightsPage() {
 
 			{/* Bottom Action Buttons */}
 			<Box display="flex" gap="12" justifyContent="flex-end" style={{ marginTop: "16px" }}>
-				<AxiomButton appearance="default" size="lg">
+				<Button appearance="default" size="lg">
 					Revert
-				</AxiomButton>
-				<AxiomButton appearance="primary" size="lg">
+				</Button>
+				<Button appearance="primary" size="lg">
 					Save Changes
-				</AxiomButton>
+				</Button>
 			</Box>
 		</Box>
 	);

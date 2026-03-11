@@ -34,12 +34,14 @@ export const Tr = ({
 	onClick,
 	style,
 	className,
+	...props
 }: {
 	children: ReactNode;
 	url?: string;
 	onClick?: () => void;
 	style?: React.CSSProperties;
 	className?: string;
+	[key: string]: any;
 }) => {
 	const router = useRouter();
 	const rowClick = (href: string) => {
@@ -53,16 +55,29 @@ export const Tr = ({
 				"relative" +
 				(url || onClick
 					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
-					: "")
-				+ (className ? ` ${className}` : "")
+					: "") +
+				(className ? ` ${className}` : "")
 			}
 			style={style}
+			{...props}
 		>
 			{children}
 		</tr>
 	);
 };
-export const Th = ({children, align, style, className}: {children?: ReactNode; align?: any; style?: React.CSSProperties; className?: string}) => {
+export const Th = ({
+	children,
+	align,
+	style,
+	className,
+	onClick,
+}: {
+	children?: ReactNode;
+	align?: any;
+	style?: React.CSSProperties;
+	className?: string;
+	onClick?: () => void;
+}) => {
 	return (
 		<th
 			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${className || ""}`}
@@ -70,6 +85,7 @@ export const Th = ({children, align, style, className}: {children?: ReactNode; a
 				textAlign: align,
 				...style,
 			}}
+			onClick={onClick}
 		>
 			{children}
 		</th>
@@ -104,21 +120,13 @@ export const Td = ({
 		>
 			{type === undefined && (
 				<>
-					{isValidElement(children) ? (
+					{isValidElement(children) && !Array.isArray(children) ? (
 						children
 					) : (
-						<Text
-							color="fg.default"
-							fontSize="md"
-						>
-							{children}
-						</Text>
+						<Box color="fg.default">{children}</Box>
 					)}
 					{description && (
-						<Text
-							fontSize="sm"
-							color="fg.secondary"
-						>
+						<Text fontSize="sm" color="fg.secondary">
 							{description}
 						</Text>
 					)}
@@ -126,18 +134,11 @@ export const Td = ({
 			)}
 			{type === "header" && (
 				<>
-					<Text
-						asChild
-						color="fg.default"
-						fontWeight="500"
-					>
+					<Text asChild color="fg.default" fontWeight="500">
 						<span>{children}</span>
 					</Text>
 					{description && (
-						<Text
-							fontSize="sm"
-							color="fg.tertiary"
-						>
+						<Text fontSize="sm" color="fg.tertiary">
 							{description}
 						</Text>
 					)}
@@ -151,11 +152,7 @@ export const Td = ({
 			{type === "avatar" && (
 				<Box style={{height: "20px", marginTop: "-6px"}}>
 					<Tooltip content={children}>
-						<Avatar
-							src={data}
-							size="md"
-							name={children as string}
-						/>
+						<Avatar src={data} size="md" name={children as string} />
 					</Tooltip>
 				</Box>
 			)}
@@ -181,10 +178,7 @@ export const Td = ({
 				</Box>
 			)}
 			{type === "numeric" && (
-				<Text
-					color="fg.default"
-					textAlign="end"
-				>
+				<Text color="fg.default" textAlign="end">
 					{children}
 				</Text>
 			)}

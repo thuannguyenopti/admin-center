@@ -2,7 +2,8 @@
 
 import AbstractDialog from "@/app/components/AbstractDialog";
 import usePersistentState from "@/app/usePersistentState";
-import {Heading, Text, Button} from "@optiaxiom/react";
+import {Heading, Text} from "@optiaxiom/react";
+import {Button} from "@/app/components/Button";
 import {useState} from "react";
 import {useRouter} from "next/navigation";
 

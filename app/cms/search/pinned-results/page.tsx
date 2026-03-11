@@ -1,15 +1,19 @@
 "use client";
 
-import {Box} from "@optiaxiom/react";
+import {Box, SearchInput} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
 import {IconPlus, IconSearch} from "@tabler/icons-react";
-import {useState, useMemo} from "react";
+import {useState, useMemo, useEffect} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {PinnedResult, initialPinnedResults} from "@/app/db/initialData";
 import PinnedResultsTable from "../components/PinnedResultsTable";
 import PinnedResultDialog from "../components/PinnedResultDialog";
+import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
+
+const PAGE_SIZE = 10;
 
 export default function PinnedResultsPage() {
 	const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +25,13 @@ export default function PinnedResultsPage() {
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 	const [editingPinnedResult, setEditingPinnedResult] = useState<PinnedResult | null>(null);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [pendingDeleteQuery, setPendingDeleteQuery] = useState<string | null>(null);
+	const [currentPage, setCurrentPage] = useState(1);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchQuery]);
 
 	const handleCreatePinnedResult = (data: {query: string; destination: string}) => {
 		const newPinnedResult: PinnedResult = {
@@ -35,7 +46,15 @@ export default function PinnedResultsPage() {
 	};
 
 	const handleRemovePinnedResult = (query: string) => {
-		setPinnedResults(pinnedResults.filter((b) => b.query !== query));
+		setPendingDeleteQuery(query);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const confirmRemovePinnedResult = () => {
+		if (!pendingDeleteQuery) return;
+		setPinnedResults(pinnedResults.filter((p: PinnedResult) => p.query !== pendingDeleteQuery));
+		setPendingDeleteQuery(null);
+		setIsDeleteDialogOpen(false);
 	};
 
 	const handleEditClick = (bet: PinnedResult) => {
@@ -52,7 +71,7 @@ export default function PinnedResultsPage() {
 						...b,
 						query: data.query,
 						destination: data.destination,
-				  }
+					}
 				: b
 		);
 
@@ -73,6 +92,46 @@ export default function PinnedResultsPage() {
 		);
 	}, [searchQuery, pinnedResults]);
 
+	const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
+	const effectivePage = Math.min(currentPage, totalPages);
+	const paginatedResults = filteredData.slice(
+		(effectivePage - 1) * PAGE_SIZE,
+		effectivePage * PAGE_SIZE
+	);
+	const shouldShowPagination = filteredData.length > PAGE_SIZE;
+
+	useEffect(() => {
+		if (currentPage !== effectivePage) {
+			setCurrentPage(effectivePage);
+		}
+	}, [currentPage, effectivePage]);
+
+	if (pinnedResults.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No pinned results yet"
+					body="Pin specific results to the top of search queries to ensure users always find the most relevant content."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Pinned Result
+					</Button>
+				</EmptyList>
+
+				<PinnedResultDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreatePinnedResult}
+				/>
+			</Box>
+		);
+	}
+
 	return (
 		<Box>
 			<Flex
@@ -82,12 +141,11 @@ export default function PinnedResultsPage() {
 				gap="16"
 				mb="24"
 			>
-				<Input
-					addonBefore={<IconSearch size={16} />}
-					placeholder="Search pinned results..."
-					style={{width: "320px"}}
+				<SearchInput
+					size="lg"
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
+					placeholder="Search pinned results..."
 				/>
 				<Button
 					size="lg"
@@ -101,10 +159,19 @@ export default function PinnedResultsPage() {
 			</Flex>
 
 			<PinnedResultsTable
-				pinnedResults={filteredData}
+				pinnedResults={paginatedResults}
 				onEdit={handleEditClick}
 				onRemove={handleRemovePinnedResult}
 				showStatus={false}
+				pagination={
+					shouldShowPagination
+						? {
+								page: effectivePage,
+								total: totalPages,
+								onPageChange: setCurrentPage,
+							}
+						: undefined
+				}
 			/>
 
 			<PinnedResultDialog
@@ -120,6 +187,24 @@ export default function PinnedResultsPage() {
 				mode="edit"
 				initialData={editingPinnedResult || undefined}
 				onSave={handleUpdatePinnedResult}
+			/>
+
+			<AbstractDialog
+				isAlert
+				title="Remove Pinned Result"
+				description={
+					pendingDeleteQuery
+						? `Are you sure you want to remove the pinned result "${pendingDeleteQuery}"? This action cannot be undone.`
+						: "Are you sure you want to remove this pinned result? This action cannot be undone."
+				}
+				open={isDeleteDialogOpen}
+				setOpen={(open: boolean) => {
+					setIsDeleteDialogOpen(open);
+					if (!open) setPendingDeleteQuery(null);
+				}}
+				footerPrimaryText="Remove"
+				footerPrimaryAction={confirmRemovePinnedResult}
+				footerAppearance="danger"
 			/>
 		</Box>
 	);

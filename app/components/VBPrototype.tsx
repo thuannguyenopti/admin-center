@@ -1,20 +1,9 @@
-"use client";
+"use client"; // --- SEO Block Types (from initialData) ---
 
-import {
-	Box,
-	Button,
-	Text,
-	Tabs,
-	TabsList,
-	TabsTrigger,
-	TabsContent,
-	Textarea,
-	Heading,
-	Menu,
-	MenuTrigger,
-	MenuContent,
-} from "@optiaxiom/react";
-import React, { useEffect, useRef, useState } from "react";
+import type {SEOBlock} from "@/app/db/initialData";
+
+import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
+import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
 	IconArrowBarBoth,
@@ -22,48 +11,74 @@ import {
 	IconSparkles,
 	IconSquare,
 	IconSection,
+	IconDots,
+	IconSettings,
+	IconChevronLeft,
+	IconCopy,
 } from "@tabler/icons-react";
 
-import { EleMap } from "./vb/Ele";
+import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
-import RightToolbar from "./RightToolbar";
+import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
-import { PreviewSettings } from "./vb/PreviewSettings";
-import ImageSelectorPanel from "./ImageSelector/ImageSelectorPanel";
+import {PreviewSettings} from "./vb/PreviewSettings";
+import VersionHistory from "./vb/versionHistory/VersionHistory";
+
+import {getExtensionById} from "@/app/extensions/registry";
+
 import styles from "./VBPrototype.module.css";
-import PropertiesPanel, { PageProperties } from "./vb/PropertiesPanel";
+import PropertiesPanel, {
+	PageProperties,
+	PropertySection,
+	navigationItems,
+} from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
+import ExtensionPanel from "./ExtensionPanel";
+// @ts-ignore
+import usePersistentState from "@/app/usePersistentState";
+import AbstractDialog from "@/app/components/AbstractDialog";
+import {Input} from "@/app/components/Input";
+import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
+import DragHandle from "@/app/components/DragHandle";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
  * ------------------------------*/
 
-type NormalizeResult = { data: any[]; theEles: EleMap };
-type SplitPayload = { data: any[]; theEles: EleMap };
+type NormalizeResult = {data: any[]; theEles: EleMap};
+type SplitPayload = {data: any[]; theEles: EleMap};
 
 const isEleNode = (n: any) =>
 	n &&
 	typeof n === "object" &&
 	typeof n.id === "string" &&
 	typeof n.type === "string" &&
-	Array.isArray(n.props);
+	(n.properties || Array.isArray(n.props));
 
 const ensureOpen = (nodes: any[]): any[] => {
 	return nodes.map((node) => ({
 		...node,
 		open: node.open ?? true,
-		children: Array.isArray(node.children) ? ensureOpen(node.children) : node.children,
+		children: Array.isArray(node.children)
+			? ensureOpen(node.children)
+			: Array.isArray(node.elements)
+				? ensureOpen(node.elements)
+				: node.children,
 	}));
 };
 
 // only strips truly transient flags (keep `open`)
 const stripTransientFlags = (nodes: any[]): any[] => {
 	return nodes.map((n) => {
-		const { isNew, ...rest } = n;
+		const {isNew, ...rest} = n;
 		return {
 			...rest,
-			children: Array.isArray(n.children) ? stripTransientFlags(n.children) : n.children,
+			children: Array.isArray(n.children)
+				? stripTransientFlags(n.children)
+				: Array.isArray(n.elements)
+					? stripTransientFlags(n.elements)
+					: n.children,
 		};
 	});
 };
@@ -83,18 +98,49 @@ const normalizePage = (input: any): NormalizeResult => {
 	}
 
 	// Case B: merged tree array
-	if (!Array.isArray(input)) return { data: [], theEles: {} };
+	if (!Array.isArray(input)) return {data: [], theEles: {}};
 
 	const theEles: EleMap = {};
 
 	const strip = (node: any): any => {
 		if (isEleNode(node)) {
-			theEles[node.id] = { type: node.type, props: node.props };
-			return { id: node.id };
+			let properties = node.properties;
+			if (!properties && Array.isArray(node.props)) {
+				// Normalize legacy props array to properties map
+				properties = {};
+				node.props.forEach((p: any) => {
+					// Use label-based mapping for legacy support
+					const key = p.label.toLowerCase().includes("text")
+						? "text"
+						: p.label.toLowerCase().includes("heading")
+							? "text"
+							: p.label.toLowerCase().includes("label")
+								? "label"
+								: p.label.toLowerCase().includes("image")
+									? "imageUrl"
+									: p.label.toLowerCase().replace(/\s+/g, "");
+					properties[key] = {value: p.value};
+				});
+			}
+			theEles[node.id] = {
+				type: node.type,
+				properties: properties || {},
+			};
+			return {id: node.id};
 		}
 
-		const out: any = { ...node };
-		if (Array.isArray(node.children)) out.children = node.children.map(strip);
+		const out: any = {...node};
+		if (Array.isArray(node.elements)) {
+			out.elements = node.elements.map(strip);
+		} else if (Array.isArray(node.children)) {
+			// If it's likely a column but using 'children', normalize to 'elements'
+			if (node.id && (node.id.startsWith("col-") || node.id.startsWith("c-"))) {
+				out.elements = node.children.map(strip);
+				delete out.children;
+			} else {
+				out.children = node.children.map(strip);
+			}
+		}
 		return out;
 	};
 
@@ -109,7 +155,8 @@ const collectElementIds = (data: any[]): Set<string> => {
 	for (const section of data) {
 		for (const row of section.children || []) {
 			for (const col of row.children || []) {
-				for (const ref of col.children || []) {
+				const children = col.elements || col.children || [];
+				for (const ref of children) {
 					if (ref?.id) ids.add(ref.id);
 				}
 			}
@@ -123,29 +170,6 @@ const pruneEles = (data: any[], theEles: EleMap): EleMap => {
 	const out: EleMap = {};
 	for (const id of used) if (theEles[id]) out[id] = theEles[id];
 	return out;
-};
-
-/** -----------------------------
- * AnimatedText (kept; optional)
- * ------------------------------*/
-
-const AnimatedText: React.FC<{ texts: string[]; interval?: number }> = ({
-	texts,
-	interval = 2000,
-}) => {
-	const [index, setIndex] = useState(0);
-	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-	useEffect(() => {
-		timeoutRef.current = setTimeout(() => {
-			setIndex((prev) => (prev + 1) % texts.length);
-		}, interval);
-		return () => {
-			if (timeoutRef.current) clearTimeout(timeoutRef.current);
-		};
-	}, [index, texts.length, interval]);
-
-	return <span>{texts[index]}</span>;
 };
 
 type OutlineType = {
@@ -171,7 +195,11 @@ const isOutlineArray = (v: any): v is OutlineType[] => {
 
 type PageInput = {
 	outlines?: OutlineType[] | any[] | SplitPayload; // allow legacy too
-	properties?: PageProperties;
+	properties?: PageProperties; // allow both
+	data?: Record<string, any>;
+	variationId?: string;
+	contentTypeId?: string;
+	id?: string;
 };
 
 /** -----------------------------
@@ -180,13 +208,14 @@ type PageInput = {
 
 const mergeData = (structure: any[], elements: EleMap) => {
 	return structure.map((node) => {
-		const newNode = { ...node };
+		const newNode = {...node};
 		if (elements[node.id]) {
 			newNode.type = elements[node.id].type;
-			newNode.props = elements[node.id].props;
+			newNode.properties = elements[node.id].properties;
 		}
-		if (node.children) {
-			newNode.children = mergeData(node.children, elements);
+		const children = node.elements || node.children;
+		if (Array.isArray(children)) {
+			newNode.children = mergeData(children, elements);
 		}
 		return newNode;
 	});
@@ -204,17 +233,145 @@ export default function VBPrototype({
 	onSave,
 	onPublish,
 	pageName,
+	pageId,
 	pageStatus,
+	variations,
+	onAddVariation,
+	onDeleteVariation,
+	onRenameVariation,
+	onTrash,
+	onRenamePage,
+	onViewOnWebsite,
+	versionHistory,
+	onRestoreVersion,
 }: {
 	initialData?: PageInput;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
+	onTrash?: () => void;
 	pageName?: string;
+	pageId?: string;
 	pageStatus?: string;
+	onViewOnWebsite?: () => void;
+	variations?: {
+		id: string;
+		name: string;
+		status: string;
+		outlines?: any[];
+		data?: Record<string, any>;
+	}[];
+	onAddVariation?: (
+		payload: string | {name: string; outlines?: any[]; data?: Record<string, any>}
+	) => string | void;
+	onDeleteVariation?: (id: string) => void;
+	onRenameVariation?: (id: string, newName: string) => void;
+	onRenamePage?: (newName: string) => void;
+	versionHistory?: ReturnType<typeof useVersionHistory>;
+	onRestoreVersion?: (version: any) => void;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
 	const [cloning, setCloning] = useState<boolean>(false);
+	const [selectedVariation, setSelectedVariation] = useState("original");
+	const [isVariationDialogOpen, setIsVariationDialogOpen] = useState(false);
+	const [isDeleteVariationDialogOpen, setIsDeleteVariationDialogOpen] = useState(false);
+	const [isRenameVariationDialogOpen, setIsRenameVariationDialogOpen] = useState(false);
+	const [isTrashDialogOpen, setIsTrashDialogOpen] = useState(false);
+	const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
+	const [newVariationName, setNewVariationName] = useState("");
+	const [renameVariationName, setRenameVariationName] = useState("");
+
+	const [isRenamePageDialogOpen, setIsRenamePageDialogOpen] = useState(false);
+	const [newPageName, setNewPageName] = useState("");
+
+	const handleCreateVariation = () => {
+		if (newVariationName && onAddVariation) {
+			onAddVariation(newVariationName);
+			setIsVariationDialogOpen(false);
+			setNewVariationName("");
+		}
+	};
+
+	const handleDeleteVariation = () => {
+		if (onDeleteVariation && selectedVariation !== "original") {
+			onDeleteVariation(selectedVariation);
+			setSelectedVariation("original");
+			setIsDeleteVariationDialogOpen(false);
+		}
+	};
+
+	const handleRenameVariation = () => {
+		if (onRenameVariation && renameVariationName && selectedVariation !== "original") {
+			onRenameVariation(selectedVariation, renameVariationName);
+			setIsRenameVariationDialogOpen(false);
+		}
+	};
+
+	const openRenameDialog = () => {
+		if (!variations) return;
+		const v = variations.find((varItem) => varItem.id === selectedVariation);
+		if (v) {
+			setRenameVariationName(v.name);
+			setIsRenameVariationDialogOpen(true);
+		}
+	};
+
+	// Update outlines when variation changes
+	// We use refs to access the latest data without triggering re-renders on every save/edit loop
+	const latestData = useRef({initialData, variations});
+	useEffect(() => {
+		latestData.current = {initialData, variations};
+	}, [initialData, variations]);
+
+	useEffect(() => {
+		const {variations, initialData} = latestData.current;
+
+		const target = variations?.find((v) => v.id === selectedVariation);
+		if (target) {
+			// Restore properties
+			if (target.data) {
+				setProperties({...defaultProps, ...target.data});
+			}
+
+			const raw = target.outlines ?? [];
+			// Allow empty array for new variations
+			if (isOutlineArray(raw) || Array.isArray(raw)) {
+				_setOutlines(
+					(raw ?? []).map((o: any) => ({
+						...o,
+						tree: ensureOpen(stripTransientFlags(o.tree ?? [])),
+						elements: o.elements ?? {},
+					}))
+				);
+			}
+		} else if (selectedVariation === "original") {
+			// Restore properties
+			const originalProps = initialData?.properties ?? initialData?.data ?? {};
+			setProperties({...defaultProps, ...originalProps});
+
+			// Fallback for when "Original" is not explicitly in variations array (backward compat)
+			const raw = initialData?.outlines;
+			if (isOutlineArray(raw)) {
+				_setOutlines(
+					(raw ?? []).map((o) => ({
+						...o,
+						tree: ensureOpen(stripTransientFlags(o.tree ?? [])),
+						elements: o.elements ?? {},
+					}))
+				);
+			}
+		}
+	}, [selectedVariation]);
+
+	const variationOptions = React.useMemo(() => {
+		if (!variations) return [{label: "Original", value: "original"}];
+		// If variations includes "original", just map them all. Check by ID.
+		const hasOriginal = variations.some((v) => v.id === "original");
+		const mapped = variations.map((v) => ({label: v.name, value: v.id}));
+
+		if (hasOriginal) return mapped;
+		return [{label: "Original", value: "original"}, ...mapped];
+	}, [variations]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
 		mode: "responsive",
@@ -223,24 +380,55 @@ export default function VBPrototype({
 	});
 
 	const onPreviewChange = (patch: Partial<PreviewSettings>) => {
-		setPreview((p) => ({ ...p, ...patch }));
+		setPreview((p) => ({...p, ...patch}));
 	};
 
 	const defaultProps: PageProperties = {
-		seoTitle: "",
-		keywords: "",
-		description: "",
-		meta: "",
 		campaignMode: "no",
 		someOtherSetting: "setting1",
 	};
 
 	const [properties, setProperties] = useState<PageProperties>(() => {
-		return { ...defaultProps, ...(initialData?.properties ?? {}) };
+		return {
+			...defaultProps,
+			...(initialData?.properties ?? initialData?.data ?? {}),
+		};
 	});
 
+	const [activePropertiesSection, setActivePropertiesSection] = useState<PropertySection>("menu");
+	const generateTriggerRef = useRef<(() => void) | null>(null);
+	const [generateLoading, setGenerateLoading] = useState(false);
+
+	// --- SEO Block Extraction ---
+	const getSEO = (seo: SEOBlock | undefined, locale: string, variant: string) => {
+		if (!seo) return {};
+		return seo[locale]?.[variant] || seo[locale]?.original || {};
+	};
+
+	const currentLocale = "en"; // TODO: wire to actual locale
+	const currentVariant = selectedVariation || "original";
+
+	const seoBlock: SEOBlock | undefined = (() => {
+		if (selectedVariation === "original") {
+			return (initialData?.data as any)?.seo;
+		}
+		const v = variations?.find((v) => v.id === selectedVariation);
+		return v?.data?.seo;
+	})();
+
+	const seo = getSEO(seoBlock, currentLocale, currentVariant);
+
+	// Example usage: Render meta tags using the dynamic SEO block
+	// <title>{seo.title}</title>
+	// <meta name="description" content={seo.description} />
+	// {seo.meta && Object.entries(seo.meta).map(([k, v]) => (
+	//   <meta name={k} content={v} key={k} />
+	// ))}
+
 	const [outlines, _setOutlines] = useState<OutlineType[]>(() => {
-		const raw = initialData?.outlines;
+		// Try to find "original" variation first
+		const originalVar = variations?.find((v) => v.id === "original");
+		let raw = originalVar?.outlines || initialData?.outlines;
 
 		if (isOutlineArray(raw)) {
 			return (raw ?? []).map((o) => ({
@@ -255,7 +443,7 @@ export default function VBPrototype({
 		}
 
 		const norm = normalizePage(raw);
-		return [{ id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles }];
+		return [{id: "outline-main", title: "Main", tree: norm.data, elements: norm.theEles}];
 	});
 
 	const hasChanged = useRef(false);
@@ -267,7 +455,7 @@ export default function VBPrototype({
 
 	const setPropertiesPatch = (patch: Partial<PageProperties>) => {
 		hasChanged.current = true;
-		setProperties((p) => ({ ...p, ...patch }));
+		setProperties((p) => ({...p, ...patch}));
 	};
 
 	const isFirstRender = useRef(true);
@@ -282,6 +470,7 @@ export default function VBPrototype({
 		return outlines.length ? outlines[0].id : null;
 	});
 
+	const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 
@@ -319,14 +508,16 @@ export default function VBPrototype({
 			if (sidebarTab === "outline") setSidebarTab("outlines");
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [outlines.length]);
+	}, [outlines]);
 
 	const isZero = outlines.length === 0; // View 4
 	const isSingle = outlines.length === 1; // View 3
 	const isMulti = outlines.length > 1; // View 1/2
 	const isEditingElement = currentEle !== "none";
 
-	const activeOutline = activeOutlineId ? outlines.find((o) => o.id === activeOutlineId) ?? null : null;
+	const activeOutline = activeOutlineId
+		? (outlines.find((o) => o.id === activeOutlineId) ?? null)
+		: null;
 
 	const data = activeOutline?.tree ?? [];
 	const theEles = activeOutline?.elements ?? {};
@@ -335,7 +526,9 @@ export default function VBPrototype({
 		hasChanged.current = true;
 		setOutlines((prev) =>
 			prev.map((o) =>
-				o.id === activeOutlineId ? { ...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg } : o
+				o.id === activeOutlineId
+					? {...o, tree: typeof arg === "function" ? (arg as any)(o.tree) : arg}
+					: o
 			)
 		);
 	};
@@ -345,10 +538,22 @@ export default function VBPrototype({
 		setOutlines((prev) =>
 			prev.map((o) =>
 				o.id === activeOutlineId
-					? { ...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg }
+					? {...o, elements: typeof arg === "function" ? (arg as any)(o.elements) : arg}
 					: o
 			)
 		);
+	};
+
+	const duplicateActiveOutline = () => {
+		if (!activeOutline) return;
+		const newId = `outline-${Date.now()}`;
+		const newOutline: OutlineType = {
+			...activeOutline,
+			id: newId,
+			title: `${activeOutline.title} (Copy)`,
+		};
+		setOutlines((prev) => [...prev, newOutline]);
+		setActiveOutlineId(newId);
 	};
 
 	const findOutlineIdForElement = (eleId: string) => {
@@ -368,7 +573,7 @@ export default function VBPrototype({
 		// ✅ Always drill down from View 1 -> View 2 when multi-outline
 		// (even if the element belongs to the currently active outline)
 		if (isMulti) {
-			setSidebarTab("outlines");  // keep your View 2 layout expectations
+			setSidebarTab("outlines"); // keep your View 2 layout expectations
 			setOutlineView("tree");
 		}
 
@@ -377,32 +582,6 @@ export default function VBPrototype({
 			setActiveOutlineId(owner);
 		}
 	};
-
-	const [AI, setAI] = useState(false);
-	const [loadingAI, setLoadingAI] = useState(false);
-	const [aiPrompt, setAiPrompt] = useState("");
-
-	async function sendMessage(message: string) {
-		if (!message.trim()) return;
-		setLoadingAI(true);
-		try {
-			const res = await fetch("/api/chat", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ userMessage: message }),
-			});
-
-			const payload = await res.json();
-
-			const parsed = JSON.parse(payload.response);
-
-			const norm = normalizePage(parsed);
-			setData(norm.data);
-			setTheEles(norm.theEles);
-		} finally {
-			setLoadingAI(false);
-		}
-	}
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
@@ -457,30 +636,53 @@ export default function VBPrototype({
 	};
 
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
-	const [isImageSelectorOpen, setIsImageSelectorOpen] = useState(false);
+	const [activeRightTool, setActiveRightTool] = usePersistentState("active-right-tool", null);
 
-	const onInputChange = (value: any, propIndex: number) => {
-		if (currentEle !== "none" && currentEle in theEles) {
-			setTheEles((prev) => {
-				const oldProps = prev[currentEle].props;
-				const newProps = [...oldProps];
-				newProps[propIndex] = { ...oldProps[propIndex], value };
-				return { ...prev, [currentEle]: { ...prev[currentEle], props: newProps } };
-			});
-		}
-	};
+	const onInputChange = useCallback((value: any, keyOrIndex: string | number) => {
+		if (currentEle === "none") return;
 
-	// Header actions (AI + plus-menu)
+		setTheEles((prev) => {
+			// Check if currentEle exists in the previous state
+			if (!prev[currentEle]) return prev;
+
+			const ele = prev[currentEle];
+			const properties = {...(ele.properties || {})};
+
+			if (typeof keyOrIndex === "string") {
+				properties[keyOrIndex] = {...properties[keyOrIndex], value};
+			}
+
+			return {
+				...prev,
+				[currentEle]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [currentEle, setTheEles]);
+
+	// Header actions (Generate only in Categories & Tags + plus-menu)
+	const showGenerateInHeader =
+		sidebarTab === "properties" && activePropertiesSection === "categories-tags";
 	const HeaderActions = (
 		<Box display="flex" alignItems="center" gap="2" className="relative">
-			<Button
-				onClick={() => setAI((v) => !v)}
-				appearance="subtle"
-				size="sm"
-				aria-label="AI"
-				icon={<IconSparkles size={16} />}
-				disabled={loadingAI}
-			/>
+			{showGenerateInHeader && (
+				<Tooltip content="Generate tag and category suggestions using Opal">
+					<Button
+						onClick={() => generateTriggerRef.current?.()}
+						appearance="default-opal"
+						size="sm"
+						rounded="sm"
+						px="8"
+						className="opalGenerateButton"
+						aria-label="Generate tags and categories"
+						icon={<IconSparkles size={16} />}
+						disabled={generateLoading}
+						loading={generateLoading}
+					/>
+				</Tooltip>
+			)}
 
 			<Menu
 				options={[
@@ -506,47 +708,34 @@ export default function VBPrototype({
 				<MenuContent />
 			</Menu>
 
-			<div
-				className={`absolute -right-[10px] top-[32px] opacity-0 invisible z-10 p-2 rounded-md ${styles.popupMenu} w-[200px] max-w-[80vw] mr-12`}
-				style={{
-					visibility: AI ? "visible" : undefined,
-					opacity: AI ? 1 : 0,
-					transform: AI ? "scale(1)" : "scale(0.9)",
-					transformOrigin: "top center",
-					transition: "0.3s",
-				}}
-			>
-				<form
-					onSubmit={(e) => {
-						e.preventDefault();
-						sendMessage(aiPrompt);
-					}}
+			{!isMulti && (
+				<Menu
+					options={[
+						{
+							addon: <IconSettings size={16} />,
+							label: "Properties",
+							execute: () => {
+								setSidebarTab("properties");
+								setEditingSectionId(null);
+							},
+						},
+						{
+							addon: <IconCopy size={16} />,
+							label: "Duplicate",
+							execute: duplicateActiveOutline,
+						},
+					]}
 				>
-					<Textarea
-						name="prompt"
-						rows={3}
-						className="w-full border rounded p-2 focus:outline-none focus:ring-2"
-						placeholder="What do you want to build today?"
-						value={aiPrompt}
-						onChange={(e: any) => setAiPrompt(e.target.value)}
+					<MenuTrigger
+						icon={<IconDots size={16} />}
+						aria-label="more"
+						appearance="subtle"
+						size="sm"
+						iconPosition="start"
 					/>
-					<div className="mt-2 flex gap-2">
-						<Button size="sm" onClick={() => sendMessage(aiPrompt)} disabled={loadingAI}>
-							Run
-						</Button>
-						<Button
-							size="sm"
-							appearance="subtle"
-							onClick={() => {
-								setAI(false);
-								setAiPrompt("");
-							}}
-						>
-							Close
-						</Button>
-					</div>
-				</form>
-			</div>
+					<MenuContent />
+				</Menu>
+			)}
 		</Box>
 	);
 
@@ -569,9 +758,11 @@ export default function VBPrototype({
 		onSaveRef.current?.({
 			outlines: nextOutlines,
 			properties,
+			variationId: selectedVariation,
 		});
 
 		setLastSaved(new Date());
+		hasChanged.current = false;
 	}, [outlines, properties]);
 
 	/** -----------------------------
@@ -588,14 +779,21 @@ export default function VBPrototype({
 	const isColId = (id: string) => id.startsWith("col-");
 	const isEleId = (id: string) => !isSectionId(id) && !isRowId(id) && !isColId(id);
 
-	const isSectionLast = (id: string) => id === "sec-last" || id.startsWith("sec-last") || id === "section-last" || id.startsWith("section-last");
+	const isSectionLast = (id: string) =>
+		id === "sec-last" ||
+		id.startsWith("sec-last") ||
+		id === "section-last" ||
+		id.startsWith("section-last");
 	const isRowLast = (id: string) => id.startsWith("row-last-");
 	const isColLast = (id: string) => id.startsWith("col-last-");
 	const isLastEle = (id: string) => id.startsWith("last-ele-");
 
 	const mkId = (base: string) => `${base}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
-	function cloneSectionWithRemap(section: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
+	function cloneSectionWithRemap(
+		section: any,
+		theEles: EleMap
+	): {cloned: any; elesPatch: EleMap} {
 		const elesPatch: EleMap = {};
 
 		const clonedSectionId = mkId(section.id);
@@ -609,16 +807,17 @@ export default function VBPrototype({
 					id: newRowId,
 					children: (row.children || []).map((col: any) => {
 						const newColId = mkId(col.id);
+						const colChildren = col.elements || col.children || [];
 						return {
 							...col,
 							id: newColId,
-							children: (col.children || []).map((ref: any) => {
+							elements: colChildren.map((ref: any) => {
 								const oldEleId = ref?.id;
 								if (!oldEleId) return ref;
 
 								const newEleId = mkId(oldEleId);
-								if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
-								return { id: newEleId };
+								if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
+								return {id: newEleId};
 							}),
 						};
 					}),
@@ -626,10 +825,10 @@ export default function VBPrototype({
 			}),
 		};
 
-		return { cloned, elesPatch };
+		return {cloned, elesPatch};
 	}
 
-	function cloneRowWithRemap(row: any, theEles: EleMap): { cloned: any; elesPatch: EleMap } {
+	function cloneRowWithRemap(row: any, theEles: EleMap): {cloned: any; elesPatch: EleMap} {
 		const elesPatch: EleMap = {};
 
 		const newRowId = mkId(row.id);
@@ -638,22 +837,23 @@ export default function VBPrototype({
 			id: newRowId,
 			children: (row.children || []).map((col: any) => {
 				const newColId = mkId(col.id);
+				const colChildren = col.elements || col.children || [];
 				return {
 					...col,
 					id: newColId,
-					children: (col.children || []).map((ref: any) => {
+					elements: colChildren.map((ref: any) => {
 						const oldEleId = ref?.id;
 						if (!oldEleId) return ref;
 
 						const newEleId = mkId(oldEleId);
-						if (theEles[oldEleId]) elesPatch[newEleId] = { ...theEles[oldEleId] };
-						return { id: newEleId };
+						if (theEles[oldEleId]) elesPatch[newEleId] = {...theEles[oldEleId]};
+						return {id: newEleId};
 					}),
 				};
 			}),
 		};
 
-		return { cloned, elesPatch };
+		return {cloned, elesPatch};
 	}
 
 	function applySectionDrag(
@@ -683,14 +883,14 @@ export default function VBPrototype({
 
 		if (isSectionLast(hoverId)) {
 			next.push(dragged);
-			return { nextData: next, elesPatch };
+			return {nextData: next, elesPatch};
 		}
 
 		const hoverIdx = next.findIndex((s) => s.id === hoverId);
 		if (hoverIdx === -1) return null;
 
 		next.splice(hoverIdx, 0, dragged);
-		return { nextData: next, elesPatch };
+		return {nextData: next, elesPatch};
 	}
 
 	function applyRowDrag(
@@ -755,13 +955,18 @@ export default function VBPrototype({
 				children.splice(insertAt, 0, rowToInsert);
 			}
 
-			return { ...sec, children };
+			return {...sec, children};
 		});
 
-		return { nextData: next, elesPatch };
+		return {nextData: next, elesPatch};
 	}
 
-	function applyColDrag(data: any[], draggingId: string, hoverId: string, cloning: boolean): DragApplyResult | null {
+	function applyColDrag(
+		data: any[],
+		draggingId: string,
+		hoverId: string,
+		cloning: boolean
+	): DragApplyResult | null {
 		let fromS = -1,
 			fromR = -1,
 			fromC = -1;
@@ -831,13 +1036,13 @@ export default function VBPrototype({
 					cols.splice(insertAt, 0, draggedCol);
 				}
 
-				return { ...row, children: cols };
+				return {...row, children: cols};
 			});
 
-			return { ...sec, children: rows };
+			return {...sec, children: rows};
 		});
 
-		return { nextData: next };
+		return {nextData: next};
 	}
 
 	function applyElementDrag(
@@ -848,7 +1053,8 @@ export default function VBPrototype({
 		theEles: EleMap
 	): DragApplyResult | null {
 		const newEleId = cloning ? mkId(draggingId) : draggingId;
-		const elesPatch = cloning && theEles[draggingId] ? { [newEleId]: { ...theEles[draggingId] } } : undefined;
+		const elesPatch =
+			cloning && theEles[draggingId] ? {[newEleId]: {...theEles[draggingId]}} : undefined;
 
 		let draggedRef: any = null;
 
@@ -857,14 +1063,15 @@ export default function VBPrototype({
 			children: (sec.children || []).map((row: any) => ({
 				...row,
 				children: (row.children || []).map((col: any) => {
-					const nextChildren = (col.children || []).filter((ref: any) => {
+					const colChildren = col.elements || col.children || [];
+					const nextChildren = colChildren.filter((ref: any) => {
 						if (ref?.id === draggingId) {
-							draggedRef = cloning ? { id: newEleId } : ref;
+							draggedRef = cloning ? {id: newEleId} : ref;
 							return cloning;
 						}
 						return true;
 					});
-					return { ...col, children: nextChildren };
+					return {...col, elements: nextChildren};
 				}),
 			})),
 		}));
@@ -879,13 +1086,14 @@ export default function VBPrototype({
 					...row,
 					children: (row.children || []).map((col: any) => {
 						if (col.id !== targetColId) return col;
-						if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
-						return { ...col, children: [...(col.children || []), draggedRef] };
+						const colChildren = col.elements || col.children || [];
+						if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
+						return {...col, elements: [...colChildren, draggedRef]};
 					}),
 				})),
 			}));
 
-			return { nextData: next, elesPatch };
+			return {nextData: next, elesPatch};
 		}
 
 		const next = removed.map((sec: any) => ({
@@ -893,19 +1101,20 @@ export default function VBPrototype({
 			children: (sec.children || []).map((row: any) => ({
 				...row,
 				children: (row.children || []).map((col: any) => {
-					const idx = (col.children || []).findIndex((r: any) => r?.id === hoverId);
+					const colChildren = col.elements || col.children || [];
+					const idx = colChildren.findIndex((r: any) => r?.id === hoverId);
 					if (idx === -1) return col;
 
-					if ((col.children || []).some((r: any) => r?.id === draggedRef.id)) return col;
+					if (colChildren.some((r: any) => r?.id === draggedRef.id)) return col;
 
-					const copy = [...(col.children || [])];
+					const copy = [...colChildren];
 					copy.splice(idx, 0, draggedRef);
-					return { ...col, children: copy };
+					return {...col, elements: copy};
 				}),
 			})),
 		}));
 
-		return { nextData: next, elesPatch };
+		return {nextData: next, elesPatch};
 	}
 
 	function applyDragDrop(
@@ -955,7 +1164,7 @@ export default function VBPrototype({
 			if (res) {
 				setData(res.nextData);
 				if (res.elesPatch) {
-					setTheEles((prev) => ({ ...prev, ...res.elesPatch! }));
+					setTheEles((prev) => ({...prev, ...res.elesPatch!}));
 				}
 				setCurrentHoverEle("none");
 			}
@@ -975,7 +1184,6 @@ export default function VBPrototype({
 			if (event.key === "Escape") {
 				setCurrentEle("none");
 				setCurrentHoverEle("none");
-				setAI(false);
 			} else if (event.key === "Alt" && event.location === 1) {
 				setCloning(true);
 			}
@@ -998,21 +1206,32 @@ export default function VBPrototype({
 	 * ------------------------------*/
 	if (isZero) {
 		return (
-			<div className="select-none" style={{ height: "100%" }}>
+			<div className="select-none" style={{height: "100%"}}>
 				<Box
 					bg="bg.page"
 					w="full"
 					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-					style={{ height: "100%", overflow: "hidden" }}
+					style={{height: "100%", overflow: "hidden"}}
 				>
 					<CMSToolbar
 						pageName={pageName || "New Page"}
+						pageId={pageId}
 						lastSaved={lastSaved}
 						pageStatus={pageStatus}
 						onPublish={onPublish}
+						onViewOnWebsite={onViewOnWebsite}
+						onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
+						variationOptions={variationOptions}
+						selectedVariation={selectedVariation}
+						onVariationChange={setSelectedVariation}
+						onAddVariation={() => setIsVariationDialogOpen(true)}
+						onRenamePage={() => {
+							setNewPageName(pageName || "");
+							setIsRenamePageDialogOpen(true);
+						}}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1021,45 +1240,26 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
+						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 					>
-						{/* Resizable handle (kept consistent) */}
-						<div
-							className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-5 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
-							onMouseDown={(e) => {
-								e.preventDefault();
-								const startX = e.clientX;
-								const outlineBox = e.currentTarget.parentElement as HTMLElement;
-								const startWidth = outlineBox.offsetWidth;
+						<DragHandle position="right" minWidth={180} maxWidth={600} />
 
-								const onMouseMove = (moveEvent: MouseEvent) => {
-									const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
-									outlineBox.style.width = newWidth + "px";
-								};
-
-								const onMouseUp = () => {
-									window.removeEventListener("mousemove", onMouseMove);
-									window.removeEventListener("mouseup", onMouseUp);
-								};
-
-								window.addEventListener("mousemove", onMouseMove);
-								window.addEventListener("mouseup", onMouseUp);
-							}}
-						>
-							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-							<Box color="fg.secondary">
-								<IconArrowBarBoth size="16" />
-							</Box>
-							<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-						</div>
-
-						<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
+						<div className="h-full flex flex-col" style={{overflow: "hidden"}}>
 							<div className="pl-6 pt-4 pb-2">
 								<Heading level="4">Properties</Heading>
 							</div>
 
 							<div className="flex-1 overflow-y-auto">
-								<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
+								<PropertiesPanel
+									value={properties}
+									onChange={setPropertiesPatch}
+									pageName={pageName ?? undefined}
+									pageId={initialData?.id}
+									onRegisterGenerateTrigger={(fn) => {
+										generateTriggerRef.current = fn;
+									}}
+									onGenerateLoadingChange={setGenerateLoading}
+								/>
 							</div>
 						</div>
 					</Box>
@@ -1067,11 +1267,11 @@ export default function VBPrototype({
 					{/* RIGHT / CANVAS (still visible even with 0 outlines) */}
 					<div
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
-						style={{ height: "100%", overflow: "hidden" }}
+						style={{height: "100%", overflow: "hidden"}}
 					>
 						<PreviewCanvas
 							outlines={outlines as any} // will be []
-							theEles={{}}              // no active outline
+							theEles={{}} // no active outline
 							currentEle={currentEle}
 							currentHoverEle={currentHoverEle}
 							setCurrentEle={setCurrentEleSmart}
@@ -1079,17 +1279,37 @@ export default function VBPrototype({
 							setOutlines={setOutlines as any}
 							preview={preview}
 						/>
-
-						{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
-
 						<Box borderL="1" borderColor="border.tertiary">
 							<RightToolbar
-								onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
-								isFolderActive={isImageSelectorOpen}
+								activeTool={activeRightTool}
+								onToggleTool={(tool) =>
+									setActiveRightTool(activeRightTool === tool ? null : tool)
+								}
 							/>
 						</Box>
 					</div>
 				</Box>
+				<AbstractDialog
+					title="Create Variation"
+					description="Enter a name for the new variation."
+					open={isVariationDialogOpen}
+					setOpen={setIsVariationDialogOpen}
+					footerPrimaryText="Create"
+					footerPrimaryAction={handleCreateVariation}
+					size="sm"
+				>
+					<Box pt="4">
+						<Input
+							autoFocus
+							placeholder="Variation Name"
+							value={newVariationName}
+							onChange={(e: any) => setNewVariationName(e.target.value)}
+							onKeyDown={(e: any) => {
+								if (e.key === "Enter") handleCreateVariation();
+							}}
+						/>
+					</Box>
+				</AbstractDialog>
 			</div>
 		);
 	}
@@ -1098,21 +1318,34 @@ export default function VBPrototype({
 	 * Main layout
 	 * ------------------------------*/
 	return (
-		<div className="select-none" style={{ height: "100%" }}>
+		<div className="select-none" style={{height: "100%"}}>
 			<Box
-				bg="bg.page"
 				w="full"
 				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
-				style={{ height: "100%", overflow: "hidden" }}
+				style={{height: "100%", overflow: "hidden"}}
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
+					pageId={pageId}
 					lastSaved={lastSaved}
 					pageStatus={pageStatus}
 					onPublish={onPublish}
+					onViewOnWebsite={onViewOnWebsite}
+					onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
+					variationOptions={variationOptions}
+					selectedVariation={selectedVariation}
+					onVariationChange={setSelectedVariation}
+					onAddVariation={() => setIsVariationDialogOpen(true)}
+					onDeleteVariationRequest={() => setIsDeleteVariationDialogOpen(true)}
+					onRenameVariation={() => openRenameDialog()}
+					onTrash={() => setIsTrashDialogOpen(true)}
+					onRenamePage={() => {
+						setNewPageName(pageName || "");
+						setIsRenamePageDialogOpen(true);
+					}}
 				/>
 
 				{/* LEFT SIDEBAR */}
@@ -1122,254 +1355,441 @@ export default function VBPrototype({
 					w="auto"
 					className="vb-outline"
 					bg="bg.page"
-					style={{ width: 324, minWidth: 180, maxWidth: 600, position: "relative" }}
+					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 				>
-					{/* Resizable handle */}
-					<div
-						className="absolute top-0 bottom-0 flex flex-col items-center gap-1 -right-2 w-4 cursor-ew-resize z-20 hover:opacity-100 opacity-0 transition-opacity duration-200"
-						onMouseDown={(e) => {
-							e.preventDefault();
-							const startX = e.clientX;
-							const outlineBox = e.currentTarget.parentElement as HTMLElement;
-							const startWidth = outlineBox.offsetWidth;
+					<DragHandle position="right" minWidth={180} maxWidth={600} />
 
-							const onMouseMove = (moveEvent: MouseEvent) => {
-								const newWidth = Math.max(180, Math.min(600, startWidth + (moveEvent.clientX - startX)));
-								outlineBox.style.width = newWidth + "px";
-							};
-
-							const onMouseUp = () => {
-								window.removeEventListener("mousemove", onMouseMove);
-								window.removeEventListener("mouseup", onMouseUp);
-							};
-
-							window.addEventListener("mousemove", onMouseMove);
-							window.addEventListener("mouseup", onMouseUp);
-						}}
-					>
-						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-						<Box color="fg.secondary">
-							<IconArrowBarBoth size="16" />
-						</Box>
-						<div className={`w-1 h-full left-1.5 grow-1 ${styles.divider}`} />
-					</div>
-
-					<div className="h-full flex flex-col" style={{ overflow: "hidden" }}>
-						{/* MULTI: View 1 <-> View 2 full-sidebar slide */}
+					<div className="h-full flex flex-col">
+						{/* MULTI: list/tree/properties/ElementEditor drill-down slide */}
 						{isMulti ? (
-							<div className=" h-full overflow-hidden">
+							<div className="h-full overflow-hidden">
 								<div
-									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									className="flex w-[400%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
-										transform: outlineView === "tree" ? "translateX(-50%)" : "translateX(0%)",
+										transform: isEditingElement
+											? "translateX(-75%)"
+											: sidebarTab === "properties"
+												? "translateX(-50%)"
+												: outlineView === "tree"
+													? "translateX(-25%)"
+													: "translateX(0%)",
 									}}
 								>
-									{/* PANE 1 = View 1 */}
-									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col min-h-0 ${outlineView === "tree" ? "pointer-events-none" : "pointer-events-auto"
-											}`}
-									>
-										<div className="pl-6 pr-6 pt-4 pb-2">
-											<div className="flex items-center gap-2">
+									{/* PANE 1: Outlines List */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										<Box px="24" pt="16" mb="16">
+											<Box display="flex" alignItems="center" gap="8">
 												<Heading level="4">Page</Heading>
-												<div className="flex-1" />
+												<Box flex="1" />
+												<Box display="flex" alignItems="center" gap="4">
+													<Menu
+														options={[
+															{
+																addon: <IconSettings size={16} />,
+																label: "Properties",
+																execute: () => {
+																	setSidebarTab("properties");
+																	setEditingSectionId(null);
+																},
+															},
+														]}
+													>
+														<MenuTrigger
+															icon={<IconDots size={16} />}
+															aria-label="more"
+															appearance="subtle"
+															size="sm"
+															iconPosition="start"
+														/>
+														<MenuContent />
+													</Menu>
+												</Box>
+											</Box>
+										</Box>
+										<div className="flex-1 overflow-y-auto pl-3 pr-3 pb-4">
+											<div className="flex flex-col gap-1">
+												{outlines.map((o) => (
+													<Button
+														key={o.id}
+														appearance="subtle"
+														w="full"
+														justifyContent="flex-start"
+														onClick={() => {
+															setActiveOutlineId(o.id);
+															setSidebarTab("outlines");
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+															setOutlineView("tree");
+														}}
+													>
+														{o.title}
+													</Button>
+												))}
 											</div>
-										</div>
-
-										<div className=" flex-1 overflow-y-auto">
-											<Tabs value={sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pr-6 pt-2 pb-2">
-													<TabsList>
-														<TabsTrigger value="outlines">Outlines</TabsTrigger>
-														<TabsTrigger value="properties">Properties</TabsTrigger>
-													</TabsList>
-												</div>
-
-												<TabsContent value="outlines">
-													<div className="pl-3 pr-3 pb-4">
-														<div className="flex flex-col gap-2">
-															{outlines.map((o) => (
-																<Button
-																	key={o.id}
-																	appearance="subtle"
-																	onClick={() => {
-																		setActiveOutlineId(o.id);
-																		setSidebarTab("outlines");
-																		setCurrentEle("none");
-																		setCurrentHoverEle("none");
-																		setAI(false);
-																		setOutlineView("tree");
-																	}}
-																>
-																	{o.title}
-																</Button>
-															))}
-														</div>
-													</div>
-												</TabsContent>
-
-												<TabsContent value="properties">
-													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-												</TabsContent>
-											</Tabs>
 										</div>
 									</div>
 
-									{/* PANE 2 = View 2 (tree) <-> ElementEditor */}
-									<div
-										className={`min-w-[50%] w-[50%] h-full overflow-hidden min-h-0 ${outlineView === "tree" ? "pointer-events-auto" : "pointer-events-none"
-											}`}
-									>
-										<div
-											className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
-											style={{
-												transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
-											}}
-										>
-											{/* VIEW 2 */}
-											<div
-												className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
-													}`}
-											>
-												<div className="pt-4 pb-2">
-													{activeOutline ? (
-														<div className="pl-6 pr-6 flex flex-col gap-1">
-															<Text
-																fontSize="sm"
-																fontWeight="400"
-																color="fg.accent"
-																className="cursor-pointer"
-																onClick={() => {
-																	setOutlineView("list");
-																	setCurrentEle("none");
-																	setCurrentHoverEle("none");
-																	setAI(false);
-																}}
-															>
-																← Page
-															</Text>
-
-															<div className="flex items-center gap-2">
-																<Heading level="4">{activeOutline.title}</Heading>
-																<div className="flex-1" />
-																{HeaderActions}
-															</div>
-														</div>
-													) : (
-														<div className="pl-6 pr-6 flex items-center gap-2">
-															<Heading level="4">Outline</Heading>
-															<div className="flex-1" />
-															{HeaderActions}
-														</div>
-													)}
-												</div>
-
-												<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
-													{activeOutline ? (
-														<OutlineTree
-															cloning={cloning}
-															dragging={dragging}
-															setDragging={setDragging}
-															currentHoverEle={currentHoverEle}
-															setCurrentEle={setCurrentEle}
-															data={data}
-															setTheEles={setTheEles}
-															setData={setData}
-															theEles={theEles}
-															setCurrentHoverEle={setCurrentHoverEle}
-														/>
-													) : null}
-												</div>
-											</div>
-
-											{/* ELEMENT EDITOR */}
-											<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
-												<div className="h-full overflow-y-auto">
-													<ElementEditor
-														outlineTitle={activeOutline?.title || "Outline"}
-														elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
-														currentEle={currentEle}
-														propsList={theEles[currentEle]?.props}
-														onBack={() => {
+									{/* PANE 2: Outline Tree */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										<div className="pt-4 pb-2">
+											{activeOutline ? (
+												<div className="pl-6 pr-6 flex flex-col gap-1">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer"
+														onClick={() => {
+															setOutlineView("list");
 															setCurrentEle("none");
 															setCurrentHoverEle("none");
-															setAI(false);
 														}}
-														onInputChange={onInputChange}
-													/>
+													>
+														← Page
+													</Text>
+
+													<div className="flex items-center gap-2">
+														<Heading level="4">
+															{activeOutline.title}
+														</Heading>
+														<div className="flex-1" />
+														<div className="flex items-center gap-1">
+															{HeaderActions}
+														</div>
+													</div>
+												</div>
+											) : (
+												<div className="pl-6 pr-6 flex items-center gap-2">
+													<Heading level="4">Outline</Heading>
+													<div className="flex-1" />
+													{HeaderActions}
+												</div>
+											)}
+										</div>
+										<div className="flex-1 overflow-y-auto pb-4 pr-3 min-h-0">
+											{activeOutline ? (
+												<OutlineTree
+													cloning={cloning}
+													dragging={dragging}
+													setDragging={setDragging}
+													currentHoverEle={currentHoverEle}
+													setCurrentEle={setCurrentEle}
+													data={data}
+													setTheEles={setTheEles}
+													setData={setData}
+													theEles={theEles}
+													setCurrentHoverEle={setCurrentHoverEle}
+													onEditProperties={(id) => {
+														setSidebarTab("properties");
+														setEditingSectionId(id);
+													}}
+												/>
+											) : null}
+										</div>
+									</div>
+
+									{/* PANE 3: Properties */}
+									<div className="min-w-[25%] w-[25%] h-full flex flex-col">
+										{!editingSectionId && (
+											<div className="pl-6 pr-6 pt-4 pb-2">
+												<div
+													className="relative mb-1"
+													style={{height: "20px"}}
+												>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setActivePropertiesSection("menu");
+														}}
+														style={{
+															visibility:
+																activePropertiesSection === "menu"
+																	? "hidden"
+																	: "visible",
+															pointerEvents:
+																activePropertiesSection === "menu"
+																	? "none"
+																	: "auto",
+														}}
+													>
+														← Properties
+													</Text>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setSidebarTab("outlines");
+															setOutlineView("list");
+															setEditingSectionId(null);
+														}}
+														style={{
+															visibility:
+																activePropertiesSection !== "menu"
+																	? "hidden"
+																	: "visible",
+															pointerEvents:
+																activePropertiesSection !== "menu"
+																	? "none"
+																	: "auto",
+														}}
+													>
+														← Main
+													</Text>
+												</div>
+												<div className="flex items-center gap-2">
+													<Heading level="4">
+														{activePropertiesSection === "menu"
+															? "Properties"
+															: navigationItems.find(
+																	(item) =>
+																		item.id ===
+																		activePropertiesSection
+																)?.label || "Properties"}
+													</Heading>
+													<div className="flex-1" />
 												</div>
 											</div>
+										)}
+										<div className="flex-1 overflow-y-auto">
+											{editingSectionId ? (
+												<Box p="24">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer mb-1"
+														onClick={() => {
+															setSidebarTab("outlines");
+															setOutlineView("tree");
+															setEditingSectionId(null);
+														}}
+													>
+														← {activeOutline?.title || "Page"}
+													</Text>
+													<Heading level="4" mb="16">
+														Section Properties
+													</Heading>
+													<Text fontSize="sm" color="fg.secondary">
+														Editing properties for section:{" "}
+														{editingSectionId}
+													</Text>
+													{/* Add section specific fields here later */}
+												</Box>
+											) : (
+												<PropertiesPanel
+													value={properties}
+													onChange={setPropertiesPatch}
+													activeSection={activePropertiesSection}
+													onSectionChange={setActivePropertiesSection}
+													pageName={pageName ?? undefined}
+													pageId={initialData?.id}
+													onRegisterGenerateTrigger={(fn) => {
+														generateTriggerRef.current = fn;
+													}}
+													onGenerateLoadingChange={setGenerateLoading}
+												/>
+											)}
+										</div>
+									</div>
+
+									{/* PANE 4: Element Editor */}
+									<div className="min-w-[25%] w-[25%] h-full">
+										<div className="h-full overflow-y-auto">
+											<ElementEditor
+												outlineTitle={activeOutline?.title || "Outline"}
+												elementType={
+													currentEle !== "none"
+														? theEles[currentEle]?.type || ""
+														: ""
+												}
+												currentEle={currentEle}
+												properties={theEles[currentEle]?.properties}
+												onBack={() => {
+													setCurrentEle("none");
+													setCurrentHoverEle("none");
+												}}
+												onInputChange={onInputChange}
+											/>
 										</div>
 									</div>
 								</div>
 							</div>
 						) : null}
 
-						{/* SINGLE: tree/properties (left) <-> ElementEditor (right) slide */}
+						{/* SINGLE: tree/properties/ElementEditor drill-down slide */}
 						{isSingle && activeOutline ? (
-							<div className="h-full overflow-hidden">
+							<div className="h-full">
 								<div
-									className="flex w-[200%] h-full transition-transform duration-300 ease-out will-change-transform"
+									className="flex w-[300%] h-full transition-transform duration-300 ease-out will-change-transform"
 									style={{
-										transform: isEditingElement ? "translateX(-50%)" : "translateX(0%)",
+										transform: isEditingElement
+											? "translateX(-66.666%)"
+											: sidebarTab === "properties"
+												? "translateX(-33.333%)"
+												: "translateX(0%)",
 									}}
 								>
-									<div
-										className={`min-w-[50%] w-[50%] h-full flex flex-col ${isEditingElement ? "pointer-events-none" : "pointer-events-auto"
-											}`}
-									>
+									{/* PANE 1: Outline Tree */}
+									<div className="min-w-[33.333%] w-[33.333%] h-full flex flex-col">
 										<div className="pl-6 pr-6 pt-4 pb-2">
 											<div className="flex items-center gap-2">
-												<Heading level="4">Page</Heading>
+												<Heading level="4">{activeOutline.title}</Heading>
 												<div className="flex-1" />
-												{HeaderActions}
+												<div className="flex items-center gap-1">
+													{HeaderActions}
+												</div>
 											</div>
 										</div>
-
-										<div className="flex-1 overflow-y-auto">
-											<Tabs value={isEditingElement ? "outline" : sidebarTab} onValueChange={setSidebarTab as any}>
-												<div className="pl-6 pr-6 pt-2 pb-2">
-													<TabsList>
-														<TabsTrigger value="outline">{activeOutline.title}</TabsTrigger>
-														<TabsTrigger value="properties">Properties</TabsTrigger>
-													</TabsList>
-												</div>
-
-												<TabsContent value="outline">
-													<div className="pb-4 pr-3">
-														<OutlineTree
-															cloning={cloning}
-															dragging={dragging}
-															setDragging={setDragging}
-															currentHoverEle={currentHoverEle}
-															setCurrentEle={setCurrentEle}
-															data={data}
-															setTheEles={setTheEles}
-															setData={setData}
-															theEles={theEles}
-															setCurrentHoverEle={setCurrentHoverEle}
-														/>
-													</div>
-												</TabsContent>
-
-												<TabsContent value="properties">
-													<PropertiesPanel value={properties} onChange={setPropertiesPatch} />
-												</TabsContent>
-											</Tabs>
+										<div className="flex-1 overflow-y-auto pb-4 pr-3">
+											<OutlineTree
+												cloning={cloning}
+												dragging={dragging}
+												setDragging={setDragging}
+												currentHoverEle={currentHoverEle}
+												setCurrentEle={setCurrentEle}
+												data={data}
+												setTheEles={setTheEles}
+												setData={setData}
+												theEles={theEles}
+												setCurrentHoverEle={setCurrentHoverEle}
+												onEditProperties={(id) => {
+													setSidebarTab("properties");
+													setEditingSectionId(id);
+												}}
+											/>
 										</div>
 									</div>
 
-									<div className={`flex-none w-1/2 h-full ${isEditingElement ? "pointer-events-auto" : "pointer-events-none"}`}>
+									{/* PANE 2: Properties (Page or Section) */}
+									<div className="min-w-[33.333%] w-[33.333%] h-full flex flex-col">
+										{!editingSectionId && (
+											<div className="pl-6 pr-6 pt-4 pb-2">
+												<div
+													className="relative mb-1"
+													style={{height: "20px"}}
+												>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setActivePropertiesSection("menu");
+														}}
+														style={{
+															visibility:
+																activePropertiesSection === "menu"
+																	? "hidden"
+																	: "visible",
+															pointerEvents:
+																activePropertiesSection === "menu"
+																	? "none"
+																	: "auto",
+														}}
+													>
+														← Properties
+													</Text>
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer absolute top-0 left-0"
+														onClick={() => {
+															setSidebarTab("outline");
+															setEditingSectionId(null);
+														}}
+														style={{
+															visibility:
+																activePropertiesSection !== "menu"
+																	? "hidden"
+																	: "visible",
+															pointerEvents:
+																activePropertiesSection !== "menu"
+																	? "none"
+																	: "auto",
+														}}
+													>
+														← Main
+													</Text>
+												</div>
+												<div className="flex items-center gap-2">
+													<Heading level="4">
+														{activePropertiesSection === "menu"
+															? "Properties"
+															: navigationItems.find(
+																	(item) =>
+																		item.id ===
+																		activePropertiesSection
+																)?.label || "Properties"}
+													</Heading>
+													<div className="flex-1" />
+													<div className="flex items-center gap-1">
+														{HeaderActions}
+													</div>
+												</div>
+											</div>
+										)}
+										<div className="flex-1 overflow-y-auto">
+											{editingSectionId ? (
+												<Box p="24">
+													<Text
+														fontSize="sm"
+														fontWeight="400"
+														color="fg.accent"
+														className="cursor-pointer mb-1"
+														onClick={() => {
+															setSidebarTab("outline");
+															setEditingSectionId(null);
+														}}
+													>
+														← {activeOutline?.title || "Page"}
+													</Text>
+													<Heading level="4" mb="16">
+														Section Properties
+													</Heading>
+													<Text fontSize="sm" color="fg.secondary">
+														Editing properties for section:{" "}
+														{editingSectionId}
+													</Text>
+													{/* Add section specific fields here later */}
+												</Box>
+											) : (
+												<PropertiesPanel
+													value={properties}
+													onChange={setPropertiesPatch}
+													activeSection={activePropertiesSection}
+													onSectionChange={setActivePropertiesSection}
+													pageName={pageName ?? undefined}
+													pageId={initialData?.id}
+													onRegisterGenerateTrigger={(fn) => {
+														generateTriggerRef.current = fn;
+													}}
+													onGenerateLoadingChange={setGenerateLoading}
+												/>
+											)}
+										</div>
+									</div>
+
+									{/* PANE 3: Element Editor */}
+									<div className="min-w-[33.333%] w-[33.333%] h-full">
 										<div className="h-full overflow-y-auto">
 											<ElementEditor
 												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={currentEle !== "none" ? theEles[currentEle]?.type || "" : ""}
+												elementType={
+													currentEle !== "none"
+														? theEles[currentEle]?.type || ""
+														: ""
+												}
 												currentEle={currentEle}
-												propsList={theEles[currentEle]?.props}
+												properties={theEles[currentEle]?.properties}
 												onBack={() => {
 													setCurrentEle("none");
 													setCurrentHoverEle("none");
-													setAI(false);
 												}}
 												onInputChange={onInputChange}
 											/>
@@ -1382,7 +1802,10 @@ export default function VBPrototype({
 				</Box>
 
 				{/* RIGHT / CANVAS */}
-				<div className=" pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1" style={{ height: "100%", overflow: "hidden" }}>
+				<div
+					className="relative pr-0 pt-0 gap-0 flex items-stretch z-10 min-h-0 flex-1"
+					style={{height: "100%"}}
+				>
 					<PreviewCanvas
 						outlines={outlines as any}
 						theEles={theEles}
@@ -1394,16 +1817,186 @@ export default function VBPrototype({
 						preview={preview}
 					/>
 
-					{isImageSelectorOpen && <ImageSelectorPanel onClose={() => setIsImageSelectorOpen(false)} />}
+					{(() => {
+						const activeExtension = activeRightTool
+							? getExtensionById(activeRightTool)
+							: null;
+						const ActivePanel = activeExtension?.component;
+						const activeManifest =
+							activeExtension && "manifest" in activeExtension
+								? (activeExtension as any).manifest
+								: activeExtension;
+
+						// Ensure "original" exists in variations for extensions
+						const safeVariations = [...(variations || [])];
+						if (!safeVariations.find((v) => v.id === "original")) {
+							// fallback: construct "original" from top-level legacy outlines
+							safeVariations.unshift({
+								id: "original",
+								name: "Original",
+								status: pageStatus || "Published",
+								outlines: initialData?.outlines as any[],
+								data: initialData?.data || initialData?.properties,
+							});
+						}
+
+						const extensionContext = {
+							pageName,
+							pageStatus,
+							variations: safeVariations,
+							selectedVariation,
+							// mutation hooks
+							onSelectVariation: setSelectedVariation,
+							onAddVariation,
+						};
+
+						if (ActivePanel) {
+							return (
+								<ExtensionPanel
+									title={activeManifest?.title || activeExtension?.label}
+									width={activeManifest?.width}
+									onClose={() => setActiveRightTool(null)}
+								>
+									<ActivePanel {...extensionContext} />
+								</ExtensionPanel>
+							);
+						}
+						return null;
+					})()}
 
 					<Box borderL="1" borderColor="border.tertiary">
 						<RightToolbar
-							onFolderClick={() => setIsImageSelectorOpen(!isImageSelectorOpen)}
-							isFolderActive={isImageSelectorOpen}
+							activeTool={activeRightTool}
+							onToggleTool={(tool) =>
+								setActiveRightTool(activeRightTool === tool ? null : tool)
+							}
 						/>
 					</Box>
 				</div>
 			</Box>
+			<AbstractDialog
+				title="Create Variation"
+				description="Enter a name for the new variation."
+				open={isVariationDialogOpen}
+				setOpen={setIsVariationDialogOpen}
+				footerPrimaryText="Create"
+				footerPrimaryAction={handleCreateVariation}
+				footerAppearance="primary"
+				size="sm"
+			>
+				<Box pt="4">
+					<Input
+						autoFocus
+						placeholder="Variation Name"
+						value={newVariationName}
+						onChange={(e: any) => setNewVariationName(e.target.value)}
+						onKeyDown={(e: any) => {
+							if (e.key === "Enter") handleCreateVariation();
+						}}
+					/>
+				</Box>
+			</AbstractDialog>
+
+			<AbstractDialog
+				isAlert
+				title="Delete Variation"
+				description={`Are you sure you want to delete this variation? This action cannot be undone.`}
+				open={isDeleteVariationDialogOpen}
+				setOpen={setIsDeleteVariationDialogOpen}
+				footerPrimaryText="Delete"
+				footerPrimaryAction={handleDeleteVariation}
+				footerSecondaryText="Cancel"
+				size="sm"
+			>
+				<Text>
+					You are about to delete "
+					{variations?.find((v) => v.id === selectedVariation)?.name}".
+				</Text>
+			</AbstractDialog>
+
+			<AbstractDialog
+				title="Rename Variation"
+				description="Enter a new name for the variation."
+				open={isRenameVariationDialogOpen}
+				setOpen={setIsRenameVariationDialogOpen}
+				footerPrimaryText="Rename"
+				footerPrimaryAction={handleRenameVariation}
+				size="sm"
+			>
+				<Box pt="4">
+					<Input
+						autoFocus
+						placeholder="Variation Name"
+						value={renameVariationName}
+						onChange={(e: any) => setRenameVariationName(e.target.value)}
+						onKeyDown={(e: any) => {
+							if (e.key === "Enter") handleRenameVariation();
+						}}
+					/>
+				</Box>
+			</AbstractDialog>
+
+			<AbstractDialog
+				title="Rename Page"
+				description="Enter a new name for the page."
+				open={isRenamePageDialogOpen}
+				setOpen={setIsRenamePageDialogOpen}
+				footerPrimaryText="Rename"
+				footerAppearance="primary"
+				blockPrimaryAction={!newPageName.trim()}
+				footerPrimaryAction={() => {
+					if (newPageName.trim()) {
+						onRenamePage?.(newPageName);
+					}
+				}}
+				size="sm"
+			>
+				<Box pt="4">
+					<Input
+						autoFocus
+						placeholder="Page Name"
+						value={newPageName}
+						onChange={(e: any) => setNewPageName(e.target.value)}
+						onKeyDown={(e: any) => {
+							if (e.key === "Enter") {
+								if (newPageName.trim()) {
+									onRenamePage?.(newPageName);
+									setIsRenamePageDialogOpen(false);
+								}
+							}
+						}}
+					/>
+				</Box>
+			</AbstractDialog>
+
+			<AbstractDialog
+				isAlert
+				title="Move Page to Trash"
+				description="Are you sure you want to move this page to trash?"
+				open={isTrashDialogOpen}
+				setOpen={setIsTrashDialogOpen}
+				footerPrimaryText="Move to Trash"
+				footerPrimaryAction={() => {
+					if (onTrash) onTrash();
+					setIsTrashDialogOpen(false);
+				}}
+				footerSecondaryText="Cancel"
+				size="sm"
+			>
+				<Text>This action will unpublish the page and move it to the trash.</Text>
+			</AbstractDialog>
+
+			{isVersionHistoryOpen && (
+				<VersionHistory
+					variations={variations}
+					pageOutlines={outlines}
+					onClose={() => setIsVersionHistoryOpen(false)}
+					initialPreviewMode={preview.mode === "fixed" || preview.mode === "scale" ? "fixed" : "responsive"}
+					versionHistory={versionHistory}
+					pageId={pageId}
+					onRestore={onRestoreVersion}
+				/>
+			)}
 		</div>
 	);
 }

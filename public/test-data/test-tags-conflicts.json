@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Cycling Training",
+    "slug": "cycling-training",
+    "visibility": "public"
+  },
+  {
+    "name": "Road Cycling",
+    "slug": "road-cycling",
+    "visibility": "public"
+  },
+  {
+    "name": "Mountain Biking",
+    "slug": "mountain-biking",
+    "visibility": "private"
+  }
+]
