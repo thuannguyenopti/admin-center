@@ -1,6 +1,15 @@
 "use client";
 
-import { type ComponentType, type ReactNode, type SVGProps, useDeferredValue, useMemo, useState } from "react";
+import {
+	type ComponentType,
+	type ReactNode,
+	type SVGProps,
+	useDeferredValue,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -16,13 +25,16 @@ import {
 	TabsList,
 	TabsTrigger,
 	Textarea,
+	Tooltip,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
+import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import Grid3Icon from "@/app/cmp/assets/grid3.svg";
 import Grid4Icon from "@/app/cmp/assets/grid4.svg";
+import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
 import {
 	IconCalendar,
 	IconCheck,
@@ -35,9 +47,9 @@ import {
 	IconLink,
 	IconMaximize,
 	IconMinus,
+	IconPencil,
 	IconPlus,
 	IconSearch,
-	IconSparkles,
 	IconTag,
 	IconUpload,
 	IconX,
@@ -54,15 +66,18 @@ type Scene =
 
 type TaskTab = "brief" | "content";
 
-type AssetType = "JPG" | "MP4" | "PDF";
+type AssetType = "JPG" | "PNG" | "MP4" | "PDF";
 
 type AssetItem = {
 	id: string;
+	heroSrc?: string;
 	label: AssetType;
 	match: number;
+	metaDescription?: string;
 	src: string;
 	title: string;
 	selected?: boolean;
+	thumbnailSrc?: string;
 	tooltip?: string;
 	preview: "image" | "pdf";
 	previewSrc?: string;
@@ -70,6 +85,9 @@ type AssetItem = {
 
 type SearchAssetItem = AssetItem & {
 	height: number;
+	keywords: string[];
+	thumbnailSrc?: string;
+	width: number;
 };
 
 type WorkflowTemplateIconKind = "calendar" | "copy" | "sparkles" | "tag" | "check";
@@ -96,10 +114,112 @@ type WorkflowTemplate = {
 	steps: WorkflowStep[];
 };
 
-type BriefBlock =
-	| { type: "heading"; text: string }
-	| { type: "paragraph"; text: string }
-	| { type: "list"; items: string[] };
+function getAssetMatch({
+	id,
+	label,
+	selected = false,
+	tooltip = false,
+}: {
+	id: string;
+	label: AssetType;
+	selected?: boolean;
+	tooltip?: boolean;
+}) {
+	const baseByLabel: Record<AssetType, number> = {
+		JPG: 90,
+		PNG: 90,
+		MP4: 89,
+		PDF: 86,
+	};
+	const spreadByLabel: Record<AssetType, number> = {
+		JPG: 8,
+		PNG: 8,
+		MP4: 9,
+		PDF: 7,
+	};
+
+	const hash = Array.from(id).reduce((total, char, index) => total + char.charCodeAt(0) * (index + 1), 0);
+	let score = baseByLabel[label] + (hash % spreadByLabel[label]);
+
+	if (selected) score += 2;
+	if (tooltip) score += 2;
+	if (label === "PDF") score = Math.min(score, 94);
+
+	return Math.min(score, 99);
+}
+
+function tokenizePrompt(value: string) {
+	return value
+		.toLowerCase()
+		.split(/[^a-z0-9]+/)
+		.filter((token) => token.length > 2);
+}
+
+function getSearchAssetMatch({
+	asset,
+	exclude,
+	perspectives,
+}: {
+	asset: SearchAssetItem;
+	exclude: string;
+	perspectives: string[];
+}) {
+	const includeTokens = perspectives.flatMap(tokenizePrompt);
+	const excludeTokens = tokenizePrompt(exclude);
+	const keywordSet = new Set(asset.keywords.map((keyword) => keyword.toLowerCase()));
+
+	let score = asset.match;
+
+	for (const token of includeTokens) {
+		if (keywordSet.has(token)) {
+			score += 2;
+			continue;
+		}
+
+		if (asset.title.toLowerCase().includes(token)) {
+			score += 1;
+		}
+	}
+
+	for (const token of excludeTokens) {
+		if (keywordSet.has(token) || asset.title.toLowerCase().includes(token)) {
+			score -= 6;
+		}
+	}
+
+	if (asset.selected) score += 1;
+	if (asset.tooltip) score += 1;
+
+	return Math.max(72, Math.min(score, 99));
+}
+
+function getBriefAssetMatch({
+	asset,
+	brief,
+}: {
+	asset: SearchAssetItem;
+	brief: string;
+}) {
+	const briefTokens = tokenizePrompt(brief);
+	const keywordSet = new Set(asset.keywords.map((keyword) => keyword.toLowerCase()));
+
+	let score = getAssetMatch({ id: asset.id, label: asset.label });
+
+	for (const token of briefTokens) {
+		if (keywordSet.has(token)) {
+			score += 5;
+			continue;
+		}
+
+		if (asset.title.toLowerCase().includes(token)) {
+			score += 2;
+		}
+	}
+
+	if (asset.selected) score += 1;
+
+	return Math.max(72, Math.min(score, 99));
+}
 
 const initialBriefContent = `Objective:
 Enhance sponsorship opportunities and visibility for the 2026 March IRONMAN/STRIDE triathlon.
@@ -115,42 +235,148 @@ Content #1: Sponsorship Overview Document
 • Distribution Channels: Direct outreach to potential sponsors, event website, and email campaigns.
 • Social Channels: Instagram, Facebook, and LinkedIn.`;
 
-function parseBriefContent(content: string): BriefBlock[] {
+function escapeHtml(value: string) {
+	return value
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
+}
+
+function formatInitialBriefHtml(content: string) {
 	const lines = content
 		.split("\n")
 		.map((line) => line.trim())
 		.filter(Boolean);
 
-	const blocks: BriefBlock[] = [];
+	const html: string[] = [];
 	let pendingList: string[] = [];
 
 	const flushList = () => {
 		if (pendingList.length > 0) {
-			blocks.push({ items: pendingList, type: "list" });
+			html.push(`<ul>${pendingList.join("")}</ul>`);
 			pendingList = [];
 		}
 	};
 
 	for (const line of lines) {
 		if (line.startsWith("•")) {
-			pendingList.push(line.replace(/^•\s*/, ""));
+			const item = line.replace(/^•\s*/, "");
+			const labelMatch = item.match(/^([^:]+:)\s*(.+)$/);
+
+			if (labelMatch) {
+				pendingList.push(`<li><strong>${escapeHtml(labelMatch[1])}</strong> ${escapeHtml(labelMatch[2])}</li>`);
+				continue;
+			}
+
+			pendingList.push(`<li>${escapeHtml(item)}</li>`);
 			continue;
 		}
 
 		flushList();
 
-		if (line.endsWith(":")) {
-			blocks.push({ text: line, type: "heading" });
+		if (/^Content #\d+:/i.test(line)) {
+			html.push(`<h3>${escapeHtml(line)}</h3>`);
 			continue;
 		}
 
-		blocks.push({ text: line, type: "paragraph" });
+		if (line.endsWith(":")) {
+			html.push(`<h2>${escapeHtml(line.slice(0, -1))}</h2>`);
+			continue;
+		}
+
+		html.push(`<p>${escapeHtml(line)}</p>`);
 	}
 
 	flushList();
 
-	return blocks;
+	return html.join("");
 }
+
+function getPlainTextFromHtml(content: string) {
+	if (typeof document === "undefined") {
+		return content.replace(/<[^>]+>/g, " ");
+	}
+
+	const container = document.createElement("div");
+	container.innerHTML = content;
+	return container.textContent ?? container.innerText ?? "";
+}
+
+const initialBriefHtml = formatInitialBriefHtml(initialBriefContent);
+
+const richTextContentStyles = `
+.brief-rich-content,
+.brief-editor-content {
+	color: var(--ax-colors-fg-default);
+	font-family: Inter, sans-serif;
+	font-size: 14px;
+	letter-spacing: -0.1px;
+	line-height: 20px;
+}
+
+.brief-rich-content h2,
+.brief-editor-content h2 {
+	font-size: 24px;
+	font-weight: 600;
+	line-height: 32px;
+	letter-spacing: -0.4px;
+	margin: 0 0 12px;
+}
+
+.brief-rich-content h3,
+.brief-editor-content h3 {
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 26px;
+	letter-spacing: -0.2px;
+	margin: 12px 0 8px;
+}
+
+.brief-rich-content p,
+.brief-editor-content p,
+.brief-rich-content ul,
+.brief-editor-content ul,
+.brief-rich-content ol,
+.brief-editor-content ol,
+.brief-rich-content blockquote,
+.brief-editor-content blockquote {
+	margin: 0 0 12px;
+}
+
+.brief-rich-content ul,
+.brief-editor-content ul,
+.brief-rich-content ol,
+.brief-editor-content ol {
+	padding-left: 22px;
+}
+
+.brief-rich-content li,
+.brief-editor-content li {
+	margin: 0 0 8px;
+}
+
+.brief-rich-content blockquote,
+.brief-editor-content blockquote {
+	border-left: 3px solid var(--ax-colors-border-accent);
+	color: var(--ax-colors-fg-secondary);
+	padding-left: 12px;
+}
+
+.brief-rich-content hr,
+.brief-editor-content hr {
+	border: 0;
+	border-top: 1px solid var(--ax-colors-border-default);
+	margin: 16px 0;
+}
+
+.brief-editor-content a,
+.brief-rich-content a {
+	color: var(--ax-colors-fg-accent);
+	text-decoration: underline;
+}
+`;
 
 const figmaAssets = {
 	card1: "https://www.figma.com/api/mcp/asset/52391482-2cbe-4357-9192-a0149afc8ef4",
@@ -206,53 +432,212 @@ const figmaAssets = {
 };
 
 const suggestedAssets: AssetItem[] = [
-	{ id: "a1", label: "JPG", match: 97, src: figmaAssets.card1, title: "Open water runners", preview: "image", selected: true },
-	{ id: "a2", label: "JPG", match: 97, src: figmaAssets.card2, title: "Swimmer in surf", preview: "image" },
-	{ id: "a3", label: "JPG", match: 97, src: figmaAssets.card5, title: "Cyclist in desert", preview: "image" },
-	{ id: "a4", label: "JPG", match: 97, src: figmaAssets.card3, title: "Swimming pack", preview: "image" },
-	{ id: "a5", label: "JPG", match: 97, src: figmaAssets.card8, title: "Sports cover art", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
-	{ id: "a6", label: "JPG", match: 97, src: figmaAssets.card6, title: "Cyclists on road", preview: "image", selected: true },
-	{ id: "a7", label: "PDF", match: 94, src: figmaAssets.vespaThumb, title: "Vespa brochure", preview: "pdf", previewSrc: figmaAssets.vespaPreview },
-	{ id: "a8", label: "MP4", match: 97, src: figmaAssets.card9, title: "Time trial cyclist", preview: "image" },
-	{ id: "a9", label: "MP4", match: 97, src: figmaAssets.card10, title: "Runner in red", preview: "image" },
-	{ id: "a10", label: "MP4", match: 97, src: figmaAssets.card11, title: "Runner on course", preview: "image" },
-	{ id: "a11", label: "MP4", match: 97, src: figmaAssets.card12, title: "Triathlon finish", preview: "image", selected: true },
-	{ id: "a12", label: "MP4", match: 97, src: figmaAssets.card18, title: "Cyclist in tunnel", preview: "image" },
+	{ id: "a1", label: "JPG", match: getAssetMatch({ id: "a1", label: "JPG", selected: true }), src: figmaAssets.card1, title: "Open water runners", preview: "image", selected: true },
+	{ id: "a2", label: "JPG", match: getAssetMatch({ id: "a2", label: "JPG" }), src: figmaAssets.card2, title: "Swimmer in surf", preview: "image" },
+	{ id: "a3", label: "JPG", match: getAssetMatch({ id: "a3", label: "JPG" }), src: figmaAssets.card5, title: "Cyclist in desert", preview: "image" },
+	{ id: "a4", label: "JPG", match: getAssetMatch({ id: "a4", label: "JPG" }), src: figmaAssets.card3, title: "Swimming pack", preview: "image" },
+	{ id: "a5", label: "JPG", match: getAssetMatch({ id: "a5", label: "JPG", tooltip: true }), src: figmaAssets.card8, title: "Sports cover art", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
+	{ id: "a6", label: "JPG", match: getAssetMatch({ id: "a6", label: "JPG", selected: true }), src: figmaAssets.card6, title: "Cyclists on road", preview: "image", selected: true },
+	{ id: "a7", label: "PDF", match: getAssetMatch({ id: "a7", label: "PDF" }), src: figmaAssets.vespaThumb, title: "Vespa brochure", preview: "pdf", previewSrc: figmaAssets.vespaPreview },
+	{ id: "a8", label: "MP4", match: getAssetMatch({ id: "a8", label: "MP4" }), src: figmaAssets.card9, title: "Time trial cyclist", preview: "image" },
+	{ id: "a9", label: "MP4", match: getAssetMatch({ id: "a9", label: "MP4" }), src: figmaAssets.card10, title: "Runner in red", preview: "image" },
+	{ id: "a10", label: "MP4", match: getAssetMatch({ id: "a10", label: "MP4" }), src: figmaAssets.card11, title: "Runner on course", preview: "image" },
+	{ id: "a11", label: "MP4", match: getAssetMatch({ id: "a11", label: "MP4", selected: true }), src: figmaAssets.card12, title: "Triathlon finish", preview: "image", selected: true },
+	{ id: "a12", label: "MP4", match: getAssetMatch({ id: "a12", label: "MP4" }), src: figmaAssets.card18, title: "Cyclist in tunnel", preview: "image" },
 ];
 
-const panelAssets: AssetItem[] = [
-	{ id: "p1", label: "JPG", match: 97, src: figmaAssets.panel1, title: "Open-water athlete", preview: "image" },
-	{ id: "p2", label: "JPG", match: 97, src: figmaAssets.panel2, title: "Swimmer overhead", preview: "image" },
-	{ id: "p3", label: "JPG", match: 97, src: figmaAssets.panel3, title: "Cyclists pack", preview: "image" },
-	{ id: "p4", label: "JPG", match: 97, src: figmaAssets.panel4, title: "Open-water group", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
-	{ id: "p5", label: "JPG", match: 97, src: figmaAssets.panel5, title: "Crowd cheering", preview: "image" },
-	{ id: "p6", label: "JPG", match: 97, src: figmaAssets.panel6, title: "Race runners", preview: "image" },
-	{ id: "p7", label: "JPG", match: 97, src: figmaAssets.panel7, title: "Beach runners", preview: "image" },
-	{ id: "p8", label: "JPG", match: 97, src: figmaAssets.panel8, title: "Cyclist in desert", preview: "image" },
-];
+const initialTaskAssets: AssetItem[] = [];
 
 const searchAssets: SearchAssetItem[] = [
-	{ id: "s1", label: "JPG", match: 97, src: figmaAssets.searchFortniteWide, title: "Fortnite screen", preview: "image", selected: true, height: 180 },
-	{ id: "s2", label: "JPG", match: 97, src: figmaAssets.searchSwimPack, title: "Swim pack", preview: "image", selected: true, height: 180 },
-	{ id: "s3", label: "PDF", match: 94, src: figmaAssets.searchFortnitePdf, title: "Fortnite brochure", preview: "pdf", height: 256 },
-	{ id: "s4", label: "MP4", match: 97, src: figmaAssets.searchBook, title: "Magazine spread", preview: "image", height: 170 },
-	{ id: "s5", label: "MP4", match: 97, src: figmaAssets.searchRedCyclist, title: "Red cyclist", preview: "image", height: 144 },
-	{ id: "s6", label: "JPG", match: 97, src: figmaAssets.searchOpenWaterWide, title: "Open-water runners", preview: "image", height: 180 },
-	{ id: "s7", label: "JPG", match: 97, src: figmaAssets.panel1, title: "Swimmer sprint", preview: "image", height: 180 },
-	{ id: "s8", label: "MP4", match: 97, src: figmaAssets.searchRoadCyclists, title: "Road cyclists", preview: "image", height: 256 },
-	{ id: "s9", label: "MP4", match: 97, src: figmaAssets.searchStockChart, title: "Stock chart", preview: "image", height: 180 },
-	{ id: "s10", label: "MP4", match: 97, src: figmaAssets.searchDarkCyclist, title: "Night cyclist", preview: "image", height: 144 },
-	{ id: "s11", label: "JPG", match: 97, src: figmaAssets.searchCyclistDesert, title: "Cyclist in desert", preview: "image", height: 180 },
-	{ id: "s12", label: "JPG", match: 97, src: figmaAssets.card3, title: "Open-water group", preview: "image", height: 180 },
-	{ id: "s13", label: "MP4", match: 97, src: figmaAssets.searchTimeTrial, title: "Time trial cyclist", preview: "image", height: 180 },
-	{ id: "s14", label: "MP4", match: 97, src: figmaAssets.searchTriathlonFinish, title: "Triathlon finish", preview: "image", selected: true, height: 144 },
-	{ id: "s15", label: "MP4", match: 97, src: figmaAssets.searchOrangeCyclist, title: "Orange cyclist", preview: "image", height: 144, tooltip: "highly relevant to fitness, cycling and health in general" },
-];
-
-const searchMasonryColumns = [
-	["s1", "s2", "s3", "s4", "s5"],
-	["s6", "s8", "s9", "s10"],
-	["s11", "s12", "s13", "s14", "s15"],
+	{
+		id: "s1",
+		label: "JPG",
+		match: getAssetMatch({ id: "s1", label: "JPG", selected: true }),
+		metaDescription: "Energetic open-water triathlon scene that works well as a sponsor-package hero or campaign thumbnail.",
+		src: "https://www.figma.com/api/mcp/asset/4a6043d8-95cb-44da-a9d2-edbf7b2394b8",
+		selected: true,
+		height: 180,
+		preview: "image",
+		keywords: ["swim", "swimmer", "openwater", "ocean", "fitness", "athlete", "triathlon", "event", "outdoor", "runners"],
+		thumbnailSrc: "https://www.figma.com/api/mcp/asset/22588afa-c07d-4a18-8d10-62383a3569dd",
+		title: "Open-water runners",
+		width: 291,
+	},
+	{
+		id: "s2",
+		label: "PNG",
+		match: getAssetMatch({ id: "s2", label: "PNG" }),
+		metaDescription: "Strong motion-led water shot for endurance storytelling, event promotion, and athlete-focused content.",
+		src: "https://www.figma.com/api/mcp/asset/15d6a52f-25f6-44c0-9385-b98b3948946a",
+		height: 180,
+		keywords: ["swim", "swimmer", "ocean", "fitness", "athlete", "triathlon", "sprint", "water"],
+		preview: "image",
+		title: "Runner in surf",
+		width: 162,
+	},
+	{
+		id: "s3",
+		label: "MP4",
+		match: getAssetMatch({ id: "s3", label: "MP4" }),
+		metaDescription: "A clean cycling visual with wide landscape context, useful for sport-performance and outdoor event messaging.",
+		src: "https://www.figma.com/api/mcp/asset/695da0de-de11-413c-b480-7c47fa6aa827",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "road", "desert", "outdoor", "athlete", "triathlon"],
+		preview: "image",
+		thumbnailSrc: "https://www.figma.com/api/mcp/asset/a395fdf0-d2d4-48f3-ba6c-9cfd5befab68",
+		title: "Cyclist in desert",
+		width: 219.2,
+	},
+	{
+		id: "s4",
+		label: "MP4",
+		match: getAssetMatch({ id: "s4", label: "MP4" }),
+		metaDescription: "Graphic overhead swim image that adds variety to triathlon coverage and works well in editorial layouts.",
+		src: "https://www.figma.com/api/mcp/asset/cf7a16a6-4f37-4110-a35b-5a2cdba859da",
+		height: 180,
+		keywords: ["swim", "swimmer", "water", "fitness", "athlete", "triathlon", "outdoor"],
+		preview: "image",
+		title: "Swimmer overhead",
+		width: 132,
+	},
+	{
+		id: "s5",
+		label: "JPG",
+		match: getAssetMatch({ id: "s5", label: "JPG" }),
+		metaDescription: "Poster-style creative asset suited for campaign moodboards, sponsor collateral, or concept exploration.",
+		src: "https://www.figma.com/api/mcp/asset/ac293cba-d3a8-4dc7-b10e-8ac84509d3a6",
+		height: 180,
+		keywords: ["music", "poster", "editorial", "print", "magazine", "cover", "collateral", "design"],
+		preview: "image",
+		title: "Swing poster",
+		width: 245,
+	},
+	{
+		id: "s6",
+		label: "MP4",
+		match: getAssetMatch({ id: "s6", label: "MP4", selected: true }),
+		metaDescription: "Road-cycling image with strong event energy, useful for hero banners, recaps, and sponsor storytelling.",
+		src: "https://www.figma.com/api/mcp/asset/9d728d71-337d-4acc-af17-9f73f0df342c",
+		selected: true,
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "road", "event", "outdoor", "athlete", "triathlon", "sales"],
+		preview: "image",
+		title: "Cyclists on road",
+		width: 294,
+	},
+	{
+		id: "s7",
+		label: "PDF",
+		match: getAssetMatch({ id: "s7", label: "PDF", tooltip: true }),
+		metaDescription: "Reference brochure asset for sales and sponsorship collateral when you need document-style supporting content.",
+		src: "https://www.figma.com/api/mcp/asset/45ad4624-294e-41d4-871e-b40c09e2466e",
+		height: 180,
+		keywords: ["pdf", "brochure", "collateral", "sales", "vespa", "brand", "print", "document", "webinar"],
+		preview: "pdf",
+		thumbnailSrc: "https://www.figma.com/api/mcp/asset/a6d8d1c5-5278-4d90-bcf3-68097aa99ba9",
+		title: "Vespa brochure",
+		tooltip: "highly relevant to fitness, cycling and health in general",
+		width: 219.2,
+	},
+	{
+		id: "s8",
+		label: "MP4",
+		match: getAssetMatch({ id: "s8", label: "MP4" }),
+		metaDescription: "Tight action image that emphasizes performance, speed, and race-day intensity for premium sports content.",
+		src: "https://www.figma.com/api/mcp/asset/30b06ce8-347c-4779-990e-fdc42fc3e551",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "timetrial", "athlete", "triathlon", "outdoor", "fitness"],
+		preview: "image",
+		title: "Time trial cyclist",
+		width: 305,
+	},
+	{
+		id: "s9",
+		label: "JPG",
+		match: getAssetMatch({ id: "s9", label: "JPG" }),
+		metaDescription: "Editorial print spread useful for mixing brand collateral and document-like references into the recommendation set.",
+		src: "https://www.figma.com/api/mcp/asset/7e502c56-9fa8-4b89-851d-513822fd33ca",
+		height: 180,
+		keywords: ["magazine", "book", "editorial", "print", "collateral", "document", "brochure"],
+		preview: "image",
+		title: "Magazine spread",
+		width: 148,
+	},
+	{
+		id: "s10",
+		label: "MP4",
+		match: getAssetMatch({ id: "s10", label: "MP4" }),
+		metaDescription: "Distinct cycling portrait that works well for athlete spotlights, training stories, and product-led race narratives.",
+		src: "https://www.figma.com/api/mcp/asset/229731dd-cb80-4092-b5cc-bd8b0ad1be10",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "orange", "athlete", "triathlon", "outdoor"],
+		preview: "image",
+		title: "Orange cyclist",
+		width: 132,
+	},
+	{
+		id: "s11",
+		label: "MP4",
+		match: getAssetMatch({ id: "s11", label: "MP4" }),
+		metaDescription: "Minimal profile shot that gives the panel a calmer visual option for editorial or supporting placements.",
+		src: "https://www.figma.com/api/mcp/asset/f74d40ed-ef4f-4d03-a260-e9e28eba7642",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "profile", "athlete", "triathlon", "fitness"],
+		preview: "image",
+		thumbnailSrc: "https://www.figma.com/api/mcp/asset/6ae6d557-81a4-4f2b-86c2-1e7145cd2088",
+		title: "Cyclist profile",
+		width: 219.2,
+	},
+	{
+		id: "s12",
+		label: "JPG",
+		match: getAssetMatch({ id: "s12", label: "JPG", selected: true }),
+		metaDescription: "Clear race-action image with visible event context, ideal for sponsor package pages and campaign recaps.",
+		src: "https://www.figma.com/api/mcp/asset/9b218406-8645-48ed-9187-4ef28953a8df",
+		selected: true,
+		height: 180,
+		keywords: ["running", "runners", "race", "event", "fitness", "athlete", "triathlon", "outdoor", "sports"],
+		preview: "image",
+		title: "Race runners",
+		width: 322,
+	},
+	{
+		id: "s13",
+		label: "MP4",
+		match: getAssetMatch({ id: "s13", label: "MP4" }),
+		metaDescription: "Simple urban cycling frame that supports lifestyle-oriented messaging without overpowering the surrounding content.",
+		src: "https://www.figma.com/api/mcp/asset/6678964d-2dae-43e0-aab0-373519af65a2",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "road", "athlete", "triathlon", "outdoor"],
+		preview: "image",
+		title: "Cyclist against wall",
+		width: 219.2,
+	},
+	{
+		id: "s14",
+		label: "JPG",
+		match: getAssetMatch({ id: "s14", label: "JPG" }),
+		metaDescription: "Fast, dynamic blur treatment for moments where you want more motion and less literal event coverage.",
+		src: "https://www.figma.com/api/mcp/asset/f388b2f9-b082-4a5b-ae07-e8436878d1ca",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "motion", "athlete", "triathlon", "outdoor", "speed"],
+		preview: "image",
+		thumbnailSrc: "https://www.figma.com/api/mcp/asset/e695f977-ef1f-485a-bd69-070dfdc9b2ca",
+		title: "Cyclist motion blur",
+		width: 287,
+	},
+	{
+		id: "s15",
+		label: "MP4",
+		match: getAssetMatch({ id: "s15", label: "MP4" }),
+		metaDescription: "Event-focused cycling image with approachable framing, good for secondary cards and supporting recommendations.",
+		src: "https://www.figma.com/api/mcp/asset/2792d536-0151-47c0-92b7-fbbf8662da69",
+		height: 180,
+		keywords: ["cycling", "cyclist", "bike", "bicycle", "athlete", "triathlon", "outdoor", "webinar", "event"],
+		preview: "image",
+		title: "Cyclist in coral jersey",
+		width: 163,
+	},
 ];
 
 const perspectiveSeeds = [
@@ -403,10 +788,16 @@ export function CmpOpalAssetRecommendation() {
 	const [scene, setScene] = useState<Scene>("brief");
 	const [hasTaskContent, setHasTaskContent] = useState(false);
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
+	const [selectedTaskAssetId, setSelectedTaskAssetId] = useState<string | null>(null);
+	const [selectedPanelAssetIds, setSelectedPanelAssetIds] = useState<string[]>([]);
+	const [selectedSearchAssetIds, setSelectedSearchAssetIds] = useState<string[]>(
+		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
+	);
+	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
-	const [briefContent, setBriefContent] = useState(initialBriefContent);
-	const [draftBriefContent, setDraftBriefContent] = useState(initialBriefContent);
+	const [briefContent, setBriefContent] = useState(initialBriefHtml);
+	const [draftBriefContent, setDraftBriefContent] = useState(initialBriefHtml);
 	const [searchReturnScene, setSearchReturnScene] = useState<Scene>("brief-edit");
 	const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 	const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
@@ -415,9 +806,69 @@ export function CmpOpalAssetRecommendation() {
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
 
 	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
+	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
+	const effectiveBriefText = useMemo(() => getPlainTextFromHtml(effectiveBriefContent), [effectiveBriefContent]);
+	const deferredBriefContent = useDeferredValue(effectiveBriefText);
 	const deferredWorkflowSearch = useDeferredValue(workflowSearch);
+	const deferredPerspectives = useDeferredValue(perspectives);
+	const deferredExclude = useDeferredValue(exclude);
 	const activeWorkflowId = selectedWorkflowId ?? (scene === "content-empty" ? "starter" : "newsletter");
 	const activeWorkflow = workflowTemplates.find((template) => template.id === activeWorkflowId) ?? workflowTemplates[0];
+	const rankedSearchAssets = useMemo(() => {
+		return searchAssets
+			.map((asset, index) => ({
+				...asset,
+				match: getSearchAssetMatch({
+					asset,
+					exclude: deferredExclude,
+					perspectives: deferredPerspectives,
+				}),
+				selected: selectedSearchAssetIds.includes(asset.id),
+				originalIndex: index,
+			}))
+			.sort((left, right) => {
+				if (right.match !== left.match) {
+					return right.match - left.match;
+				}
+
+				return left.originalIndex - right.originalIndex;
+			})
+			.map(({ originalIndex, ...asset }) => asset);
+	}, [deferredExclude, deferredPerspectives, selectedSearchAssetIds]);
+	const panelAssetsWithSelection = useMemo(
+		() => {
+			const taskAssetIds = new Set(taskAssets.map((asset) => asset.id));
+
+			return searchAssets
+				.filter((asset) => !taskAssetIds.has(asset.id))
+				.map((asset, index) => {
+					const isSelected = selectedPanelAssetIds.includes(asset.id);
+
+					return {
+						...asset,
+						match: getBriefAssetMatch({
+							asset,
+							brief: deferredBriefContent,
+						}),
+						originalIndex: index,
+						selected: isSelected,
+					};
+				})
+				.sort((left, right) => {
+					if (left.selected !== right.selected) {
+						return left.selected ? -1 : 1;
+					}
+
+					if (right.match !== left.match) {
+						return right.match - left.match;
+					}
+
+					return left.originalIndex - right.originalIndex;
+				})
+				.map(({ originalIndex, ...asset }) => asset);
+		},
+		[deferredBriefContent, selectedPanelAssetIds, taskAssets],
+	);
 	const filteredWorkflowTemplates = useMemo(() => {
 		const query = deferredWorkflowSearch.trim().toLowerCase();
 
@@ -488,10 +939,52 @@ export function CmpOpalAssetRecommendation() {
 		setWorkflowSearch("");
 	};
 
+	const addAssetsToTask = (assetsToAdd: AssetItem[]) => {
+		if (assetsToAdd.length === 0) {
+			return;
+		}
+
+		const normalizedAssets = assetsToAdd.map((asset) => ({
+			...asset,
+			thumbnailSrc: asset.thumbnailSrc ?? asset.previewSrc ?? asset.src,
+		}));
+		const firstImage = normalizedAssets.find((asset) => asset.preview === "image");
+
+		setTaskAssets((current) => {
+			const existing = current.filter(
+				(asset) => !normalizedAssets.some((candidate) => candidate.id === asset.id),
+			);
+
+			return [...normalizedAssets, ...existing];
+		});
+
+		if (firstImage) {
+			setSelectedTaskAssetId(firstImage.id);
+		}
+
+		setSelectedPanelAssetIds([]);
+		setHasTaskContent(true);
+		setScene("content");
+	};
+
 	const closeWorkflowDialog = () => {
 		setWorkflowDialogOpen(false);
 		setPendingWorkflowId(null);
 	};
+
+	useEffect(() => {
+		const availablePanelAssetIds = new Set(panelAssetsWithSelection.map((asset) => asset.id));
+
+		setSelectedPanelAssetIds((current) => {
+			const next = current.filter((id) => availablePanelAssetIds.has(id));
+
+			if (next.length === current.length && next.every((id, index) => id === current[index])) {
+				return current;
+			}
+
+			return next;
+		});
+	}, [panelAssetsWithSelection]);
 
 	const mainContent = useMemo(() => {
 		switch (scene) {
@@ -532,24 +1025,32 @@ export function CmpOpalAssetRecommendation() {
 								onTabChange={handleTabChange}
 							/>
 						}
-						right={
-							<SuggestedAssetsPanel
-								assets={panelAssets}
-								onClose={() => setScene("brief")}
-								onEditSearch={() => openSearch("brief-edit")}
-							/>
-						}
-					/>
+							right={
+								<SuggestedAssetsPanel
+									assets={panelAssetsWithSelection}
+									onAddToTask={() =>
+										addAssetsToTask(panelAssetsWithSelection.filter((asset) => asset.selected))
+									}
+									onClearSelection={() => setSelectedPanelAssetIds([])}
+									onClose={() => setScene("brief")}
+									onEditSearch={() => openSearch("brief-edit")}
+									onToggleSelect={(assetId) =>
+										setSelectedPanelAssetIds((current) =>
+											current.includes(assetId)
+												? current.filter((id) => id !== assetId)
+												: [...current, assetId],
+										)
+									}
+								/>
+							}
+						/>
 				);
 			case "search":
 				return (
 					<SearchPage
-						assets={searchAssets}
+						assets={rankedSearchAssets}
 						exclude={exclude}
-						onAdd={() => {
-							setHasTaskContent(true);
-							setScene("content");
-						}}
+						onAdd={() => addAssetsToTask(rankedSearchAssets.filter((asset) => asset.selected))}
 						onAssetClick={(asset) => {
 							setSelectedAsset(asset);
 							setScene("preview");
@@ -561,6 +1062,13 @@ export function CmpOpalAssetRecommendation() {
 								current.map((item, itemIndex) => (itemIndex === index ? value : item)),
 							)
 						}
+						onToggleSelect={(assetId) =>
+							setSelectedSearchAssetIds((current) =>
+								current.includes(assetId)
+									? current.filter((id) => id !== assetId)
+									: [...current, assetId],
+							)
+						}
 						perspectives={perspectives}
 					/>
 				);
@@ -568,10 +1076,7 @@ export function CmpOpalAssetRecommendation() {
 				return (
 					<PreviewPage
 						asset={selectedAsset}
-						onAdd={() => {
-							setHasTaskContent(true);
-							setScene("content");
-						}}
+						onAdd={() => addAssetsToTask([selectedAsset])}
 						onClose={() => setScene("search")}
 					/>
 				);
@@ -600,6 +1105,10 @@ export function CmpOpalAssetRecommendation() {
 								activeTab={activeTab}
 								onAddContent={() => openSearch("content")}
 								onOpenSuggested={() => setScene("content-panel")}
+								onSelectTaskAsset={setSelectedTaskAssetId}
+								suggestedOpen={false}
+								selectedTaskAssetId={selectedTaskAssetId}
+								taskAssets={taskAssets}
 								onTabChange={handleTabChange}
 							/>
 						}
@@ -624,22 +1133,37 @@ export function CmpOpalAssetRecommendation() {
 								activeTab={activeTab}
 								onAddContent={() => openSearch("content")}
 								onOpenSuggested={() => setScene("content-panel")}
+								onSelectTaskAsset={setSelectedTaskAssetId}
+								suggestedOpen={true}
+								selectedTaskAssetId={selectedTaskAssetId}
+								taskAssets={taskAssets}
 								onTabChange={handleTabChange}
 							/>
 						}
-						right={
-							<SuggestedAssetsPanel
-								assets={panelAssets}
-								onClose={() => setScene("content")}
-								onEditSearch={() => openSearch("content-panel")}
-							/>
-						}
-					/>
+							right={
+								<SuggestedAssetsPanel
+									assets={panelAssetsWithSelection}
+									onAddToTask={() =>
+										addAssetsToTask(panelAssetsWithSelection.filter((asset) => asset.selected))
+									}
+									onClearSelection={() => setSelectedPanelAssetIds([])}
+									onClose={() => setScene("content")}
+									onEditSearch={() => openSearch("content-panel")}
+									onToggleSelect={(assetId) =>
+										setSelectedPanelAssetIds((current) =>
+											current.includes(assetId)
+												? current.filter((id) => id !== assetId)
+												: [...current, assetId],
+										)
+									}
+								/>
+							}
+						/>
 				);
 			default:
 				return null;
 		}
-	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, perspectives, scene, searchReturnScene, selectedAsset, workflowMenuOpen, workflowSearch]);
+	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, panelAssetsWithSelection, perspectives, rankedSearchAssets, scene, searchReturnScene, selectedAsset, selectedTaskAssetId, taskAssets, workflowMenuOpen, workflowSearch]);
 
 	return (
 		<Box
@@ -674,7 +1198,7 @@ function TaskCanvas({ left, right }: { left: ReactNode; right?: ReactNode }) {
 		<Box
 			display="grid"
 			style={{
-				gridTemplateColumns: "minmax(0, 1fr) 444px",
+				gridTemplateColumns: "minmax(0, 1fr) 392px",
 				height: "calc(100vh - 48px)",
 			}}
 		>
@@ -700,21 +1224,30 @@ function PageHeader({
 	onTabChange: (tab: string) => void;
 }) {
 	return (
-		<Box display="flex" flexDirection="column" style={{ gap: 18, padding: "18px 28px 0" }}>
-			<Box alignItems="center" display="flex" style={{ gap: 14 }}>
-				<Text color="fg.tertiary" fontSize="sm">Label</Text>
-				<Text color="fg.tertiary" fontSize="sm">/</Text>
-				<Text color="fg.tertiary" fontSize="sm">Ca...</Text>
-				<Text color="fg.tertiary" fontSize="sm">/</Text>
-				<Text color="fg.tertiary" fontSize="sm">TSK...</Text>
+		<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "18px 32px 0" }}>
+			<Box alignItems="center" display="flex" style={{ gap: 10 }}>
+				<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>Label</Text>
+				<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>/</Text>
+				<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>Ca...</Text>
+				<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>/</Text>
+				<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>TSK...</Text>
 			</Box>
 
-			<Text color="fg.default" fontSize="4xl" fontWeight="600">
+			<Text
+				color="fg.default"
+				style={{
+					fontSize: 28,
+					fontWeight: 500,
+					letterSpacing: "-0.8px",
+					lineHeight: "40px",
+					maxWidth: "none",
+				}}
+			>
 				Ironman Miami triathlon 2026 Sponsor Package
 			</Text>
 
 			<Tabs onValueChange={onTabChange} value={activeTab}>
-				<TabsList>
+				<TabsList style={{ gap: 20 }}>
 					<TabsTrigger value="brief">Brief</TabsTrigger>
 					<TabsTrigger value="content">Content</TabsTrigger>
 					<TabsTrigger value="fields">Fields</TabsTrigger>
@@ -846,110 +1379,116 @@ function BriefEditPage({
 }
 
 function BriefBody({ content }: { content: string }) {
-	const blocks = useMemo(() => parseBriefContent(content), [content]);
-
 	return (
-		<Box display="flex" flexDirection="column" style={{ gap: 18 }}>
-			{blocks.map((block, blockIndex) => {
-				if (block.type === "paragraph") {
-					return (
-						<Text
-							key={`paragraph-${blockIndex}`}
-							color="fg.default"
-							fontSize="lg"
-							style={{ maxWidth: "none" }}
-						>
-							{block.text}
-						</Text>
-					);
-				}
-
-				if (block.type === "heading") {
-					return (
-						<Text
-							key={`heading-${blockIndex}`}
-							color="fg.default"
-							fontSize="xl"
-							fontWeight="600"
-							style={{ maxWidth: "none" }}
-						>
-							{block.text}
-						</Text>
-					);
-				}
-
-				return (
-					<Box asChild key={`list-${blockIndex}`}>
-						<ul style={{ margin: "0 0 0 24px", padding: 0 }}>
-							{block.items.map((item, itemIndex) => (
-								<li key={`${item}-${itemIndex}`}>
-									<Text color="fg.default" fontSize="lg" style={{ maxWidth: "none" }}>
-										{item}
-									</Text>
-								</li>
-							))}
-						</ul>
-					</Box>
-				);
-			})}
-		</Box>
+		<>
+			<style>{richTextContentStyles}</style>
+			<Box style={{ maxWidth: "none" }}>
+				<div className="brief-rich-content" dangerouslySetInnerHTML={{ __html: content }} />
+			</Box>
+		</>
 	);
 }
 
-function RichToolbar() {
-	const iconButtons = [
-		"↶",
-		"↷",
-		"P",
-		"15px",
-		"≡",
-		"≣",
-		"≢",
-		"•",
-		"1.",
-		"⇤",
-		"⇥",
-		"⛶",
-		"?",
+function RichToolbar({
+	onAction,
+}: {
+	onAction: (action: string, value?: string) => void;
+}) {
+	const topRow = [
+		{ label: "↶", action: "undo", title: "Undo" },
+		{ label: "↷", action: "redo", title: "Redo" },
+		{ label: "P", action: "paragraph", title: "Paragraph" },
+		{ label: "H2", action: "heading-two", title: "Heading 2" },
+		{ label: "H3", action: "heading-three", title: "Heading 3" },
+		{ label: "14px", action: "font-size", title: "14px", value: "3" },
+		{ label: "18px", action: "font-size", title: "18px", value: "4" },
+		{ label: "24px", action: "font-size", title: "24px", value: "5" },
+		{ label: "≡", action: "justifyLeft", title: "Align left" },
+		{ label: "≣", action: "justifyCenter", title: "Align center" },
+		{ label: "≢", action: "justifyRight", title: "Align right" },
+		{ label: "•", action: "insertUnorderedList", title: "Bulleted list" },
+		{ label: "1.", action: "insertOrderedList", title: "Numbered list" },
+		{ label: "⇤", action: "outdent", title: "Outdent" },
+		{ label: "⇥", action: "indent", title: "Indent" },
+		{ label: "⎯", action: "insertHorizontalRule", title: "Divider" },
+		{ label: "?", action: "removeFormat", title: "Clear formatting" },
+	];
+	const bottomRow = [
+		{ label: "B", action: "bold", title: "Bold" },
+		{ label: "I", action: "italic", title: "Italic" },
+		{ label: "U", action: "underline", title: "Underline" },
+		{ label: "A", action: "text-color", title: "Text color" },
+		{ label: "⋯", action: "strikeThrough", title: "Strikethrough" },
+		{ label: "🔗", action: "create-link", title: "Insert link" },
+		{ label: "❝", action: "blockquote", title: "Quote" },
+		{ label: "</>", action: "code-block", title: "Code block" },
 	];
 
 	return (
 		<Box bg="bg.default">
 			<Box alignItems="center" display="flex" gap="4" px="8" py="8" style={{ borderBottom: "1px solid var(--ax-colors-border-default)" }}>
-				{iconButtons.map((item, index) => (
+				{topRow.map((item) => (
 					<Box
-						key={item + index}
+						asChild
+						key={item.action + item.label}
 						alignItems="center"
 						display="flex"
 						justifyContent="center"
 						rounded="sm"
-						style={{
-							color: "var(--ax-colors-fg-secondary)",
-							fontSize: index < 2 ? 18 : 14,
-							height: 28,
-							minWidth: item.length > 3 ? 58 : 28,
-						}}
 					>
-						{item}
+						<button
+							onMouseDown={(event) => {
+								event.preventDefault();
+								onAction(item.action, item.value);
+							}}
+							style={{
+								background: "transparent",
+								border: "none",
+								color: "var(--ax-colors-fg-secondary)",
+								cursor: "pointer",
+								fontSize: 14,
+								height: 28,
+								minWidth: item.label.length > 2 ? 48 : 28,
+								padding: "0 8px",
+							}}
+							title={item.title}
+							type="button"
+						>
+							{item.label}
+						</button>
 					</Box>
 				))}
 			</Box>
 			<Box alignItems="center" display="flex" gap="4" px="8" py="8" style={{ borderBottom: "1px solid var(--ax-colors-border-default)" }}>
-				{["B", "I", "U", "A", "⋯", "🖼", "🎞", "🔗", "❝", "―", "▦", "Ω", "✓", "✕", "</>", "⎘"].map((item, index) => (
+				{bottomRow.map((item) => (
 					<Box
-						key={item + index}
+						asChild
+						key={item.action + item.label}
 						alignItems="center"
 						display="flex"
 						justifyContent="center"
 						rounded="sm"
-						style={{
-							color: "var(--ax-colors-fg-secondary)",
-							fontSize: 14,
-							height: 28,
-							minWidth: 28,
-						}}
 					>
-						{item}
+						<button
+							onMouseDown={(event) => {
+								event.preventDefault();
+								onAction(item.action);
+							}}
+							style={{
+								background: "transparent",
+								border: "none",
+								color: "var(--ax-colors-fg-secondary)",
+								cursor: "pointer",
+								fontSize: 14,
+								height: 28,
+								minWidth: item.label.length > 2 ? 40 : 28,
+								padding: "0 8px",
+							}}
+							title={item.title}
+							type="button"
+						>
+							{item.label}
+						</button>
 					</Box>
 				))}
 			</Box>
@@ -964,6 +1503,104 @@ function EditorSurface({
 	content: string;
 	onChange: (value: string) => void;
 }) {
+	const editorRef = useRef<HTMLDivElement | null>(null);
+	const selectionRef = useRef<Range | null>(null);
+
+	useEffect(() => {
+		const editor = editorRef.current;
+
+		if (!editor || editor.innerHTML === content) {
+			return;
+		}
+
+		editor.innerHTML = content;
+	}, [content]);
+
+	const saveSelection = () => {
+		const selection = window.getSelection();
+		const editor = editorRef.current;
+
+		if (!selection || selection.rangeCount === 0 || !editor) {
+			return;
+		}
+
+		const range = selection.getRangeAt(0);
+
+		if (editor.contains(range.commonAncestorContainer)) {
+			selectionRef.current = range.cloneRange();
+		}
+	};
+
+	const restoreSelection = () => {
+		const selection = window.getSelection();
+		const range = selectionRef.current;
+
+		if (!selection || !range) {
+			return;
+		}
+
+		selection.removeAllRanges();
+		selection.addRange(range);
+	};
+
+	const commitEditorChange = () => {
+		saveSelection();
+		onChange(editorRef.current?.innerHTML ?? "");
+	};
+
+	const runCommand = (command: string, value?: string) => {
+		editorRef.current?.focus();
+		restoreSelection();
+		document.execCommand("styleWithCSS", false, true);
+		document.execCommand(command, false, value);
+		commitEditorChange();
+	};
+
+	const handleToolbarAction = (action: string, value?: string) => {
+		switch (action) {
+			case "paragraph":
+				runCommand("formatBlock", "p");
+				return;
+			case "heading-two":
+				runCommand("formatBlock", "h2");
+				return;
+			case "heading-three":
+				runCommand("formatBlock", "h3");
+				return;
+			case "blockquote":
+				runCommand("formatBlock", "blockquote");
+				return;
+			case "code-block":
+				runCommand("formatBlock", "pre");
+				return;
+			case "font-size":
+				runCommand("fontSize", value);
+				return;
+			case "create-link": {
+				const url = window.prompt("Enter a URL");
+
+				if (!url) {
+					return;
+				}
+
+				runCommand("createLink", url);
+				return;
+			}
+			case "text-color": {
+				const color = window.prompt("Enter a text color", "#1D4ED8");
+
+				if (!color) {
+					return;
+				}
+
+				runCommand("foreColor", color);
+				return;
+			}
+			default:
+				runCommand(action, value);
+		}
+	};
+
 	return (
 		<Box
 			bg="bg.default"
@@ -972,29 +1609,35 @@ function EditorSurface({
 			rounded="lg"
 			style={{ overflow: "hidden" }}
 		>
-			<RichToolbar />
+			<style>{richTextContentStyles}</style>
+			<RichToolbar onAction={handleToolbarAction} />
 			<Box p="20" style={{ lineHeight: 1.5, minHeight: 620 }}>
 				<Text color="fg.tertiary" fontSize="sm">
 					Last Modified by Sasha Thiel on Jan 25, 2026, 2:58 PM
 				</Text>
 				<Box mt="20">
-					<textarea
-						onChange={(event) => onChange(event.target.value)}
-						spellCheck={false}
+					<div
+						className="brief-editor-content"
+						contentEditable
+						onInput={commitEditorChange}
+						onKeyUp={saveSelection}
+						onMouseUp={saveSelection}
+						ref={editorRef}
+						suppressContentEditableWarning
 						style={{
 							background: "transparent",
 							border: "none",
 							color: "var(--ax-colors-fg-default)",
 							fontFamily: "Inter, sans-serif",
-							fontSize: 18,
-							lineHeight: "30px",
+							fontSize: 14,
+							letterSpacing: "-0.1px",
+							lineHeight: "20px",
 							minHeight: 520,
 							outline: "none",
 							padding: 0,
-							resize: "vertical",
+							whiteSpace: "normal",
 							width: "100%",
 						}}
-						value={content}
 					/>
 				</Box>
 			</Box>
@@ -1020,33 +1663,33 @@ function WorkflowSidebar({
 	workflow: WorkflowTemplate;
 }) {
 	return (
-		<Box bg="bg.default" display="flex" flexDirection="column" style={{ padding: 16, position: "relative" }}>
-			<Box display="flex" flexDirection="column" style={{ gap: 24 }}>
+		<Box bg="bg.default" display="flex" flexDirection="column" style={{ padding: "14px 16px 18px", position: "relative" }}>
+			<Box display="flex" flexDirection="column" style={{ gap: 18 }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Box alignItems="center" display="flex" style={{ gap: 16 }}>
+					<Box alignItems="center" display="flex" style={{ gap: 14 }}>
 						<WorkflowAvatarGroup />
 						<Box alignItems="center" display="flex" gap="8">
 							<IconEye size={18} color="var(--ax-colors-fg-secondary)" />
-							<Text color="fg.default" style={{ fontSize: 16, fontWeight: 500, lineHeight: "24px", maxWidth: "none" }}>
+							<Text color="fg.default" style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px", maxWidth: "none" }}>
 								8
 							</Text>
 						</Box>
 					</Box>
 					<Box alignItems="center" display="flex" gap="8">
-						<Button appearance="default" size="sm" style={{ height: 40 }}>
+						<Button appearance="default" size="sm" style={{ borderRadius: 6, height: 28, padding: "0 10px" }}>
 							Mark Complete
 						</Button>
-						<Button appearance="subtle" aria-label="More" icon={<IconDots size={18} />} size="sm" />
+						<Button appearance="subtle" aria-label="More" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 					</Box>
 				</Box>
 
-				<Box alignItems="center" display="flex" style={{ gap: 24 }}>
-					<Badge intent="information">In Progress</Badge>
+				<Box alignItems="center" display="flex" style={{ gap: 18 }}>
+					<Badge intent="information" style={{ fontSize: 12, height: 22, padding: "0 8px" }}>In Progress</Badge>
 					<InlineDate label="Started • May 11" />
 					<InlineDate label="Due • Jun 28" />
 				</Box>
 
-				<Box bg="bg.tertiary" rounded="full" style={{ height: 8, overflow: "hidden" }}>
+				<Box bg="bg.tertiary" rounded="full" style={{ height: 6, overflow: "hidden" }}>
 					<Box bg="bg.accent" style={{ height: "100%", width: "70%" }} />
 				</Box>
 			</Box>
@@ -1054,16 +1697,16 @@ function WorkflowSidebar({
 			<Box
 				display="flex"
 				flexDirection="column"
-				mt="24"
+				mt="20"
 				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
 			>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Box alignItems="center" display="flex" style={{ gap: 24 }}>
+					<Box alignItems="center" display="flex" style={{ gap: 18 }}>
 						<WorkflowTab active>Workflow</WorkflowTab>
 						<WorkflowTab>Comments</WorkflowTab>
 						<WorkflowTab>Attachments</WorkflowTab>
 					</Box>
-					<Button appearance="subtle" aria-label="Collapse" icon={<IconChevronRight size={18} />} size="sm" />
+					<Button appearance="subtle" aria-label="Collapse" icon={<IconChevronRight size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 				</Box>
 			</Box>
 
@@ -1071,7 +1714,7 @@ function WorkflowSidebar({
 				alignItems="center"
 				display="flex"
 				justifyContent="space-between"
-				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", padding: "24px 0" }}
+				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", padding: "14px 0" }}
 			>
 				<Button
 					appearance="subtle"
@@ -1080,7 +1723,7 @@ function WorkflowSidebar({
 					style={{
 						background: workflow.id === "starter" ? "var(--ax-colors-bg-secondary)" : "transparent",
 						borderRadius: 8,
-						height: 48,
+						height: 32,
 						justifyContent: "flex-start",
 						padding: workflow.id === "starter" ? "0 16px" : 0,
 					}}
@@ -1089,10 +1732,10 @@ function WorkflowSidebar({
 					<Text color="fg.default" style={{ fontSize: 16, lineHeight: "24px", maxWidth: "none" }}>
 						{workflow.name}
 					</Text>
-					<IconChevronDown size={18} color="var(--ax-colors-fg-secondary)" />
+					<IconChevronDown size={16} color="var(--ax-colors-fg-secondary)" />
 					</Box>
 				</Button>
-				<Button appearance="subtle" aria-label="Workflow menu" icon={<IconDots size={18} />} size="sm" />
+				<Button appearance="subtle" aria-label="Workflow menu" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 			</Box>
 
 			{isMenuOpen && (
@@ -1110,9 +1753,9 @@ function WorkflowSidebar({
 				))}
 			</Box>
 
-			<Button appearance="subtle" size="sm" style={{ justifyContent: "flex-start", marginTop: 12 }}>
+			<Button appearance="subtle" size="sm" style={{ justifyContent: "flex-start", marginTop: 10, paddingLeft: 0 }}>
 				<Box alignItems="center" display="flex" gap="8">
-					<IconPlus size={18} />
+					<IconPlus size={16} />
 					<span>Add Step</span>
 				</Box>
 			</Button>
@@ -1126,16 +1769,16 @@ function WorkflowAvatarGroup() {
 			<DashedCircle>
 				<IconPlus size={12} stroke={1.8} />
 			</DashedCircle>
-			<Avatar size="sm" src="/avatars/aamr-fakhry.png" style={{ marginLeft: 6 }} />
-			<Avatar size="sm" src="/avatars/benjamin-holme.svg" style={{ marginLeft: -2 }} />
-			<Avatar size="sm" src="/avatars/stefan-svebeck.svg" style={{ marginLeft: -2 }} />
+			<Avatar size="sm" src="/avatars/aamr-fakhry.png" style={{ height: 24, marginLeft: 6, width: 24 }} />
+			<Avatar size="sm" src="/avatars/benjamin-holme.svg" style={{ height: 24, marginLeft: -4, width: 24 }} />
+			<Avatar size="sm" src="/avatars/stefan-svebeck.svg" style={{ height: 24, marginLeft: -4, width: 24 }} />
 			<Box
 				alignItems="center"
 				bg="bg.secondary"
 				display="flex"
 				justifyContent="center"
 				rounded="full"
-				style={{ height: 24, marginLeft: -2, width: 24 }}
+				style={{ height: 24, marginLeft: -4, width: 24 }}
 			>
 				<Text style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+3</Text>
 			</Box>
@@ -1167,7 +1810,7 @@ function WorkflowTemplateMenu({
 				overflow: "hidden",
 				position: "absolute",
 				right: 16,
-				top: 244,
+				top: 164,
 				zIndex: 30,
 			}}
 		>
@@ -1222,7 +1865,7 @@ function WorkflowTemplateIcon({ icon }: { icon: WorkflowTemplateIconKind }) {
 		case "calendar":
 			return <IconCalendar {...common} />;
 		case "sparkles":
-			return <IconSparkles {...common} />;
+			return <SparklesIcon height={common.size} style={{ color: common.color }} width={common.size} />;
 		case "tag":
 			return <IconTag {...common} />;
 		case "check":
@@ -1238,12 +1881,12 @@ function WorkflowTab({ active = false, children }: { active?: boolean; children:
 		<Box
 			style={{
 				borderBottom: active ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
-				paddingBottom: 12,
+				paddingBottom: 10,
 			}}
 		>
 			<Text
 				color={active ? "fg.default" : "fg.tertiary"}
-				style={{ fontSize: 16, fontWeight: 500, lineHeight: "24px", maxWidth: "none" }}
+				style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px", maxWidth: "none" }}
 			>
 				{children}
 			</Text>
@@ -1261,7 +1904,7 @@ function WorkflowStepItem({ step }: { step: WorkflowStep }) {
 				alignItems="center"
 				display="flex"
 				justifyContent="space-between"
-				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", padding: "16px 0" }}
+				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", padding: "14px 0" }}
 			>
 			<Box alignItems="center" display="flex" gap="12">
 				<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
@@ -1279,7 +1922,7 @@ function WorkflowStepItem({ step }: { step: WorkflowStep }) {
 				) : (
 					<DashedCircle />
 				)}
-				<Text color="fg.default" style={{ fontSize: 16, fontWeight: 500, lineHeight: "24px", maxWidth: "none" }}>{step.title}</Text>
+				<Text color="fg.default" style={{ fontSize: 15, fontWeight: 500, lineHeight: "22px", maxWidth: "none" }}>{step.title}</Text>
 			</Box>
 			<Box alignItems="center" display="flex" gap="12">
 				{step.date && (
@@ -1291,7 +1934,7 @@ function WorkflowStepItem({ step }: { step: WorkflowStep }) {
 					</Text>
 				)}
 				{step.showCalendarAction && <DashedCircle><IconCalendar size={12} /></DashedCircle>}
-				<Avatar size="xs" src="/avatars/aamr-fakhry.png" />
+				<Avatar size="xs" src="/avatars/aamr-fakhry.png" style={{ height: 20, width: 20 }} />
 				<Box
 					alignItems="center"
 					bg="bg.secondary"
@@ -1300,7 +1943,7 @@ function WorkflowStepItem({ step }: { step: WorkflowStep }) {
 					rounded="full"
 					style={{ height: 20, width: 20 }}
 				>
-					<Text fontSize="xs">WM</Text>
+					<Text fontSize="xs" style={{ fontSize: 10, lineHeight: "14px" }}>WM</Text>
 				</Box>
 			</Box>
 		</Box>
@@ -1312,17 +1955,17 @@ function WorkflowExpandedStep({ step }: { step: WorkflowStep }) {
 			<Box
 				display="flex"
 				flexDirection="column"
-				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", gap: 20, padding: "16px 0" }}
+				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", gap: 16, padding: "14px 0" }}
 			>
 			<Box alignItems="center" display="flex" justifyContent="space-between">
 				<Box alignItems="center" display="flex" gap="12">
 					<IconChevronDown size={16} color="var(--ax-colors-fg-secondary)" />
 					<DashedCircle />
-					<Text color="fg.default" style={{ fontSize: 16, fontWeight: 500, lineHeight: "24px", maxWidth: "none" }}>{step.title}</Text>
+					<Text color="fg.default" style={{ fontSize: 15, fontWeight: 500, lineHeight: "22px", maxWidth: "none" }}>{step.title}</Text>
 				</Box>
 				<Box alignItems="center" display="flex" gap="12">
 					{step.showCalendarAction && <DashedCircle><IconCalendar size={12} /></DashedCircle>}
-					<Avatar size="xs" src="/avatars/aamr-fakhry.png" />
+					<Avatar size="xs" src="/avatars/aamr-fakhry.png" style={{ height: 20, width: 20 }} />
 					<Box
 						alignItems="center"
 						bg="bg.secondary"
@@ -1331,12 +1974,12 @@ function WorkflowExpandedStep({ step }: { step: WorkflowStep }) {
 						rounded="full"
 						style={{ height: 20, width: 20 }}
 					>
-						<Text fontSize="xs">WM</Text>
+						<Text fontSize="xs" style={{ fontSize: 10, lineHeight: "14px" }}>WM</Text>
 					</Box>
 				</Box>
 			</Box>
 
-				<Box display="flex" flexDirection="column" style={{ gap: 16, paddingLeft: 80 }}>
+				<Box display="flex" flexDirection="column" style={{ gap: 12, paddingLeft: 76 }}>
 				<Box alignItems="center" display="flex" gap="10">
 					<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>Assigned to</Text>
 					<Text color="fg.default" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>{step.assignee ?? "Mary Anne"}</Text>
@@ -1347,11 +1990,11 @@ function WorkflowExpandedStep({ step }: { step: WorkflowStep }) {
 				{step.checklist?.map((item) => (
 					<ChecklistItem key={item} label={item} />
 				))}
-				<Badge intent="neutral" style={{ width: "fit-content" }}>{step.badgeLabel ?? "Not Started"}</Badge>
+				<Badge intent="neutral" style={{ fontSize: 12, height: 22, width: "fit-content" }}>{step.badgeLabel ?? "Not Started"}</Badge>
 				<Box alignItems="center" display="flex" gap="8" pt="4">
-					<Button appearance="subtle" aria-label="Comment" icon={<IconPlus size={14} />} size="sm" />
-					<Button appearance="subtle" aria-label="Delete" icon={<IconX size={14} />} size="sm" />
-					<Button appearance="subtle" aria-label="More" icon={<IconDots size={14} />} size="sm" />
+					<Button appearance="subtle" aria-label="Comment" icon={<IconPlus size={14} />} size="sm" style={{ height: 28, width: 28 }} />
+					<Button appearance="subtle" aria-label="Delete" icon={<IconX size={14} />} size="sm" style={{ height: 28, width: 28 }} />
+					<Button appearance="subtle" aria-label="More" icon={<IconDots size={14} />} size="sm" style={{ height: 28, width: 28 }} />
 				</Box>
 			</Box>
 		</Box>
@@ -1383,9 +2026,9 @@ function InlineDate({ label }: { label: string }) {
 				display="flex"
 				justifyContent="center"
 				rounded="full"
-				style={{ height: 24, width: 24 }}
+				style={{ height: 20, width: 20 }}
 			>
-				<IconCalendar size={12} color="var(--ax-colors-fg-secondary)" />
+				<IconCalendar size={11} color="var(--ax-colors-fg-secondary)" />
 			</Box>
 			<Text
 				color="fg.default"
@@ -1528,34 +2171,118 @@ function DashedCircle({ children }: { children?: ReactNode }) {
 	);
 }
 
+function AssetTooltipContent({ asset }: { asset: AssetItem }) {
+	return (
+		<Box display="flex" flexDirection="column" style={{ gap: 4, maxWidth: 240 }}>
+			<Text color="fg.default.inverse" fontSize="sm" fontWeight="600" style={{ maxWidth: "none" }}>
+				{asset.title}
+			</Text>
+			{asset.metaDescription && (
+				<Text color="fg.default.inverse" fontSize="xs" style={{ lineHeight: "16px", maxWidth: "none" }}>
+					{asset.metaDescription}
+				</Text>
+			)}
+			{asset.tooltip && (
+				<Text color="fg.default.inverse" fontSize="xs" style={{ lineHeight: "16px", maxWidth: "none", opacity: 0.8 }}>
+					Why suggested: {asset.tooltip}
+				</Text>
+			)}
+		</Box>
+	);
+}
+
 function SuggestedAssetsPanel({
 	assets,
+	onAddToTask,
+	onClearSelection,
 	onClose,
 	onEditSearch,
+	onToggleSelect,
 }: {
 	assets: AssetItem[];
+	onAddToTask: () => void;
+	onClearSelection: () => void;
 	onClose: () => void;
 	onEditSearch: () => void;
+	onToggleSelect: (assetId: string) => void;
 }) {
+	const pageSize = 8;
+	const [visibleCount, setVisibleCount] = useState(pageSize);
+	const selectedAssetsCount = assets.filter((asset) => asset.selected).length;
+
+	useEffect(() => {
+		setVisibleCount((current) => {
+			if (assets.length === 0) {
+				return pageSize;
+			}
+
+			return Math.min(Math.max(current, pageSize), assets.length);
+		});
+	}, [assets.length]);
+
+	const visibleAssets = useMemo(() => assets.slice(0, visibleCount), [assets, visibleCount]);
+	const hasMoreAssets = visibleCount < assets.length;
 	const masonryRows = useMemo(() => {
 		const rows: AssetItem[][] = [];
 
-		for (let index = 0; index < assets.length; index += 2) {
-			rows.push(assets.slice(index, index + 2));
+		for (let index = 0; index < visibleAssets.length; index += 2) {
+			rows.push(visibleAssets.slice(index, index + 2));
 		}
 
 		return rows;
-	}, [assets]);
+	}, [visibleAssets]);
 
 	return (
 			<Box display="flex" flexDirection="column" style={{ gap: 16, padding: 20 }}>
 				<Box alignItems="start" display="flex" justifyContent="space-between">
 				<Box display="flex" flexDirection="column" gap="4">
-					<Text color="fg.default" fontSize="3xl" fontWeight="600">Suggested Assets</Text>
+					<Text
+						color="fg.default"
+						style={{
+							fontFamily: "Inter, sans-serif",
+							fontSize: 20,
+							fontWeight: 500,
+							letterSpacing: "-0.35px",
+							lineHeight: "28px",
+							maxWidth: "none",
+						}}
+					>
+						Suggested Assets
+					</Text>
 					<Text color="fg.tertiary" fontSize="md">Based on your brief</Text>
 				</Box>
 				<Button appearance="subtle" aria-label="Close" icon={<IconX size={18} />} onClick={onClose} size="sm" />
 			</Box>
+
+			{selectedAssetsCount > 0 && (
+				<Box alignItems="center" display="flex" justifyContent="space-between">
+					<Box alignItems="center" display="flex" gap="8">
+						<Text
+							color="fg.default"
+							style={{
+								fontFamily: "Inter, sans-serif",
+								fontSize: 14,
+								fontWeight: 500,
+								letterSpacing: "-0.1px",
+								lineHeight: "20px",
+								maxWidth: "none",
+							}}
+						>
+							{selectedAssetsCount} {selectedAssetsCount === 1 ? "asset" : "assets"} selected
+						</Text>
+						<Button
+							appearance="subtle"
+							aria-label="Clear selected assets"
+							icon={<IconX size={16} />}
+							onClick={onClearSelection}
+							size="sm"
+						/>
+					</Box>
+					<Button appearance="primary" onClick={onAddToTask} size="sm">
+						Add to task
+					</Button>
+				</Box>
+			)}
 
 			<Box
 				display="grid"
@@ -1566,34 +2293,49 @@ function SuggestedAssetsPanel({
 					row.map((asset, itemIndex) => {
 						const useNarrowCard = rowIndex % 2 === itemIndex;
 
-						return (
-							<PanelAssetCard
-								key={asset.id}
-								asset={asset}
-								span={useNarrowCard ? 4 : 6}
-							/>
-						);
+							return (
+								<PanelAssetCard
+									key={asset.id}
+									asset={asset}
+									onToggleSelect={() => onToggleSelect(asset.id)}
+									span={useNarrowCard ? 4 : 6}
+								/>
+							);
 					}),
 				)}
 			</Box>
 
-			<Box alignItems="center" display="flex" justifyContent="flex-end" pt="6">
-				<Button appearance="subtle" onClick={onEditSearch} size="sm">
-					<Box alignItems="center" display="flex" gap="8">
-						<span>Edit Search</span>
-						<IconChevronRight size={14} />
+				<Box alignItems="center" display="flex" justifyContent="space-between" pt="6" style={{ gap: 12 }}>
+					<Box alignItems="center" display="flex" gap="8" style={{ minHeight: 32 }}>
+						{hasMoreAssets && (
+							<Button
+								appearance="subtle"
+								icon={<IconChevronDown size={16} />}
+								iconPosition="end"
+								onClick={() => setVisibleCount((current) => Math.min(current + pageSize, assets.length))}
+								size="sm"
+							>
+								Show more
+							</Button>
+						)}
 					</Box>
-				</Button>
+					<Box alignItems="center" display="flex" gap="8">
+						<Button appearance="subtle" icon={<IconPencil size={16} />} onClick={onEditSearch} size="sm">
+							Edit Search
+						</Button>
+					</Box>
+				</Box>
 			</Box>
-		</Box>
-	);
+		);
 }
 
 function PanelAssetCard({
 	asset,
+	onToggleSelect,
 	span,
 }: {
 	asset: AssetItem;
+	onToggleSelect: () => void;
 	span: 4 | 6;
 }) {
 	const [isHovered, setIsHovered] = useState(false);
@@ -1610,42 +2352,48 @@ function PanelAssetCard({
 				position: "relative",
 			}}
 		>
-			<Box
-				rounded="lg"
-				style={{
-					background: `url(${asset.src}) center / cover`,
-					height: 116,
-					position: "relative",
-				}}
-			>
-				<Box alignItems="center" display="flex" gap="8" style={{ left: 8, bottom: 8, position: "absolute" }}>
+			<Tooltip align="start" content={<AssetTooltipContent asset={asset} />} side="top">
+				<Box
+					rounded="lg"
+					style={{
+						background: `url(${asset.src}) center / cover`,
+						height: 116,
+						position: "relative",
+					}}
+				>
+						<button
+							aria-label={asset.selected ? `Deselect ${asset.title}` : `Select ${asset.title}`}
+							onClick={onToggleSelect}
+							style={{
+								alignItems: "center",
+								background: asset.selected ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-default)",
+								border: asset.selected ? "none" : "1px solid var(--ax-colors-border-control)",
+								borderRadius: 4,
+								boxShadow: asset.selected ? "0 0 0 1px rgba(0,0,0,0.02)" : "0 1px 2px rgba(16,24,40,0.12)",
+								cursor: "pointer",
+								display: "flex",
+								height: 18,
+								justifyContent: "center",
+								opacity: isHovered || asset.selected ? 1 : 0,
+								padding: 0,
+								pointerEvents: isHovered || asset.selected ? "auto" : "none",
+								position: "absolute",
+								right: 8,
+								top: 8,
+								transition: "opacity 120ms ease",
+								width: 18,
+								zIndex: 1,
+							}}
+						type="button"
+					>
+						{asset.selected && <IconCheck color="white" size={12} stroke={3} />}
+					</button>
+					<Box alignItems="center" display="flex" gap="8" style={{ left: 8, bottom: 8, position: "absolute" }}>
 					<AssetBadge label={asset.label} kind={asset.label} />
 					<ScoreBadge score={asset.match} />
 				</Box>
-				{asset.tooltip && isHovered && (
-					<Box
-						alignItems="start"
-						bg="bg.default.inverse"
-						display="flex"
-						flexDirection="column"
-						p="8"
-						rounded="md"
-						style={{
-							justifyContent: "center",
-							maxWidth: 272,
-							position: "absolute",
-							right: -24,
-							top: 52,
-							width: 163,
-							zIndex: 2,
-						}}
-					>
-						<Text color="fg.default.inverse" fontSize="xs">
-							{asset.tooltip}
-						</Text>
-					</Box>
-				)}
-			</Box>
+				</Box>
+			</Tooltip>
 		</Box>
 	);
 }
@@ -1658,6 +2406,7 @@ function SearchPage({
 	onBack,
 	onExcludeChange,
 	onPerspectiveChange,
+	onToggleSelect,
 	perspectives,
 }: {
 	assets: SearchAssetItem[];
@@ -1667,14 +2416,10 @@ function SearchPage({
 	onBack: () => void;
 	onExcludeChange: (value: string) => void;
 	onPerspectiveChange: (index: number, value: string) => void;
+	onToggleSelect: (assetId: string) => void;
 	perspectives: string[];
 }) {
 	const [layoutMode, setLayoutMode] = useState<"masonry" | "grid">("masonry");
-	const assetMap = useMemo(
-		() => new Map(assets.map((asset) => [asset.id, asset])),
-		[assets],
-	);
-
 	return (
 		<Box display="flex" flexDirection="column" style={{ height: "calc(100vh - 48px)" }}>
 			<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "20px 28px" }}>
@@ -1689,40 +2434,49 @@ function SearchPage({
 			>
 				{layoutMode === "masonry" ? (
 					<Box
-						display="grid"
-						gap="12"
+						display="flex"
+						flexDirection="column"
+						gap="10"
 						overflow="auto"
 						pb="20"
 						style={{
 							alignContent: "start",
-							gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
 						}}
 					>
-						{searchMasonryColumns.map((column, columnIndex) => (
-							<Box key={`search-column-${columnIndex}`} display="flex" flexDirection="column" gap="12">
-								{column.map((assetId) => {
-									const asset = assetMap.get(assetId);
+						{Array.from({ length: Math.ceil(assets.length / 3) }, (_, rowIndex) => {
+							const rowAssets = assets.slice(rowIndex * 3, rowIndex * 3 + 3);
 
-									if (!asset) {
-										return null;
-									}
-
-									return (
-										<SearchAssetCard
-											key={asset.id}
-											asset={asset}
-											height={asset.height}
-											onClick={() => onAssetClick(asset)}
-										/>
-									);
-								})}
-							</Box>
-						))}
+							return (
+								<Box
+									key={`search-row-${rowIndex}`}
+									display="grid"
+									gap="10"
+									style={{
+										gridTemplateColumns: rowAssets
+											.map((asset) => `minmax(0, ${asset.width}fr)`)
+											.join(" "),
+										width: "100%",
+									}}
+								>
+										{rowAssets.map((asset) => (
+											<SearchAssetCard
+												key={asset.id}
+												asset={asset}
+												height={asset.height}
+												onClick={() => onAssetClick(asset)}
+												onToggleSelect={() => onToggleSelect(asset.id)}
+												showTooltip
+												width="100%"
+											/>
+										))}
+								</Box>
+							);
+						})}
 					</Box>
 				) : (
 					<Box
 						display="grid"
-						gap="12"
+						gap="10"
 						overflow="auto"
 						pb="20"
 						style={{
@@ -1730,14 +2484,16 @@ function SearchPage({
 							gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
 						}}
 					>
-						{assets.map((asset) => (
-							<SearchAssetCard
-								key={asset.id}
-								asset={asset}
-								height={180}
-								onClick={() => onAssetClick(asset)}
-							/>
-						))}
+							{assets.map((asset) => (
+								<SearchAssetCard
+									key={asset.id}
+									asset={asset}
+									height={180}
+									onClick={() => onAssetClick(asset)}
+									onToggleSelect={() => onToggleSelect(asset.id)}
+									width="100%"
+								/>
+							))}
 					</Box>
 				)}
 
@@ -1796,14 +2552,7 @@ function SearchPage({
 				<Box alignItems="center" display="flex" gap="16" justifyContent="center" style={{ padding: "0 12px" }}>
 					<FooterViewButton
 						active={layoutMode === "masonry"}
-						icon={
-							<Box style={{ display: "grid", gap: 2, gridTemplateColumns: "repeat(18, 1px)", gridTemplateRows: "repeat(14, 1px)", height: 14, width: 18 }}>
-								<Box rounded="sm" style={{ backgroundColor: "currentColor", gridColumn: "1 / span 8", gridRow: "1 / span 6" }} />
-								<Box rounded="sm" style={{ backgroundColor: "currentColor", gridColumn: "11 / span 8", gridRow: "1 / span 6" }} />
-								<Box rounded="sm" style={{ backgroundColor: "currentColor", gridColumn: "1 / span 5", gridRow: "9 / span 6" }} />
-								<Box rounded="sm" style={{ backgroundColor: "currentColor", gridColumn: "8 / span 11", gridRow: "9 / span 6" }} />
-							</Box>
-						}
+						icon={<GridIconAsset active={layoutMode === "masonry"} Icon={Grid1Icon} />}
 						onClick={() => setLayoutMode("masonry")}
 					/>
 					<FooterViewButton
@@ -1812,84 +2561,110 @@ function SearchPage({
 						onClick={() => setLayoutMode("grid")}
 					/>
 					<FooterViewButton
+						disabled
 						icon={<GridIconAsset Icon={Grid3Icon} />}
 					/>
-					<FooterViewButton icon={<GridIconAsset Icon={Grid4Icon} />} />
+					<FooterViewButton disabled icon={<GridIconAsset Icon={Grid4Icon} />} />
 				</Box>
-				<Box alignItems="center" display="flex" gap="8" justifyContent="flex-end" style={{ minWidth: 0 }}>
-					<Button appearance="subtle" size="lg">Cancel</Button>
-					<Button appearance="primary" onClick={onAdd} size="lg">Add to Content</Button>
+					<Box alignItems="center" display="flex" gap="8" justifyContent="flex-end" style={{ minWidth: 0 }}>
+						<Button appearance="subtle" size="lg">Cancel</Button>
+						<Button appearance="primary" disabled={!assets.some((asset) => asset.selected)} onClick={onAdd} size="lg">Add to Content</Button>
+					</Box>
 				</Box>
 			</Box>
-		</Box>
-	);
+		);
 }
 
 function SearchAssetCard({
 	asset,
 	height,
 	onClick,
+	onToggleSelect,
+	showTooltip = false,
+	width,
 }: {
-	asset: AssetItem;
+	asset: SearchAssetItem;
 	height: number;
 	onClick: () => void;
+	onToggleSelect: () => void;
+	showTooltip?: boolean;
+	width?: number | string;
 }) {
 	const [isHovered, setIsHovered] = useState(false);
-
-	return (
+	const card = (
 		<Box
+			bg="bg.default"
+			border="1"
+			borderColor="border.tertiary"
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 			onClick={onClick}
+			overflow="hidden"
 			rounded="lg"
 			style={{
-				background: `url(${asset.src}) center / cover`,
 				cursor: "pointer",
 				height,
 				position: "relative",
+				width: width ?? "100%",
 			}}
 		>
-			{asset.selected && (
-				<Box
-					alignItems="center"
-					bg="bg.accent"
-					display="flex"
-					justifyContent="center"
-					rounded="md"
-					style={{ height: 24, position: "absolute", right: 10, top: 10, width: 24 }}
-				>
-					<IconCheck color="white" size={16} stroke={2.5} />
-				</Box>
+			{"thumbnailSrc" in asset && asset.thumbnailSrc && (
+				<img
+					alt={asset.title}
+					src={asset.thumbnailSrc}
+					style={{ height: "100%", inset: 0, objectFit: "cover", position: "absolute", width: "100%" }}
+				/>
 			)}
-			<Box alignItems="center" display="flex" gap="8" style={{ bottom: 10, left: 10, position: "absolute" }}>
+			<img
+				alt={asset.title}
+				src={asset.src}
+				style={{ height: "100%", inset: 0, objectFit: "cover", position: "absolute", width: "100%" }}
+			/>
+				<button
+					aria-label={asset.selected ? `Deselect ${asset.title}` : `Select ${asset.title}`}
+					onClick={(event) => {
+						event.stopPropagation();
+						onToggleSelect();
+					}}
+					style={{
+						alignItems: "center",
+						background: asset.selected ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-default)",
+						border: asset.selected ? "none" : "1px solid var(--ax-colors-border-control)",
+						borderRadius: 4,
+						boxShadow: asset.selected ? "0 0 0 1px rgba(0,0,0,0.02)" : "0 1px 2px rgba(16,24,40,0.12)",
+						cursor: "pointer",
+						display: "flex",
+						height: 18,
+						justifyContent: "center",
+						opacity: isHovered || asset.selected ? 1 : 0,
+						padding: 0,
+						pointerEvents: isHovered || asset.selected ? "auto" : "none",
+						position: "absolute",
+						right: 16,
+						top: 16,
+						transition: "opacity 120ms ease",
+						width: 18,
+						zIndex: 1,
+					}}
+				type="button"
+			>
+				{asset.selected && <IconCheck color="white" size={11} stroke={3} />}
+			</button>
+			<Box alignItems="center" display="flex" gap="8" style={{ bottom: 16, left: 16, position: "absolute" }}>
 				<AssetBadge label={asset.label} kind={asset.label} />
 				<ScoreBadge score={asset.match} />
 			</Box>
-			{asset.tooltip && isHovered && (
-				<Box
-					alignItems="start"
-					bg="bg.default.inverse"
-					display="flex"
-					flexDirection="column"
-					p="8"
-					rounded="md"
-					style={{
-						justifyContent: "center",
-						left: 62,
-						maxWidth: 272,
-						position: "absolute",
-						top: "50%",
-						transform: "translateY(-50%)",
-						width: 163,
-						zIndex: 2,
-					}}
-				>
-					<Text color="fg.default.inverse" fontSize="xs">
-						{asset.tooltip}
-					</Text>
-				</Box>
-			)}
 		</Box>
+	);
+
+	if (!showTooltip) {
+		return card;
+	}
+
+	return (
+		<Tooltip align="start" content={<AssetTooltipContent asset={asset} />} side="top">
+			{card}
+		</Tooltip>
 	);
 }
 
@@ -2033,7 +2808,7 @@ function ContentEmptyPage({
 							"Add Content" button.
 						</Text>
 					</Box>
-					<Button appearance="primary" onClick={onAddContent} size="sm">
+					<Button appearance="primary" onClick={onAddContent} size="lg">
 						<Box alignItems="center" display="flex" gap="8">
 							<IconPlus size={16} />
 							<span>Add Content</span>
@@ -2065,160 +2840,242 @@ function ContentFilledPage({
 	activeTab,
 	onAddContent,
 	onOpenSuggested,
+	onSelectTaskAsset,
+	selectedTaskAssetId,
+	suggestedOpen = false,
+	taskAssets,
 	onTabChange,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
 	onOpenSuggested: () => void;
+	onSelectTaskAsset: (assetId: string) => void;
+	selectedTaskAssetId: string;
+	suggestedOpen?: boolean;
+	taskAssets: AssetItem[];
 	onTabChange: (tab: string) => void;
 }) {
+	const selectedTaskAsset =
+		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? taskAssets[0] ?? null;
+	const heroImageSrc =
+		selectedTaskAsset?.preview === "image"
+			? selectedTaskAsset.heroSrc ?? selectedTaskAsset.src
+			: figmaAssets.contentHero;
+	const articleBodyStyle = {
+		color: "var(--ax-colors-fg-default)",
+		fontFamily: "Inter, sans-serif",
+		fontSize: 14,
+		fontStyle: "normal" as const,
+		fontWeight: 400,
+		letterSpacing: "-0.1px",
+		lineHeight: "20px",
+	};
+
 	return (
-		<Box pb="40" style={{ position: "relative" }}>
+		<Box pb="32" style={{ position: "relative" }}>
 			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
-			<Box display="flex" flexDirection="column" style={{ gap: 20, maxWidth: 980, padding: "22px 28px 0" }}>
+			<Box display="flex" flexDirection="column" style={{ gap: 18, maxWidth: 812, padding: "20px 32px 0" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Button appearance="primary" onClick={onAddContent} size="sm">
-						<Box alignItems="center" display="flex" gap="8">
+					<Button
+						appearance="primary"
+						onClick={onAddContent}
+						size="sm"
+						style={{
+							background: "#0037FF",
+							borderRadius: 6,
+							height: 40,
+							padding: "0 12px",
+						}}
+					>
+						<Box alignItems="center" display="flex" gap="4">
 							<IconPlus size={16} />
 							<span>Add Content</span>
 						</Box>
 					</Button>
-					<Box alignItems="center" display="flex" style={{ gap: 14 }}>
-						<IconCopy size={18} color="var(--ax-colors-fg-secondary)" />
-						<Box alignItems="center" bg="bg.secondary" display="flex" gap="8" px="8" py="4" rounded="full">
-							<Text fontSize="sm">8</Text>
+					<Box alignItems="center" display="flex" style={{ gap: 12 }}>
+						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
+							<IconCopy size={16} color="var(--ax-colors-fg-secondary)" />
 						</Box>
-						<Box alignItems="center" bg="bg.tertiary" display="flex" justifyContent="center" rounded="md" style={{ height: 40, width: 40 }}>
-							<Box style={{ border: "2px solid var(--ax-colors-bg-accent)", borderRadius: 2, height: 16, width: 16 }} />
+						<Text color="fg.secondary" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>8</Text>
+						<Box alignItems="center" bg="bg.tertiary" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
+							<Box style={{ border: "1.6px solid var(--ax-colors-fg-accent)", borderRadius: 2, height: 16, width: 16 }} />
 						</Box>
-						<Box alignItems="center" display="flex" gap="10">
-							{["▦", "≣"].map((item) => (
-								<Text key={item} color="fg.tertiary" fontSize="lg">{item}</Text>
-							))}
+						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
+							<Grid2Icon aria-hidden="true" style={{ color: "var(--ax-colors-fg-tertiary)", display: "block", height: 16, width: 16 }} />
+						</Box>
+						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
+							<Box display="flex" flexDirection="column" style={{ gap: 2, width: 14 }}>
+								<Box bg="bg.tertiary" rounded="full" style={{ height: 2, width: "100%" }} />
+								<Box bg="bg.tertiary" rounded="full" style={{ height: 2, width: "100%" }} />
+								<Box bg="bg.tertiary" rounded="full" style={{ height: 2, width: "100%" }} />
+							</Box>
 						</Box>
 					</Box>
 				</Box>
 
-				<Box alignItems="center" display="flex" gap="10">
-					{[
-						{ label: "✦", src: undefined, selected: false },
-						{ label: "", src: figmaAssets.contentThumbDoc, selected: true },
-						{ label: "", src: figmaAssets.contentThumbOne, selected: false },
-						{ label: "", src: figmaAssets.contentThumbTwo, selected: false },
-						{ label: "", src: figmaAssets.contentThumbThree, selected: false },
-						{ label: "", src: figmaAssets.vespaThumb, selected: false },
-					].map((thumb, index) => (
-						<Box
-							key={index}
-							alignItems="center"
-							bg={thumb.selected ? "bg.information.subtle" : "bg.secondary"}
-							border={thumb.selected ? "1" : undefined}
-							borderColor={thumb.selected ? "border.accent" : undefined}
-							display="flex"
-							justifyContent="center"
-							rounded="md"
-							style={{
-								height: 38,
-								overflow: "hidden",
-								width: 38,
-							}}
-						>
-							{thumb.src ? (
-								<img alt="" src={thumb.src} style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }} />
-							) : (
-								<Text fontSize="lg">{thumb.label}</Text>
-							)}
-						</Box>
-					))}
+				<Box alignItems="center" display="flex" gap="8">
+					{[null, ...taskAssets].map((asset, index) => {
+						const isSuggestedTrigger = index === 0;
+						const isSelected = isSuggestedTrigger
+							? suggestedOpen
+							: !suggestedOpen && asset?.id === selectedTaskAssetId;
+
+							return (
+								<Box
+									key={index}
+									alignItems="center"
+									bg={isSelected ? "bg.default" : "bg.secondary"}
+									border="1"
+									borderColor={isSelected ? "border.accent" : "border.tertiary"}
+									display="flex"
+									justifyContent="center"
+									rounded="md"
+									style={{
+										background: "#FFF",
+										boxShadow: isSelected
+											? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7"
+											: "none",
+										flexShrink: 0,
+										height: 32,
+										minHeight: 32,
+										minWidth: 32,
+										overflow: "hidden",
+										width: 32,
+									}}
+								>
+									<button
+										aria-label={isSuggestedTrigger ? "Open suggested assets" : `View ${asset?.title ?? "task asset"}`}
+										onClick={isSuggestedTrigger ? onOpenSuggested : asset ? () => onSelectTaskAsset(asset.id) : undefined}
+										style={{
+											alignItems: "center",
+											background: "transparent",
+											border: "none",
+											cursor: "pointer",
+											display: "flex",
+											flexShrink: 0,
+											height: 32,
+											justifyContent: "center",
+											padding: 0,
+											width: 32,
+										}}
+										type="button"
+									>
+										{isSuggestedTrigger ? (
+											<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
+										) : asset?.thumbnailSrc || asset?.src ? (
+											<img
+												alt=""
+												src={asset?.thumbnailSrc ?? asset?.src}
+												style={{
+													display: "block",
+													flexShrink: 0,
+													height: 32,
+													objectFit: "cover",
+													width: 32,
+												}}
+											/>
+										) : (
+											<Text fontSize="lg">{thumb.label}</Text>
+										)}
+									</button>
+								</Box>
+							);
+						})}
 				</Box>
 
 				<Box
 					bg="bg.default"
 					border="1"
 					borderColor="border.tertiary"
-					p="20"
 					rounded="lg"
+					style={{ overflow: "hidden" }}
 				>
-					<Box alignItems="center" display="flex" justifyContent="space-between">
-						<Text color="fg.default" fontSize="2xl" fontWeight="500">The runner sponsoring package</Text>
-						<Box alignItems="center" display="flex" style={{ gap: 14 }}>
-							<IconTag size={18} color="var(--ax-colors-fg-secondary)" />
-							<IconSparkles size={18} color="var(--ax-colors-fg-secondary)" />
-							<IconLink size={18} color="var(--ax-colors-fg-secondary)" />
-							<IconDots size={18} color="var(--ax-colors-fg-secondary)" />
+					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
+						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>The runner sponsoring package</Text>
+						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
+							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
+							<button
+								aria-label="Open suggested assets"
+								onClick={onOpenSuggested}
+								style={{
+									alignItems: "center",
+									background: "transparent",
+									border: "none",
+									cursor: "pointer",
+									display: "flex",
+									justifyContent: "center",
+									padding: 0,
+								}}
+								type="button"
+							>
+								<SparklesIcon height={16} style={{ color: "var(--ax-colors-fg-secondary)" }} width={16} />
+							</button>
+							<IconLink size={16} color="var(--ax-colors-fg-secondary)" />
+							<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
 						</Box>
 					</Box>
 
-						<Box mt="16" rounded="lg" style={{ overflow: "hidden" }}>
-						<img alt="Runner sponsorship package" src={figmaAssets.contentHero} style={{ display: "block", width: "100%" }} />
-					</Box>
+					<img
+						alt="Runner sponsorship package"
+						src={heroImageSrc}
+						style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
+					/>
 
-						<Box display="flex" flexDirection="column" mt="16" style={{ gap: 18 }}>
-						<Text color="fg.default" fontSize="lg">
-							When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
-						</Text>
+					<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
 						<Box asChild>
-							<div style={{ lineHeight: 1.55 }}>
-								<Text color="fg.default" fontSize="lg" fontWeight="600">Title Sponsor: The 'Victory Lap' Package ($5M)</Text>
-								<ul style={{ margin: "6px 0 18px 24px", padding: 0 }}>
-									<li><Text color="fg.default" fontSize="lg">Headline billing on all event promotions.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">Logo placement on runner jerseys.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">Exclusive naming rights for the finish line.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">VIP access for 50 guests.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">Full-page ad in the event program.</Text></li>
-								</ul>
-								<Text color="fg.default" fontSize="lg" fontWeight="600">Platinum Tier: The 'Sprint' Package ($3M)</Text>
-								<ul style={{ margin: "6px 0 18px 24px", padding: 0 }}>
-									<li><Text color="fg.default" fontSize="lg">Prominent logo placement on event banners.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">Opportunity to set up an interactive booth at the event.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">VIP access for 30 guests.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">Half-page ad in the event program.</Text></li>
-								</ul>
-								<Text color="fg.default" fontSize="lg" fontWeight="600">Gold Tier: The 'Marathon' Package ($1.5M)</Text>
-								<ul style={{ margin: "6px 0 0 24px", padding: 0 }}>
-									<li><Text color="fg.default" fontSize="lg">Logo placement on event signage.</Text></li>
-									<li><Text color="fg.default" fontSize="lg">Opportunity to distribute promotional materials.</Text></li>
-								</ul>
+							<div style={articleBodyStyle}>
+								<>
+									<p style={{ margin: 0 }}>
+										When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
+									</p>
+									<div style={{ marginTop: 10 }}>
+										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
+										<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
+											<li>Headline billing on all event promotions.</li>
+											<li>Logo placement on runner jerseys.</li>
+											<li>Exclusive naming rights for the finish line.</li>
+											<li>VIP access for 50 guests.</li>
+											<li>Full-page ad in the event program.</li>
+										</ul>
+										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
+										<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
+											<li>Prominent logo placement on event banners.</li>
+											<li>Opportunity to set up an interactive booth at the event.</li>
+											<li>VIP access for 30 guests.</li>
+											<li>Half-page ad in the event program.</li>
+										</ul>
+										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
+										<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
+											<li>Logo placement on event signage.</li>
+											<li>Opportunity to distribute promotional materials.</li>
+										</ul>
+									</div>
+								</>
 							</div>
 						</Box>
 					</Box>
 
-					<Box display="flex" flexDirection="column" gap="12" mt="24">
-						<Box alignItems="center" display="flex" gap="8">
-							<Badge intent="neutral">Image</Badge>
-							<Badge intent="neutral">Marathoner</Badge>
-							<Badge intent="neutral">Millenials</Badge>
-							<Text color="fg.accent" fontSize="sm">+ 6</Text>
+					<Box display="flex" flexDirection="column" gap="10" style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", marginTop: 12, padding: "12px 18px 18px" }}>
+						<Box alignItems="center" display="flex" gap="6">
+							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Image</Text>
+							</Box>
+							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Marathoner</Text>
+							</Box>
+							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Millenials</Text>
+							</Box>
+							<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
 						</Box>
-						<MetadataRow icon={<IconCalendar size={16} />} label="Instance Name here • By Author name" />
-						<MetadataRow icon={<IconCopy size={16} />} label="Will be saved in Library > Images" />
-						<MetadataRow icon={<IconCalendar size={16} />} label="Expiry Date" />
-						<MetadataRow icon={<IconLink size={16} />} label="Preview URL: https://www.stride.com/ironmanmiami" link />
+						<MetadataRow icon={<IconCalendar size={12} />} label="Instance Name here • By Author name" />
+						<MetadataRow icon={<IconCopy size={12} />} label="Will be saved in Library > Images" />
+						<MetadataRow icon={<IconCalendar size={12} />} label="Expiry Date" />
+						<MetadataRow icon={<IconLink size={12} />} label="Preview URL: https://www.stride.com/ironmanmiami" link />
 					</Box>
 				</Box>
 			</Box>
 
-			<button
-				aria-label="Start AI"
-				onClick={onOpenSuggested}
-				style={{
-					alignItems: "center",
-					background: "linear-gradient(135deg, #3f34d1 10%, #7c40ec 72%)",
-					border: "none",
-					borderRadius: 999,
-					bottom: 20,
-					cursor: "pointer",
-					display: "flex",
-					height: 48,
-					justifyContent: "center",
-					position: "fixed",
-					right: 20,
-					width: 48,
-					zIndex: 10,
-				}}
-			>
-				<img alt="Opal" src="/opal-orb.png" style={{ height: 18, width: 18 }} />
-			</button>
 		</Box>
 	);
 }
@@ -2234,20 +3091,21 @@ function MetadataRow({
 }) {
 	return (
 		<Box alignItems="center" display="flex" gap="10">
-			<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 22, width: 22 }}>
+			<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 18, width: 18 }}>
 				{icon}
 			</Box>
-			<Text color={link ? "fg.accent" : "fg.default"} fontSize="sm">{label}</Text>
+			<Text color={link ? "fg.accent" : "fg.secondary"} style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>{label}</Text>
 		</Box>
 	);
 }
 
 function AssetBadge({ kind, label }: { kind: AssetType; label: string }) {
-	const color =
-		kind === "PDF"
-			? { bg: "#fff1d6", fg: "#a25d00" }
-			: { bg: "#dbeafe", fg: "#2457c5" };
+	const intent = kind === "MP4" ? "information" : kind === "PDF" ? "warning" : "success";
 
+	return <Badge intent={intent}>{label}</Badge>;
+}
+
+function ScoreBadge({ score }: { score: number }) {
 	return (
 		<Box
 			alignItems="center"
@@ -2255,28 +3113,24 @@ function AssetBadge({ kind, label }: { kind: AssetType; label: string }) {
 			justifyContent="center"
 			rounded="full"
 			style={{
-				backgroundColor: color.bg,
-				height: 28,
-				minWidth: 46,
-				padding: "0 10px",
+				background: "var(--ax-colors-fg-white)",
+				borderRadius: 12,
+				padding: "2px 8px",
 			}}
 		>
-			<Text fontSize="sm" style={{ color: color.fg, fontWeight: 600 }}>{label}</Text>
-		</Box>
-	);
-}
-
-function ScoreBadge({ score }: { score: number }) {
-	return (
-		<Box
-			alignItems="center"
-			bg="bg.default"
-			display="flex"
-			justifyContent="center"
-			rounded="full"
-			style={{ height: 28, minWidth: 54, padding: "0 10px" }}
-		>
-			<Text color="fg.accent" fontSize="sm" fontWeight="600">{score}%</Text>
+			<Text
+				style={{
+					color: "#6F33D1",
+					fontFamily: "Inter, sans-serif",
+					fontSize: 12,
+					fontWeight: 500,
+					letterSpacing: "0.01px",
+					lineHeight: "16px",
+					maxWidth: "none",
+				}}
+			>
+				{score}%
+			</Text>
 		</Box>
 	);
 }
@@ -2292,10 +3146,11 @@ function GridIconAsset({
 		<Icon
 			aria-hidden="true"
 			style={{
+				color: active ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
 				display: "block",
-				filter: active ? "none" : "grayscale(1) brightness(1.02)",
 				height: 14,
-				opacity: active ? 1 : 0.9,
+				opacity: active ? 1 : 0.5,
+				flexShrink: 0,
 				width: 18,
 			}}
 		/>
@@ -2304,10 +3159,12 @@ function GridIconAsset({
 
 function FooterViewButton({
 	active = false,
+	disabled = false,
 	icon,
 	onClick,
 }: {
 	active?: boolean;
+	disabled?: boolean;
 	icon: ReactNode;
 	onClick?: () => void;
 }) {
@@ -2317,13 +3174,13 @@ function FooterViewButton({
 			bg={active ? "bg.secondary" : undefined}
 			display="flex"
 			justifyContent="center"
-			onClick={onClick}
+			onClick={disabled ? undefined : onClick}
 			rounded="md"
 			style={{
 				color: active ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
-				cursor: onClick ? "pointer" : "default",
+				cursor: disabled ? "default" : onClick ? "pointer" : "default",
 				height: 32,
-				opacity: active ? 1 : 0.55,
+				opacity: disabled ? 0.28 : active ? 1 : 0.55,
 				padding: 0,
 				width: 32,
 			}}
