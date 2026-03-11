@@ -11,6 +11,7 @@ import {AutocompletePhrase, initialAutocompletePhrases} from "@/app/db/initialDa
 import AutocompletePhrasesTable from "../components/AutocompletePhrasesTable";
 import AutocompletePhraseDialog from "../components/AutocompletePhraseDialog";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 const PAGE_SIZE = 10;
 
@@ -104,6 +105,32 @@ export default function AutocompletePhrasesPage() {
 			setCurrentPage(effectivePage);
 		}
 	}, [currentPage, effectivePage]);
+
+	if (phrases.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No autocomplete phrases yet"
+					body="Add autocomplete phrases to help users discover content faster by suggesting popular and relevant searches."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Autocomplete Phrase
+					</Button>
+				</EmptyList>
+
+				<AutocompletePhraseDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreatePhrase}
+				/>
+			</Box>
+		);
+	}
 
 	return (
 		<Box>

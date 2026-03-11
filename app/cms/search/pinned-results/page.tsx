@@ -11,6 +11,7 @@ import {PinnedResult, initialPinnedResults} from "@/app/db/initialData";
 import PinnedResultsTable from "../components/PinnedResultsTable";
 import PinnedResultDialog from "../components/PinnedResultDialog";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 const PAGE_SIZE = 10;
 
@@ -104,6 +105,32 @@ export default function PinnedResultsPage() {
 			setCurrentPage(effectivePage);
 		}
 	}, [currentPage, effectivePage]);
+
+	if (pinnedResults.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No pinned results yet"
+					body="Pin specific results to the top of search queries to ensure users always find the most relevant content."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Pinned Result
+					</Button>
+				</EmptyList>
+
+				<PinnedResultDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreatePinnedResult}
+				/>
+			</Box>
+		);
+	}
 
 	return (
 		<Box>
