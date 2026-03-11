@@ -9,6 +9,7 @@ import {IconSearch, IconAlertCircle} from "@tabler/icons-react";
 import {useState, useMemo} from "react";
 import {ctrQueries, CTRQuery, scaleValue} from "@/app/db/analyticsData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
+import EmptyList from "@/app/components/EmptyList";
 
 const allData: CTRQuery[] = ctrQueries;
 
@@ -95,28 +96,35 @@ export default function ClickThroughRatePage() {
 				</Flex>
 			</Flex>
 
-			<Table>
-				<thead>
-					<Tr>
-						<Th>Query</Th>
-						<Th>Impressions</Th>
-						<Th>Clicks</Th>
-						<Th>CTR</Th>
-						<Th>Avg. Position</Th>
-					</Tr>
-				</thead>
-				<tbody>
-					{filteredData.map((row, i) => (
-						<Tr key={i}>
-							<Td type="header">{row.query}</Td>
-							<Td>{row.impressions.toLocaleString()}</Td>
-							<Td>{row.clicks.toLocaleString()}</Td>
-							<Td>{row.ctr}%</Td>
-							<Td>{row.position.toFixed(1)}</Td>
+			{filteredData.length === 0 ? (
+				<EmptyList
+					heading="No results found"
+					body="No queries match your current filters. Try adjusting the time range or search terms."
+				/>
+			) : (
+				<Table>
+					<thead>
+						<Tr>
+							<Th>Query</Th>
+							<Th>Impressions</Th>
+							<Th>Clicks</Th>
+							<Th>CTR</Th>
+							<Th>Avg. Position</Th>
 						</Tr>
-					))}
-				</tbody>
-			</Table>
+					</thead>
+					<tbody>
+						{filteredData.map((row, i) => (
+							<Tr key={i}>
+								<Td type="header">{row.query}</Td>
+								<Td>{row.impressions.toLocaleString()}</Td>
+								<Td>{row.clicks.toLocaleString()}</Td>
+								<Td>{row.ctr}%</Td>
+								<Td>{row.position.toFixed(1)}</Td>
+							</Tr>
+						))}
+					</tbody>
+				</Table>
+			)}
 		</Box>
 	);
 }

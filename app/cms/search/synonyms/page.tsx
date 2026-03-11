@@ -11,6 +11,7 @@ import {Synonym, initialSynonyms} from "@/app/db/initialData";
 import SynonymsTable from "../components/SynonymsTable";
 import SynonymDialog from "../components/SynonymDialog";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 const PAGE_SIZE = 10;
 
@@ -119,6 +120,32 @@ export default function SynonymsPage() {
 			setCurrentPage(effectivePage);
 		}
 	}, [currentPage, effectivePage]);
+
+	if (synonyms.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No synonyms yet"
+					body="Create synonyms to help users find content using alternative terms and improve search recall."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Synonym
+					</Button>
+				</EmptyList>
+
+				<SynonymDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreateSynonym}
+				/>
+			</Box>
+		);
+	}
 
 	return (
 		<Box>
