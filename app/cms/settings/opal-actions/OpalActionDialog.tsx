@@ -1,6 +1,6 @@
 "use client";
 
-import {useState, useEffect} from "react";
+import {useState, useEffect, useMemo} from "react";
 import {
 	Box,
 	Dialog,
@@ -16,7 +16,13 @@ import {
 	Disclosure,
 	DisclosureContent,
 	DisclosureTrigger,
+	type MenuOption,
 } from "@optiaxiom/react";
+import {
+	PillMenu,
+	PillMenuContent,
+	PillMenuTrigger,
+} from "@optiaxiom/react/unstable";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {OpalAction, availableAgents, PropertyType} from "./mockData";
@@ -42,8 +48,8 @@ export default function OpalActionDialog({
 	const [assetPanel, setAssetPanel] = useState(false);
 	const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
 	const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-	const [visibleAt, setVisibleAt] = useState<"Everyone" | "Editors" | "Administrators">(
-		"Everyone"
+	const [visibleTo, setVisibleTo] = useState<Array<"Everyone" | "Editors" | "Administrators">>(
+		["Everyone"]
 	);
 
 	// Reset form when dialog opens/closes or action changes
@@ -57,7 +63,7 @@ export default function OpalActionDialog({
 			setAssetPanel(action.locations.assetPanel);
 			setPropertyTypes(action.locations.propertyEditor.propertyTypes);
 			setSelectedAgents(action.agents);
-			setVisibleAt(action.visibleAt);
+			setVisibleTo([action.visibleAt]);
 		} else {
 			setName("");
 			setEnabled(true);
@@ -67,7 +73,7 @@ export default function OpalActionDialog({
 			setAssetPanel(false);
 			setPropertyTypes([]);
 			setSelectedAgents([]);
-			setVisibleAt("Everyone");
+			setVisibleTo(["Everyone"]);
 		}
 	}, [action, open]);
 
@@ -90,7 +96,7 @@ export default function OpalActionDialog({
 				},
 			},
 			agents: selectedAgents,
-			visibleAt,
+			visibleAt: visibleTo[0] || "Everyone",
 		});
 	};
 
@@ -157,6 +163,33 @@ export default function OpalActionDialog({
 									value={helpText}
 									onChange={(e) => setHelpText(e.target.value)}
 								/>
+							</Field>
+
+							{/* Visible To field */}
+							<Field label="Visible To" description="Select which user groups can see this action">
+								<PillMenu
+									options={useMemo(
+										() =>
+											(["Everyone", "Editors", "Administrators"] as const).map(
+												(group) =>
+													({
+														execute: () =>
+															setVisibleTo((values) =>
+																values.includes(group)
+																	? values.filter((v) => v !== group)
+																	: [...values, group]
+															),
+														label: group,
+														multi: true,
+														selected: () => visibleTo.includes(group),
+													}) satisfies MenuOption
+											),
+										[visibleTo]
+									)}
+								>
+									<PillMenuTrigger>Select groups</PillMenuTrigger>
+									<PillMenuContent />
+								</PillMenu>
 							</Field>
 						</Box>
 
