@@ -208,6 +208,7 @@ export type PropertyType =
 	| "ContentReference"
 	| "ContentArea"
 	| "Url"
+	| "LinkItem"
 	| "LinkItemCollection"
 	| "PageReference"
 	| "ImageReference"
@@ -218,6 +219,7 @@ export type PropertyType =
 	| "text"
 	| "textarea"
 	| "richtext"
+	| "link"
 	| "reference"
 	| "address"
 	| "outline"
@@ -388,8 +390,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "imageUrl", name: "Image URL", type: "text", required: true },
-			{ id: "altText", name: "Alt Text", type: "text" },
+			{ id: "src", name: "Image URL", type: "text", required: true },
+			{ id: "alt", name: "Alt Text", type: "text" },
 			{ id: "width", name: "Width", type: "text" },
 			{ id: "height", name: "Height", type: "text" },
 		],
@@ -425,7 +427,10 @@ export const initialContentTypes: ContentType[] = [
 		name: "Button",
 		baseType: "Block",
 		description: "A button block",
-		properties: [{ id: "label", name: "Label", type: "text", required: true }],
+		properties: [
+			{ id: "label", name: "Label", type: "text", required: true },
+			{ id: "url", name: "URL", type: "link" },
+		],
 	},
 	{
 		id: "ct-input",
@@ -1411,6 +1416,7 @@ export const initialPages: Page[] = [
 													{ id: "ele-landing-hero-badge" },
 													{ id: "ele-landing-hero-sub" },
 													{ id: "ele-landing-hero-heading" },
+													{ id: "ele-landing-hero-broken-image" },
 												],
 											},
 										],
@@ -1762,16 +1768,25 @@ export const initialPages: Page[] = [
 									},
 								},
 							},
+							"ele-landing-hero-broken-image": {
+								type: "ct-image",
+								properties: {
+									src: { value: "https://example.com/missing-image-404.jpg" },
+									alt: { value: "" },
+								},
+							},
 							"ele-landing-hero-cta-primary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Register for your bib" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Learn More" },
+									url: { value: "/about" },
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
@@ -2070,6 +2085,7 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: { value: "Join Now" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-challenges-heading": {

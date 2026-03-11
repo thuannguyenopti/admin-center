@@ -1,9 +1,11 @@
 "use client";
 
-import { Box } from "@optiaxiom/react";
-import { Text } from "../Text";
-import { ChatMessage } from "@/app/hooks/useOpalState";
+import {Box} from "@optiaxiom/react";
+import {Text} from "../Text";
+import {ChatMessage} from "@/app/hooks/useOpalState";
 import Image from "next/image";
+import {PreflightProgressIndicator} from "../ai/PreflightProgressIndicator";
+import {PreflightResultsTable} from "../ai/PreflightResultsTable";
 
 type OpalMessageProps = {
   message: ChatMessage;
@@ -60,7 +62,7 @@ export function OpalMessage({ message }: OpalMessageProps) {
               />
               <Text
                 fontSize="sm"
-                style={{ 
+                style={{
                   margin: 0,
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
@@ -69,10 +71,27 @@ export function OpalMessage({ message }: OpalMessageProps) {
                 Opal is thinking...
               </Text>
             </Box>
+          ) : message.messageType === 'preflight-progress' && message.metadata?.checklist ? (
+            <PreflightProgressIndicator checklist={message.metadata.checklist} />
+          ) : message.messageType === 'preflight-results' && message.metadata?.auditResult ? (
+            <>
+              <Text
+                fontSize="sm"
+                style={{
+                  margin: 0,
+                  marginBottom: '12px',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {message.content}
+              </Text>
+              <PreflightResultsTable result={message.metadata.auditResult} messageId={message.id} />
+            </>
           ) : (
             <Text
               fontSize="sm"
-              style={{ 
+              style={{
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',

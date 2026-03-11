@@ -104,18 +104,8 @@ export default function RootLayout({
 				icon: <IconSettings />,
 				children: [
 					{label: "Taxonomy"},
-					{
-						label: "Categories",
-						url: "/cms/settings/categories",
-						description:
-							"Categories organise your content into a hierarchy (e.g. Sport > Cycling). Use them to structure navigation, filter content, and group related items. Assign categories to content when editing, and create parent categories to build a taxonomy.",
-					},
-					{
-						label: "Tags",
-						url: "/cms/settings/tags",
-						description:
-							"Tags are labels you attach to content (e.g. “featured”, “how-to”). Use them to filter and search in the Content Manager, power faceted search, and surface related content. Create tags here, then assign them to pages and other content when editing.",
-					},
+					{label: "Categories", url: "/cms/settings/categories"},
+					{label: "Tags", url: "/cms/settings/tags"},
 					{label: "Configure"},
 					{
 						label: "Applications",
@@ -482,7 +472,6 @@ export default function RootLayout({
 					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
 					rel="stylesheet"
 				/>
-				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
 			<body suppressHydrationWarning>
 				<ThemeProvider>

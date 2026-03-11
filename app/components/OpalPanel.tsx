@@ -7,6 +7,8 @@ import { OpalInput } from "./Opal/OpalInput";
 import { OpalHistorySidebar } from "./Opal/OpalHistorySidebar";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
+import { useLayout } from "@/app/context/LayoutContext";
+import { useEffect, useState, useCallback } from "react";
 
 type OpalPanelProps = {
   isOpen: boolean;
@@ -14,6 +16,7 @@ type OpalPanelProps = {
   messages: ChatMessage[];
   inputValue: string;
   isLoading: boolean;
+  isInputDisabled?: boolean;
   error?: string;
   setInputValue: (value: string) => void;
   sendMessage: (content: string) => void;
@@ -37,6 +40,7 @@ export function OpalPanel({
   messages,
   inputValue,
   isLoading,
+  isInputDisabled = false,
   error,
   setInputValue,
   sendMessage,
@@ -52,8 +56,12 @@ export function OpalPanel({
   deleteChat,
   selectChat,
 }: OpalPanelProps) {
+  const { setOpalPanelWidth } = useLayout();
+  const [customWidth, setCustomWidth] = useState<number | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+
   const handleSend = () => {
-    if (inputValue.trim() && !isLoading) {
+    if (inputValue.trim() && !isLoading && !isInputDisabled) {
       sendMessage(inputValue);
     }
   };
@@ -62,51 +70,91 @@ export function OpalPanel({
     setInputValue(suggestion);
   };
 
-  if (!isOpen) return null;
+  // Resize handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
 
-  // Calculate width based on mode
-  const baseWidth = mode === 'docked' ? 400 : 449;
-  const historyWidth = mode === 'docked' ? 272 : 256;
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    const newWidth = window.innerWidth - e.clientX;
+    if (newWidth >= 300 && newWidth <= 800) {
+      setCustomWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // Add/remove global mouse event listeners for resizing
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+    }
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  // Calculate width - use custom width if set, otherwise use default
+  const baseWidth = customWidth || 400;
+  const historyWidth = 272;
   const totalWidth = isHistoryVisible ? baseWidth + historyWidth : baseWidth;
 
-  const boxShadow = mode === 'docked' 
-    ? '-6px 6px 25px rgba(12, 16, 29, 0.08)'
-    : '0px 6px 18px rgba(9, 30, 66, 0.04), 0px 6px 12px rgba(9, 30, 66, 0.08), 0px 4px 4px 1px rgba(9, 30, 66, 0.04)';
+  // Update layout context with panel width
+  useEffect(() => {
+    if (isOpen) {
+      setOpalPanelWidth(totalWidth);
+    } else {
+      setOpalPanelWidth(0);
+    }
+  }, [isOpen, totalWidth, setOpalPanelWidth]);
+
+  if (!isOpen) return null;
 
   return (
     <Box
       className="opal-panel"
       style={{
         position: 'fixed',
-        top: '64px',
-        right: '20px',
+        top: '57px',
+        right: 0,
+        bottom: 0,
         width: `${totalWidth}px`,
-        height: 'calc(100vh - 84px)',
         backgroundColor: 'var(--opal-bg-primary)',
-        border: '1px solid var(--opal-border-primary)',
-        borderRadius: '8px',
-        boxShadow,
+        borderLeft: '1px solid var(--opal-border-primary)',
         zIndex: 50,
         display: 'flex',
         flexDirection: 'row',
-        overflow: 'hidden',
+        overflowX: 'visible',
+        overflowY: 'hidden',
         transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
       }}
     >
       {/* Grab Handle - only in docked mode */}
       {mode === 'docked' && (
         <Box
+          onMouseDown={handleMouseDown}
           style={{
             position: 'absolute',
-            left: '-5px',
+            left: '0',
             top: '50%',
-            transform: 'translateY(-50%)',
+            transform: 'translate(-50%, -50%)',
             width: '10px',
             height: '52px',
             backgroundColor: 'var(--opal-bg-primary)',
             border: '1px solid var(--opal-border-secondary)',
             borderRadius: '4px',
-            cursor: 'grab',
+            cursor: isResizing ? 'ew-resize' : 'ew-resize',
+            zIndex: 100,
           }}
         />
       )}
@@ -148,7 +196,7 @@ export function OpalPanel({
           value={inputValue}
           onChange={setInputValue}
           onSend={handleSend}
-          disabled={isLoading}
+          disabled={isLoading || isInputDisabled}
           error={error}
         />
       </Box>

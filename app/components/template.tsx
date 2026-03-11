@@ -10,6 +10,8 @@ import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
+import {BrandToneProvider} from "../components/ai/BrandToneProvider";
+import {PreflightProvider} from "../components/ai/PreflightContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
@@ -26,7 +28,7 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent, hidePageHeader} = useLayout();
+	const {asideContent, hidePageHeader, setOpalPanelControls, opalPanelWidth} = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
@@ -53,11 +55,31 @@ function TemplateContent({
 		inputValue,
 		isLoading,
 		error,
+		isInputDisabled,
 		togglePanel: toggleOpal,
 		closePanel: closeOpal,
+		openPanel: openOpal,
 		setInputValue,
+		setInputDisabled,
 		sendMessage,
+		addMessage,
+		updateMessage,
+		removeMessage,
 	} = useOpalState({activeChatId: activeChat, opalContext});
+
+	// Provide Opal panel controls through LayoutContext
+	useEffect(() => {
+		setOpalPanelControls({
+			openPanel: openOpal,
+			togglePanel: toggleOpal,
+			closePanel: closeOpal,
+			addMessage,
+			updateMessage,
+			removeMessage,
+			setInputDisabled,
+		});
+		return () => setOpalPanelControls(null);
+	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, addMessage, updateMessage, removeMessage, setInputDisabled]);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -273,7 +295,11 @@ function TemplateContent({
 				fontSize="md"
 				color="fg.default"
 				h="full"
-				style={{minHeight: 0}}
+				style={{
+				minHeight: 0,
+				marginRight: opalPanelWidth ? `${opalPanelWidth}px` : 0,
+				transition: 'margin-right 0.3s cubic-bezier(0, 1, 0, 1)',
+			}}
 			>
 				<Box
 					flex="1"
@@ -351,6 +377,7 @@ function TemplateContent({
 				inputValue={inputValue}
 				isLoading={isLoading}
 				error={error}
+				isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
 				groupedHistory={groupedHistory}
@@ -395,9 +422,13 @@ function TemplateWrapper(props: any) {
 export default function Template(props: any) {
 	return (
 		<LayoutProvider>
-			<OpalContextProvider navigationStructure={props.structure}>
-				<TemplateWrapper {...props} />
-			</OpalContextProvider>
+			<BrandToneProvider>
+				<PreflightProvider>
+					<OpalContextProvider navigationStructure={props.structure}>
+						<TemplateWrapper {...props} />
+					</OpalContextProvider>
+				</PreflightProvider>
+			</BrandToneProvider>
 		</LayoutProvider>
 	);
 }
