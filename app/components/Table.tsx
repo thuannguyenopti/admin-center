@@ -2,7 +2,16 @@ import {ReactNode, isValidElement} from "react";
 import {Badge, Box, Avatar, Tooltip} from "@optiaxiom/react";
 import {Text} from "./Text";
 import {Button} from "./Button";
-import {IconDots as IconMenu} from "@tabler/icons-react";
+import {
+	IconDots as IconMenu,
+	IconInfoCircle,
+	IconCaretUp,
+	IconCaretDown,
+	IconCaretUpDown,
+	IconCaretDownFilled,
+	IconCaretUpFilled,
+	IconCaretUpDownFilled,
+} from "@tabler/icons-react";
 
 export const Table = ({
 	children,
@@ -71,23 +80,47 @@ export const Th = ({
 	style,
 	className,
 	onClick,
+	sortDirection,
+	onSort,
+	tooltip,
 }: {
 	children?: ReactNode;
 	align?: any;
 	style?: React.CSSProperties;
 	className?: string;
 	onClick?: () => void;
+	sortDirection?: "asc" | "desc" | null;
+	onSort?: () => void;
+	tooltip?: string;
 }) => {
+	const interactive = !!(onSort || onClick);
 	return (
 		<th
-			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${className || ""}`}
+			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
 			style={{
 				textAlign: align,
 				...style,
 			}}
-			onClick={onClick}
+			onClick={onSort || onClick}
 		>
-			{children}
+			<span className="inline-flex items-center gap-1">
+				{children}
+				{onSort &&
+					(sortDirection === "asc" ? (
+						<IconCaretDownFilled size={14} aria-hidden />
+					) : sortDirection === "desc" ? (
+						<IconCaretUpFilled size={14} aria-hidden />
+					) : (
+						<IconCaretUpDownFilled size={14} aria-hidden />
+					))}
+				{tooltip && (
+					<Tooltip content={tooltip}>
+						<span className="inline-flex" onClick={(e) => e.stopPropagation()}>
+							<IconInfoCircle size={14} />
+						</span>
+					</Tooltip>
+				)}
+			</span>
 		</th>
 	);
 };

@@ -238,7 +238,7 @@ export default function RootLayout({
 				label: "Search Management",
 				url: "/cms/search/search-analytics",
 				highlight: "/cms/search",
-				icon: <IconSearch />,
+				icon: <IconSettingsSearch />,
 				children: [
 					{label: "Health & Monitoring"},
 					{
