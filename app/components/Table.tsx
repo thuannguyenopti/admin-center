@@ -107,9 +107,9 @@ export const Th = ({
 				{children}
 				{onSort &&
 					(sortDirection === "asc" ? (
-						<IconCaretDownFilled size={14} aria-hidden />
-					) : sortDirection === "desc" ? (
 						<IconCaretUpFilled size={14} aria-hidden />
+					) : sortDirection === "desc" ? (
+						<IconCaretDownFilled size={14} aria-hidden />
 					) : (
 						<IconCaretUpDownFilled size={14} aria-hidden />
 					))}
