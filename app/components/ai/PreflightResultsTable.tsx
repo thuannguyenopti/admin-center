@@ -12,6 +12,7 @@ import type {
 import {SeverityIntent, AuditTypeLabels} from "./PreflightAuditTypes";
 import {IconCheck} from "@tabler/icons-react";
 import {AdaptiveBlock} from "./AdaptiveBlock";
+import {CmsIcon} from "@/app/components/icons/CmsIcon";
 
 interface PreflightResultsTableProps {
 	result: PreflightAuditResult;
@@ -221,16 +222,7 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 		return (
 			<AdaptiveBlock
 				subtitle="Content Management System"
-				icon={
-					<Box
-						w="16"
-						h="16"
-						rounded="sm"
-						style={{
-							background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-						}}
-					/>
-				}
+				icon={<CmsIcon size={16} />}
 			>
 				<Text fontSize="sm" style={{color: "#6B7280"}}>
 					No issues found! Your content is ready to publish.
@@ -257,16 +249,7 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 	return (
 		<AdaptiveBlock
 			subtitle="Content Management System"
-			icon={
-				<Box
-					w="16"
-					h="16"
-					rounded="sm"
-					style={{
-						background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-					}}
-				/>
-			}
+			icon={<CmsIcon size={16} />}
 			title="Pre-flight Audit Results"
 			actions={actions}
 		>
