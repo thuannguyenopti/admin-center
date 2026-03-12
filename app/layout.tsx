@@ -24,6 +24,7 @@ import {
 	IconPuzzle,
 	IconFolders,
 	IconBuildingStore,
+	IconSettingsSearch,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -131,13 +132,20 @@ export default function RootLayout({
 						url: "/cms/settings/content-types",
 						children: currentContentType
 							? {
-									title: currentContentType.displayName || currentContentType.name,
-									description: currentContentType.baseType === "Page" ? "Page Type" : 
-										currentContentType.baseType === "Block" ? "Block Type" :
-										currentContentType.baseType === "Experience" ? "Experience Type" :
-										currentContentType.baseType === "Media" ? "Media Type" :
-										currentContentType.baseType === "Product" ? "Product Type" :
-										currentContentType.baseType,
+									title:
+										currentContentType.displayName || currentContentType.name,
+									description:
+										currentContentType.baseType === "Page"
+											? "Page Type"
+											: currentContentType.baseType === "Block"
+												? "Block Type"
+												: currentContentType.baseType === "Experience"
+													? "Experience Type"
+													: currentContentType.baseType === "Media"
+														? "Media Type"
+														: currentContentType.baseType === "Product"
+															? "Product Type"
+															: currentContentType.baseType,
 									children: [
 										{label: "Define"},
 										{
@@ -174,7 +182,7 @@ export default function RootLayout({
 											url: `/cms/settings/content-types/${contentTypeId}/settings`,
 										},
 									],
-							  }
+								}
 							: undefined,
 					},
 					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
