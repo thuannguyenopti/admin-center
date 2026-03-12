@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Heading, Button, Group } from '@optiaxiom/react';
+import { Box, Heading, Button, Group, Text } from '@optiaxiom/react';
 
 export type AdaptiveBlockAction = {
   label: string;
@@ -10,6 +10,8 @@ export type AdaptiveBlockAction = {
 
 export type AdaptiveBlockProps = {
   title?: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   actions?: AdaptiveBlockAction[];
   imagery?: React.ReactNode;
@@ -25,6 +27,8 @@ export type AdaptiveBlockProps = {
  */
 export const AdaptiveBlock: React.FC<AdaptiveBlockProps> = ({
   title,
+  subtitle,
+  icon,
   children,
   actions,
   imagery,
@@ -41,11 +45,21 @@ export const AdaptiveBlock: React.FC<AdaptiveBlockProps> = ({
       shadow="sm"
     >
       {/* Header Section */}
-      {title && (
+      {(title || subtitle || icon) && (
         <Box p="16">
-          <Heading level="4" fontSize="md">
-            {title}
-          </Heading>
+          <Group gap="8" alignItems="center" mb={title ? "4" : "0"}>
+            {icon && <Box>{icon}</Box>}
+            {subtitle && (
+              <Text fontSize="xs" color="fg.secondary">
+                {subtitle}
+              </Text>
+            )}
+          </Group>
+          {title && (
+            <Heading level="4" fontSize="md">
+              {title}
+            </Heading>
+          )}
         </Box>
       )}
 
