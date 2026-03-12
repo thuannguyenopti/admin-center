@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useState, useCallback, useEffect} from "react";
-import {Box, Button, Checkbox, Badge, Text, Group, toaster} from "@optiaxiom/react";
+import {Box, Checkbox, Badge, Text, Group, toaster} from "@optiaxiom/react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import {usePreflightContext} from "./PreflightContext";
 import {useLayout} from "@/app/context/LayoutContext";
@@ -11,6 +11,7 @@ import type {
 } from "./PreflightAuditTypes";
 import {SeverityIntent, AuditTypeLabels} from "./PreflightAuditTypes";
 import {IconCheck} from "@tabler/icons-react";
+import {AdaptiveBlock} from "./AdaptiveBlock";
 
 interface PreflightResultsTableProps {
 	result: PreflightAuditResult;
@@ -218,16 +219,34 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 
 	if (result.issues.length === 0) {
 		return (
-			<Box p="12" bg="bg.secondary" style={{borderRadius: "8px"}}>
+			<AdaptiveBlock>
 				<Text fontSize="sm" style={{color: "#6B7280"}}>
 					No issues found! Your content is ready to publish.
 				</Text>
-			</Box>
+			</AdaptiveBlock>
 		);
 	}
 
+	// Prepare actions for the adaptive block
+	const actions = !allIssuesApplied ? [
+		{
+			label: `Apply ${selectedIssues.size} Change${selectedIssues.size !== 1 ? "s" : ""}`,
+			onClick: handleApplySelected,
+			disabled: selectedIssues.size === 0,
+			appearance: 'primary-opal' as const,
+		},
+		{
+			label: 'Dismiss',
+			onClick: handleDismiss,
+			appearance: 'subtle' as const,
+		},
+	] : undefined;
+
 	return (
-		<Box>
+		<AdaptiveBlock
+			title="Pre-flight Audit Results"
+			actions={actions}
+		>
 			{/* Select All Header - only show if there are selectable issues */}
 			{!allIssuesApplied && (
 				<Group mb="12" gap="8">
@@ -309,22 +328,6 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 					</Table>
 				</Box>
 			))}
-
-			{/* Action Buttons - only show if there are selectable issues */}
-			{!allIssuesApplied && (
-				<Group mt="12" gap="8">
-					<Button
-						onClick={handleApplySelected}
-						disabled={selectedIssues.size === 0}
-						appearance="primary-opal"
-					>
-						Apply {selectedIssues.size} Change{selectedIssues.size !== 1 ? "s" : ""}
-					</Button>
-					<Button onClick={handleDismiss} appearance="subtle">
-						Dismiss
-					</Button>
-				</Group>
-			)}
-		</Box>
+		</AdaptiveBlock>
 	);
 }
