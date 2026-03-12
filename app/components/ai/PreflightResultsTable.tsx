@@ -219,7 +219,19 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 
 	if (result.issues.length === 0) {
 		return (
-			<AdaptiveBlock>
+			<AdaptiveBlock
+				subtitle="Content Management System"
+				icon={
+					<Box
+						w="16"
+						h="16"
+						rounded="sm"
+						style={{
+							background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+						}}
+					/>
+				}
+			>
 				<Text fontSize="sm" style={{color: "#6B7280"}}>
 					No issues found! Your content is ready to publish.
 				</Text>
@@ -244,6 +256,17 @@ export function PreflightResultsTable({result, messageId}: PreflightResultsTable
 
 	return (
 		<AdaptiveBlock
+			subtitle="Content Management System"
+			icon={
+				<Box
+					w="16"
+					h="16"
+					rounded="sm"
+					style={{
+						background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+					}}
+				/>
+			}
 			title="Pre-flight Audit Results"
 			actions={actions}
 		>
