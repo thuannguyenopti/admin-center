@@ -4,7 +4,7 @@ import VBPrototype from "@/app/components/VBPrototype";
 import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData";
+import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
 import {useEffect, useState} from "react";
 import {Box, Heading} from "@optiaxiom/react";
 import {buildPageSlug} from "@/app/site/resolveSlug";
@@ -20,12 +20,19 @@ export default function EditPageDetail() {
 		boolean,
 	];
 	const [page, setPage] = useState<Page | null>(null);
+	const [contentType, setContentType] = useState<ContentType | null>(null);
 	const versionHistory = useVersionHistory(id);
 
 	useEffect(() => {
 		if (pages && isHydrated) {
 			const found = pages.find((p) => p.id === id);
 			setPage(found || null);
+
+			// Load content type definition
+			if (found?.contentTypeId) {
+				const ct = initialContentTypes.find((ct) => ct.id === found.contentTypeId);
+				setContentType(ct || null);
+			}
 		}
 	}, [id, pages, isHydrated]);
 
@@ -239,6 +246,7 @@ export default function EditPageDetail() {
 		<VBPrototype
 			key={id}
 			initialData={page}
+			contentType={contentType}
 			onSave={handleSave}
 			onPublish={handlePublish}
 			pageName={page.name}

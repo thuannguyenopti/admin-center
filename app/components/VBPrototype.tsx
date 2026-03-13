@@ -1,6 +1,6 @@
 "use client"; // --- SEO Block Types (from initialData) ---
 
-import type {SEOBlock} from "@/app/db/initialData";
+import type {SEOBlock, ContentType} from "@/app/db/initialData";
 
 import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
@@ -232,6 +232,7 @@ type OutlineView = "list" | "tree";
 
 export default function VBPrototype({
 	initialData,
+	contentType,
 	onSave,
 	onPublish,
 	pageName,
@@ -248,6 +249,7 @@ export default function VBPrototype({
 	onRestoreVersion,
 }: {
 	initialData?: PageInput;
+	contentType?: ContentType | null;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
 	onTrash?: () => void;
@@ -1305,6 +1307,7 @@ export default function VBPrototype({
 									onChange={setPropertiesPatch}
 									pageName={pageName ?? undefined}
 									pageId={initialData?.id}
+									contentTypeId={contentType?.id}
 									onRegisterGenerateTrigger={(fn) => {
 										generateTriggerRef.current = fn;
 									}}
@@ -1640,6 +1643,7 @@ export default function VBPrototype({
 													onSectionChange={setActivePropertiesSection}
 													pageName={pageName ?? undefined}
 													pageId={initialData?.id}
+													contentTypeId={contentType?.id}
 													onRegisterGenerateTrigger={(fn) => {
 														generateTriggerRef.current = fn;
 													}}
@@ -1818,6 +1822,7 @@ export default function VBPrototype({
 													onSectionChange={setActivePropertiesSection}
 													pageName={pageName ?? undefined}
 													pageId={initialData?.id}
+													contentTypeId={contentType?.id}
 													onRegisterGenerateTrigger={(fn) => {
 														generateTriggerRef.current = fn;
 													}}
