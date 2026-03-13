@@ -8,7 +8,7 @@ import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData";
+import {initialPages, Page, initialContentTypes} from "@/app/db/initialData";
 import {useState} from "react";
 import {CreatePageDialog} from "./CreatePageDialog";
 
@@ -58,6 +58,11 @@ const getStatusIntent = (status: string) => {
 		default:
 			return "neutral";
 	}
+};
+
+const getContentTypeName = (contentTypeId: string) => {
+	const contentType = initialContentTypes.find((ct) => ct.id === contentTypeId);
+	return contentType?.displayName || contentType?.name || contentTypeId;
 };
 
 const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
@@ -157,7 +162,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 						<Item icon={<IconFile size={16} />} title={node.name} />
 					</Flex>
 				</Td>
-				<Td>{node.contentTypeId}</Td>
+				<Td>{getContentTypeName(node.contentTypeId)}</Td>
 				<Td>{node.lastModified}</Td>
 				<Td type="badge" data={getStatusIntent(node.status)}>
 					{node.status}
