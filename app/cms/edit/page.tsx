@@ -10,6 +10,7 @@ import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page} from "@/app/db/initialData";
 import {useState} from "react";
+import {CreatePageDialog} from "./CreatePageDialog";
 
 type PageNode = Page & {children: PageNode[]};
 
@@ -192,6 +193,17 @@ export default function EditPage() {
 	];
 	const tree = buildTree(pages);
 
+	// Create root node containing all top-level nodes
+	const rootNode: PageNode = {
+		id: "root",
+		name: "Root",
+		parentId: null,
+		status: "Published",
+		lastModified: new Date().toISOString(),
+		contentTypeId: "folder",
+		children: tree,
+	};
+
 	if (!isHydrated) {
 		return <Box p="24">Loading...</Box>;
 	}
@@ -209,9 +221,11 @@ export default function EditPage() {
 					<SearchInput size="lg" placeholder="Search content..." />
 					<Button aria-label="Filter content" icon={<IconFilter />} />
 				</Flex>
-				<Button appearance="primary">
-					Create Page
-				</Button>
+				<CreatePageDialog pages={pages}>
+					<Button appearance="primary">
+						Create Page
+					</Button>
+				</CreatePageDialog>
 			</Flex>
 			<Table>
 				<thead>
@@ -226,9 +240,7 @@ export default function EditPage() {
 					</Tr>
 				</thead>
 				<tbody>
-					{tree.map((node) => (
-						<PageRow key={node.id} node={node} />
-					))}
+					<PageRow node={rootNode} />
 				</tbody>
 			</Table>
 		</Box>
