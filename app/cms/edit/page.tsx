@@ -1,9 +1,9 @@
 "use client";
 
-import {Box, Heading, SearchInput} from "@optiaxiom/react";
+import {Box, Heading, SearchInput, Menu, MenuContent, MenuTrigger, EllipsisMenuButton} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
-import {IconFilter, IconChevronRight, IconChevronDown, IconFile} from "@tabler/icons-react";
+import {IconFilter, IconChevronRight, IconChevronDown, IconFile, IconPlus, IconPencil, IconFolderPlus, IconFilePlus, IconCut, IconCopy, IconClipboard, IconArrowUp, IconArrowDown, IconTrash} from "@tabler/icons-react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
@@ -63,6 +63,59 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 	const [expanded, setExpanded] = useState(true);
 	const hasChildren = node.children.length > 0;
 
+	const menuOptions = [
+		{
+			addon: <IconPencil size={16} />,
+			label: "Rename",
+			onSelect: () => console.log("Rename", node.id),
+		},
+		{
+			addon: <IconFilePlus size={16} />,
+			label: "Create child",
+			onSelect: () => console.log("Create child", node.id),
+		},
+		{
+			addon: <IconCut size={16} />,
+			group: {
+				separator: true,
+			},
+			label: "Cut",
+			onSelect: () => console.log("Cut", node.id),
+		},
+		{
+			addon: <IconCopy size={16} />,
+			label: "Copy",
+			onSelect: () => console.log("Copy", node.id),
+		},
+		{
+			addon: <IconClipboard size={16} />,
+			label: "Paste",
+			onSelect: () => console.log("Paste", node.id),
+		},
+		{
+			addon: <IconArrowUp size={16} />,
+			group: {
+				separator: true,
+			},
+			label: "Move up",
+			onSelect: () => console.log("Move up", node.id),
+		},
+		{
+			addon: <IconArrowDown size={16} />,
+			label: "Move down",
+			onSelect: () => console.log("Move down", node.id),
+		},
+		{
+			addon: <IconTrash size={16} />,
+			group: {
+				separator: true,
+			},
+			intent: "danger" as const,
+			label: "Delete",
+			onSelect: () => console.log("Delete", node.id),
+		},
+	];
+
 	return (
 		<>
 			<Tr url={`/cms/edit/${node.id}`}>
@@ -108,6 +161,20 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 				<Td type="badge" data={getStatusIntent(node.status)}>
 					{node.status}
 				</Td>
+				<Td>
+					<Box
+						onClick={(e) => {
+							e.stopPropagation();
+						}}
+					>
+						<Menu options={menuOptions}>
+							<MenuTrigger asChild>
+								<EllipsisMenuButton appearance="subtle" aria-label="Page options" />
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
+					</Box>
+				</Td>
 			</Tr>
 			{expanded &&
 				node.children.map((child) => (
@@ -137,9 +204,14 @@ export default function EditPage() {
 			<Text mb="24" color="fg.secondary">
 				Select pages from the content tree to view or modify their content.
 			</Text>
-			<Flex mb="24" gap="8">
-				<SearchInput size="lg" placeholder="Search content..." />
-				<Button aria-label="Filter content" icon={<IconFilter />} />
+			<Flex mb="24" gap="8" justifyContent="space-between">
+				<Flex gap="8">
+					<SearchInput size="lg" placeholder="Search content..." />
+					<Button aria-label="Filter content" icon={<IconFilter />} />
+				</Flex>
+				<Button appearance="primary">
+					Create Page
+				</Button>
 			</Flex>
 			<Table>
 				<thead>
@@ -150,6 +222,7 @@ export default function EditPage() {
 						<Th>Type</Th>
 						<Th>Last Modified</Th>
 						<Th>Status</Th>
+						<Th></Th>
 					</Tr>
 				</thead>
 				<tbody>
