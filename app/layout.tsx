@@ -32,6 +32,7 @@ import CMPHomeIcon from "@/app/cmp/assets/home.svg";
 import CMPPlanIcon from "@/app/cmp/assets/plan.svg";
 import CMPDashboardIcon from "@/app/cmp/assets/dashboard.svg";
 import CMPResourceManagementIcon from "@/app/cmp/assets/resource-management.svg";
+import CMPIdeaLabIcon from "@/app/cmp/assets/sparkles 16.svg";
 import CMPLibraryIcon from "@/app/cmp/assets/library.svg";
 import CMPMarketplaceIcon from "@/app/cmp/assets/marketplace.svg";
 import CMPWorkRequestIcon from "@/app/cmp/assets/workrequest.svg";
@@ -519,10 +520,16 @@ export default function RootLayout({
 				icon: <CMPMarketplaceIcon />,
 			},
 			{
+				label: "Resource Management",
+				url: "/cmp/resource-management",
+				highlight: "/cmp/resource-management",
+				icon: <CMPResourceManagementIcon />,
+			},
+			{
 				label: "Idea Lab",
 				url: "/cmp/idea-lab",
 				highlight: "/cmp/idea-lab",
-				icon: <CMPResourceManagementIcon />,
+				icon: <CMPIdeaLabIcon />,
 			},
 			{
 				label: "Analytics",

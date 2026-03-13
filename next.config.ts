@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
         path: false,
       };
     }
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      "@optimizely/axiom-icons": require("path").resolve(__dirname, "app/lib/axiom-icons.tsx"),
+    };
     return config;
   },
 };
