@@ -301,6 +301,24 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			return;
 		}
 
+		// Get the selected content type to initialize outlines
+		const contentType = initialContentTypes.find((ct) => ct.id === selectedTemplate);
+
+		// Initialize outlines based on content type properties
+		const initialOutlines: any[] = [];
+		if (contentType?.properties) {
+			contentType.properties.forEach((prop) => {
+				if (prop.type === "outline") {
+					initialOutlines.push({
+						id: `ol-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+						title: prop.displayName || prop.name,
+						tree: [], // Empty tree - no default sections
+						elements: {}, // Empty element map
+					});
+				}
+			});
+		}
+
 		const newPage: Page = {
 			id: `page-${Date.now()}`,
 			name: name.trim(),
@@ -308,6 +326,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			status: "Draft",
 			lastModified: new Date().toISOString(),
 			contentTypeId: selectedTemplate!,
+			outlines: initialOutlines.length > 0 ? initialOutlines : undefined,
 		};
 
 		console.log("Create page:", newPage);
