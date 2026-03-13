@@ -1,6 +1,7 @@
 "use client";
 
 import {useState, useMemo} from "react";
+import {useRouter} from "next/navigation";
 import {
 	Dialog,
 	DialogBody,
@@ -227,6 +228,7 @@ const CATEGORY_OPTIONS = [
 ];
 
 export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
+	const router = useRouter();
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [language, setLanguage] = useState("en");
@@ -315,6 +317,9 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		setSelectedLocation(null);
 		setSelectedTemplate(null);
 		setErrors({});
+
+		// Navigate to visual builder
+		router.push(`/cms/edit/${newPage.id}`);
 	};
 
 	const handleCreateWithOpal = () => {
