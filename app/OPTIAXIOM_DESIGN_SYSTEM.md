@@ -12,6 +12,7 @@
 - **Styling/Tokens**: https://optimizely-axiom.github.io/optiaxiom/styling/
 - **Colors**: https://optimizely-axiom.github.io/optiaxiom/styling/colors/
 - **Installation**: https://optimizely-axiom.github.io/optiaxiom/guides/
+- **Data Visualization Colors**: [app/DATA_VISUALIZATION_COLORS.md](./DATA_VISUALIZATION_COLORS.md)
 
 ---
 
@@ -61,6 +62,13 @@ export function App() {
 ---
 
 ## Color Tokens
+
+### UI Colors vs Data Viz Colors
+- Use Axiom `fg.*`, `bg.*`, and `border.*` tokens for product UI, surfaces, and interaction states.
+- Use the shared data-viz palette for charts, legends, dashboards, heatmaps, and data-driven accents.
+- Do not replace normal UI chrome with chart colors by default.
+- Canonical data-viz guidance lives in [app/DATA_VISUALIZATION_COLORS.md](./DATA_VISUALIZATION_COLORS.md).
+- Live reference page is available at `/data-viz-colors`.
 
 ### Text Colors (fg.*)
 | Token | Usage |

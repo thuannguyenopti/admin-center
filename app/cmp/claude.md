@@ -174,6 +174,11 @@ Use Axiom's design tokens for consistency:
 - Foreground: `color="fg.default"`, `color="fg.secondary"`, `color="fg.tertiary"`
 - Border: `borderColor="border.default"`, `borderColor="border.tertiary"`
 
+### Data Visualization Colors
+- Use Axiom UI tokens for normal product UI, controls, surfaces, and text.
+- Use the shared data-viz palette only when color is encoding information such as charts, legends, heatmaps, or scheduler accents.
+- Canonical data-viz guidance lives in [DATA_VISUALIZATION_COLORS.md](../DATA_VISUALIZATION_COLORS.md).
+
 ## CMP-Specific Icons
 Custom SVG icons are stored in `/app/cmp/assets/`:
 - `plus-16.svg` - Create button (blue circle with white plus)
