@@ -186,12 +186,16 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 };
 
 export default function EditPage() {
-	const [pages, , isHydrated] = usePersistentState("pages_v5", initialPages) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
-		any,
+		(pages: Page[]) => void,
 		boolean,
 	];
 	const tree = buildTree(pages);
+
+	const handleCreatePage = (newPage: Page) => {
+		setPages([...pages, newPage]);
+	};
 
 	// Create root node containing all top-level nodes
 	const rootNode: PageNode = {
@@ -221,7 +225,7 @@ export default function EditPage() {
 					<SearchInput size="lg" placeholder="Search content..." />
 					<Button aria-label="Filter content" icon={<IconFilter />} />
 				</Flex>
-				<CreatePageDialog pages={pages}>
+				<CreatePageDialog pages={pages} onCreatePage={handleCreatePage}>
 					<Button appearance="primary">
 						Create Page
 					</Button>

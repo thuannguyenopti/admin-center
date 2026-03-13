@@ -49,6 +49,7 @@ interface CreatePageDialogProps {
 	children: React.ReactNode;
 	pages: Page[];
 	preselectedLocation?: string;
+	onCreatePage?: (page: Page) => void;
 }
 
 const LocationTreeNode = ({
@@ -225,7 +226,7 @@ const CATEGORY_OPTIONS = [
 	{label: "E-commerce", value: "ecommerce"},
 ];
 
-export function CreatePageDialog({children, pages, preselectedLocation}: CreatePageDialogProps) {
+export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [language, setLanguage] = useState("en");
@@ -292,7 +293,21 @@ export function CreatePageDialog({children, pages, preselectedLocation}: CreateP
 			return;
 		}
 
-		console.log("Create page:", {name, language, selectedLocation, selectedTemplate});
+		const newPage: Page = {
+			id: `page-${Date.now()}`,
+			name: name.trim(),
+			parentId: selectedLocation === "root" ? null : selectedLocation,
+			status: "Draft",
+			lastModified: new Date().toISOString(),
+			contentTypeId: selectedTemplate!,
+		};
+
+		console.log("Create page:", newPage);
+
+		if (onCreatePage) {
+			onCreatePage(newPage);
+		}
+
 		setOpen(false);
 		// Reset form
 		setName("");
