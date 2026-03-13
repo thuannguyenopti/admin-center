@@ -42,7 +42,7 @@ import {
 } from "@tabler/icons-react";
 import {IconList} from "@optimizely/axiom-icons";
 import Item from "@/app/components/Item";
-import {Page} from "@/app/db/initialData";
+import {Page, ContentType, initialContentTypes} from "@/app/db/initialData";
 
 type PageNode = Page & {children: PageNode[]};
 
@@ -221,10 +221,9 @@ const LANGUAGE_OPTIONS = [
 
 const CATEGORY_OPTIONS = [
 	{label: "Any", value: "any"},
-	{label: "Basic", value: "basic"},
-	{label: "Marketing", value: "marketing"},
-	{label: "Content", value: "content"},
-	{label: "E-commerce", value: "ecommerce"},
+	{label: "Page", value: "Page"},
+	{label: "Experience", value: "Experience"},
+	{label: "Block", value: "Block"},
 ];
 
 export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
@@ -263,14 +262,21 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			: LANGUAGE_OPTIONS[0].value;
 	}, [language]);
 
-	// Mock templates - these would come from your CMS configuration
+	// Get templates from content types - filter by Page and Experience base types
 	const templates = selectedLocation
-		? [
-				{id: "blank", name: "Blank Page", category: "Basic"},
-				{id: "landing", name: "Landing Page", category: "Marketing"},
-				{id: "article", name: "Article", category: "Content"},
-				{id: "product", name: "Product Page", category: "E-commerce"},
-		  ]
+		? initialContentTypes
+				.filter((ct) => ct.baseType === "Page" || ct.baseType === "Experience")
+				.filter((ct) => categoryFilter === "any" || ct.baseType === categoryFilter)
+				.filter((ct) =>
+					templateSearch
+						? (ct.displayName || ct.name).toLowerCase().includes(templateSearch.toLowerCase())
+						: true
+				)
+				.map((ct) => ({
+					id: ct.id,
+					name: ct.displayName || ct.name,
+					category: ct.baseType,
+				}))
 		: [];
 
 	const validateForm = () => {
