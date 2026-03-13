@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Tabs, TabsList, TabsTrigger, TabsContent, Badge } from '@optiaxiom/react';
+import { Box, Badge } from '@optiaxiom/react';
 import { Text } from '@/app/components/Text';
 import { Input } from '@/app/components/Input';
 import { Button } from '@/app/components/Button';
@@ -26,14 +26,14 @@ export default function IdeaLabPage() {
   };
 
   return (
-    <Box as="div" className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header Section */}
-      <Box as="section" className="bg-white border-b border-slate-200">
-        <Box as="div" className="max-w-7xl mx-auto px-6 py-8">
-          <Box as="div" className="flex items-center justify-between mb-2">
-            <Text as="h1" className="text-4xl font-bold text-slate-900">
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-4xl font-bold text-slate-900">
               Idea Lab
-            </Text>
+            </h1>
             <Button
               className="flex items-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200"
               size="sm"
@@ -42,19 +42,19 @@ export default function IdeaLabPage() {
               Download As
               <ChevronDown size={16} />
             </Button>
-          </Box>
-          <Text as="p" className="text-lg text-slate-600">
+          </div>
+          <p className="text-lg text-slate-600">
             Research topics and competitor keywords to help build your content strategy.
-          </Text>
-        </Box>
-      </Box>
+          </p>
+        </div>
+      </section>
 
       {/* Main Content */}
-      <Box as="div" className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Controls Section */}
-        <Box as="div" className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           {/* Radio Toggle for Domain/Topic */}
-          <Box as="div" className="flex items-center gap-8 mb-6">
+          <div className="flex items-center gap-8 mb-6">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
@@ -77,14 +77,14 @@ export default function IdeaLabPage() {
               />
               <Text className="text-slate-700 font-medium">Topic</Text>
             </label>
-          </Box>
+          </div>
 
           {/* Country Selector */}
-          <Box as="div" className="mb-6">
+          <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Country
             </label>
-            <Box as="div" className="relative w-48">
+            <div className="relative w-48">
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
@@ -101,11 +101,11 @@ export default function IdeaLabPage() {
                 size={16}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-600"
               />
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Search Input */}
-          <Box as="div" className="relative">
+          <div className="relative">
             <Input
               placeholder="Enter Topic/Domain to Explore"
               value={searchQuery}
@@ -113,21 +113,21 @@ export default function IdeaLabPage() {
               className="w-full pl-4 pr-12 py-3 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400"
             />
             <Search size={20} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
-          </Box>
-        </Box>
+          </div>
+        </div>
 
         {/* Section 1: Recommended Keywords */}
-        <Box as="section" className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <Box as="div" className="flex items-center justify-between mb-4">
-            <Box as="div" className="flex items-center gap-3">
-              <Badge variant="secondary">RECOMMENDED FOR YOU</Badge>
-              <Text as="h2" className="text-2xl font-bold text-slate-900">
+        <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Badge variant="subtle">RECOMMENDED FOR YOU</Badge>
+              <h2 className="text-2xl font-bold text-slate-900">
                 Keywords with the Greatest Opportunity
-              </Text>
-            </Box>
-          </Box>
+              </h2>
+            </div>
+          </div>
 
-          <Box as="div" className="flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -140,23 +140,23 @@ export default function IdeaLabPage() {
             <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
               Enter your targeted keywords
             </button>
-          </Box>
-        </Box>
+          </div>
+        </section>
 
         {/* Divider */}
-        <Box as="div" className="h-px bg-slate-200 my-8" />
+        <div className="h-px bg-slate-200 my-8" />
 
         {/* Section 2: Keyword Rank Analysis */}
-        <Box as="section" className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <Text as="h2" className="text-2xl font-bold text-slate-900 mb-3">
+        <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-3">
             Keyword Rank Analysis
-          </Text>
+          </h2>
           <Text className="text-slate-600 mb-6">
             Compare how your keywords rank across multiple domains. Enter up to 5 domains to analyze their keyword performance and find competitive opportunities.
           </Text>
 
           {/* Domain Input Fields */}
-          <Box as="div" className="flex items-end gap-2 mb-6 flex-wrap">
+          <div className="flex items-end gap-2 mb-6 flex-wrap">
             {domains.map((domain, index) => (
               <Box key={index} className="flex items-center gap-2">
                 <Input
@@ -171,29 +171,29 @@ export default function IdeaLabPage() {
                 )}
               </Box>
             ))}
-          </Box>
+          </div>
 
           {/* Analyze Button */}
           <Button className="bg-blue-600 hover:bg-blue-700 text-white">
             Analyze
           </Button>
-        </Box>
+        </section>
 
         {/* Divider */}
-        <Box as="div" className="h-px bg-slate-200 my-8" />
+        <div className="h-px bg-slate-200 my-8" />
 
         {/* Section 3: Your Program's Targeted Keywords */}
-        <Box as="section" className="bg-white rounded-lg shadow-sm p-6">
-          <Box as="div" className="flex items-center justify-between">
-            <Text as="h2" className="text-2xl font-bold text-slate-900">
+        <section className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900">
               Your Program's Targeted Keywords
-            </Text>
+            </h2>
             <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
               Manage Keywords
             </button>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }

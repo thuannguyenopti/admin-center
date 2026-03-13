@@ -218,7 +218,7 @@ export default function CMPReportsPage() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        <Button appearance="secondary" size="md">
+        <Button appearance="subtle" size="md">
           <IconDownload size={16} />
           Export
         </Button>

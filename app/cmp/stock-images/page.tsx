@@ -77,23 +77,23 @@ export default function StockImagesPage() {
   };
 
   return (
-    <Box as="div" className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header Section */}
-      <Box as="section" className="bg-white border-b border-slate-200">
-        <Box as="div" className="max-w-7xl mx-auto px-6 py-8">
-          <Text as="h1" className="text-4xl font-bold text-slate-900 mb-2">
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">
             Stock Images
-          </Text>
-          <Text as="p" className="text-lg text-slate-600">
+          </h1>
+          <p className="text-lg text-slate-600">
             Browse free stock images
-          </Text>
-        </Box>
-      </Box>
+          </p>
+        </div>
+      </section>
 
       {/* Main Content */}
-      <Box as="div" className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Search Bar */}
-        <Box as="div" className="relative mb-8">
+        <div className="relative mb-8">
           <Input
             type="text"
             placeholder="Search by title or photographer..."
@@ -108,10 +108,10 @@ export default function StockImagesPage() {
             size={20}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400"
           />
-        </Box>
+        </div>
 
         {/* Category Pills */}
-        <Box as="div" className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-3 mb-8">
           {categories.map((category) => (
             <button
               key={category}
@@ -125,7 +125,7 @@ export default function StockImagesPage() {
               {category}
             </button>
           ))}
-        </Box>
+        </div>
 
         {/* Results Count */}
         <Text className="text-sm text-slate-600 mb-6">
@@ -136,54 +136,54 @@ export default function StockImagesPage() {
 
         {/* Image Grid */}
         {paginatedImages.length > 0 ? (
-          <Box as="div" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {paginatedImages.map((image) => (
               <Box
                 key={image.id}
                 className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
               >
                 {/* Image Placeholder */}
-                <Box as="div" className="relative bg-gradient-to-br from-slate-200 to-slate-300 w-full h-48 overflow-hidden group">
+                <div className="relative bg-gradient-to-br from-slate-200 to-slate-300 w-full h-48 overflow-hidden group">
                   <img
                     src={`https://picsum.photos/400/300?random=${image.id}`}
                     alt={image.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   {/* Download Button Overlay */}
-                  <Box as="div" className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <Button className="bg-white text-slate-900 hover:bg-slate-100 rounded-lg flex items-center gap-2">
                       <Download size={18} />
                       Download
                     </Button>
-                  </Box>
-                </Box>
+                  </div>
+                </div>
 
                 {/* Image Info */}
-                <Box as="div" className="p-4">
-                  <Text as="h3" className="font-semibold text-slate-900 mb-1">
+                <div className="p-4">
+                  <h3 className="font-semibold text-slate-900 mb-1">
                     {image.title}
-                  </Text>
+                  </h3>
                   <Text className="text-sm text-slate-600 mb-3">
                     by {image.photographer}
                   </Text>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="subtle" className="text-xs">
                     {image.category}
                   </Badge>
-                </Box>
+                </div>
               </Box>
             ))}
-          </Box>
+          </div>
         ) : (
-          <Box as="div" className="bg-white rounded-lg p-12 text-center mb-8">
+          <div className="bg-white rounded-lg p-12 text-center mb-8">
             <Text className="text-slate-600 text-lg">
               No images found matching your search criteria.
             </Text>
-          </Box>
+          </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <Box as="div" className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4">
             <Button
               onClick={handlePrevPage}
               disabled={currentPage === 1}
@@ -193,7 +193,7 @@ export default function StockImagesPage() {
               Previous
             </Button>
 
-            <Box as="div" className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                 <button
                   key={page}
@@ -207,7 +207,7 @@ export default function StockImagesPage() {
                   {page}
                 </button>
               ))}
-            </Box>
+            </div>
 
             <Button
               onClick={handleNextPage}
@@ -217,9 +217,9 @@ export default function StockImagesPage() {
               Next
               <ChevronRight size={18} />
             </Button>
-          </Box>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
