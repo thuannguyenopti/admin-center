@@ -157,7 +157,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 						<Item icon={<IconFile size={16} />} title={node.name} />
 					</Flex>
 				</Td>
-				<Td>Page</Td>
+				<Td>{node.contentTypeId}</Td>
 				<Td>{node.lastModified}</Td>
 				<Td type="badge" data={getStatusIntent(node.status)}>
 					{node.status}
