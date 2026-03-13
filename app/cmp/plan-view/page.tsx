@@ -400,7 +400,7 @@ const TimelineView = ({data}: {data: any[]}) => {
 									style={{ marginLeft: "-8px" }}
 								/>
 							)}
-							<Text fontSize="sm" fontWeight={item.isGroup ? 500 : 400} className="truncate">
+							<Text fontSize="sm" fontWeight={item.isGroup ? "500" : "400"} className="truncate">
 								{item.title}
 							</Text>
 							{item.badge && (
@@ -808,7 +808,7 @@ const CalendarView = ({data}: {data: any[]}) => {
 									if (!isToday) el.style.backgroundColor = "var(--ax-colors-bg-secondary)";
 								}}
 							>
-								<Text fontWeight={isToday ? 600 : 500} fontSize="sm">
+								<Text fontWeight={isToday ? "600" : "500"} fontSize="sm">
 									{day}
 								</Text>
 								<Box

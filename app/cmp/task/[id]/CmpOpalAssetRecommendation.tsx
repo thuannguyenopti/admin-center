@@ -1551,7 +1551,7 @@ function EditorSurface({
 	const runCommand = (command: string, value?: string) => {
 		editorRef.current?.focus();
 		restoreSelection();
-		document.execCommand("styleWithCSS", false, true);
+		document.execCommand("styleWithCSS", false, "true");
 		document.execCommand(command, false, value);
 		commitEditorChange();
 	};
@@ -2850,7 +2850,7 @@ function ContentFilledPage({
 	onAddContent: () => void;
 	onOpenSuggested: () => void;
 	onSelectTaskAsset: (assetId: string) => void;
-	selectedTaskAssetId: string;
+	selectedTaskAssetId: string | null;
 	suggestedOpen?: boolean;
 	taskAssets: AssetItem[];
 	onTabChange: (tab: string) => void;
@@ -2975,7 +2975,7 @@ function ContentFilledPage({
 												}}
 											/>
 										) : (
-											<Text fontSize="lg">{thumb.label}</Text>
+											<Text fontSize="lg">{asset?.title?.charAt(0) ?? "?"}</Text>
 										)}
 									</button>
 								</Box>

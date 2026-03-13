@@ -73,7 +73,7 @@ function resolveIcon(name: string): ComponentType<CompatIconProps> {
 	const candidates = iconMap[name] ?? [];
 
 	for (const candidate of candidates) {
-		const component = (TablerIcons as Record<string, ComponentType<CompatIconProps> | undefined>)[
+		const component = (TablerIcons as unknown as Record<string, ComponentType<CompatIconProps> | undefined>)[
 			candidate
 		];
 		if (component) {
