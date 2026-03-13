@@ -138,6 +138,34 @@ Axiom components use **design tokens** for styling props. You cannot use arbitra
 
 ---
 
+### 📥 Input & SearchInput Sizes
+
+**Input/SearchInput size (`size`):**
+```typescript
+"md" | "lg" | "xl"  // Default: "md"
+```
+
+**IMPORTANT:** Input and SearchInput do NOT support `size="sm"`. Only `"md"`, `"lg"`, and `"xl"` are valid.
+
+**Examples:**
+```tsx
+✅ <Input />                    // Uses default "md" size
+✅ <Input size="md" />          // Explicit medium size
+✅ <Input size="lg" />          // Large size
+✅ <SearchInput />              // Uses default "md" size
+✅ <SearchInput size="lg" />    // Large size
+
+❌ <Input size="sm" />          // INVALID - "sm" not supported
+❌ <SearchInput size="sm" />    // INVALID - causes weird heights
+```
+
+**When to use each size:**
+- `"md"` (default) - Standard form inputs
+- `"lg"` - Emphasized inputs or larger touch targets
+- `"xl"` - Hero sections or prominent search bars
+
+---
+
 ### 🔲 Borders
 
 **Border width (`border`, `borderT`, `borderB`, `borderL`, `borderR`):**
@@ -238,6 +266,32 @@ Visit the Axiom documentation for comprehensive prop listings.
 
 ## 💡 Common Patterns
 
+### Form Inputs with Labels
+```tsx
+// ✅ Use Field component to wrap inputs with labels
+<Field label="Name" required>
+  <Input placeholder="Enter name" value={name} onChange={(e) => setName(e.target.value)} />
+</Field>
+
+<Field label="Country">
+  <Select
+    value={country}
+    onValueChange={setCountry}
+    options={[
+      {label: "United States", value: "us"},
+      {label: "Canada", value: "ca"},
+    ]}
+  >
+    <SelectTrigger placeholder="Select country" />
+    <SelectContent />
+  </Select>
+</Field>
+
+// ❌ Don't manually create labels with Text component
+<Text fontSize="sm" fontWeight="600" mb="8">Name *</Text>
+<Input placeholder="Enter name" />
+```
+
 ### Flexible Width Container
 ```tsx
 // ✅ Good: Use flex instead of fixed width
@@ -289,6 +343,8 @@ Visit the Axiom documentation for comprehensive prop listings.
 
 | ❌ Wrong | ✅ Correct | Note |
 |---------|-----------|------|
+| `<Text>Label</Text><Input />` | `<Field label="Label"><Input /></Field>` | Use Field for form inputs |
+| `<Input size="sm" />` | `<Input />` or `<Input size="md" />` | Input/SearchInput only support md/lg/xl |
 | `p="md"` | `p="16"` | Use numbers for spacing |
 | `w="200"` | `w="224"` or `style={{width: '200px'}}` | Use valid token or style |
 | `bg="surface.primary"` | `bg="bg.default"` | Wrong color prefix |
@@ -297,6 +353,7 @@ Visit the Axiom documentation for comprehensive prop listings.
 | `color="#666"` | `color="fg.secondary"` | Use color tokens |
 | `fontSize="14px"` | `fontSize="sm"` | Use size tokens |
 | `maxHeight="400px"` | `style={{maxHeight: '400px'}}` | Use style for custom |
+| `<Select><option>...</option></Select>` | `<Select options={[...]}><SelectTrigger /><SelectContent /></Select>` | Use options prop |
 
 ---
 

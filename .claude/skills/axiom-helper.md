@@ -12,6 +12,9 @@ Use this skill when:
 - You need to know valid values for Axiom component props
 - You're unsure which design token to use
 - You want to convert custom CSS values to Axiom tokens
+- You need help with component patterns (Field, Select, Card, SearchInput, etc.)
+- You're getting errors like "getItemProps" from Select component
+- You're unsure how to properly label form inputs
 
 ---
 
@@ -21,6 +24,8 @@ Use this skill when:
 2. **Suggests Alternatives** - Recommends the closest valid token for your custom value
 3. **Explains Design Tokens** - Helps you understand Axiom's token system
 4. **Fixes Common Mistakes** - Corrects typical prop naming and value errors
+5. **Component Patterns** - Shows correct usage of Field, Select, Card, SearchInput, and other components
+6. **Debugging Component Errors** - Helps resolve downshift, validation, and accessibility issues
 
 ---
 
@@ -31,6 +36,13 @@ When this skill is invoked, you should:
 ### 1. Check for Common Mistakes
 
 Review the user's code and check for these common errors:
+
+**Component Usage:**
+- ❌ `<Text>Label</Text><Input />` → ✅ `<Field label="Label"><Input /></Field>`
+- ❌ `<Select><option>...</option></Select>` → ✅ `<Select options={[...]}><SelectTrigger /><SelectContent /></Select>`
+- ❌ `<Card onClick={...}>` → ✅ `<Box onClick={...}><Card>...</Card></Box>`
+- ❌ `<Input size="sm" />` → ✅ `<Input />` (Input/SearchInput only support md/lg/xl)
+- ❌ Manual labels with Text → ✅ Use Field component wrapper
 
 **Spacing:**
 - ❌ `p="md"` → ✅ `p="16"`
@@ -146,6 +158,240 @@ For more details, see the [Axiom Guide](AXIOM_GUIDE.md#-width-w-and-height-h).
 
 ---
 
+## Component Usage Patterns
+
+### Field Component (Forms & Labels)
+
+**Purpose:** Wraps form inputs to provide labels, required indicators, errors, and help text.
+
+**Always use Field for:**
+- Input
+- SearchInput
+- Select
+- Textarea
+- Any form control that needs a label
+
+**Pattern:**
+```tsx
+// ✅ Correct - Input with label
+<Field label="Name" required>
+  <Input placeholder="Enter name" value={name} onChange={(e) => setName(e.target.value)} />
+</Field>
+
+// ✅ Correct - Select with label
+<Field label="Country">
+  <Select
+    value={country}
+    onValueChange={setCountry}
+    options={[
+      {label: "United States", value: "us"},
+      {label: "Canada", value: "ca"},
+    ]}
+  >
+    <SelectTrigger placeholder="Select country" />
+    <SelectContent />
+  </Select>
+</Field>
+
+// ✅ Correct - SearchInput with label
+<Field label="Search">
+  <SearchInput placeholder="Search items..." />
+</Field>
+
+// ❌ Wrong - Manual labels
+<Text fontSize="sm" fontWeight="600" mb="8">Name *</Text>
+<Input placeholder="Enter name" />
+```
+
+**Benefits:**
+- ✅ Proper accessibility (label association)
+- ✅ Automatic required indicators
+- ✅ Consistent styling
+- ✅ Support for descriptions and errors
+
+---
+
+### Select Component
+
+**IMPORTANT:** Select uses downshift internally and requires specific patterns.
+
+**Required Pattern:**
+```tsx
+<Select
+  value={value}
+  onValueChange={setValue}
+  options={OPTIONS_ARRAY}
+>
+  <SelectTrigger />
+  <SelectContent />
+</Select>
+```
+
+**Common Mistakes:**
+```tsx
+// ❌ WRONG - HTML option tags don't work
+<Select value={lang} onValueChange={setLang}>
+  <option value="en">English</option>
+  <option value="es">Spanish</option>
+</Select>
+
+// ❌ WRONG - Value not in options causes "getItemProps" error
+<Select value={value} options={[...]} />  // value must exist in options array
+
+// ✅ CORRECT - Options array with value validation
+const OPTIONS = [
+  {label: "English", value: "en"},
+  {label: "Spanish", value: "es"},
+];
+
+const validValue = useMemo(() => {
+  return OPTIONS.some(o => o.value === value) ? value : OPTIONS[0].value;
+}, [value]);
+
+<Select
+  value={validValue}
+  onValueChange={setValue}
+  options={OPTIONS}
+>
+  <SelectTrigger />
+  <SelectContent />
+</Select>
+```
+
+**Why validate value?**
+Downshift throws "Pass either item or index to getItemProps!" if the value doesn't exist in the options array. Always ensure the value matches an option.
+
+---
+
+### Card Component
+
+**IMPORTANT:** Card does NOT support onClick directly.
+
+**Pattern:**
+```tsx
+// ❌ WRONG - onClick not supported
+<Card onClick={handleClick} cursor="pointer">
+  ...
+</Card>
+
+// ✅ CORRECT - Wrap in clickable Box
+<Box onClick={handleClick} cursor="pointer">
+  <Card>
+    ...
+  </Card>
+</Box>
+
+// ✅ CORRECT - Use CardLink for links
+<Card>
+  <CardHeader>
+    <CardLink href="/page">Link text</CardLink>
+  </CardHeader>
+</Card>
+```
+
+---
+
+### Box vs Group
+
+**Box:** Use for simple styling without flexbox layout
+- Padding, margin, colors, borders
+- When you don't need flex layout
+
+**Group:** Use for flexbox layouts
+- Automatically sets `display: flex`
+- Use when you need `gap`, `alignItems`, `justifyContent`, etc.
+
+```tsx
+// ✅ Box - Simple container
+<Box p="16" bg="bg.default" rounded="md">
+  <Text>Content</Text>
+</Box>
+
+// ✅ Group - Flexbox layout
+<Group gap="8" alignItems="center">
+  <Icon />
+  <Text>Label</Text>
+</Group>
+```
+
+---
+
+### Input & SearchInput Components
+
+**IMPORTANT SIZE RESTRICTION:**
+Input and SearchInput only support `size="md"` (default), `"lg"`, or `"xl"`.
+**There is NO `size="sm"` option** - using it causes rendering issues.
+
+**Always wrap in Field for labels:**
+```tsx
+// ✅ Correct - Default size (md)
+<Field label="Search">
+  <SearchInput placeholder="Search..." />
+</Field>
+
+// ✅ Correct - With valid size
+<Field label="Name">
+  <Input size="lg" placeholder="Enter name" />
+</Field>
+
+// ❌ WRONG - Invalid size="sm"
+<SearchInput size="sm" placeholder="Search..." />  // Causes weird heights!
+
+// ❌ Wrong - No label
+<SearchInput placeholder="Search..." />
+```
+
+**Valid size values:**
+- `"md"` - Default, standard form inputs
+- `"lg"` - Larger touch targets
+- `"xl"` - Hero sections or prominent inputs
+
+---
+
+### Common Component Patterns
+
+**Form with multiple fields:**
+```tsx
+<Group flexDirection="column" gap="16">
+  <Field label="Name" required>
+    <Input placeholder="Enter name" />
+  </Field>
+
+  <Field label="Email" required>
+    <Input type="email" placeholder="Enter email" />
+  </Field>
+
+  <Field label="Country">
+    <Select options={countryOptions}>
+      <SelectTrigger placeholder="Select country" />
+      <SelectContent />
+    </Select>
+  </Field>
+</Group>
+```
+
+**Horizontal form fields:**
+```tsx
+<Group gap="16">
+  <Box style={{flex: 1}}>
+    <Field label="First Name" required>
+      <Input placeholder="First name" />
+    </Field>
+  </Box>
+
+  <Box w="224">
+    <Field label="Title">
+      <Select options={titleOptions}>
+        <SelectTrigger />
+        <SelectContent />
+      </Select>
+    </Field>
+  </Box>
+</Group>
+```
+
+---
+
 ## Debugging Workflow
 
 When encountering a SprinklesError:
@@ -161,12 +407,20 @@ When encountering a SprinklesError:
 
 ## Best Practices to Share
 
-1. **Always use tokens first** - They ensure design consistency
-2. **Use `style` prop for one-offs** - When tokens don't fit exactly
-3. **Prefer semantic naming** - `bg.default` over hardcoded colors
-4. **Check TypeScript errors** - They show valid options
-5. **Use MCP tools** - To verify component props
-6. **Keep the guide handy** - Bookmark AXIOM_GUIDE.md
+### Component Usage
+1. **Always use Field for form inputs** - Provides labels, accessibility, and consistency
+2. **Wrap SearchInput in Field** - Even search inputs need labels for accessibility
+3. **Validate Select values** - Use useMemo to ensure value exists in options array
+4. **Don't put onClick on Card** - Wrap Card in a clickable Box instead
+5. **Use Group for flex layouts** - Use Box for simple styling
+
+### Design Tokens
+6. **Always use tokens first** - They ensure design consistency
+7. **Use `style` prop for one-offs** - When tokens don't fit exactly
+8. **Prefer semantic naming** - `bg.default` over hardcoded colors
+9. **Check TypeScript errors** - They show valid options
+10. **Use MCP tools** - To verify component props
+11. **Keep the guide handy** - Bookmark AXIOM_GUIDE.md
 
 ---
 
