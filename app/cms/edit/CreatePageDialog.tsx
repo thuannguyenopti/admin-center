@@ -45,6 +45,9 @@ import {
 import {IconList} from "@optimizely/axiom-icons";
 import Item from "@/app/components/Item";
 import {Page, ContentType, initialContentTypes} from "@/app/db/initialData";
+import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
+import usePersistentState from "@/app/usePersistentState";
+import {opalActions as initialOpalActions, OpalAction} from "@/app/cms/settings/opal-actions/mockData";
 
 type PageNode = Page & {children: PageNode[]};
 
@@ -230,6 +233,8 @@ const CATEGORY_OPTIONS = [
 
 export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
 	const router = useRouter();
+	const {setPendingGeneration} = useOpalGeneration();
+	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
 	const [open, setOpen] = useState(false);
 	const [opalDialogOpen, setOpalDialogOpen] = useState(false);
 	const [name, setName] = useState("");
@@ -371,22 +376,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			files: uploadedFiles,
 		});
 
-		// Create the page
-		const contentType = initialContentTypes.find((ct) => ct.id === selectedTemplate);
-		const initialOutlines: any[] = [];
-		if (contentType?.properties) {
-			contentType.properties.forEach((prop) => {
-				if (prop.type === "outline") {
-					initialOutlines.push({
-						id: `ol-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-						title: prop.displayName || prop.name,
-						tree: [],
-						elements: {},
-					});
-				}
-			});
-		}
-
+		// Create the page with empty structure (will be populated by Opal)
 		const newPage: Page = {
 			id: `page-${Date.now()}`,
 			name: name.trim(),
@@ -394,12 +384,30 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			status: "Draft",
 			lastModified: new Date().toISOString(),
 			contentTypeId: selectedTemplate!,
-			outlines: initialOutlines.length > 0 ? initialOutlines : undefined,
+			outlines: [], // Empty - will be populated by Opal
+			data: {}, // Empty - will be populated by Opal
+			variations: [
+				{
+					id: "original",
+					name: "Original",
+					status: "Draft",
+					outlines: [],
+					data: {},
+				},
+			],
 		};
 
 		if (onCreatePage) {
 			onCreatePage(newPage);
 		}
+
+		// Store generation context for VB to pick up
+		setPendingGeneration({
+			pageId: newPage.id,
+			instructions: opalInstructions,
+			contentTypeId: selectedTemplate!,
+			files: uploadedFiles,
+		});
 
 		// Close dialogs and reset
 		setOpalDialogOpen(false);
@@ -412,7 +420,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		setUploadedFiles([]);
 		setErrors({});
 
-		// Navigate to visual builder
+		// Navigate to visual builder - it will detect pending generation and auto-start
 		router.push(`/cms/edit/${newPage.id}`);
 	};
 
@@ -652,9 +660,11 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 							<Button appearance="default" onClick={handleCreate}>
 								Create Page
 							</Button>
-							<Button appearance="primary-opal" onClick={handleCreateWithOpal} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
-								Generate Page With Opal
-							</Button>
+							{opalActions.find((a) => a.id === "system-page-generator")?.enabled && (
+								<Button appearance="primary-opal" onClick={handleCreateWithOpal} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
+									Generate Page With Opal
+								</Button>
+							)}
 						</Group>
 					</Group>
 				</DialogFooter>
