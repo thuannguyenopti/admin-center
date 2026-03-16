@@ -2,6 +2,7 @@
 
 import {useState, useMemo} from "react";
 import {useRouter} from "next/navigation";
+import Image from "next/image";
 import {
 	Dialog,
 	DialogBody,
@@ -32,6 +33,7 @@ import {
 	TableRow,
 	TableCell,
 	Checkbox,
+	Textarea,
 } from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {
@@ -229,6 +231,7 @@ const CATEGORY_OPTIONS = [
 export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
 	const router = useRouter();
 	const [open, setOpen] = useState(false);
+	const [opalDialogOpen, setOpalDialogOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [language, setLanguage] = useState("en");
 	const [selectedLocation, setSelectedLocation] = useState<string | null>(preselectedLocation || null);
@@ -241,6 +244,8 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		location?: string;
 		template?: string;
 	}>({});
+	const [opalInstructions, setOpalInstructions] = useState("");
+	const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
 	const tree = buildTree(pages);
 
@@ -352,22 +357,76 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			return;
 		}
 
-		console.log("Create with Opal:", {name, language, selectedLocation});
+		// Open the Opal generation dialog
+		setOpalDialogOpen(true);
+	};
+
+	const handleOpalConfirm = () => {
+		console.log("Generate with Opal:", {
+			name,
+			language,
+			selectedLocation,
+			selectedTemplate,
+			instructions: opalInstructions,
+			files: uploadedFiles,
+		});
+
+		// Create the page
+		const contentType = initialContentTypes.find((ct) => ct.id === selectedTemplate);
+		const initialOutlines: any[] = [];
+		if (contentType?.properties) {
+			contentType.properties.forEach((prop) => {
+				if (prop.type === "outline") {
+					initialOutlines.push({
+						id: `ol-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+						title: prop.displayName || prop.name,
+						tree: [],
+						elements: {},
+					});
+				}
+			});
+		}
+
+		const newPage: Page = {
+			id: `page-${Date.now()}`,
+			name: name.trim(),
+			parentId: selectedLocation === "root" ? null : selectedLocation,
+			status: "Draft",
+			lastModified: new Date().toISOString(),
+			contentTypeId: selectedTemplate!,
+			outlines: initialOutlines.length > 0 ? initialOutlines : undefined,
+		};
+
+		if (onCreatePage) {
+			onCreatePage(newPage);
+		}
+
+		// Close dialogs and reset
+		setOpalDialogOpen(false);
 		setOpen(false);
-		// Reset form
 		setName("");
 		setLanguage("en");
 		setSelectedLocation(null);
 		setSelectedTemplate(null);
+		setOpalInstructions("");
+		setUploadedFiles([]);
 		setErrors({});
+
+		// Navigate to visual builder
+		router.push(`/cms/edit/${newPage.id}`);
+	};
+
+	const handleOpalBack = () => {
+		setOpalDialogOpen(false);
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger asChild>{children}</DialogTrigger>
+		<>
+			<Dialog open={open} onOpenChange={setOpen}>
+				<DialogTrigger asChild>{children}</DialogTrigger>
 
-			<DialogContent style={{maxWidth: "1200px", width: "90vw", maxHeight: "80vh"}}>
-				<DialogHeader>Create Page</DialogHeader>
+				<DialogContent style={{maxWidth: "1200px", width: "90vw", maxHeight: "80vh"}}>
+					<DialogHeader>Create Page</DialogHeader>
 
 				<DialogBody>
 					<Group flexDirection="column" gap="16">
@@ -593,7 +652,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 							<Button appearance="default" onClick={handleCreate}>
 								Create Page
 							</Button>
-							<Button appearance="primary-opal" onClick={handleCreateWithOpal}>
+							<Button appearance="primary-opal" onClick={handleCreateWithOpal} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
 								Generate Page With Opal
 							</Button>
 						</Group>
@@ -601,5 +660,109 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
+
+		{/* Opal Generation Dialog */}
+		<Dialog open={opalDialogOpen} onOpenChange={setOpalDialogOpen}>
+			<DialogContent style={{maxWidth: "800px", width: "90vw"}}>
+				<DialogHeader>Generate Page With Opal</DialogHeader>
+
+				<DialogBody>
+					<Group flexDirection="column" gap="20">
+						<Text color="fg.secondary">
+							Provide instructions and optionally attach images or PDFs to help Opal generate your page content.
+						</Text>
+
+						<Field label="Instructions">
+							<Textarea
+								placeholder="Describe the page you want to create... (e.g., 'Create a product landing page for a new smartphone with features, pricing, and testimonials')"
+								rows={6}
+								value={opalInstructions}
+								onChange={(e) => setOpalInstructions(e.target.value)}
+							/>
+						</Field>
+
+						<Field label="Attachments (optional)">
+							<Box
+								p="32"
+								rounded="md"
+								bg="bg.default.hovered"
+								display="flex"
+								flexDirection="column"
+								alignItems="center"
+								justifyContent="center"
+								gap="12"
+								style={{
+									minHeight: "200px",
+									border: "1px dashed var(--border-secondary)",
+								}}
+								onDragOver={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+								}}
+								onDrop={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									const files = Array.from(e.dataTransfer.files);
+									setUploadedFiles((prev) => [...prev, ...files]);
+								}}
+							>
+								{uploadedFiles.length === 0 ? (
+									<>
+										<Text fontSize="sm" color="fg.secondary" textAlign="center">
+											Drag and drop images or PDFs here
+										</Text>
+										<Text fontSize="xs" color="fg.tertiary" textAlign="center">
+											or paste from clipboard
+										</Text>
+									</>
+								) : (
+									<Box display="flex" flexDirection="column" gap="8" w="full">
+										{uploadedFiles.map((file, index) => (
+											<Box
+												key={index}
+												display="flex"
+												alignItems="center"
+												justifyContent="space-between"
+												p="8"
+												rounded="sm"
+												bg="bg.default"
+												style={{
+													border: "1px solid var(--border-secondary)",
+												}}
+											>
+												<Text fontSize="sm">{file.name}</Text>
+												<Button
+													appearance="subtle"
+													size="sm"
+													onClick={() => {
+														setUploadedFiles((prev) =>
+															prev.filter((_, i) => i !== index)
+														);
+													}}
+												>
+													Remove
+												</Button>
+											</Box>
+										))}
+									</Box>
+								)}
+							</Box>
+						</Field>
+					</Group>
+				</DialogBody>
+
+				<DialogFooter>
+					<Group gap="8" justifyContent="flex-end" w="full">
+						<Button appearance="subtle" onClick={handleOpalBack}>
+							Cancel
+						</Button>
+						<Button appearance="primary-opal" onClick={handleOpalConfirm} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
+							Confirm
+						</Button>
+					</Group>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+		</>
 	);
 }
