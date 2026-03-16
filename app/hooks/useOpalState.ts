@@ -9,7 +9,7 @@ export type ChatMessage = {
   content: string;
   timestamp: number;
   isLoading?: boolean;
-  messageType?: 'preflight-progress' | 'preflight-results';
+  messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete';
   metadata?: {
     checklist?: Array<{
       label: string;

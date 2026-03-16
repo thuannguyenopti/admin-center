@@ -2,7 +2,7 @@
 
 import type {SEOBlock, ContentType} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
+import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip, Spinner} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
@@ -247,6 +247,8 @@ export default function VBPrototype({
 	onViewOnWebsite,
 	versionHistory,
 	onRestoreVersion,
+	isOpalGenerating,
+	hasPendingGeneration,
 }: {
 	initialData?: PageInput;
 	contentType?: ContentType | null;
@@ -272,6 +274,8 @@ export default function VBPrototype({
 	onRenamePage?: (newName: string) => void;
 	versionHistory?: ReturnType<typeof useVersionHistory>;
 	onRestoreVersion?: (version: any) => void;
+	isOpalGenerating?: boolean;
+	hasPendingGeneration?: boolean;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
@@ -2053,6 +2057,46 @@ export default function VBPrototype({
 					pageId={pageId}
 					onRestore={onRestoreVersion}
 				/>
+			)}
+
+			{/* Opal Generation Overlay */}
+			{(isOpalGenerating || hasPendingGeneration) && (
+				<Box
+					style={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						background: "rgba(255, 255, 255, 0.7)",
+						backdropFilter: "blur(8px)",
+						zIndex: 9999,
+						pointerEvents: "all",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						gap="16"
+						p="32"
+						bg="bg.default"
+						rounded="lg"
+						shadow="lg"
+						style={{border: "1px solid var(--ax-colors-border-default)"}}
+					>
+						<Spinner size="lg" />
+						<Text fontSize="lg" fontWeight="500">
+							Opal is generating your page...
+						</Text>
+						<Text fontSize="sm" color="fg.secondary">
+							Please wait while we create your content
+						</Text>
+					</Box>
+				</Box>
 			)}
 		</div>
 	);
