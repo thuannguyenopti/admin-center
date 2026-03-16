@@ -36,6 +36,26 @@ const nextConfig: NextConfig = {
       ...(config.resolve.alias ?? {}),
       "@optimizely/axiom-icons": require("path").resolve(__dirname, "app/lib/axiom-icons.tsx"),
     };
+
+    const assetRule = config.module.rules.find((rule: any) => rule?.test?.test?.(".svg"));
+    if (assetRule) {
+      assetRule.exclude = /\.svg$/i;
+    }
+
+    config.module.rules.push(
+      {
+        ...assetRule,
+        test: /\.svg$/i,
+        resourceQuery: /url/,
+      },
+      {
+        test: /\.svg$/i,
+        issuer: assetRule?.issuer,
+        resourceQuery: { not: [/url/] },
+        use: ["@svgr/webpack"],
+      }
+    );
+
     return config;
   },
 };

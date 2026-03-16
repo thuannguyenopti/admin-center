@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Tabs,
@@ -91,7 +91,7 @@ export default function DashboardPage() {
   }, [filteredData, currentPage]);
 
   // Reset to page 1 when tab or filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [activeTab, searchQuery, modifiedBy]);
 
