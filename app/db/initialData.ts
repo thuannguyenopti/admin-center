@@ -317,8 +317,47 @@ export const initialContentTypes: ContentType[] = [
 		modifiedAt: "2024-01-10T14:20:00Z",
 		modifiedBy: "Bob Smith",
 		properties: [
+			// Content group
 			{ id: "mainOutline", name: "Main", displayName: "Main Content", type: "outline", groupName: "Content", order: 1 },
-			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "SEO", order: 1 },
+
+			// Content Settings group
+			{
+				id: "campaignMode",
+				name: "Campaign Mode",
+				displayName: "Campaign Mode",
+				type: "SelectOne",
+				groupName: "Content Settings",
+				order: 1,
+				options: [
+					{ label: "No", value: "no" },
+					{ label: "Yes", value: "yes" }
+				],
+				defaultValue: "no"
+			},
+			{
+				id: "someOtherSetting",
+				name: "Some Other Setting",
+				displayName: "Some Other Setting",
+				type: "SelectOne",
+				groupName: "Content Settings",
+				order: 2,
+				options: [
+					{ label: "Setting 1", value: "setting1" },
+					{ label: "Setting 2", value: "setting2" }
+				],
+				defaultValue: "setting1"
+			},
+
+			// GEO & SEO group
+			{ id: "seoTitle", name: "SEO Title", displayName: "SEO Title", type: "String", groupName: "GEO & SEO", order: 1, description: "Title tag for search engines" },
+			{ id: "keywords", name: "Keywords", displayName: "Keywords", type: "String", groupName: "GEO & SEO", order: 2, description: "Meta keywords" },
+			{ id: "description", name: "Description", displayName: "Meta Description", type: "LongString", groupName: "GEO & SEO", order: 3, description: "Meta description for search engines" },
+			{ id: "meta", name: "Meta", displayName: "Additional Meta Tags", type: "LongString", groupName: "GEO & SEO", order: 4, description: "Additional meta tags" },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "GEO & SEO", order: 5 },
+
+			// Categories & Tags group
+			{ id: "categories", name: "Categories", displayName: "Categories", type: "SelectMany", groupName: "Categories & Tags", order: 1, description: "Page categories" },
+			{ id: "tags", name: "Tags", displayName: "Tags", type: "SelectMany", groupName: "Categories & Tags", order: 2, description: "Page tags" },
 		],
 	},
 	{
