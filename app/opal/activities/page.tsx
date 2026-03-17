@@ -113,7 +113,7 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
         return (
             <Box display="flex" flexDirection="column" gap="8">
                 <Box display="flex" flexDirection="column" gap="4">
-                    <Text fontSize="md" fontWeight="600">Execution Guardrails</Text>
+                    <Text fontSize="md" fontWeight="600">Guardrails Status</Text>
                     <Text fontSize="sm" color="fg.secondary">
                         Execution status based on the agent’s guardrails.
                     </Text>
@@ -141,7 +141,7 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
     return (
         <Box display="flex" flexDirection="column" gap="8">
             <Box display="flex" flexDirection="column" gap="4">
-                <Text fontSize="md" fontWeight="600">Execution Guardrails: {status}</Text>
+                <Text fontSize="md" fontWeight="600">Guardrails Status: {status}</Text>
                 <Text fontSize="sm" color="fg.secondary">{content}</Text>
                 {mode && (
                     <Text fontSize="sm" color="fg.secondary" mt="4">
@@ -167,7 +167,7 @@ const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPa
         return (
             <Box display="flex" flexDirection="column" gap="8">
                 <Box display="flex" flexDirection="column" gap="4">
-                    <Text fontSize="md" fontWeight="600">Output Quality Score</Text>
+                    <Text fontSize="md" fontWeight="600">Evaluation Score</Text>
                     <Text fontSize="sm" color="fg.secondary">
                         An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.
                     </Text>
@@ -519,8 +519,8 @@ const allColumns: ColumnConfig[] = [
     { id: "triggeredBy", label: "Triggered by", visible: true, movable: true },
     { id: "status", label: "Status", visible: true, movable: true },
     { id: "output", label: "Output", visible: true, movable: true },
-    { id: "qualityScore", label: "Output Quality Score", visible: true, movable: true },
-    { id: "guardrails", label: "Execution Guardrails", visible: true, movable: true },
+    { id: "qualityScore", label: "Evaluation Score", visible: true, movable: true },
+    { id: "guardrails", label: "Guardrails Status", visible: true, movable: true },
     { id: "duration", label: "Duration", visible: true, movable: true },
     { id: "variables", label: "Variables", visible: false, movable: true },
     { id: "agentVersion", label: "Agent Version", visible: false, movable: true },
