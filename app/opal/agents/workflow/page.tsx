@@ -41,8 +41,8 @@ import {
     IconXmark,
     IconEllipsisStroke,
 } from "@optimizely/axiom-icons";
-import { useState, useRef, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useCallback, useMemo, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
     EmailTriggerPanel,
     ConditionPanel,
@@ -87,26 +87,69 @@ const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}
     const isHorizontal = options?.['elk.direction'] === 'RIGHT';
     const graph: any = {
         id: 'root',
-        layoutOptions: options,
-        children: nodes.map((node) => ({
-            ...node,
-            targetPosition: isHorizontal ? 'left' : 'top',
-            sourcePosition: isHorizontal ? 'right' : 'bottom',
-            width: node.measured?.width ?? 240,
-            height: node.measured?.height ?? 120,
-        })),
-        edges: edges.map((edge) => ({
-            id: edge.id,
-            sources: [edge.source],
-            targets: [edge.target],
-        })),
+        layoutOptions: {
+            ...options,
+            'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+            'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
+        },
+        children: nodes.map((node) => {
+            const ports: any[] = [];
+            
+            // Define target port
+            ports.push({
+                id: `${node.id}-target`,
+                properties: {
+                    'port.side': isHorizontal ? 'WEST' : 'NORTH',
+                },
+            });
+
+            // Define source ports
+            if (node.type === 'condition' && node.data?.conditions) {
+                node.data.conditions.forEach((_: any, index: number) => {
+                    ports.push({
+                        id: `${node.id}-rule-${index}`,
+                        properties: {
+                            'port.side': isHorizontal ? 'EAST' : 'SOUTH',
+                            'port.index': index,
+                        },
+                    });
+                });
+            } else {
+                ports.push({
+                    id: `${node.id}-source`,
+                    properties: {
+                        'port.side': isHorizontal ? 'EAST' : 'SOUTH',
+                    },
+                });
+            }
+
+            return {
+                id: node.id,
+                width: node.measured?.width ?? (node.type === 'condition' ? 280 : 240),
+                height: node.measured?.height ?? (node.type === 'condition' ? 120 + (node.data?.conditions?.length || 0) * 40 : 120),
+                ports,
+                // Pass through original node for mapping back
+                originalNode: node,
+            };
+        }),
+        edges: edges.map((edge) => {
+            const sourcePortId = edge.sourceHandle || `${edge.source}-source`;
+            const targetPortId = edge.targetHandle || `${edge.target}-target`;
+            return {
+                id: edge.id,
+                sources: [sourcePortId],
+                targets: [targetPortId],
+            };
+        }),
     };
 
     try {
         const layoutedGraph = await elk.layout(graph);
         return {
             nodes: layoutedGraph.children?.map((node: any) => ({
-                ...node,
+                ...node.originalNode,
+                targetPosition: isHorizontal ? 'left' : 'top',
+                sourcePosition: isHorizontal ? 'right' : 'bottom',
                 position: { x: node.x, y: node.y },
             })) || [],
             edges: edges,
@@ -117,7 +160,7 @@ const getLayoutedElements = async (nodes: any[], edges: any[], options: any = {}
     }
 };
 
-const initialNodes = [
+const INITIAL_NODES: any[] = [
     {
         id: 'add-trigger',
         type: 'addTrigger',
@@ -132,17 +175,160 @@ const initialNodes = [
     }
 ];
 
-const initialEdges = [
+const INITIAL_EDGES: any[] = [
     {
-        id: 'e1-2',
+        id: 'e-default-1',
         source: 'add-trigger',
         target: 'node-placeholder-step',
         type: 'smoothstep',
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-        },
-        style: { strokeDasharray: '5,5' } // Make edge dashed as per common design patterns for placeholders or future steps
+        markerEnd: { type: MarkerType.ArrowClosed },
+        style: { strokeDasharray: '5,5' }
     }
+];
+
+const CMP_NODES: any[] = [
+    {
+        id: 'node-gate',
+        type: 'action',
+        position: { x: 50, y: 200 },
+        data: {
+            label: 'CMP Workflow Gate',
+            icon: <WebhookIcon />,
+            bg: 'bg.avatar.purple',
+            description: 'Inspects incoming CMP webhook payloads and routes to the correct agent.',
+        },
+    },
+    {
+        id: 'node-condition',
+        type: 'condition',
+        position: { x: 350, y: 150 },
+        data: {
+            label: 'Condition',
+            description: 'Click to configure conditions',
+            conditions: [
+                { matchType: 'equals', value: 'brief-enrichment' },
+                { matchType: 'equals', value: 'campaign-strategy' },
+                { matchType: 'equals', value: 'asset-requirements' },
+                { matchType: 'equals', value: 'image-creation' },
+                { matchType: 'equals', value: 'content-creation' },
+            ],
+        },
+    },
+    {
+        id: 'agent-brief',
+        type: 'action',
+        position: { x: 750, y: 20 },
+        data: {
+            label: 'Brief Enrichment Agent',
+            icon: <IconAgent />,
+            bg: 'bg.avatar.purple',
+            description: 'Reads an incoming campaign brief, enriches it with seasonal context,...',
+            outputType: 'JSON',
+        },
+    },
+    {
+        id: 'agent-strategy',
+        type: 'action',
+        position: { x: 920, y: 220 },
+        data: {
+            label: 'Campaign Strategy Agent',
+            icon: <IconAgent />,
+            bg: 'bg.avatar.purple',
+            description: 'Reads an enriched campaign brief and produces a full campaign strategy —...',
+            outputType: 'JSON',
+        },
+    },
+    {
+        id: 'agent-requirements',
+        type: 'action',
+        position: { x: 820, y: 400 },
+        data: {
+            label: 'Asset Requirements Agent',
+            icon: <IconAgent />,
+            bg: 'bg.avatar.purple',
+            description: 'Translates a campaign strategy into a complete asset requirements list —...',
+            outputType: 'JSON',
+        },
+    },
+    {
+        id: 'agent-image',
+        type: 'action',
+        position: { x: 250, y: 620 },
+        data: {
+            label: 'Image Creation Agent',
+            icon: <IconAgent />,
+            bg: 'bg.avatar.purple',
+            description: 'Reads the asset requirements from a campaign brief and generates chann...',
+            outputType: 'JSON',
+        },
+    },
+    {
+        id: 'agent-content',
+        type: 'action',
+        position: { x: 620, y: 620 },
+        data: {
+            label: 'Content Creation Agent',
+            icon: <IconAgent />,
+            bg: 'bg.avatar.purple',
+            description: 'Reads a fully developed campaign brief and produces copy for every asset in...',
+            outputType: 'JSON',
+        },
+    },
+];
+
+const CMP_EDGES: any[] = [
+    {
+        id: 'e-gate-condition',
+        source: 'node-gate',
+        target: 'node-condition',
+        type: 'smoothstep',
+        markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+        id: 'e-cond-brief',
+        source: 'node-condition',
+        sourceHandle: 'node-condition-rule-0',
+        target: 'agent-brief',
+        type: 'condition',
+        label: 'equals: brief-enrichment',
+        markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+        id: 'e-cond-strategy',
+        source: 'node-condition',
+        sourceHandle: 'node-condition-rule-1',
+        target: 'agent-strategy',
+        type: 'condition',
+        label: 'equals: campaign-strategy',
+        markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+        id: 'e-cond-requirements',
+        source: 'node-condition',
+        sourceHandle: 'node-condition-rule-2',
+        target: 'agent-requirements',
+        type: 'condition',
+        label: 'equals: asset-requirements',
+        markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+        id: 'e-cond-image',
+        source: 'node-condition',
+        sourceHandle: 'node-condition-rule-3',
+        target: 'agent-image',
+        type: 'condition',
+        label: 'equals: image-creation',
+        markerEnd: { type: MarkerType.ArrowClosed },
+    },
+    {
+        id: 'e-cond-content',
+        source: 'node-condition',
+        sourceHandle: 'node-condition-rule-4',
+        target: 'agent-content',
+        type: 'condition',
+        label: 'equals: content-creation',
+        markerEnd: { type: MarkerType.ArrowClosed },
+    },
 ];
 
 let id = 0;
@@ -150,19 +336,21 @@ const getId = () => `dndnode_${id++}`;
 
 function WorkflowBuilder() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const preset = searchParams.get('preset');
+
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
     const [isSetupPanelOpen, setIsSetupPanelOpen] = useState(true);
     const [isLibraryOpen, setIsLibraryOpen] = useState(true);
-    const [workflowName, setWorkflowName] = useState("Untitled Workflow");
+    const [workflowName, setWorkflowName] = useState(preset === 'cmp-workflow' ? "CMP Workflow Agent" : "Untitled Workflow");
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isElkEnabled, setIsElkEnabled] = useState(false);
 
-
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [nodes, setNodes, onNodesChange] = useNodesState(preset === 'cmp-workflow' ? CMP_NODES : INITIAL_NODES);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(preset === 'cmp-workflow' ? CMP_EDGES : INITIAL_EDGES);
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
     const nodeTypes = useMemo(() => ({
@@ -494,7 +682,7 @@ function WorkflowBuilder() {
         setIsElkEnabled((prev) => {
             const next = !prev;
             if (next) {
-                onLayout({ direction: 'DOWN' });
+                onLayout({ direction: 'RIGHT' });
             }
             return next;
         });
@@ -834,7 +1022,9 @@ function WorkflowBuilder() {
 export default function WorkflowBuilderPageWrapper() {
     return (
         <ReactFlowProvider>
-            <WorkflowBuilder />
+            <Suspense fallback={<Box p="24">Loading workflow...</Box>}>
+                <WorkflowBuilder />
+            </Suspense>
         </ReactFlowProvider>
     );
 }

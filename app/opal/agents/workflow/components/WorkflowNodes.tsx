@@ -223,7 +223,8 @@ export function ActionNode({ id, data, selected }: NodeProps) {
 export function ConditionNode({ id, data, selected }: NodeProps) {
     const label = data.label as string;
     const description = data.description as string;
-    const { deleteElements, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+    const conditions = (data.conditions as { matchType: string; value: string }[]) || [];
+    const { deleteElements } = useReactFlow();
 
     // Standard removal logic
     const onRemove = () => {
@@ -235,8 +236,9 @@ export function ConditionNode({ id, data, selected }: NodeProps) {
             selected={selected}
             borderColor={selected ? "border.accent" : "border.tertiary"}
             border={selected ? "2" : "1"}
+            style={{ width: '280px', position: 'relative' }}
         >
-            <Handle type="target" position={Position.Top} />
+            <Handle type="target" position={Position.Left} style={{ left: '-4px' }} />
 
             <NodeHeader
                 icon={
@@ -249,13 +251,47 @@ export function ConditionNode({ id, data, selected }: NodeProps) {
             />
 
             <NodeBody>
-                <Text fontSize="sm" color="fg.secondary">
-                    {description || "All website activities"}
-                </Text>
-            </NodeBody>
+                <Box display="flex" flexDirection="column" gap="4">
+                    <Text fontSize="sm" color="fg.secondary" mb="8">
+                        {description || "Click to configure conditions"}
+                    </Text>
 
-            {/* We use one source handle but it can have multiple edges */}
-            <Handle type="source" position={Position.Bottom} />
+                    <Box display="flex" flexDirection="column" gap="8">
+                        {conditions.map((condition, index) => (
+                            <Box
+                                key={index}
+                                style={{ position: 'relative' }}
+                                h="32"
+                                display="flex"
+                                alignItems="center"
+                                px="8"
+                                rounded="sm"
+                                bg="bg.accent.subtle"
+                                border="1"
+                                borderColor="border.accent"
+                            >
+                                <Text fontSize="xs" fontWeight="700" color="fg.accent" truncate>
+                                    {condition.matchType}: {condition.value}
+                                </Text>
+                                <Handle
+                                    type="source"
+                                    position={Position.Right}
+                                    id={`${id}-rule-${index}`}
+                                    style={{
+                                        right: -8,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: '#0a6abf',
+                                        border: '2px solid white',
+                                        width: 12,
+                                        height: 12,
+                                    }}
+                                />
+                            </Box>
+                        ))}
+                    </Box>
+                </Box>
+            </NodeBody>
         </NodeWrapper>
     );
 }
