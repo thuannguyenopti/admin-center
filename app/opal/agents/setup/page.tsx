@@ -2180,7 +2180,7 @@ function SpecializedAgentSetupContent() {
                                             } : {}}
                                             suppressHydrationWarning
                                         >
-                                            Execution Guardrails
+                                            Guardrails Status
                                         </Button>
                                     </Box>
 
@@ -2201,7 +2201,7 @@ function SpecializedAgentSetupContent() {
                                                                     <Text fontSize="sm" fontWeight="500">75</Text>
                                                                 </Box>
                                                                 <Box display="flex" justifyContent="space-between">
-                                                                    <Text fontSize="sm" color="fg.secondary">Avg. Output Quality Score</Text>
+                                                                    <Text fontSize="sm" color="fg.secondary">Avg. Evaluation Score</Text>
                                                                     <Text fontSize="sm" fontWeight="500">82%</Text>
                                                                 </Box>
                                                                 <Box

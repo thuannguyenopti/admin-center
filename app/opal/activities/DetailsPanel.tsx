@@ -43,7 +43,7 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
         return (
             <Box display="flex" flexDirection="column" gap="8">
                 <Box display="flex" flexDirection="column" gap="4">
-                    <Text fontSize="md" fontWeight="600">Execution Guardrails</Text>
+                    <Text fontSize="md" fontWeight="600">Guardrails Status</Text>
                     <Text fontSize="sm" color="fg.secondary">
                         Execution status based on the agent’s guardrails.
                     </Text>
@@ -71,7 +71,7 @@ const GuardrailHoverCardContent = ({ status, mode, isHelp }: { status?: string, 
     return (
         <Box display="flex" flexDirection="column" gap="8">
             <Box display="flex" flexDirection="column" gap="4">
-                <Text fontSize="md" fontWeight="600">Execution Guardrails: {status}</Text>
+                <Text fontSize="md" fontWeight="600">Guardrails Status: {status}</Text>
                 <Text fontSize="sm" color="fg.secondary">{content}</Text>
                 {mode && (
                     <Text fontSize="sm" color="fg.secondary" mt="4">
@@ -98,7 +98,7 @@ const QualityScoreHoverCardContent = ({ score, baseScore, isHelp, isPassed: isPa
         return (
             <Box display="flex" flexDirection="column" gap="8">
                 <Box display="flex" flexDirection="column" gap="4">
-                    <Text fontSize="md" fontWeight="600">Output Quality Score</Text>
+                    <Text fontSize="md" fontWeight="600">Evaluation Score</Text>
                     <Text fontSize="sm" color="fg.secondary">
                         An LLM-assessed score measuring how well the output meets the agent builder’s quality standards and examples.
                     </Text>
@@ -316,7 +316,7 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                         const isPassed = !isNaN(scoreValue) && scoreValue >= 85;
                                         return (
                                             <MetricRow
-                                                label="Output Quality Score"
+                                                label="Evaluation Score"
                                                 borderT
                                                 helpContent={
                                                     <HoverCard openDelay={200}>
@@ -407,7 +407,7 @@ export default function DetailsPanel({ activity, onClose, focusOutput }: Details
                                     >
                                         <Box p="12" display="flex" flexDirection="column" gap="8">
                                             <Box display="flex" alignItems="center" gap="8">
-                                                <Text fontSize="md" fontWeight="500">Output Quality Score: {activity.qualityScore}</Text>
+                                                <Text fontSize="md" fontWeight="500">Evaluation Score: {activity.qualityScore}</Text>
                                                 {(() => {
                                                     const scoreValue = parseInt(activity.qualityScore);
                                                     const isPassed = !isNaN(scoreValue) && scoreValue >= 85;
