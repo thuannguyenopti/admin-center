@@ -3,21 +3,75 @@
  * Generates page structure and content based on user instructions
  */
 
+import OpenAI from "openai";
+
+const openai = process.env.OPENAI_API_KEY
+	? new OpenAI({
+			apiKey: process.env.OPENAI_API_KEY,
+		})
+	: null;
+
 interface ChecklistItem {
 	label: string;
 	status: "pending" | "running" | "completed" | "failed";
 }
 
+interface AnalysisResult {
+	pageType: string;
+	sections: Array<{
+		type: string;
+		title: string;
+		purpose: string;
+		contentNeeds: {
+			headings?: number;
+			paragraphs?: number;
+			buttons?: number;
+			images?: number;
+		};
+	}>;
+	layout: "single-column" | "multi-column";
+	tone: string;
+	targetAudience: string;
+}
+
+interface ContentResult {
+	sections: Record<
+		string,
+		{
+			heading?: string;
+			subheading?: string;
+			paragraphs?: string[];
+			buttonText?: string;
+			buttonUrl?: string;
+			imageAlt?: string;
+			listItems?: Array<{
+				title: string;
+				description: string;
+			}>;
+		}
+	>;
+}
+
 export async function POST(request: Request) {
 	try {
 		const body = await request.json();
-		const {pageId, instructions, contentTypeId} = body;
+		const {pageId, instructions, contentTypeId, files} = body;
 
 		console.log("[Generate Page Stream] Request received:", {
 			pageId,
 			instructionsLength: instructions?.length,
 			contentTypeId,
+			filesCount: files?.length || 0,
 		});
+
+		// Check OpenAI client
+		if (!openai) {
+			console.error("[Generate Page Stream] OpenAI client not initialized");
+			return new Response(
+				JSON.stringify({error: "OpenAI API key not configured"}),
+				{status: 500, headers: {"Content-Type": "application/json"}}
+			);
+		}
 
 		// Validate inputs
 		if (!pageId || !instructions || !contentTypeId) {
@@ -28,6 +82,25 @@ export async function POST(request: Request) {
 					headers: {"Content-Type": "application/json"},
 				}
 			);
+		}
+
+		// Validate files if provided
+		if (files && Array.isArray(files)) {
+			for (const file of files) {
+				if (!file.type.match(/^image\/(jpeg|png|gif|webp)$/)) {
+					return new Response(
+						JSON.stringify({error: `Unsupported file type: ${file.type}`}),
+						{status: 400, headers: {"Content-Type": "application/json"}}
+					);
+				}
+				const sizeEstimate = (file.url.length * 0.75) / 1024 / 1024;
+				if (sizeEstimate > 20) {
+					return new Response(
+						JSON.stringify({error: "File too large (max 20MB)"}),
+						{status: 400, headers: {"Content-Type": "application/json"}}
+					);
+				}
+			}
 		}
 
 		// Create SSE stream
@@ -63,9 +136,8 @@ export async function POST(request: Request) {
 					checklist[0].status = "running";
 					sendEvent("checklist", checklist);
 
-					// For MVP, we'll use a simple template-based approach
-					// In production, this would call OpenAI API
-					const analysis = await analyzeInstructions(instructions, contentTypeId);
+					// Use OpenAI to analyze instructions and plan page structure
+					const analysis = await analyzeInstructions(instructions, contentTypeId, files);
 
 					// Create page structure immediately
 					const pageStructure = await generatePageStructure(analysis);
@@ -92,7 +164,7 @@ export async function POST(request: Request) {
 					checklist[2].status = "running";
 					sendEvent("checklist", checklist);
 
-					const contentData = await generateContent(analysis, pageStructure);
+					const contentData = await generateContent(analysis, instructions);
 
 					checklist[2].status = "completed";
 					sendEvent("checklist", checklist);
@@ -178,40 +250,126 @@ export async function POST(request: Request) {
 
 // Helper functions for page generation
 
-async function analyzeInstructions(instructions: string, contentTypeId: string) {
-	// In production, this would call OpenAI API to parse instructions
-	// For MVP, return a simple analysis
-	return {
-		pageType: contentTypeId,
-		sections: determineSections(instructions),
-		contentNeeds: {
-			hero: instructions.toLowerCase().includes("hero"),
-			features: instructions.toLowerCase().includes("feature"),
-			cta: instructions.toLowerCase().includes("cta") || instructions.toLowerCase().includes("call to action"),
-			testimonial: instructions.toLowerCase().includes("testimonial"),
-			pricing: instructions.toLowerCase().includes("pricing"),
-		},
-	};
-}
+async function analyzeInstructions(
+	instructions: string,
+	contentTypeId: string,
+	files?: Array<{url: string; type: string}>
+): Promise<AnalysisResult> {
+	// Truncate if too long
+	const MAX_TOKENS = 10000;
+	const estimatedTokens = Math.ceil(instructions.length / 4);
+	let truncatedInstructions = instructions;
+	let wasTruncated = false;
 
-function determineSections(instructions: string): string[] {
-	const sections: string[] = [];
-	const lower = instructions.toLowerCase();
-
-	if (lower.includes("hero")) sections.push("hero");
-	if (lower.includes("feature")) sections.push("features");
-	if (lower.includes("benefit")) sections.push("benefits");
-	if (lower.includes("testimonial")) sections.push("testimonials");
-	if (lower.includes("pricing")) sections.push("pricing");
-	if (lower.includes("cta") || lower.includes("call to action")) sections.push("cta");
-	if (lower.includes("faq")) sections.push("faq");
-
-	// Default sections if none detected
-	if (sections.length === 0) {
-		sections.push("hero", "features", "cta");
+	if (estimatedTokens > MAX_TOKENS) {
+		const maxChars = MAX_TOKENS * 4;
+		truncatedInstructions =
+			instructions.substring(0, maxChars) + "\n\n[Instructions truncated due to length...]";
+		wasTruncated = true;
 	}
 
-	return sections;
+	const messages: any[] = [
+		{
+			role: "system",
+			content: `You are a web page planning expert. Analyze user instructions and plan a page structure.
+
+Available section types: hero, features, benefits, testimonials, pricing, cta, faq, content
+Available element types: ct-heading, ct-text, ct-rich-text, ct-button, ct-input, ct-image, ct-product
+
+Respond with a JSON object:
+{
+  "pageType": "landing-page" | "product-page" | "content-page" | "form-page",
+  "sections": [
+    {
+      "type": "section type",
+      "title": "Section title for outline",
+      "purpose": "Brief description",
+      "contentNeeds": {"headings": 1, "paragraphs": 2, "buttons": 1}
+    }
+  ],
+  "layout": "single-column",
+  "tone": "professional" | "casual" | "technical" | "friendly",
+  "targetAudience": "Brief description"
+}`,
+		},
+	];
+
+	// Add user instructions (with images if available)
+	if (files && files.length > 0) {
+		const content: any[] = [
+			{
+				type: "text",
+				text: `Analyze these instructions for a ${contentTypeId} page:\n\n${truncatedInstructions}`,
+			},
+		];
+
+		files.forEach((file) => {
+			if (file.type.startsWith("image/")) {
+				content.push({
+					type: "image_url",
+					image_url: {url: file.url},
+				});
+			}
+		});
+
+		messages.push({role: "user", content});
+	} else {
+		messages.push({
+			role: "user",
+			content: `Analyze these instructions for a ${contentTypeId} page:\n\n${truncatedInstructions}`,
+		});
+	}
+
+	try {
+		const completion = await openai!.chat.completions.create({
+			model: "gpt-4o",
+			messages,
+			temperature: 0.3,
+			response_format: {type: "json_object"},
+			max_tokens: 2000,
+		});
+
+		const result = completion.choices[0]?.message?.content?.trim() || "{}";
+		const parsed = JSON.parse(result) as AnalysisResult;
+
+		// Validate structure
+		if (!parsed.sections || !Array.isArray(parsed.sections)) {
+			throw new Error("Invalid response structure");
+		}
+
+		console.log("[Generate Page Stream] Analysis result:", {
+			pageType: parsed.pageType,
+			sectionsCount: parsed.sections.length,
+			tone: parsed.tone,
+			wasTruncated,
+		});
+
+		return parsed;
+	} catch (error: any) {
+		console.error("[Generate Page Stream] AI analysis error:", error);
+
+		// Fallback to basic structure
+		return {
+			pageType: "content-page",
+			sections: [
+				{
+					type: "hero",
+					title: "Hero",
+					purpose: "Main hero section",
+					contentNeeds: {headings: 1, paragraphs: 1, buttons: 1},
+				},
+				{
+					type: "content",
+					title: "Content",
+					purpose: "Main content area",
+					contentNeeds: {headings: 1, paragraphs: 2},
+				},
+			],
+			layout: "single-column",
+			tone: "professional",
+			targetAudience: "General audience",
+		};
+	}
 }
 
 async function generatePageStructure(analysis: any) {
@@ -221,41 +379,101 @@ async function generatePageStructure(analysis: any) {
 	};
 }
 
-async function generateContent(analysis: any, structure: any) {
-	// Generate sample content for each section
-	const contentMap: Record<string, any> = {
-		hero: {
-			heading: "Welcome to Your New Page",
-			subheading: "Create amazing experiences with ease",
-			ctaText: "Get Started",
-		},
-		features: {
-			heading: "Key Features",
-			items: [
-				{title: "Feature One", description: "Description of first feature"},
-				{title: "Feature Two", description: "Description of second feature"},
-				{title: "Feature Three", description: "Description of third feature"},
-			],
-		},
-		cta: {
-			heading: "Ready to Get Started?",
-			buttonText: "Sign Up Now",
-		},
-	};
+async function generateContent(
+	analysis: AnalysisResult,
+	instructions: string
+): Promise<ContentResult> {
+	try {
+		const completion = await openai!.chat.completions.create({
+			model: "gpt-4o",
+			messages: [
+				{
+					role: "system",
+					content: `You are a professional copywriter. Generate engaging content for a web page.
 
-	return contentMap;
+Tone: ${analysis.tone}
+Target Audience: ${analysis.targetAudience}
+
+Guidelines:
+- Write clear, compelling copy
+- Match the specified tone
+- Keep headings concise (under 60 characters)
+- Keep paragraphs readable (2-3 sentences)
+- Make CTAs action-oriented
+- Include specific details from user instructions
+
+Respond with a JSON object mapping section types to content:
+{
+  "sections": {
+    "hero": {
+      "heading": "Main headline",
+      "subheading": "Supporting text",
+      "buttonText": "CTA text",
+      "buttonUrl": "#"
+    },
+    "features": {
+      "heading": "Section heading",
+      "listItems": [
+        {"title": "Feature name", "description": "Feature description"}
+      ]
+    }
+  }
+}`,
+				},
+				{
+					role: "user",
+					content: `Generate content for this page structure:
+
+${JSON.stringify(analysis.sections, null, 2)}
+
+User instructions:
+${instructions}`,
+				},
+			],
+			temperature: 0.7,
+			response_format: {type: "json_object"},
+			max_tokens: 4000,
+		});
+
+		const result = completion.choices[0]?.message?.content?.trim() || "{}";
+		const parsed = JSON.parse(result) as ContentResult;
+
+		console.log("[Generate Page Stream] Generated content for sections:", {
+			sectionTypes: Object.keys(parsed.sections || {}),
+		});
+
+		return parsed;
+	} catch (error: any) {
+		console.error("[Generate Page Stream] AI content generation error:", error);
+
+		// Fallback to basic content
+		return {
+			sections: {
+				hero: {
+					heading: "Welcome to Your New Page",
+					subheading: "Create amazing experiences with ease",
+					buttonText: "Get Started",
+				},
+				content: {
+					heading: "Main Content",
+					paragraphs: ["This is your main content area."],
+				},
+			},
+		};
+	}
 }
 
 async function createSections(structure: any, contentData: any) {
 	const outlines: any[] = [];
 
-	structure.sections.forEach((sectionType: string, index: number) => {
+	structure.sections.forEach((section: any, index: number) => {
 		const outlineId = `ol-${Date.now()}-${index}`;
 		const sectionId = `sec-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`;
 		const rowId = `row-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`;
 		const colId = `col-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`;
 
-		const title = sectionType.charAt(0).toUpperCase() + sectionType.slice(1);
+		// Extract title from section object (use provided title or capitalize type)
+		const title = section.title || (section.type.charAt(0).toUpperCase() + section.type.slice(1));
 
 		// Create tree structure immediately so VB can render the page shell
 		const tree = [
@@ -282,6 +500,7 @@ async function createSections(structure: any, contentData: any) {
 		outlines.push({
 			id: outlineId,
 			title: title,
+			sectionType: section.type, // Store the type for matching with content
 			tree: tree,
 			elements: {},
 		});
@@ -290,95 +509,94 @@ async function createSections(structure: any, contentData: any) {
 	return outlines;
 }
 
-async function populateElements(outlines: any[], contentData: any) {
+async function populateElements(outlines: any[], contentData: ContentResult) {
 	return outlines.map((outline: any) => {
-		const sectionType = outline.title.toLowerCase();
-		const content = contentData[sectionType];
+		// Use the stored sectionType for matching with AI-generated content
+		const sectionType = outline.sectionType || outline.title.toLowerCase();
+		const sectionContent = contentData.sections[sectionType];
 
-		if (!content) return outline;
+		if (!sectionContent) return outline;
 
 		const elements: Record<string, any> = {};
 		const elementIds: string[] = [];
+		const genId = () => `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-		// Add content elements based on section type
-		if (sectionType === "hero" && content.heading) {
-			const headingId = `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-			elementIds.push(headingId);
-			elements[headingId] = {
+		// Heading
+		if (sectionContent.heading) {
+			const id = genId();
+			elementIds.push(id);
+			elements[id] = {
 				type: "ct-heading",
 				properties: {
-					text: {value: content.heading},
-					level: {value: "h1"},
+					text: {value: sectionContent.heading},
+					level: {value: sectionType === "hero" ? "h1" : "h2"},
 				},
 			};
-
-			if (content.subheading) {
-				const subheadingId = `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-				elementIds.push(subheadingId);
-				elements[subheadingId] = {
-					type: "ct-text",
-					properties: {
-						text: {value: content.subheading},
-					},
-				};
-			}
-
-			if (content.ctaText) {
-				const buttonId = `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-				elementIds.push(buttonId);
-				elements[buttonId] = {
-					type: "ct-button",
-					properties: {
-						text: {value: content.ctaText},
-						appearance: {value: "primary"},
-					},
-				};
-			}
-		} else if (sectionType === "features" && content.heading) {
-			const headingId = `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-			elementIds.push(headingId);
-			elements[headingId] = {
-				type: "ct-heading",
-				properties: {
-					text: {value: content.heading},
-					level: {value: "h2"},
-				},
-			};
-		} else if (sectionType === "cta" && content.heading) {
-			const headingId = `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-			elementIds.push(headingId);
-			elements[headingId] = {
-				type: "ct-heading",
-				properties: {
-					text: {value: content.heading},
-					level: {value: "h2"},
-				},
-			};
-
-			if (content.buttonText) {
-				const buttonId = `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-				elementIds.push(buttonId);
-				elements[buttonId] = {
-					type: "ct-button",
-					properties: {
-						text: {value: content.buttonText},
-						appearance: {value: "primary"},
-					},
-				};
-			}
 		}
 
-		// Update the existing tree structure with elements
-		// Navigate to the column node and update its elements
-		const updatedTree = JSON.parse(JSON.stringify(outline.tree)); // Deep clone
+		// Subheading
+		if (sectionContent.subheading) {
+			const id = genId();
+			elementIds.push(id);
+			elements[id] = {
+				type: "ct-text",
+				properties: {text: {value: sectionContent.subheading}},
+			};
+		}
+
+		// Paragraphs
+		if (sectionContent.paragraphs) {
+			sectionContent.paragraphs.forEach((para) => {
+				const id = genId();
+				elementIds.push(id);
+				elements[id] = {
+					type: "ct-text",
+					properties: {text: {value: para}},
+				};
+			});
+		}
+
+		// List items (for features, benefits)
+		if (sectionContent.listItems) {
+			sectionContent.listItems.forEach((item) => {
+				const headingId = genId();
+				const descId = genId();
+				elementIds.push(headingId, descId);
+
+				elements[headingId] = {
+					type: "ct-heading",
+					properties: {
+						text: {value: item.title},
+						level: {value: "h3"},
+					},
+				};
+
+				elements[descId] = {
+					type: "ct-text",
+					properties: {text: {value: item.description}},
+				};
+			});
+		}
+
+		// Button
+		if (sectionContent.buttonText) {
+			const id = genId();
+			elementIds.push(id);
+			elements[id] = {
+				type: "ct-button",
+				properties: {
+					label: {value: sectionContent.buttonText},
+					url: {value: sectionContent.buttonUrl || "#"},
+				},
+			};
+		}
+
+		// Update tree with elements
+		const updatedTree = JSON.parse(JSON.stringify(outline.tree));
 		if (updatedTree[0]?.children[0]?.children[0]) {
 			updatedTree[0].children[0].children[0].elements = elementIds.map((id) => ({id}));
 		}
 
-		return {
-			...outline,
-			tree: updatedTree,
-			elements,
-		};
+		return {...outline, tree: updatedTree, elements};
 	});
 }

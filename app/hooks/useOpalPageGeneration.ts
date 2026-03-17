@@ -2,6 +2,26 @@
 
 import {useEffect, useState} from "react";
 import {useLayout} from "@/app/context/LayoutContext";
+import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
+
+// Helper function to convert File[] to base64 data URLs
+async function filesToDataUrls(files: File[]): Promise<Array<{url: string; type: string}>> {
+	return Promise.all(
+		files.map(
+			(file) =>
+				new Promise<{url: string; type: string}>((resolve, reject) => {
+					const reader = new FileReader();
+					reader.onload = () =>
+						resolve({
+							url: reader.result as string,
+							type: file.type,
+						});
+					reader.onerror = reject;
+					reader.readAsDataURL(file);
+				})
+		)
+	);
+}
 
 export function useOpalPageGeneration(
 	pageId: string,
@@ -9,6 +29,7 @@ export function useOpalPageGeneration(
 	onSave: (patch: {outlines?: any; properties?: any; variationId?: string}) => void
 ) {
 	const {opalPanelControls} = useLayout();
+	const {generationData} = useOpalGeneration();
 	const [isGenerating, setIsGenerating] = useState(false);
 
 	useEffect(() => {
@@ -60,6 +81,15 @@ export function useOpalPageGeneration(
 					},
 				});
 
+				// Get files from context (not localStorage - too large)
+				const files = generationData?.files || [];
+				const fileData = files.length > 0 ? await filesToDataUrls(files) : [];
+
+				console.log("[useOpalPageGeneration] Uploading files:", {
+					count: fileData.length,
+					types: fileData.map((f) => f.type),
+				});
+
 				// Connect to SSE stream
 				const response = await fetch("/api/generate-page/stream", {
 					method: "POST",
@@ -68,6 +98,7 @@ export function useOpalPageGeneration(
 						pageId,
 						instructions: pendingData.instructions,
 						contentTypeId,
+						files: fileData,
 					}),
 				});
 
