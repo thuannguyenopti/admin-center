@@ -56,6 +56,19 @@ const agents = [
         status: "Active",
     },
     {
+        id: "cmp-workflow",
+        icon: <IconCodeBranch />,
+        name: "CMP Workflow Agent",
+        handle: "@cmp_workflow",
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
+        category: "Marketing",
+        categoryColor: "primary",
+        description: "Orchestrate specialized agents to process CMP webhook payloads and generate enriched campaign content.",
+        activity: "0 Runs",
+        lastModified: { date: "Mar 13, 2026", user: "Pei Chien" },
+        status: "Active",
+    },
+    {
         id: "experiment-planning",
         icon: <IconAgent />,
         name: "Experiment Planning Agent",
@@ -71,7 +84,7 @@ const agents = [
     },
     {
         id: "geo-recommendations",
-        icon: <IconCodeBranch />,
+        icon: <IconAgent />,
         name: "GEO Recommendations",
         handle: "@opti_geo_recommendati...",
         tag: "Updated",
@@ -86,7 +99,7 @@ const agents = [
     },
     {
         id: "resource-manager",
-        icon: <IconCodeBranch />,
+        icon: <IconAgent />,
         name: "Resource Manager",
         handle: "@rm",
         creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
@@ -99,7 +112,7 @@ const agents = [
     },
     {
         id: "seo-keyword-research",
-        icon: <IconCodeBranch />,
+        icon: <IconAgent />,
         name: "SEO Keyword Research",
         handle: "@seo_keyword_resaerch",
         creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
@@ -123,19 +136,6 @@ const agents = [
         activity: "5 Runs",
         lastModified: { date: "Aug 20, 2025", user: "John Smith" },
         status: "Inactive",
-    },
-    {
-        id: "cmp-workflow",
-        icon: <IconCodeBranch />,
-        name: "CMP Workflow Agent",
-        handle: "@cmp_workflow",
-        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
-        category: "Marketing",
-        categoryColor: "primary",
-        description: "Orchestrate specialized agents to process CMP webhook payloads and generate enriched campaign content.",
-        activity: "0 Runs",
-        lastModified: { date: "Mar 13, 2026", user: "Pei Chien" },
-        status: "Active",
     },
 ];
 
