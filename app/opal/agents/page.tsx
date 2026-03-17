@@ -124,6 +124,19 @@ const agents = [
         lastModified: { date: "Aug 20, 2025", user: "John Smith" },
         status: "Inactive",
     },
+    {
+        id: "cmp-workflow",
+        icon: <IconCodeBranch />,
+        name: "CMP Workflow Agent",
+        handle: "@cmp_workflow",
+        creator: { name: "Optimizely", type: "system", avatar: "/logo.svg" },
+        category: "Marketing",
+        categoryColor: "primary",
+        description: "Orchestrate specialized agents to process CMP webhook payloads and generate enriched campaign content.",
+        activity: "0 Runs",
+        lastModified: { date: "Mar 13, 2026", user: "Pei Chien" },
+        status: "Active",
+    },
 ];
 
 export default function AgentsPage() {
@@ -236,7 +249,7 @@ export default function AgentsPage() {
                 </thead>
                 <tbody>
                     {agents.map((agent, index) => (
-                        <Tr key={index} url={`/opal/agents/setup?id=${agent.id}&mode=edit`}>
+                        <Tr key={index} url={agent.id === 'cmp-workflow' ? '/opal/agents/workflow?preset=cmp-workflow' : `/opal/agents/setup?id=${agent.id}&mode=edit`}>
                             <Td>
                                 <Box color="fg.secondary">{agent.icon}</Box>
                             </Td>
