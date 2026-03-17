@@ -285,6 +285,78 @@ function NotificationCenterSection() {
                 </Box>
             </CatalogItem>
 
+            <CatalogItem label="Table row — unread" description="Dot before checkbox; icon + text block; Category · message; Action Required badge on own line">
+                {/* Simulated table row — matches NotificationCenter list view */}
+                <Box border="1" borderColor="border.tertiary" rounded="lg" bg="bg.secondary" style={{ overflowX: "auto" }}>
+                    {/* Header row */}
+                    <Box display="flex" alignItems="center" gap="0" px="16" py="10" borderB="1" borderColor="border.tertiary" bg="bg.default">
+                        <Box style={{ width: 60, flexShrink: 0 }}>
+                            <Checkbox />
+                        </Box>
+                        <Text fontSize="sm" color="fg.tertiary" style={{ flex: 1 }}>Notification</Text>
+                        <Text fontSize="sm" color="fg.tertiary" style={{ width: 140 }}>Category</Text>
+                        <Text fontSize="sm" color="fg.tertiary" style={{ width: 100 }}>Timestamp</Text>
+                    </Box>
+                    {/* Unread row */}
+                    <Box display="flex" alignItems="center" gap="0" px="16" py="12" bg="bg.secondary">
+                        {/* Dot → Checkbox */}
+                        <Box display="flex" alignItems="center" gap="8" style={{ width: 60, flexShrink: 0 }}>
+                            <Box rounded="full" style={{ width: 8, height: 8, backgroundColor: "var(--ax-colors-fg-error)", flexShrink: 0 }} />
+                            <Checkbox />
+                        </Box>
+                        {/* Icon + Text block */}
+                        <Box display="flex" flexDirection="row" gap="12" alignItems="start" style={{ flex: 1, paddingLeft: 12 }}>
+                            <Box style={{ flexShrink: 0, marginTop: 2 }}>
+                                <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />
+                            </Box>
+                            <Box display="flex" flexDirection="column" gap="4">
+                                <Text fontWeight="600" color="fg.default">Hypothesis Creator failed</Text>
+                                <Text fontSize="sm" color="fg.tertiary">Agent Execution · Execution b2953c08 hit a tool timeout after 62.45s.</Text>
+                                <Box>
+                                    <Badge intent="warning" variant="subtle">Action Required</Badge>
+                                </Box>
+                            </Box>
+                        </Box>
+                        <Box style={{ width: 140, flexShrink: 0 }}>
+                            <Badge intent="primary" variant="subtle">Agent Execution</Badge>
+                        </Box>
+                        <Box display="flex" flexDirection="column" gap="2" style={{ width: 100, flexShrink: 0 }}>
+                            <Text fontSize="sm">1:55 PM</Text>
+                            <Text fontSize="xs" color="fg.tertiary">Today</Text>
+                        </Box>
+                    </Box>
+                </Box>
+            </CatalogItem>
+
+            <CatalogItem label="Table row — read" description="No dot; lighter title weight; no action badge">
+                <Box border="1" borderColor="border.tertiary" rounded="lg" style={{ overflowX: "auto" }}>
+                    <Box display="flex" alignItems="center" gap="0" px="16" py="12" bg="bg.default">
+                        {/* No dot — spacer + Checkbox */}
+                        <Box display="flex" alignItems="center" gap="8" style={{ width: 60, flexShrink: 0 }}>
+                            <Box style={{ width: 8, height: 8, flexShrink: 0 }} />
+                            <Checkbox />
+                        </Box>
+                        {/* Icon + Text block */}
+                        <Box display="flex" flexDirection="row" gap="12" alignItems="start" style={{ flex: 1, paddingLeft: 12 }}>
+                            <Box style={{ flexShrink: 0, marginTop: 2 }}>
+                                <AxiomCircleCheck style={{ width: 16, height: 16, color: "var(--ax-colors-fg-success)" }} />
+                            </Box>
+                            <Box display="flex" flexDirection="column" gap="4">
+                                <Text fontWeight="400" color="fg.default">Content Localizer completed</Text>
+                                <Text fontSize="sm" color="fg.tertiary">Agent Execution · Chat-triggered execution finished. Campaign copy translated to 4 languages.</Text>
+                            </Box>
+                        </Box>
+                        <Box style={{ width: 140, flexShrink: 0 }}>
+                            <Badge intent="primary" variant="subtle">Agent Execution</Badge>
+                        </Box>
+                        <Box display="flex" flexDirection="column" gap="2" style={{ width: 100, flexShrink: 0 }}>
+                            <Text fontSize="sm">1:48 PM</Text>
+                            <Text fontSize="xs" color="fg.tertiary">Today</Text>
+                        </Box>
+                    </Box>
+                </Box>
+            </CatalogItem>
+
             <CatalogItem label="Pagination" description="Previous / next controls; 50 notifications per page">
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Text fontSize="sm" color="fg.tertiary">Showing 1–20 of 55 results</Text>
@@ -309,7 +381,7 @@ function NotificationItemSection() {
         <Box>
             <SectionHeading id="notification-items" number="3" title="Individual Notification Items" subtitle="All variants: read/unread states, categories, inline actions" />
 
-            <CatalogItem label="Unread item" description="Bold title, red dot, highlighted background">
+            <CatalogItem label="Unread item" description="Bold title, red dot, highlighted background; Category · message on second line; Action Required as standalone badge">
                 <Box
                     p="16"
                     rounded="xl"
@@ -325,23 +397,20 @@ function NotificationItemSection() {
                         <IconCircleExclamation style={{ width: 16, height: 16, color: "var(--ax-colors-fg-error)" }} />
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
-                        <Box display="flex" alignItems="center" gap="8">
-                            <Text fontWeight="700" fontSize="md">Hypothesis Creator failed</Text>
-                        </Box>
-                        <Text fontSize="sm" color="fg.tertiary">Execution b2953c08 hit a tool timeout after 62.45s.</Text>
-                        <Box display="flex" alignItems="center" gap="4" mt="4">
-                            <Badge intent="primary" variant="subtle">Agent Execution</Badge>
+                        <Text fontWeight="700" fontSize="md">Hypothesis Creator failed</Text>
+                        <Text fontSize="sm" color="fg.tertiary">Agent Execution · Execution b2953c08 hit a tool timeout after 62.45s.</Text>
+                        <Box>
+                            <Badge intent="warning" variant="subtle">Action Required</Badge>
                         </Box>
                     </Box>
                     <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-                        <Badge intent="warning" variant="subtle">Action Required</Badge>
                         <Text fontSize="xs" color="fg.tertiary">2:05 PM</Text>
                         <UnreadDot />
                     </Box>
                 </Box>
             </CatalogItem>
 
-            <CatalogItem label="Read item" description="Normal weight, dimmed appearance">
+            <CatalogItem label="Read item" description="Normal weight, dimmed appearance; Category · message on second line">
                 <Box
                     p="16"
                     rounded="xl"
@@ -358,10 +427,7 @@ function NotificationItemSection() {
                     </Box>
                     <Box flex="1" display="flex" flexDirection="column" gap="4">
                         <Text fontWeight="500" fontSize="md">Content Localizer completed</Text>
-                        <Text fontSize="sm" color="fg.tertiary">Chat-triggered execution finished. Campaign copy translated to 4 languages.</Text>
-                        <Box display="flex" alignItems="center" gap="4" mt="4">
-                            <Badge intent="primary" variant="subtle">Agent Execution</Badge>
-                        </Box>
+                        <Text fontSize="sm" color="fg.tertiary">Agent Execution · Chat-triggered execution finished. Campaign copy translated to 4 languages.</Text>
                     </Box>
                     <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
                         <Text fontSize="xs" color="fg.tertiary">1:52 PM</Text>
@@ -517,6 +583,7 @@ function BulkActionsSection() {
                 <Box display="flex" flexDirection="column" gap="0" border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
                     {/* Header row */}
                     <Box display="flex" gap="12" px="16" py="10" bg="bg.secondary" borderB="1" borderColor="border.tertiary" alignItems="center">
+                        <Box style={{ width: 8, flexShrink: 0 }} />
                         <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
                         <Text fontSize="xs" color="fg.tertiary" fontWeight="600" style={{ textTransform: "uppercase", letterSpacing: "0.05em" }}>
                             {allSelected ? "Deselect all" : "Select all"}
@@ -534,9 +601,8 @@ function BulkActionsSection() {
                             borderColor="border.tertiary"
                             bg={item.unread ? "bg.default" : "bg.secondary"}
                         >
+                            {item.unread ? <UnreadDot /> : <Box style={{ width: 8 }} />}
                             <Checkbox checked={selected.has(item.id)} onCheckedChange={() => toggle(item.id)} />
-                            {item.unread && <UnreadDot />}
-                            {!item.unread && <Box style={{ width: 8 }} />}
                             <Text fontSize="sm" fontWeight={item.unread ? "600" : "400"} flex="1">{item.title}</Text>
                             <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke />} aria-label="More options" />
                         </Box>
