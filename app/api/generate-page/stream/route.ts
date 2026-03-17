@@ -43,7 +43,14 @@ interface ContentResult {
 			paragraphs?: string[];
 			buttonText?: string;
 			buttonUrl?: string;
-			imageAlt?: string;
+			imagePrompts?: Array<{
+				prompt: string;
+				alt: string;
+			}>;
+			images?: Array<{
+				url: string;
+				alt: string;
+			}>;
 			listItems?: Array<{
 				title: string;
 				description: string;
@@ -166,6 +173,9 @@ export async function POST(request: Request) {
 
 					const contentData = await generateContent(analysis, instructions);
 
+					// Generate images if content includes image prompts
+					const contentWithImages = await generateImages(contentData);
+
 					checklist[2].status = "completed";
 					sendEvent("checklist", checklist);
 					await taskDelay();
@@ -184,7 +194,14 @@ export async function POST(request: Request) {
 					checklist[4].status = "running";
 					sendEvent("checklist", checklist);
 
-					const populatedOutlines = await populateElements(outlines, contentData);
+					// Debug: Send diagnostic info to client
+					sendEvent("debug", {
+						message: "Section matching info",
+						outlineSectionTypes: outlines.map((o: any) => ({title: o.title, type: o.sectionType})),
+						contentSectionKeys: Object.keys(contentWithImages.sections),
+					});
+
+					const populatedOutlines = await populateElements(outlines, contentWithImages);
 
 					console.log("[Generate Page Stream] Generated outlines:", JSON.stringify(populatedOutlines, null, 2));
 
@@ -401,15 +418,23 @@ Guidelines:
 - Keep paragraphs readable (2-3 sentences)
 - Make CTAs action-oriented
 - Include specific details from user instructions
+- For sections that need images, provide detailed DALL-E prompts
 
-Respond with a JSON object mapping section types to content:
+IMPORTANT: Use the section "type" OR "title" as the key in your response.
+If sections have unique types (hero, features, etc), use those.
+If multiple sections have the same type (e.g., all "content"), use the section titles as keys.
+
+Respond with a JSON object mapping sections to content:
 {
   "sections": {
     "hero": {
       "heading": "Main headline",
       "subheading": "Supporting text",
       "buttonText": "CTA text",
-      "buttonUrl": "#"
+      "buttonUrl": "#",
+      "imagePrompts": [
+        {"prompt": "Detailed DALL-E prompt for hero image", "alt": "Alt text for accessibility"}
+      ]
     },
     "features": {
       "heading": "Section heading",
@@ -463,6 +488,61 @@ ${instructions}`,
 	}
 }
 
+async function generateImages(contentData: ContentResult): Promise<ContentResult> {
+	console.log("[Generate Page Stream] generateImages called with sections:", Object.keys(contentData.sections));
+
+	// Generate images for each section that has imagePrompts
+	const updatedSections: Record<string, any> = {};
+
+	for (const [sectionType, content] of Object.entries(contentData.sections)) {
+		updatedSections[sectionType] = {...content};
+
+		if (content.imagePrompts && content.imagePrompts.length > 0) {
+			const generatedImages: Array<{url: string; alt: string}> = [];
+
+			for (const imagePrompt of content.imagePrompts) {
+				try {
+					console.log(`[Generate Page Stream] Generating image: "${imagePrompt.prompt}"`);
+
+					const response = await openai!.images.generate({
+						model: "dall-e-3",
+						prompt: imagePrompt.prompt,
+						n: 1,
+						size: "1024x1024",
+						quality: "standard",
+					});
+
+					const imageUrl = response?.data?.[0]?.url;
+					if (imageUrl) {
+						generatedImages.push({
+							url: imageUrl,
+							alt: imagePrompt.alt,
+						});
+						console.log(`[Generate Page Stream] Image generated successfully`);
+					}
+				} catch (error: any) {
+					console.error(`[Generate Page Stream] Image generation error:`, error.message);
+					// Continue without this image if generation fails
+				}
+			}
+
+			updatedSections[sectionType].images = generatedImages;
+			delete updatedSections[sectionType].imagePrompts; // Remove prompts, keep URLs
+		}
+	}
+
+	console.log("[Generate Page Stream] generateImages returning sections:", {
+		sectionKeys: Object.keys(updatedSections),
+		sectionDetails: Object.entries(updatedSections).map(([key, val]) => ({
+			key,
+			hasImages: !!(val as any).images,
+			imageCount: ((val as any).images?.length || 0),
+		})),
+	});
+
+	return {sections: updatedSections};
+}
+
 async function createSections(structure: any, contentData: any) {
 	const outlines: any[] = [];
 
@@ -510,10 +590,30 @@ async function createSections(structure: any, contentData: any) {
 }
 
 async function populateElements(outlines: any[], contentData: ContentResult) {
+	console.log("[Generate Page Stream] populateElements called with:", {
+		outlineCount: outlines.length,
+		outlineSectionTypes: outlines.map(o => ({title: o.title, sectionType: o.sectionType})),
+		contentSectionKeys: Object.keys(contentData.sections),
+	});
+
 	return outlines.map((outline: any) => {
-		// Use the stored sectionType for matching with AI-generated content
-		const sectionType = outline.sectionType || outline.title.toLowerCase();
-		const sectionContent = contentData.sections[sectionType];
+		// Store the section type for later use (e.g., determining heading level)
+		const sectionType = outline.sectionType || "content";
+
+		// Try to match by title first (AI uses titles as keys), then fall back to type
+		let sectionContent = contentData.sections[outline.title];
+		if (!sectionContent && outline.sectionType) {
+			sectionContent = contentData.sections[outline.sectionType];
+		}
+
+		console.log("[Generate Page Stream] Matching section:", {
+			outlineTitle: outline.title,
+			outlineSectionType: outline.sectionType,
+			foundByTitle: !!contentData.sections[outline.title],
+			foundByType: outline.sectionType ? !!contentData.sections[outline.sectionType] : false,
+			foundContent: !!sectionContent,
+			availableKeys: Object.keys(contentData.sections),
+		});
 
 		if (!sectionContent) return outline;
 
@@ -589,6 +689,21 @@ async function populateElements(outlines: any[], contentData: ContentResult) {
 					url: {value: sectionContent.buttonUrl || "#"},
 				},
 			};
+		}
+
+		// Images (from DALL-E generation)
+		if (sectionContent.images) {
+			sectionContent.images.forEach((image: {url: string; alt: string}) => {
+				const id = genId();
+				elementIds.push(id);
+				elements[id] = {
+					type: "ct-image",
+					properties: {
+						src: {value: image.url},
+						alt: {value: image.alt},
+					},
+				};
+			});
 		}
 
 		// Update tree with elements
