@@ -11,7 +11,9 @@ export type ChecklistItem = {
 
 export type PageGenerationProgressBlockMetadata = {
   blockType: 'page-generation-progress';
-  checklist: ChecklistItem[];
+  checklist?: ChecklistItem[];
+  loading?: boolean;
+  loadingMessage?: string;
 };
 
 /**
@@ -24,6 +26,10 @@ export const PageGenerationProgressBlock: React.FC<AdaptiveBlockComponentProps> 
   metadata,
 }) => {
   const progressMetadata = metadata as PageGenerationProgressBlockMetadata;
+
+  if (!progressMetadata.checklist) {
+    return null;
+  }
 
   return (
     <PreflightProgressIndicator checklist={progressMetadata.checklist} />

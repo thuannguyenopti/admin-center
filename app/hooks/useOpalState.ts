@@ -16,6 +16,8 @@ export type ChatMessage = {
       status: 'pending' | 'running' | 'completed' | 'failed';
     }>;
     auditResult?: any; // Will be typed as PreflightAuditResult when imported
+    loading?: boolean;
+    loadingMessage?: string;
   };
 };
 

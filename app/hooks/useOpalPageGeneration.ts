@@ -64,20 +64,13 @@ export function useOpalPageGeneration(
 					content: `@generate page\n\n${pendingData.instructions}`,
 				});
 
-				// Add progress message with checklist
+				// Add progress message
 				const progressMsg = opalPanelControls.addMessage({
 					role: "assistant",
-					content: "Generating your page...",
+					content: "Generating page...",
 					messageType: "page-generation-progress",
 					metadata: {
-						checklist: [
-							{label: "Analyzing instructions", status: "pending"},
-							{label: "Designing page structure", status: "pending"},
-							{label: "Generating content", status: "pending"},
-							{label: "Creating sections", status: "pending"},
-							{label: "Populating elements", status: "pending"},
-							{label: "Finalizing page", status: "pending"},
-						],
+						loadingMessage: "Generating page...",
 					},
 				});
 
@@ -135,7 +128,7 @@ export function useOpalPageGeneration(
 						if (eventType === "checklist") {
 							// Update progress checklist
 							opalPanelControls.updateMessage(progressMsg.id, {
-								metadata: {checklist: data},
+								metadata: {checklist: data, loadingMessage: "Generating page..."},
 							});
 						} else if (eventType === "structure") {
 							// Apply page structure
@@ -185,7 +178,7 @@ export function useOpalPageGeneration(
 		};
 
 		startGeneration();
-	}, [pageId, contentTypeId, opalPanelControls, onSave, isGenerating]);
+	}, [pageId, contentTypeId, opalPanelControls, onSave, isGenerating, generationData]);
 
 	return {isGenerating};
 }
