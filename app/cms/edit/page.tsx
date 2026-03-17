@@ -84,6 +84,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 			addon: <IconCut size={16} />,
 			group: {
 				separator: true,
+				label: "",
 			},
 			label: "Cut",
 			onSelect: () => console.log("Cut", node.id),
@@ -102,6 +103,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 			addon: <IconArrowUp size={16} />,
 			group: {
 				separator: true,
+				label: "",
 			},
 			label: "Move up",
 			onSelect: () => console.log("Move up", node.id),
@@ -115,6 +117,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 			addon: <IconTrash size={16} />,
 			group: {
 				separator: true,
+				label: "",
 			},
 			intent: "danger" as const,
 			label: "Delete",
