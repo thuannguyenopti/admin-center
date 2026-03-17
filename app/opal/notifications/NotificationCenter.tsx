@@ -168,7 +168,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
     const [dateRangeFilter, setDateRangeFilter] = useState("All");
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-    const [viewMode, setViewMode] = useState<"list" | "card" | "detailed">("detailed");
+    const [viewMode, setViewMode] = useState<"list" | "card" | "detailed">("list");
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -682,14 +682,16 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                         <Table>
                             <thead>
                                 <Tr>
-                                    <Th style={{ width: 40 }}>
-                                        <Checkbox
-                                            checked={allOnPageSelected}
-                                            onCheckedChange={toggleSelectAll}
-                                        />
+                                    <Th style={{ width: 60 }}>
+                                        <Box display="flex" alignItems="center" gap="8">
+                                            <Box style={{ width: 8, flexShrink: 0 }} />
+                                            <Checkbox
+                                                checked={allOnPageSelected}
+                                                onCheckedChange={toggleSelectAll}
+                                            />
+                                        </Box>
                                     </Th>
-                                    <Th style={{ width: 24 }}></Th>
-                                    <Th>Notification</Th>
+                                    <Th style={{ minWidth: 320 }}>Notification</Th>
                                     <Th>Category</Th>
                                     <Th>Timestamp</Th>
                                     <Th>Priority</Th>
@@ -708,41 +710,47 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     : undefined,
                                         }}
                                     >
-                                        <Td style={{ width: 40 }}>
-                                            <Box onClick={(e) => e.stopPropagation()}>
-                                                <Checkbox
-                                                    checked={selectedIds.has(n.id)}
-                                                    onCheckedChange={() => toggleSelect(n.id)}
-                                                />
+                                        <Td style={{ width: 36, paddingRight: 4, verticalAlign: "top" }}>
+                                            <Box display="flex" alignItems="center" gap="8">
+                                                <Box style={{ width: 8, height: 8, flexShrink: 0 }}>
+                                                    {n.status === "unread" && <UnreadIndicator />}
+                                                </Box>
+                                                <Box onClick={(e) => e.stopPropagation()}>
+                                                    <Checkbox
+                                                        checked={selectedIds.has(n.id)}
+                                                        onCheckedChange={() => toggleSelect(n.id)}
+                                                    />
+                                                </Box>
                                             </Box>
                                         </Td>
-                                        <Td style={{ width: 24, verticalAlign: "middle" }}>
-                                            {/* Unread Indicator */}
-                                            {n.status === "unread" && <UnreadIndicator />}
-                                        </Td>
-                                        <Td>
-                                            <Box display="flex" flexDirection="column" gap="4">
-                                                <Box display="flex" alignItems="center" gap="8">
-                                                    {getStatusIcon(n)}
+                                        <Td style={{ paddingLeft: 12 }}>
+                                            <Box display="flex" flexDirection="row" gap="12" alignItems="start">
+                                                {/* Icon column — matches card view */}
+                                                <Box style={{ flexShrink: 0, marginTop: 2 }}>
+                                                    {getStatusIcon(n) ?? getTypeIcon(n)}
+                                                </Box>
+                                                {/* Text block */}
+                                                <Box display="flex" flexDirection="column" gap="4">
                                                     <Box
                                                         fontWeight={n.status === "unread" ? "600" : "400"}
                                                         color="fg.default"
                                                     >
                                                         {n.title}
                                                     </Box>
+                                                    <Box
+                                                        fontSize="sm"
+                                                        color="fg.tertiary"
+                                                        className="line-clamp-1"
+                                                    >
+                                                        {getCategoryLabel(n.category)} · {n.message}
+                                                    </Box>
                                                     {n.actionRequired && (
-                                                        <Badge intent="warning" variant="subtle">
-                                                            Action
-                                                        </Badge>
+                                                        <Box>
+                                                            <Badge intent="warning" variant="subtle">
+                                                                Action Required
+                                                            </Badge>
+                                                        </Box>
                                                     )}
-                                                </Box>
-                                                <Box
-                                                    fontSize="sm"
-                                                    color="fg.tertiary"
-                                                    className="line-clamp-1"
-                                                    style={{ maxWidth: 500 }}
-                                                >
-                                                    {n.message}
                                                 </Box>
                                             </Box>
                                         </Td>
@@ -917,14 +925,18 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
 
                                                     {/* Content Column */}
                                                     <Box flex="1" display="flex" flexDirection="column" gap="4" style={{ minWidth: 0 }}>
-                                                        <Text
-                                                            fontWeight={n.status === "unread" ? "600" : "500"}
-                                                            fontSize="md"
-                                                            color="fg.default"
-                                                            className="line-clamp-1"
-                                                        >
-                                                            {n.title}
-                                                        </Text>
+                                                        <Box display="flex" alignItems="center" gap="8" style={{ minWidth: 0 }}>
+                                                            {n.status === "unread" && <UnreadIndicator />}
+                                                            <Text
+                                                                fontWeight={n.status === "unread" ? "600" : "500"}
+                                                                fontSize="md"
+                                                                color="fg.default"
+                                                                className="line-clamp-1"
+                                                                style={{ minWidth: 0, flex: 1 }}
+                                                            >
+                                                                {n.title}
+                                                            </Text>
+                                                        </Box>
                                                         <Box display="flex" alignItems="center" gap="4" flexWrap="wrap">
                                                             <Text fontSize="sm" color="fg.tertiary">
                                                                 {getCategoryLabel(n.category)}
@@ -948,11 +960,6 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                         <Text fontSize="sm" color="fg.tertiary" className="whitespace-nowrap">
                                                             {n.timestamp}
                                                         </Text>
-                                                        <Box style={{ width: 8, height: 8, flexShrink: 0 }}>
-                                                            {n.status === "unread" && (
-                                                                <UnreadIndicator />
-                                                            )}
-                                                        </Box>
                                                     </Box>
                                                 </Box>
                                             </NextLink>

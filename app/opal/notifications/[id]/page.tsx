@@ -899,7 +899,7 @@ export default function NotificationDetailsPage({
                 <Heading level="3" color="fg.secondary">Notification not found</Heading>
                 <Text color="fg.tertiary">The notification with ID &quot;{id}&quot; could not be found.</Text>
                 <Link asChild color="fg.accent">
-                    <NextLink href="/opal/notifications">← Back to Notifications</NextLink>
+                    <NextLink href="/opal/notifications">← Back to Inbox</NextLink>
                 </Link>
             </Box>
         );
@@ -951,7 +951,7 @@ export default function NotificationDetailsPage({
                 <Box display="flex" alignItems="center">
                     <Breadcrumb
                         items={[
-                            { label: "Notifications", href: "/opal/notifications" },
+                            { label: "Inbox", href: "/opal/notifications" },
                             { label: "" }
                         ]}
                     />
