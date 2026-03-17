@@ -510,7 +510,7 @@ function NotificationItemSection() {
             <CatalogItem label="Category badges / role labels" description="Chips indicating notification category">
                 <Box display="flex" gap="8" flexWrap="wrap">
                     <Badge intent="primary" variant="subtle">Agent Execution</Badge>
-                    <Badge intent="warning" variant="subtle">Guardrails</Badge>
+                    <Badge intent="neutral" variant="strong">Guardrails</Badge>
                     <Badge intent="primary" variant="subtle">Agent Directory</Badge>
                     <Badge intent="neutral" variant="strong">Tools & Connections</Badge>
                     <Badge intent="neutral" variant="subtle">System</Badge>
