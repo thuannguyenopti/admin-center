@@ -117,7 +117,7 @@ function PriorityDot({ priority }: { priority: Notification["priority"] }) {
 function CategoryBadge({ category }: { category: Notification["category"] }) {
     const colorMap: Record<string, { intent: string; variant: "subtle" | "strong" }> = {
         agent_execution: { intent: "primary", variant: "subtle" },
-        guardrail: { intent: "warning", variant: "subtle" },
+        guardrail: { intent: "neutral", variant: "strong" },
         directory: { intent: "information", variant: "subtle" },
         tools: { intent: "success", variant: "subtle" },
         system: { intent: "neutral", variant: "subtle" },
