@@ -3,18 +3,19 @@
 import {Box, Heading, SearchInput, Menu, MenuContent, MenuTrigger, EllipsisMenuButton} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
-import {IconFilter, IconChevronRight, IconChevronDown, IconFile, IconPlus, IconPencil, IconFolderPlus, IconFilePlus, IconCut, IconCopy, IconClipboard, IconArrowUp, IconArrowDown, IconTrash} from "@tabler/icons-react";
+import {IconFilter, IconChevronRight, IconChevronDown, IconFile, IconPlus, IconPencil, IconFolderPlus, IconFilePlus, IconCut, IconCopy, IconClipboard, IconArrowUp, IconArrowDown, IconTrash, IconHome} from "@tabler/icons-react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page, initialContentTypes} from "@/app/db/initialData";
-import {useState} from "react";
+import {initialPages, Page, initialContentTypes, initialApplications, Application} from "@/app/db/initialData";
+import {useState, useMemo} from "react";
+import {useRouter} from "next/navigation";
 import {CreatePageDialog} from "./CreatePageDialog";
 
 type PageNode = Page & {children: PageNode[]};
 
-const buildTree = (pages: Page[]) => {
+const buildTree = (pages: Page[], startPageId?: string) => {
 	const map = new Map<string, PageNode>();
 	const roots: PageNode[] = [];
 
@@ -36,7 +37,28 @@ const buildTree = (pages: Page[]) => {
 		}
 	});
 
-	return roots;
+	// If we have a start page, restructure to make it the primary root
+	if (startPageId) {
+		const startPage = map.get(startPageId);
+		if (startPage) {
+			// Get all descendants of the start page
+			const isDescendantOf = (nodeId: string, ancestorId: string): boolean => {
+				const node = map.get(nodeId);
+				if (!node || !node.parentId) return false;
+				if (node.parentId === ancestorId) return true;
+				return isDescendantOf(node.parentId, ancestorId);
+			};
+
+			// Separate in-scope and out-of-scope pages
+			const outOfScopeRoots = roots.filter(
+				(node) => node.id !== startPageId && !isDescendantOf(node.id, startPageId)
+			);
+
+			return { startPage, outOfScopeRoots };
+		}
+	}
+
+	return { startPage: null, outOfScopeRoots: roots };
 };
 
 const getStatusIntent = (status: string) => {
@@ -65,16 +87,37 @@ const getContentTypeName = (contentTypeId: string) => {
 	return contentType?.displayName || contentType?.name || contentTypeId;
 };
 
-const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
+const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number; startPageId?: string}) => {
+	const router = useRouter();
 	const [expanded, setExpanded] = useState(true);
 	const hasChildren = node.children.length > 0;
+	const isStartPage = startPageId === node.id;
 
 	const menuOptions = [
-		{
-			addon: <IconPencil size={16} />,
-			label: "Rename",
-			onSelect: () => console.log("Rename", node.id),
-		},
+		...(isStartPage
+			? [
+					{
+						addon: <IconHome size={16} />,
+						label: "Edit Application",
+						onSelect: () => router.push("/cms/settings/applications/mosey-bank/settings"),
+					},
+					{
+						addon: <IconPencil size={16} />,
+						label: "Rename",
+						onSelect: () => console.log("Rename", node.id),
+						group: {
+							separator: true,
+							label: "",
+						},
+					},
+			  ]
+			: [
+					{
+						addon: <IconPencil size={16} />,
+						label: "Rename",
+						onSelect: () => console.log("Rename", node.id),
+					},
+			  ]),
 		{
 			addon: <IconFilePlus size={16} />,
 			label: "Create child",
@@ -162,7 +205,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 						) : (
 							<Box w="32" />
 						)}
-						<Item icon={<IconFile size={16} />} title={node.name} />
+						<Item icon={isStartPage ? <IconHome size={16} /> : <IconFile size={16} />} title={node.name} />
 					</Flex>
 				</Td>
 				<Td>{getContentTypeName(node.contentTypeId)}</Td>
@@ -187,7 +230,7 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 			</Tr>
 			{expanded &&
 				node.children.map((child) => (
-					<PageRow key={child.id} node={child} level={level + 1} />
+					<PageRow key={child.id} node={child} level={level + 1} startPageId={startPageId} />
 				))}
 		</>
 	);
@@ -199,6 +242,26 @@ export default function EditPage() {
 		(pages: Page[]) => void,
 		boolean,
 	];
+	const [savedApplications] = usePersistentState("applications", initialApplications) as [
+		Application[],
+		(value: Application[]) => void,
+		boolean,
+	];
+
+	const applications = useMemo(() => {
+		if (!savedApplications) return initialApplications;
+		const savedMap = new Map(savedApplications.map((app) => [app.id, app]));
+		initialApplications.forEach((app) => {
+			if (!savedMap.has(app.id)) {
+				savedMap.set(app.id, app);
+			}
+		});
+		return Array.from(savedMap.values());
+	}, [savedApplications]);
+
+	// Get the start page ID from the first application (for now)
+	const startPageId = applications[0]?.startPageId;
+
 	const tree = buildTree(pages);
 
 	const handleCreatePage = (newPage: Page) => {
@@ -252,7 +315,7 @@ export default function EditPage() {
 					</Tr>
 				</thead>
 				<tbody>
-					<PageRow node={rootNode} />
+					<PageRow node={rootNode} startPageId={startPageId} />
 				</tbody>
 			</Table>
 		</Box>

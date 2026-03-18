@@ -652,6 +652,16 @@ export type Page = {
 	categories?: string[];
 };
 
+export type Application = {
+	id: string;
+	name: string;
+	appId: string;
+	url?: string;
+	startPageId?: string;
+	modifiedAt?: string;
+	modifiedBy?: string;
+};
+
 export const initialPages: Page[] = [
 	{
 		id: "page-site-home",
@@ -5440,6 +5450,18 @@ export const initialCategories = [
 		lastModified: 'Jan 7, 2025',
 		parentId: null,
 		isExpanded: false,
+	},
+];
+
+export const initialApplications: Application[] = [
+	{
+		id: "app-stride",
+		name: "Stride",
+		appId: "1234",
+		url: "www",
+		startPageId: "page-site-home",
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
 	},
 ];
 
