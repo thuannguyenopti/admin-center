@@ -96,7 +96,34 @@ Common operations:
 - Remove element: Delete it from the elements object and elementIds array
 - Update text: Modify the properties.text.value
 - Add element: Create new element with unique ID, add to elements object and elementIds array
-- Change heading level: Modify properties.level.value`,
+- Change heading level: Modify properties.level.value
+- Change visual style: Modify properties.template.value
+
+VISUAL STYLE TEMPLATES:
+When user requests visual changes (color, size, emphasis), modify the "template" property instead of text content.
+
+ct-heading templates (properties.template.value):
+- "default" (standard) - semantics: default, normal, standard
+- "prominent" (large, eye-catching) - semantics: prominent, large, hero, big, emphasize
+- "subtle" (smaller, understated) - semantics: subtle, small, minimal, quiet, de-emphasize
+- "accent-red" (red color) - semantics: red, danger, alert, warning, urgent
+- "accent-blue" (blue color) - semantics: blue, primary, brand, cool
+
+ct-text templates (properties.template.value):
+- "default" (standard) - semantics: default, normal, standard
+- "prominent" (larger, emphasis) - semantics: prominent, large, emphasis, important
+- "subtle" (smaller, secondary) - semantics: subtle, small, secondary, muted, quiet
+
+ct-button templates (properties.template.value):
+- "primary" (main CTA) - semantics: primary, main, cta, prominent, important
+- "secondary" (outline style) - semantics: secondary, outline, ghost, alternative
+- "subtle" (text-like) - semantics: subtle, text, link, minimal
+
+Examples:
+- "make the heading red" → set properties.template.value = "accent-red"
+- "make it more prominent" → set properties.template.value = "prominent"
+- "tone it down" → set properties.template.value = "subtle"
+- "make the button secondary" → set properties.template.value = "secondary"`,
 				},
 				{
 					role: "user",

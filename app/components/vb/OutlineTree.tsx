@@ -42,6 +42,7 @@ interface OutlineProps {
 	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 	onEditProperties?: (id: string) => void;
+	onOpenStyleEditor?: (elementId: string) => void;
 
 	data: any[];
 }
@@ -106,6 +107,7 @@ export default function OutlineTree({
 	setTheEles,
 	dragging,
 	onEditProperties,
+	onOpenStyleEditor,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -1017,6 +1019,11 @@ export default function OutlineTree({
 																								}
 																								setCurrentHoverEle={
 																									setCurrentHoverEle
+																								}
+																								onOpenStyleEditor={
+																									onOpenStyleEditor
+																										? () => onOpenStyleEditor(element.id)
+																										: undefined
 																								}
 																							/>
 																						</div>
