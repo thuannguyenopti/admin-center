@@ -544,6 +544,7 @@ export default function OutlineTree({
 								onDragStart={(e: any) => onDragStart(e, section.id)}
 								removeSection={() => removeSection(sindex)}
 								onEditProperties={() => onEditProperties?.(section.id)}
+								onOpenStyleEditor={() => onOpenStyleEditor?.(section.id)}
 								// Add Section Before
 								addSection={() => addSection(sindex)}
 								// Add Section After
