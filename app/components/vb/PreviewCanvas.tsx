@@ -20,6 +20,7 @@ import {BlockRegistry} from "./blocks";
 import {isImageDrag, isInternalDrag, isValidVBDrag, VB_INTERNAL_MIME} from "./blocks/utils";
 import {Box} from "@optiaxiom/react";
 import StrideHeaderContent from "../../site/StrideHeaderContent";
+import {getSectionTemplateClasses} from "./blocks/templateUtils";
 
 export type EleMap = Record<string, {type: string; properties: any}>;
 
@@ -247,10 +248,19 @@ export default function PreviewCanvas({
 			const hasBgImage = !!section.bgImage;
 			const isFooterCTA = section.name === "Footer CTA";
 
+			// Get template classes for section (background, padding, etc.)
+			const templateClasses = getSectionTemplateClasses(section, {hasBgImage});
+
+			// Base classes that apply to all sections
+			const baseClasses = "mb-6 last:mb-0 overflow-hidden rounded-[10px]";
+
+			// Additional classes when there's a background image
+			const bgImageClasses = hasBgImage ? "relative min-h-[500px] flex items-center" : "shadow-sm";
+
 			return (
 				<section
 					key={section.id ?? sindex}
-					className={`mb-6 last:mb-0 overflow-hidden rounded-[10px] ${hasBgImage ? "relative min-h-[500px] flex items-center" : "bg-white shadow-sm"}`}
+					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses}`}
 					style={
 						hasBgImage
 							? {

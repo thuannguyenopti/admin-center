@@ -599,21 +599,26 @@ function createElement(type: string, properties: any) {
 	return {type, properties};
 }
 
-function createHeadingElement(text: string, level: string) {
+function createHeadingElement(text: string, level: string, template?: string) {
 	return createElement("ct-heading", {
 		text: {value: text},
 		level: {value: level},
+		template: {value: template || "default"},
 	});
 }
 
-function createTextElement(text: string) {
-	return createElement("ct-text", {text: {value: text}});
+function createTextElement(text: string, template?: string) {
+	return createElement("ct-text", {
+		text: {value: text},
+		template: {value: template || "default"},
+	});
 }
 
-function createButtonElement(label: string, url: string = "#") {
+function createButtonElement(label: string, url: string = "#", template?: string) {
 	return createElement("ct-button", {
 		label: {value: label},
 		url: {value: url},
+		template: {value: template || "primary"},
 	});
 }
 
