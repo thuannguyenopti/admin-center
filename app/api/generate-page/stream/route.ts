@@ -95,9 +95,17 @@ export async function POST(request: Request) {
 			return jsonResponse({error: "OpenAI API key not configured"}, 500);
 		}
 
-		if (!pageId || !instructions || !contentTypeId) {
+		if (!pageId || !contentTypeId) {
 			return jsonResponse(
-				{error: "pageId, instructions, and contentTypeId are required"},
+				{error: "pageId and contentTypeId are required"},
+				400
+			);
+		}
+
+		// Instructions or files are required (but not both)
+		if (!instructions && (!files || files.length === 0)) {
+			return jsonResponse(
+				{error: "Either instructions or files are required"},
 				400
 			);
 		}
@@ -264,12 +272,20 @@ Respond with a JSON object:
 	];
 
 	if (files && files.length > 0) {
-		const content: any[] = [
-			{
+		const content: any[] = [];
+
+		// Add text instructions if provided
+		if (truncatedInstructions.trim()) {
+			content.push({
 				type: "text",
 				text: `Analyze these instructions for a ${contentTypeId} page:\n\n${truncatedInstructions}`,
-			},
-		];
+			});
+		} else {
+			content.push({
+				type: "text",
+				text: `Analyze the provided image(s) and create a ${contentTypeId} page based on what you see. Extract relevant content, layouts, and design elements from the image(s).`,
+			});
+		}
 
 		files.forEach((file) => {
 			if (file.type.startsWith("image/")) {
@@ -389,8 +405,7 @@ Respond with a JSON object mapping sections to content:
 
 ${JSON.stringify(analysis.sections, null, 2)}
 
-User instructions:
-${instructions}`,
+${instructions ? `User instructions:\n${instructions}` : 'Base the content on the page structure and tone specified above.'}`,
 				},
 			],
 			temperature: 0.7,
