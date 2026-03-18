@@ -11,7 +11,6 @@ type OpalPanelControls = {
 	updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
 	removeMessage: (id: string) => void;
 	setInputDisabled: (disabled: boolean) => void;
-	applyPageUpdate?: (patch: {outlines?: any; properties?: any; variationId?: string}) => void;
 };
 
 type LayoutContextType = {
