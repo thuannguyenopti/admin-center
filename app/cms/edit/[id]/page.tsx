@@ -10,6 +10,7 @@ import {Box, Heading, Spinner, Text} from "@optiaxiom/react";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
+import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -111,6 +112,28 @@ export default function EditPageDetail() {
 		page?.contentTypeId || "",
 		handleSave
 	);
+
+	// Register page update handler and set active page for iteration
+	const {setPageUpdateHandler, setActivePage, setCurrentPageData} = useOpalGeneration();
+	useEffect(() => {
+		setPageUpdateHandler(handleSave);
+		setActivePage(id); // Mark this page as active for iteration
+
+		// Update current page data whenever page changes
+		if (page) {
+			setCurrentPageData({
+				outlines: page.outlines,
+				variations: page.variations,
+				data: page.data,
+			});
+		}
+
+		return () => {
+			setPageUpdateHandler(null);
+			setActivePage(null);
+			setCurrentPageData(null);
+		};
+	}, [setPageUpdateHandler, setActivePage, setCurrentPageData, handleSave, id, page]);
 
 	// Clear hasPendingGeneration when actual generation starts
 	useEffect(() => {
