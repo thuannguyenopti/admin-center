@@ -1,6 +1,6 @@
 "use client";
 
-import {createContext, useContext, useState, useCallback, ReactNode, useRef} from "react";
+import {createContext, useContext, useState, useCallback, ReactNode, useRef, useEffect} from "react";
 
 export interface OpalGenerationData {
 	pageId: string;
@@ -40,6 +40,18 @@ export function OpalGenerationProvider({children}: {children: ReactNode}) {
 	const [activePageId, setActivePageId] = useState<string | null>(null);
 	const [onPageUpdate, setOnPageUpdate] = useState<((patch: PagePatch) => void) | null>(null);
 	const pageDataGetterRef = useRef<(() => PageStructure | null) | null>(null);
+
+	// Hydrate activePageId from localStorage on mount
+	useEffect(() => {
+		try {
+			const savedPageId = localStorage.getItem('opal_active_page');
+			if (savedPageId) {
+				setActivePageId(savedPageId);
+			}
+		} catch (err) {
+			console.error('Failed to load active page ID from localStorage:', err);
+		}
+	}, []);
 
 	const setPendingGeneration = useCallback((data: OpalGenerationData) => {
 		// Store in both state and localStorage for persistence
