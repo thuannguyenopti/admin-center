@@ -277,6 +277,7 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
+	availableContentTypes?: string[]; // Array of allowed child content type IDs
 	properties: Property[];
 	variantDimensions?: VariantDimension[];
 	modifiedAt?: string;
@@ -365,12 +366,31 @@ export const initialContentTypes: ContentType[] = [
 		name: "Blog Post",
 		baseType: "Page",
 		description: "A standard blog/article page",
+		availableContentTypes: [], // Blog posts don't allow children
 		properties: [
 			{ id: "title", name: "Title", type: "text", required: true },
 			{ id: "subtitle", name: "Subtitle", type: "text" },
 			{ id: "body", name: "Body", type: "richtext", required: true },
 			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
 			{ id: "seo", name: "SEO", type: "seo" },
+		],
+	},
+	{
+		id: "ct-blog-listing",
+		name: "Blog Listing",
+		displayName: "Blog Listing",
+		baseType: "Page",
+		description: "A blog listing page that can only contain blog posts",
+		groupName: "Standard",
+		guid: "c3d4e5f6-a7b8-9012-cdef-g34567890123",
+		isAvailable: true,
+		availableContentTypes: ["ct-blog-post"], // Only allow blog posts as children
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+		properties: [
+			{ id: "title", name: "Title", displayName: "Title", type: "text", required: true },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "text" },
+			{ id: "seo", name: "SEO", displayName: "SEO", type: "seo" },
 		],
 	},
 	{
@@ -1088,7 +1108,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-24",
-		contentTypeId: "ct-page",
+		contentTypeId: "ct-blog-listing",
 		data: {
 			seo: {
 				en: {
@@ -5422,3 +5442,22 @@ export const initialCategories = [
 		isExpanded: false,
 	},
 ];
+
+// Helper functions for content type restrictions
+export function getContentType(contentTypeId: string): ContentType | undefined {
+	return initialContentTypes.find(ct => ct.id === contentTypeId);
+}
+
+export function canCreateChildType(
+	parentContentTypeId: string,
+	childContentTypeId: string
+): boolean {
+	const parentType = getContentType(parentContentTypeId);
+
+	// No restrictions means allow all
+	if (!parentType?.availableContentTypes || parentType.availableContentTypes.length === 0) {
+		return true;
+	}
+
+	return parentType.availableContentTypes.includes(childContentTypeId);
+}
