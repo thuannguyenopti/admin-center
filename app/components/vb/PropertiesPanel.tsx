@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
 	Box,
 	Button,
@@ -11,16 +11,14 @@ import {
 	SelectTrigger,
 	SelectContent,
 	Textarea,
-	Badge,
-	Popover,
-	PopoverAnchor,
-	PopoverContent,
-	Input,
+	type MenuOption,
 } from "@optiaxiom/react";
-import { IconChevronRight, IconCheck, IconX } from "@tabler/icons-react";
+import { PillMenu, PillMenuTrigger, PillMenuContent } from "@optiaxiom/react/unstable";
+import { IconChevronRight } from "@tabler/icons-react";
 import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
 import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
+import { initialContentTypes, Property } from "@/app/db/initialData";
 
 export type PageProperties = {
 	seoTitle?: string;
@@ -33,7 +31,7 @@ export type PageProperties = {
 	tags?: string[];
 };
 
-export type PropertySection = "menu" | "content-settings" | "geo-seo" | "categories-tags";
+export type PropertySection = string;
 
 type Props = {
 	value: PageProperties;
@@ -51,256 +49,74 @@ type Props = {
 };
 
 export const navigationItems = [
-	{ id: "content-settings" as const, label: "Content settings" },
-	{ id: "geo-seo" as const, label: "GEO & SEO" },
-	{ id: "categories-tags" as const, label: "Categories & Tags" },
+	{ id: "content-settings", label: "Content Settings" },
+	{ id: "geo-seo", label: "GEO & SEO" },
+	{ id: "categories-tags", label: "Categories & Tags" },
 ];
 
-const SHIMMER_INSET = 2;
-
-function ShimmerFieldWrapper({
-	children,
-	loading,
-}: {
-	children: React.ReactNode;
-	loading: boolean;
-}) {
-	if (!loading) return <>{children}</>;
-	return (
-		<Box style={{ position: "relative", width: "100%" }}>
-			{children}
-			<Box
-				className="opal-skeleton-shimmer"
-				style={{
-					position: "absolute",
-					top: SHIMMER_INSET,
-					left: SHIMMER_INSET,
-					right: SHIMMER_INSET,
-					bottom: SHIMMER_INSET,
-					pointerEvents: "none",
-					borderRadius: "4px",
-				}}
-			/>
-		</Box>
-	);
-}
-
-// Autocomplete input component for categories/tags
-function AutocompleteMultiSelect({
+// PillMenu wrapper component for categories/tags
+function PillMenuSelect({
 	label,
 	placeholder,
 	selectedItems,
 	availableItems,
-	onAdd,
-	onRemove,
+	onToggle,
 	onCreateNew,
-	itemExists,
-	getItemLabel,
-	loading = false,
 }: {
 	label: string;
 	placeholder: string;
 	selectedItems: string[];
 	availableItems: { name: string; slug: string }[];
-	onAdd: (slug: string) => void;
-	onRemove: (slug: string) => void;
+	onToggle: (slug: string) => void;
 	onCreateNew?: (name: string) => void;
-	itemExists: (name: string) => boolean;
-	getItemLabel: (slug: string) => string | undefined;
-	loading?: boolean;
 }) {
 	const [inputValue, setInputValue] = useState("");
-	const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-	const [isOpen, setIsOpen] = useState(false);
-	const [itemsExpanded, setItemsExpanded] = useState(false);
 
-	const INITIAL_VISIBLE = 10;
-	const visibleItems = itemsExpanded ? selectedItems : selectedItems.slice(0, INITIAL_VISIBLE);
-	const hasMoreItems = selectedItems.length > INITIAL_VISIBLE;
-	const hiddenCount = selectedItems.length - INITIAL_VISIBLE;
+	const options = useMemo(() => {
+		const filtered = availableItems.filter((item) =>
+			!inputValue || item.name.toLowerCase().includes(inputValue.toLowerCase())
+		);
 
-	// Filter available items based on input
-	const filteredItems = availableItems.filter(
-		(item) => !inputValue || item.name.toLowerCase().includes(inputValue.toLowerCase())
-	);
+		const menuOptions: MenuOption[] = filtered.map((item) => ({
+			execute: () => onToggle(item.slug),
+			label: item.name,
+			multi: true,
+			selected: () => selectedItems.includes(item.slug),
+		}));
 
-	// Create options for autocomplete dropdown
-	const autocompleteOptions = filteredItems.map((item) => ({
-		label: item.name,
-		value: item.slug,
-		isSelected: selectedItems.includes(item.slug),
-	}));
-
-	// Add custom item option if input doesn't match any available item
-	const inputMatchesExisting = availableItems.some(
-		(item) => item.name.toLowerCase() === inputValue.toLowerCase()
-	);
-	if (inputValue.trim() && !inputMatchesExisting && onCreateNew) {
-		autocompleteOptions.push({
-			label: `+ Add "${inputValue}"`,
-			value: `__new__${inputValue}`,
-			isSelected: false,
-		});
-	}
-
-	const handleSelect = (option: { value: string; label: string }) => {
-		if (option.value.startsWith("__new__")) {
-			const newName = option.value.replace("__new__", "");
-			onCreateNew?.(newName);
-			// After creating, we need to wait for the item to be added
-			// The parent component should handle this
-		} else {
-			if (selectedItems.includes(option.value)) {
-				onRemove(option.value);
-			} else {
-				onAdd(option.value);
+		// Add "Create new" option if search doesn't match existing
+		if (inputValue.trim() && onCreateNew) {
+			const inputMatchesExisting = availableItems.some(
+				(item) => item.name.toLowerCase() === inputValue.toLowerCase()
+			);
+			if (!inputMatchesExisting) {
+				menuOptions.push({
+					execute: () => {
+						onCreateNew(inputValue);
+						setInputValue("");
+					},
+					label: `Create "${inputValue}"`,
+					multi: false,
+					selected: () => false,
+				});
 			}
 		}
-		setInputValue("");
-		setIsOpen(false);
-	};
 
-	const handleKeyPress = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && autocompleteOptions.length > 0) {
-			handleSelect(autocompleteOptions[0]);
-		}
-	};
+		return menuOptions;
+	}, [availableItems, selectedItems, inputValue, onToggle, onCreateNew]);
 
 	return (
-		<Box display="flex" flexDirection="column" gap="8">
-			<Text fontSize="sm" fontWeight="500" color="fg.default">
-				{label}
-			</Text>
-
-			{/* Selected Items Display (Show more / Show less) */}
-			{selectedItems.length > 0 && (
-				<Box display="flex" flexDirection="column" gap="8">
-					<Box display="flex" flexWrap="wrap" gap="6">
-						{visibleItems.map((slug) => {
-							const displayLabel = getItemLabel(slug) || slug;
-							return (
-								<Badge key={slug} intent="neutral">
-									<Box display="flex" alignItems="center" gap="4">
-										<span>{displayLabel}</span>
-										<button
-											onClick={() => onRemove(slug)}
-											style={{
-												background: "none",
-												border: "none",
-												cursor: "pointer",
-												padding: "0",
-												display: "flex",
-												alignItems: "center",
-												fontSize: "14px",
-												fontWeight: "500",
-												lineHeight: "1",
-												color: "inherit",
-											}}
-											aria-label={`Remove ${displayLabel}`}
-										>
-											<IconX size={12} />
-										</button>
-									</Box>
-								</Badge>
-							);
-						})}
-					</Box>
-					{hasMoreItems && (
-						<Button
-							appearance="subtle"
-							size="sm"
-							onClick={() => setItemsExpanded(!itemsExpanded)}
-							aria-expanded={itemsExpanded}
-						>
-							{itemsExpanded ? "Show less" : `Show ${hiddenCount} more`}
-						</Button>
-					)}
-				</Box>
-			)}
-
-			{/* Autocomplete Input */}
-			<Popover
-				modal={false}
-				open={isOpen && autocompleteOptions.length > 0}
-				onOpenChange={setIsOpen}
+		<Field label={label}>
+			<PillMenu
+				options={options}
+				placeholder={placeholder}
+				inputValue={inputValue}
+				onInputValueChange={setInputValue}
 			>
-				<PopoverAnchor asChild>
-					<Box style={{ width: "100%" }}>
-						<ShimmerFieldWrapper loading={loading}>
-							<Input
-								value={inputValue}
-								onChange={(e) => {
-									setInputValue(e.target.value);
-									setIsOpen(true);
-								}}
-								onFocus={() => setIsOpen(true)}
-								onKeyPress={handleKeyPress}
-								placeholder={placeholder}
-								size="md"
-							/>
-						</ShimmerFieldWrapper>
-					</Box>
-				</PopoverAnchor>
-				<PopoverContent
-					side="bottom"
-					sideOffset={4}
-					align="start"
-					style={{ width: "var(--radix-popover-trigger-width)" }}
-					onOpenAutoFocus={(e) => e.preventDefault()}
-					onCloseAutoFocus={(e) => e.preventDefault()}
-				>
-					<Box
-						display="flex"
-						flexDirection="column"
-						gap="0"
-						py="2"
-						style={{ maxHeight: "200px" }}
-						overflow="auto"
-					>
-						{autocompleteOptions.length === 0 ? (
-							<Box px="8" py="6">
-								<Text fontSize="sm" color="fg.secondary">
-									No results found
-								</Text>
-							</Box>
-						) : (
-							autocompleteOptions.map((option, index) => (
-								<Box
-									key={option.value}
-									display="flex"
-									alignItems="center"
-									gap="8"
-									px="8"
-									py="6"
-									rounded="sm"
-									cursor="pointer"
-									transition="colors"
-									bg={hoveredIndex === index ? "bg.secondary" : "transparent"}
-									onClick={() => handleSelect(option)}
-									onMouseEnter={() => setHoveredIndex(index)}
-									onMouseLeave={() => setHoveredIndex(null)}
-								>
-									{option.isSelected && (
-										<IconCheck size={14} style={{ flexShrink: 0 }} />
-									)}
-									<Text
-										fontSize="sm"
-										color={
-											option.value.startsWith("__new__")
-												? "fg.accent"
-												: "fg.default"
-										}
-										style={{ marginLeft: option.isSelected ? 0 : undefined }}
-									>
-										{option.label}
-									</Text>
-								</Box>
-							))
-						)}
-					</Box>
-				</PopoverContent>
-			</Popover>
-		</Box>
+				<PillMenuTrigger>{label}</PillMenuTrigger>
+				<PillMenuContent />
+			</PillMenu>
+		</Field>
 	);
 }
 
@@ -323,6 +139,48 @@ export default function PropertiesPanel({
 	onRegisterGenerateTrigger,
 	onGenerateLoadingChange,
 }: Props) {
+	// Load content type definition
+	const contentType = useMemo(() => {
+		if (!contentTypeId) return null;
+		return initialContentTypes.find((ct) => ct.id === contentTypeId) || null;
+	}, [contentTypeId]);
+
+	// Group properties by groupName for dynamic sections
+	const propertyGroups = useMemo(() => {
+		if (!contentType) return {};
+
+		const groups: Record<string, Property[]> = {};
+
+		// Filter out outline properties (they're handled separately in the outline tree)
+		const nonOutlineProps = contentType.properties.filter((p) => p.type !== "outline");
+
+		nonOutlineProps.forEach((prop) => {
+			const groupName = prop.groupName || "Other";
+			if (!groups[groupName]) {
+				groups[groupName] = [];
+			}
+			groups[groupName].push(prop);
+		});
+
+		// Sort properties within each group by order
+		Object.keys(groups).forEach((groupName) => {
+			groups[groupName].sort((a, b) => (a.order || 0) - (b.order || 0));
+		});
+
+		return groups;
+	}, [contentType]);
+
+	// Generate navigation items dynamically from property groups
+	const dynamicNavigationItems = useMemo(() => {
+		const groupNames = Object.keys(propertyGroups);
+		if (groupNames.length === 0) return navigationItems; // Fallback to static
+
+		return groupNames.map((groupName) => ({
+			id: groupName.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, ""),
+			label: groupName,
+		}));
+	}, [propertyGroups]);
+
 	// Get global tags and categories from CMS settings
 	const { tags: allTags, tagNames: availableTagNames, addTag, tagExists } = useGlobalTags();
 	const {
@@ -363,6 +221,14 @@ export default function PropertiesPanel({
 		onChange({ categories: selectedCategories.filter((s) => s !== slug) });
 	};
 
+	const handleToggleCategory = (slug: string) => {
+		if (selectedCategories.includes(slug)) {
+			handleRemoveCategory(slug);
+		} else {
+			handleAddCategory(slug);
+		}
+	};
+
 	const handleCreateCategory = (name: string) => {
 		addCategory(name);
 		// Generate slug from name
@@ -389,6 +255,14 @@ export default function PropertiesPanel({
 
 	const handleRemoveTag = (slug: string) => {
 		onChange({ tags: selectedTags.filter((s) => s !== slug) });
+	};
+
+	const handleToggleTag = (slug: string) => {
+		if (selectedTags.includes(slug)) {
+			handleRemoveTag(slug);
+		} else {
+			handleAddTag(slug);
+		}
 	};
 
 	const handleCreateTag = (name: string) => {
@@ -522,8 +396,135 @@ export default function PropertiesPanel({
 		onGenerateLoadingChange?.(suggestLoading);
 	}, [suggestLoading, onGenerateLoadingChange]);
 
+	// Render a single property field based on its definition
+	const renderPropertyField = (prop: Property) => {
+		const propValue = (value as any)[prop.id];
+
+		switch (prop.type) {
+			case "String":
+			case "text":
+				return (
+					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
+						<Input2
+							placeholder={`Enter ${prop.displayName || prop.name}`}
+							value={propValue ?? prop.defaultValue ?? ""}
+							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
+						/>
+					</Field>
+				);
+
+			case "LongString":
+			case "textarea":
+				return (
+					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
+						<Textarea
+							placeholder={`Enter ${prop.displayName || prop.name}`}
+							rows={3}
+							value={propValue ?? prop.defaultValue ?? ""}
+							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
+						/>
+					</Field>
+				);
+
+			case "SelectOne":
+				return (
+					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
+						<Select
+							value={propValue ?? prop.defaultValue}
+							onValueChange={(newValue) => onChange({ [prop.id]: newValue })}
+							options={prop.options || []}
+						>
+							<SelectTrigger />
+							<SelectContent />
+						</Select>
+					</Field>
+				);
+
+			case "SelectMany":
+				// Handle categories and tags specially with PillMenu
+				if (prop.id === "categories") {
+					return (
+						<PillMenuSelect
+							key={prop.id}
+							label={prop.displayName || prop.name}
+							placeholder={`Search ${prop.displayName || prop.name}...`}
+							selectedItems={selectedCategories}
+							availableItems={categoriesWithSlugs}
+							onToggle={handleToggleCategory}
+							onCreateNew={handleCreateCategory}
+						/>
+					);
+				} else if (prop.id === "tags") {
+					return (
+						<PillMenuSelect
+							key={prop.id}
+							label={prop.displayName || prop.name}
+							placeholder={`Search ${prop.displayName || prop.name}...`}
+							selectedItems={selectedTags}
+							availableItems={tagsWithSlugs}
+							onToggle={handleToggleTag}
+							onCreateNew={handleCreateTag}
+						/>
+					);
+				}
+				return null;
+
+			case "seo":
+				// SEO block is handled separately - skip for now
+				return null;
+
+			default:
+				return (
+					<Field key={prop.id} label={prop.displayName || prop.name} description={prop.description}>
+						<Input2
+							placeholder={`Enter ${prop.displayName || prop.name}`}
+							value={propValue ?? ""}
+							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
+						/>
+					</Field>
+				);
+		}
+	};
+
 	// Render section-specific content
 	const renderSectionContent = () => {
+		// If we have a content type, render properties dynamically
+		if (contentType && effectiveSection !== "menu") {
+			const sectionId = effectiveSection;
+			const groupName = dynamicNavigationItems.find((item) => item.id === sectionId)?.label;
+
+			if (groupName && propertyGroups[groupName]) {
+				const properties = propertyGroups[groupName];
+
+				return (
+					<Box display="flex" flexDirection="column" gap="12">
+						{/* Special handling for Categories & Tags section - show suggestions UI */}
+						{groupName === "Categories & Tags" && (
+							<Box display="flex" flexDirection="column" gap="8">
+								{suggestError && (
+									<Text fontSize="xs" color="fg.error">
+										{suggestError}
+									</Text>
+								)}
+								{!suggestError && noTagSuggestions && (
+									<Text fontSize="xs" color="fg.secondary">
+										No suggestions for tags.
+									</Text>
+								)}
+								{!suggestError && noCategorySuggestions && (
+									<Text fontSize="xs" color="fg.secondary">
+										No suggestions for categories.
+									</Text>
+								)}
+							</Box>
+						)}
+						{properties.map((prop) => renderPropertyField(prop))}
+					</Box>
+				);
+			}
+		}
+
+		// Fallback to hardcoded sections for backward compatibility
 		switch (effectiveSection) {
 			case "content-settings":
 				return (
@@ -602,30 +603,22 @@ export default function PropertiesPanel({
 								</Text>
 							)}
 						</Box>
-						<AutocompleteMultiSelect
+						<PillMenuSelect
 							label="Categories"
 							placeholder="Search categories..."
 							selectedItems={selectedCategories}
 							availableItems={categoriesWithSlugs}
-							onAdd={handleAddCategory}
-							onRemove={handleRemoveCategory}
+							onToggle={handleToggleCategory}
 							onCreateNew={handleCreateCategory}
-							itemExists={categoryExists}
-							getItemLabel={getCategoryNameBySlug}
-							loading={suggestLoading}
 						/>
 
-						<AutocompleteMultiSelect
+						<PillMenuSelect
 							label="Tags"
 							placeholder="Search tags..."
 							selectedItems={selectedTags}
 							availableItems={tagsWithSlugs}
-							onAdd={handleAddTag}
-							onRemove={handleRemoveTag}
+							onToggle={handleToggleTag}
 							onCreateNew={handleCreateTag}
-							itemExists={tagExists}
-							getItemLabel={getTagNameBySlug}
-							loading={suggestLoading}
 						/>
 					</Box>
 				);
@@ -646,7 +639,7 @@ export default function PropertiesPanel({
 				{/* PANE 1: Properties Menu */}
 				<div className="min-w-[50%] w-[50%] h-full flex flex-col">
 					<Box display="flex" flexDirection="column" w="full">
-						{navigationItems.map((item) => (
+						{dynamicNavigationItems.map((item) => (
 							<Box
 								key={item.id}
 								pl="24"

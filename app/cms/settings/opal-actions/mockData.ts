@@ -19,10 +19,12 @@ export interface OpalAction {
 			enabled: boolean;
 			propertyTypes: PropertyType[];
 		};
+		pageCreation?: boolean; // For system actions like "Generate Page With Opal"
 	};
 	agents: string[]; // Agent IDs
 	visibleAt: "Everyone" | "Editors" | "Administrators";
 	modified: string;
+	isSystemAction?: boolean; // True for built-in actions that can't be fully configured
 }
 
 export type PropertyType =
@@ -44,6 +46,9 @@ export type PropertyType =
 	| "LinkItemCollection";
 
 export const availableAgents: Agent[] = [
+	// System category (for built-in actions)
+	{id: "page-generator", name: "Page Generator", category: "System"},
+
 	// Quality category
 	{id: "preflight-audit", name: "Preflight Audit", category: "Quality"},
 
@@ -73,6 +78,29 @@ export const availableAgents: Agent[] = [
 ];
 
 export const opalActions: OpalAction[] = [
+	// System Actions (provided by default, can only be enabled/disabled)
+	{
+		id: "system-page-generator",
+		name: "Generate Page With Opal",
+		enabled: true,
+		helpText: "AI-powered page generation with custom instructions and file uploads",
+		locations: {
+			toolbar: {
+				contextMenu: false,
+				improveButton: false,
+			},
+			assetPanel: false,
+			propertyEditor: {
+				enabled: false,
+				propertyTypes: [],
+			},
+			pageCreation: true,
+		},
+		agents: ["page-generator"],
+		visibleAt: "Everyone",
+		modified: "2026-03-16 10:00:00",
+		isSystemAction: true,
+	},
 	{
 		id: "0",
 		name: "Preflight Audit",

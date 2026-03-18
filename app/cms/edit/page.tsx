@@ -1,15 +1,16 @@
 "use client";
 
-import {Box, Heading, SearchInput} from "@optiaxiom/react";
+import {Box, Heading, SearchInput, Menu, MenuContent, MenuTrigger, EllipsisMenuButton} from "@optiaxiom/react";
 import {Text} from "@/app/components/Text";
 import {Button} from "@/app/components/Button";
-import {IconFilter, IconChevronRight, IconChevronDown, IconFile} from "@tabler/icons-react";
+import {IconFilter, IconChevronRight, IconChevronDown, IconFile, IconPlus, IconPencil, IconFolderPlus, IconFilePlus, IconCut, IconCopy, IconClipboard, IconArrowUp, IconArrowDown, IconTrash} from "@tabler/icons-react";
 import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData";
+import {initialPages, Page, initialContentTypes} from "@/app/db/initialData";
 import {useState} from "react";
+import {CreatePageDialog} from "./CreatePageDialog";
 
 type PageNode = Page & {children: PageNode[]};
 
@@ -59,9 +60,70 @@ const getStatusIntent = (status: string) => {
 	}
 };
 
+const getContentTypeName = (contentTypeId: string) => {
+	const contentType = initialContentTypes.find((ct) => ct.id === contentTypeId);
+	return contentType?.displayName || contentType?.name || contentTypeId;
+};
+
 const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 	const [expanded, setExpanded] = useState(true);
 	const hasChildren = node.children.length > 0;
+
+	const menuOptions = [
+		{
+			addon: <IconPencil size={16} />,
+			label: "Rename",
+			onSelect: () => console.log("Rename", node.id),
+		},
+		{
+			addon: <IconFilePlus size={16} />,
+			label: "Create child",
+			onSelect: () => console.log("Create child", node.id),
+		},
+		{
+			addon: <IconCut size={16} />,
+			group: {
+				separator: true,
+				label: "",
+			},
+			label: "Cut",
+			onSelect: () => console.log("Cut", node.id),
+		},
+		{
+			addon: <IconCopy size={16} />,
+			label: "Copy",
+			onSelect: () => console.log("Copy", node.id),
+		},
+		{
+			addon: <IconClipboard size={16} />,
+			label: "Paste",
+			onSelect: () => console.log("Paste", node.id),
+		},
+		{
+			addon: <IconArrowUp size={16} />,
+			group: {
+				separator: true,
+				label: "",
+			},
+			label: "Move up",
+			onSelect: () => console.log("Move up", node.id),
+		},
+		{
+			addon: <IconArrowDown size={16} />,
+			label: "Move down",
+			onSelect: () => console.log("Move down", node.id),
+		},
+		{
+			addon: <IconTrash size={16} />,
+			group: {
+				separator: true,
+				label: "",
+			},
+			intent: "danger" as const,
+			label: "Delete",
+			onSelect: () => console.log("Delete", node.id),
+		},
+	];
 
 	return (
 		<>
@@ -103,10 +165,24 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 						<Item icon={<IconFile size={16} />} title={node.name} />
 					</Flex>
 				</Td>
-				<Td>Page</Td>
+				<Td>{getContentTypeName(node.contentTypeId)}</Td>
 				<Td>{node.lastModified}</Td>
 				<Td type="badge" data={getStatusIntent(node.status)}>
 					{node.status}
+				</Td>
+				<Td>
+					<Box
+						onClick={(e) => {
+							e.stopPropagation();
+						}}
+					>
+						<Menu options={menuOptions}>
+							<MenuTrigger asChild>
+								<EllipsisMenuButton appearance="subtle" aria-label="Page options" />
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
+					</Box>
 				</Td>
 			</Tr>
 			{expanded &&
@@ -118,12 +194,27 @@ const PageRow = ({node, level = 0}: {node: PageNode; level?: number}) => {
 };
 
 export default function EditPage() {
-	const [pages, , isHydrated] = usePersistentState("pages_v5", initialPages) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
-		any,
+		(pages: Page[]) => void,
 		boolean,
 	];
 	const tree = buildTree(pages);
+
+	const handleCreatePage = (newPage: Page) => {
+		setPages([...pages, newPage]);
+	};
+
+	// Create root node containing all top-level nodes
+	const rootNode: PageNode = {
+		id: "root",
+		name: "Root",
+		parentId: null,
+		status: "Published",
+		lastModified: new Date().toISOString(),
+		contentTypeId: "folder",
+		children: tree,
+	};
 
 	if (!isHydrated) {
 		return <Box p="24">Loading...</Box>;
@@ -137,9 +228,16 @@ export default function EditPage() {
 			<Text mb="24" color="fg.secondary">
 				Select pages from the content tree to view or modify their content.
 			</Text>
-			<Flex mb="24" gap="8">
-				<SearchInput size="lg" placeholder="Search content..." />
-				<Button aria-label="Filter content" icon={<IconFilter />} />
+			<Flex mb="24" gap="8" justifyContent="space-between">
+				<Flex gap="8">
+					<SearchInput size="lg" placeholder="Search content..." />
+					<Button aria-label="Filter content" icon={<IconFilter />} />
+				</Flex>
+				<CreatePageDialog pages={pages} onCreatePage={handleCreatePage}>
+					<Button appearance="primary">
+						Create Page
+					</Button>
+				</CreatePageDialog>
 			</Flex>
 			<Table>
 				<thead>
@@ -150,12 +248,11 @@ export default function EditPage() {
 						<Th>Type</Th>
 						<Th>Last Modified</Th>
 						<Th>Status</Th>
+						<Th></Th>
 					</Tr>
 				</thead>
 				<tbody>
-					{tree.map((node) => (
-						<PageRow key={node.id} node={node} />
-					))}
+					<PageRow node={rootNode} />
 				</tbody>
 			</Table>
 		</Box>

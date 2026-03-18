@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { OpalContextType } from '@/app/context/OpalContext';
+import { useOpalGeneration } from '@/app/context/OpalGenerationContext';
 
 export type ChatMessage = {
   id: string;
@@ -9,13 +10,15 @@ export type ChatMessage = {
   content: string;
   timestamp: number;
   isLoading?: boolean;
-  messageType?: 'preflight-progress' | 'preflight-results';
+  messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete';
   metadata?: {
     checklist?: Array<{
       label: string;
       status: 'pending' | 'running' | 'completed' | 'failed';
     }>;
     auditResult?: any; // Will be typed as PreflightAuditResult when imported
+    loading?: boolean;
+    loadingMessage?: string;
   };
 };
 
@@ -116,6 +119,7 @@ function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null 
 }
 
 export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOpalStateProps = {}) {
+  const {activePageId, onPageUpdate, getCurrentPageData} = useOpalGeneration();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -270,20 +274,52 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     });
 
     try {
-      // Call API with context
-      const response = await fetch('/api/chat', {
+      // Check if we're iterating on a generated page
+      // If there's an activePageId, we're in iteration mode
+      let isIterating = !!activePageId;
+
+      let requestBody: any;
+      if (isIterating) {
+        const currentPageData = getCurrentPageData();
+        console.log('[Opal Iteration] Current page data:', {
+          hasData: !!currentPageData,
+          outlinesCount: currentPageData?.outlines?.length,
+          hasVariations: !!currentPageData?.variations,
+        });
+
+        // Guard against null page data - fall back to regular chat mode
+        if (!currentPageData) {
+          console.warn('[Opal Iteration] Page data is null, falling back to regular chat mode');
+          isIterating = false;
+        } else {
+          requestBody = {
+            pageId: activePageId,
+            feedback: content.trim(),
+            currentPage: currentPageData,
+          };
+        }
+      }
+
+      if (!isIterating) {
+        requestBody = {
+          userMessage: content.trim(),
+          context: opalContext
+            ? {
+                currentPage: opalContext.currentPage,
+                availableFeatures: opalContext.availableFeatures,
+                opalCapabilities: opalContext.opalCapabilities,
+              }
+            : undefined,
+        };
+      }
+
+      // Call appropriate API endpoint
+      const response = await fetch(isIterating ? '/api/iterate-page' : '/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userMessage: content.trim(),
-          context: opalContext ? {
-            currentPage: opalContext.currentPage,
-            availableFeatures: opalContext.availableFeatures,
-            opalCapabilities: opalContext.opalCapabilities,
-          } : undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -293,10 +329,30 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
       const data = await response.json();
 
       // Update loading message with actual response
-      updateMessage(loadingMessage.id, {
-        content: data.response || 'Sorry, I couldn\'t generate a response.',
-        isLoading: false,
-      });
+      if (isIterating) {
+        // Handle iteration response
+        updateMessage(loadingMessage.id, {
+          content: data.summary || 'Changes applied successfully!',
+          isLoading: false,
+        });
+
+        // Apply the changes to the page if we have the callback
+        if (data.outlines && onPageUpdate) {
+          console.log('[Opal Iteration] Applying changes to page');
+          onPageUpdate({
+            outlines: data.outlines,
+            variationId: 'original',
+          });
+        } else {
+          console.warn('[Opal Iteration] Cannot apply changes - missing outlines or callback');
+        }
+      } else {
+        // Handle regular chat response
+        updateMessage(loadingMessage.id, {
+          content: data.response || 'Sorry, I couldn\'t generate a response.',
+          isLoading: false,
+        });
+      }
     } catch (err) {
       console.error('Error sending message:', err);
       setError('Failed to send message. Please try again.');
@@ -306,7 +362,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, addMessage, updateMessage, opalContext]);
+  }, [isLoading, addMessage, updateMessage, opalContext, activePageId, onPageUpdate, onMessageSent, getCurrentPageData]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
