@@ -9,6 +9,11 @@ export const HeadingBlock = React.memo(function HeadingBlock({ properties, hasBg
     const variant = getProperty(properties, "variant", "Variant");
     const isStat = variant === "stat";
 
+    // Get and validate heading level
+    const levelValue = getProperty(properties, "level", "h2");
+    const validLevels = ["h1", "h2", "h3", "h4", "h5", "h6"];
+    const level = validLevels.includes(levelValue) ? levelValue : "h2";
+
     // Spacing is independent of template
     const spacingClass = isStat ? "mt-0 mb-0" : hasBgImage ? "mb-6" : "mb-4 text-center";
 
@@ -23,9 +28,12 @@ export const HeadingBlock = React.memo(function HeadingBlock({ properties, hasBg
         styleClasses = getTemplateClasses("ct-heading", properties, { hasBgImage });
     }
 
+    // Render the correct semantic heading tag based on level property
+    const Tag = level as "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
     return (
-        <h1 className={`${styleClasses} ${spacingClass}`}>
+        <Tag className={`${styleClasses} ${spacingClass}`}>
             {text || <>&nbsp;</>}
-        </h1>
+        </Tag>
     );
 });
