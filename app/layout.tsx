@@ -3,6 +3,7 @@ import Template from "./components/template";
 import "./globals.css";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
+import {OpalGenerationProvider} from "@/app/context/OpalGenerationContext";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
@@ -484,11 +485,13 @@ export default function RootLayout({
 			<body suppressHydrationWarning>
 				<ThemeProvider>
 					<ProofreadingProvider>
-						<HydrationErrorSuppressor />
-						<MigrationRunner />
-						{menu ? <Template structure={menu}>{children}</Template> : children}
-						{activeEffect === "snow" && <SnowEffect />}
-						{activeEffect === "newyear" && <NewYearEffect />}
+						<OpalGenerationProvider>
+							<HydrationErrorSuppressor />
+							<MigrationRunner />
+							{menu ? <Template structure={menu}>{children}</Template> : children}
+							{activeEffect === "snow" && <SnowEffect />}
+							{activeEffect === "newyear" && <NewYearEffect />}
+						</OpalGenerationProvider>
 					</ProofreadingProvider>
 				</ThemeProvider>
 			</body>

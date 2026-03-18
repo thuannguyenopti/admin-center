@@ -21,6 +21,7 @@ import {Table, Th, Tr, Td} from "@/app/components/Table";
 import {opalActions as initialOpalActions, OpalAction} from "./mockData";
 import {IconDots, IconSparkles} from "@tabler/icons-react";
 import {useRouter} from "next/navigation";
+import Image from "next/image";
 import usePersistentState from "@/app/usePersistentState";
 import OpalActionDialog from "./OpalActionDialog";
 import EmptyList from "@/app/components/EmptyList";
@@ -45,7 +46,7 @@ export default function OpalActionsPage() {
 			setOpalActions((prev) =>
 				prev.map((a) =>
 					a.id === editingAction.id
-						? {...action, id: a.id, modified: new Date().toISOString()}
+						? {...action, id: a.id, modified: new Date().toISOString(), isSystemAction: a.isSystemAction}
 						: a
 				)
 			);
@@ -209,7 +210,12 @@ export default function OpalActionsPage() {
 					{filteredActions.map((action) => (
 						<Tr key={action.id} onClick={() => handleEdit(action)}>
 							<Td type="header" description={action.helpText}>
-								{action.name}
+								<Box display="flex" alignItems="center" gap="8">
+									{action.isSystemAction && (
+										<Image src="/logo.svg" alt="Optimizely" width={16} height={16} />
+									)}
+									{action.name}
+								</Box>
 							</Td>
 							<Td>
 								<Box display="flex" flexDirection="column" gap="4">
