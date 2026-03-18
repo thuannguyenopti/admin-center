@@ -445,14 +445,46 @@ export const initialContentTypes: ContentType[] = [
 		name: "Heading",
 		baseType: "Block",
 		description: "A heading block",
-		properties: [{ id: "text", name: "Text", type: "text", required: true }],
+		properties: [
+			{ id: "text", name: "Text", type: "text", required: true },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Visual Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Default", value: "default" },
+					{ label: "Prominent", value: "prominent" },
+					{ label: "Subtle", value: "subtle" },
+					{ label: "Red Accent", value: "accent-red" },
+					{ label: "Blue Accent", value: "accent-blue" }
+				],
+				defaultValue: "default"
+			}
+		],
 	},
 	{
 		id: "ct-text",
 		name: "Text",
 		baseType: "Block",
 		description: "A text block",
-		properties: [{ id: "text", name: "Text", type: "text", required: true }],
+		properties: [
+			{ id: "text", name: "Text", type: "text", required: true },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Visual Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Default", value: "default" },
+					{ label: "Prominent", value: "prominent" },
+					{ label: "Subtle", value: "subtle" }
+				],
+				defaultValue: "default"
+			}
+		],
 	},
 	{
 		id: "ct-rich-text",
@@ -469,6 +501,19 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "label", name: "Label", type: "text", required: true },
 			{ id: "url", name: "URL", type: "link" },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Button Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Primary", value: "primary" },
+					{ label: "Secondary", value: "secondary" },
+					{ label: "Subtle", value: "subtle" }
+				],
+				defaultValue: "primary"
+			}
 		],
 	},
 	{

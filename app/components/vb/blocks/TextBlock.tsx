@@ -2,6 +2,7 @@
 
 import React from "react";
 import { getProperty } from "./utils";
+import { getTemplateClasses } from "./templateUtils";
 
 export const TextBlock = React.memo(function TextBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const textValue = getProperty(properties, "text", "Text") || "";
@@ -50,8 +51,23 @@ export const TextBlock = React.memo(function TextBlock({ properties, hasBgImage 
         );
     }
 
+    // Default paragraph - use template system
+    let styleClasses: string;
+    let spacingAndLayoutClasses: string;
+
+    if (isStat) {
+        // Keep backward compatibility for stat variant
+        styleClasses = "leading-relaxed mt-0 mb-0 text-white/80";
+        spacingAndLayoutClasses = "";
+    } else {
+        // Use template system for styling
+        styleClasses = getTemplateClasses("ct-text", properties, { hasBgImage });
+        // Spacing and layout are independent of template
+        spacingAndLayoutClasses = hasBgImage ? "mb-8 max-w-2xl" : "mb-4 text-center max-w-3xl mx-auto";
+    }
+
     return (
-        <p className={`leading-relaxed ${isStat ? "mt-0 mb-0 text-white/80" : hasBgImage ? "text-lg text-white/90 mb-8 max-w-2xl" : "text-base text-gray-500 mb-4 text-center max-w-3xl mx-auto"}`}>
+        <p className={`${styleClasses} ${spacingAndLayoutClasses}`}>
             {textValue || <>&nbsp;</>}
         </p>
     );

@@ -94,11 +94,6 @@ export default function EditPageDetail() {
 
 		setPage(nextPage);
 
-		// Force re-render if outlines changed
-		if (patch.outlines !== undefined) {
-			setRenderKey((prev) => prev + 1);
-		}
-
 		console.log("[handleSave] Saved successfully. Next page:", {
 			outlinesCount: nextPage.outlines?.length,
 			variationsCount: nextPage.variations?.length,

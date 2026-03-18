@@ -34,9 +34,12 @@ export const FieldWithAIActions: React.FC<FieldWithAIActionsProps> = ({
 	return (
 		<div style={{ position: "relative" }}>
 			<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-				<Text fontSize="sm" fontWeight="500" asChild>
-					<label>{label}</label>
-				</Text>
+				<label style={{
+					fontSize: "0.875rem",
+					fontWeight: "500",
+					lineHeight: "1.25rem",
+					color: "var(--ax-colors-fg-default)"
+				}}>{label}</label>
 				<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 					<DropdownMenuTrigger asChild>
 						<Button
