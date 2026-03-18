@@ -251,6 +251,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 	}>({});
 	const [opalInstructions, setOpalInstructions] = useState("");
 	const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+	const [opalError, setOpalError] = useState<string | undefined>();
 
 	const tree = buildTree(pages);
 
@@ -367,6 +368,12 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 	};
 
 	const handleOpalConfirm = () => {
+		// Validate that either instructions or files are provided
+		if (!opalInstructions.trim() && uploadedFiles.length === 0) {
+			setOpalError("Please provide instructions or upload at least one file");
+			return;
+		}
+
 		console.log("Generate with Opal:", {
 			name,
 			language,
@@ -419,6 +426,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		setOpalInstructions("");
 		setUploadedFiles([]);
 		setErrors({});
+		setOpalError(undefined);
 
 		// Navigate to visual builder - it will detect pending generation and auto-start
 		router.push(`/cms/edit/${newPage.id}`);
@@ -426,6 +434,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 
 	const handleOpalBack = () => {
 		setOpalDialogOpen(false);
+		setOpalError(undefined);
 	};
 
 	return (
@@ -679,19 +688,32 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 				<DialogBody>
 					<Group flexDirection="column" gap="20">
 						<Text color="fg.secondary">
-							Provide instructions and optionally attach images or PDFs to help Opal generate your page content.
+							Provide instructions, attach images, or both to help Opal generate your page content.
 						</Text>
 
-						<Field label="Instructions">
+						{opalError && (
+							<Box p="12" rounded="md" bg="bg.error.subtle" style={{border: "1px solid var(--border-error)"}}>
+								<Text fontSize="sm" color="fg.error">
+									{opalError}
+								</Text>
+							</Box>
+						)}
+
+						<Field label="Instructions (optional if files are provided)">
 							<Textarea
 								placeholder="Describe the page you want to create... (e.g., 'Create a product landing page for a new smartphone with features, pricing, and testimonials')"
 								rows={6}
 								value={opalInstructions}
-								onChange={(e) => setOpalInstructions(e.target.value)}
+								onChange={(e) => {
+									setOpalInstructions(e.target.value);
+									if (opalError && (e.target.value.trim() || uploadedFiles.length > 0)) {
+										setOpalError(undefined);
+									}
+								}}
 							/>
 						</Field>
 
-						<Field label="Attachments (optional)">
+						<Field label="Attachments (optional if instructions are provided)">
 							<Box
 								p="32"
 								rounded="md"
@@ -713,16 +735,22 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 									e.preventDefault();
 									e.stopPropagation();
 									const files = Array.from(e.dataTransfer.files);
-									setUploadedFiles((prev) => [...prev, ...files]);
+									setUploadedFiles((prev) => {
+										const newFiles = [...prev, ...files];
+										if (opalError && (opalInstructions.trim() || newFiles.length > 0)) {
+											setOpalError(undefined);
+										}
+										return newFiles;
+									});
 								}}
 							>
 								{uploadedFiles.length === 0 ? (
 									<>
 										<Text fontSize="sm" color="fg.secondary" textAlign="center">
-											Drag and drop images or PDFs here
+											Drag and drop images here
 										</Text>
 										<Text fontSize="xs" color="fg.tertiary" textAlign="center">
-											or paste from clipboard
+											Supported formats: JPG, PNG, GIF, WebP
 										</Text>
 									</>
 								) : (
@@ -745,9 +773,13 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 													appearance="subtle"
 													size="sm"
 													onClick={() => {
-														setUploadedFiles((prev) =>
-															prev.filter((_, i) => i !== index)
-														);
+														setUploadedFiles((prev) => {
+															const newFiles = prev.filter((_, i) => i !== index);
+															if (opalError && (opalInstructions.trim() || newFiles.length > 0)) {
+																setOpalError(undefined);
+															}
+															return newFiles;
+														});
 													}}
 												>
 													Remove
