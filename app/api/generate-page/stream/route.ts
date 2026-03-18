@@ -33,6 +33,7 @@ interface AnalysisResult {
 	layout: "single-column" | "multi-column";
 	tone: string;
 	targetAudience: string;
+	visualStyle?: "realistic-photo" | "illustration" | "3d-render" | "flat-design" | "artistic";
 }
 
 interface SectionContent {
@@ -167,7 +168,8 @@ function createGenerationStream(
 				// Send checklist
 				const checklist: ChecklistItem[] = [
 					{label: "Analyzing instructions", status: "pending"},
-					{label: "Generating content", status: "pending"},
+					{label: "Generating text content", status: "pending"},
+					{label: "Generating images", status: "pending"},
 					{label: "Populating elements", status: "pending"},
 				];
 
@@ -187,25 +189,34 @@ function createGenerationStream(
 				sendEvent("checklist", checklist);
 				await delay(500);
 
-				// Step 2: Generate content & images
+				// Step 2: Generate text content
 				checklist[1].status = "running";
 				sendEvent("checklist", checklist);
 
 				const contentData = await generateContent(analysis, instructions);
-				const contentWithImages = await generateImages(contentData);
 
 				checklist[1].status = "completed";
 				sendEvent("checklist", checklist);
 				await delay(500);
 
-				// Step 3: Populate elements
+				// Step 3: Generate images with DALL-E
 				checklist[2].status = "running";
+				sendEvent("checklist", checklist);
+
+				const contentWithImages = await generateImages(contentData, analysis.visualStyle, sendEvent);
+
+				checklist[2].status = "completed";
+				sendEvent("checklist", checklist);
+				await delay(500);
+
+				// Step 4: Populate elements
+				checklist[3].status = "running";
 				sendEvent("checklist", checklist);
 
 				const populatedOutlines = populateElements(outlines, contentWithImages);
 				sendEvent("structure", {outlines: populatedOutlines});
 
-				checklist[2].status = "completed";
+				checklist[3].status = "completed";
 				sendEvent("checklist", checklist);
 
 				const sectionCount = populatedOutlines.length;
@@ -253,6 +264,8 @@ async function analyzeInstructions(
 Available section types: hero, features, benefits, testimonials, pricing, cta, faq, content
 Available element types: ct-heading, ct-text, ct-rich-text, ct-button, ct-input, ct-image, ct-product
 
+${files && files.length > 0 ? 'IMPORTANT: Reference images have been provided. Analyze their visual style (realistic photography, illustration, 3D render, etc.) and maintain this style consistently throughout the page.' : ''}
+
 Respond with a JSON object:
 {
   "pageType": "landing-page" | "product-page" | "content-page" | "form-page",
@@ -266,7 +279,8 @@ Respond with a JSON object:
   ],
   "layout": "single-column",
   "tone": "professional" | "casual" | "technical" | "friendly",
-  "targetAudience": "Brief description"
+  "targetAudience": "Brief description",
+  "visualStyle": "realistic-photo" | "illustration" | "3d-render" | "flat-design" | "artistic"
 }`,
 		},
 	];
@@ -283,7 +297,7 @@ Respond with a JSON object:
 		} else {
 			content.push({
 				type: "text",
-				text: `Analyze the provided image(s) and create a ${contentTypeId} page based on what you see. Extract relevant content, layouts, and design elements from the image(s).`,
+				text: `Analyze the provided image(s) and create a ${contentTypeId} page based on what you see. Extract relevant content, layouts, and design elements from the image(s). IMPORTANT: Identify the visual style of these images (realistic photo, illustration, etc.) and ensure ALL generated content maintains this exact same visual style.`,
 			});
 		}
 
@@ -345,6 +359,7 @@ Respond with a JSON object:
 			layout: "single-column",
 			tone: "professional",
 			targetAudience: "General audience",
+			visualStyle: files && files.length > 0 ? "realistic-photo" : undefined,
 		};
 	}
 }
@@ -354,6 +369,21 @@ async function generateContent(
 	analysis: AnalysisResult,
 	instructions: string
 ): Promise<ContentResult> {
+	const visualStyleGuidance = analysis.visualStyle
+		? `\nVisual Style: ${analysis.visualStyle}
+CRITICAL: All image prompts MUST match this visual style exactly. ${
+			analysis.visualStyle === 'realistic-photo'
+				? 'ONLY photorealistic photography. Describe real scenes that could be photographed. NO fantasy, NO illustrations, NO cartoons, NO artistic renderings, NO magical elements. Realistic documentary-style photography only.'
+				: analysis.visualStyle === 'illustration'
+				? 'Use illustrated, drawn style. NO photorealistic images.'
+				: analysis.visualStyle === '3d-render'
+				? 'Use 3D rendered, CGI style. Clean and modern.'
+				: analysis.visualStyle === 'flat-design'
+				? 'Use flat, minimalist design with simple shapes and colors.'
+				: 'Use artistic, creative interpretations.'
+		}`
+		: '';
+
 	try {
 		const completion = await openai!.chat.completions.create({
 			model: "gpt-4o",
@@ -363,7 +393,7 @@ async function generateContent(
 					content: `You are a professional copywriter. Generate engaging content for a web page.
 
 Tone: ${analysis.tone}
-Target Audience: ${analysis.targetAudience}
+Target Audience: ${analysis.targetAudience}${visualStyleGuidance}
 
 Guidelines:
 - Write clear, compelling copy
@@ -372,7 +402,7 @@ Guidelines:
 - Keep paragraphs readable (2-3 sentences)
 - Make CTAs action-oriented
 - Include specific details from user instructions
-- For sections that need images, provide detailed DALL-E prompts
+- For sections that need images, provide detailed DALL-E prompts that STRICTLY match the visual style above
 
 IMPORTANT: Use the section "type" OR "title" as the key in your response.
 If sections have unique types (hero, features, etc), use those.
@@ -441,8 +471,41 @@ ${instructions ? `User instructions:\n${instructions}` : 'Base the content on th
 }
 
 // AI: Generate images with DALL-E
-async function generateImages(contentData: ContentResult): Promise<ContentResult> {
+async function generateImages(
+	contentData: ContentResult,
+	visualStyle?: "realistic-photo" | "illustration" | "3d-render" | "flat-design" | "artistic",
+	sendEvent?: (event: string, data: any) => void
+): Promise<ContentResult> {
 	const updatedSections: Record<string, SectionContent> = {};
+
+	// Count total images to generate
+	let totalImages = 0;
+	let currentImageIndex = 0;
+	for (const content of Object.values(contentData.sections)) {
+		if (content.imagePrompts) {
+			totalImages += content.imagePrompts.length;
+		}
+	}
+
+	// Create style prefix for DALL-E prompts based on visual style
+	const getStylePrefix = () => {
+		switch (visualStyle) {
+			case "realistic-photo":
+				return "Photorealistic photograph, professional photography, high resolution, sharp focus, natural lighting, realistic, documentary style, authentic, ";
+			case "illustration":
+				return "Hand-drawn illustration style, artistic, detailed illustration of ";
+			case "3d-render":
+				return "3D rendered CGI image, clean modern render, ";
+			case "flat-design":
+				return "Flat design style, minimalist, simple shapes and colors, ";
+			case "artistic":
+				return "Artistic creative interpretation, expressive style, ";
+			default:
+				return "";
+		}
+	};
+
+	const stylePrefix = getStylePrefix();
 
 	for (const [sectionKey, content] of Object.entries(contentData.sections)) {
 		updatedSections[sectionKey] = {...content};
@@ -451,15 +514,35 @@ async function generateImages(contentData: ContentResult): Promise<ContentResult
 			const generatedImages: Array<{url: string; alt: string}> = [];
 
 			for (const imagePrompt of content.imagePrompts) {
+				currentImageIndex++;
+
+				// Send progress update for this image
+				if (sendEvent) {
+					sendEvent("checklist", [
+						{label: "Analyzing instructions", status: "completed"},
+						{label: "Generating text content", status: "completed"},
+						{label: `Generating images (${currentImageIndex} of ${totalImages})`, status: "running"},
+						{label: "Populating elements", status: "pending"},
+					]);
+				}
+
 				try {
-					console.log(`[Generate Page Stream] Generating image: "${imagePrompt.prompt.substring(0, 60)}..."`);
+					// Prepend visual style to ensure consistency
+					let enhancedPrompt = stylePrefix + imagePrompt.prompt;
+
+					// For realistic photos, add explicit anti-fantasy instructions
+					if (visualStyle === "realistic-photo") {
+						enhancedPrompt += ". NO fantasy, NO artistic rendering, NO illustration, realistic photography only";
+					}
+
+					console.log(`[Generate Page Stream] Generating image ${currentImageIndex}/${totalImages} (${visualStyle || 'default'}): "${enhancedPrompt.substring(0, 80)}..."`);
 
 					const response = await openai!.images.generate({
 						model: "dall-e-3",
-						prompt: imagePrompt.prompt,
+						prompt: enhancedPrompt,
 						n: 1,
 						size: "1024x1024",
-						quality: "standard",
+						quality: "hd", // Use HD quality for better photorealistic results
 					});
 
 					const imageUrl = response?.data?.[0]?.url;
