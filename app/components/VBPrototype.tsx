@@ -19,6 +19,7 @@ import {
 
 import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
+import StyleEditor from "./vb/StyleEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
 import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
@@ -479,6 +480,9 @@ export default function VBPrototype({
 		onSaveRef.current = onSave;
 	}, [onSave]);
 
+	// Track previous outline count to avoid resetting view on content changes
+	const prevOutlineCount = useRef(outlines.length);
+
 	// active outline
 	const [activeOutlineId, setActiveOutlineId] = useState<string | null>(() => {
 		return outlines.length ? outlines[0].id : null;
@@ -487,6 +491,8 @@ export default function VBPrototype({
 	const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
+	const [styleEditorEle, setStyleEditorEle] = useState<string | null>(null);
+	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(null);
 
 	// VIEW STATE
 	const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
@@ -500,26 +506,33 @@ export default function VBPrototype({
 	});
 
 	useEffect(() => {
+		const currentCount = outlines.length;
+		const countChanged = currentCount !== prevOutlineCount.current;
+
 		// Keep active outline valid
-		if (outlines.length === 0) {
+		if (currentCount === 0) {
 			setActiveOutlineId(null);
 			setCurrentEle("none");
 			setCurrentHoverEle("none");
 			setSidebarTab("properties");
 			setOutlineView("list");
+			prevOutlineCount.current = currentCount;
 			return;
 		}
 		if (!activeOutlineId || !outlines.some((o) => o.id === activeOutlineId)) {
 			setActiveOutlineId(outlines[0].id);
 		}
 
-		// Enforce tabs/view by outline count
-		if (outlines.length === 1) {
-			if (sidebarTab === "outlines") setSidebarTab("outline");
-			setOutlineView("tree");
-		} else {
-			// multi
-			if (sidebarTab === "outline") setSidebarTab("outlines");
+		// Only enforce tabs/view when outline COUNT changes, not when content changes
+		if (countChanged) {
+			if (currentCount === 1) {
+				if (sidebarTab === "outlines") setSidebarTab("outline");
+				setOutlineView("tree");
+			} else {
+				// multi
+				if (sidebarTab === "outline") setSidebarTab("outlines");
+			}
+			prevOutlineCount.current = currentCount;
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [outlines]);
@@ -527,7 +540,7 @@ export default function VBPrototype({
 	const isZero = outlines.length === 0; // View 4
 	const isSingle = outlines.length === 1; // View 3
 	const isMulti = outlines.length > 1; // View 1/2
-	const isEditingElement = currentEle !== "none";
+	const isEditingElement = currentEle !== "none" || styleEditorEle !== null;
 
 	const activeOutline = activeOutlineId
 		? (outlines.find((o) => o.id === activeOutlineId) ?? null)
@@ -690,6 +703,41 @@ export default function VBPrototype({
 			};
 		});
 	}, [currentEle, setTheEles]);
+
+	// Style editor handlers
+	const onOpenStyleEditorFromOutline = useCallback((elementId: string) => {
+		setStyleEditorEle(elementId);
+		setStyleEditorSource("outline");
+		setCurrentEle(elementId);
+		setCurrentHoverEle("none");
+	}, []);
+
+	const onOpenStyleEditorFromElementEditor = useCallback(() => {
+		if (currentEle === "none") return;
+		setStyleEditorEle(currentEle);
+		setStyleEditorSource("elementEditor");
+	}, [currentEle]);
+
+	const onStyleChange = useCallback((templateId: string) => {
+		if (!styleEditorEle) return;
+
+		setTheEles((prev) => {
+			if (!prev[styleEditorEle]) return prev;
+
+			const ele = prev[styleEditorEle];
+			const properties = {...(ele.properties || {})};
+
+			properties.template = {value: templateId};
+
+			return {
+				...prev,
+				[styleEditorEle]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [styleEditorEle, setTheEles]);
 
 	// Update element by ID (for Brand Tone suggestions)
 	const onUpdateElementById = useCallback((elementId: string, propertyKey: string, value: string) => {
@@ -1542,6 +1590,7 @@ export default function VBPrototype({
 														setSidebarTab("properties");
 														setEditingSectionId(id);
 													}}
+													onOpenStyleEditor={onOpenStyleEditorFromOutline}
 												/>
 											) : null}
 										</div>
@@ -1657,24 +1706,52 @@ export default function VBPrototype({
 										</div>
 									</div>
 
-									{/* PANE 4: Element Editor */}
+									{/* PANE 4: Element Editor or Style Editor */}
 									<div className="min-w-[25%] w-[25%] h-full">
 										<div className="h-full overflow-y-auto">
-											<ElementEditor
-												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={
-													currentEle !== "none"
-														? theEles[currentEle]?.type || ""
-														: ""
-												}
-												currentEle={currentEle}
-												properties={theEles[currentEle]?.properties}
-												onBack={() => {
-													setCurrentEle("none");
-													setCurrentHoverEle("none");
-												}}
-												onInputChange={onInputChange}
-											/>
+											{styleEditorEle && theEles[styleEditorEle] ? (
+												<StyleEditor
+													outlineTitle={
+														styleEditorSource === "elementEditor"
+															? (theEles[styleEditorEle]?.type || "Element")
+															: (activeOutline?.title || "Outline")
+													}
+													elementType={theEles[styleEditorEle]?.type || ""}
+													currentEle={styleEditorEle}
+													properties={theEles[styleEditorEle]?.properties}
+													onBack={() => {
+														setStyleEditorEle(null);
+														setStyleEditorSource(null);
+														// Only clear currentEle if coming from outline
+														if (styleEditorSource === "outline") {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+														}
+													}}
+													onStyleChange={onStyleChange}
+												/>
+											) : (
+												<ElementEditor
+													outlineTitle={activeOutline?.title || "Outline"}
+													elementType={
+														currentEle !== "none"
+															? theEles[currentEle]?.type || ""
+															: ""
+													}
+													currentEle={currentEle}
+													properties={theEles[currentEle]?.properties}
+													onBack={() => {
+														setCurrentEle("none");
+														setCurrentHoverEle("none");
+													}}
+													onInputChange={onInputChange}
+													onOpenStyleEditor={
+														currentEle !== "none"
+															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+												/>
+											)}
 										</div>
 									</div>
 								</div>
@@ -1721,6 +1798,7 @@ export default function VBPrototype({
 													setSidebarTab("properties");
 													setEditingSectionId(id);
 												}}
+												onOpenStyleEditor={onOpenStyleEditorFromOutline}
 											/>
 										</div>
 									</div>
@@ -1836,24 +1914,52 @@ export default function VBPrototype({
 										</div>
 									</div>
 
-									{/* PANE 3: Element Editor */}
+									{/* PANE 3: Element Editor or Style Editor */}
 									<div className="min-w-[33.333%] w-[33.333%] h-full">
 										<div className="h-full overflow-y-auto">
-											<ElementEditor
-												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={
-													currentEle !== "none"
-														? theEles[currentEle]?.type || ""
-														: ""
-												}
-												currentEle={currentEle}
-												properties={theEles[currentEle]?.properties}
-												onBack={() => {
-													setCurrentEle("none");
-													setCurrentHoverEle("none");
-												}}
-												onInputChange={onInputChange}
-											/>
+											{styleEditorEle && theEles[styleEditorEle] ? (
+												<StyleEditor
+													outlineTitle={
+														styleEditorSource === "elementEditor"
+															? (theEles[styleEditorEle]?.type || "Element")
+															: (activeOutline?.title || "Outline")
+													}
+													elementType={theEles[styleEditorEle]?.type || ""}
+													currentEle={styleEditorEle}
+													properties={theEles[styleEditorEle]?.properties}
+													onBack={() => {
+														setStyleEditorEle(null);
+														setStyleEditorSource(null);
+														// Only clear currentEle if coming from outline
+														if (styleEditorSource === "outline") {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+														}
+													}}
+													onStyleChange={onStyleChange}
+												/>
+											) : (
+												<ElementEditor
+													outlineTitle={activeOutline?.title || "Outline"}
+													elementType={
+														currentEle !== "none"
+															? theEles[currentEle]?.type || ""
+															: ""
+													}
+													currentEle={currentEle}
+													properties={theEles[currentEle]?.properties}
+													onBack={() => {
+														setCurrentEle("none");
+														setCurrentHoverEle("none");
+													}}
+													onInputChange={onInputChange}
+													onOpenStyleEditor={
+														currentEle !== "none"
+															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+												/>
+											)}
 										</div>
 									</div>
 								</div>

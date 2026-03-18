@@ -9,7 +9,7 @@ import {
 } from "@optiaxiom/react";
 
 import React, { useState } from "react";
-import { IconHeading, IconPilcrow, IconForms, IconRectangle, IconPhoto, IconBrackets, IconTrash, IconDots } from "@tabler/icons-react";
+import { IconHeading, IconPilcrow, IconForms, IconRectangle, IconPhoto, IconBrackets, IconTrash, IconDots, IconPalette } from "@tabler/icons-react";
 import styles from "../VBPrototype.module.css";
 
 export type EleMap = Record<string, { type: string; properties: any }>;
@@ -24,7 +24,8 @@ const Ele: React.FC<{
     setCurrentHoverEle: any;
     label: string;
     onDragStart: any;
-}> = ({ element, removeEle, setCurrentEle, type, setCurrentHoverEle, label, onDragStart }) => {
+    onOpenStyleEditor?: () => void;
+}> = ({ element, removeEle, setCurrentEle, type, setCurrentHoverEle, label, onDragStart, onOpenStyleEditor }) => {
     const [menuOpen, setMenuOpen] = useState(false);
     return (
         <Box
@@ -90,6 +91,14 @@ const Ele: React.FC<{
                         onOpenChange={(e) => setMenuOpen(!menuOpen)}
                         open={menuOpen}
                         options={[
+                            ...(onOpenStyleEditor ? [{
+                                addon: <IconPalette size={16} />,
+                                label: "Style",
+                                execute: () => {
+                                    onOpenStyleEditor();
+                                    setMenuOpen(false);
+                                },
+                            }] : []),
                             {
                                 addon: <IconTrash size={16} />,
                                 label: "Remove Element",
@@ -98,6 +107,7 @@ const Ele: React.FC<{
                                     removeEle();
                                     setMenuOpen(false);
                                 },
+                                group: onOpenStyleEditor ? { label: "actions", hidden: true, separator: true } : undefined,
                             },
                         ]}
                     >
