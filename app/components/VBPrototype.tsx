@@ -2,7 +2,7 @@
 
 import type {SEOBlock, ContentType} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip, Spinner} from "@optiaxiom/react";
+import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip, Spinner, Field, Select, SelectTrigger, SelectContent} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
@@ -180,6 +180,7 @@ type OutlineType = {
 	title: string;
 	tree: any[];
 	elements: EleMap;
+	sectionType?: string;
 };
 
 const isOutlineArray = (v: any): v is OutlineType[] => {
@@ -1682,11 +1683,46 @@ export default function VBPrototype({
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
-													<Text fontSize="sm" color="fg.secondary">
-														Editing properties for section:{" "}
-														{editingSectionId}
-													</Text>
-													{/* Add section specific fields here later */}
+													{(() => {
+														const currentSectionType = activeOutline?.sectionType || "content";
+														const sectionTypeOptions = [
+															{ label: "Hero", value: "hero" },
+															{ label: "Features", value: "features" },
+															{ label: "Benefits", value: "benefits" },
+															{ label: "Testimonials", value: "testimonials" },
+															{ label: "Pricing", value: "pricing" },
+															{ label: "Call to Action", value: "cta" },
+															{ label: "FAQ", value: "faq" },
+															{ label: "Content", value: "content" },
+														];
+
+														return (
+															<Box>
+																<Field label="Section Type">
+																	<Select
+																		value={currentSectionType}
+																		options={sectionTypeOptions}
+																		onValueChange={(value: string) => {
+																			// Update section type in active outline
+																			setOutlines((prev) =>
+																				prev.map((outline) =>
+																					outline.id === activeOutlineId
+																						? {...outline, sectionType: value}
+																						: outline
+																				)
+																			);
+																		}}
+																	>
+																		<SelectTrigger />
+																		<SelectContent />
+																	</Select>
+																</Field>
+																<Text fontSize="sm" color="fg.secondary" mt="8">
+																	Section ID: {editingSectionId}
+																</Text>
+															</Box>
+														);
+													})()}
 												</Box>
 											) : (
 												<PropertiesPanel

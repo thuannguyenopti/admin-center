@@ -448,6 +448,22 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "text", name: "Text", type: "text", required: true },
 			{
+				id: "level",
+				name: "Level",
+				displayName: "Heading Level",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "H1 (Largest)", value: "h1" },
+					{ label: "H2", value: "h2" },
+					{ label: "H3", value: "h3" },
+					{ label: "H4", value: "h4" },
+					{ label: "H5", value: "h5" },
+					{ label: "H6 (Smallest)", value: "h6" }
+				],
+				defaultValue: "h2"
+			},
+			{
 				id: "template",
 				name: "Template",
 				displayName: "Visual Style",
