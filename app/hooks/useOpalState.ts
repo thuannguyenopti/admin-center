@@ -276,7 +276,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     try {
       // Check if we're iterating on a generated page
       // If there's an activePageId, we're in iteration mode
-      const isIterating = !!activePageId;
+      let isIterating = !!activePageId;
 
       let requestBody: any;
       if (isIterating) {
@@ -286,12 +286,21 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
           outlinesCount: currentPageData?.outlines?.length,
           hasVariations: !!currentPageData?.variations,
         });
-        requestBody = {
-          pageId: activePageId,
-          feedback: content.trim(),
-          currentPage: currentPageData,
-        };
-      } else {
+
+        // Guard against null page data - fall back to regular chat mode
+        if (!currentPageData) {
+          console.warn('[Opal Iteration] Page data is null, falling back to regular chat mode');
+          isIterating = false;
+        } else {
+          requestBody = {
+            pageId: activePageId,
+            feedback: content.trim(),
+            currentPage: currentPageData,
+          };
+        }
+      }
+
+      if (!isIterating) {
         requestBody = {
           userMessage: content.trim(),
           context: opalContext
@@ -353,7 +362,7 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, addMessage, updateMessage, opalContext, activePageId, onPageUpdate]);
+  }, [isLoading, addMessage, updateMessage, opalContext, activePageId, onPageUpdate, onMessageSent, getCurrentPageData]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
