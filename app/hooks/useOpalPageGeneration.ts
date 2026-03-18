@@ -29,7 +29,7 @@ export function useOpalPageGeneration(
 	onSave: (patch: {outlines?: any; properties?: any; variationId?: string}) => void
 ) {
 	const {opalPanelControls} = useLayout();
-	const {generationData} = useOpalGeneration();
+	const {generationData, setActivePage} = useOpalGeneration();
 	const [isGenerating, setIsGenerating] = useState(false);
 
 	useEffect(() => {
@@ -147,8 +147,14 @@ export function useOpalPageGeneration(
 							opalPanelControls.removeMessage(progressMsg.id);
 							opalPanelControls.addMessage({
 								role: "assistant",
-								content: data.summary || "Page generated successfully!",
+								content:
+									data.summary ||
+									"Page generated successfully! You can now ask me to make changes.",
 							});
+
+							// Set as active page for iteration
+							setActivePage(pageId);
+
 							setIsGenerating(false);
 							localStorage.removeItem(`opal_generation_${pageId}`);
 						} else if (eventType === "error") {
@@ -178,7 +184,7 @@ export function useOpalPageGeneration(
 		};
 
 		startGeneration();
-	}, [pageId, contentTypeId, opalPanelControls, onSave, isGenerating, generationData]);
+	}, [pageId, contentTypeId, opalPanelControls, onSave, isGenerating, generationData, setActivePage]);
 
 	return {isGenerating};
 }
