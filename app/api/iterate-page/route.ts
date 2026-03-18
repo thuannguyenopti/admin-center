@@ -9,6 +9,45 @@ const openai = process.env.OPENAI_API_KEY
 	? new OpenAI({apiKey: process.env.OPENAI_API_KEY})
 	: null;
 
+/**
+ * Validates and fixes element IDs in page structure
+ * Ensures all elements have proper IDs to prevent React key warnings
+ */
+function validateAndFixElementIds(outlines: any[]): any[] {
+	return outlines.map((outline: any) => {
+		// Validate elements object
+		if (outline.elements) {
+			Object.keys(outline.elements).forEach((eleId) => {
+				if (!eleId || eleId === "undefined") {
+					console.warn("[Iterate Page] Found element without proper ID");
+				}
+			});
+		}
+
+		// Fix tree element references
+		if (outline.tree) {
+			outline.tree = outline.tree.map((section: any) => ({
+				...section,
+				children: (section.children || []).map((row: any) => ({
+					...row,
+					children: (row.children || []).map((col: any) => {
+						const elements = (col.elements || []).map((el: any) => {
+							if (!el.id) {
+								console.warn("[Iterate Page] Element missing ID, generating one");
+								return {...el, id: `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`};
+							}
+							return el;
+						});
+						return {...col, elements};
+					}),
+				})),
+			}));
+		}
+
+		return outline;
+	});
+}
+
 export async function POST(request: Request) {
 	try {
 		const body = await request.json();
@@ -74,38 +113,7 @@ Common operations:
 
 		// Validate and fix element IDs
 		if (updates.outlines) {
-			updates.outlines = updates.outlines.map((outline: any) => {
-				// Ensure all elements have IDs
-				if (outline.elements) {
-					Object.keys(outline.elements).forEach((eleId) => {
-						if (!eleId || eleId === "undefined") {
-							console.warn("[Iterate Page] Found element without proper ID");
-						}
-					});
-				}
-
-				// Ensure all tree references have IDs
-				if (outline.tree) {
-					outline.tree = outline.tree.map((section: any) => ({
-						...section,
-						children: (section.children || []).map((row: any) => ({
-							...row,
-							children: (row.children || []).map((col: any) => {
-								const elements = (col.elements || []).map((el: any) => {
-									if (!el.id) {
-										console.warn("[Iterate Page] Element missing ID, generating one");
-										return {...el, id: `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`};
-									}
-									return el;
-								});
-								return {...col, elements};
-							}),
-						})),
-					}));
-				}
-
-				return outline;
-			});
+			updates.outlines = validateAndFixElementIds(updates.outlines);
 		}
 
 		console.log("[Iterate Page] Applied changes:", {

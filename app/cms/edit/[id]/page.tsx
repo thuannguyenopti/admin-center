@@ -114,26 +114,32 @@ export default function EditPageDetail() {
 	);
 
 	// Register page update handler and set active page for iteration
-	const {setPageUpdateHandler, setActivePage, setCurrentPageData} = useOpalGeneration();
+	const {setPageUpdateHandler, setActivePage, setPageDataGetter} = useOpalGeneration();
 	useEffect(() => {
 		setPageUpdateHandler(handleSave);
-		setActivePage(id); // Mark this page as active for iteration
+		setActivePage(id);
 
-		// Update current page data whenever page changes
-		if (page) {
-			setCurrentPageData({
-				outlines: page.outlines,
+		// Provide a getter function that always returns fresh page data
+		setPageDataGetter(() => {
+			if (!page) return null;
+
+			// Get outlines from the original variation or fallback to page.outlines
+			const originalVariation = page.variations?.find(v => v.id === "original");
+			const outlines = originalVariation?.outlines || page.outlines || [];
+
+			return {
+				outlines,
 				variations: page.variations,
 				data: page.data,
-			});
-		}
+			};
+		});
 
 		return () => {
 			setPageUpdateHandler(null);
 			setActivePage(null);
-			setCurrentPageData(null);
+			setPageDataGetter(null);
 		};
-	}, [setPageUpdateHandler, setActivePage, setCurrentPageData, handleSave, id, page]);
+	}, [setPageUpdateHandler, setActivePage, setPageDataGetter, handleSave, id, page]);
 
 	// Clear hasPendingGeneration when actual generation starts
 	useEffect(() => {

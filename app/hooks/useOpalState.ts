@@ -119,7 +119,7 @@ function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null 
 }
 
 export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOpalStateProps = {}) {
-  const {activePageId, onPageUpdate, currentPageData} = useOpalGeneration();
+  const {activePageId, onPageUpdate, getCurrentPageData} = useOpalGeneration();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -278,30 +278,39 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
       // If there's an activePageId, we're in iteration mode
       const isIterating = !!activePageId;
 
+      let requestBody: any;
+      if (isIterating) {
+        const currentPageData = getCurrentPageData();
+        console.log('[Opal Iteration] Current page data:', {
+          hasData: !!currentPageData,
+          outlinesCount: currentPageData?.outlines?.length,
+          hasVariations: !!currentPageData?.variations,
+        });
+        requestBody = {
+          pageId: activePageId,
+          feedback: content.trim(),
+          currentPage: currentPageData,
+        };
+      } else {
+        requestBody = {
+          userMessage: content.trim(),
+          context: opalContext
+            ? {
+                currentPage: opalContext.currentPage,
+                availableFeatures: opalContext.availableFeatures,
+                opalCapabilities: opalContext.opalCapabilities,
+              }
+            : undefined,
+        };
+      }
+
       // Call appropriate API endpoint
       const response = await fetch(isIterating ? '/api/iterate-page' : '/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(
-          isIterating
-            ? {
-                pageId: activePageId,
-                feedback: content.trim(),
-                currentPage: currentPageData,
-              }
-            : {
-                userMessage: content.trim(),
-                context: opalContext
-                  ? {
-                      currentPage: opalContext.currentPage,
-                      availableFeatures: opalContext.availableFeatures,
-                      opalCapabilities: opalContext.opalCapabilities,
-                    }
-                  : undefined,
-              }
-        ),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
