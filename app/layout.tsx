@@ -485,14 +485,14 @@ export default function RootLayout({
 			<body suppressHydrationWarning>
 				<ThemeProvider>
 					<ProofreadingProvider>
-			<OpalGenerationProvider>
-						<HydrationErrorSuppressor />
-						<MigrationRunner />
-						{menu ? <Template structure={menu}>{children}</Template> : children}
-						{activeEffect === "snow" && <SnowEffect />}
-						{activeEffect === "newyear" && <NewYearEffect />}
+						<OpalGenerationProvider>
+							<HydrationErrorSuppressor />
+							<MigrationRunner />
+							{menu ? <Template structure={menu}>{children}</Template> : children}
+							{activeEffect === "snow" && <SnowEffect />}
+							{activeEffect === "newyear" && <NewYearEffect />}
 						</OpalGenerationProvider>
-		</ProofreadingProvider>
+					</ProofreadingProvider>
 				</ThemeProvider>
 			</body>
 		</html>
