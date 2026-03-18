@@ -9,7 +9,7 @@ import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, initialApplications, Application} from "@/app/db/initialData";
-import {useState, useMemo} from "react";
+import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {CreatePageDialog} from "./CreatePageDialog";
 
@@ -87,11 +87,44 @@ const getContentTypeName = (contentTypeId: string) => {
 	return contentType?.displayName || contentType?.name || contentTypeId;
 };
 
-const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number; startPageId?: string}) => {
+const PageRow = ({
+	node,
+	level = 0,
+	startPageId,
+	onCut,
+	onCopy,
+	onPaste,
+	onMoveUp,
+	onMoveDown,
+	onDragStart,
+	onDrop,
+	onPageClick,
+	selectedPageIds,
+	clipboard,
+	isDragging,
+}: {
+	node: PageNode;
+	level?: number;
+	startPageId?: string;
+	onCut?: (pageId?: string) => void;
+	onCopy?: (pageId?: string) => void;
+	onPaste?: (targetParentId: string) => void;
+	onMoveUp?: (pageId: string) => void;
+	onMoveDown?: (pageId: string) => void;
+	onDragStart?: (pageId: string) => void;
+	onDrop?: (targetPageId: string) => void;
+	onPageClick?: (pageId: string, event: React.MouseEvent) => void;
+	selectedPageIds?: string[];
+	clipboard?: {pageIds: string[]; operation: 'cut' | 'copy'} | null;
+	isDragging?: boolean;
+}) => {
 	const router = useRouter();
 	const [expanded, setExpanded] = useState(true);
+	const [dragOver, setDragOver] = useState(false);
 	const hasChildren = node.children.length > 0;
 	const isStartPage = startPageId === node.id;
+	const isSelected = selectedPageIds?.includes(node.id) ?? false;
+	const isInClipboard = clipboard?.pageIds.includes(node.id) ?? false;
 
 	const menuOptions = [
 		...(isStartPage
@@ -99,12 +132,12 @@ const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number
 					{
 						addon: <IconHome size={16} />,
 						label: "Edit Application",
-						onSelect: () => router.push("/cms/settings/applications/mosey-bank/settings"),
+						execute: () => router.push("/cms/settings/applications/mosey-bank/settings"),
 					},
 					{
 						addon: <IconPencil size={16} />,
 						label: "Rename",
-						onSelect: () => console.log("Rename", node.id),
+						execute: () => console.log("Rename", node.id),
 						group: {
 							separator: true,
 							label: "",
@@ -115,13 +148,13 @@ const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number
 					{
 						addon: <IconPencil size={16} />,
 						label: "Rename",
-						onSelect: () => console.log("Rename", node.id),
+						execute: () => console.log("Rename", node.id),
 					},
 			  ]),
 		{
 			addon: <IconFilePlus size={16} />,
 			label: "Create child",
-			onSelect: () => console.log("Create child", node.id),
+			execute: () => console.log("Create child", node.id),
 		},
 		{
 			addon: <IconCut size={16} />,
@@ -129,18 +162,19 @@ const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number
 				separator: true,
 				label: "",
 			},
-			label: "Cut",
-			onSelect: () => console.log("Cut", node.id),
+			label: isSelected && (selectedPageIds?.length ?? 0) > 1 ? `Cut (${selectedPageIds?.length} items)` : "Cut",
+			execute: () => onCut?.(isSelected ? undefined : node.id),
 		},
 		{
 			addon: <IconCopy size={16} />,
-			label: "Copy",
-			onSelect: () => console.log("Copy", node.id),
+			label: isSelected && (selectedPageIds?.length ?? 0) > 1 ? `Copy (${selectedPageIds?.length} items)` : "Copy",
+			execute: () => onCopy?.(isSelected ? undefined : node.id),
 		},
 		{
 			addon: <IconClipboard size={16} />,
 			label: "Paste",
-			onSelect: () => console.log("Paste", node.id),
+			execute: () => onPaste?.(node.id),
+			disabled: !clipboard || clipboard.pageIds.length === 0,
 		},
 		{
 			addon: <IconArrowUp size={16} />,
@@ -149,12 +183,12 @@ const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number
 				label: "",
 			},
 			label: "Move up",
-			onSelect: () => console.log("Move up", node.id),
+			execute: () => onMoveUp?.(node.id),
 		},
 		{
 			addon: <IconArrowDown size={16} />,
 			label: "Move down",
-			onSelect: () => console.log("Move down", node.id),
+			execute: () => onMoveDown?.(node.id),
 		},
 		{
 			addon: <IconTrash size={16} />,
@@ -164,13 +198,84 @@ const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number
 			},
 			intent: "danger" as const,
 			label: "Delete",
-			onSelect: () => console.log("Delete", node.id),
+			execute: () => console.log("Delete", node.id),
 		},
 	];
 
+	const handleDragStart = (e: React.DragEvent) => {
+		e.stopPropagation();
+		e.dataTransfer.effectAllowed = 'move';
+
+		// If this node is selected along with others, drag all selected items
+		if (isSelected && (selectedPageIds?.length ?? 0) > 1) {
+			e.dataTransfer.setData('text/html', JSON.stringify(selectedPageIds));
+		} else {
+			e.dataTransfer.setData('text/html', node.id);
+			onDragStart?.(node.id);
+		}
+	};
+
+	const handleDragEnd = (e: React.DragEvent) => {
+		e.stopPropagation();
+		setDragOver(false);
+	};
+
+	const handleDragOver = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		e.dataTransfer.dropEffect = 'move';
+		setDragOver(true);
+	};
+
+	const handleDragLeave = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setDragOver(false);
+	};
+
+	const handleDrop = (e: React.DragEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setDragOver(false);
+		onDrop?.(node.id);
+	};
+
 	return (
 		<>
-			<Tr url={`/cms/edit/${node.id}`}>
+			<tr
+				draggable
+				onDragStart={handleDragStart}
+				onDragEnd={handleDragEnd}
+				onDragOver={handleDragOver}
+				onDragLeave={handleDragLeave}
+				onDrop={handleDrop}
+				onClick={(e: React.MouseEvent) => {
+					// Don't handle clicks on interactive elements
+					if ((e.target as HTMLElement).closest('button, a, [role="menuitem"]')) {
+						return;
+					}
+
+					// Handle multi-select
+					if (e.shiftKey || e.metaKey || e.ctrlKey) {
+						e.preventDefault();
+						e.stopPropagation();
+						onPageClick?.(node.id, e);
+					} else {
+						// Normal click - navigate and select single
+						onPageClick?.(node.id, e);
+						router.push(`/cms/edit/${node.id}`);
+					}
+				}}
+				className="relative cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
+				style={{
+					opacity: isInClipboard && clipboard?.operation === 'cut' ? 0.5 : 1,
+					backgroundColor: dragOver
+						? 'var(--ax-colors-bg-accent-subtle)'
+						: isSelected
+							? 'var(--ax-colors-bg-accent-subtle-hovered)'
+							: undefined,
+				}}
+			>
 				<Td type="header">
 					<Flex gap="8" style={{paddingLeft: level * 24}}>
 						{hasChildren ? (
@@ -227,10 +332,26 @@ const PageRow = ({node, level = 0, startPageId}: {node: PageNode; level?: number
 						</Menu>
 					</Box>
 				</Td>
-			</Tr>
+			</tr>
 			{expanded &&
 				node.children.map((child) => (
-					<PageRow key={child.id} node={child} level={level + 1} startPageId={startPageId} />
+					<PageRow
+						key={child.id}
+						node={child}
+						level={level + 1}
+						startPageId={startPageId}
+						onCut={onCut}
+						onCopy={onCopy}
+						onPaste={onPaste}
+						onMoveUp={onMoveUp}
+						onMoveDown={onMoveDown}
+						onDragStart={onDragStart}
+						onDrop={onDrop}
+						onPageClick={onPageClick}
+						selectedPageIds={selectedPageIds}
+						clipboard={clipboard}
+						isDragging={isDragging}
+					/>
 				))}
 		</>
 	);
@@ -262,22 +383,219 @@ export default function EditPage() {
 	// Get the start page ID from the first application (for now)
 	const startPageId = applications[0]?.startPageId;
 
-	const tree = buildTree(pages);
+	const { startPage, outOfScopeRoots } = buildTree(pages, startPageId);
+
+	// Selection state for multi-select
+	const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
+	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
+
+	// Clipboard state for cut/copy/paste
+	const [clipboard, setClipboard] = useState<{pageIds: string[]; operation: 'cut' | 'copy'} | null>(null);
+	const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
 
 	const handleCreatePage = (newPage: Page) => {
 		setPages([...pages, newPage]);
 	};
 
-	// Create root node containing all top-level nodes
-	const rootNode: PageNode = {
-		id: "root",
-		name: "Root",
-		parentId: null,
-		status: "Published",
-		lastModified: new Date().toISOString(),
-		contentTypeId: "folder",
-		children: tree,
+	// Handle page selection
+	const handlePageClick = (pageId: string, event: React.MouseEvent) => {
+		if (event.shiftKey && lastSelectedId) {
+			// Shift-click: select range
+			const allPageIds = pages.map(p => p.id);
+			const lastIndex = allPageIds.indexOf(lastSelectedId);
+			const currentIndex = allPageIds.indexOf(pageId);
+
+			if (lastIndex !== -1 && currentIndex !== -1) {
+				const start = Math.min(lastIndex, currentIndex);
+				const end = Math.max(lastIndex, currentIndex);
+				const rangeIds = allPageIds.slice(start, end + 1);
+				setSelectedPageIds(rangeIds);
+			}
+		} else if (event.metaKey || event.ctrlKey) {
+			// Cmd/Ctrl-click: toggle selection
+			setSelectedPageIds(prev =>
+				prev.includes(pageId)
+					? prev.filter(id => id !== pageId)
+					: [...prev, pageId]
+			);
+			setLastSelectedId(pageId);
+		} else {
+			// Normal click: select single
+			setSelectedPageIds([pageId]);
+			setLastSelectedId(pageId);
+		}
 	};
+
+	// Cut operation
+	const handleCut = (pageId?: string) => {
+		const idsToUse = pageId ? [pageId] : selectedPageIds;
+		if (idsToUse.length === 0) return;
+		setClipboard({ pageIds: idsToUse, operation: 'cut' });
+	};
+
+	// Copy operation
+	const handleCopy = (pageId?: string) => {
+		const idsToUse = pageId ? [pageId] : selectedPageIds;
+		if (idsToUse.length === 0) return;
+		setClipboard({ pageIds: idsToUse, operation: 'copy' });
+	};
+
+	// Paste operation
+	const handlePaste = (targetParentId: string) => {
+		if (!clipboard || clipboard.pageIds.length === 0) return;
+
+		if (clipboard.operation === 'cut') {
+			// Move the pages
+			const updatedPages = pages.map(page =>
+				clipboard.pageIds.includes(page.id)
+					? { ...page, parentId: targetParentId }
+					: page
+			);
+			setPages(updatedPages);
+			setClipboard(null);
+			setSelectedPageIds([]);
+		} else {
+			// Copy the pages (create new ones)
+			const sourcePages = pages.filter(p => clipboard.pageIds.includes(p.id));
+			const newPages = sourcePages.map((sourcePage, index) => ({
+				...sourcePage,
+				id: `page-${Date.now()}-${index}`,
+				name: `${sourcePage.name} (Copy)`,
+				parentId: targetParentId,
+				lastModified: new Date().toISOString(),
+			}));
+			setPages([...pages, ...newPages]);
+			setClipboard(null);
+		}
+	};
+
+	// Move page up or down in the same parent
+	const handleMoveUp = (pageId: string) => {
+		const page = pages.find(p => p.id === pageId);
+		if (!page) return;
+
+		const siblings = pages.filter(p => p.parentId === page.parentId);
+		const currentIndex = siblings.findIndex(p => p.id === pageId);
+
+		if (currentIndex > 0) {
+			// Swap with previous sibling
+			const prevSibling = siblings[currentIndex - 1];
+			const updatedPages = pages.map(p => {
+				if (p.id === pageId) return { ...prevSibling, id: pageId, name: page.name, contentTypeId: page.contentTypeId };
+				if (p.id === prevSibling.id) return { ...page, id: prevSibling.id, name: prevSibling.name, contentTypeId: prevSibling.contentTypeId };
+				return p;
+			});
+			// This is a simple swap - in reality you'd want to use an order field
+			console.log("Move up:", pageId);
+		}
+	};
+
+	const handleMoveDown = (pageId: string) => {
+		const page = pages.find(p => p.id === pageId);
+		if (!page) return;
+
+		const siblings = pages.filter(p => p.parentId === page.parentId);
+		const currentIndex = siblings.findIndex(p => p.id === pageId);
+
+		if (currentIndex < siblings.length - 1) {
+			// Swap with next sibling
+			console.log("Move down:", pageId);
+		}
+	};
+
+	// Handle drop
+	const handleDrop = (targetPageId: string) => {
+		// Determine which pages are being dragged
+		const pagesToMove = selectedPageIds.length > 0 ? selectedPageIds : (draggedPageId ? [draggedPageId] : []);
+
+		if (pagesToMove.length === 0 || pagesToMove.includes(targetPageId)) {
+			setDraggedPageId(null);
+			return;
+		}
+
+		const targetPage = pages.find(p => p.id === targetPageId);
+
+		if (!targetPage) {
+			setDraggedPageId(null);
+			return;
+		}
+
+		// Prevent dropping a page into its own descendant
+		const isDescendant = (pageId: string, ancestorId: string): boolean => {
+			const page = pages.find(p => p.id === pageId);
+			if (!page || !page.parentId) return false;
+			if (page.parentId === ancestorId) return true;
+			return isDescendant(page.parentId, ancestorId);
+		};
+
+		// Check if any of the pages being moved would create a circular reference
+		const hasCircularReference = pagesToMove.some(pageId => isDescendant(targetPageId, pageId));
+
+		if (hasCircularReference) {
+			console.log("Cannot drop a page into its own descendant");
+			setDraggedPageId(null);
+			return;
+		}
+
+		// Move all dragged pages to be children of the target page
+		const updatedPages = pages.map(page =>
+			pagesToMove.includes(page.id)
+				? { ...page, parentId: targetPageId }
+				: page
+		);
+		setPages(updatedPages);
+		setDraggedPageId(null);
+		setSelectedPageIds([]);
+	};
+
+	// Keyboard shortcuts
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			// Only handle keyboard shortcuts when there are selected pages
+			if (selectedPageIds.length === 0) return;
+
+			// Check if we're in an input/textarea
+			const target = e.target as HTMLElement;
+			if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+				return;
+			}
+
+			// Use metaKey for Mac, ctrlKey for others
+			const modifierKey = e.metaKey || e.ctrlKey;
+
+			if (modifierKey) {
+				switch (e.key.toLowerCase()) {
+					case 'x':
+						e.preventDefault();
+						handleCut();
+						break;
+					case 'c':
+						e.preventDefault();
+						handleCopy();
+						break;
+					case 'v':
+						e.preventDefault();
+						// For paste, we need a target - use the first selected page's parent
+						if (clipboard && clipboard.pageIds.length > 0 && selectedPageIds.length > 0) {
+							const firstSelectedPage = pages.find(p => p.id === selectedPageIds[0]);
+							if (firstSelectedPage?.parentId) {
+								handlePaste(firstSelectedPage.parentId);
+							}
+						}
+						break;
+				}
+			}
+
+			// Delete key
+			if (e.key === 'Delete' || e.key === 'Backspace') {
+				e.preventDefault();
+				console.log('Delete selected pages:', selectedPageIds);
+			}
+		};
+
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, [selectedPageIds, clipboard, pages]);
 
 	if (!isHydrated) {
 		return <Box p="24">Loading...</Box>;
@@ -315,7 +633,78 @@ export default function EditPage() {
 					</Tr>
 				</thead>
 				<tbody>
-					<PageRow node={rootNode} startPageId={startPageId} />
+					{startPage ? (
+						<>
+							<PageRow
+								node={startPage}
+								startPageId={startPageId}
+								onCut={handleCut}
+								onCopy={handleCopy}
+								onPaste={handlePaste}
+								onMoveUp={handleMoveUp}
+								onMoveDown={handleMoveDown}
+								onDragStart={setDraggedPageId}
+								onDrop={handleDrop}
+								onPageClick={handlePageClick}
+								selectedPageIds={selectedPageIds}
+								clipboard={clipboard}
+								isDragging={!!draggedPageId}
+							/>
+
+							{/* Out of scope pages */}
+							{outOfScopeRoots.length > 0 && (
+								<>
+									<tr>
+										<td colSpan={5} style={{ padding: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)" }}>
+											<Box py="8" px="12" bg="bg.secondary">
+												<Text fontSize="sm" fontWeight="500" color="fg.tertiary">
+													Out of Scope (Not under application start page)
+												</Text>
+											</Box>
+										</td>
+									</tr>
+									{outOfScopeRoots.map((node) => (
+										<PageRow
+											key={node.id}
+											node={node}
+											startPageId={startPageId}
+											onCut={handleCut}
+											onCopy={handleCopy}
+											onPaste={handlePaste}
+											onMoveUp={handleMoveUp}
+											onMoveDown={handleMoveDown}
+											onDragStart={setDraggedPageId}
+											onDrop={handleDrop}
+											onPageClick={handlePageClick}
+											selectedPageIds={selectedPageIds}
+											clipboard={clipboard}
+											isDragging={!!draggedPageId}
+										/>
+									))}
+								</>
+							)}
+						</>
+					) : (
+						// No start page configured - show all pages
+						outOfScopeRoots.map((node) => (
+							<PageRow
+								key={node.id}
+								node={node}
+								startPageId={startPageId}
+								onCut={handleCut}
+								onCopy={handleCopy}
+								onPaste={handlePaste}
+								onMoveUp={handleMoveUp}
+								onMoveDown={handleMoveDown}
+								onDragStart={setDraggedPageId}
+								onDrop={handleDrop}
+								onPageClick={handlePageClick}
+								selectedPageIds={selectedPageIds}
+								clipboard={clipboard}
+								isDragging={!!draggedPageId}
+							/>
+						))
+					)}
 				</tbody>
 			</Table>
 		</Box>
