@@ -50,8 +50,8 @@ type Props = {
 
 export const navigationItems = [
 	{ id: "content-settings", label: "Content Settings" },
-	{ id: "geoseo", label: "GEO & SEO" },
-	{ id: "categoriestags", label: "Categories & Tags" },
+	{ id: "geo-seo", label: "GEO & SEO" },
+	{ id: "categories-tags", label: "Categories & Tags" },
 ];
 
 // PillMenu wrapper component for categories/tags
