@@ -1,13 +1,23 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import {useLayout} from "@/app/context/LayoutContext";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 
 // Helper function to convert File[] to base64 data URLs
+// Only processes image files to match backend validation
 async function filesToDataUrls(files: File[]): Promise<Array<{url: string; type: string}>> {
+	// Filter to only image types before encoding
+	const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+
+	if (imageFiles.length < files.length) {
+		console.warn(
+			`[filesToDataUrls] Filtered out ${files.length - imageFiles.length} non-image files. Only images are supported.`
+		);
+	}
+
 	return Promise.all(
-		files.map(
+		imageFiles.map(
 			(file) =>
 				new Promise<{url: string; type: string}>((resolve, reject) => {
 					const reader = new FileReader();
@@ -32,40 +42,55 @@ export function useOpalPageGeneration(
 	const {generationData, setActivePage} = useOpalGeneration();
 	const [isGenerating, setIsGenerating] = useState(false);
 
-	useEffect(() => {
-		// Don't start if already generating
-		if (isGenerating) {
-			return;
-		}
+	// Use refs for unstable dependencies to prevent effect re-runs
+	const opalPanelControlsRef = useRef(opalPanelControls);
+	const onSaveRef = useRef(onSave);
+	const generationDataRef = useRef(generationData);
+	const setActivePageRef = useRef(setActivePage);
 
+	// Keep refs up to date
+	useEffect(() => {
+		opalPanelControlsRef.current = opalPanelControls;
+		onSaveRef.current = onSave;
+		generationDataRef.current = generationData;
+		setActivePageRef.current = setActivePage;
+	});
+
+	useEffect(() => {
 		// Check for pending generation
 		const pendingDataStr = localStorage.getItem(`opal_generation_${pageId}`);
 
 		// Wait until we have all required data before starting generation
-		if (!pendingDataStr || !opalPanelControls || !pageId || !contentTypeId) {
+		if (!pendingDataStr || !opalPanelControlsRef.current || !pageId || !contentTypeId) {
 			return;
 		}
 
+		// Remove from localStorage immediately to prevent double-starts (e.g., strict mode double-mount)
+		// Store the data first so we can use it
+		const pendingData = JSON.parse(pendingDataStr);
+		localStorage.removeItem(`opal_generation_${pageId}`);
+
+		const abortController = new AbortController();
+		let readerRef: ReadableStreamDefaultReader<Uint8Array> | null = null;
+
 		const startGeneration = async () => {
 			try {
-				const pendingData = JSON.parse(pendingDataStr);
-
 				console.log("[useOpalPageGeneration] Starting generation for page:", pageId);
 
-				// Set generating flag first (don't clear localStorage yet - let VBPrototype see it for overlay)
+				// Set generating flag
 				setIsGenerating(true);
 
 				// Open Opal panel
-				opalPanelControls.openPanel();
+				opalPanelControlsRef.current!.openPanel();
 
 				// Add user message
-				opalPanelControls.addMessage({
+				opalPanelControlsRef.current!.addMessage({
 					role: "user",
 					content: `@generate page\n\n${pendingData.instructions}`,
 				});
 
 				// Add progress message
-				const progressMsg = opalPanelControls.addMessage({
+				const progressMsg = opalPanelControlsRef.current!.addMessage({
 					role: "assistant",
 					content: "Generating page...",
 					messageType: "page-generation-progress",
@@ -75,7 +100,7 @@ export function useOpalPageGeneration(
 				});
 
 				// Get files from context (not localStorage - too large)
-				const files = generationData?.files || [];
+				const files = generationDataRef.current?.files || [];
 				const fileData = files.length > 0 ? await filesToDataUrls(files) : [];
 
 				console.log("[useOpalPageGeneration] Uploading files:", {
@@ -83,7 +108,7 @@ export function useOpalPageGeneration(
 					types: fileData.map((f) => f.type),
 				});
 
-				// Connect to SSE stream
+				// Connect to SSE stream with abort signal
 				const response = await fetch("/api/generate-page/stream", {
 					method: "POST",
 					headers: {"Content-Type": "application/json"},
@@ -93,6 +118,7 @@ export function useOpalPageGeneration(
 						contentTypeId,
 						files: fileData,
 					}),
+					signal: abortController.signal,
 				});
 
 				if (!response.ok) {
@@ -101,12 +127,19 @@ export function useOpalPageGeneration(
 
 				// Process SSE stream
 				const reader = response.body!.getReader();
+				readerRef = reader;
 				const decoder = new TextDecoder();
 				let buffer = "";
 
 				while (true) {
 					const {done, value} = await reader.read();
 					if (done) break;
+
+					// Check if aborted
+					if (abortController.signal.aborted) {
+						console.log("[useOpalPageGeneration] Generation aborted");
+						break;
+					}
 
 					buffer += decoder.decode(value, {stream: true});
 					const lines = buffer.split("\n\n");
@@ -125,15 +158,21 @@ export function useOpalPageGeneration(
 
 						console.log("[useOpalPageGeneration] Event:", eventType, data);
 
+						// Guard all updates with abort check
+						if (abortController.signal.aborted) {
+							console.log("[useOpalPageGeneration] Skipping update after abort");
+							break;
+						}
+
 						if (eventType === "checklist") {
 							// Update progress checklist
-							opalPanelControls.updateMessage(progressMsg.id, {
+							opalPanelControlsRef.current!.updateMessage(progressMsg.id, {
 								metadata: {checklist: data, loadingMessage: "Generating page..."},
 							});
 						} else if (eventType === "structure") {
 							// Apply page structure
 							console.log("[useOpalPageGeneration] Applying structure:", data);
-							onSave({
+							onSaveRef.current({
 								outlines: data.outlines,
 								variationId: "original",
 							});
@@ -144,8 +183,8 @@ export function useOpalPageGeneration(
 							// For now, we'll handle this in the API by sending complete structure updates
 						} else if (eventType === "complete") {
 							// Remove progress, add completion message
-							opalPanelControls.removeMessage(progressMsg.id);
-							opalPanelControls.addMessage({
+							opalPanelControlsRef.current!.removeMessage(progressMsg.id);
+							opalPanelControlsRef.current!.addMessage({
 								role: "assistant",
 								content:
 									data.summary ||
@@ -153,29 +192,32 @@ export function useOpalPageGeneration(
 							});
 
 							// Set as active page for iteration
-							setActivePage(pageId);
+							setActivePageRef.current(pageId);
 
 							setIsGenerating(false);
-							localStorage.removeItem(`opal_generation_${pageId}`);
 						} else if (eventType === "error") {
 							// Show error
-							opalPanelControls.removeMessage(progressMsg.id);
-							opalPanelControls.addMessage({
+							opalPanelControlsRef.current!.removeMessage(progressMsg.id);
+							opalPanelControlsRef.current!.addMessage({
 								role: "assistant",
 								content: `Error: ${data.message || "An error occurred during generation"}`,
 							});
 							setIsGenerating(false);
-							localStorage.removeItem(`opal_generation_${pageId}`);
 						}
 					}
 				}
 			} catch (error) {
+				// Don't show errors if we aborted intentionally
+				if (error instanceof Error && error.name === "AbortError") {
+					console.log("[useOpalPageGeneration] Generation cancelled");
+					return;
+				}
+
 				console.error("[useOpalPageGeneration] Error:", error);
 				setIsGenerating(false);
-				localStorage.removeItem(`opal_generation_${pageId}`);
 
-				if (opalPanelControls) {
-					opalPanelControls.addMessage({
+				if (opalPanelControlsRef.current && !abortController.signal.aborted) {
+					opalPanelControlsRef.current.addMessage({
 						role: "assistant",
 						content: `Error: ${error instanceof Error ? error.message : "An error occurred during generation"}`,
 					});
@@ -184,7 +226,18 @@ export function useOpalPageGeneration(
 		};
 
 		startGeneration();
-	}, [pageId, contentTypeId, opalPanelControls, onSave, isGenerating, generationData, setActivePage]);
+
+		// Cleanup function to cancel stream when unmounting
+		return () => {
+			console.log("[useOpalPageGeneration] Cleaning up - aborting generation");
+			abortController.abort();
+			if (readerRef) {
+				readerRef.cancel().catch((err) => {
+					console.warn("[useOpalPageGeneration] Error cancelling reader:", err);
+				});
+			}
+		};
+	}, [pageId, contentTypeId]);
 
 	return {isGenerating};
 }
