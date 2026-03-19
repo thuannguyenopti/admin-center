@@ -8,7 +8,7 @@ import {Table, Tr, Th, Td} from "@/app/components/Table";
 import Item from "@/app/components/Item";
 import {Flex} from "@/app/components/Flex";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page, initialContentTypes, initialApplications, Application} from "@/app/db/initialData";
+import {initialPages, Page, initialContentTypes, initialApplications, Application, canCreateChildType} from "@/app/db/initialData";
 import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {CreatePageDialog} from "./CreatePageDialog";
@@ -141,19 +141,13 @@ const PageRow = ({
 	const canDropHere = (draggedPageIds: string[]): boolean => {
 		if (!allPages) return false;
 
-		// Get the target page's content type
-		const targetContentType = initialContentTypes.find(ct => ct.id === node.contentTypeId);
-
-		// If no restrictions, allow all
-		if (!targetContentType?.availableContentTypes || targetContentType.availableContentTypes.length === 0) {
-			return true;
-		}
-
-		// Check if all dragged pages have allowed content types
+		// Check if all dragged pages can be dropped here
 		return draggedPageIds.every(pageId => {
 			const draggedPage = allPages.find(p => p.id === pageId);
 			if (!draggedPage) return false;
-			return targetContentType.availableContentTypes!.includes(draggedPage.contentTypeId);
+
+			// Use helper function to validate content type restrictions
+			return canCreateChildType(node.contentTypeId, draggedPage.contentTypeId);
 		});
 	};
 
@@ -605,17 +599,18 @@ export default function EditPage() {
 		// Check if the target content type allows these child content types
 		const targetPage = pages.find(p => p.id === targetParentId);
 		if (targetPage) {
-			const targetContentType = initialContentTypes.find(ct => ct.id === targetPage.contentTypeId);
-			if (targetContentType?.availableContentTypes && targetContentType.availableContentTypes.length > 0) {
-				const allAllowed = clipboard.pageIds.every(pageId => {
-					const clipboardPage = pages.find(p => p.id === pageId);
-					return clipboardPage && targetContentType.availableContentTypes!.includes(clipboardPage.contentTypeId);
-				});
+			// Check both parent-side and child-side restrictions
+			const allAllowed = clipboard.pageIds.every(pageId => {
+				const clipboardPage = pages.find(p => p.id === pageId);
+				if (!clipboardPage) return false;
 
-				if (!allAllowed) {
-					console.log("Cannot paste: target content type does not allow these child types");
-					return;
-				}
+				// Use helper function to validate content type restrictions
+				return canCreateChildType(targetPage.contentTypeId, clipboardPage.contentTypeId);
+			});
+
+			if (!allAllowed) {
+				console.log("Cannot paste: content type restrictions not met");
+				return;
 			}
 		}
 
@@ -714,18 +709,19 @@ export default function EditPage() {
 
 		// For 'inside' position, check content type restrictions
 		if (position === 'inside') {
-			const targetContentType = initialContentTypes.find(ct => ct.id === targetPage.contentTypeId);
-			if (targetContentType?.availableContentTypes && targetContentType.availableContentTypes.length > 0) {
-				const allAllowed = pagesToMove.every(pageId => {
-					const draggedPage = pages.find(p => p.id === pageId);
-					return draggedPage && targetContentType.availableContentTypes!.includes(draggedPage.contentTypeId);
-				});
+			// Check both parent-side and child-side restrictions
+			const allAllowed = pagesToMove.every(pageId => {
+				const draggedPage = pages.find(p => p.id === pageId);
+				if (!draggedPage) return false;
 
-				if (!allAllowed) {
-					console.log("Cannot drop: target content type does not allow these child types");
-					setDraggedPageId(null);
-					return;
-				}
+				// Use helper function to validate content type restrictions
+				return canCreateChildType(targetPage.contentTypeId, draggedPage.contentTypeId);
+			});
+
+			if (!allAllowed) {
+				console.log("Cannot drop: content type restrictions not met");
+				setDraggedPageId(null);
+				return;
 			}
 		}
 

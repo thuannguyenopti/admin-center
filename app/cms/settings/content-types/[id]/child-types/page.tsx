@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useState, useCallback, useMemo } from "react";
+import { use, useState, useCallback, useMemo, useEffect } from "react";
 import {
 	Box,
 	Heading,
 	Checkbox,
 	Flex,
+	toaster,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
@@ -13,6 +14,7 @@ import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { initialContentTypes, ContentType } from "@/app/db/initialData";
 import { useParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
+import { Footer } from "@/app/context/LayoutContext";
 
 type SelectionMode = "all" | "none" | "selected";
 
@@ -40,13 +42,44 @@ export default function ChildContentTypesPage() {
 
 	const contentType = contentTypes?.find((ct) => ct.id === id);
 
-	// Local form state - track selected content types
+	// Local form state - track selected child content types (parent-side)
 	const [availableContentTypes, setAvailableContentTypes] = useState<string[]>(() => {
 		if (!contentType?.availableContentTypes) {
 			return [];
 		}
-		return contentType.availableContentTypes.filter(id => id !== "__none__");
+		// Handle new object structure
+		if (typeof contentType.availableContentTypes === 'object') {
+			// If availability is "None", return empty array
+			if (contentType.availableContentTypes.availability === "None") {
+				return [];
+			}
+			// If include is set, use that
+			if (contentType.availableContentTypes.include) {
+				return contentType.availableContentTypes.include;
+			}
+			// If exclude is set, calculate the inverse
+			if (contentType.availableContentTypes.exclude) {
+				const allTypes = contentTypes
+					.filter(ct => ct.baseType === "Page" || ct.baseType === "Experience")
+					.filter(ct => ct.id !== id)
+					.map(ct => ct.id);
+				return allTypes.filter(ctId => !contentType.availableContentTypes?.exclude?.includes(ctId));
+			}
+		}
+		return [];
 	});
+
+	// Local form state - track selected parent content types (child-side)
+	const [availableParentTypes, setAvailableParentTypes] = useState<string[]>(() => {
+		if (!contentType?.includeOn) {
+			return [];
+		}
+		return contentType.includeOn;
+	});
+
+	// Track initial values to detect changes
+	const [initialChildTypes, setInitialChildTypes] = useState<string[]>(availableContentTypes);
+	const [initialParentTypes, setInitialParentTypes] = useState<string[]>(availableParentTypes);
 
 	// Get all eligible content types (Page and Experience, excluding self)
 	const eligibleContentTypes = useMemo(() => {
@@ -55,26 +88,57 @@ export default function ChildContentTypesPage() {
 			.filter(ct => ct.id !== id);
 	}, [contentTypes, id]);
 
-	// Determine checkbox states
-	const allSelected = availableContentTypes.length === eligibleContentTypes.length;
-	const noneSelected = availableContentTypes.length === 0;
-	const someSelected = !allSelected && !noneSelected;
+	// Check if there are unsaved changes
+	const hasUnsavedChanges = useMemo(() => {
+		const childTypesChanged = JSON.stringify([...availableContentTypes].sort()) !== JSON.stringify([...initialChildTypes].sort());
+		const parentTypesChanged = JSON.stringify([...availableParentTypes].sort()) !== JSON.stringify([...initialParentTypes].sort());
+		return childTypesChanged || parentTypesChanged;
+	}, [availableContentTypes, availableParentTypes, initialChildTypes, initialParentTypes]);
 
-	// Handle "select all" checkbox toggle
-	const handleSelectAll = useCallback(() => {
-		if (allSelected) {
-			// If all are selected, deselect all
+	// Determine checkbox states for child types
+	const allChildrenSelected = availableContentTypes.length === eligibleContentTypes.length;
+	const noChildrenSelected = availableContentTypes.length === 0;
+	const someChildrenSelected = !allChildrenSelected && !noChildrenSelected;
+
+	// Determine checkbox states for parent types
+	const allParentsSelected = availableParentTypes.length === eligibleContentTypes.length;
+	const noParentsSelected = availableParentTypes.length === 0;
+	const someParentsSelected = !allParentsSelected && !noParentsSelected;
+
+	// Handle "select all" checkbox toggle for children
+	const handleSelectAllChildren = useCallback(() => {
+		if (allChildrenSelected) {
 			setAvailableContentTypes([]);
 		} else {
-			// Otherwise, select all
 			setAvailableContentTypes(eligibleContentTypes.map(ct => ct.id));
 		}
-	}, [allSelected, eligibleContentTypes]);
+	}, [allChildrenSelected, eligibleContentTypes]);
 
-	// Toggle individual content type
+	// Handle "select all" checkbox toggle for parents
+	const handleSelectAllParents = useCallback(() => {
+		if (allParentsSelected) {
+			setAvailableParentTypes([]);
+		} else {
+			setAvailableParentTypes(eligibleContentTypes.map(ct => ct.id));
+		}
+	}, [allParentsSelected, eligibleContentTypes]);
+
+	// Toggle individual child content type
 	const toggleAvailableContentType = useCallback(
 		(contentTypeId: string) => {
 			setAvailableContentTypes((prev) =>
+				prev.includes(contentTypeId)
+					? prev.filter((id) => id !== contentTypeId)
+					: [...prev, contentTypeId]
+			);
+		},
+		[]
+	);
+
+	// Toggle individual parent content type
+	const toggleAvailableParentType = useCallback(
+		(contentTypeId: string) => {
+			setAvailableParentTypes((prev) =>
 				prev.includes(contentTypeId)
 					? prev.filter((id) => id !== contentTypeId)
 					: [...prev, contentTypeId]
@@ -87,19 +151,6 @@ export default function ChildContentTypesPage() {
 	const handleSave = useCallback(() => {
 		if (!contentTypes || !contentType) return;
 
-		let typesToSave: string[] | undefined;
-
-		if (availableContentTypes.length === eligibleContentTypes.length) {
-			// All types selected - don't set availableContentTypes (undefined means no restrictions)
-			typesToSave = undefined;
-		} else if (availableContentTypes.length === 0) {
-			// No types allowed - use special marker
-			typesToSave = ["__none__"];
-		} else {
-			// Selected types only
-			typesToSave = availableContentTypes;
-		}
-
 		const updatedContentTypes = contentTypes.map((ct: ContentType) => {
 			if (ct.id === id) {
 				const updated = {
@@ -107,11 +158,28 @@ export default function ChildContentTypesPage() {
 					modifiedAt: new Date().toISOString(),
 				};
 
-				if (typesToSave === undefined) {
-					// Remove the field for "all"
+				// Handle child content types (parent-side restrictions)
+				if (availableContentTypes.length === eligibleContentTypes.length) {
+					// All types selected - don't set availableContentTypes (undefined means no restrictions)
 					delete (updated as any).availableContentTypes;
+				} else if (availableContentTypes.length === 0) {
+					// No types allowed - use availability: "None"
+					updated.availableContentTypes = { availability: "None" };
 				} else {
-					updated.availableContentTypes = typesToSave;
+					// Selected types only - use include
+					updated.availableContentTypes = { include: availableContentTypes };
+				}
+
+				// Handle parent content types (child-side restrictions)
+				if (availableParentTypes.length === eligibleContentTypes.length) {
+					// All types selected - don't set includeOn (undefined means no restrictions)
+					delete (updated as any).includeOn;
+				} else if (availableParentTypes.length === 0) {
+					// No types allowed - don't set includeOn (undefined)
+					delete (updated as any).includeOn;
+				} else {
+					// Selected types only - use includeOn
+					updated.includeOn = availableParentTypes;
 				}
 
 				return updated;
@@ -120,11 +188,19 @@ export default function ChildContentTypesPage() {
 		});
 
 		setContentTypes(updatedContentTypes);
+
+		// Update initial values to current values
+		setInitialChildTypes(availableContentTypes);
+		setInitialParentTypes(availableParentTypes);
+
+		// Show success toast
+		toaster.create("Content type restrictions saved successfully", { intent: "success" });
 	}, [
 		contentTypes,
 		contentType,
 		id,
 		availableContentTypes,
+		availableParentTypes,
 		eligibleContentTypes,
 		setContentTypes,
 	]);
@@ -138,63 +214,91 @@ export default function ChildContentTypesPage() {
 	}
 
 	return (
-		<Box display="flex" flexDirection="column" style={{ height: "calc(100vh - 130px)", marginLeft: "-32px", marginRight: "-32px", marginTop: "-16px", marginBottom: "-24px" }}>
-			<Box flex="1" overflow="auto" px="32" py="16">
-				<Box style={{ maxWidth: "900px" }}>
-					<Text color="fg.secondary" mb="24">
-						Choose what content types you should be able to add as children.
+		<>
+			<Box style={{ maxWidth: "900px" }}>
+				{/* Available Child Content Types Section */}
+				<Box mb="48">
+					<Text fontSize="lg" fontWeight="600" mb="8">Available Child Content Types</Text>
+					<Text color="fg.secondary" mb="16">
+						Choose which content types can be created as children under this content type.
 					</Text>
 
-					{/* Child Content Types Table */}
-					<Box mb="16">
-						<Table>
-							<thead>
-								<Tr>
-									<Th style={{ width: "50px" }}>
+					<Table>
+						<thead>
+							<Tr>
+								<Th style={{ width: "50px" }}>
+									<Checkbox
+										checked={allChildrenSelected}
+										indeterminate={someChildrenSelected}
+										onCheckedChange={handleSelectAllChildren}
+									/>
+								</Th>
+								<Th>Name</Th>
+								<Th>Description</Th>
+							</Tr>
+						</thead>
+						<tbody>
+							{eligibleContentTypes.map(ct => (
+								<Tr key={ct.id}>
+									<Td>
 										<Checkbox
-											checked={allSelected}
-											indeterminate={someSelected}
-											onCheckedChange={handleSelectAll}
+											checked={availableContentTypes.includes(ct.id)}
+											onCheckedChange={() => toggleAvailableContentType(ct.id)}
 										/>
-									</Th>
-									<Th>Name</Th>
-									<Th>Description</Th>
+									</Td>
+									<Td type="header">{ct.displayName || ct.name}</Td>
+									<Td>{ct.description || ""}</Td>
 								</Tr>
-							</thead>
-							<tbody>
-								{eligibleContentTypes.map(ct => (
-									<Tr key={ct.id}>
-										<Td>
-											<Checkbox
-												checked={availableContentTypes.includes(ct.id)}
-												onCheckedChange={() => toggleAvailableContentType(ct.id)}
-											/>
-										</Td>
-										<Td type="header">{ct.displayName || ct.name}</Td>
-										<Td>{ct.description || ""}</Td>
-									</Tr>
-								))}
-							</tbody>
-						</Table>
-					</Box>
+							))}
+						</tbody>
+					</Table>
+				</Box>
+
+				{/* Available Parent Content Types Section */}
+				<Box mb="48">
+					<Text fontSize="lg" fontWeight="600" mb="8">Available Parent Content Types</Text>
+					<Text color="fg.secondary" mb="16">
+						Choose which content types this content type can be created under. Leave all unchecked to allow this type under any parent.
+					</Text>
+
+					<Table>
+						<thead>
+							<Tr>
+								<Th style={{ width: "50px" }}>
+									<Checkbox
+										checked={allParentsSelected}
+										indeterminate={someParentsSelected}
+										onCheckedChange={handleSelectAllParents}
+									/>
+								</Th>
+								<Th>Name</Th>
+								<Th>Description</Th>
+							</Tr>
+						</thead>
+						<tbody>
+							{eligibleContentTypes.map(ct => (
+								<Tr key={ct.id}>
+									<Td>
+										<Checkbox
+											checked={availableParentTypes.includes(ct.id)}
+											onCheckedChange={() => toggleAvailableParentType(ct.id)}
+										/>
+									</Td>
+									<Td type="header">{ct.displayName || ct.name}</Td>
+									<Td>{ct.description || ""}</Td>
+								</Tr>
+							))}
+						</tbody>
+					</Table>
 				</Box>
 			</Box>
 
 			{/* Fixed Save Footer */}
-			<Box
-				borderT="1"
-				borderColor="border.secondary"
-				bg="bg.default"
-				px="32"
-				py="16"
-				display="flex"
-				justifyContent="end"
-				z="10"
-			>
-				<Button appearance="primary" onClick={handleSave}>
+			<Footer>
+				<Button appearance="primary" onClick={handleSave} disabled={!hasUnsavedChanges}>
 					Save
 				</Button>
-			</Box>
-		</Box>
+			</Footer>
+		</>
 	);
 }

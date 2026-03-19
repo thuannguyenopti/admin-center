@@ -13,6 +13,7 @@ import {
 	initialPages,
 	Page,
 } from "@/app/db/initialData";
+import { Footer } from "@/app/context/LayoutContext";
 
 export default function ApplicationSettingsPage() {
 	// Persistent state for applications and pages
@@ -83,19 +84,8 @@ export default function ApplicationSettingsPage() {
 	}
 
 	return (
-		<Box
-			display="flex"
-			flexDirection="column"
-			style={{
-				height: "calc(100vh - 130px)",
-				marginLeft: "-32px",
-				marginRight: "-32px",
-				marginTop: "-16px",
-				marginBottom: "-24px",
-			}}
-		>
-			<Box flex="1" overflow="auto" px="32" py="16">
-				<Box style={{ maxWidth: "640px" }}>
+		<>
+			<Box style={{ maxWidth: "640px" }}>
 					<Box gap="16" display="flex" flexDirection="column">
 						<Field label="Application Name" required>
 							<Input
@@ -131,23 +121,13 @@ export default function ApplicationSettingsPage() {
 						</Field>
 					</Box>
 				</Box>
-			</Box>
 
 			{/* Fixed Save Footer */}
-			<Box
-				borderT="1"
-				borderColor="border.secondary"
-				bg="bg.default"
-				px="32"
-				py="16"
-				display="flex"
-				justifyContent="end"
-				z="10"
-			>
+			<Footer>
 				<Button appearance="primary" onClick={handleSave}>
 					Save
 				</Button>
-			</Box>
-		</Box>
+			</Footer>
+		</>
 	);
 }
