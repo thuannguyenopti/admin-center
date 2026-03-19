@@ -1,13 +1,7 @@
 "use client";
 
-import { use, useState, useCallback, useMemo, useEffect } from "react";
-import {
-	Box,
-	Heading,
-	Checkbox,
-	Flex,
-	toaster,
-} from "@optiaxiom/react";
+import { use, useState, useCallback, useMemo } from "react";
+import { Box, Checkbox, toaster } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -15,8 +9,6 @@ import { initialContentTypes, ContentType } from "@/app/db/initialData";
 import { useParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import { Footer } from "@/app/context/LayoutContext";
-
-type SelectionMode = "all" | "none" | "selected";
 
 export default function ChildContentTypesPage() {
 	const params = useParams();
@@ -70,12 +62,9 @@ export default function ChildContentTypesPage() {
 	});
 
 	// Local form state - track selected parent content types (child-side)
-	const [availableParentTypes, setAvailableParentTypes] = useState<string[]>(() => {
-		if (!contentType?.includeOn) {
-			return [];
-		}
-		return contentType.includeOn;
-	});
+	const [availableParentTypes, setAvailableParentTypes] = useState<string[]>(
+		() => contentType?.includeOn || []
+	);
 
 	// Track initial values to detect changes
 	const [initialChildTypes, setInitialChildTypes] = useState<string[]>(availableContentTypes);

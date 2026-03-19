@@ -50,28 +50,49 @@ export function useLayout() {
 	return context;
 }
 
-// Helper component to use in pages
+/**
+ * Aside component for rendering content in the right sidebar panel.
+ *
+ * @example
+ * ```tsx
+ * <Aside>
+ *   <ContentDetails item={selectedItem} />
+ * </Aside>
+ * ```
+ */
 export function Aside({children}: {children: ReactNode}) {
 	const {setAsideContent} = useLayout();
 
-	// Update the aside content when this component mounts
 	useEffect(() => {
 		setAsideContent(children);
-		return () => setAsideContent(null); // Cleanup on unmount
+		return () => setAsideContent(null);
 	}, [children, setAsideContent]);
 
-	return null; // Renders nothing in the main flow
+	return null;
 }
 
-// Helper component for fixed footer
+/**
+ * Footer component for rendering a fixed footer at the bottom of the page.
+ * The footer automatically:
+ * - Positions itself at the bottom of the viewport
+ * - Respects sidebars and panels (doesn't cover them)
+ * - Adds appropriate padding to page content
+ * - Transitions smoothly when sidebars expand/collapse
+ *
+ * @example
+ * ```tsx
+ * <Footer>
+ *   <Button onClick={handleSave}>Save</Button>
+ * </Footer>
+ * ```
+ */
 export function Footer({children}: {children: ReactNode}) {
 	const {setFooterContent} = useLayout();
 
-	// Update the footer content when this component mounts
 	useEffect(() => {
 		setFooterContent(children);
-		return () => setFooterContent(null); // Cleanup on unmount
+		return () => setFooterContent(null);
 	}, [children, setFooterContent]);
 
-	return null; // Renders nothing in the main flow
+	return null;
 }

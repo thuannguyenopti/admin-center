@@ -85,42 +85,40 @@ export default function ApplicationSettingsPage() {
 
 	return (
 		<>
-			<Box style={{ maxWidth: "640px" }}>
-					<Box gap="16" display="flex" flexDirection="column">
-						<Field label="Application Name" required>
-							<Input
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-							/>
-						</Field>
-						<Field label="APP ID" required>
-							<Input
-								value={appId}
-								onChange={(e) => setAppId(e.target.value)}
-							/>
-						</Field>
-						<Field label="URL">
-							<Input value={url} onChange={(e) => setUrl(e.target.value)} />
-						</Field>
-						<Field label="Start Page" required>
-							<Box display="flex" gap="8" alignItems="center">
-								<Input
-									value={startPageName}
-									placeholder="No start page selected"
-									disabled
-									style={{ flex: 1 }}
-								/>
-								<SelectStartPageDialog
-									pages={pages}
-									currentStartPageId={startPageId}
-									onSelect={setStartPageId}
-								>
-									<Button>Select Page</Button>
-								</SelectStartPageDialog>
-							</Box>
-						</Field>
+			<Box style={{ maxWidth: "640px" }} gap="16" display="flex" flexDirection="column">
+				<Field label="Application Name" required>
+					<Input
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+					/>
+				</Field>
+				<Field label="APP ID" required>
+					<Input
+						value={appId}
+						onChange={(e) => setAppId(e.target.value)}
+					/>
+				</Field>
+				<Field label="URL">
+					<Input value={url} onChange={(e) => setUrl(e.target.value)} />
+				</Field>
+				<Field label="Start Page" required>
+					<Box display="flex" gap="8" alignItems="center">
+						<Input
+							value={startPageName}
+							placeholder="No start page selected"
+							disabled
+							style={{ flex: 1 }}
+						/>
+						<SelectStartPageDialog
+							pages={pages}
+							currentStartPageId={startPageId}
+							onSelect={setStartPageId}
+						>
+							<Button>Select Page</Button>
+						</SelectStartPageDialog>
 					</Box>
-				</Box>
+				</Field>
+			</Box>
 
 			{/* Fixed Save Footer */}
 			<Footer>
