@@ -138,7 +138,7 @@ export function OpalInput({
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSend();
+      if (hasValue && !isLoading) onSend();
     }
   };
 
