@@ -1,6 +1,6 @@
 "use client";
 
-import {useState, useMemo} from "react";
+import {useState, useMemo, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import Image from "next/image";
 import {
@@ -24,7 +24,6 @@ import {
 	Heading,
 	SearchInput,
 	Group,
-	Separator,
 	ToggleButton,
 	Table,
 	TableBody,
@@ -57,6 +56,55 @@ interface CreatePageDialogProps {
 	preselectedLocation?: string;
 	onCreatePage?: (page: Page) => void;
 }
+
+const StepIndicator = ({currentStep}: {currentStep: 'template' | 'location'}) => {
+	return (
+		<Box display="flex" alignItems="center" justifyContent="flex-start" gap="12" mb="24" mt="16" px="24">
+			{/* Step 1 */}
+			<Box display="flex" alignItems="center" gap="8">
+				<Box
+					w="32"
+					h="32"
+					rounded="full"
+					bg="bg.accent"
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+				>
+					<Text fontSize="sm" fontWeight="600" color="fg.default.inverse">
+						1
+					</Text>
+				</Box>
+				<Text fontSize="md" fontWeight={currentStep === 'template' ? '600' : '400'}>
+					Template
+				</Text>
+			</Box>
+
+			{/* Connecting line */}
+			<Box w="64" bg={currentStep === 'location' ? "bg.accent" : "bg.tertiary"} style={{height: '2px'}} />
+
+			{/* Step 2 */}
+			<Box display="flex" alignItems="center" gap="8">
+				<Box
+					w="32"
+					h="32"
+					rounded="full"
+					bg={currentStep === 'location' ? "bg.accent" : "bg.tertiary"}
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+				>
+					<Text fontSize="sm" fontWeight="600" color={currentStep === 'location' ? "fg.default.inverse" : "fg.secondary"}>
+						2
+					</Text>
+				</Box>
+				<Text fontSize="md" fontWeight={currentStep === 'location' ? '600' : '400'} color={currentStep === 'location' ? undefined : "fg.secondary"}>
+					Location
+				</Text>
+			</Box>
+		</Box>
+	);
+};
 
 const LocationTreeNode = ({
 	node,
@@ -242,6 +290,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 	const {setPendingGeneration} = useOpalGeneration();
 	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
 	const [open, setOpen] = useState(false);
+	const [step, setStep] = useState<'template' | 'location'>('template');
 	const [opalDialogOpen, setOpalDialogOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [language, setLanguage] = useState("en");
@@ -280,7 +329,6 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 	}, [language]);
 
 	// Get templates from content types - filter by Page and Experience base types
-	// Templates are now shown immediately, not dependent on location selection
 	const templates = initialContentTypes
 		.filter((ct) => ct.baseType === "Page" || ct.baseType === "Experience")
 		.filter((ct) => categoryFilter === "any" || ct.baseType === categoryFilter)
@@ -308,17 +356,31 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		});
 	}, [selectedTemplate, pages, rootNode]);
 
-	// Auto-select location if only one valid location exists
-	useMemo(() => {
-		if (selectedTemplate && validLocations.length === 1 && !selectedLocation) {
+	// Auto-select location when entering step 2
+	useEffect(() => {
+		if (step === 'location' && selectedTemplate && validLocations.length === 1 && !selectedLocation) {
 			setSelectedLocation(validLocations[0].id);
 		}
-	}, [selectedTemplate, validLocations, selectedLocation]);
+	}, [step, selectedTemplate, validLocations, selectedLocation]);
 
 	// Get valid location IDs for disabling invalid nodes
 	const validLocationIds = useMemo(() => {
 		return validLocations.map(loc => loc.id);
 	}, [validLocations]);
+
+	const validateStep1 = () => {
+		const newErrors: {name?: string; template?: string} = {};
+
+		if (!name.trim()) {
+			newErrors.name = "Page name is required";
+		}
+		if (!selectedTemplate) {
+			newErrors.template = "Please select a template";
+		}
+
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
 
 	const validateForm = () => {
 		const newErrors: {name?: string; location?: string; template?: string} = {};
@@ -340,6 +402,16 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 
 		setErrors(newErrors);
 		return Object.keys(newErrors).length === 0;
+	};
+
+	const handleNext = () => {
+		if (validateStep1()) {
+			setStep('location');
+		}
+	};
+
+	const handleBack = () => {
+		setStep('template');
 	};
 
 	const handleCreate = () => {
@@ -387,6 +459,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		setLanguage("en");
 		setSelectedLocation(null);
 		setSelectedTemplate(null);
+		setStep('template');
 		setErrors({});
 
 		// Navigate to visual builder
@@ -458,6 +531,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		setLanguage("en");
 		setSelectedLocation(null);
 		setSelectedTemplate(null);
+		setStep('template');
 		setOpalInstructions("");
 		setUploadedFiles([]);
 		setErrors({});
@@ -472,19 +546,29 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		setOpalError(undefined);
 	};
 
+	const handleDialogOpenChange = (newOpen: boolean) => {
+		setOpen(newOpen);
+		if (!newOpen) {
+			// Reset to step 1 when dialog closes
+			setStep('template');
+		}
+	};
+
 	return (
 		<>
-			<Dialog open={open} onOpenChange={setOpen}>
+			<Dialog open={open} onOpenChange={handleDialogOpenChange}>
 				<DialogTrigger asChild>{children}</DialogTrigger>
 
-				<DialogContent style={{maxWidth: "1200px", width: "90vw", maxHeight: "80vh"}}>
+				<DialogContent style={{maxWidth: "800px", width: "90vw", maxHeight: "80vh"}}>
 					<DialogHeader>Create Page</DialogHeader>
+					<StepIndicator currentStep={step} />
 
 				<DialogBody>
-					<Group flexDirection="column" gap="16">
-						{/* Name and Language */}
-						<Group gap="16">
-							<Box style={{flex: 1}}>
+					{/* Step 1: Template Selection */}
+					{step === 'template' && (
+						<Group flexDirection="column" gap="16">
+							{/* Name and Language */}
+							<Group flexDirection="column" gap="16">
 								<Field label="Name" required error={errors.name}>
 									<Input
 										placeholder="Enter page name"
@@ -497,8 +581,6 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 										}}
 									/>
 								</Field>
-							</Box>
-							<Box style={{width: "200px"}}>
 								<Field label="Language">
 									<Select
 										value={languageValue}
@@ -509,13 +591,10 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 										<SelectContent />
 									</Select>
 								</Field>
-							</Box>
-						</Group>
+							</Group>
 
-						{/* Templates and Location */}
-						<Group gap="16" style={{minHeight: "400px"}} alignItems={"normal"}>
-							{/* Left: Template Selection */}
-							<Box style={{flex: 1}} rounded="md">
+							{/* Template Selection */}
+							<Box rounded="md">
 								<Group flexDirection="column" gap="16">
 									{/* Filters Row */}
 									<Group gap="12" alignItems="end">
@@ -567,7 +646,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 											gap="12"
 											style={{
 												gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-												maxHeight: "320px",
+												maxHeight: "400px",
 												overflow: "auto",
 											}}
 										>
@@ -588,7 +667,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 											))}
 										</Box>
 									) : (
-										<Box style={{maxHeight: "320px", overflow: "auto"}}>
+										<Box style={{maxHeight: "400px", overflow: "auto"}}>
 											<Table>
 												<TableHeader>
 													<TableRow>
@@ -658,81 +737,94 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 									)}
 								</Group>
 							</Box>
+						</Group>
+					)}
 
-							{/* Right: Location Selection - Conditional */}
-							{selectedTemplate && validLocations.length > 1 && (
-								<>
-									<Separator orientation="vertical" />
+					{/* Step 2: Location Selection */}
+					{step === 'location' && (
+						<Group flexDirection="column" gap="16">
+							{/* Selected Template Summary */}
+							<Box p="16" bg="bg.secondary" rounded="md">
+								<Text fontSize="sm" color="fg.secondary" mb="4">
+									Selected Template
+								</Text>
+								<Text fontSize="md" fontWeight="600">
+									{templates.find(t => t.id === selectedTemplate)?.name}
+								</Text>
+								<Text fontSize="sm" color="fg.secondary">
+									{templates.find(t => t.id === selectedTemplate)?.category}
+								</Text>
+							</Box>
 
-									<Group w="384" flexDirection="column" rounded="md" gap="16">
-										<Group flexDirection="column" gap="8" style={{flex: 1}}>
-											<Field label="Location" required error={errors.location}>
-												<SearchInput placeholder="Search locations..." />
-											</Field>
-											<Box overflow="auto" style={{maxHeight: "320px"}}>
-												<LocationTreeNode
-													node={rootNode}
-													selectedLocation={selectedLocation}
-													onSelectLocation={(id) => {
-														setSelectedLocation(id);
-														if (errors.location) {
-															setErrors({...errors, location: undefined});
-														}
-													}}
-													validLocationIds={validLocationIds}
-												/>
-											</Box>
-										</Group>
-									</Group>
-								</>
+							{/* Location Selection */}
+							{validLocations.length > 1 && (
+								<Group flexDirection="column" gap="16">
+									<Field label="Location" required error={errors.location}>
+										<SearchInput placeholder="Search locations..." />
+									</Field>
+									<Box overflow="auto" style={{maxHeight: "400px"}}>
+										<LocationTreeNode
+											node={rootNode}
+											selectedLocation={selectedLocation}
+											onSelectLocation={(id) => {
+												setSelectedLocation(id);
+												if (errors.location) {
+													setErrors({...errors, location: undefined});
+												}
+											}}
+											validLocationIds={validLocationIds}
+										/>
+									</Box>
+								</Group>
 							)}
 
 							{/* Show message if single valid location */}
-							{selectedTemplate && validLocations.length === 1 && (
-								<>
-									<Separator orientation="vertical" />
-									<Group w="384" flexDirection="column" rounded="md" gap="16" p="16">
-										<Text fontSize="sm" color="fg.secondary">
-											This content type can only be created under:
-										</Text>
-										<Box p="12" rounded="md" bg="bg.secondary">
-											<Text fontWeight="600">{validLocations[0].name}</Text>
-										</Box>
-									</Group>
-								</>
+							{validLocations.length === 1 && (
+								<Box p="16" rounded="md" bg="bg.secondary">
+									<Text fontSize="sm" color="fg.secondary" mb="8">
+										This content type can only be created under:
+									</Text>
+									<Text fontWeight="600">{validLocations[0].name}</Text>
+								</Box>
 							)}
 
 							{/* Show error if no valid locations */}
-							{selectedTemplate && validLocations.length === 0 && (
-								<>
-									<Separator orientation="vertical" />
-									<Group w="384" flexDirection="column" rounded="md" gap="16" p="16">
-										<Box p="12" rounded="md" bg="bg.error.subtle" style={{border: "1px solid var(--border-error)"}}>
-											<Text fontSize="sm" color="fg.error">
-												This content type cannot be created anywhere in the current tree. Create a parent page that allows this type first.
-											</Text>
-										</Box>
-									</Group>
-								</>
+							{validLocations.length === 0 && (
+								<Box p="16" rounded="md" bg="bg.error.subtle" style={{border: "1px solid var(--border-error)"}}>
+									<Text fontSize="sm" color="fg.error">
+										This content type cannot be created anywhere in the current tree. Create a parent page that allows this type first.
+									</Text>
+								</Box>
 							)}
 						</Group>
-					</Group>
+					)}
 				</DialogBody>
 
 				<DialogFooter>
-					<Group gap="8" justifyContent="space-between" w="full">
-						<DialogClose>Cancel</DialogClose>
-						<Group gap="8">
-							<Button appearance="default" onClick={handleCreate}>
-								Create Page
+					{step === 'template' ? (
+						<Group gap="8" justifyContent="space-between" w="full">
+							<DialogClose>Cancel</DialogClose>
+							<Button appearance="primary" onClick={handleNext}>
+								Next
 							</Button>
-							{opalActions.find((a) => a.id === "system-page-generator")?.enabled && (
-								<Button appearance="primary-opal" onClick={handleCreateWithOpal} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
-									Generate Page With Opal
-								</Button>
-							)}
 						</Group>
-					</Group>
+					) : (
+						<Group gap="8" justifyContent="space-between" w="full">
+							<Button appearance="subtle" onClick={handleBack}>
+								Back
+							</Button>
+							<Group gap="8">
+								<Button appearance="primary" onClick={handleCreate} disabled={validLocations.length === 0}>
+									Create Page
+								</Button>
+								{opalActions.find((a) => a.id === "system-page-generator")?.enabled && (
+									<Button appearance="primary-opal" onClick={handleCreateWithOpal} disabled={validLocations.length === 0} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
+										Generate Page
+									</Button>
+								)}
+							</Group>
+						</Group>
+					)}
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
