@@ -200,7 +200,7 @@ export default function OpalPage() {
                             onClick={handleSend}
                             disabled={!hasValue}
                             style={{
-                                backgroundColor: hasValue ? opal_primary : undefined,
+                                backgroundColor: opal_primary,
                                 opacity: hasValue ? 1 : 0.4,
                             }}
                         />
