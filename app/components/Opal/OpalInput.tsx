@@ -29,7 +29,7 @@ const MOCK_AGENTS: Agent[] = [
 type OpalInputProps = {
   value: string;
   onChange: (value: string) => void;
-  onSend: () => void;
+  onSend: (content?: string) => void;
   disabled: boolean;
   error?: string;
   isLoading?: boolean;
@@ -127,6 +127,17 @@ export function OpalInput({
   // Defined early so handleKeyDown can reference it
   const hasValue = value.trim().length > 0 || selectedAgent !== null;
 
+  // Build full message content (agent mention + text) and fire onSend
+  const triggerSend = () => {
+    if (!hasValue || isLoading) return;
+    const textPart = value.trim();
+    const content = selectedAgent
+      ? `@${selectedAgent.name}${textPart ? ' ' + textPart : ''}`
+      : textPart;
+    onSend(content);
+    setSelectedAgent(null);
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showAgentDropdown) {
       if (e.key === 'ArrowDown') {
@@ -153,7 +164,7 @@ export function OpalInput({
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (hasValue && !isLoading) onSend();
+      triggerSend();
     }
   };
 
@@ -529,7 +540,7 @@ export function OpalInput({
                 if (isLoading) {
                   onSend();
                 } else {
-                  onSend();
+                  triggerSend();
                   setTimeout(() => textareaRef.current?.focus(), 50);
                 }
               }}

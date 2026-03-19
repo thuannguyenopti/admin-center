@@ -330,7 +330,7 @@ export default function OpalPage() {
         <OpalInput
           value={inputValue}
           onChange={setInputValue}
-          onSend={() => sendMessage(inputValue)}
+          onSend={(content) => sendMessage(content ?? inputValue)}
           disabled={false}
           isLoading={isLoading}
           error={error}
