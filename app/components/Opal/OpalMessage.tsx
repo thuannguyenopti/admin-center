@@ -4,6 +4,8 @@ import { Box } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import Image from "next/image";
+import { getAdaptiveBlockComponent } from "../ai/AdaptiveBlockRegistry";
+import "../ai/blocks"; // Auto-register all blocks
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
@@ -346,6 +348,34 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange }: 
                   >
                     {message.content}
                   </Text>
+                ) : message.messageType && message.metadata ? (
+                  (() => {
+                    const BlockComponent = getAdaptiveBlockComponent(message.messageType);
+                    if (BlockComponent) {
+                      return (
+                        <>
+                          {message.content && (
+                            <Text
+                              fontSize="sm"
+                              style={{
+                                margin: 0,
+                                marginBottom: '12px',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {message.content}
+                            </Text>
+                          )}
+                          <BlockComponent
+                            metadata={{ ...message.metadata, blockType: message.messageType }}
+                            messageId={message.id}
+                          />
+                        </>
+                      );
+                    }
+                    return <MarkdownContent content={message.content} />;
+                  })()
                 ) : (
                   <MarkdownContent content={message.content} />
                 )
@@ -386,7 +416,7 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange }: 
               marginRight: isUser ? '32px' : '0',
               opacity: isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
-              marginTop: isUser ? '4px' : '-8px',
+              marginTop: isUser ? '4px' : (message.messageType && message.metadata) ? '8px' : '-8px',
               width: '100%',
               justifyContent: 'space-between',
               alignItems: 'center',
