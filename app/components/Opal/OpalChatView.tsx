@@ -95,7 +95,7 @@ export function OpalChatView({
                             variant="home"
                             value={inputValue}
                             onChange={setInputValue}
-                            onSend={() => onSend(inputValue)}
+                            onSend={(content) => onSend(content ?? inputValue)}
                             disabled={isLoading}
                             isLoading={isLoading}
                             error={error}
