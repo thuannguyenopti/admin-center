@@ -197,11 +197,11 @@ export default function OpalPage() {
                             icon={<IconArrowUp size={20} />}
                             rounded="full"
                             aria-label="Send message"
-                            onClick={handleSend}
-                            disabled={!hasValue}
+                            onClick={hasValue ? handleSend : undefined}
                             style={{
                                 backgroundColor: opal_primary,
                                 opacity: hasValue ? 1 : 0.4,
+                                cursor: hasValue ? 'pointer' : 'default',
                             }}
                         />
                     </Box>
