@@ -62,6 +62,7 @@ function TemplateContent({
 		setInputValue,
 		setInputDisabled,
 		sendMessage,
+		regenerate,
 		addMessage,
 		updateMessage,
 		removeMessage,
@@ -268,7 +269,6 @@ function TemplateContent({
 										<VT
 											backLink={undefined}
 											title={highlight1?.children?.title || highlight1?.label}
-											description={highlight1?.children?.description}
 											items={highlight1?.children}
 										/>
 									)}
@@ -276,7 +276,6 @@ function TemplateContent({
 										<VT
 											backLink={lvl2}
 											title={lvl2.children?.title}
-											description={lvl2.children?.description}
 											items={lvl2.children?.children}
 										/>
 									)}
@@ -284,7 +283,6 @@ function TemplateContent({
 										<VT
 											backLink={lvl3}
 											title={lvl3.children?.title}
-											description={lvl3.children?.description}
 											items={lvl3.children?.children}
 										/>
 									)}
@@ -371,7 +369,6 @@ function TemplateContent({
 						bg="bg.default"
 						h="full"
 						overflow="auto"
-						style={{width: "384px", minWidth: "384px"}}
 					>
 						{asideContent}
 					</Box>
@@ -409,6 +406,7 @@ function TemplateContent({
 				isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
+				regenerate={regenerate}
 				groupedHistory={groupedHistory}
 				activeChat={activeChat}
 				searchQuery={searchQuery}

@@ -1,23 +1,25 @@
 "use client";
 
-import { Box, Heading, Text, SearchInput, Grid, Button, Paper, Textarea } from "@optiaxiom/react";
-import { IconMicrophone } from "@tabler/icons-react";
-import { IconAgent, IconFileArrowUp, IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
-import { useState, useRef, useEffect } from "react";
+import { Box, Heading, Text, Button } from "@optiaxiom/react";
+import { IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
+import { IconChevronRight } from "@tabler/icons-react";
+import { useOpalContext } from "../context/OpalContext";
+import { OpalChatView } from "../components/Opal/OpalChatView";
 
 const opal_primary = "#7C3AED";
 
 export default function OpalPage() {
-    const [inputValue, setInputValue] = useState("");
-    const [isFocused, setIsFocused] = useState(false);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-        if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, window.innerHeight / 3)}px`;
-        }
-    }, [inputValue]);
+    const opalContext = useOpalContext();
+    const {
+        messages,
+        inputValue,
+        isLoading,
+        error,
+        setInputValue,
+        sendMessage,
+        regenerate,
+        switchVersion,
+    } = opalContext.chatState;
 
     const cards = [
         {
@@ -60,79 +62,119 @@ export default function OpalPage() {
 
     const handleCardClick = (prompt: string) => {
         setInputValue(prompt);
+        setTimeout(() => {
+            const textarea = document.querySelector('textarea');
+            if (textarea) textarea.focus();
+        }, 0);
     };
 
-    return (
-        <Box p="32" display="flex" flexDirection="column" gap="32" alignItems="center" style={{ maxWidth: "1200px" }} mx="auto">
-            <Box textAlign="center" my="16">
-                <Heading level="2" fontSize="3xl" color="fg.default">What are we working on today?</Heading>
-            </Box>
+    const landingHeader = (
+        <Box textAlign="center" mb="24" mt="64">
+            <Heading level="2" fontSize="4xl" color="fg.default" fontWeight="600" style={{ letterSpacing: '-0.02em' }}>
+                What are we working on today?
+            </Heading>
+        </Box>
+    );
 
+    const emptyState = (
+        <Box w="full" px="32" py="48" display="flex" flexDirection="column" alignItems="center">
             <Box
-                w="full"
+                display="grid"
                 style={{
-                    maxWidth: "800px",
-                    position: "relative",
-                    borderColor: isFocused ? opal_primary : undefined,
-                    transition: "border-color 0.2s ease-in-out"
+                    gridTemplateColumns: "repeat(3, 272px)",
+                    gap: "24px",
+                    justifyContent: "center"
                 }}
-                bg="bg.default"
-                px="16"
-                py="4"
-                rounded="lg"
-                border="1"
-                borderColor={isFocused ? undefined : "border.tertiary"}
-                shadow="sm"
+                w="full"
+                mb="48"
             >
-                <Textarea
-                    className="w-full text-md outline-none bg-transparent placeholder-gray-400 resize-none"
-                    placeholder='Ask Opal anything—like "Plan a new campaign" or "Suggest test ideas"'
-                    value={inputValue}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    ref={textareaRef}
-                    rows={1}
-                    style={{ minHeight: "22px", maxHeight: "33vh", border: "none", padding: 0, paddingBottom: "32px", overflowY: "auto", boxShadow: "none", outline: "none", backgroundColor: "transparent" }}
-                />
-                <Box display="flex" justifyContent="space-between" alignItems="end" style={{ position: "absolute", bottom: "4px", left: "16px", right: "16px", pointerEvents: "none", zIndex: 10 }}>
-                    <Box display="flex" gap="8" style={{ pointerEvents: "auto" }}>
-                        <Button appearance="subtle" icon={<IconAgent />} aria-label="Agent" />
-                        <Button appearance="subtle" icon={<IconFileArrowUp />} aria-label="File upload" />
-                    </Box>
-                    <Button appearance="primary" size="lg" icon={<IconMicrophone />} rounded="full" aria-label="Voice search" style={{ backgroundColor: opal_primary, pointerEvents: "auto" }} />
-                </Box>
-            </Box>
-
-            <Box display="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(268px, 268px))", gap: "24px", justifyContent: "center" }} w="full">
                 {cards.map((card, index) => (
                     <Box
                         key={index}
-                        p="24"
+                        p="12"
+                        bg="bg.default"
+                        rounded="xl"
                         border="1"
                         borderColor="border.tertiary"
-                        rounded="lg"
-                        bg="bg.default"
-                        display="flex"
-                        flexDirection="column"
-                        gap="12"
-                        style={{ maxWidth: "268px" }}
-                        w="full"
-                        className="hover:border-purple-500 cursor-pointer transition-colors"
+                        style={{
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                            position: 'relative'
+                        }}
                         onClick={() => handleCardClick(card.prompt)}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = opal_primary;
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.08)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                        }}
                     >
-                        <Box display="flex" justifyContent="flex-end" mb="4">
+                        <Box style={{ position: 'absolute', top: '24px', right: '24px' }}>
                             {card.icon}
                         </Box>
-                        <Heading level="4" fontSize="lg" fontWeight="600">{card.title}</Heading>
-                        <Text color="fg.secondary" fontSize="md">{card.description}</Text>
+                        <Box mt="32">
+                            <Heading level="4" fontSize="lg" fontWeight="600" mb="4">{card.title}</Heading>
+                            <Text color="fg.secondary" fontSize="md" style={{ lineHeight: '1.5' }}>{card.description}</Text>
+                        </Box>
                     </Box>
                 ))}
             </Box>
 
-            <Box w="full" style={{ maxWidth: "852px" }} display="flex" justifyContent="flex-end">
-                <Button appearance="subtle">See more &gt;</Button>
+            <Box w="full" style={{ maxWidth: "864px" }} display="flex" justifyContent="flex-end">
+                <Button appearance="subtle">
+                    <Box display="flex" alignItems="center" gap="4" style={{ whiteSpace: 'nowrap' }}>
+                        See more <IconChevronRight size={16} />
+                    </Box>
+                </Button>
             </Box>
+        </Box>
+    );
+
+    return (
+        <Box
+            className="opal-landing-page"
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            h="full"
+            w="full"
+            style={{
+                backgroundColor: 'var(--opal-bg-page)',
+                overflow: 'hidden',
+                minHeight: 0,
+            }}
+        >
+            <OpalChatView
+                variant="home"
+                messages={messages}
+                inputValue={inputValue}
+                isLoading={isLoading}
+                error={error}
+                setInputValue={setInputValue}
+                onSend={sendMessage}
+                onSuggestionClick={sendMessage}
+
+                onToggleHistory={opalContext.history.toggleHistory}
+                onNewChat={opalContext.history.createNewChat}
+                isHistoryVisible={opalContext.history.isHistoryVisible}
+                groupedHistory={opalContext.history.groupedHistory}
+                activeChat={opalContext.history.activeChat}
+                searchQuery={opalContext.history.searchQuery}
+                onSearchChange={opalContext.history.setSearchQuery}
+                onDeleteChat={opalContext.history.deleteChat}
+                onSelectChat={opalContext.history.selectChat}
+
+                landingHeader={landingHeader}
+                emptyState={emptyState}
+                onMessageEdit={() => {}}
+                onRegenerate={regenerate}
+                onMessageVersionChange={switchVersion}
+            />
         </Box>
     );
 }
