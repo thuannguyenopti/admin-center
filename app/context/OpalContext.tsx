@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useMemo, ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { useOpalHistory } from "@/app/hooks/useOpalHistory";
+import { useOpalState } from "@/app/hooks/useOpalState";
 
 // Types for navigation structure
 type NavItem = {
@@ -24,6 +26,7 @@ export type OpalContextType = {
   currentPage: PageContext;
   availableFeatures: string[];
   opalCapabilities: string[];
+  history?: any;
 };
 
 // Opal's capabilities - what it can help with
@@ -51,22 +54,19 @@ const PRODUCT_AREA_MAP: Record<string, string> = {
 // Helper function to extract features from navigation structure
 function extractFeaturesFromNavigation(structure: NavItem[]): string[] {
   const features: string[] = [];
-  
+
   for (const item of structure) {
     if (item.url && item.label) {
       features.push(item.label);
     }
-    
-    // Handle children array
+
     if (Array.isArray(item.children)) {
       for (const child of item.children) {
         if (child.url && child.label) {
           features.push(child.label);
         }
       }
-    }
-    // Handle children object with nested children
-    else if (item.children && typeof item.children === 'object' && 'children' in item.children) {
+    } else if (item.children && typeof item.children === 'object' && 'children' in item.children) {
       for (const child of item.children.children) {
         if (child.url && child.label) {
           features.push(child.label);
@@ -74,8 +74,8 @@ function extractFeaturesFromNavigation(structure: NavItem[]): string[] {
       }
     }
   }
-  
-  return [...new Set(features)]; // Remove duplicates
+
+  return [...new Set(features)];
 }
 
 // Helper function to find the current page info from navigation
@@ -83,20 +83,13 @@ function findCurrentPageInfo(
   path: string,
   structure: NavItem[]
 ): { pageName: string; pageDescription?: string } {
-  // Sort by highlight/url length to find the most specific match
   const flatItems: { label: string; url?: string; highlight?: string; description?: string }[] = [];
-  
+
   function flatten(items: NavItem[]) {
     for (const item of items) {
       if (item.url || item.highlight) {
-        flatItems.push({
-          label: item.label,
-          url: item.url,
-          highlight: item.highlight,
-          description: item.description,
-        });
+        flatItems.push({ label: item.label, url: item.url, highlight: item.highlight, description: item.description });
       }
-      
       if (Array.isArray(item.children)) {
         flatten(item.children);
       } else if (item.children && typeof item.children === 'object' && 'children' in item.children) {
@@ -104,10 +97,9 @@ function findCurrentPageInfo(
       }
     }
   }
-  
+
   flatten(structure);
-  
-  // Find the best match
+
   const matches = flatItems
     .filter(item => {
       const matchPath = item.url || item.highlight;
@@ -118,24 +110,17 @@ function findCurrentPageInfo(
       const bPath = b.url || b.highlight || '';
       return bPath.length - aPath.length;
     });
-  
+
   if (matches.length > 0) {
-    return {
-      pageName: matches[0].label,
-      pageDescription: matches[0].description,
-    };
+    return { pageName: matches[0].label, pageDescription: matches[0].description };
   }
-  
+
   return { pageName: "Unknown Page" };
 }
 
 // Default context value
 const defaultContext: OpalContextType = {
-  currentPage: {
-    path: "/",
-    productArea: "Unknown",
-    pageName: "Unknown Page",
-  },
+  currentPage: { path: "/", productArea: "Unknown", pageName: "Unknown Page" },
   availableFeatures: [],
   opalCapabilities: OPAL_CAPABILITIES,
 };
@@ -147,52 +132,63 @@ type OpalContextProviderProps = {
   navigationStructure?: NavItem[];
 };
 
-export function OpalContextProvider({ 
-  children, 
-  navigationStructure = [] 
+export function OpalContextProvider({
+  children,
+  navigationStructure = []
 }: OpalContextProviderProps) {
   const pathname = usePathname();
-  
+
   const contextValue = useMemo<OpalContextType>(() => {
-    // Determine product area from path
     const pathSegments = pathname.split("/").filter(Boolean);
     const productAreaKey = pathSegments[0] || "";
     const productArea = PRODUCT_AREA_MAP[productAreaKey] || "Optimizely Platform";
-    
-    // Get page info from navigation structure
+
     const pageInfo = navigationStructure.length > 0
       ? findCurrentPageInfo(pathname, navigationStructure)
       : { pageName: productAreaKey || "Home" };
-    
-    // Extract available features from navigation
+
     const availableFeatures = extractFeaturesFromNavigation(navigationStructure);
-    
+
     return {
-      currentPage: {
-        path: pathname,
-        productArea,
-        pageName: pageInfo.pageName,
-        pageDescription: pageInfo.pageDescription,
-      },
+      currentPage: { path: pathname, productArea, pageName: pageInfo.pageName, pageDescription: pageInfo.pageDescription },
       availableFeatures,
       opalCapabilities: OPAL_CAPABILITIES,
     };
   }, [pathname, navigationStructure]);
-  
+
+  const history = useOpalHistory();
+  const chatState = useOpalState({
+    activeChatId: history.activeChat,
+    opalContext: contextValue
+  });
+
+  const value = useMemo(() => ({
+    ...contextValue,
+    history,
+    chatState,
+  }), [contextValue, history, chatState]);
+
   return (
-    <OpalContext.Provider value={contextValue}>
+    <OpalContext.Provider value={value}>
       {children}
     </OpalContext.Provider>
   );
 }
 
+export type OpalHistoryContextType = ReturnType<typeof useOpalHistory>;
+export type OpalChatStateContextType = ReturnType<typeof useOpalState>;
+
+export type OpalContextWithHistoryType = OpalContextType & {
+  history: OpalHistoryContextType;
+  chatState: OpalChatStateContextType;
+};
+
 export function useOpalContext() {
-  const context = useContext(OpalContext);
+  const context = useContext(OpalContext) as OpalContextWithHistoryType;
   if (!context) {
     throw new Error("useOpalContext must be used within an OpalContextProvider");
   }
   return context;
 }
 
-// Export the capabilities constant for use in the API
 export { OPAL_CAPABILITIES };

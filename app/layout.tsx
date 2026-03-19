@@ -390,6 +390,7 @@ export default function RootLayout({
 				highlight: "/opal",
 				icon: <img src="/nav_icons/comments.svg" alt="Chat" width={20} height={20} />,
 				exact: true,
+				customLayout: true,
 			},
 			{
 				label: "Prompt Library",

@@ -10,6 +10,8 @@ export type ChatMessage = {
   content: string;
   timestamp: number;
   isLoading?: boolean;
+  versions?: string[];
+  currentVersionIndex?: number;
   messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete';
   metadata?: {
     checklist?: Array<{
@@ -31,6 +33,8 @@ export type OpalState = {
 };
 
 const PANEL_STATE_KEY = 'opal_panel_state';
+const OPAL_LOADER_DEV_STORAGE_KEY = 'opal_loader_dev';
+const DEV_LOADER_MIN_PREVIEW_MS = 8500;
 
 type UseOpalStateProps = {
   activeChatId?: string | null;
@@ -39,6 +43,26 @@ type UseOpalStateProps = {
 };
 
 const MOCK_CHAT_IDS = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+
+function isLoaderDevEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = JSON.parse(localStorage.getItem(OPAL_LOADER_DEV_STORAGE_KEY) ?? '{}');
+    return !!raw?.enabled;
+  } catch {
+    return false;
+  }
+}
+
+function sleepWithAbort(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(resolve, ms);
+    signal.addEventListener('abort', () => {
+      clearTimeout(timeout);
+      reject(new DOMException('Aborted', 'AbortError'));
+    }, { once: true });
+  });
+}
 
 function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null {
   const base = Date.now() - 1000 * 60 * 60 * 24 * 3;
@@ -364,6 +388,73 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     }
   }, [isLoading, addMessage, updateMessage, opalContext, activePageId, onPageUpdate, onMessageSent, getCurrentPageData]);
 
+  const regenerate = useCallback(async (assistantMessageId: string) => {
+    if (isLoading) return;
+
+    // Find the message and the preceding user message content
+    const currentMessages = await new Promise<ChatMessage[]>(resolve => {
+      setMessages(prev => { resolve(prev); return prev; });
+    });
+    const idx = currentMessages.findIndex(m => m.id === assistantMessageId);
+    if (idx < 0) return;
+    const userMsg = [...currentMessages].slice(0, idx).reverse().find(m => m.role === 'user');
+    if (!userMsg) return;
+    const userContent = userMsg.content;
+    const oldMessage = currentMessages[idx];
+
+    // Replace the assistant message with a loading state (keep id stable)
+    setIsLoading(true);
+    setError(undefined);
+    setMessages(prev => prev.map(m =>
+      m.id === assistantMessageId
+        ? { ...m, content: '', isLoading: true }
+        : m
+    ));
+
+    try {
+      const requestBody = {
+        userMessage: userContent,
+        context: opalContext ? {
+          currentPage: opalContext.currentPage,
+          availableFeatures: opalContext.availableFeatures,
+          opalCapabilities: opalContext.opalCapabilities,
+        } : undefined,
+      };
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      if (!response.ok) throw new Error('Failed to regenerate response');
+      const data = await response.json();
+      const newContent = data.response || 'Sorry, I couldn\'t generate a response.';
+
+      // Add new version and display it
+      setMessages(prev => prev.map(m => {
+        if (m.id !== assistantMessageId) return m;
+        const existingVersions = m.versions ?? [oldMessage.content];
+        const newVersions = [...existingVersions, newContent];
+        return {
+          ...m,
+          content: newContent,
+          isLoading: false,
+          versions: newVersions,
+          currentVersionIndex: newVersions.length - 1,
+        };
+      }));
+    } catch (err) {
+      console.error('Error regenerating:', err);
+      setError('Failed to regenerate. Please try again.');
+      setMessages(prev => prev.map(m =>
+        m.id === assistantMessageId
+          ? { ...m, content: oldMessage.content, isLoading: false }
+          : m
+      ));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, opalContext]);
+
   const clearHistory = useCallback(() => {
     setMessages([]);
     if (activeChatId) {
@@ -388,6 +479,10 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     setInputValue,
     setInputDisabled: setIsInputDisabled,
     sendMessage,
+    regenerate,
+    switchVersion: (id: string, versionIndex: number, content: string) => {
+      updateMessage(id, { content, currentVersionIndex: versionIndex });
+    },
     clearHistory,
     addMessage,
     updateMessage,
