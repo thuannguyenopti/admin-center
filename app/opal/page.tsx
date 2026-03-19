@@ -4,6 +4,7 @@ import { Box, Heading } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX } from "@tabler/icons-react";
+import { IconAgent } from "@optimizely/axiom-icons";
 import { useState, useEffect, useRef } from "react";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
@@ -292,11 +293,10 @@ export default function OpalPage() {
         }}
       >
         <Button
-          appearance="subtle"
-          size="sm"
+          appearance="default-opal"
+          size="md"
           onClick={() => setShowAgents(!showAgents)}
-          icon={<img src="/nav_icons/agent_nav.svg" width={16} height={16} alt="" />}
-          style={{ borderRadius: "16px", border: "1px solid #9747ff", padding: "16px 12px", background: "#FFFFFF" }}
+          icon={<IconAgent />}
         >
           View Agents
         </Button>
