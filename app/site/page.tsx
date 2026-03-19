@@ -11,7 +11,7 @@ import SitePageRenderer from "./SitePageRenderer";
  * /site — renders the published Homepage.
  */
 export default function SiteHomePage() {
-	const [pages, , isHydrated] = usePersistentState("pages_v3", initialPages) as [
+	const [pages, , isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,

@@ -1,6 +1,6 @@
 "use client";
 
-import {Box} from "@optiaxiom/react";
+import {Box, SearchInput} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
@@ -11,6 +11,7 @@ import {RelatedQuery, initialRelatedQueries} from "@/app/db/initialData";
 import RelatedQueriesTable from "../components/RelatedQueriesTable";
 import RelatedQueryDialog from "../components/RelatedQueryDialog";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 const PAGE_SIZE = 10;
 
@@ -106,6 +107,32 @@ export default function RelatedQueriesPage() {
 		}
 	}, [currentPage, effectivePage]);
 
+	if (relatedQueries.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No related queries yet"
+					body="Define related queries to surface relevant content when users search for similar terms."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Related Query
+					</Button>
+				</EmptyList>
+
+				<RelatedQueryDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreateRelatedQuery}
+				/>
+			</Box>
+		);
+	}
+
 	return (
 		<Box>
 			<Flex
@@ -115,12 +142,11 @@ export default function RelatedQueriesPage() {
 				gap="16"
 				mb="24"
 			>
-				<Input
-					addonBefore={<IconSearch size={16} />}
-					placeholder="Search related queries..."
-					style={{width: "320px"}}
+				<SearchInput
+					size="lg"
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
+					placeholder="Search related queries..."
 				/>
 				<Button
 					icon={<IconPlus size={16} />}

@@ -24,6 +24,7 @@ interface CategoryRowProps {
   onToggleExpand: (id: string) => void;
   onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
+  newlyImportedIds?: Set<string>;
 }
 
 export function CategoryRow({
@@ -35,11 +36,13 @@ export function CategoryRow({
   onToggleExpand,
   onEdit,
   onDelete,
+  newlyImportedIds = new Set(),
 }: CategoryRowProps) {
   const router = useRouter();
   const children = getChildren(category.id, allCategories);
   const hasChildren = children.length > 0;
   const indent = depth * 32; // 32px per level
+  const isNewlyImported = newlyImportedIds.has(category.id);
 
   const statusColors: Record<string, 'neutral' | 'success' | 'warning'> = {
     draft: 'neutral',
@@ -57,7 +60,7 @@ export function CategoryRow({
   return (
     <>
       <Tr
-        className={`${isSelected ? 'bg-[var(--ax-colors-bg-accent-subtle)]' : ''} hover:bg-[var(--ax-colors-bg-default-hovered)]`}
+        className={`${isSelected ? 'bg-[var(--ax-colors-bg-accent-subtle)]' : ''} hover:bg-[var(--ax-colors-bg-default-hovered)] ${isNewlyImported ? 'newly-imported' : ''}`}
       >
         <Td type="raw">
           <div className="flex items-center gap-2" style={{ paddingLeft: `${indent}px` }}>
@@ -161,6 +164,7 @@ export function CategoryRow({
             onToggleExpand={onToggleExpand}
             onEdit={onEdit}
             onDelete={onDelete}
+            newlyImportedIds={newlyImportedIds}
           />
         ))}
     </>

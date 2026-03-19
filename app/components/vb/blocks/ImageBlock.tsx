@@ -3,10 +3,10 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
-    const imageUrlRaw = getProperty(properties, "imageUrl", "Image URL");
+export const ImageBlock = React.memo(function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+    const imageUrlRaw = getProperty(properties, "src", "Image URL");
     const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-    const imageAlt = getProperty(properties, "altText", "Alt Text");
+    const imageAlt = getProperty(properties, "alt", "Alt Text");
     const imageWidth = getProperty(properties, "width", "Width");
     const imageHeight = getProperty(properties, "height", "Height");
 
@@ -30,4 +30,4 @@ export function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgI
             )}
         </div>
     );
-}
+});

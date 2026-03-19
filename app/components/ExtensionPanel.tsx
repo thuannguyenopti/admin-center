@@ -22,7 +22,7 @@ export default function ExtensionPanel({
 	children,
 	onClose,
 	width = 300,
-	minWidth = 200,
+	minWidth = 350,
 	maxWidth = 600,
 }: ExtensionPanelProps) {
 	const [panelWidth, setPanelWidth] = usePersistentState("extension-panel-width", width);

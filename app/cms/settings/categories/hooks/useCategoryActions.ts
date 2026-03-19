@@ -1,45 +1,90 @@
-import { useCallback } from 'react';
+import { useCallback, Dispatch, SetStateAction } from 'react';
 import { Category, CategoryFormRow } from '../types';
-import { generateSlug } from '../utils';
 
 export function useCategoryActions(
   categories: Category[],
-  setCategories: (categories: Category[]) => void
+  setCategories: Dispatch<SetStateAction<Category[]>>
 ) {
   const createCategories = useCallback(
-    (formRows: CategoryFormRow[]) => {
-      const newCategories: Category[] = formRows.map((row) => ({
-        id: `cat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: row.name,
-        slug: row.slug,
-        status: 'draft' as const,
-        visibility: row.visibility,
-        modifiedBy: 'Current User',
-        usage: 0,
-        lastModified: new Date().toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        }),
-        parentId: row.parentId,
-        isExpanded: false,
-      }));
+    (formRows: CategoryFormRow[]): string[] => {
+      let createdIds: string[] = [];
+      setCategories((prevCategories) => {
+        const newCategories: Category[] = [];
+        const slugToIdMap = new Map<string, string>();
 
-      setCategories([...categories, ...newCategories]);
+        // First pass: create all categories and build slug-to-id mapping
+        formRows.forEach((row) => {
+          const newId = `cat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          slugToIdMap.set(row.slug, newId);
+
+          newCategories.push({
+            id: newId,
+            name: row.name,
+            slug: row.slug,
+            status: 'published' as const,
+            visibility: row.visibility,
+            modifiedBy: 'Current User',
+            usage: 0,
+            lastModified: new Date().toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+            parentId: row.parentId, // Will be resolved in second pass
+            isExpanded: false,
+          });
+        });
+
+        // Second pass: resolve PENDING parent IDs
+        newCategories.forEach((cat, index) => {
+          if (cat.parentId && cat.parentId.startsWith('PENDING:')) {
+            const parentSlug = cat.parentId.replace('PENDING:', '');
+
+            // Check if parent was created in this batch
+            const newParentId = slugToIdMap.get(parentSlug);
+            if (newParentId) {
+              cat.parentId = newParentId;
+            } else {
+              // Parent might exist in current categories
+              const existingParent = prevCategories.find((c) => c.slug === parentSlug);
+              if (existingParent) {
+                cat.parentId = existingParent.id;
+              } else {
+                // Parent not found - set to null to avoid invalid reference
+                cat.parentId = null;
+              }
+            }
+          }
+        });
+
+        createdIds = newCategories.map(cat => cat.id);
+        return [...prevCategories, ...newCategories];
+      });
+      return createdIds;
     },
-    [categories, setCategories]
+    [setCategories]
   );
 
   const updateCategories = useCallback(
-    (formRows: CategoryFormRow[]) => {
-      const updatedCategories = categories.map((category) => {
+    (formRows: CategoryFormRow[]): string[] => {
+      const updatedIds: string[] = [];
+      setCategories((prevCategories) => prevCategories.map((category) => {
         const formRow = formRows.find((row) => row.id === category.id);
         if (formRow) {
+          updatedIds.push(category.id);
+          // Resolve PENDING parent IDs
+          let parentId = formRow.parentId;
+          if (parentId && parentId.startsWith('PENDING:')) {
+            const parentSlug = parentId.replace('PENDING:', '');
+            const existingParent = prevCategories.find((c) => c.slug === parentSlug);
+            parentId = existingParent ? existingParent.id : null;
+          }
+
           return {
             ...category,
             name: formRow.name,
             slug: formRow.slug,
-            parentId: formRow.parentId,
+            parentId,
             visibility: formRow.visibility,
             lastModified: new Date().toLocaleDateString('en-US', {
               month: 'short',
@@ -49,29 +94,26 @@ export function useCategoryActions(
           };
         }
         return category;
-      });
-
-      setCategories(updatedCategories);
+      }));
+      return updatedIds;
     },
-    [categories, setCategories]
+    [setCategories]
   );
 
   const deleteCategories = useCallback(
     (ids: string[]) => {
-      const remaining = categories.filter((c) => !ids.includes(c.id));
-      setCategories(remaining);
+      setCategories((prevCategories) => prevCategories.filter((c) => !ids.includes(c.id)));
     },
-    [categories, setCategories]
+    [setCategories]
   );
 
   const toggleExpanded = useCallback(
     (id: string) => {
-      const updated = categories.map((c) =>
+      setCategories((prevCategories) => prevCategories.map((c) =>
         c.id === id ? { ...c, isExpanded: !c.isExpanded } : c
-      );
-      setCategories(updated);
+      ));
     },
-    [categories, setCategories]
+    [setCategories]
   );
 
   return {

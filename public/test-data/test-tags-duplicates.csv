@@ -1,0 +1,5 @@
+name,slug,visibility
+Beginner Friendly,beginner-friendly,public
+Advanced Techniques,advanced-techniques,public
+Duplicate Advanced,advanced-techniques,private
+Nutrition Tips,nutrition-tips,public

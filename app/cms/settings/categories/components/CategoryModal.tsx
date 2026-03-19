@@ -90,25 +90,25 @@ export function CategoryModal({
       .trim();
 
   const handleGenerate = useCallback(async () => {
-    const hasTaxonomy = allCategories.length > 0;
-    const hasContent = contentContext.length > 0;
-    if (!hasTaxonomy && !hasContent) return;
     setGenerateLoading(true);
     setGenerateError(null);
     try {
-      const categoryTaxonomy = allCategories.map((c) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        parentId: c.parentId,
-      }));
+      const payload: any = {};
+      if (allCategories.length > 0) {
+        payload.categoryTaxonomy = allCategories.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          parentId: c.parentId,
+        }));
+      }
+      if (contentContext.length > 0) {
+        payload.contentContext = contentContext;
+      }
       const res = await fetch('/api/categories/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoryTaxonomy,
-          contentContext,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -304,6 +304,11 @@ export function CategoryModal({
           }}
         >
           <Box display="flex" flexDirection="column" gap="8">
+            {mode === 'create' && generateError && (
+              <Text fontSize="xs" color="fg.error">
+                {generateError}
+              </Text>
+            )}
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
@@ -372,35 +377,25 @@ export function CategoryModal({
                 </Box>
               ))}
             </Box>
-            {mode === 'create' && (
-              <Box display="flex" justifyContent="flex-start" alignItems="center">
-                <Button
-                  appearance="default-opal"
-                  size="sm"
-                  rounded="sm"
-                  px="8"
-                  className="opalGenerateButton"
-                  icon={<IconSparkles size={16} />}
-                  iconPosition="start"
-                  onClick={handleGenerate}
-                  disabled={generateLoading || (allCategories.length === 0 && contentContext.length === 0)}
-                  loading={generateLoading}
-                  aria-label="Generate category suggestions with Opal"
-                >
-                  Generate
-                </Button>
-              </Box>
-            )}
-            {mode === 'create' && generateError && (
-              <Box>
-                <Text fontSize="xs" color="fg.error">
-                  {generateError}
-                </Text>
-              </Box>
-            )}
           </Box>
         </DialogBody>
-        <DialogFooter style={{ gap: '16px' }}>
+        <DialogFooter style={{ gap: '16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          {mode === 'create' && (
+            <Button
+              appearance="default-opal"
+              size="lg"
+              className="opalGenerateButton"
+              icon={<IconSparkles size={16} />}
+              iconPosition="start"
+              onClick={handleGenerate}
+              disabled={generateLoading}
+              loading={generateLoading}
+              aria-label="Generate category suggestions with Opal"
+            >
+              Generate
+            </Button>
+          )}
+          <Box style={{ flex: 1 }} />
           <DialogClose size="lg">Cancel</DialogClose>
           <Button
             appearance="primary"

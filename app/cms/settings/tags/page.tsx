@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Box,
   Button,
+  Heading,
   SearchInput,
   Text,
   AngleMenuButton,
@@ -12,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuContent,
   Pagination,
+  toaster,
 } from '@optiaxiom/react';
 import { Button as AppButton } from '@/app/components/Button';
 import { Text as AppText } from '@/app/components/Text';
@@ -22,12 +24,15 @@ import { TagsTable } from './components/TagsTable';
 import { TagModal } from './components/TagModal';
 import { DeleteTagModal } from './components/DeleteTagModal';
 import { MergeTagsModal } from './components/MergeTagsModal';
+import { UploadTagsModal } from './components/UploadTagsModal';
 import { useSelection } from './hooks/useSelection';
 import { useTagActions } from './hooks/useTagActions';
 import { filterTags } from './utils';
 import EmptyStateIllustration from './empty-state.svg';
+import { useLayout } from '@/app/context/LayoutContext';
 
 export default function TagsSettings() {
+  const { setHidePageHeader } = useLayout();
   const [tags, setTags] = usePersistentState('tags', initialTags);
   const [pages] = usePersistentState('pages', initialPages) as [Page[], any, boolean];
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +43,7 @@ export default function TagsSettings() {
   const [tagsToDelete, setTagsToDelete] = useState<Tag[]>([]);
   const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
   const [tagsToMerge, setTagsToMerge] = useState<Tag[]>([]);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [contentTagOverrides, setContentTagOverrides] = usePersistentState(
     'contentTagOverrides',
     {}
@@ -45,6 +51,7 @@ export default function TagsSettings() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [newlyImportedIds, setNewlyImportedIds] = useState<Set<string>>(new Set());
 
   // Base content items from pages
   const baseContentItems = useMemo(
@@ -77,6 +84,11 @@ export default function TagsSettings() {
       usage: tagUsageCounts[tag.slug] || 0,
     }));
   }, [tags, tagUsageCounts]);
+
+  // Update page header visibility based on tags
+  useEffect(() => {
+    setHidePageHeader(tagsWithUsage.length === 0 && !isModalOpen);
+  }, [tagsWithUsage.length, isModalOpen, setHidePageHeader]);
 
   const {
     selectedIds,
@@ -240,6 +252,28 @@ export default function TagsSettings() {
     deselectAll();
   };
 
+  const handleUploadImport = (toCreate: TagFormRow[], toUpdate: TagFormRow[]) => {
+    const importedIds: string[] = [];
+    if (toCreate.length > 0) importedIds.push(...createTags(toCreate));
+    if (toUpdate.length > 0) importedIds.push(...updateTags(toUpdate));
+
+    const count = toCreate.length + toUpdate.length;
+    if (count > 0) {
+      const noun = count === 1 ? 'tag' : 'tags';
+      toaster.create(`${count} ${noun} imported successfully.`, { intent: 'success' });
+    }
+
+    // Track newly imported IDs for highlighting
+    setNewlyImportedIds(new Set(importedIds));
+
+    // Clear the highlight after animation completes (2 seconds)
+    setTimeout(() => {
+      setNewlyImportedIds(new Set());
+    }, 2000);
+
+    setIsUploadModalOpen(false);
+  };
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       // Toggle direction if same column
@@ -250,6 +284,15 @@ export default function TagsSettings() {
       setSortDirection('asc');
     }
   };
+
+  // Prepare content context for tag generation
+  const contentContext = useMemo(() => {
+    return contentItems.map((item) => ({
+      name: item.name,
+      baseType: item.baseType,
+      tagSlugs: item.tags || [],
+    }));
+  }, [contentItems]);
 
   // Show empty state if no tags
   if (tagsWithUsage.length === 0 && !isModalOpen) {
@@ -273,6 +316,18 @@ export default function TagsSettings() {
             textAlign="center"
             style={{ maxWidth: '552px' }}
           >
+            <Heading
+              level="3"
+              style={{
+                fontSize: '28px',
+                fontWeight: '500',
+                letterSpacing: '-0.60px',
+                color: '#2e3442',
+              }}
+            >
+              No tags
+            </Heading>
+
             <AppText
               style={{
                 fontSize: '16px',
@@ -282,8 +337,7 @@ export default function TagsSettings() {
                 color: '#2e3442',
               }}
             >
-              Tags help you organise and surface related content. Create your first tag
-              to get started.{' '}
+              Tags are labels you attach to content (e.g. "featured", "how-to"). Use them to filter and search in the Content Manager, power faceted search, and surface related content. Create tags here, then assign them to pages and other content when editing.{' '}
               <a
                 href="#"
                 style={{
@@ -323,6 +377,7 @@ export default function TagsSettings() {
           mode={modalMode}
           initialTags={editingTags}
           allTags={tagsWithUsage}
+          contentContext={contentContext}
           onSave={handleSave}
         />
       </>
@@ -370,8 +425,15 @@ export default function TagsSettings() {
               </DropdownMenu>
             </>
           )}
+          <Button
+            appearance="default"
+            size="md"
+            onClick={() => setIsUploadModalOpen(true)}
+          >
+            Import
+          </Button>
           <Button appearance="primary" size="md" onClick={handleCreateClick}>
-            Create tags
+            Create
           </Button>
         </Box>
       </Box>
@@ -387,6 +449,7 @@ export default function TagsSettings() {
         sortColumn={sortColumn}
         sortDirection={sortDirection}
         onSort={handleSort}
+        newlyImportedIds={newlyImportedIds}
       />
 
       {/* Pagination */}
@@ -406,6 +469,7 @@ export default function TagsSettings() {
         mode={modalMode}
         initialTags={editingTags}
         allTags={tagsWithUsage}
+        contentContext={contentContext}
         onSave={handleSave}
       />
 
@@ -425,6 +489,14 @@ export default function TagsSettings() {
         allTags={tagsWithUsage}
         contentItems={contentItems}
         onMerge={handleMerge}
+      />
+
+      {/* Upload Modal */}
+      <UploadTagsModal
+        open={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        allTags={tagsWithUsage}
+        onImport={handleUploadImport}
       />
     </>
   );

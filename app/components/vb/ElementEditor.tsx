@@ -1,8 +1,14 @@
 "use client";
 
-import React, { Fragment, useEffect, useRef } from "react";
-import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea } from "@optiaxiom/react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
+import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import { IconPalette } from "@tabler/icons-react";
 import { BLOCK_SCHEMAS } from "./blocks/schemas";
+import { AIInputField } from "@/app/components/ai/AIInputField";
+import { AITextArea } from "@/app/components/ai/AITextArea";
+import { FieldWithAIActions } from "./FieldWithAIActions";
+import { usePropertyEditorActions } from "@/app/hooks/usePropertyEditorActions";
+import { PropertyType } from "@/app/cms/settings/opal-actions/mockData";
 
 type Props = {
   currentEle: string;
@@ -11,23 +17,30 @@ type Props = {
   onBack: () => void;
   onInputChange: (value: any, keyOrIndex: string | number) => void;
   outlineTitle?: string;
+  onOpenStyleEditor?: () => void;
 };
 
-const Input: React.FC<{ label: string; placeholder?: string; value: any; onChange: any }> = ({
+const Input: React.FC<{ label: string; placeholder?: string; value: any; onChange: any; propertyType?: PropertyType }> = ({
   label,
   placeholder,
   value,
   onChange,
+  propertyType = "String",
 }) => {
+  const aiActions = usePropertyEditorActions(propertyType, value || "", (suggestion: string) => {
+    onChange(suggestion);
+  });
+
   return (
     <div className=" pr-1 py-2">
-      <Field label={label}>
-        <AxiomInput
+      <FieldWithAIActions label={label} aiActions={aiActions}>
+        <AIInputField
           placeholder={placeholder || ""}
           value={value || ""}
           onChange={(e: any) => onChange(e.currentTarget.value)}
+          enableAutoComplete={true}
         />
-      </Field>
+      </FieldWithAIActions>
     </div>
   );
 };
@@ -102,17 +115,22 @@ const markdownToTipTap = (text: string) => {
   };
 };
 
-const RichTextInput: React.FC<{ label: string; value: any; onChange: any }> = ({ label, value, onChange }) => {
+const RichTextInput: React.FC<{ label: string; value: any; onChange: any; propertyType?: PropertyType }> = ({ label, value, onChange, propertyType = "XhtmlString" }) => {
   const markdownValue = isTipTapDoc(value) ? tiptapToMarkdown(value) : (value || "");
+  const aiActions = usePropertyEditorActions(propertyType, markdownValue, (suggestion: string) => {
+    onChange(markdownToTipTap(suggestion));
+  });
+
   return (
     <div className="pr-1 py-2">
-      <Field label={label}>
-        <Textarea
+      <FieldWithAIActions label={label} aiActions={aiActions}>
+        <AITextArea
           value={markdownValue}
           onChange={(e: any) => onChange(markdownToTipTap(e.currentTarget.value))}
           rows={4}
+          enableAutoComplete={true}
         />
-      </Field>
+      </FieldWithAIActions>
     </div>
   );
 };
@@ -124,8 +142,10 @@ export default function ElementEditor({
   onBack,
   onInputChange,
   outlineTitle,
+  onOpenStyleEditor,
 }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     // Don’t focus when “closed”
@@ -176,11 +196,39 @@ export default function ElementEditor({
         <Heading level="4">{elementType}</Heading>
 
         <Box display="flex" alignItems="center" gap="8">
-          <Box color="fg.default">
-            <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 14.5C11.3125 14.5 13.4375 13.2812 14.625 11.25C15.7812 9.25 15.7812 6.78125 14.625 4.75C13.4375 2.75 11.3125 1.5 9 1.5C6.65625 1.5 4.53125 2.75 3.34375 4.75C2.1875 6.78125 2.1875 9.25 3.34375 11.25C4.53125 13.2812 6.65625 14.5 9 14.5ZM9 0C11.8438 0 14.4688 1.53125 15.9062 4C17.3438 6.5 17.3438 9.53125 15.9062 12C14.4688 14.5 11.8438 16 9 16C6.125 16 3.5 14.5 2.0625 12C0.625 9.53125 0.625 6.5 2.0625 4C3.5 1.53125 6.125 0 9 0ZM10 8C10 8.5625 9.53125 9 9 9C8.4375 9 8 8.5625 8 8C8 7.46875 8.4375 7 9 7C9.53125 7 10 7.46875 10 8ZM12 7C12.5312 7 13 7.46875 13 8C13 8.5625 12.5312 9 12 9C11.4375 9 11 8.5625 11 8C11 7.46875 11.4375 7 12 7ZM7 8C7 8.5625 6.53125 9 6 9C5.4375 9 5 8.5625 5 8C5 7.46875 5.4375 7 6 7C6.53125 7 7 7.46875 7 8Z" fill="currentColor" />
-            </svg>
-          </Box>
+          {onOpenStyleEditor && (
+            <Menu
+              onOpenChange={() => setMenuOpen(!menuOpen)}
+              open={menuOpen}
+              options={[
+                {
+                  addon: <IconPalette size={16} />,
+                  label: "Style",
+                  execute: () => {
+                    onOpenStyleEditor();
+                    setMenuOpen(false);
+                  },
+                },
+              ]}
+            >
+              <MenuTrigger
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen(true);
+                }}
+                icon={
+                  <svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 14.5C11.3125 14.5 13.4375 13.2812 14.625 11.25C15.7812 9.25 15.7812 6.78125 14.625 4.75C13.4375 2.75 11.3125 1.5 9 1.5C6.65625 1.5 4.53125 2.75 3.34375 4.75C2.1875 6.78125 2.1875 9.25 3.34375 11.25C4.53125 13.2812 6.65625 14.5 9 14.5ZM9 0C11.8438 0 14.4688 1.53125 15.9062 4C17.3438 6.5 17.3438 9.53125 15.9062 12C14.4688 14.5 11.8438 16 9 16C6.125 16 3.5 14.5 2.0625 12C0.625 9.53125 0.625 6.5 2.0625 4C3.5 1.53125 6.125 0 9 0ZM10 8C10 8.5625 9.53125 9 9 9C8.4375 9 8 8.5625 8 8C8 7.46875 8.4375 7 9 7C9.53125 7 10 7.46875 10 8ZM12 7C12.5312 7 13 7.46875 13 8C13 8.5625 12.5312 9 12 9C11.4375 9 11 8.5625 11 8C11 7.46875 11.4375 7 12 7ZM7 8C7 8.5625 6.53125 9 6 9C5.4375 9 5 8.5625 5 8C5 7.46875 5.4375 7 6 7C6.53125 7 7 7.46875 7 8Z" fill="currentColor" />
+                  </svg>
+                }
+                aria-label="Element options"
+                appearance="subtle"
+                size="sm"
+                iconPosition="start"
+              />
+              <MenuContent />
+            </Menu>
+          )}
         </Box>
       </Box>
 
@@ -190,16 +238,38 @@ export default function ElementEditor({
         if (!schema) return null;
 
         return Object.entries(schema.properties).map(([key, def]) => {
+          // Skip template property - it's accessed via context menu "Style" option
+          if (key === "template" || def.type === "SelectOne") {
+            return null;
+          }
+
           const propData = properties ? properties[key] : null;
           const value = propData ? propData.value : (def.default ?? "");
 
+          // Map schema type to PropertyType
+          const getPropertyType = (schemaType: string): PropertyType => {
+            switch (schemaType) {
+              case "text":
+                return "String";
+              case "textarea":
+                return "LongString";
+              case "richtext":
+                return "XhtmlString";
+              case "link":
+                return "Url";
+              default:
+                return "String";
+            }
+          };
+
           return (
             <Fragment key={key}>
-              {(def.type === "text" || def.type === "textarea") && (
+              {(def.type === "text" || def.type === "textarea" || def.type === "link") && (
                 <Input
                   label={def.label}
                   value={value}
                   onChange={(val: any) => onInputChange(val, key)}
+                  propertyType={getPropertyType(def.type)}
                 />
               )}
               {def.type === "richtext" && (
@@ -207,6 +277,7 @@ export default function ElementEditor({
                   label={def.label}
                   value={value}
                   onChange={(val: any) => onInputChange(val, key)}
+                  propertyType="XhtmlString"
                 />
               )}
               {def.type === "checkbox" && (
