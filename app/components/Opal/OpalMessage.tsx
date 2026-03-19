@@ -416,7 +416,7 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange }: 
               marginRight: isUser ? '32px' : '0',
               opacity: isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
-              marginTop: isUser ? '4px' : '-8px',
+              marginTop: isUser ? '4px' : (message.messageType && message.metadata) ? '8px' : '-8px',
               width: '100%',
               justifyContent: 'space-between',
               alignItems: 'center',
