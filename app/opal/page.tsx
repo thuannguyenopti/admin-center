@@ -170,10 +170,14 @@ export default function OpalPage() {
                     alignItems="center"
                     style={{ position: "absolute", bottom: "8px", left: "16px", right: "16px", zIndex: 10 }}
                 >
-                    {/* Left: Agent, File, Mic */}
+                    {/* Left: Agent, File */}
                     <Box display="flex" gap="4" alignItems="center">
                         <Button appearance="subtle" size="sm" icon={<IconAgent />} aria-label="Agent" style={{ color: "var(--ax-colors-fg-tertiary)" }} />
                         <Button appearance="subtle" size="sm" icon={<IconFileArrowUp />} aria-label="File upload" style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+                    </Box>
+
+                    {/* Right: Mic + Send */}
+                    <Box display="flex" gap="8" alignItems="center">
                         <Button
                             appearance="subtle"
                             size="sm"
@@ -187,22 +191,20 @@ export default function OpalPage() {
                                 opacity: isTranscribing ? 0.5 : 1,
                             }}
                         />
+                        <Button
+                            appearance="primary"
+                            size="lg"
+                            icon={<IconArrowUp size={20} />}
+                            rounded="full"
+                            aria-label="Send message"
+                            onClick={handleSend}
+                            disabled={!hasValue}
+                            style={{
+                                backgroundColor: hasValue ? opal_primary : undefined,
+                                opacity: hasValue ? 1 : 0.4,
+                            }}
+                        />
                     </Box>
-
-                    {/* Right: Send */}
-                    <Button
-                        appearance="primary"
-                        size="lg"
-                        icon={<IconArrowUp size={20} />}
-                        rounded="full"
-                        aria-label="Send message"
-                        onClick={handleSend}
-                        disabled={!hasValue}
-                        style={{
-                            backgroundColor: hasValue ? opal_primary : undefined,
-                            opacity: hasValue ? 1 : 0.4,
-                        }}
-                    />
                 </Box>
             </Box>
 
