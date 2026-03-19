@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Heading, Text, Button, Textarea } from "@optiaxiom/react";
+import { Box, Heading, Text, Button } from "@optiaxiom/react";
 import { IconMicrophone } from "@tabler/icons-react";
 import { IconAgent, IconFileArrowUp, IconArrowUp, IconCircleStop, IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
 import { useState, useRef, useEffect } from "react";
@@ -152,7 +152,7 @@ export default function OpalPage() {
                 borderColor={isFocused || isRecording ? undefined : "border.tertiary"}
                 shadow="sm"
             >
-                <Textarea
+                <textarea
                     className="w-full text-md outline-none bg-transparent placeholder-gray-400 resize-none"
                     placeholder='Ask Opal anything—like "Plan a new campaign" or "Suggest test ideas"'
                     value={inputValue}
@@ -162,7 +162,7 @@ export default function OpalPage() {
                     onKeyDown={handleKeyDown}
                     ref={textareaRef}
                     rows={1}
-                    style={{ minHeight: "22px", maxHeight: "33vh", border: "none", padding: 0, paddingBottom: "40px", overflowY: "auto", boxShadow: "none", outline: "none", backgroundColor: "transparent" }}
+                    style={{ minHeight: "22px", maxHeight: "33vh", border: "none", padding: 0, paddingBottom: "40px", overflowY: "auto", boxShadow: "none", outline: "none", backgroundColor: "transparent", width: "100%", resize: "none", fontFamily: "inherit", fontSize: "inherit", color: "inherit", boxSizing: "border-box" }}
                 />
                 <Box
                     display="flex"

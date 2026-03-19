@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Textarea, Switch } from "@optiaxiom/react";
+import { Box, Button, Switch } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
 import {
@@ -424,7 +424,7 @@ export function OpalInput({
           </Box>
         )}
 
-        <Textarea
+        <textarea
           ref={textareaRef}
           placeholder={selectedAgent ? "Ask anything..." : "Ask Opal"}
           value={value}
@@ -433,6 +433,7 @@ export function OpalInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled && !isLoading}
+          rows={1}
           style={{
             flex: 1,
             border: 'none',
@@ -450,6 +451,7 @@ export function OpalInput({
             outline: 'none',
             overflowY: 'hidden',
             boxSizing: 'border-box',
+            width: '100%',
           }}
         />
 
