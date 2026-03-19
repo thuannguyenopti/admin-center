@@ -31,6 +31,8 @@ export type OpalState = {
 };
 
 const PANEL_STATE_KEY = 'opal_panel_state';
+const OPAL_LOADER_DEV_STORAGE_KEY = 'opal_loader_dev';
+const DEV_LOADER_MIN_PREVIEW_MS = 8500;
 
 type UseOpalStateProps = {
   activeChatId?: string | null;
@@ -39,6 +41,26 @@ type UseOpalStateProps = {
 };
 
 const MOCK_CHAT_IDS = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+
+function isLoaderDevEnabled(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const raw = JSON.parse(localStorage.getItem(OPAL_LOADER_DEV_STORAGE_KEY) ?? '{}');
+    return !!raw?.enabled;
+  } catch {
+    return false;
+  }
+}
+
+function sleepWithAbort(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(resolve, ms);
+    signal.addEventListener('abort', () => {
+      clearTimeout(timeout);
+      reject(new DOMException('Aborted', 'AbortError'));
+    }, { once: true });
+  });
+}
 
 function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null {
   const base = Date.now() - 1000 * 60 * 60 * 24 * 3;
