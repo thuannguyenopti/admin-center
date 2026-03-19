@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button, Textarea, Switch } from "@optiaxiom/react";
+import { Box, Button, Switch } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
 import {
@@ -10,7 +10,7 @@ import {
   IconCircleStop,
   IconXmark
 } from "@optimizely/axiom-icons";
-import { KeyboardEvent, useState, useRef, useEffect } from "react";
+import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type Agent = {
@@ -58,8 +58,19 @@ export function OpalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-resize textarea based on content
+  // Auto-focus textarea when value is set externally (e.g. suggestion/card click)
+  const prevValueRef = useRef('');
   useEffect(() => {
+    const prev = prevValueRef.current;
+    prevValueRef.current = value;
+    if (value && !prev && document.activeElement !== textareaRef.current) {
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    }
+  }, [value]);
+
+  // Auto-resize textarea based on content — useLayoutEffect fires synchronously
+  // before paint, so heights are always correct (including reset after send)
+  useLayoutEffect(() => {
     const textarea = textareaRef.current;
     const container = containerRef.current;
     if (textarea && container) {
@@ -112,6 +123,9 @@ export function OpalInput({
     }
   }, [showAgentDropdown]);
 
+  // Defined early so handleKeyDown can reference it
+  const hasValue = value.trim().length > 0 || selectedAgent !== null;
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showAgentDropdown) {
       if (e.key === 'ArrowDown') {
@@ -138,7 +152,7 @@ export function OpalInput({
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      onSend();
+      if (hasValue && !isLoading) onSend();
     }
   };
 
@@ -181,8 +195,6 @@ export function OpalInput({
   const handleAddContext = () => {
     setContextChip('Mosey Bank / Mobile Handoff'); // Mock context
   };
-
-  const hasValue = value.trim().length > 0 || selectedAgent !== null;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -253,6 +265,8 @@ export function OpalInput({
           console.error('[Voice] Transcription error:', error);
         } finally {
           setIsTranscribing(false);
+          // Refocus textarea so user can press Enter to submit immediately
+          setTimeout(() => textareaRef.current?.focus(), 50);
         }
       };
 
@@ -283,10 +297,8 @@ export function OpalInput({
 
 
   // Determine border color based on state
-  let borderColor = 'var(--opal-border-input)';
-  if (isFocused || hasValue || isLoading || isRecording || isTranscribing) {
-    borderColor = '#7C3AED';
-  }
+  const isActive = isFocused || hasValue || isLoading || isRecording || isTranscribing;
+  let borderColor = isActive ? '#7C3AED' : 'var(--ax-colors-border-default, #e5e7eb)';
 
   // CTA Icon state logic
   let ctaIcon = <IconMicrophone size={20} />;
@@ -424,7 +436,7 @@ export function OpalInput({
           </Box>
         )}
 
-        <Textarea
+        <textarea
           ref={textareaRef}
           placeholder={selectedAgent ? "Ask anything..." : "Ask Opal"}
           value={value}
@@ -433,6 +445,7 @@ export function OpalInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled && !isLoading}
+          rows={1}
           style={{
             flex: 1,
             border: 'none',
@@ -450,6 +463,7 @@ export function OpalInput({
             outline: 'none',
             overflowY: 'hidden',
             boxSizing: 'border-box',
+            width: '100%',
           }}
         />
 
@@ -515,7 +529,6 @@ export function OpalInput({
                   onSend();
                 } else {
                   onSend();
-                  // Refocus after sending
                   setTimeout(() => textareaRef.current?.focus(), 50);
                 }
               }}
