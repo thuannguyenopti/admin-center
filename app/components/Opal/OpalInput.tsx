@@ -82,8 +82,9 @@ export function OpalInput({
       // Total 88px = Textarea 34px + Offset 54px
       // Offset 54px = Padding (8+8=16) + Margin (2) + Submit Button (32) + Extra Gap (4)
       const offset = 54;
-      const minTextareaHeight = 34;
-      const minContainerHeight = 88;
+      // Home variant starts taller (4-row default like Ana's design)
+      const minTextareaHeight = variant === 'home' ? 90 : 34;
+      const minContainerHeight = variant === 'home' ? 144 : 88;
       const maxContainerHeight = window.innerHeight * 0.5; // 50vh
 
       const targetTextareaHeight = Math.max(naturalHeight, minTextareaHeight);
