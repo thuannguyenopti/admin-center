@@ -285,7 +285,7 @@ export function OpalInput({
   // Determine border color based on state
   let borderColor = 'var(--opal-border-input)';
   if (isFocused || hasValue || isLoading || isRecording || isTranscribing) {
-    borderColor = 'var(--opal-accent-purple)';
+    borderColor = '#7C3AED';
   }
 
   // CTA Icon state logic
@@ -397,11 +397,11 @@ export function OpalInput({
                 style={{
                   backgroundColor: 'var(--opal-bg-user)',
                   borderRadius: '16px',
-                  border: '1px solid var(--opal-accent-purple)',
+                  border: '1px solid #7C3AED',
                 }}
               >
-                <Text fontSize="xs" fontWeight="600" style={{ color: 'var(--opal-accent-purple)' }}>@{selectedAgent.name}</Text>
-                <IconXmark size={12} style={{ cursor: 'pointer', color: 'var(--opal-accent-purple)' }} onClick={removeAgent} />
+                <Text fontSize="xs" fontWeight="600" style={{ color: '#7C3AED' }}>@{selectedAgent.name}</Text>
+                <IconXmark size={12} style={{ cursor: 'pointer', color: '#7C3AED' }} onClick={removeAgent} />
               </Box>
             )}
             {contextChip && (
@@ -508,6 +508,7 @@ export function OpalInput({
             <Button
               appearance="default"
               size="md"
+              icon={isLoading ? <IconCircleStop size={20} /> : <IconArrowUp size={20} />}
               aria-label={isLoading ? "Stop generating" : "Send message"}
               onClick={() => {
                 if (isLoading) {
@@ -525,20 +526,18 @@ export function OpalInput({
                 padding: 0,
                 borderRadius: '8px',
                 backgroundColor: isLoading
-                  ? 'var(--opal-stop-btn-bg)'
-                  : 'var(--opal-accent-purple)',
-                color: isLoading ? 'var(--opal-accent-purple)' : 'white',
+                  ? 'var(--ax-colors-bg-secondary)'
+                  : '#7C3AED',
+                color: isLoading ? '#7C3AED' : 'var(--opal-send-btn-text)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                opacity: (!isLoading && !hasValue) ? 0.5 : 1,
+                opacity: (!isLoading && !hasValue) ? 0.4 : 1,
               }}
-            >
-              {isLoading ? <IconCircleStop size={20} /> : <IconArrowUp size={20} />}
-            </Button>
+            />
           </Box>
         </Box>
       </Box>
