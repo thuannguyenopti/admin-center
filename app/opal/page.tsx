@@ -133,6 +133,7 @@ export default function OpalPage() {
   const [activePill, setActivePill] = useState<string | null>(null);
   const [showAgents, setShowAgents] = useState(false);
   const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(0);
+  const [focusedChipIndex, setFocusedChipIndex] = useState<number>(-1);
   const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const hasMessages = messages.length > 0;
@@ -169,6 +170,27 @@ export default function OpalPage() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [activeAction, focusedSuggestionIndex]);
+
+  // Left/Right arrow keys to navigate between chips (skip when typing in textarea)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = focusedChipIndex < QUICK_ACTIONS.length - 1 ? focusedChipIndex + 1 : 0;
+        setFocusedChipIndex(next);
+        setActivePill(QUICK_ACTIONS[next].label);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev = focusedChipIndex > 0 ? focusedChipIndex - 1 : QUICK_ACTIONS.length - 1;
+        setFocusedChipIndex(prev);
+        setActivePill(QUICK_ACTIONS[prev].label);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [focusedChipIndex]);
 
   const handleSuggestionClick = (suggestion: string) => {
     setInputValue(suggestion);
@@ -335,7 +357,11 @@ export default function OpalPage() {
           return (
             <Box
               key={action.label}
-              onClick={() => setActivePill(isActive ? null : action.label)}
+              onClick={() => {
+                const idx = QUICK_ACTIONS.findIndex((a) => a.label === action.label);
+                setFocusedChipIndex(idx);
+                setActivePill(isActive ? null : action.label);
+              }}
               onMouseEnter={() => setHoveredPill(action.label)}
               onMouseLeave={() => setHoveredPill(null)}
               style={{
@@ -345,6 +371,8 @@ export default function OpalPage() {
                 padding: "8px 16px",
                 background: isActive || isHovered ? "#F5F3FF" : "var(--ax-colors-bg-default)",
                 border: isActive || isHovered ? "1px solid #7c3aed" : "1px solid var(--ax-colors-border-default)",
+                outline: focusedChipIndex === QUICK_ACTIONS.findIndex((a) => a.label === action.label) && !isActive ? "2px solid #c4b5fd" : "none",
+                outlineOffset: "2px",
                 borderRadius: "9999px",
                 cursor: "pointer",
                 fontSize: "14px",
