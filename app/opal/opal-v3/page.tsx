@@ -1,10 +1,11 @@
 "use client";
 
-import { Box, Heading, Textarea, Dialog, DialogContent, DialogBody, DialogFooter } from "@optiaxiom/react";
+import { Box, Heading, Dialog, DialogContent, DialogBody, DialogFooter } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconMicrophone, IconFile, IconBrandFigma, IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch } from "@tabler/icons-react";
-import React, { useState, useRef, useEffect } from "react";
+import { IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch, IconBrandFigma } from "@tabler/icons-react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { OpalInput } from "@/app/components/Opal/OpalInput";
 
 const LIBRARY_TABS = ["Recommended for you", "Featured", "Brainstorm & Plan", "Create", "Test & Experiment", "Optimize", "Search"];
 
@@ -358,34 +359,80 @@ export default function OpalPage() {
   const [inputValue, setInputValue] = useState("");
   const [hoveredPill, setHoveredPill] = useState<string | null>(null);
   const [activePill, setActivePill] = useState<string | null>(null);
+  const [focusedChipIndex, setFocusedChipIndex] = useState(-1);
+  const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(0);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [activeTab, setActiveTab] = useState("Recommended for you");
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(
-        textareaRef.current.scrollHeight,
-        window.innerHeight / 3
-      )}px`;
-    }
-  }, [inputValue]);
-
-  const handlePillClick = (label: string) => {
-    setActivePill(activePill === label ? null : label);
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    setInputValue(suggestion);
-    setActivePill(null);
-    textareaRef.current?.focus();
-  };
+  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const activeAction = QUICK_ACTIONS.find((a) => a.label === activePill);
+
+  // Reset focused suggestion index when dropdown opens
+  useEffect(() => {
+    if (activeAction) setFocusedSuggestionIndex(0);
+  }, [activePill]);
+
+  // Scroll focused suggestion into view
+  useEffect(() => {
+    suggestionRefs.current[focusedSuggestionIndex]?.scrollIntoView({ block: "nearest" });
+  }, [focusedSuggestionIndex]);
+
+  const handleSuggestionClick = useCallback((suggestion: string) => {
+    setInputValue(suggestion);
+    setActivePill(null);
+    // OpalInput auto-focuses when value changes from empty to non-empty
+  }, []);
+
+  // ↑/↓/Enter/Escape keyboard nav within suggestion dropdown
+  useEffect(() => {
+    if (!activeAction) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setFocusedSuggestionIndex((prev) => (prev + 1) % activeAction.suggestions.length);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setFocusedSuggestionIndex((prev) => (prev - 1 + activeAction.suggestions.length) % activeAction.suggestions.length);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        handleSuggestionClick(activeAction.suggestions[focusedSuggestionIndex]);
+      } else if (e.key === "Escape") {
+        setActivePill(null);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [activeAction, focusedSuggestionIndex, handleSuggestionClick]);
+
+  // ←/→ keyboard nav between chips (skip when typing in textarea/input)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "TEXTAREA" || target.tagName === "INPUT") return;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        const next = focusedChipIndex < QUICK_ACTIONS.length - 1 ? focusedChipIndex + 1 : 0;
+        setFocusedChipIndex(next);
+        setActivePill(QUICK_ACTIONS[next].label);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        const prev = focusedChipIndex > 0 ? focusedChipIndex - 1 : QUICK_ACTIONS.length - 1;
+        setFocusedChipIndex(prev);
+        setActivePill(QUICK_ACTIONS[prev].label);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [focusedChipIndex]);
+
+  const handlePillClick = (label: string) => {
+    const idx = QUICK_ACTIONS.findIndex((a) => a.label === label);
+    setFocusedChipIndex(idx);
+    setActivePill(activePill === label ? null : label);
+  };
 
   return (
     <Box style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
@@ -428,72 +475,15 @@ export default function OpalPage() {
         What are we working on today?
       </Heading>
 
-      {/* Input box */}
-      <Box
-        style={{
-          position: "relative",
-          zIndex: 1,
-          width: "100%",
-          maxWidth: "800px",
-          backgroundColor: "var(--ax-colors-bg-default)",
-          border: "1px solid #7c3aed",
-          borderRadius: "8px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          padding: "8px",
-          marginBottom: "20px",
-        }}
-      >
-        <Textarea
-          ref={textareaRef}
-          placeholder='Ask Opal anything—like "Plan a new campaign" or "Suggest an image for travel audience"'
+      {/* Input — main OpalInput with home variant */}
+      <Box style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "800px", marginBottom: "20px" }}>
+        <OpalInput
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          rows={4}
-          style={{
-            border: "none",
-            padding: "8px",
-            resize: "none",
-            fontSize: "14px",
-            fontFamily: "Inter, sans-serif",
-            color: "var(--ax-colors-fg-default)",
-            backgroundColor: "transparent",
-            letterSpacing: "-0.21px",
-            lineHeight: "1.6",
-            outline: "none",
-            boxShadow: "none",
-            width: "100%",
-          }}
+          onChange={setInputValue}
+          onSend={() => { /* standalone prototype — no chat backend wired */ }}
+          disabled={false}
+          variant="home"
         />
-
-        {/* Bottom bar */}
-        <Box
-          display="flex"
-          alignItems="end"
-          justifyContent="space-between"
-          style={{ padding: "0 4px 4px" }}
-        >
-          <Box display="flex" gap="4">
-            <Button appearance="subtle" size="sm" icon={<IconFile size={16} />} aria-label="Attach file" />
-            <Button appearance="subtle" size="sm" icon={<IconBrandFigma size={16} />} aria-label="Figma" />
-          </Box>
-          <Box
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "6px",
-              backgroundColor: "#7c3aed",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-            aria-label="Send"
-          >
-            <IconMicrophone size={14} color="white" />
-          </Box>
-        </Box>
       </Box>
 
       {/* Quick action pills */}
@@ -529,6 +519,8 @@ export default function OpalPage() {
                   ? "#F5F3FF"
                   : "var(--ax-colors-bg-default)",
                 border: isActive || isHovered ? "1px solid #7c3aed" : "1px solid var(--ax-colors-border-default)",
+                outline: focusedChipIndex === QUICK_ACTIONS.findIndex((a) => a.label === action.label) && !isActive ? "2px solid #c4b5fd" : "none",
+                outlineOffset: "2px",
                 borderRadius: "9999px",
                 cursor: "pointer",
                 fontSize: "14px",
@@ -600,17 +592,19 @@ export default function OpalPage() {
           {activeAction.suggestions.map((suggestion, i) => (
             <Box
               key={i}
+              ref={(el) => { suggestionRefs.current[i] = el as HTMLDivElement | null; }}
               onClick={() => handleSuggestionClick(suggestion)}
+              onMouseEnter={() => setFocusedSuggestionIndex(i)}
               px="16"
               py="12"
               borderB={i < activeAction.suggestions.length - 1 ? "1" : "0"}
               borderColor="border.tertiary"
-              style={{ cursor: "pointer", transition: "background 0.1s ease" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--ax-colors-bg-secondary)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--ax-colors-bg-default)";
+              style={{
+                cursor: "pointer",
+                transition: "background 0.1s ease",
+                background: i === focusedSuggestionIndex
+                  ? "var(--ax-colors-bg-secondary)"
+                  : "var(--ax-colors-bg-default)",
               }}
             >
               <Text color="fg.default" fontSize="md">
@@ -912,7 +906,6 @@ export default function OpalPage() {
               onClick={() => {
                 setInputValue(selectedAgent.title);
                 setSelectedAgent(null);
-                setTimeout(() => textareaRef.current?.focus(), 50);
               }}
             >
               Run
