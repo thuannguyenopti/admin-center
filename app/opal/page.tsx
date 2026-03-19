@@ -57,6 +57,8 @@ export default function OpalPage() {
                     console.error('[Voice] Transcription error:', err);
                 } finally {
                     setIsTranscribing(false);
+                    // Refocus textarea so user can press Enter to submit immediately
+                    setTimeout(() => textareaRef.current?.focus(), 50);
                 }
             };
 
