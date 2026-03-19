@@ -5,7 +5,9 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch, IconBrandFigma } from "@tabler/icons-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
+import { useOpalContext } from "@/app/context/OpalContext";
 
 const LIBRARY_TABS = ["Recommended for you", "Featured", "Brainstorm & Plan", "Create", "Test & Experiment", "Optimize", "Search"];
 
@@ -356,7 +358,9 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
 }
 
 export default function OpalPage() {
-  const [inputValue, setInputValue] = useState("");
+  const router = useRouter();
+  const { chatState } = useOpalContext();
+  const { inputValue, setInputValue, sendMessage } = chatState;
   const [hoveredPill, setHoveredPill] = useState<string | null>(null);
   const [activePill, setActivePill] = useState<string | null>(null);
   const [focusedChipIndex, setFocusedChipIndex] = useState(-1);
@@ -480,7 +484,10 @@ export default function OpalPage() {
         <OpalInput
           value={inputValue}
           onChange={setInputValue}
-          onSend={() => { /* standalone prototype — no chat backend wired */ }}
+          onSend={(content) => {
+            sendMessage(content ?? inputValue);
+            router.push('/opal');
+          }}
           disabled={false}
           variant="home"
         />
@@ -904,8 +911,9 @@ export default function OpalPage() {
             <Button
               appearance="primary"
               onClick={() => {
-                setInputValue(selectedAgent.title);
+                sendMessage(selectedAgent.title);
                 setSelectedAgent(null);
+                router.push('/opal');
               }}
             >
               Run
