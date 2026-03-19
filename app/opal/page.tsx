@@ -4,7 +4,7 @@ import { Box, Heading } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX } from "@tabler/icons-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
@@ -132,16 +132,49 @@ export default function OpalPage() {
   const [hoveredPill, setHoveredPill] = useState<string | null>(null);
   const [activePill, setActivePill] = useState<string | null>(null);
   const [showAgents, setShowAgents] = useState(false);
+  const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(0);
+  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const hasMessages = messages.length > 0;
+
+  const activeAction = QUICK_ACTIONS.find((a) => a.label === activePill);
+
+  // Reset focused index when dropdown opens
+  useEffect(() => {
+    if (activeAction) setFocusedSuggestionIndex(0);
+  }, [activePill]);
+
+  // Scroll focused item into view
+  useEffect(() => {
+    suggestionRefs.current[focusedSuggestionIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [focusedSuggestionIndex]);
+
+  // Keyboard navigation for suggestion dropdown
+  useEffect(() => {
+    if (!activeAction) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setFocusedSuggestionIndex((prev) => (prev + 1) % activeAction.suggestions.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setFocusedSuggestionIndex((prev) => (prev - 1 + activeAction.suggestions.length) % activeAction.suggestions.length);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSuggestionClick(activeAction.suggestions[focusedSuggestionIndex]);
+      } else if (e.key === 'Escape') {
+        setActivePill(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeAction, focusedSuggestionIndex]);
 
   const handleSuggestionClick = (suggestion: string) => {
     setInputValue(suggestion);
     setActivePill(null);
     // OpalInput auto-focuses when value changes from empty to non-empty
   };
-
-  const activeAction = QUICK_ACTIONS.find((a) => a.label === activePill);
 
   // Once a conversation starts, hand off to the full chat view
   if (hasMessages) {
@@ -376,17 +409,19 @@ export default function OpalPage() {
           {activeAction.suggestions.map((suggestion, i) => (
             <Box
               key={i}
+              ref={(el) => { suggestionRefs.current[i] = el as HTMLDivElement | null; }}
               onClick={() => handleSuggestionClick(suggestion)}
+              onMouseEnter={() => setFocusedSuggestionIndex(i)}
               px="16"
               py="12"
               borderB={i < activeAction.suggestions.length - 1 ? "1" : "0"}
               borderColor="border.tertiary"
-              style={{ cursor: "pointer", transition: "background 0.1s ease" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--ax-colors-bg-secondary)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--ax-colors-bg-default)";
+              style={{
+                cursor: "pointer",
+                transition: "background 0.1s ease",
+                background: i === focusedSuggestionIndex
+                  ? "var(--ax-colors-bg-secondary)"
+                  : "var(--ax-colors-bg-default)",
               }}
             >
               <Text color="fg.default" fontSize="md">
