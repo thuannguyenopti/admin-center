@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { OpalContextType } from '@/app/context/OpalContext';
+import { useOpalGeneration } from '@/app/context/OpalGenerationContext';
 
 export type ChatMessage = {
   id: string;
@@ -9,6 +10,16 @@ export type ChatMessage = {
   content: string;
   timestamp: number;
   isLoading?: boolean;
+  messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete';
+  metadata?: {
+    checklist?: Array<{
+      label: string;
+      status: 'pending' | 'running' | 'completed' | 'failed';
+    }>;
+    auditResult?: any; // Will be typed as PreflightAuditResult when imported
+    loading?: boolean;
+    loadingMessage?: string;
+  };
 };
 
 export type OpalState = {
@@ -130,50 +141,29 @@ function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null 
 }
 
 export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOpalStateProps = {}) {
+  const {activePageId, onPageUpdate, getCurrentPageData} = useOpalGeneration();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
-  const [enableAI, setEnableAI] = useState<boolean>(false);
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
-  // Manual handler to set AND save preference
-  const setEnableAIWithStorage = useCallback((enabled: boolean) => {
-    setEnableAI(enabled);
-    localStorage.setItem('opal_ai_enabled', String(enabled));
-  }, []);
-
-  // Consolidated effect: Load preference or apply smart default on mount & path change
+  // Load chat messages when activeChatId changes
   useEffect(() => {
-    // Check new key first, then fallback to legacy key
-    let saved = localStorage.getItem('opal_ai_enabled');
-    if (saved === null) {
-      saved = localStorage.getItem('opal_enable_ai');
-    }
-
-    if (saved !== null) {
-      // If a preference exists, ALWAYS respect it
-      setEnableAI(saved === 'true');
-    } else {
-      // No preference? Use Smart Defaults: ON for CMS edit, OFF for everything else
-      const path = opalContext?.currentPage?.path;
-      const isCMSEdit = path?.startsWith('/cms/edit');
-      setEnableAI(!!isCMSEdit);
-    }
-  }, [opalContext?.currentPage?.path]);
-
-  // REMOVED: Auto-saving effect. We only save on manual interaction now.
-
-  // Load chat messages when activeChatId changes or storage event triggers
-  const loadMessages = useCallback(() => {
     if (!activeChatId) {
       setMessages([]);
       setCurrentChatId(null);
       return;
     }
 
+    // If we're already on this chat, don't reload
+    // This prevents double-loading but allows switching to a new chat with same ID if needed (rare)
+    if (activeChatId === currentChatId) return;
+
     try {
+      // Use a versioned key for mock chats to force the new diversified data
       const isMockId = MOCK_CHAT_IDS.has(activeChatId);
       const storageKey = isMockId
         ? `opal_chat_messages_v2_${activeChatId}`
@@ -183,13 +173,17 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
 
       if (savedMessages) {
         const parsed = JSON.parse(savedMessages);
-        if (Array.isArray(parsed) && parsed.length === 0 && isMockId) {
-          setMessages(getSeedMessagesForMockChat(activeChatId) ?? []);
+        // If the built-in mock chats are empty, seed them once for the demo window.
+        if (Array.isArray(parsed) && parsed.length === 0 && MOCK_CHAT_IDS.has(activeChatId)) {
+          const seeded = getSeedMessagesForMockChat(activeChatId) ?? [];
+          setMessages(seeded);
         } else {
           setMessages(parsed);
         }
       } else {
-        if (isMockId) {
+        // If there is no stored history yet and this is one of the built-in chats (1–9),
+        // seed it with mock messages. New chats (UUIDs) remain empty.
+        if (MOCK_CHAT_IDS.has(activeChatId)) {
           setMessages(getSeedMessagesForMockChat(activeChatId) ?? []);
         } else {
           setMessages([]);
@@ -197,33 +191,11 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
       }
       setCurrentChatId(activeChatId);
     } catch (err) {
-      console.error('Failed to load chat messages:', err);
+      console.error('Failed to load chat messages from localStorage:', err);
       setMessages([]);
       setCurrentChatId(activeChatId);
     }
-  }, [activeChatId]);
-
-  useEffect(() => {
-    loadMessages();
-  }, [loadMessages]);
-
-  // Listen for storage changes to sync across tabs/components
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (!activeChatId) return;
-      const isMockId = MOCK_CHAT_IDS.has(activeChatId);
-      const storageKey = isMockId
-        ? `opal_chat_messages_v2_${activeChatId}`
-        : `opal_chat_messages_${activeChatId}`;
-
-      if (e.key === storageKey) {
-        loadMessages();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [activeChatId, loadMessages]);
+  }, [activeChatId, currentChatId]);
 
   // Load panel state on mount
   useEffect(() => {
@@ -292,14 +264,29 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     ));
   }, []);
 
-  const abortControllerRef = useRef<AbortController | null>(null);
+  const removeMessage = useCallback((id: string) => {
+    setMessages(prev => prev.filter(msg => msg.id !== id));
+  }, []);
 
-  const generateResponse = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
     setError(undefined);
     setIsLoading(true);
 
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+    // Add user message
+    const userMessage = addMessage({
+      role: 'user',
+      content: content.trim(),
+    });
+
+    // Notify parent about new message
+    if (onMessageSent) {
+      onMessageSent(content.trim());
+    }
+
+    // Clear input
+    setInputValue('');
 
     // Add loading message
     const loadingMessage = addMessage({
@@ -309,178 +296,95 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     });
 
     try {
-      if (isLoaderDevEnabled()) {
-        await sleepWithAbort(DEV_LOADER_MIN_PREVIEW_MS, controller.signal);
-      }
+      // Check if we're iterating on a generated page
+      // If there's an activePageId, we're in iteration mode
+      let isIterating = !!activePageId;
 
-      if (enableAI) {
-        // Call API with context
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userMessage: content,
-            context: opalContext ? {
-              currentPage: opalContext.currentPage,
-              availableFeatures: opalContext.availableFeatures,
-              opalCapabilities: opalContext.opalCapabilities,
-            } : undefined,
-          }),
-          signal: controller.signal,
+      let requestBody: any;
+      if (isIterating) {
+        const currentPageData = getCurrentPageData();
+        console.log('[Opal Iteration] Current page data:', {
+          hasData: !!currentPageData,
+          outlinesCount: currentPageData?.outlines?.length,
+          hasVariations: !!currentPageData?.variations,
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to get response from Opal');
-        }
-
-        if (!response.body) {
-          throw new Error('No response body from Opal');
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let accumulatedContent = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          accumulatedContent += chunk;
-
-          // Update message with accumulated content
-          updateMessage(loadingMessage.id, {
-            content: accumulatedContent,
-            isLoading: false,
-          });
-        }
-      } else {
-        // Simulation delay for mock data
-        await sleepWithAbort(800, controller.signal);
-
-        const mockResponses = [
-          "That's an interesting question about optimization. Based on your current context, I'd recommend looking at your mobile conversion rates first.",
-          "I've analyzed your request. You might find better results by grouping those navigation items into a single 'Help' menu as we discussed.",
-          "Great idea for a campaign! To start, we should define your primary KPIs and target segments.",
-          "Optimizely's Opal AI can help you with that! Try selecting one of the specialized agents for more tailored advice."
-        ];
-        const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-
-        // Simulate streaming for mock data
-        const words = randomResponse.split(' ');
-        let simulatedContent = '';
-
-        for (let i = 0; i < words.length; i++) {
-          if (controller.signal.aborted) break;
-
-          simulatedContent += (i === 0 ? '' : ' ') + words[i];
-          updateMessage(loadingMessage.id, {
-            content: simulatedContent,
-            isLoading: false,
-          });
-          // Small delay between words
-          await new Promise(resolve => setTimeout(resolve, 40 + Math.random() * 40));
+        // Guard against null page data - fall back to regular chat mode
+        if (!currentPageData) {
+          console.warn('[Opal Iteration] Page data is null, falling back to regular chat mode');
+          isIterating = false;
+        } else {
+          requestBody = {
+            pageId: activePageId,
+            feedback: content.trim(),
+            currentPage: currentPageData,
+          };
         }
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log('Generation aborted successfully');
-      } else {
-        console.error('Error sending message:', err);
-        setError('Failed to send message. Please try again.');
-        setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+
+      if (!isIterating) {
+        requestBody = {
+          userMessage: content.trim(),
+          context: opalContext
+            ? {
+                currentPage: opalContext.currentPage,
+                availableFeatures: opalContext.availableFeatures,
+                opalCapabilities: opalContext.opalCapabilities,
+              }
+            : undefined,
+        };
       }
+
+      // Call appropriate API endpoint
+      const response = await fetch(isIterating ? '/api/iterate-page' : '/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Opal');
+      }
+
+      const data = await response.json();
+
+      // Update loading message with actual response
+      if (isIterating) {
+        // Handle iteration response
+        updateMessage(loadingMessage.id, {
+          content: data.summary || 'Changes applied successfully!',
+          isLoading: false,
+        });
+
+        // Apply the changes to the page if we have the callback
+        if (data.outlines && onPageUpdate) {
+          console.log('[Opal Iteration] Applying changes to page');
+          onPageUpdate({
+            outlines: data.outlines,
+            variationId: 'original',
+          });
+        } else {
+          console.warn('[Opal Iteration] Cannot apply changes - missing outlines or callback');
+        }
+      } else {
+        // Handle regular chat response
+        updateMessage(loadingMessage.id, {
+          content: data.response || 'Sorry, I couldn\'t generate a response.',
+          isLoading: false,
+        });
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      setError('Failed to send message. Please try again.');
+
+      // Remove loading message on error
+      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
     } finally {
       setIsLoading(false);
-      abortControllerRef.current = null;
     }
-  }, [enableAI, opalContext, addMessage, updateMessage]);
-
-  const sendMessage = useCallback(async (content: string) => {
-    // If already loading, getting called again means STOP/CANCEL
-    if (isLoading) {
-      console.log('🛑 [Opal] User cancelled generation');
-      abortControllerRef.current?.abort();
-      setIsLoading(false);
-      return;
-    }
-
-    if (!content.trim()) return;
-
-    // Add user message
-    addMessage({
-      role: 'user',
-      content: content.trim(),
-    });
-
-    // Notify parent
-    if (onMessageSent) {
-      onMessageSent(content.trim());
-    }
-
-    // Clear input
-    setInputValue('');
-
-    await generateResponse(content.trim());
-  }, [isLoading, addMessage, onMessageSent, generateResponse]);
-
-  const editPrompt = useCallback(async (id: string, newContent: string) => {
-    // Abort active generation if any
-    if (isLoading) {
-      abortControllerRef.current?.abort();
-    }
-
-    const query = newContent.trim();
-    if (!query) {
-      return;
-    }
-
-    // Update history: find message, update it, and remove everything after it
-    setMessages(prev => {
-      const idx = prev.findIndex(m => m.id === id);
-      if (idx === -1) {
-        return prev;
-      }
-
-      const newHistory = prev.slice(0, idx + 1);
-      newHistory[idx] = { ...newHistory[idx], content: query };
-      return newHistory;
-    });
-
-    await generateResponse(query);
-  }, [isLoading, generateResponse]);
-
-  const regenerate = useCallback(async (assistantMessageId: string) => {
-    // Abort active generation if any
-    if (isLoading) {
-      abortControllerRef.current?.abort();
-    }
-
-    // Find the assistant message and the previous user message
-    const assistantIdx = messages.findIndex(m => m.id === assistantMessageId);
-    if (assistantIdx === -1 || assistantIdx === 0) return;
-
-    // Find the previous user message
-    let userMessageIdx = -1;
-    for (let i = assistantIdx - 1; i >= 0; i--) {
-      if (messages[i].role === 'user') {
-        userMessageIdx = i;
-        break;
-      }
-    }
-
-    if (userMessageIdx === -1) return;
-
-    const userMessage = messages[userMessageIdx];
-
-    // Remove the assistant message (keep everything up to and including the user message)
-    setMessages(prev => prev.slice(0, assistantIdx));
-
-    // Generate new response
-    await generateResponse(userMessage.content);
-  }, [isLoading, messages, generateResponse]);
+  }, [isLoading, addMessage, updateMessage, opalContext, activePageId, onPageUpdate, onMessageSent, getCurrentPageData]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
@@ -499,16 +403,16 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     inputValue,
     isLoading,
     error,
+    isInputDisabled,
     togglePanel,
     closePanel,
     openPanel,
     setInputValue,
+    setInputDisabled: setIsInputDisabled,
     sendMessage,
     clearHistory,
-    enableAI,
-    setEnableAI: setEnableAIWithStorage,
+    addMessage,
     updateMessage,
-    editPrompt,
-    regenerate,
+    removeMessage,
   };
 }

@@ -28,7 +28,7 @@ function buildSystemPrompt(context) {
   const { currentPage, availableFeatures, opalCapabilities } = context;
 
   let contextSection = '';
-
+  
   // Add current page context
   if (currentPage) {
     contextSection += `
@@ -87,41 +87,15 @@ export async function POST(request) {
     // Build dynamic system prompt with context
     const systemPrompt = buildSystemPrompt(context);
 
-    const stream = await openai.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage }
-      ],
-      stream: true,
+      ]
     });
 
-    // Handle streaming response
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        try {
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-              controller.enqueue(encoder.encode(content));
-            }
-          }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(readableStream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    return Response.json({ response: completion.choices[0].message.content });
   } catch (error) {
     console.error(error);
     return Response.json({ error: 'Error communicating with OpenAI' }, { status: 500 });

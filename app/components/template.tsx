@@ -1,23 +1,25 @@
 "use client";
 
-import { Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator } from "@optiaxiom/react";
-import { Button } from "./Button";
-import { Text } from "./Text";
-import Link from "next/link";
-import { useEffect, useState, Suspense } from "react";
+import {Box, Sidebar, NavBody, NavFooter, NavItem, NavList, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
+import {Button} from "./Button";
+import {Text} from "./Text";
+import {useEffect, useState, Suspense} from "react";
 
-import { useRouter, usePathname } from "next/navigation";
+import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
-import { LayoutProvider, useLayout } from "../context/LayoutContext";
-import { OpalContextProvider, useOpalContext } from "../context/OpalContext";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {LayoutProvider, useLayout} from "../context/LayoutContext";
+import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
+import {BrandToneProvider} from "../components/ai/BrandToneProvider";
+import {PreflightProvider} from "../components/ai/PreflightContext";
+import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
-import { FilterPanelProvider } from "../cms/content/context/FilterPanelContext";
+import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
+import {ContentManagerLayoutProvider, useContentManagerLayout} from "../cms/content/context/ContentManagerLayoutContext";
 import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
-import { OpalPanel } from "./OpalPanel";
-import { useOpalState } from "@/app/hooks/useOpalState";
-import { useOpalHistory } from "@/app/hooks/useOpalHistory";
+import {OpalPanel} from "./OpalPanel";
+import {useOpalState} from "@/app/hooks/useOpalState";
+import {useOpalHistory} from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -26,11 +28,13 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const { asideContent } = useLayout();
+	const {asideContent, hidePageHeader, setOpalPanelControls, opalPanelWidth} = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
-	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false); const { history, chatState } = opalContext;
+	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
+
+	// Opal panel state
 	const {
 		groupedHistory,
 		activeChat,
@@ -43,7 +47,7 @@ function TemplateContent({
 		createNewChat,
 		deleteChat,
 		selectChat,
-	} = history;
+	} = useOpalHistory();
 
 	const {
 		isOpen: isOpalOpen,
@@ -51,15 +55,31 @@ function TemplateContent({
 		inputValue,
 		isLoading,
 		error,
+		isInputDisabled,
 		togglePanel: toggleOpal,
 		closePanel: closeOpal,
+		openPanel: openOpal,
 		setInputValue,
+		setInputDisabled,
 		sendMessage,
-		enableAI,
-		setEnableAI,
-		editPrompt,
-		regenerate,
-	} = chatState;
+		addMessage,
+		updateMessage,
+		removeMessage,
+	} = useOpalState({activeChatId: activeChat, opalContext});
+
+	// Provide Opal panel controls through LayoutContext
+	useEffect(() => {
+		setOpalPanelControls({
+			openPanel: openOpal,
+			togglePanel: toggleOpal,
+			closePanel: closeOpal,
+			addMessage,
+			updateMessage,
+			removeMessage,
+			setInputDisabled,
+		});
+		return () => setOpalPanelControls(null);
+	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, addMessage, updateMessage, removeMessage, setInputDisabled]);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -93,17 +113,22 @@ function TemplateContent({
 
 	// Show secondary sidebar for Content Manager or hierarchical navigation
 	const showSecondarySidebar = isContentManager || showVT;
+	const { contentSubNavExpanded } = useContentManagerLayout();
+	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
+	const secondarySidebarWidth = isContentManager
+		? (contentSubNavExpanded ? 224 : 56)
+		: 224;
 
 	const customLayout = highlight1?.customLayout;
 
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
-	if (!isHydrated) return <Box style={{ height: "100vh" }} bg="bg.page" />;
+	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
 
 	if (isWorkflowBuilder) {
 		return (
-			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
+			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
 				{children}
 			</Box>
 		);
@@ -129,8 +154,8 @@ function TemplateContent({
 										aria-label={menuItem.label}
 										icon={
 											menuItem.label === "Notifications" &&
-												!path.startsWith("/opal/notifications") ? (
-												<Box style={{ position: "relative" }}>
+											!path.startsWith("/opal/notifications") ? (
+												<Box style={{position: "relative"}}>
 													{menuItem.icon}
 													<Box
 														style={{
@@ -170,37 +195,41 @@ function TemplateContent({
 								)
 							)}
 						</NavBody>
+						<NavFooter>
+							<NavList>
+								<Button
+									aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
+									icon={
+										!isExpanded ? (
+											<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
+										) : (
+											<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
+										)
+									}
+									onClick={() => setIsExpanded(!isExpanded)}
+									appearance="subtle"
+								/>
+							</NavList>
+						</NavFooter>
 					</Nav>
-					<Box className="absolute bottom-0 left-0 right-0" p="8">
-						<Button
-							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-							icon={
-								!isExpanded ? (
-									<IconChevronRight size={16} />
-								) : (
-									<IconChevronLeft size={16} />
-								)
-							}
-							onClick={() => setIsExpanded(!isExpanded)}
-							appearance="subtle"
-						/>
-					</Box>
 				</Sidebar>
 				<Box
 					style={{
-						marginLeft: "-224px",
-						transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
-						transition: ".7s cubic-bezier(0, 1, 0, 1)",
+						marginLeft: -secondarySidebarWidth,
+						transform: showSecondarySidebar ? `translateX(${secondarySidebarWidth}px)` : "translateX(0px)",
 						overflowX: "hidden",
 						overflowY: isContentManager ? "hidden" : undefined,
 						minHeight: isContentManager ? 0 : undefined,
+						width: secondarySidebarWidth,
+						minWidth: secondarySidebarWidth,
+						flexShrink: 0,
+						height: "100%",
 					}}
 					borderR="1"
 					borderColor="border.tertiary"
 					bg="bg.default"
 					overflow="hidden"
-					h="full"
-					className="slide w-[224px] h-[calc(100vh-58px)]"
+					className="slide"
 				>
 					{isContentManager ? (
 						<ContentManagerSidebar />
@@ -208,16 +237,22 @@ function TemplateContent({
 						<Sidebar
 							className="flex"
 							h="full"
-							style={{ overflowY: "auto", overflowX: "hidden" }}
+							style={{overflowY: "auto", overflowX: "hidden"}}
 						>
 							<SubNav
-								style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}
+								style={{
+									height: "100%",
+									overflowY: "auto",
+									overflowX: "hidden",
+									borderRight: 0,
+								}}
 							>
 								<div
 									className="flex w-[500%]"
 									style={{
-										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
-											}px)`,
+										transform: `translateX(-${
+											224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
+										}px)`,
 										transition: ".7s cubic-bezier(0, 1, 0, 1)",
 										minHeight: "100%",
 										overflowX: "hidden",
@@ -257,7 +292,11 @@ function TemplateContent({
 				fontSize="md"
 				color="fg.default"
 				h="full"
-				style={{ minHeight: 0 }}
+				style={{
+				minHeight: 0,
+				marginRight: opalPanelWidth ? `${opalPanelWidth}px` : 0,
+				transition: 'margin-right 0.3s cubic-bezier(0, 1, 0, 1)',
+			}}
 			>
 				<Box
 					flex="1"
@@ -270,37 +309,39 @@ function TemplateContent({
 					) : (
 						<Box
 							style={{
-								marginLeft: "224px",
-								marginRight: "-224px",
-								width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
+								marginLeft: secondarySidebarWidth,
+								marginRight: -secondarySidebarWidth,
+								width: !showSecondarySidebar ? "100%" : `calc(100% - ${secondarySidebarWidth}px)`,
 								transform: showSecondarySidebar
-									? "translatex(0px)"
-									: "translatex(-224px)",
-								transition: ".7s cubic-bezier(0, 1, 0, 1)",
+									? "translateX(0px)"
+									: `translateX(-${secondarySidebarWidth}px)`,
+								transition: "margin 0.2s ease-out, width 0.2s ease-out, transform 0.2s ease-out",
 							}}
 							color="fg.default"
 							overflow="auto"
 							p="24"
 						>
 							<>
-								<Box w="full" className="min-w-0">
-									<Heading level="3" mb="16">
-										{heading || highlight1?.label}
-									</Heading>
-									{desc && (
-										<Text
-											mb="24"
-											color="fg.secondary"
-											display="block"
-											w="full"
-											style={{ width: "100%", maxWidth: "none" }}
-										>
-											{desc}
-										</Text>
-									)}
-								</Box>
+								{!hidePageHeader && (
+									<Box w="full" className="min-w-0" overflow="hidden">
+										<Heading level="3" mb="16" truncate>
+											{heading || highlight1?.label}
+										</Heading>
+										{desc && (
+											<Text
+												mb="24"
+												color="fg.secondary"
+												display="block"
+												w="full"
+												style={{ width: "100%", maxWidth: "none" }}
+											>
+												{desc}
+											</Text>
+										)}
+									</Box>
+								)}
 								<Box
-									mt={desc ? "0" : "24"}
+									mt={!hidePageHeader && desc ? "0" : !hidePageHeader ? "24" : "0"}
 									z="10"
 									className="relative"
 									w="full"
@@ -331,6 +372,7 @@ function TemplateContent({
 				inputValue={inputValue}
 				isLoading={isLoading}
 				error={error}
+				isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
 				groupedHistory={groupedHistory}
@@ -344,10 +386,6 @@ function TemplateContent({
 				createNewChat={createNewChat}
 				deleteChat={deleteChat}
 				selectChat={selectChat}
-				enableAI={enableAI}
-				onEnableAIChange={setEnableAI}
-				onMessageEdit={editPrompt}
-				onRegenerate={regenerate}
 			/>
 		</Box>
 	);
@@ -360,22 +398,32 @@ function TemplateWrapper(props: any) {
 	if (isContentManager) {
 		return (
 			<Suspense fallback={<Box p="24">Loading...</Box>}>
-				<FilterPanelProvider>
-					<TemplateContent {...props} />
-				</FilterPanelProvider>
+				<ContentManagerLayoutProvider>
+					<FilterPanelProvider>
+						<TemplateContent {...props} />
+					</FilterPanelProvider>
+				</ContentManagerLayoutProvider>
 			</Suspense>
 		);
 	}
 
-	return <TemplateContent {...props} />;
+	return (
+		<ContentManagerLayoutProvider>
+			<TemplateContent {...props} />
+		</ContentManagerLayoutProvider>
+	);
 }
 
 export default function Template(props: any) {
 	return (
 		<LayoutProvider>
-			<OpalContextProvider navigationStructure={props.structure}>
-				<TemplateWrapper {...props} />
-			</OpalContextProvider>
+			<BrandToneProvider>
+				<PreflightProvider>
+					<OpalContextProvider navigationStructure={props.structure}>
+						<TemplateWrapper {...props} />
+					</OpalContextProvider>
+				</PreflightProvider>
+			</BrandToneProvider>
 		</LayoutProvider>
 	);
 }

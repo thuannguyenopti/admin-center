@@ -16,12 +16,20 @@ import { useState, useEffect, useCallback } from 'react';
 import { generateSlug, isSlugUnique } from '../utils';
 import { IconSparkles, IconCircleInfo } from '@optimizely/axiom-icons';
 
+export interface ContentContextItem {
+  name: string;
+  baseType?: string;
+  tagSlugs: string[];
+}
+
 interface TagModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'create' | 'edit';
   initialTags?: Tag[];
   allTags: Tag[];
+  /** Content (e.g. pages) to infer tags from: name, type, and current tag slugs. */
+  contentContext?: ContentContextItem[];
   onSave: (formRows: FormRowType[]) => void;
 }
 
@@ -31,6 +39,7 @@ export function TagModal({
   mode,
   initialTags = [],
   allTags,
+  contentContext = [],
   onSave,
 }: TagModalProps) {
   const [formRows, setFormRows] = useState<FormRowType[]>([]);
@@ -80,17 +89,26 @@ export function TagModal({
       .trim();
 
   const handleGenerate = useCallback(async () => {
-    if (allTags.length === 0) return;
     setGenerateLoading(true);
     setGenerateError(null);
     try {
+      const payload: any = {
+        itemName: allTags.length > 0
+          ? 'Suggest new tag names that fit the existing taxonomy'
+          : contentContext.length > 0
+            ? 'Suggest tag names based on the content items listed'
+            : 'Suggest useful tag names for a content management system',
+      };
+      if (allTags.length > 0) {
+        payload.tagTaxonomy = allTags.map((t) => ({ name: t.name, slug: t.slug }));
+      }
+      if (contentContext.length > 0) {
+        payload.contentContext = contentContext;
+      }
       const res = await fetch('/api/tags/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          itemName: 'Suggest new tag names that fit the existing taxonomy',
-          tagTaxonomy: allTags.map((t) => ({ name: t.name, slug: t.slug })),
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -119,7 +137,7 @@ export function TagModal({
     } finally {
       setGenerateLoading(false);
     }
-  }, [allTags]);
+  }, [allTags, contentContext]);
 
   const handleChange = useCallback(
     (index: number, field: keyof FormRowType, value: string) => {
@@ -271,6 +289,11 @@ export function TagModal({
           }}
         >
           <Box display="flex" flexDirection="column" gap="8">
+            {mode === 'create' && generateError && (
+              <Text fontSize="xs" color="fg.error">
+                {generateError}
+              </Text>
+            )}
             {/* Column headers + form rows */}
             <Box display="flex" flexDirection="column" gap="2">
               <Box display="flex" gap="10" mb="4">
@@ -334,35 +357,25 @@ export function TagModal({
                 </Box>
               ))}
             </Box>
-            {mode === 'create' && (
-              <Box display="flex" justifyContent="flex-start" alignItems="center">
-                <Button
-                  appearance="default-opal"
-                  size="sm"
-                  rounded="sm"
-                  px="8"
-                  className="opalGenerateButton"
-                  icon={<IconSparkles size={16} />}
-                  iconPosition="start"
-                  onClick={handleGenerate}
-                  disabled={generateLoading || allTags.length === 0}
-                  loading={generateLoading}
-                  aria-label="Generate tag suggestions with Opal"
-                >
-                  Generate
-                </Button>
-              </Box>
-            )}
-            {mode === 'create' && generateError && (
-              <Box>
-                <Text fontSize="xs" color="fg.error">
-                  {generateError}
-                </Text>
-              </Box>
-            )}
           </Box>
         </DialogBody>
-        <DialogFooter style={{ gap: '16px' }}>
+        <DialogFooter style={{ gap: '16px', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          {mode === 'create' && (
+            <Button
+              appearance="default-opal"
+              size="lg"
+              className="opalGenerateButton"
+              icon={<IconSparkles size={16} />}
+              iconPosition="start"
+              onClick={handleGenerate}
+              disabled={generateLoading}
+              loading={generateLoading}
+              aria-label="Generate tag suggestions with Opal"
+            >
+              Generate
+            </Button>
+          )}
+          <Box style={{ flex: 1 }} />
           <DialogClose size="lg">Cancel</DialogClose>
           <Button
             appearance="primary"

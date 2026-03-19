@@ -2,6 +2,8 @@
 import Template from "./components/template";
 import "./globals.css";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
+import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
+import {OpalGenerationProvider} from "@/app/context/OpalGenerationContext";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
@@ -10,6 +12,7 @@ import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
+import {MigrationRunner} from "@/app/components/MigrationRunner";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -22,6 +25,7 @@ import {
 	IconPuzzle,
 	IconFolders,
 	IconBuildingStore,
+	IconSettingsSearch,
 } from "@tabler/icons-react";
 
 export default function RootLayout({
@@ -129,13 +133,20 @@ export default function RootLayout({
 						url: "/cms/settings/content-types",
 						children: currentContentType
 							? {
-									title: currentContentType.displayName || currentContentType.name,
-									description: currentContentType.baseType === "Page" ? "Page Type" : 
-										currentContentType.baseType === "Block" ? "Block Type" :
-										currentContentType.baseType === "Experience" ? "Experience Type" :
-										currentContentType.baseType === "Media" ? "Media Type" :
-										currentContentType.baseType === "Product" ? "Product Type" :
-										currentContentType.baseType,
+									title:
+										currentContentType.displayName || currentContentType.name,
+									description:
+										currentContentType.baseType === "Page"
+											? "Page Type"
+											: currentContentType.baseType === "Block"
+												? "Block Type"
+												: currentContentType.baseType === "Experience"
+													? "Experience Type"
+													: currentContentType.baseType === "Media"
+														? "Media Type"
+														: currentContentType.baseType === "Product"
+															? "Product Type"
+															: currentContentType.baseType,
 									children: [
 										{label: "Define"},
 										{
@@ -172,7 +183,7 @@ export default function RootLayout({
 											url: `/cms/settings/content-types/${contentTypeId}/settings`,
 										},
 									],
-							  }
+								}
 							: undefined,
 					},
 					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
@@ -203,6 +214,8 @@ export default function RootLayout({
 								: [],
 						},
 					},
+					{label: "AI & Automation"},
+					{label: "Opal Actions", url: "/cms/settings/opal-actions"},
 					{label: "Config"},
 					{label: "Languages", url: "/cms/settings/languages"},
 					{label: "Edit Tabs", url: "/cms/settings/edit-tabs"},
@@ -226,7 +239,7 @@ export default function RootLayout({
 				label: "Search Management",
 				url: "/cms/search/search-analytics",
 				highlight: "/cms/search",
-				icon: <IconSearch />,
+				icon: <IconSettingsSearch />,
 				children: [
 					{label: "Health & Monitoring"},
 					{
@@ -377,7 +390,6 @@ export default function RootLayout({
 				highlight: "/opal",
 				icon: <img src="/nav_icons/comments.svg" alt="Chat" width={20} height={20} />,
 				exact: true,
-				customLayout: true,
 			},
 			{
 				label: "Prompt Library",
@@ -472,10 +484,15 @@ export default function RootLayout({
 			</head>
 			<body suppressHydrationWarning>
 				<ThemeProvider>
-					<HydrationErrorSuppressor />
-					{menu ? <Template structure={menu}>{children}</Template> : children}
-					{activeEffect === "snow" && <SnowEffect />}
-					{activeEffect === "newyear" && <NewYearEffect />}
+					<ProofreadingProvider>
+						<OpalGenerationProvider>
+							<HydrationErrorSuppressor />
+							<MigrationRunner />
+							{menu ? <Template structure={menu}>{children}</Template> : children}
+							{activeEffect === "snow" && <SnowEffect />}
+							{activeEffect === "newyear" && <NewYearEffect />}
+						</OpalGenerationProvider>
+					</ProofreadingProvider>
 				</ThemeProvider>
 			</body>
 		</html>

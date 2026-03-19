@@ -17,6 +17,7 @@ interface CategoriesTableProps {
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   onSort?: (column: string) => void;
+  newlyImportedIds?: Set<string>;
 }
 
 export function CategoriesTable({
@@ -30,6 +31,7 @@ export function CategoriesTable({
   sortColumn,
   sortDirection,
   onSort,
+  newlyImportedIds = new Set(),
 }: CategoriesTableProps) {
   const rootCategories = getChildren(null, categories);
   const allSelected =
@@ -137,6 +139,7 @@ export function CategoriesTable({
             onToggleExpand={onToggleExpand}
             onEdit={onEdit}
             onDelete={onDelete}
+            newlyImportedIds={newlyImportedIds}
           />
         ))}
       </tbody>

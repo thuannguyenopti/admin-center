@@ -208,6 +208,7 @@ export type PropertyType =
 	| "ContentReference"
 	| "ContentArea"
 	| "Url"
+	| "LinkItem"
 	| "LinkItemCollection"
 	| "PageReference"
 	| "ImageReference"
@@ -218,6 +219,7 @@ export type PropertyType =
 	| "text"
 	| "textarea"
 	| "richtext"
+	| "link"
 	| "reference"
 	| "address"
 	| "outline"
@@ -315,8 +317,47 @@ export const initialContentTypes: ContentType[] = [
 		modifiedAt: "2024-01-10T14:20:00Z",
 		modifiedBy: "Bob Smith",
 		properties: [
+			// Content group
 			{ id: "mainOutline", name: "Main", displayName: "Main Content", type: "outline", groupName: "Content", order: 1 },
-			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "SEO", order: 1 },
+
+			// Content Settings group
+			{
+				id: "campaignMode",
+				name: "Campaign Mode",
+				displayName: "Campaign Mode",
+				type: "SelectOne",
+				groupName: "Content Settings",
+				order: 1,
+				options: [
+					{ label: "No", value: "no" },
+					{ label: "Yes", value: "yes" }
+				],
+				defaultValue: "no"
+			},
+			{
+				id: "someOtherSetting",
+				name: "Some Other Setting",
+				displayName: "Some Other Setting",
+				type: "SelectOne",
+				groupName: "Content Settings",
+				order: 2,
+				options: [
+					{ label: "Setting 1", value: "setting1" },
+					{ label: "Setting 2", value: "setting2" }
+				],
+				defaultValue: "setting1"
+			},
+
+			// GEO & SEO group
+			{ id: "seoTitle", name: "SEO Title", displayName: "SEO Title", type: "String", groupName: "GEO & SEO", order: 1, description: "Title tag for search engines" },
+			{ id: "keywords", name: "Keywords", displayName: "Keywords", type: "String", groupName: "GEO & SEO", order: 2, description: "Meta keywords" },
+			{ id: "description", name: "Description", displayName: "Meta Description", type: "LongString", groupName: "GEO & SEO", order: 3, description: "Meta description for search engines" },
+			{ id: "meta", name: "Meta", displayName: "Additional Meta Tags", type: "LongString", groupName: "GEO & SEO", order: 4, description: "Additional meta tags" },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "GEO & SEO", order: 5 },
+
+			// Categories & Tags group
+			{ id: "categories", name: "Categories", displayName: "Categories", type: "SelectMany", groupName: "Categories & Tags", order: 1, description: "Page categories" },
+			{ id: "tags", name: "Tags", displayName: "Tags", type: "SelectMany", groupName: "Categories & Tags", order: 2, description: "Page tags" },
 		],
 	},
 	{
@@ -388,8 +429,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "imageUrl", name: "Image URL", type: "text", required: true },
-			{ id: "altText", name: "Alt Text", type: "text" },
+			{ id: "src", name: "Image URL", type: "text", required: true },
+			{ id: "alt", name: "Alt Text", type: "text" },
 			{ id: "width", name: "Width", type: "text" },
 			{ id: "height", name: "Height", type: "text" },
 		],
@@ -404,14 +445,62 @@ export const initialContentTypes: ContentType[] = [
 		name: "Heading",
 		baseType: "Block",
 		description: "A heading block",
-		properties: [{ id: "text", name: "Text", type: "text", required: true }],
+		properties: [
+			{ id: "text", name: "Text", type: "text", required: true },
+			{
+				id: "level",
+				name: "Level",
+				displayName: "Heading Level",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "H1 (Largest)", value: "h1" },
+					{ label: "H2", value: "h2" },
+					{ label: "H3", value: "h3" },
+					{ label: "H4", value: "h4" },
+					{ label: "H5", value: "h5" },
+					{ label: "H6 (Smallest)", value: "h6" }
+				],
+				defaultValue: "h2"
+			},
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Visual Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Default", value: "default" },
+					{ label: "Prominent", value: "prominent" },
+					{ label: "Subtle", value: "subtle" },
+					{ label: "Red Accent", value: "accent-red" },
+					{ label: "Blue Accent", value: "accent-blue" }
+				],
+				defaultValue: "default"
+			}
+		],
 	},
 	{
 		id: "ct-text",
 		name: "Text",
 		baseType: "Block",
 		description: "A text block",
-		properties: [{ id: "text", name: "Text", type: "text", required: true }],
+		properties: [
+			{ id: "text", name: "Text", type: "text", required: true },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Visual Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Default", value: "default" },
+					{ label: "Prominent", value: "prominent" },
+					{ label: "Subtle", value: "subtle" }
+				],
+				defaultValue: "default"
+			}
+		],
 	},
 	{
 		id: "ct-rich-text",
@@ -425,7 +514,23 @@ export const initialContentTypes: ContentType[] = [
 		name: "Button",
 		baseType: "Block",
 		description: "A button block",
-		properties: [{ id: "label", name: "Label", type: "text", required: true }],
+		properties: [
+			{ id: "label", name: "Label", type: "text", required: true },
+			{ id: "url", name: "URL", type: "link" },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Button Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Primary", value: "primary" },
+					{ label: "Secondary", value: "secondary" },
+					{ label: "Subtle", value: "subtle" }
+				],
+				defaultValue: "primary"
+			}
+		],
 	},
 	{
 		id: "ct-input",
@@ -1411,6 +1516,7 @@ export const initialPages: Page[] = [
 													{ id: "ele-landing-hero-badge" },
 													{ id: "ele-landing-hero-sub" },
 													{ id: "ele-landing-hero-heading" },
+													{ id: "ele-landing-hero-broken-image" },
 												],
 											},
 										],
@@ -1762,16 +1868,25 @@ export const initialPages: Page[] = [
 									},
 								},
 							},
+							"ele-landing-hero-broken-image": {
+								type: "ct-image",
+								properties: {
+									src: { value: "https://example.com/missing-image-404.jpg" },
+									alt: { value: "" },
+								},
+							},
 							"ele-landing-hero-cta-primary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Register for your bib" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Learn More" },
+									url: { value: "/about" },
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
@@ -2070,6 +2185,7 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: { value: "Join Now" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-challenges-heading": {
@@ -5073,7 +5189,7 @@ export const siteConfig = {
 	},
 };
 
-// Initial Tags
+// Initial Tags - cleaned: removed 8 orphaned tags and updated usage counts to match actual content usage
 export const initialTags = [
 	{
 		id: 'tag-1',
@@ -5081,7 +5197,7 @@ export const initialTags = [
 		slug: 'spring-reset',
 		visibility: 'private' as const,
 		modifiedBy: 'Tien Le',
-		usage: 85,
+		usage: 2,
 		lastModified: 'Jan 11, 2025',
 	},
 	{
@@ -5090,17 +5206,8 @@ export const initialTags = [
 		slug: 'summer-shred',
 		visibility: 'private' as const,
 		modifiedBy: 'Sofia Kim',
-		usage: 90,
+		usage: 1,
 		lastModified: 'Feb 15, 2025',
-	},
-	{
-		id: 'tag-3',
-		name: 'Beach Body',
-		slug: 'beach-body',
-		visibility: 'public' as const,
-		modifiedBy: 'Amir Patel',
-		usage: 78,
-		lastModified: 'Mar 1, 2025',
 	},
 	{
 		id: 'tag-4',
@@ -5108,71 +5215,8 @@ export const initialTags = [
 		slug: 'outdoor-training',
 		visibility: 'private' as const,
 		modifiedBy: 'Lara Chen',
-		usage: 88,
+		usage: 4,
 		lastModified: 'Mar 20, 2025',
-	},
-	{
-		id: 'tag-5',
-		name: 'Back to Fitness',
-		slug: 'back-to-fitness',
-		visibility: 'public' as const,
-		modifiedBy: 'Raj Singh',
-		usage: 83,
-		lastModified: 'Apr 5, 2025',
-	},
-	{
-		id: 'tag-6',
-		name: 'Fall Focus',
-		slug: 'fall-focus',
-		visibility: 'public' as const,
-		modifiedBy: 'Emma Brown',
-		usage: 95,
-		lastModified: 'Apr 22, 2025',
-	},
-	{
-		id: 'tag-7',
-		name: 'Routine Reboot',
-		slug: 'routine-reboot',
-		visibility: 'private' as const,
-		modifiedBy: 'David Lee',
-		usage: 80,
-		lastModified: 'May 10, 2025',
-	},
-	{
-		id: 'tag-8',
-		name: 'Holiday Hustle',
-		slug: 'holiday-hustle',
-		visibility: 'public' as const,
-		modifiedBy: 'Nina Roberts',
-		usage: 89,
-		lastModified: 'May 30, 2025',
-	},
-	{
-		id: 'tag-9',
-		name: 'New Year Reset',
-		slug: 'new-year-reset',
-		visibility: 'private' as const,
-		modifiedBy: 'Tom Green',
-		usage: 92,
-		lastModified: 'Jun 15, 2025',
-	},
-	{
-		id: 'tag-10',
-		name: 'Resolution Challenge',
-		slug: 'resolution-challenge',
-		visibility: 'public' as const,
-		modifiedBy: 'Hannah White',
-		usage: 87,
-		lastModified: 'Jul 1, 2025',
-	},
-	{
-		id: 'tag-11',
-		name: 'Festive Fitness',
-		slug: 'festive-fitness',
-		visibility: 'private' as const,
-		modifiedBy: 'Jake Wilson',
-		usage: 91,
-		lastModified: 'Jul 20, 2025',
 	},
 	{
 		id: 'tag-12',
@@ -5189,7 +5233,7 @@ export const initialTags = [
 		slug: 'cycling-performance',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 12,
+		usage: 9,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5198,7 +5242,7 @@ export const initialTags = [
 		slug: 'exercise-routine',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 20,
+		usage: 5,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5207,7 +5251,7 @@ export const initialTags = [
 		slug: 'cardio-workout',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 18,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5216,7 +5260,7 @@ export const initialTags = [
 		slug: 'mountain-biking',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 10,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5225,7 +5269,7 @@ export const initialTags = [
 		slug: 'road-cycling',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 14,
+		usage: 7,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5234,7 +5278,7 @@ export const initialTags = [
 		slug: 'indoor-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 16,
+		usage: 2,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5243,7 +5287,7 @@ export const initialTags = [
 		slug: 'fitness-tracking',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 22,
+		usage: 18,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5252,7 +5296,7 @@ export const initialTags = [
 		slug: 'endurance-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 13,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5261,7 +5305,7 @@ export const initialTags = [
 		slug: 'sprint-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 11,
+		usage: 1,
 		lastModified: 'Jan 28, 2026',
 	},
 ];

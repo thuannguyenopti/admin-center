@@ -6,7 +6,7 @@ import { Input } from "../Input";
 import { OpalHistoryItem } from "./OpalHistoryItem";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import IconSearch from "@/app/assets/opal/icon-search.svg";
-import { IconCirclePlus } from "@optimizely/axiom-icons";
+import IconInfo from "@/app/assets/opal/icon-info.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHistorySidebarProps = {
@@ -68,7 +68,7 @@ export function OpalHistorySidebar({
         >
           <IconSearch style={{ width: '16px', height: '16px' }} />
         </Button>
-
+        
         <Box
           onClick={onNewChat}
           style={{
@@ -93,7 +93,7 @@ export function OpalHistorySidebar({
             e.currentTarget.style.borderColor = 'var(--opal-border-input)';
           }}
         >
-          <IconCirclePlus size={16} style={{ flexShrink: 0 }} />
+          <IconInfo style={{ width: '16px', height: '16px', flexShrink: 0 }} />
           <Text
             style={{
               fontSize: '14px',
@@ -113,7 +113,7 @@ export function OpalHistorySidebar({
       <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {Object.entries(groupedHistory).map(([dateLabel, items]) => {
           if (items.length === 0) return null;
-
+          
           return (
             <Box key={dateLabel} display="flex" flexDirection="column" gap="8">
               <Text

@@ -4,33 +4,57 @@ import VBPrototype from "@/app/components/VBPrototype";
 import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
-import {initialPages, Page} from "@/app/db/initialData";
-import {useEffect, useState} from "react";
-import {Box, Heading} from "@optiaxiom/react";
+import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
+import {useEffect, useState, useCallback} from "react";
+import {Box, Heading, Spinner, Text} from "@optiaxiom/react";
 import {buildPageSlug} from "@/app/site/resolveSlug";
+import {useVersionHistory} from "@/app/hooks/useVersionHistory";
+import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
+import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 
 export default function EditPageDetail() {
 	const params = useParams();
 	const resolvedParams = params instanceof Promise ? use(params) : params;
 	const id = (resolvedParams?.id ?? "") as string;
-	const [pages, setPages, isHydrated] = usePersistentState("pages_v3", initialPages) as [
+	const [pages, setPages, isHydrated] = usePersistentState("pages_v5", initialPages) as [
 		Page[],
 		any,
 		boolean,
 	];
 	const [page, setPage] = useState<Page | null>(null);
+	const [contentType, setContentType] = useState<ContentType | null>(null);
+	const [renderKey, setRenderKey] = useState(0);
+	const [hasPendingGeneration, setHasPendingGeneration] = useState(false);
+	const versionHistory = useVersionHistory(id);
+
+	// Check for pending generation immediately on mount
+	useEffect(() => {
+		const pendingData = localStorage.getItem(`opal_generation_${id}`);
+		setHasPendingGeneration(!!pendingData);
+	}, [id]);
 
 	useEffect(() => {
 		if (pages && isHydrated) {
 			const found = pages.find((p) => p.id === id);
 			setPage(found || null);
+
+			// Load content type definition
+			if (found?.contentTypeId) {
+				const ct = initialContentTypes.find((ct) => ct.id === found.contentTypeId);
+				setContentType(ct || null);
+			}
 		}
 	}, [id, pages, isHydrated]);
 
 	type PagePatch = {outlines?: any; properties?: any; variationId?: string};
 
-	const handleSave = (patch: PagePatch) => {
-		if (!page) return;
+	const handleSave = useCallback((patch: PagePatch) => {
+		if (!page) {
+			console.log("[handleSave] No page, skipping save");
+			return;
+		}
+
+		console.log("[handleSave] Saving patch:", patch);
 
 		const vid = patch.variationId || "original";
 
@@ -47,6 +71,15 @@ export default function EditPageDetail() {
 				outlines: patch.outlines,
 				data: patch.properties ?? nextVariations[idx].data,
 			};
+
+			// Also update page-level outlines if this is the original variation
+			if (vid === "original" && patch.outlines !== undefined) {
+				nextOutlines = patch.outlines;
+			}
+			// Update page-level data if properties were provided
+			if (vid === "original" && patch.properties !== undefined) {
+				nextData = patch.properties;
+			}
 		}
 
 		const nextPage: Page = {
@@ -60,10 +93,78 @@ export default function EditPageDetail() {
 		setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
 
 		setPage(nextPage);
-	};
+
+		console.log("[handleSave] Saved successfully. Next page:", {
+			outlinesCount: nextPage.outlines?.length,
+			variationsCount: nextPage.variations?.length,
+			firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
+		});
+	}, [page, id, setPages]);
+
+	// Opal page generation hook (must be after handleSave is defined)
+	const {isGenerating} = useOpalPageGeneration(
+		id,
+		page?.contentTypeId || "",
+		handleSave
+	);
+
+	// Register page update handler and set active page for iteration
+	const {setPageUpdateHandler, setActivePage, setPageDataGetter} = useOpalGeneration();
+	useEffect(() => {
+		setPageUpdateHandler(handleSave);
+		setActivePage(id);
+
+		// Provide a getter function that always returns fresh page data
+		setPageDataGetter(() => {
+			if (!page) return null;
+
+			// Get outlines from the original variation or fallback to page.outlines
+			const originalVariation = page.variations?.find(v => v.id === "original");
+			const outlines = originalVariation?.outlines || page.outlines || [];
+
+			return {
+				outlines,
+				variations: page.variations,
+				data: page.data,
+			};
+		});
+
+		return () => {
+			setPageUpdateHandler(null);
+			setActivePage(null);
+			setPageDataGetter(null);
+		};
+	}, [setPageUpdateHandler, setActivePage, setPageDataGetter, handleSave, id, page]);
+
+	// Clear hasPendingGeneration when actual generation starts
+	useEffect(() => {
+		if (isGenerating) {
+			setHasPendingGeneration(false);
+		}
+	}, [isGenerating]);
 
 	const handlePublish = () => {
 		if (!page) return;
+
+		// Create version snapshot before publishing
+		// Get the current variation's data
+		const currentVariation = page.variations?.find(v => v.id === "original") || null;
+		const outlines = currentVariation?.outlines || page.outlines || [];
+		const properties = currentVariation?.data || page.data || {};
+
+		// Create version snapshot
+		versionHistory.createVersion({
+			author: "Current User", // TODO: Get from auth context
+			status: "published",
+			variationId: "original",
+			variationName: "Original",
+			isCurrent: true,
+			changeSummary: "Published version",
+			outlines: JSON.parse(JSON.stringify(outlines)), // Deep clone
+			properties: JSON.parse(JSON.stringify(properties)), // Deep clone
+		});
+
+		// Update page status
 		const updatedPages = pages.map((p) => {
 			if (p.id === id) {
 				return {...p, status: "Published"};
@@ -160,7 +261,81 @@ export default function EditPageDetail() {
 		setPage(updatedPage);
 	};
 
+	const handleRestoreVersion = (version: any) => {
+		if (!page) return;
+
+		// Restore the version's content to the current page
+		const variationId = version.variationId || "original";
+
+		let nextVariations = page.variations ? [...page.variations] : [];
+		let nextOutlines = page.outlines;
+		let nextData = page.data;
+
+		// Update the variation with the restored content
+		if (variationId === "original") {
+			nextOutlines = version.outlines;
+			nextData = version.properties;
+		} else {
+			const idx = nextVariations.findIndex((v) => v.id === variationId);
+			if (idx !== -1) {
+				nextVariations[idx] = {
+					...nextVariations[idx],
+					outlines: version.outlines,
+					data: version.properties,
+				};
+			}
+		}
+
+		const nextPage: Page = {
+			...page,
+			outlines: nextOutlines,
+			variations: nextVariations,
+			data: nextData,
+			status: "Changed" as const,
+		};
+
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
+		setPage(nextPage);
+
+		// Mark version as current in history
+		versionHistory.markAsCurrent(version.id);
+
+		console.log(`Restored version: ${version.id}`);
+	};
+
 	if (!isHydrated || !page) {
+		// Show generation spinner if there's pending generation, otherwise show simple loading
+		if (hasPendingGeneration) {
+			return (
+				<Box
+					style={{height: "100%", width: "100%", position: "relative"}}
+					bg="bg.page"
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+				>
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						gap="16"
+						p="32"
+						bg="bg.default"
+						rounded="lg"
+						shadow="lg"
+						style={{border: "1px solid var(--ax-colors-border-default)"}}
+					>
+						<Spinner size="lg" />
+						<Text fontSize="lg" fontWeight="500">
+							Opal is generating your page...
+						</Text>
+						<Text fontSize="sm" color="fg.secondary">
+							Please wait while we create your content
+						</Text>
+					</Box>
+				</Box>
+			);
+		}
 		return <Box p="24">Loading...</Box>;
 	}
 
@@ -173,8 +348,9 @@ export default function EditPageDetail() {
 
 	return (
 		<VBPrototype
-			key={id}
+			key={`${id}-${renderKey}`}
 			initialData={page}
+			contentType={contentType}
 			onSave={handleSave}
 			onPublish={handlePublish}
 			pageName={page.name}
@@ -187,6 +363,10 @@ export default function EditPageDetail() {
 			onRenamePage={handleRenamePage}
 			onTrash={handleTrash}
 			onViewOnWebsite={handleViewOnWebsite}
+			versionHistory={versionHistory}
+			onRestoreVersion={handleRestoreVersion}
+			isOpalGenerating={isGenerating}
+			hasPendingGeneration={hasPendingGeneration}
 		/>
 	);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import {Box} from "@optiaxiom/react";
+import {Box, SearchInput} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
@@ -11,6 +11,7 @@ import {PinnedResult, initialPinnedResults} from "@/app/db/initialData";
 import PinnedResultsTable from "../components/PinnedResultsTable";
 import PinnedResultDialog from "../components/PinnedResultDialog";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 const PAGE_SIZE = 10;
 
@@ -105,6 +106,32 @@ export default function PinnedResultsPage() {
 		}
 	}, [currentPage, effectivePage]);
 
+	if (pinnedResults.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No pinned results yet"
+					body="Pin specific results to the top of search queries to ensure users always find the most relevant content."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Pinned Result
+					</Button>
+				</EmptyList>
+
+				<PinnedResultDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreatePinnedResult}
+				/>
+			</Box>
+		);
+	}
+
 	return (
 		<Box>
 			<Flex
@@ -114,12 +141,11 @@ export default function PinnedResultsPage() {
 				gap="16"
 				mb="24"
 			>
-				<Input
-					addonBefore={<IconSearch size={16} />}
-					placeholder="Search pinned results..."
-					style={{width: "320px"}}
+				<SearchInput
+					size="lg"
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
+					placeholder="Search pinned results..."
 				/>
 				<Button
 					size="lg"
