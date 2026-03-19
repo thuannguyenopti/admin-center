@@ -10,7 +10,7 @@ import {
   IconCircleStop,
   IconXmark
 } from "@optimizely/axiom-icons";
-import { KeyboardEvent, useState, useRef, useEffect } from "react";
+import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type Agent = {
@@ -58,8 +58,19 @@ export function OpalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-resize textarea based on content
+  // Auto-focus textarea when value is set externally (e.g. suggestion/card click)
+  const prevValueRef = useRef('');
   useEffect(() => {
+    const prev = prevValueRef.current;
+    prevValueRef.current = value;
+    if (value && !prev && document.activeElement !== textareaRef.current) {
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    }
+  }, [value]);
+
+  // Auto-resize textarea based on content — useLayoutEffect fires synchronously
+  // before paint, so heights are always correct (including reset after send)
+  useLayoutEffect(() => {
     const textarea = textareaRef.current;
     const container = containerRef.current;
     if (textarea && container) {
@@ -286,10 +297,8 @@ export function OpalInput({
 
 
   // Determine border color based on state
-  let borderColor = 'var(--opal-border-input)';
-  if (isFocused || hasValue || isLoading || isRecording || isTranscribing) {
-    borderColor = '#7C3AED';
-  }
+  const isActive = isFocused || hasValue || isLoading || isRecording || isTranscribing;
+  let borderColor = isActive ? '#7C3AED' : 'var(--ax-colors-border-default, #e5e7eb)';
 
   // CTA Icon state logic
   let ctaIcon = <IconMicrophone size={20} />;
@@ -520,7 +529,6 @@ export function OpalInput({
                   onSend();
                 } else {
                   onSend();
-                  // Refocus after sending
                   setTimeout(() => textareaRef.current?.focus(), 50);
                 }
               }}

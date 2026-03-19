@@ -62,6 +62,7 @@ function TemplateContent({
 		setInputValue,
 		setInputDisabled,
 		sendMessage,
+		regenerate,
 		addMessage,
 		updateMessage,
 		removeMessage,
@@ -375,6 +376,7 @@ function TemplateContent({
 				isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
+				regenerate={regenerate}
 				groupedHistory={groupedHistory}
 				activeChat={activeChat}
 				searchQuery={searchQuery}
