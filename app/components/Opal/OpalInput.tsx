@@ -29,7 +29,7 @@ const MOCK_AGENTS: Agent[] = [
 type OpalInputProps = {
   value: string;
   onChange: (value: string) => void;
-  onSend: () => void;
+  onSend: (content?: string) => void;
   disabled: boolean;
   error?: string;
   isLoading?: boolean;
@@ -82,8 +82,9 @@ export function OpalInput({
       // Total 88px = Textarea 34px + Offset 54px
       // Offset 54px = Padding (8+8=16) + Margin (2) + Submit Button (32) + Extra Gap (4)
       const offset = 54;
-      const minTextareaHeight = 34;
-      const minContainerHeight = 88;
+      // Home variant starts taller (4-row default like Ana's design)
+      const minTextareaHeight = variant === 'home' ? 90 : 34;
+      const minContainerHeight = variant === 'home' ? 144 : 88;
       const maxContainerHeight = window.innerHeight * 0.5; // 50vh
 
       const targetTextareaHeight = Math.max(naturalHeight, minTextareaHeight);
@@ -126,6 +127,17 @@ export function OpalInput({
   // Defined early so handleKeyDown can reference it
   const hasValue = value.trim().length > 0 || selectedAgent !== null;
 
+  // Build full message content (agent mention + text) and fire onSend
+  const triggerSend = () => {
+    if (!hasValue || isLoading) return;
+    const textPart = value.trim();
+    const content = selectedAgent
+      ? `@${selectedAgent.name}${textPart ? ' ' + textPart : ''}`
+      : textPart;
+    onSend(content);
+    setSelectedAgent(null);
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showAgentDropdown) {
       if (e.key === 'ArrowDown') {
@@ -152,7 +164,7 @@ export function OpalInput({
 
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (hasValue && !isLoading) onSend();
+      triggerSend();
     }
   };
 
@@ -528,7 +540,7 @@ export function OpalInput({
                 if (isLoading) {
                   onSend();
                 } else {
-                  onSend();
+                  triggerSend();
                   setTimeout(() => textareaRef.current?.focus(), 50);
                 }
               }}

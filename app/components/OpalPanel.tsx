@@ -62,9 +62,10 @@ export function OpalPanel({
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
 
-  const handleSend = () => {
-    if (inputValue.trim() && !isLoading && !isInputDisabled) {
-      sendMessage(inputValue);
+  const handleSend = (content?: string) => {
+    const msg = content ?? inputValue;
+    if (msg.trim() && !isLoading && !isInputDisabled) {
+      sendMessage(msg);
     }
   };
 
