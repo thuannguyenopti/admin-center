@@ -16,6 +16,8 @@ type OpalPanelControls = {
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	footerContent: ReactNode | null;
+	setFooterContent: (content: ReactNode | null) => void;
 	hidePageHeader: boolean;
 	setHidePageHeader: (hide: boolean) => void;
 	opalPanelControls: OpalPanelControls | null;
@@ -28,12 +30,13 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({children}: {children: ReactNode}) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [footerContent, setFooterContent] = useState<ReactNode | null>(null);
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth}}>
+		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth}}>
 			{children}
 		</LayoutContext.Provider>
 	);
@@ -56,6 +59,19 @@ export function Aside({children}: {children: ReactNode}) {
 		setAsideContent(children);
 		return () => setAsideContent(null); // Cleanup on unmount
 	}, [children, setAsideContent]);
+
+	return null; // Renders nothing in the main flow
+}
+
+// Helper component for fixed footer
+export function Footer({children}: {children: ReactNode}) {
+	const {setFooterContent} = useLayout();
+
+	// Update the footer content when this component mounts
+	useEffect(() => {
+		setFooterContent(children);
+		return () => setFooterContent(null); // Cleanup on unmount
+	}, [children, setFooterContent]);
 
 	return null; // Renders nothing in the main flow
 }

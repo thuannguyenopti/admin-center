@@ -44,7 +44,7 @@ import {
 } from "@tabler/icons-react";
 import {IconList} from "@optimizely/axiom-icons";
 import Item from "@/app/components/Item";
-import {Page, ContentType, initialContentTypes} from "@/app/db/initialData";
+import {Page, ContentType, initialContentTypes, canCreateChildType} from "@/app/db/initialData";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 import usePersistentState from "@/app/usePersistentState";
 import {opalActions as initialOpalActions, OpalAction} from "@/app/cms/settings/opal-actions/mockData";
@@ -63,26 +63,31 @@ const LocationTreeNode = ({
 	level = 0,
 	selectedLocation,
 	onSelectLocation,
+	validLocationIds = [],
 }: {
 	node: PageNode;
 	level?: number;
 	selectedLocation: string | null;
 	onSelectLocation: (id: string) => void;
+	validLocationIds?: string[];
 }) => {
 	const [expanded, setExpanded] = useState(true);
 	const hasChildren = node.children.length > 0;
 	const isSelected = selectedLocation === node.id;
+	const isValid = validLocationIds.length === 0 || validLocationIds.includes(node.id);
 
 	return (
 		<Box>
 			<Box
-				onClick={() => onSelectLocation(node.id)}
-				cursor="pointer"
+				onClick={() => isValid && onSelectLocation(node.id)}
+				cursor={isValid ? "pointer" : undefined}
 				p="8"
 				rounded="sm"
 				bg={isSelected ? "bg.accent.subtle" : undefined}
 				style={{
 					paddingLeft: level * 24 + 8,
+					opacity: isValid ? 1 : 0.5,
+					cursor: isValid ? "pointer" : "not-allowed",
 				}}
 			>
 				<Group gap="8" alignItems="center">
@@ -114,6 +119,7 @@ const LocationTreeNode = ({
 						level={level + 1}
 						selectedLocation={selectedLocation}
 						onSelectLocation={onSelectLocation}
+						validLocationIds={validLocationIds}
 					/>
 				))}
 		</Box>
@@ -297,23 +303,8 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		const allLocations = [rootNode, ...pages];
 
 		return allLocations.filter(page => {
-			const parentContentType = initialContentTypes.find(
-				ct => ct.id === page.contentTypeId
-			);
-
-			// If parent has no restrictions, allow any child
-			if (!parentContentType?.availableContentTypes ||
-				parentContentType.availableContentTypes.length === 0) {
-				return true;
-			}
-
-			// If parent explicitly disallows all children
-			if (parentContentType.availableContentTypes.includes("__none__")) {
-				return false;
-			}
-
-			// Check if selected template is in parent's allowed types
-			return parentContentType.availableContentTypes.includes(selectedTemplate);
+			// Use helper function to check if child can be created under parent
+			return canCreateChildType(page.contentTypeId, selectedTemplate);
 		});
 	}, [selectedTemplate, pages, rootNode]);
 
@@ -324,36 +315,10 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		}
 	}, [selectedTemplate, validLocations, selectedLocation]);
 
-	// Build a filtered tree containing only valid locations
-	const filteredLocationTree = useMemo(() => {
-		if (!selectedTemplate || validLocations.length <= 1) {
-			return rootNode;
-		}
-
-		const validLocationIds = new Set(validLocations.map(loc => loc.id));
-
-		const filterTree = (node: PageNode): PageNode | null => {
-			// Check if this node is valid
-			const isValid = validLocationIds.has(node.id);
-
-			// Recursively filter children
-			const filteredChildren = node.children
-				.map(child => filterTree(child))
-				.filter((child): child is PageNode => child !== null);
-
-			// Include node if it's valid OR has valid descendants
-			if (isValid || filteredChildren.length > 0) {
-				return {
-					...node,
-					children: filteredChildren,
-				};
-			}
-
-			return null;
-		};
-
-		return filterTree(rootNode) || rootNode;
-	}, [selectedTemplate, validLocations, rootNode]);
+	// Get valid location IDs for disabling invalid nodes
+	const validLocationIds = useMemo(() => {
+		return validLocations.map(loc => loc.id);
+	}, [validLocations]);
 
 	const validateForm = () => {
 		const newErrors: {name?: string; location?: string; template?: string} = {};
@@ -706,7 +671,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 											</Field>
 											<Box overflow="auto" style={{maxHeight: "320px"}}>
 												<LocationTreeNode
-													node={filteredLocationTree}
+													node={rootNode}
 													selectedLocation={selectedLocation}
 													onSelectLocation={(id) => {
 														setSelectedLocation(id);
@@ -714,6 +679,7 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 															setErrors({...errors, location: undefined});
 														}
 													}}
+													validLocationIds={validLocationIds}
 												/>
 											</Box>
 										</Group>

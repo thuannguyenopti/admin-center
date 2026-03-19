@@ -28,7 +28,7 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent, hidePageHeader, setOpalPanelControls, opalPanelWidth} = useLayout();
+	const {asideContent, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth} = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
@@ -120,6 +120,12 @@ function TemplateContent({
 		: 224;
 
 	const customLayout = highlight1?.customLayout;
+
+	// Primary sidebar width: 56px collapsed, 224px expanded
+	const primarySidebarWidth = isExpanded ? 224 : 56;
+
+	// Calculate total left offset for footer
+	const footerLeftOffset = primarySidebarWidth + (showSecondarySidebar ? secondarySidebarWidth : 0);
 
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
@@ -324,6 +330,7 @@ function TemplateContent({
 							overflow="auto"
 							px="32"
 							py="24"
+							pb={footerContent ? "80" : "24"}
 						>
 							<>
 								{!hidePageHeader && (
@@ -370,6 +377,27 @@ function TemplateContent({
 					</Box>
 				)}
 			</Box>
+			{footerContent && (
+				<Box
+					style={{
+						position: "fixed",
+						bottom: 0,
+						left: `${footerLeftOffset}px`,
+						right: `${opalPanelWidth}px`
+					}}
+					borderT="1"
+					borderL="1"
+					borderColor="border.secondary"
+					bg="bg.default"
+					px="32"
+					py="16"
+					display="flex"
+					justifyContent="end"
+					z="20"
+				>
+					{footerContent}
+				</Box>
+			)}
 			<OpalPanel
 				isOpen={isOpalOpen}
 				onClose={closeOpal}
