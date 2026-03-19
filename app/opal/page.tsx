@@ -305,10 +305,10 @@ export default function OpalPage() {
         {showAgents && FEATURED_AGENTS.map((agent) => (
           <Button
             key={agent.handle}
-            appearance="subtle"
-            size="sm"
-            icon={<img src="/nav_icons/agent_nav.svg" width={16} height={16} alt="" />}
-            style={{ borderRadius: "16px", border: "1px solid #9747ff", padding: "16px 12px", background: "#FFFFFF" }}
+            appearance="default-opal"
+            size="md"
+            icon={<IconAgent />}
+            style={{ borderRadius: "9999px" }}
             onClick={() => { setInputValue(agent.prompt); setShowAgents(false); }}
           >
             {agent.name}
@@ -317,9 +317,9 @@ export default function OpalPage() {
 
         {showAgents && (
           <Button
-            appearance="subtle"
-            size="sm"
-            style={{ borderRadius: "16px", border: "1px solid #9747ff", padding: "16px 12px", color: "var(--ax-colors-fg-tertiary)" }}
+            appearance="default-opal"
+            size="md"
+            style={{ borderRadius: "9999px" }}
           >
             More agents
           </Button>
