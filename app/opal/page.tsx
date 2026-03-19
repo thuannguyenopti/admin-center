@@ -1,8 +1,8 @@
 "use client";
 
-import { Box, Heading, Text, SearchInput, Grid, Button, Paper, Textarea } from "@optiaxiom/react";
+import { Box, Heading, Text, Button, Textarea } from "@optiaxiom/react";
 import { IconMicrophone } from "@tabler/icons-react";
-import { IconAgent, IconFileArrowUp, IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
+import { IconAgent, IconFileArrowUp, IconArrowUp, IconCircleStop, IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
 import { useState, useRef, useEffect } from "react";
 
 const opal_primary = "#7C3AED";
@@ -10,7 +10,13 @@ const opal_primary = "#7C3AED";
 export default function OpalPage() {
     const [inputValue, setInputValue] = useState("");
     const [isFocused, setIsFocused] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [isTranscribing, setIsTranscribing] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
+
+    const hasValue = inputValue.trim().length > 0;
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -18,6 +24,67 @@ export default function OpalPage() {
             textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, window.innerHeight / 3)}px`;
         }
     }, [inputValue]);
+
+    const toggleRecording = async () => {
+        if (isRecording) {
+            mediaRecorderRef.current?.stop();
+            setIsRecording(false);
+            return;
+        }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunksRef.current.push(e.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                stream.getTracks().forEach((t) => t.stop());
+                setIsTranscribing(true);
+                try {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob, 'recording.webm');
+                    const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
+                    if (response.ok) {
+                        const { text } = await response.json();
+                        if (text) setInputValue((v) => v + (v && !v.endsWith(' ') ? ' ' : '') + text);
+                    }
+                } catch (err) {
+                    console.error('[Voice] Transcription error:', err);
+                } finally {
+                    setIsTranscribing(false);
+                }
+            };
+
+            mediaRecorder.onerror = () => {
+                setIsRecording(false);
+                stream.getTracks().forEach((t) => t.stop());
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+        } catch (err) {
+            console.error('[Voice] Mic access denied:', err);
+            alert('Microphone access was denied. Please check your browser permissions.');
+        }
+    };
+
+    const handleSend = () => {
+        if (!hasValue) return;
+        // TODO: wire to chat
+        setInputValue("");
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    };
 
     const cards = [
         {
@@ -60,6 +127,7 @@ export default function OpalPage() {
 
     const handleCardClick = (prompt: string) => {
         setInputValue(prompt);
+        textareaRef.current?.focus();
     };
 
     return (
@@ -73,7 +141,7 @@ export default function OpalPage() {
                 style={{
                     maxWidth: "800px",
                     position: "relative",
-                    borderColor: isFocused ? opal_primary : undefined,
+                    borderColor: isFocused || isRecording ? opal_primary : undefined,
                     transition: "border-color 0.2s ease-in-out"
                 }}
                 bg="bg.default"
@@ -81,7 +149,7 @@ export default function OpalPage() {
                 py="4"
                 rounded="lg"
                 border="1"
-                borderColor={isFocused ? undefined : "border.tertiary"}
+                borderColor={isFocused || isRecording ? undefined : "border.tertiary"}
                 shadow="sm"
             >
                 <Textarea
@@ -91,16 +159,52 @@ export default function OpalPage() {
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     ref={textareaRef}
                     rows={1}
-                    style={{ minHeight: "22px", maxHeight: "33vh", border: "none", padding: 0, paddingBottom: "32px", overflowY: "auto", boxShadow: "none", outline: "none", backgroundColor: "transparent" }}
+                    style={{ minHeight: "22px", maxHeight: "33vh", border: "none", padding: 0, paddingBottom: "40px", overflowY: "auto", boxShadow: "none", outline: "none", backgroundColor: "transparent" }}
                 />
-                <Box display="flex" justifyContent="space-between" alignItems="end" style={{ position: "absolute", bottom: "4px", left: "16px", right: "16px", pointerEvents: "none", zIndex: 10 }}>
-                    <Box display="flex" gap="8" style={{ pointerEvents: "auto" }}>
-                        <Button appearance="subtle" icon={<IconAgent />} aria-label="Agent" />
-                        <Button appearance="subtle" icon={<IconFileArrowUp />} aria-label="File upload" />
+                <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    style={{ position: "absolute", bottom: "8px", left: "16px", right: "16px", zIndex: 10 }}
+                >
+                    {/* Left: Agent, File */}
+                    <Box display="flex" gap="4" alignItems="center">
+                        <Button appearance="subtle" size="sm" icon={<IconAgent />} aria-label="Agent" style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+                        <Button appearance="subtle" size="sm" icon={<IconFileArrowUp />} aria-label="File upload" style={{ color: "var(--ax-colors-fg-tertiary)" }} />
                     </Box>
-                    <Button appearance="primary" size="lg" icon={<IconMicrophone />} rounded="full" aria-label="Voice search" style={{ backgroundColor: opal_primary, pointerEvents: "auto" }} />
+
+                    {/* Right: Mic + Send */}
+                    <Box display="flex" gap="8" alignItems="center">
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            icon={isRecording || isTranscribing ? <IconCircleStop size={16} /> : <IconMicrophone size={16} />}
+                            aria-label={isRecording ? "Stop recording" : "Voice input"}
+                            onClick={toggleRecording}
+                            disabled={isTranscribing}
+                            style={{
+                                color: isRecording ? '#E01E5A' : "var(--ax-colors-fg-tertiary)",
+                                backgroundColor: isRecording ? 'rgba(224, 30, 90, 0.1)' : 'transparent',
+                                opacity: isTranscribing ? 0.5 : 1,
+                            }}
+                        />
+                        <Button
+                            appearance="primary"
+                            size="lg"
+                            icon={<IconArrowUp size={20} />}
+                            rounded="full"
+                            aria-label="Send message"
+                            onClick={hasValue ? handleSend : undefined}
+                            style={{
+                                backgroundColor: opal_primary,
+                                opacity: hasValue ? 1 : 0.4,
+                                cursor: hasValue ? 'pointer' : 'default',
+                            }}
+                        />
+                    </Box>
                 </Box>
             </Box>
 

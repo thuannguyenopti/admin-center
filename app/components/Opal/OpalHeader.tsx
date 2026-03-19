@@ -10,6 +10,9 @@ import IconTrash from "@/app/assets/opal/icon-trash.svg";
 import IconPopOut from "@/app/assets/opal/icon-pop-out.svg";
 import IconClose from "@/app/assets/opal/icon-close.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
+import { useEffect, useRef, useState } from "react";
+import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
+import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
 
 type OpalHeaderProps = {
   onClose: () => void;

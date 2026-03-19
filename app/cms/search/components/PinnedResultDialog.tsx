@@ -10,9 +10,8 @@ import {
 	Box,
 } from "@optiaxiom/react";
 import {Flex} from "@/app/components/Flex";
-import {useState, useEffect, useMemo} from "react";
+import {useState, useEffect} from "react";
 import searchResults from "@/app/db/searchResults.json";
-import {getSelectValueInOptions} from "@/utils/selectValue";
 import {Button} from "@/app/components/Button";
 import {IconFile, IconSparkles} from "@tabler/icons-react";
 
@@ -106,19 +105,6 @@ export default function PinnedResultDialog({
 		});
 		setOpen(false);
 	};
-
-	const destinationOptions = useMemo(
-		() => [
-			{label: "Select destination", value: ""},
-			...searchResults.map((r) => ({label: r.title, value: r.url})),
-		],
-		[]
-	);
-	const safeDestinationValue = getSelectValueInOptions(
-		destination,
-		destinationOptions,
-		""
-	);
 
 	return (
 		<AbstractDialog
