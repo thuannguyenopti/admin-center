@@ -17,6 +17,8 @@ export default function OpalPage() {
         error,
         setInputValue,
         sendMessage,
+        regenerate,
+        switchVersion,
     } = opalContext.chatState;
 
     const cards = [
@@ -60,8 +62,10 @@ export default function OpalPage() {
 
     const handleCardClick = (prompt: string) => {
         setInputValue(prompt);
-        const textarea = document.querySelector('textarea');
-        if (textarea) textarea.focus();
+        setTimeout(() => {
+            const textarea = document.querySelector('textarea');
+            if (textarea) textarea.focus();
+        }, 0);
     };
 
     const landingHeader = (
@@ -168,7 +172,8 @@ export default function OpalPage() {
                 landingHeader={landingHeader}
                 emptyState={emptyState}
                 onMessageEdit={() => {}}
-                onRegenerate={() => {}}
+                onRegenerate={regenerate}
+                onMessageVersionChange={switchVersion}
             />
         </Box>
     );

@@ -49,12 +49,10 @@ export function OpalHeader({
             alignItems="center"
             justifyContent="space-between"
             style={{
-                padding: '16px 24px',
+                padding: '0 24px',
                 width: '100%',
                 gap: '12px',
-                borderBottom: '1px solid var(--opal-border-secondary)',
-                backgroundColor: 'var(--opal-bg-primary)',
-                minHeight: '56px',
+                height: '64px',
                 zIndex: 10,
                 position: sticky ? 'sticky' : 'relative',
                 top: sticky ? 0 : undefined,

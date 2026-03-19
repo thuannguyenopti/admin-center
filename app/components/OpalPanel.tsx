@@ -20,6 +20,7 @@ type OpalPanelProps = {
   error?: string;
   setInputValue: (value: string) => void;
   sendMessage: (content: string) => void;
+  regenerate?: (id: string) => void;
 
   groupedHistory: { [key: string]: ChatHistoryItem[] };
   activeChat: string | null;
@@ -44,6 +45,7 @@ export function OpalPanel({
   error,
   setInputValue,
   sendMessage,
+  regenerate,
   groupedHistory,
   activeChat,
   searchQuery,
@@ -181,24 +183,27 @@ export function OpalPanel({
           overflow: 'hidden',
         }}
       >
-        <OpalHeader 
+        <OpalHeader
           onClose={onClose}
-          mode={mode}
-          isHistoryVisible={isHistoryVisible}
           onToggleHistory={toggleHistory}
+          onNewChat={createNewChat}
           onToggleMode={toggleMode}
         />
-        <OpalChat 
-          messages={messages} 
+        <OpalChat
+          messages={messages}
           onSuggestionClick={handleSuggestionClick}
+          onRegenerate={regenerate}
         />
-        <OpalInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSend={handleSend}
-          disabled={isLoading || isInputDisabled}
-          error={error}
-        />
+        <div style={{ flexShrink: 0 }}>
+          <OpalInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSend}
+            disabled={isLoading || isInputDisabled}
+            isLoading={isLoading}
+            error={error}
+          />
+        </div>
       </Box>
     </Box>
   );
