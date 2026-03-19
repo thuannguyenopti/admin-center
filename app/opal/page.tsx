@@ -297,6 +297,7 @@ export default function OpalPage() {
           size="md"
           onClick={() => setShowAgents(!showAgents)}
           icon={<IconAgent />}
+          style={{ borderRadius: "9999px" }}
         >
           View Agents
         </Button>
