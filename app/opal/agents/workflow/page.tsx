@@ -339,9 +339,12 @@ function WorkflowBuilder() {
     const searchParams = useSearchParams();
     const preset = searchParams.get('preset');
 
+    const isViewingExisting = !!preset;
+
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-    const [isSetupPanelOpen, setIsSetupPanelOpen] = useState(true);
-    const [isLibraryOpen, setIsLibraryOpen] = useState(true);
+    const [isSetupPanelOpen, setIsSetupPanelOpen] = useState(!isViewingExisting);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(!isViewingExisting);
+    const [isEditing, setIsEditing] = useState(false);
     const [workflowName, setWorkflowName] = useState(preset === 'cmp-workflow' ? "CMP Workflow Agent" : "Untitled Workflow");
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -793,36 +796,65 @@ function WorkflowBuilder() {
                         bg="bg.default"
                     >
                         <Box display="flex" alignItems="center" gap="16">
-                            <Button
-                                icon={<IconMenu2 />}
-                                appearance={isLibraryOpen ? "default" : "subtle"}
-                                aria-label="Toggle Component Library"
-                                onClick={() => setIsLibraryOpen(!isLibraryOpen)}
-                            />
+                            {(!isViewingExisting || isEditing) && (
+                                <Button
+                                    icon={<IconMenu2 />}
+                                    appearance={isLibraryOpen ? "default" : "subtle"}
+                                    aria-label="Toggle Component Library"
+                                    onClick={() => setIsLibraryOpen(!isLibraryOpen)}
+                                />
+                            )}
                             <Text fontSize="lg" fontWeight="600">{workflowName}</Text>
+                            {isViewingExisting && !isEditing && (
+                                <Badge intent="neutral" variant="subtle">Workflow</Badge>
+                            )}
                         </Box>
                         <Box display="flex" alignItems="center" gap="8">
-                            <Button appearance="primary">Save</Button>
-                            <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="Context Menu" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onSelect={() => {
-                                        setSelectedNodeId(null);
-                                        setIsSetupPanelOpen(true);
-                                    }}>
-                                        Edit Info
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            {isViewingExisting && !isEditing ? (
+                                <>
+                                    <Button appearance="subtle" icon={<IconPlay />} aria-label="Run" />
+                                    <Button appearance="primary" onClick={() => { setIsEditing(true); setIsLibraryOpen(true); }}>
+                                        Edit
+                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="Context Menu" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onSelect={() => { setIsEditing(true); setIsLibraryOpen(true); }}>
+                                                Edit Workflow
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            ) : (
+                                <>
+                                    <Button appearance="subtle" onClick={() => { if (isViewingExisting) { setIsEditing(false); setIsLibraryOpen(false); } }}>
+                                        {isViewingExisting ? "Cancel" : "Discard"}
+                                    </Button>
+                                    <Button appearance="primary">Save</Button>
+                                    <Button appearance="subtle" icon={<IconPlay />} aria-label="Test" />
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button appearance="subtle" icon={<IconEllipsisStroke />} aria-label="Context Menu" />
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onSelect={() => {
+                                                setSelectedNodeId(null);
+                                                setIsSetupPanelOpen(true);
+                                            }}>
+                                                Edit Info
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            )}
                             <Button appearance="subtle" icon={<IconXmark />} onClick={() => router.push('/opal/agents')} aria-label="Close" />
                         </Box>
                     </Box>
                 }
                 sidebar={
-                    isLibraryOpen ? (
+                    isLibraryOpen && (!isViewingExisting || isEditing) ? (
                         <Box
                             style={{ width: "280px", height: "100%" }}
                             borderR="1"
@@ -988,13 +1020,15 @@ function WorkflowBuilder() {
                         edgeTypes={edgeTypes}
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
-                        onConnect={onConnect}
+                        onConnect={isViewingExisting && !isEditing ? undefined : onConnect}
                         onInit={setReactFlowInstance}
-                        onDrop={onDrop}
-                        onDragOver={onDragOver}
+                        onDrop={isViewingExisting && !isEditing ? undefined : onDrop}
+                        onDragOver={isViewingExisting && !isEditing ? undefined : onDragOver}
                         onNodeClick={onNodeClick}
                         onPaneClick={onPaneClick}
-                        onNodeDragStop={onNodeDragStop}
+                        onNodeDragStop={isViewingExisting && !isEditing ? undefined : onNodeDragStop}
+                        nodesDraggable={!isViewingExisting || isEditing}
+                        nodesConnectable={!isViewingExisting || isEditing}
                         defaultEdgeOptions={{ type: 'smoothstep' }}
                         ref={reactFlowWrapper}
                     >

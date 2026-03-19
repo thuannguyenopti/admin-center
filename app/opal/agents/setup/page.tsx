@@ -81,6 +81,26 @@ import { ComparisonBanner } from "./components/ComparisonBanner";
 import { FieldComparison } from "./components/FieldComparison";
 import { TestRunTray } from "./components/TestRunTray";
 
+// Emoji lookup for agent avatars
+const AGENT_EMOJIS: Record<string, string> = {
+    "email-campaign": "📧",
+    "optimize-geo": "🌐",
+    "analyze-competitors": "📊",
+    "ab-experiment": "⚗️",
+    "content-calendar": "📅",
+    "ad-variations": "🎨",
+    "seo-audit": "🔎",
+    "social-media-strategy": "📱",
+    "content-localizer": "🌍",
+    "heatmap-analysis": "🔥",
+    "experiment-planning": "🧪",
+    "geo-recommendations": "📡",
+    "resource-manager": "👥",
+    "seo-keyword-research": "🔑",
+    "cmp-workflow": "⚙️",
+    "meeting-synthesizer": "📝",
+};
+
 // Mock data for agents
 const MOCK_AGENTS_DATA: Record<string, any> = {
     "content-localizer": {
@@ -247,6 +267,9 @@ function SpecializedAgentSetupContent() {
     const [description, setDescription] = useState("");
     const [creativity, setCreativity] = useState(40);
     const [promptTemplate, setPromptTemplate] = useState("");
+    const [multiTurnMode, setMultiTurnMode] = useState(true);
+    const [enabledInChat, setEnabledInChat] = useState(true);
+    const [systemPrompt, setSystemPrompt] = useState("You are a helpful AI assistant. You have access to tools and can use them to help users. Always be concise, accurate, and professional.");
     const [tools, setTools] = useState("");
     const [inferenceLevel, setInferenceLevel] = useState("balanced");
     const [variables, setVariables] = useState<any[]>([]);
@@ -655,6 +678,26 @@ function SpecializedAgentSetupContent() {
                                                 <Text color="fg.tertiary">/</Text>
                                             </>
                                         )}
+                                        {(() => {
+                                            const agentId = searchParams.get("id");
+                                            const emoji = agentId ? AGENT_EMOJIS[agentId] : undefined;
+                                            return emoji ? (
+                                                <Box style={{
+                                                    flexShrink: 0,
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: 10,
+                                                    background: "radial-gradient(circle, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 50%, rgba(221,214,254,1) 100%)",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    fontSize: 22,
+                                                    lineHeight: 1,
+                                                }}>
+                                                    {emoji}
+                                                </Box>
+                                            ) : null;
+                                        })()}
                                         <Heading level="2">
                                             {agentName || (mode === "edit" ? "Email Creation" : "Specialized Agent")}
                                         </Heading>
@@ -837,6 +880,32 @@ function SpecializedAgentSetupContent() {
                                                         />
                                                     )}
                                                 </Field>
+
+                                                {/* Interaction Mode */}
+                                                <Box>
+                                                    <Text fontWeight="600" fontSize="md" mb="4">Interaction Mode</Text>
+                                                    <Text fontSize="sm" color="fg.secondary" mb="16">Configure how users interact with this agent</Text>
+                                                    <Box display="flex" flexDirection="column" gap="12">
+                                                        <Box display="flex" alignItems="center" gap="8">
+                                                            <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
+                                                            <Tooltip delayDuration={300} content="Select this option for multi-turn conversations for this agent, facilitating interactive guidance, clarification, and personalized user experiences.">
+                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                    <Text>Support multi-turn conversation</Text>
+                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Box>
+                                                            </Tooltip>
+                                                        </Box>
+                                                        <Box display="flex" alignItems="center" gap="8">
+                                                            <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
+                                                            <Tooltip delayDuration={300} content="Allow users to trigger this agent from the Chat interface">
+                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                    <Text>Enable in chat</Text>
+                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                </Box>
+                                                            </Tooltip>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
                                             </Box>
                                         </DisclosureContent>
                                     </Disclosure>
@@ -912,6 +981,63 @@ function SpecializedAgentSetupContent() {
                                                         />
                                                     )}
                                                 </Field>
+
+                                                {/* Advanced Settings */}
+                                                <Disclosure suppressHydrationWarning>
+                                                    <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                                        <Tooltip delayDuration={300} content="Configure advanced settings for multi-turn conversation including system prompt, memory limits, and first message.">
+                                                            <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                Advanced Settings
+                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                            </Box>
+                                                        </Tooltip>
+                                                    </DisclosureTrigger>
+                                                    <DisclosureContent pb="8" suppressHydrationWarning>
+                                                        <Box pl="24" display="flex" flexDirection="column" gap="24" pt="16">
+                                                            {multiTurnMode ? (
+                                                                <>
+                                                                    {/* System Prompt */}
+                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                                                                            <Tooltip delayDuration={300} content="Defines the agent's persona and behavioral guidelines. Supports variables and directives for dynamic instruction.">
+                                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                                    <Text fontSize="md" fontWeight="500">System Prompt</Text>
+                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                </Box>
+                                                                            </Tooltip>
+                                                                            {!isReadOnly && (
+                                                                                <Button appearance="subtle" size="sm" onClick={() => setSystemPrompt("You are a helpful AI assistant. You have access to tools and can use them to help users. Always be concise, accurate, and professional.")}>
+                                                                                    ↺ Reset
+                                                                                </Button>
+                                                                            )}
+                                                                        </Box>
+                                                                        <Field description="Wrap dynamic variables in double brackets, e.g. [[variable_name]].">
+                                                                            <Textarea
+                                                                                value={systemPrompt}
+                                                                                onChange={(e) => setSystemPrompt(e.target.value)}
+                                                                                placeholder="You are a helpful assistant..."
+                                                                                className="h-40"
+                                                                                readOnly={isReadOnly}
+                                                                            />
+                                                                        </Field>
+                                                                    </Box>
+                                                                    {/* Memory Limit */}
+                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                        <Tooltip delayDuration={300} content="Maximum number of conversation turns retained in memory for context.">
+                                                                            <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                                <Text fontSize="md" fontWeight="500">Memory Limit</Text>
+                                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                            </Box>
+                                                                        </Tooltip>
+                                                                        <Input type="number" placeholder="10" readOnly={isReadOnly} />
+                                                                    </Box>
+                                                                </>
+                                                            ) : (
+                                                                <Text fontSize="sm" color="fg.tertiary">Enable multi-turn conversation in the Interaction Mode section to configure advanced chat settings.</Text>
+                                                            )}
+                                                        </Box>
+                                                    </DisclosureContent>
+                                                </Disclosure>
 
                                                 <Box>
                                                     <Box display="flex" justifyContent="space-between" mb="8">
