@@ -102,6 +102,7 @@ const PageRow = ({
 	selectedPageIds,
 	clipboard,
 	isDragging,
+	allPages,
 }: {
 	node: PageNode;
 	level?: number;
@@ -117,6 +118,7 @@ const PageRow = ({
 	selectedPageIds?: string[];
 	clipboard?: {pageIds: string[]; operation: 'cut' | 'copy'} | null;
 	isDragging?: boolean;
+	allPages?: Page[];
 }) => {
 	const router = useRouter();
 	const [expanded, setExpanded] = useState(true);
@@ -125,6 +127,19 @@ const PageRow = ({
 	const isStartPage = startPageId === node.id;
 	const isSelected = selectedPageIds?.includes(node.id) ?? false;
 	const isInClipboard = clipboard?.pageIds.includes(node.id) ?? false;
+
+	// Check if pasting would create a circular reference
+	const isDescendantOf = (pageId: string, ancestorId: string): boolean => {
+		if (!allPages) return false;
+		const page = allPages.find(p => p.id === pageId);
+		if (!page || !page.parentId) return false;
+		if (page.parentId === ancestorId) return true;
+		return isDescendantOf(page.parentId, ancestorId);
+	};
+
+	const wouldCreateCircularReference = clipboard?.pageIds.some(
+		pageId => pageId === node.id || isDescendantOf(node.id, pageId)
+	) ?? false;
 
 	const menuOptions = [
 		...(isStartPage
@@ -138,10 +153,11 @@ const PageRow = ({
 						addon: <IconPencil size={16} />,
 						label: "Rename",
 						execute: () => console.log("Rename", node.id),
-						group: {
-							separator: true,
-							label: "",
-						},
+					},
+					{
+						addon: <IconFilePlus size={16} />,
+						label: "Create child",
+						execute: () => console.log("Create child", node.id),
 					},
 			  ]
 			: [
@@ -150,55 +166,73 @@ const PageRow = ({
 						label: "Rename",
 						execute: () => console.log("Rename", node.id),
 					},
+					{
+						addon: <IconFilePlus size={16} />,
+						label: "Create child",
+						execute: () => console.log("Create child", node.id),
+					},
 			  ]),
 		{
-			addon: <IconFilePlus size={16} />,
-			label: "Create child",
-			execute: () => console.log("Create child", node.id),
-		},
-		{
 			addon: <IconCut size={16} />,
-			group: {
-				separator: true,
-				label: "",
-			},
 			label: isSelected && (selectedPageIds?.length ?? 0) > 1 ? `Cut (${selectedPageIds?.length} items)` : "Cut",
 			execute: () => onCut?.(isSelected ? undefined : node.id),
+			group: {
+				separator: true,
+				label: "clipboard",
+				hidden: true,
+			},
 		},
 		{
 			addon: <IconCopy size={16} />,
 			label: isSelected && (selectedPageIds?.length ?? 0) > 1 ? `Copy (${selectedPageIds?.length} items)` : "Copy",
 			execute: () => onCopy?.(isSelected ? undefined : node.id),
+			group: {
+				separator: true,
+				label: "clipboard",
+				hidden: true,
+			},
 		},
 		{
 			addon: <IconClipboard size={16} />,
 			label: "Paste",
 			execute: () => onPaste?.(node.id),
-			disabled: !clipboard || clipboard.pageIds.length === 0,
+			disabled: !clipboard || clipboard.pageIds.length === 0 || wouldCreateCircularReference,
+			group: {
+				separator: true,
+				label: "clipboard",
+				hidden: true,
+			},
 		},
 		{
 			addon: <IconArrowUp size={16} />,
-			group: {
-				separator: true,
-				label: "",
-			},
 			label: "Move up",
 			execute: () => onMoveUp?.(node.id),
+			group: {
+				separator: true,
+				label: "move",
+				hidden: true,
+			},
 		},
 		{
 			addon: <IconArrowDown size={16} />,
 			label: "Move down",
 			execute: () => onMoveDown?.(node.id),
+			group: {
+				separator: true,
+				label: "move",
+				hidden: true,
+			},
 		},
 		{
 			addon: <IconTrash size={16} />,
-			group: {
-				separator: true,
-				label: "",
-			},
 			intent: "danger" as const,
 			label: "Delete",
 			execute: () => console.log("Delete", node.id),
+			group: {
+				separator: true,
+				label: "delete",
+				hidden: true,
+			},
 		},
 	];
 
@@ -209,6 +243,75 @@ const PageRow = ({
 		// If this node is selected along with others, drag all selected items
 		if (isSelected && (selectedPageIds?.length ?? 0) > 1) {
 			e.dataTransfer.setData('text/html', JSON.stringify(selectedPageIds));
+
+			// Create drag preview showing the selected pages
+			const dragImage = document.createElement('div');
+			dragImage.style.position = 'absolute';
+			dragImage.style.top = '-10000px';
+			dragImage.style.left = '0';
+			dragImage.style.backgroundColor = 'var(--ax-colors-bg-default)';
+			dragImage.style.border = '1px solid var(--ax-colors-border-secondary)';
+			dragImage.style.borderRadius = '6px';
+			dragImage.style.padding = '8px';
+			dragImage.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+			dragImage.style.minWidth = '200px';
+			dragImage.style.maxWidth = '300px';
+
+			// Show first 3 pages and count if more
+			const selectedPageIdsList = selectedPageIds?.slice(0, 3) || [];
+			const remainingCount = (selectedPageIds?.length || 0) - selectedPageIdsList.length;
+
+			selectedPageIdsList.forEach((pageId, index) => {
+				// Look up the page from allPages
+				const page = allPages?.find(p => p.id === pageId);
+				const pageName = page?.name || 'Page';
+
+				const row = document.createElement('div');
+				row.style.display = 'flex';
+				row.style.alignItems = 'center';
+				row.style.gap = '8px';
+				row.style.padding = '4px 8px';
+				row.style.fontSize = '13px';
+				row.style.color = 'var(--ax-colors-fg-default)';
+				if (index > 0) {
+					row.style.borderTop = '1px solid var(--ax-colors-border-tertiary)';
+					row.style.marginTop = '4px';
+					row.style.paddingTop = '8px';
+				}
+
+				// Icon
+				const icon = document.createElement('span');
+				icon.innerHTML = '📄';
+				icon.style.fontSize = '14px';
+				row.appendChild(icon);
+
+				// Page name
+				const name = document.createElement('span');
+				name.textContent = pageName;
+				name.style.fontWeight = '500';
+				row.appendChild(name);
+
+				dragImage.appendChild(row);
+			});
+
+			// Show count badge if more than 3
+			if (remainingCount > 0) {
+				const badge = document.createElement('div');
+				badge.style.marginTop = '8px';
+				badge.style.padding = '4px 8px';
+				badge.style.backgroundColor = 'var(--ax-colors-bg-accent-subtle)';
+				badge.style.color = 'var(--ax-colors-fg-accent)';
+				badge.style.borderRadius = '4px';
+				badge.style.fontSize = '12px';
+				badge.style.fontWeight = '500';
+				badge.style.textAlign = 'center';
+				badge.textContent = `+${remainingCount} more`;
+				dragImage.appendChild(badge);
+			}
+
+			document.body.appendChild(dragImage);
+			e.dataTransfer.setDragImage(dragImage, 0, 0);
+			setTimeout(() => document.body.removeChild(dragImage), 0);
 		} else {
 			e.dataTransfer.setData('text/html', node.id);
 			onDragStart?.(node.id);
@@ -269,11 +372,8 @@ const PageRow = ({
 				className="relative cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
 				style={{
 					opacity: isInClipboard && clipboard?.operation === 'cut' ? 0.5 : 1,
-					backgroundColor: dragOver
-						? 'var(--ax-colors-bg-accent-subtle)'
-						: isSelected
-							? 'var(--ax-colors-bg-accent-subtle-hovered)'
-							: undefined,
+					backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined,
+					borderTop: dragOver ? '2px solid var(--ax-colors-border-brand)' : undefined,
 				}}
 			>
 				<Td type="header">
@@ -351,6 +451,7 @@ const PageRow = ({
 						selectedPageIds={selectedPageIds}
 						clipboard={clipboard}
 						isDragging={isDragging}
+						allPages={allPages}
 					/>
 				))}
 		</>
@@ -443,6 +544,29 @@ export default function EditPage() {
 	// Paste operation
 	const handlePaste = (targetParentId: string) => {
 		if (!clipboard || clipboard.pageIds.length === 0) return;
+
+		// Prevent pasting a page onto itself
+		if (clipboard.pageIds.includes(targetParentId)) {
+			console.log("Cannot paste a page onto itself");
+			return;
+		}
+
+		// Prevent pasting into a descendant (circular reference check)
+		const isDescendant = (pageId: string, ancestorId: string): boolean => {
+			const page = pages.find(p => p.id === pageId);
+			if (!page || !page.parentId) return false;
+			if (page.parentId === ancestorId) return true;
+			return isDescendant(page.parentId, ancestorId);
+		};
+
+		const hasCircularReference = clipboard.pageIds.some(pageId =>
+			isDescendant(targetParentId, pageId)
+		);
+
+		if (hasCircularReference) {
+			console.log("Cannot paste into a descendant of the selected pages");
+			return;
+		}
 
 		if (clipboard.operation === 'cut') {
 			// Move the pages
@@ -649,6 +773,7 @@ export default function EditPage() {
 								selectedPageIds={selectedPageIds}
 								clipboard={clipboard}
 								isDragging={!!draggedPageId}
+								allPages={pages}
 							/>
 
 							{/* Out of scope pages */}
@@ -679,6 +804,7 @@ export default function EditPage() {
 											selectedPageIds={selectedPageIds}
 											clipboard={clipboard}
 											isDragging={!!draggedPageId}
+											allPages={pages}
 										/>
 									))}
 								</>
@@ -702,6 +828,7 @@ export default function EditPage() {
 								selectedPageIds={selectedPageIds}
 								clipboard={clipboard}
 								isDragging={!!draggedPageId}
+								allPages={pages}
 							/>
 						))
 					)}
