@@ -112,6 +112,9 @@ export function OpalInput({
     }
   }, [showAgentDropdown]);
 
+  // Defined early so handleKeyDown can reference it
+  const hasValue = value.trim().length > 0 || selectedAgent !== null;
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showAgentDropdown) {
       if (e.key === 'ArrowDown') {
@@ -182,8 +185,6 @@ export function OpalInput({
     setContextChip('Mosey Bank / Mobile Handoff'); // Mock context
   };
 
-  const hasValue = value.trim().length > 0 || selectedAgent !== null;
-
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -253,6 +254,8 @@ export function OpalInput({
           console.error('[Voice] Transcription error:', error);
         } finally {
           setIsTranscribing(false);
+          // Refocus textarea so user can press Enter to submit immediately
+          setTimeout(() => textareaRef.current?.focus(), 50);
         }
       };
 
