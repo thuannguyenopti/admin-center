@@ -283,11 +283,12 @@ export default function OpalPage() {
           position: "relative",
           zIndex: 1,
           width: "100%",
-          maxWidth: "800px",
+          maxWidth: "768px",
           marginBottom: "16px",
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
+          justifyContent: "flex-start",
           flexWrap: "wrap",
           gap: "8px",
         }}
