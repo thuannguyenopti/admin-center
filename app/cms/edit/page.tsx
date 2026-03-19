@@ -113,7 +113,7 @@ const PageRow = ({
 	onMoveUp?: (pageId: string) => void;
 	onMoveDown?: (pageId: string) => void;
 	onDragStart?: (pageId: string) => void;
-	onDrop?: (targetPageId: string) => void;
+	onDrop?: (targetPageId: string, position?: 'before' | 'inside' | 'after') => void;
 	onPageClick?: (pageId: string, event: React.MouseEvent) => void;
 	selectedPageIds?: string[];
 	clipboard?: {pageIds: string[]; operation: 'cut' | 'copy'} | null;
@@ -122,7 +122,7 @@ const PageRow = ({
 }) => {
 	const router = useRouter();
 	const [expanded, setExpanded] = useState(true);
-	const [dragOver, setDragOver] = useState(false);
+	const [dropPosition, setDropPosition] = useState<'before' | 'inside' | 'after' | null>(null);
 	const hasChildren = node.children.length > 0;
 	const isStartPage = startPageId === node.id;
 	const isSelected = selectedPageIds?.includes(node.id) ?? false;
@@ -137,9 +137,31 @@ const PageRow = ({
 		return isDescendantOf(page.parentId, ancestorId);
 	};
 
+	// Check if a content type can be a child of this node's content type
+	const canDropHere = (draggedPageIds: string[]): boolean => {
+		if (!allPages) return false;
+
+		// Get the target page's content type
+		const targetContentType = initialContentTypes.find(ct => ct.id === node.contentTypeId);
+
+		// If no restrictions, allow all
+		if (!targetContentType?.availableContentTypes || targetContentType.availableContentTypes.length === 0) {
+			return true;
+		}
+
+		// Check if all dragged pages have allowed content types
+		return draggedPageIds.every(pageId => {
+			const draggedPage = allPages.find(p => p.id === pageId);
+			if (!draggedPage) return false;
+			return targetContentType.availableContentTypes!.includes(draggedPage.contentTypeId);
+		});
+	};
+
 	const wouldCreateCircularReference = clipboard?.pageIds.some(
 		pageId => pageId === node.id || isDescendantOf(node.id, pageId)
 	) ?? false;
+
+	const canPasteHere = clipboard && clipboard.pageIds.length > 0 && canDropHere(clipboard.pageIds);
 
 	const menuOptions = [
 		...(isStartPage
@@ -196,7 +218,7 @@ const PageRow = ({
 			addon: <IconClipboard size={16} />,
 			label: "Paste",
 			execute: () => onPaste?.(node.id),
-			disabled: !clipboard || clipboard.pageIds.length === 0 || wouldCreateCircularReference,
+			disabled: !clipboard || clipboard.pageIds.length === 0 || wouldCreateCircularReference || !canPasteHere,
 			group: {
 				separator: true,
 				label: "clipboard",
@@ -320,27 +342,51 @@ const PageRow = ({
 
 	const handleDragEnd = (e: React.DragEvent) => {
 		e.stopPropagation();
-		setDragOver(false);
+		setDropPosition(null);
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
+
+		// Check if we can drop here based on content type restrictions
+		const draggedIds = selectedPageIds && selectedPageIds.length > 0 ? selectedPageIds : [];
+		if (draggedIds.length > 0 && !canDropHere(draggedIds)) {
+			e.dataTransfer.dropEffect = 'none';
+			setDropPosition(null);
+			return;
+		}
+
+		// Determine drop position based on mouse Y position
+		const rect = e.currentTarget.getBoundingClientRect();
+		const y = e.clientY - rect.top;
+		const height = rect.height;
+
+		const threshold = 8; // pixels from top/bottom for before/after
+
+		if (y < threshold) {
+			setDropPosition('before');
+		} else if (y > height - threshold) {
+			setDropPosition('after');
+		} else {
+			setDropPosition('inside');
+		}
+
 		e.dataTransfer.dropEffect = 'move';
-		setDragOver(true);
 	};
 
 	const handleDragLeave = (e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		setDragOver(false);
+		setDropPosition(null);
 	};
 
 	const handleDrop = (e: React.DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		setDragOver(false);
-		onDrop?.(node.id);
+		const position = dropPosition;
+		setDropPosition(null);
+		onDrop?.(node.id, position || 'inside');
 	};
 
 	return (
@@ -372,8 +418,13 @@ const PageRow = ({
 				className="relative cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
 				style={{
 					opacity: isInClipboard && clipboard?.operation === 'cut' ? 0.5 : 1,
-					backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined,
-					borderTop: dragOver ? '2px solid var(--ax-colors-border-brand)' : undefined,
+					backgroundColor: isSelected
+						? 'var(--ax-colors-bg-accent-subtle)'
+						: dropPosition === 'inside'
+							? 'var(--ax-colors-bg-accent-subtle)'
+							: undefined,
+					borderTop: dropPosition === 'before' ? '2px solid var(--ax-colors-border-accent)' : undefined,
+					borderBottom: dropPosition === 'after' ? '2px solid var(--ax-colors-border-accent)' : undefined,
 				}}
 			>
 				<Td type="header">
@@ -551,6 +602,23 @@ export default function EditPage() {
 			return;
 		}
 
+		// Check if the target content type allows these child content types
+		const targetPage = pages.find(p => p.id === targetParentId);
+		if (targetPage) {
+			const targetContentType = initialContentTypes.find(ct => ct.id === targetPage.contentTypeId);
+			if (targetContentType?.availableContentTypes && targetContentType.availableContentTypes.length > 0) {
+				const allAllowed = clipboard.pageIds.every(pageId => {
+					const clipboardPage = pages.find(p => p.id === pageId);
+					return clipboardPage && targetContentType.availableContentTypes!.includes(clipboardPage.contentTypeId);
+				});
+
+				if (!allAllowed) {
+					console.log("Cannot paste: target content type does not allow these child types");
+					return;
+				}
+			}
+		}
+
 		// Prevent pasting into a descendant (circular reference check)
 		const isDescendant = (pageId: string, ancestorId: string): boolean => {
 			const page = pages.find(p => p.id === pageId);
@@ -628,7 +696,7 @@ export default function EditPage() {
 	};
 
 	// Handle drop
-	const handleDrop = (targetPageId: string) => {
+	const handleDrop = (targetPageId: string, position: 'before' | 'inside' | 'after' = 'inside') => {
 		// Determine which pages are being dragged
 		const pagesToMove = selectedPageIds.length > 0 ? selectedPageIds : (draggedPageId ? [draggedPageId] : []);
 
@@ -642,6 +710,23 @@ export default function EditPage() {
 		if (!targetPage) {
 			setDraggedPageId(null);
 			return;
+		}
+
+		// For 'inside' position, check content type restrictions
+		if (position === 'inside') {
+			const targetContentType = initialContentTypes.find(ct => ct.id === targetPage.contentTypeId);
+			if (targetContentType?.availableContentTypes && targetContentType.availableContentTypes.length > 0) {
+				const allAllowed = pagesToMove.every(pageId => {
+					const draggedPage = pages.find(p => p.id === pageId);
+					return draggedPage && targetContentType.availableContentTypes!.includes(draggedPage.contentTypeId);
+				});
+
+				if (!allAllowed) {
+					console.log("Cannot drop: target content type does not allow these child types");
+					setDraggedPageId(null);
+					return;
+				}
+			}
 		}
 
 		// Prevent dropping a page into its own descendant
@@ -661,12 +746,45 @@ export default function EditPage() {
 			return;
 		}
 
-		// Move all dragged pages to be children of the target page
-		const updatedPages = pages.map(page =>
-			pagesToMove.includes(page.id)
-				? { ...page, parentId: targetPageId }
-				: page
-		);
+		// Determine the new parent and order based on position
+		let updatedPages = [...pages];
+
+		if (position === 'inside') {
+			// Move as children of target
+			updatedPages = pages.map(page =>
+				pagesToMove.includes(page.id)
+					? { ...page, parentId: targetPageId }
+					: page
+			);
+		} else {
+			// Move as siblings (before or after target)
+			const newParentId = targetPage.parentId;
+
+			// Get all siblings of the target (including target itself)
+			const siblings = pages.filter(p => p.parentId === newParentId && !pagesToMove.includes(p.id));
+
+			// Find target index in siblings array
+			const targetIndex = siblings.findIndex(p => p.id === targetPageId);
+
+			// Calculate insert position
+			const insertIndex = position === 'before' ? targetIndex : targetIndex + 1;
+
+			// Update parent of dragged pages
+			const movedPages = pagesToMove.map(pageId => {
+				const page = pages.find(p => p.id === pageId)!;
+				return { ...page, parentId: newParentId };
+			});
+
+			// Insert moved pages at the correct position among siblings
+			siblings.splice(insertIndex, 0, ...movedPages);
+
+			// Get all pages that are not siblings of the target (keep their original order)
+			const otherPages = pages.filter(p => p.parentId !== newParentId && !pagesToMove.includes(p.id));
+
+			// Combine: other pages + reordered siblings
+			updatedPages = [...otherPages, ...siblings];
+		}
+
 		setPages(updatedPages);
 		setDraggedPageId(null);
 		setSelectedPageIds([]);
