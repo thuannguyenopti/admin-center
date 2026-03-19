@@ -383,7 +383,8 @@ function TemplateContent({
 						position: "fixed",
 						bottom: 0,
 						left: `${footerLeftOffset}px`,
-						right: `${opalPanelWidth}px`
+						right: `${opalPanelWidth}px`,
+						transition: "left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)"
 					}}
 					borderT="1"
 					borderL="1"
