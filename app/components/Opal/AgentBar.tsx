@@ -5,6 +5,7 @@ import { Button } from "@optiaxiom/react";
 export type AgentBarAgent = {
   emoji: string;
   name: string;
+  handle?: string;
   subtitle?: string;
 };
 
@@ -108,11 +109,14 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
             <Button appearance="default" size="sm" onClick={onResumeNo}>No</Button>
           </div>
         </div>
-        {/* Purple bar — standalone, full width, 44px */}
+        {/* Purple bar — standalone, full width */}
         <div style={{ ...PURPLE_CARD, height: 44 }}>
           <div style={AGENT_ROW}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
             <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px" }}>{agent.name}</span>
+            {agent.handle && (
+              <span style={{ fontSize: 12, color: "var(--ax-colors-fg-link-visited)" }}>{agent.handle}</span>
+            )}
           </div>
         </div>
       </div>
@@ -125,6 +129,9 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
         <div style={AGENT_ROW}>
           <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
           <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px" }}>{agent.name}</span>
+          {agent.handle && (
+            <span style={{ fontSize: 12, color: "var(--ax-colors-fg-link-visited)" }}>{agent.handle}</span>
+          )}
         </div>
         {state === "in-chat" && (
           <Button appearance="default" size="sm" onClick={onDone}>Done</Button>

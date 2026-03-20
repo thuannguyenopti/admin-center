@@ -232,7 +232,7 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
   // Render agent conversation event markers
   if (message.role === 'event') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0', justifyContent: 'flex-start' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0', paddingLeft: 8, justifyContent: 'flex-start' }}>
         {message.eventType !== 'agent-end' && (
           <span style={{ fontSize: 14 }}>{message.agentEmoji}</span>
         )}

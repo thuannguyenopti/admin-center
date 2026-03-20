@@ -44,6 +44,8 @@ type OpalChatViewProps = {
     onExpandSession?: (sessionStartId: string) => void;
     opalDisclosureIds?: Set<string>;
     opalClosedIds?: Set<string>;
+    collapsingOpalEndId?: string | null;
+    highlightedOpalEndId?: string | null;
     onOpenOpalRange?: (agentEndId: string) => void;
     onCloseOpalRange?: (agentEndId: string) => void;
     mentionableAgents?: MentionableAgent[];
@@ -81,6 +83,8 @@ export function OpalChatView({
     onExpandSession,
     opalDisclosureIds,
     opalClosedIds,
+    collapsingOpalEndId,
+    highlightedOpalEndId,
     onOpenOpalRange,
     onCloseOpalRange,
     mentionableAgents,
@@ -197,6 +201,8 @@ export function OpalChatView({
                         onExpandSession={onExpandSession}
                         opalDisclosureIds={opalDisclosureIds}
                         opalClosedIds={opalClosedIds}
+                        collapsingOpalEndId={collapsingOpalEndId}
+                        highlightedOpalEndId={highlightedOpalEndId}
                         onOpenOpalRange={onOpenOpalRange}
                         onCloseOpalRange={onCloseOpalRange}
                         activeAgentCtx={activeAgentCtx}
