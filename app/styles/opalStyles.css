@@ -1,5 +1,66 @@
 /* Opal Panel Styles - Using Axiom Design Tokens for consistent theming */
 
+@keyframes agentBarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
+@keyframes resumeBarSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes opalPullIn {
+  0%   { opacity: 1;    transform: translateY(0)    scaleY(1);    max-height: 800px; }
+  35%  { opacity: 0.7;  transform: translateY(-10px) scaleY(0.65); max-height: 500px; }
+  75%  { opacity: 0.15; transform: translateY(-28px) scaleY(0.15); max-height: 100px; }
+  100% { opacity: 0;    transform: translateY(-40px) scaleY(0);    max-height: 0;     }
+}
+
+@keyframes disclosureCollectIn {
+  0%   { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes disclosureHighlight {
+  0%   { background-color: rgba(124, 58, 237, 0.14); border-radius: 8px; }
+  100% { background-color: transparent;              border-radius: 8px; }
+}
+
+.opal-pull-slow {
+  animation: opalPullIn 0.6s cubic-bezier(0.4, 0, 1, 0.6) forwards;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center top;
+}
+
+.opal-pull-fast {
+  animation: opalPullIn 0.28s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center top;
+}
+
+.opal-disclosure-collect {
+  animation: disclosureCollectIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.opal-disclosure-highlight {
+  animation: disclosureHighlight 0.5s ease-out forwards;
+}
+
 :root {
   /* Background Colors - Using Axiom tokens with fallbacks */
   --opal-bg-primary: var(--ax-colors-bg-default, #ffffff);
@@ -79,6 +140,17 @@ body.dark {
 
 .opal-loading-spinner {
   animation: spin 0.8s linear infinite;
+}
+
+@keyframes agentBarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Shimmer loading placeholder for Opal (tag suggest, generate) */

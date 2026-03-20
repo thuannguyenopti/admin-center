@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Box, Button, Switch } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
@@ -13,18 +14,13 @@ import {
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 
-type Agent = {
+export type MentionableAgent = {
   id: string;
   name: string;
-  description: string;
-  icon?: string;
+  subtitle?: string;
+  emoji?: string;
+  handle: string;
 };
-
-const MOCK_AGENTS: Agent[] = [
-  { id: '1', name: 'Industry Marketer', description: 'Create industry-specific variation' },
-  { id: '2', name: 'Suggested test ideas', description: 'Get experiment ideas for web optimization' },
-  { id: '3', name: 'Opal Assistant', description: 'General purpose AI assistant' },
-];
 
 type OpalInputProps = {
   value: string;
@@ -36,6 +32,9 @@ type OpalInputProps = {
   variant?: 'assistant' | 'home';
   enableAI?: boolean;
   onEnableAIChange?: (enabled: boolean) => void;
+  agentBar?: React.ReactNode;
+  mentionableAgents?: MentionableAgent[];
+  onMentionSelect?: (agent: MentionableAgent) => void;
 };
 
 export function OpalInput({
@@ -47,11 +46,13 @@ export function OpalInput({
   isLoading,
   variant = 'assistant',
   enableAI,
-  onEnableAIChange
+  onEnableAIChange,
+  agentBar,
+  mentionableAgents = [],
+  onMentionSelect,
 }: OpalInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [contextChip, setContextChip] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -74,8 +75,8 @@ export function OpalInput({
     const textarea = textareaRef.current;
     const container = containerRef.current;
     if (textarea && container) {
-      // Temporarily reset height to 34px to get the most accurate scrollHeight
-      textarea.style.setProperty('height', '34px', 'important');
+      // Reset to auto so scrollHeight reflects true content height (not flex-stretched height)
+      textarea.style.height = 'auto';
       const naturalHeight = textarea.scrollHeight;
 
       // Calculate final heights
@@ -108,15 +109,22 @@ export function OpalInput({
     }
   }, [value]);
 
+  // Filter mentionable agents based on text after @
+  const mentionQuery = value.startsWith('@') ? value.slice(1).toLowerCase() : '';
+  const filteredAgents = mentionableAgents.filter(a =>
+    !mentionQuery || a.name.toLowerCase().includes(mentionQuery) || a.handle.toLowerCase().includes(mentionQuery)
+  );
+
   useEffect(() => {
-    if (value.startsWith('@') && !selectedAgent) {
+    if (value.startsWith('@') && mentionableAgents.length > 0) {
       setShowAgentDropdown(true);
     } else {
       setShowAgentDropdown(false);
     }
-  }, [value, selectedAgent]);
+  }, [value, mentionableAgents]);
 
   const [focusedAgentIndex, setFocusedAgentIndex] = useState(0);
+  const agentListLength = filteredAgents.length;
 
   useEffect(() => {
     if (showAgentDropdown) {
@@ -125,29 +133,24 @@ export function OpalInput({
   }, [showAgentDropdown]);
 
   // Defined early so handleKeyDown can reference it
-  const hasValue = value.trim().length > 0 || selectedAgent !== null;
+  const hasValue = value.trim().length > 0;
 
-  // Build full message content (agent mention + text) and fire onSend
+  // Build full message content and fire onSend
   const triggerSend = () => {
     if (!hasValue || isLoading) return;
-    const textPart = value.trim();
-    const content = selectedAgent
-      ? `@${selectedAgent.name}${textPart ? ' ' + textPart : ''}`
-      : textPart;
-    onSend(content);
-    setSelectedAgent(null);
+    onSend(value.trim());
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (showAgentDropdown) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setFocusedAgentIndex((prev) => (prev + 1) % MOCK_AGENTS.length);
+        setFocusedAgentIndex((prev) => (prev + 1) % agentListLength);
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setFocusedAgentIndex((prev) => (prev - 1 + MOCK_AGENTS.length) % MOCK_AGENTS.length);
+        setFocusedAgentIndex((prev) => (prev - 1 + agentListLength) % agentListLength);
         return;
       }
       if (e.key === 'Escape') {
@@ -155,9 +158,9 @@ export function OpalInput({
         setShowAgentDropdown(false);
         return;
       }
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && filteredAgents[focusedAgentIndex]) {
         e.preventDefault();
-        handleSelectAgent(MOCK_AGENTS[focusedAgentIndex]);
+        handleSelectAgent(filteredAgents[focusedAgentIndex]);
         return;
       }
     }
@@ -190,14 +193,11 @@ export function OpalInput({
 
 
 
-  const handleSelectAgent = (agent: Agent) => {
-    setSelectedAgent(agent);
+  const handleSelectAgent = (agent: MentionableAgent) => {
     setShowAgentDropdown(false);
-    onChange(value.replace(/^@\w*/, ''));
-  };
-
-  const removeAgent = () => {
-    setSelectedAgent(null);
+    onChange(value.replace(/^@\S*/, '').trimStart());
+    onMentionSelect?.(agent);
+    setTimeout(() => textareaRef.current?.focus(), 50);
   };
 
   const removeContext = () => {
@@ -324,7 +324,7 @@ export function OpalInput({
     <Box
       display="flex"
       flexDirection="column"
-      gap="4"
+      gap="0"
       p={variant === 'assistant' ? "16" : "0"}
       borderT="0"
       borderColor="border.secondary"
@@ -358,12 +358,14 @@ export function OpalInput({
           <Box p="8" borderB="1" borderColor="border.secondary" bg="bg.secondary">
             <Text fontSize="xs" fontWeight="600" color="fg.tertiary">Recently used agents</Text>
           </Box>
-          {MOCK_AGENTS.map((agent, index) => (
+          {filteredAgents.map((agent, index) => (
             <Box
               key={agent.id}
               p="12"
               display="flex"
-              flexDirection="column"
+              flexDirection="row"
+              gap="8"
+              alignItems="center"
               style={{
                 cursor: 'pointer',
                 backgroundColor: index === focusedAgentIndex ? 'var(--opal-bg-sidebar)' : 'transparent'
@@ -371,8 +373,14 @@ export function OpalInput({
               onClick={() => handleSelectAgent(agent)}
               onMouseEnter={() => setFocusedAgentIndex(index)}
             >
-              <Text fontSize="sm" fontWeight="600" color="fg.default">{agent.name}</Text>
-              <Text fontSize="xs" color="fg.tertiary">{agent.description}</Text>
+              {agent.emoji && <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>}
+              <Box display="flex" flexDirection="column" flex="1">
+                <Box display="flex" alignItems="center" gap="8">
+                  <Text fontSize="sm" fontWeight="600" color="fg.default">{agent.name}</Text>
+                  <Text fontSize="xs" color="fg.link.visited">{agent.handle}</Text>
+                </Box>
+                {agent.subtitle && <Text fontSize="xs" color="fg.tertiary">{agent.subtitle}</Text>}
+              </Box>
             </Box>
           ))}
         </Box>
@@ -388,46 +396,44 @@ export function OpalInput({
         </Text>
       )}
 
-      {/* Input Container */}
+      {/* AgentBar slot — bottom 8px tucks under input box */}
+      {agentBar && (
+        <Box style={{
+          borderRadius: '6px',
+          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 0,
+          marginBottom: '-8px',
+          animation: 'agentBarSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
+          {agentBar}
+        </Box>
+      )}
+
+      {/* Input Container — always 8px radius all corners, sits on top */}
       <Box
         ref={containerRef}
         display="flex"
         flexDirection="column"
         px="12"
         border="1"
-        rounded="lg"
         style={{
           backgroundColor: 'var(--opal-bg-input)',
           borderColor: borderColor,
-          borderRadius: '12px',
+          borderRadius: '8px',
           boxShadow: variant === 'home' ? 'var(--shadow-sm)' : 'none',
           transition: 'all 0.2s ease',
           minHeight: '88px',
           boxSizing: 'border-box',
           paddingTop: '8px',
           paddingBottom: '8px',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
-        {/* Active Context/Agent Chips */}
-        {(selectedAgent || contextChip) && (
+        {/* Active Context Chips */}
+        {contextChip && (
           <Box display="flex" gap="8" mb="8" flexWrap="wrap">
-            {selectedAgent && (
-              <Box
-                display="flex"
-                alignItems="center"
-                gap="4"
-                px="8"
-                py="2"
-                style={{
-                  backgroundColor: 'var(--opal-bg-user)',
-                  borderRadius: '16px',
-                  border: '1px solid #7C3AED',
-                }}
-              >
-                <Text fontSize="xs" fontWeight="600" style={{ color: '#7C3AED' }}>@{selectedAgent.name}</Text>
-                <IconXmark size={12} style={{ cursor: 'pointer', color: '#7C3AED' }} onClick={removeAgent} />
-              </Box>
-            )}
             {contextChip && (
               <Box
                 display="flex"
@@ -450,7 +456,7 @@ export function OpalInput({
 
         <textarea
           ref={textareaRef}
-          placeholder={selectedAgent ? "Ask anything..." : "Ask Opal"}
+          placeholder="Ask Opal"
           value={value}
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -459,7 +465,6 @@ export function OpalInput({
           disabled={disabled && !isLoading}
           rows={1}
           style={{
-            flex: 1,
             border: 'none',
             padding: 0,
             resize: 'none',

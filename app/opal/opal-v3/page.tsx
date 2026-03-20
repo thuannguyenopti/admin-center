@@ -23,7 +23,7 @@ const TOOL_ICONS: Record<string, { icon: React.ReactNode; bigIcon: React.ReactNo
 
 const AGENTS = [
   {
-    emoji: "✉️",
+    emoji: "✍️",
     title: "Write an email campaign",
     description: "Deep review of competitor positioning, messaging, and market gaps, with a summary brief.",
     tags: [{ label: "Content strategy", bg: "#c6dbfa", color: "#0d46a0" }, { label: "Copywriting", bg: "#e9f7f1", color: "#17492b" }, { label: "Email marketing", bg: "#fdf4ff", color: "#701a75" }],
