@@ -23,7 +23,7 @@ const BASE_STYLES = {
 
 const PURPLE_CARD: React.CSSProperties = {
   background: "#ede9fe",
-  borderRadius: 6,
+  borderRadius: 0,
   padding: "8px 12px",
   display: "flex",
   alignItems: "center",
@@ -91,7 +91,7 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
         {/* Gray card: resume prompt */}
         <div style={{
           background: "#e9edf5",
-          borderRadius: "6px 6px 0 0",
+          borderRadius: 0,
           padding: "8px 12px 10px",
           ...BASE_STYLES,
         }}>
@@ -102,7 +102,7 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
           </div>
         </div>
         {/* Purple card: agent info */}
-        <div style={{ ...PURPLE_CARD, borderRadius: "0 0 6px 6px", marginTop: 1 }}>
+        <div style={{ ...PURPLE_CARD, borderRadius: 0, marginTop: 0 }}>
           <div style={AGENT_ROW}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
             <span style={{ fontWeight: 500 }}>{agent.name}</span>
