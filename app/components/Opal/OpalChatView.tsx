@@ -10,6 +10,7 @@ import { OpalHeader } from "./OpalHeader";
 import { OpalHistorySidebar } from "./OpalHistorySidebar";
 import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
 
+
 type OpalChatViewProps = {
     messages: ChatMessage[];
     inputValue: string;
@@ -38,6 +39,9 @@ type OpalChatViewProps = {
     onMessageEdit?: (id: string, newContent: string) => void;
     onRegenerate?: (id: string) => void;
     onMessageVersionChange?: (id: string, versionIndex: number, content: string) => void;
+    agentBar?: ReactNode;
+    collapsedSessionIds?: Set<string>;
+    onExpandSession?: (sessionStartId: string) => void;
 };
 
 export function OpalChatView({
@@ -64,7 +68,10 @@ export function OpalChatView({
     onEnableAIChange,
     onMessageEdit,
     onRegenerate,
-    onMessageVersionChange
+    onMessageVersionChange,
+    agentBar,
+    collapsedSessionIds,
+    onExpandSession,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -170,6 +177,8 @@ export function OpalChatView({
                         onVersionChange={onMessageVersionChange}
                         hideSuggestions={!!emptyState}
                         variant={variant}
+                        collapsedSessionIds={collapsedSessionIds}
+                        onExpandSession={onExpandSession}
                     />
                 </Box>
 
@@ -186,12 +195,13 @@ export function OpalChatView({
                         variant={variant}
                         value={inputValue}
                         onChange={setInputValue}
-                        onSend={() => onSend(inputValue)}
+                        onSend={(content) => onSend(content ?? inputValue)}
                         disabled={isLoading}
                         isLoading={isLoading}
                         error={error}
                         enableAI={enableAI}
                         onEnableAIChange={onEnableAIChange}
+                        agentBar={agentBar}
                     />
                 </Box>
             </Box>
