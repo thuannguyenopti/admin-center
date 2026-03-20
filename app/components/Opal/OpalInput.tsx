@@ -391,9 +391,11 @@ export function OpalInput({
         </Text>
       )}
 
-      {/* AgentBar slot */}
+      {/* AgentBar slot — visually attached above the input */}
       {agentBar && (
-        <Box mb="8">{agentBar}</Box>
+        <Box style={{ borderRadius: '12px 12px 0 0', overflow: 'hidden', border: `1px solid ${borderColor}`, borderBottom: 'none', transition: 'border-color 0.2s ease' }}>
+          {agentBar}
+        </Box>
       )}
 
       {/* Input Container */}
@@ -407,7 +409,7 @@ export function OpalInput({
         style={{
           backgroundColor: 'var(--opal-bg-input)',
           borderColor: borderColor,
-          borderRadius: '12px',
+          borderRadius: agentBar ? '0 0 12px 12px' : '12px',
           boxShadow: variant === 'home' ? 'var(--shadow-sm)' : 'none',
           transition: 'all 0.2s ease',
           minHeight: '88px',
