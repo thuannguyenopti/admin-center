@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@optiaxiom/react";
+
 export type AgentBarAgent = {
   emoji: string;
   name: string;
@@ -23,8 +25,8 @@ const BASE_STYLES = {
 
 const PURPLE_CARD: React.CSSProperties = {
   background: "#ede9fe",
-  borderRadius: 0,
-  padding: "8px 12px",
+  borderRadius: "6px 6px 0 0",
+  padding: "8px 12px 16px",
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
@@ -87,25 +89,30 @@ const NO_BTN: React.CSSProperties = {
 export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResumeNo }: AgentBarProps) {
   if (state === "resume") {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        {/* Gray card: resume prompt */}
+      <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Gray resume bar — slides up from behind the purple bar */}
         <div style={{
           background: "#e9edf5",
-          borderRadius: 0,
-          padding: "8px 12px 10px",
-          ...BASE_STYLES,
+          padding: "8px 12px",
+          borderRadius: "6px 6px 0 0",
+          margin: "0 8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          fontFamily: "Inter, sans-serif",
+          animation: "resumeBarSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
-          <div style={{ marginBottom: 8 }}>Resume previous conversation?</div>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "#2e3442" }}>Resume previous conversation?</span>
           <div style={{ display: "flex", gap: 6 }}>
-            <button style={YES_BTN} onClick={onResumeYes}>Yes, resume</button>
-            <button style={NO_BTN} onClick={onResumeNo}>Start new</button>
+            <Button appearance="default" size="sm" onClick={onResumeYes}>Yes</Button>
+            <Button appearance="default" size="sm" onClick={onResumeNo}>No</Button>
           </div>
         </div>
-        {/* Purple card: agent info */}
-        <div style={{ ...PURPLE_CARD, borderRadius: 0, marginTop: 0 }}>
+        {/* Purple bar — standalone, full width, 44px */}
+        <div style={{ ...PURPLE_CARD, height: 44 }}>
           <div style={AGENT_ROW}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
-            <span style={{ fontWeight: 500 }}>{agent.name}</span>
+            <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px" }}>{agent.name}</span>
           </div>
         </div>
       </div>
@@ -117,13 +124,13 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={AGENT_ROW}>
           <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
-          <span style={{ fontWeight: 500 }}>{agent.name}</span>
+          <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px" }}>{agent.name}</span>
         </div>
         {state === "in-chat" && (
-          <button style={DONE_BTN} onClick={onDone}>Done</button>
+          <Button appearance="default" size="sm" onClick={onDone}>Done</Button>
         )}
         {state === "default" && (
-          <button style={DISMISS_BTN} onClick={onDismiss} aria-label="Dismiss">×</button>
+          <Button appearance="default" size="sm" onClick={onDismiss}>Done</Button>
         )}
       </div>
       {state === "default" && agent.subtitle && (

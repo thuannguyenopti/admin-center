@@ -2,7 +2,7 @@
 
 import { Box } from "@optiaxiom/react";
 import { OpalChat } from "./OpalChat";
-import { OpalInput } from "./OpalInput";
+import { OpalInput, MentionableAgent } from "./OpalInput";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { ReactNode } from "react";
@@ -42,6 +42,13 @@ type OpalChatViewProps = {
     agentBar?: ReactNode;
     collapsedSessionIds?: Set<string>;
     onExpandSession?: (sessionStartId: string) => void;
+    opalDisclosureIds?: Set<string>;
+    opalClosedIds?: Set<string>;
+    onOpenOpalRange?: (agentEndId: string) => void;
+    onCloseOpalRange?: (agentEndId: string) => void;
+    mentionableAgents?: MentionableAgent[];
+    onMentionSelect?: (agent: MentionableAgent) => void;
+    activeAgentCtx?: { emoji: string; name: string } | null;
 };
 
 export function OpalChatView({
@@ -72,6 +79,13 @@ export function OpalChatView({
     agentBar,
     collapsedSessionIds,
     onExpandSession,
+    opalDisclosureIds,
+    opalClosedIds,
+    onOpenOpalRange,
+    onCloseOpalRange,
+    mentionableAgents,
+    onMentionSelect,
+    activeAgentCtx,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -108,6 +122,8 @@ export function OpalChatView({
                             error={error}
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
+                            mentionableAgents={mentionableAgents}
+                            onMentionSelect={onMentionSelect}
                         />
                         {emptyState}
                     </Box>
@@ -179,6 +195,11 @@ export function OpalChatView({
                         variant={variant}
                         collapsedSessionIds={collapsedSessionIds}
                         onExpandSession={onExpandSession}
+                        opalDisclosureIds={opalDisclosureIds}
+                        opalClosedIds={opalClosedIds}
+                        onOpenOpalRange={onOpenOpalRange}
+                        onCloseOpalRange={onCloseOpalRange}
+                        activeAgentCtx={activeAgentCtx}
                     />
                 </Box>
 
@@ -202,6 +223,8 @@ export function OpalChatView({
                         enableAI={enableAI}
                         onEnableAIChange={onEnableAIChange}
                         agentBar={agentBar}
+                        mentionableAgents={mentionableAgents}
+                        onMentionSelect={onMentionSelect}
                     />
                 </Box>
             </Box>
