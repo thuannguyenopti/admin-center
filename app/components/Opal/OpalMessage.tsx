@@ -24,6 +24,8 @@ type OpalMessageProps = {
   onEdit?: (id: string, newContent: string) => void;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
+  agentContext?: { emoji: string; name: string } | null;
+  showOpalHeader?: boolean;
 };
 
 // Helper component for action buttons
@@ -179,7 +181,7 @@ function DevLoadingState({ sequence }: { sequence: LoaderSequenceOption }) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange }: OpalMessageProps) {
+export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, agentContext, showOpalHeader }: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
@@ -227,6 +229,16 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange }: 
     setEditValue(message.content);
   };
 
+  // Render agent conversation event markers
+  if (message.role === 'event') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0', justifyContent: 'center' }}>
+        <span style={{ fontSize: 14 }}>{message.agentEmoji}</span>
+        <span style={{ fontSize: 12, color: '#4f576e', fontFamily: 'Inter, sans-serif' }}>{message.content}</span>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{ width: '100%', display: 'flex', flexDirection: 'column', marginBottom: '16px' }}
@@ -234,6 +246,20 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange }: 
       onMouseLeave={() => setIsHovered(false)}
       className="group"
     >
+      {/* Agent or Opal name header for assistant messages */}
+      {!isUser && agentContext && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>{agentContext.name}</span>
+        </div>
+      )}
+      {!isUser && showOpalHeader && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <img src="/opal.png" alt="Opal" width={16} height={16} style={{ borderRadius: 4 }} />
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>Opal</span>
+        </div>
+      )}
+
       <Box
         display="flex"
         flexDirection="column"

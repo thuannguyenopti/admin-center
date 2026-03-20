@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Box, Button, Switch } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
@@ -36,6 +37,7 @@ type OpalInputProps = {
   variant?: 'assistant' | 'home';
   enableAI?: boolean;
   onEnableAIChange?: (enabled: boolean) => void;
+  agentBar?: React.ReactNode;
 };
 
 export function OpalInput({
@@ -47,7 +49,8 @@ export function OpalInput({
   isLoading,
   variant = 'assistant',
   enableAI,
-  onEnableAIChange
+  onEnableAIChange,
+  agentBar,
 }: OpalInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -386,6 +389,11 @@ export function OpalInput({
         >
           {error}
         </Text>
+      )}
+
+      {/* AgentBar slot */}
+      {agentBar && (
+        <Box mb="8">{agentBar}</Box>
       )}
 
       {/* Input Container */}
