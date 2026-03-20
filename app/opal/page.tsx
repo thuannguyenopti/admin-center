@@ -5,10 +5,12 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX } from "@tabler/icons-react";
 import { IconAgent } from "@optimizely/axiom-icons";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useOpalContext } from "@/app/context/OpalContext";
-import { OpalInput } from "@/app/components/Opal/OpalInput";
+import { OpalInput, MentionableAgent } from "@/app/components/Opal/OpalInput";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
+import { AgentBar } from "@/app/components/Opal/AgentBar";
+import type { AgentBarAgent } from "@/app/components/Opal/AgentBar";
 
 const QUICK_ACTIONS = [
   {
@@ -79,10 +81,17 @@ const QUICK_ACTIONS = [
   },
 ];
 
-const FEATURED_AGENTS = [
-  { emoji: "✉️", name: "Email campaign writer", handle: "@email_gen_agent", prompt: "Write an email campaign for our new feature launch @email_gen_agent" },
-  { emoji: "🧪", name: "A/B experiment setup", handle: "@ab_test", prompt: "Set up an A/B test for our hero headline @ab_test" },
-  { emoji: "📊", name: "Competitor analysis", handle: "@competitors_are_dust", prompt: "Analyze my competitors' positioning and messaging @competitors_are_dust" },
+type FeaturedAgent = AgentBarAgent & { id: string; handle: string };
+
+const FEATURED_AGENTS: FeaturedAgent[] = [
+  { id: "email_gen_agent", emoji: "✍️", name: "Email campaign writer", handle: "@email_gen_agent", subtitle: "Write an email campaign for your product or feature" },
+  { id: "ab_test", emoji: "🧪", name: "A/B experiment setup", handle: "@ab_test", subtitle: "Design and launch an A/B test for your page" },
+  { id: "competitors_are_dust", emoji: "📊", name: "Competitor analysis", handle: "@competitors_are_dust", subtitle: "Analyze and compare competitor positioning" },
+  { id: "campaign_agent", emoji: "🚀", name: "Campaign planner", handle: "@campaign_agent", subtitle: "Plan and strategize marketing campaigns" },
+  { id: "audience_agent", emoji: "🎯", name: "Audience segmentation", handle: "@audience_agent", subtitle: "Identify and target the right audience segments" },
+  { id: "social_media_pro", emoji: "📱", name: "Social media pro", handle: "@social_media_pro", subtitle: "Create and repurpose content for social media" },
+  { id: "ad_variations_agent", emoji: "🎨", name: "Ad variations", handle: "@ad_variations_agent", subtitle: "Generate ad copy variations for your campaigns" },
+  { id: "brief_to_campaign", emoji: "📋", name: "Brief to campaign", handle: "@brief_to_campaign", subtitle: "Turn a brief or case study into a full campaign" },
 ];
 
 function renderWithMentions(text: string) {
@@ -133,13 +142,165 @@ export default function OpalPage() {
   const [hoveredPill, setHoveredPill] = useState<string | null>(null);
   const [activePill, setActivePill] = useState<string | null>(null);
   const [showAgents, setShowAgents] = useState(false);
+  const [showAllAgents, setShowAllAgents] = useState(false);
+  const [recentAgentIds, setRecentAgentIds] = useState<string[]>([]);
   const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(0);
   const [focusedChipIndex, setFocusedChipIndex] = useState<number>(-1);
   const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Agent session state
+  type AgentSession = { agent: FeaturedAgent; state: 'default' | 'in-chat' | 'resume'; startEventId?: string };
+  const [agentSession, setAgentSession] = useState<AgentSession | null>(null);
+  const [lastEndedSession, setLastEndedSession] = useState<{ agent: FeaturedAgent; startEventId: string; endEventId: string } | null>(null);
+  const [collapsedSessionIds, setCollapsedSessionIds] = useState<Set<string>>(new Set());
+  const [opalDisclosureIds, setOpalDisclosureIds] = useState<Set<string>>(new Set()); // always in Disclosure mode
+  const [opalClosedIds, setOpalClosedIds] = useState<Set<string>>(new Set()); // currently collapsed
+  const [collapsingOpalEndId, setCollapsingOpalEndId] = useState<string | null>(null); // tidy-up animation in progress
+  const [highlightedOpalEndId, setHighlightedOpalEndId] = useState<string | null>(null); // post-collapse highlight
+
+  const { addMessage } = opalContext.chatState;
+
+  const handleSelectAgent = useCallback((agent: MentionableAgent | FeaturedAgent) => {
+    const featuredAgent = FEATURED_AGENTS.find(a => a.id === agent.id) ?? { ...agent, emoji: agent.emoji ?? '', subtitle: agent.subtitle };
+    if (lastEndedSession?.agent.id === agent.id) {
+      setAgentSession({ agent: featuredAgent as FeaturedAgent, state: 'resume', startEventId: lastEndedSession.startEventId });
+    } else {
+      setAgentSession({ agent: featuredAgent as FeaturedAgent, state: 'default' });
+    }
+    // Promote to front of recently used list
+    setRecentAgentIds(prev => [agent.id, ...prev.filter(id => id !== agent.id)]);
+  }, [lastEndedSession]);
+
+  const handleSendMessage = useCallback((content?: string) => {
+    const text = (content ?? inputValue).trim();
+    if (!text) return;
+
+    if (agentSession && agentSession.state === 'default') {
+      const startEvent = addMessage({
+        role: 'event',
+        eventType: 'agent-start',
+        agentEmoji: agentSession.agent.emoji,
+        agentName: agentSession.agent.name,
+        content: `Started conversation with ${agentSession.agent.name}`,
+      });
+      setAgentSession(prev => prev ? { ...prev, state: 'in-chat', startEventId: startEvent.id } : null);
+    }
+
+    sendMessage(text);
+  }, [agentSession, addMessage, sendMessage, inputValue]);
+
+  const handleAgentDone = useCallback(() => {
+    if (!agentSession) return;
+    const endEvent = addMessage({
+      role: 'event',
+      eventType: 'agent-end',
+      agentEmoji: agentSession.agent.emoji,
+      agentName: agentSession.agent.name,
+      content: `Ended conversation with ${agentSession.agent.name}`,
+    });
+    setLastEndedSession(agentSession.startEventId
+      ? { agent: agentSession.agent, startEventId: agentSession.startEventId, endEventId: endEvent.id }
+      : null
+    );
+    setAgentSession(null);
+  }, [agentSession, addMessage]);
+
+  const handleResumeYes = useCallback(() => {
+    if (!agentSession) return;
+    if (lastEndedSession?.endEventId) {
+      const endId = lastEndedSession.endEventId;
+      // Disclosure appears immediately while messages are still visible and animating
+      setOpalDisclosureIds(prev => new Set([...prev, endId]));
+      setOpalClosedIds(prev => new Set([...prev, endId]));
+      setCollapsingOpalEndId(endId);
+      // Compute how long until the LAST (topmost) message finishes animating.
+      // Must mirror the stagger formula in OpalChat.tsx exactly.
+      const BASE_DELAY = 500;
+      const endIdx = messages.findIndex(
+        m => m.role === 'event' && m.eventType === 'agent-end' && m.id === endId
+      );
+      let opalRangeCount = 0;
+      if (endIdx !== -1) {
+        for (let i = endIdx + 1; i < messages.length; i++) {
+          if (messages[i].role === 'event' && messages[i].eventType === 'agent-start') break;
+          opalRangeCount++;
+        }
+      }
+      const N = opalRangeCount;
+      let lastAnimEnd = 0;
+      if (N > 0) {
+        const posFromBottom = N - 1; // topmost = last to animate
+        if (posFromBottom < 3) {
+          lastAnimEnd = BASE_DELAY + posFromBottom * 500 + 600;
+        } else {
+          lastAnimEnd = BASE_DELAY + 1200 + (posFromBottom - 3) * 180 + 280;
+        }
+      }
+      setTimeout(() => {
+        setCollapsingOpalEndId(null); // messages now properly hidden by skipSet
+        setHighlightedOpalEndId(endId);
+        setTimeout(() => setHighlightedOpalEndId(null), 550);
+      }, lastAnimEnd + 120); // 120ms buffer after last animation completes
+    }
+    const startEvent = addMessage({
+      role: 'event',
+      eventType: 'agent-start',
+      agentEmoji: agentSession.agent.emoji,
+      agentName: agentSession.agent.name,
+      content: `Started conversation with ${agentSession.agent.name}`,
+    });
+    setAgentSession({ agent: agentSession.agent, state: 'in-chat', startEventId: startEvent.id });
+    setLastEndedSession(null);
+  }, [agentSession, lastEndedSession, addMessage]);
+
+  const handleResumeNo = useCallback(() => {
+    if (!agentSession) return;
+    setAgentSession({ agent: agentSession.agent, state: 'default' });
+    setLastEndedSession(null);
+  }, [agentSession]);
+
+  const handleExpandSession = useCallback((sessionStartId: string) => {
+    setCollapsedSessionIds(prev => {
+      const next = new Set(prev);
+      next.delete(sessionStartId);
+      return next;
+    });
+  }, []);
+
+  const handleOpenOpalRange = useCallback((agentEndId: string) => {
+    setOpalClosedIds(prev => { const n = new Set(prev); n.delete(agentEndId); return n; });
+  }, []);
+
+  const handleCloseOpalRange = useCallback((agentEndId: string) => {
+    setOpalClosedIds(prev => new Set([...prev, agentEndId]));
+  }, []);
+
   const hasMessages = messages.length > 0;
 
+  const agentBarElement = agentSession ? (
+    <AgentBar
+      agent={agentSession.agent}
+      state={agentSession.state}
+      onDone={handleAgentDone}
+      onDismiss={() => setAgentSession(null)}
+      onResumeYes={handleResumeYes}
+      onResumeNo={handleResumeNo}
+    />
+  ) : undefined;
+
   const activeAction = QUICK_ACTIONS.find((a) => a.label === activePill);
+
+  // Agents sorted by most recently used
+  const sortedAgents = useMemo(() =>
+    [...FEATURED_AGENTS].sort((a, b) => {
+      const ai = recentAgentIds.indexOf(a.id);
+      const bi = recentAgentIds.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    }),
+  [recentAgentIds]);
 
   // Reset focused index when dropdown opens
   useEffect(() => {
@@ -150,6 +311,23 @@ export default function OpalPage() {
   useEffect(() => {
     suggestionRefs.current[focusedSuggestionIndex]?.scrollIntoView({ block: 'nearest' });
   }, [focusedSuggestionIndex]);
+
+  const handleSuggestionClick = useCallback((suggestion: string) => {
+    // Parse @mention — if it matches a known agent, activate that agent
+    const mentionMatch = suggestion.match(/@(\w+)/);
+    if (mentionMatch) {
+      const handle = mentionMatch[0]; // e.g. "@email_gen_agent"
+      const agent = FEATURED_AGENTS.find((a) => a.handle === handle);
+      if (agent) {
+        handleSelectAgent(agent);
+      }
+      // Strip the " with @mention" (or standalone @mention) from the input text
+      setInputValue(suggestion.replace(/\s+with\s+@\w+|@\w+/g, '').trim());
+    } else {
+      setInputValue(suggestion);
+    }
+    setActivePill(null);
+  }, [handleSelectAgent]);
 
   // Keyboard navigation for suggestion dropdown
   useEffect(() => {
@@ -170,7 +348,7 @@ export default function OpalPage() {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [activeAction, focusedSuggestionIndex]);
+  }, [activeAction, focusedSuggestionIndex, handleSuggestionClick]);
 
   // Left/Right arrow keys to navigate between chips (skip when typing in textarea)
   useEffect(() => {
@@ -193,12 +371,6 @@ export default function OpalPage() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [focusedChipIndex]);
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setInputValue(suggestion);
-    setActivePill(null);
-    // OpalInput auto-focuses when value changes from empty to non-empty
-  };
-
   // Once a conversation starts, hand off to the full chat view
   if (hasMessages) {
     return (
@@ -217,7 +389,7 @@ export default function OpalPage() {
           isLoading={isLoading}
           error={error}
           setInputValue={setInputValue}
-          onSend={sendMessage}
+          onSend={handleSendMessage}
           onSuggestionClick={sendMessage}
           onToggleHistory={opalContext.history.toggleHistory}
           onNewChat={opalContext.history.createNewChat}
@@ -231,6 +403,18 @@ export default function OpalPage() {
           onMessageEdit={() => {}}
           onRegenerate={regenerate}
           onMessageVersionChange={switchVersion}
+          agentBar={agentBarElement}
+          collapsedSessionIds={collapsedSessionIds}
+          onExpandSession={handleExpandSession}
+          opalDisclosureIds={opalDisclosureIds}
+          opalClosedIds={opalClosedIds}
+          collapsingOpalEndId={collapsingOpalEndId}
+          highlightedOpalEndId={highlightedOpalEndId}
+          onOpenOpalRange={handleOpenOpalRange}
+          onCloseOpalRange={handleCloseOpalRange}
+          mentionableAgents={sortedAgents}
+          onMentionSelect={handleSelectAgent}
+          activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
         />
       </Box>
     );
@@ -242,7 +426,8 @@ export default function OpalPage() {
       display="flex"
       flexDirection="column"
       alignItems="center"
-      style={{ paddingTop: "120px", paddingBottom: "80px", position: "relative", overflow: "auto", height: "100%" }}
+      h="full"
+      style={{ paddingTop: "120px", paddingBottom: "80px", position: "relative", overflowY: "auto", overflowX: "hidden", minHeight: 0 }}
     >
       {/* Radial gradient glow */}
       <Box
@@ -291,52 +476,57 @@ export default function OpalPage() {
           justifyContent: "flex-start",
           flexWrap: "wrap",
           gap: "8px",
+          flexShrink: 0,
         }}
       >
         <Button
           appearance="default-opal"
           size="md"
-          onClick={() => setShowAgents(!showAgents)}
+          onClick={() => { setShowAgents(!showAgents); setShowAllAgents(false); }}
           icon={<IconAgent />}
           style={{ borderRadius: "9999px" }}
         >
           View Agents
         </Button>
 
-        {showAgents && FEATURED_AGENTS.map((agent) => (
+        {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
           <Button
             key={agent.handle}
             appearance="default-opal"
             size="md"
-            icon={<IconAgent />}
+            icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
             style={{ borderRadius: "9999px" }}
-            onClick={() => { setInputValue(agent.prompt); setShowAgents(false); }}
+            onClick={() => { handleSelectAgent(agent); setShowAgents(false); setShowAllAgents(false); }}
           >
             {agent.name}
           </Button>
         ))}
 
-        {showAgents && (
+        {showAgents && !showAllAgents && FEATURED_AGENTS.length > 3 && (
           <Button
             appearance="default-opal"
             size="md"
             style={{ borderRadius: "9999px" }}
+            onClick={() => setShowAllAgents(true)}
           >
             More agents
           </Button>
         )}
       </Box>
 
-      {/* Main Input — main's OpalInput with home variant (taller default, all buttons + audio) */}
+      {/* Main Input — home variant with AgentBar slot */}
       <Box style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "800px", marginBottom: "20px" }}>
         <OpalInput
           value={inputValue}
           onChange={setInputValue}
-          onSend={(content) => sendMessage(content ?? inputValue)}
+          onSend={handleSendMessage}
           disabled={false}
           isLoading={isLoading}
           error={error}
           variant="home"
+          agentBar={agentBarElement}
+          mentionableAgents={sortedAgents}
+          onMentionSelect={handleSelectAgent}
         />
       </Box>
 

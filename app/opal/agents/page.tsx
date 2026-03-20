@@ -31,7 +31,7 @@ const agents = [
     {
         id: "email-campaign",
         icon: <IconAgent />,
-        emoji: "📧",
+        emoji: "✍️",
         name: "Write an email campaign",
         handle: "@email_gen_agent",
         tag: "New",
