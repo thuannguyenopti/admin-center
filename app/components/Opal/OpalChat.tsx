@@ -20,12 +20,14 @@ type OpalChatProps = {
   onExpandSession?: (sessionStartId: string) => void;
   opalDisclosureIds?: Set<string>;
   opalClosedIds?: Set<string>;
+  collapsingOpalEndId?: string | null;
+  highlightedOpalEndId?: string | null;
   onOpenOpalRange?: (agentEndId: string) => void;
   onCloseOpalRange?: (agentEndId: string) => void;
   activeAgentCtx?: { emoji: string; name: string } | null;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, onOpenOpalRange, onCloseOpalRange, activeAgentCtx }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   let opalContext;
   try {
@@ -84,8 +86,11 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
           // Collect the Opal range messages to render inside DisclosureContent
           const opalRangeMessages = messages.slice(i + 1, nextAgentStartIdx);
           collapsedOpalAfter.set(i, { agentEndId: msg.id, agentName: msg.agentName ?? '', opalRangeMessages });
-          for (let j = i + 1; j < nextAgentStartIdx; j++) {
-            skipSet.add(j);
+          // Keep messages visible in the DOM while they're animating out
+          if (msg.id !== collapsingOpalEndId) {
+            for (let j = i + 1; j < nextAgentStartIdx; j++) {
+              skipSet.add(j);
+            }
           }
         }
       });
@@ -135,7 +140,27 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
       const result = { message: msg, skip: false, collapsed: undefined, collapsedOpal: undefined, agentContext: resolvedCtx ? { ...resolvedCtx } : null, showOpalHeader };
       return result;
     });
-  }, [messages, collapsedSessionIds, opalDisclosureIds, activeAgentCtx]);
+  }, [messages, collapsedSessionIds, opalDisclosureIds, collapsingOpalEndId, activeAgentCtx]);
+
+  // Map of messageId → stagger order for tidy-up animation
+  const collapsingOrder = useMemo(() => {
+    const order = new Map<string, number>();
+    if (!collapsingOpalEndId) return order;
+    let startIdx = -1;
+    for (let i = 0; i < messages.length; i++) {
+      if (messages[i].role === 'event' && messages[i].eventType === 'agent-end' && messages[i].id === collapsingOpalEndId) {
+        startIdx = i + 1;
+        break;
+      }
+    }
+    if (startIdx === -1) return order;
+    let rank = 0;
+    for (let i = startIdx; i < messages.length; i++) {
+      if (messages[i].role === 'event' && messages[i].eventType === 'agent-start') break;
+      order.set(messages[i].id, rank++);
+    }
+    return order;
+  }, [collapsingOpalEndId, messages]);
 
   const hasMessages = messages.length > 0;
 
@@ -210,8 +235,29 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 </button>
               );
             }
+            const tidyRank = collapsingOrder.get(message.id);
+            const isTidying = tidyRank !== undefined;
+            const totalTidying = collapsingOrder.size;
+            // posFromBottom: 0 = bottommost message, N-1 = topmost — bottom animates first
+            const posFromBottom = isTidying ? (totalTidying - 1 - (tidyRank as number)) : 0;
+            const isSlow = posFromBottom < 3;
+            // 500ms head-start so disclosure slide-in is visible before messages begin moving
+            // First 3 from bottom: 500ms apart (500, 1000, 1500ms); rest: 180ms apart starting at 1700ms
+            const BASE_DELAY = 500;
+            const staggerDelay = isTidying
+              ? BASE_DELAY + (posFromBottom < 3
+                ? posFromBottom * 500
+                : 1200 + (posFromBottom - 3) * 180)
+              : 0;
             return (
-              <Box key={message.id} display="flex" flexDirection="column" gap="8">
+              <Box
+                key={message.id}
+                display="flex"
+                flexDirection="column"
+                gap="8"
+                className={isTidying ? (isSlow ? 'opal-pull-slow' : 'opal-pull-fast') : undefined}
+                style={isTidying ? { animationDelay: `${staggerDelay}ms` } : undefined}
+              >
                 <OpalMessage
                   message={message}
                   agentContext={agentContext}
@@ -222,6 +268,10 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 {collapsedOpal && (
                   <Disclosure
                     my="16"
+                    className={[
+                      'opal-disclosure-collect',
+                      highlightedOpalEndId === collapsedOpal.agentEndId ? 'opal-disclosure-highlight' : '',
+                    ].filter(Boolean).join(' ')}
                     open={!opalClosedIds?.has(collapsedOpal.agentEndId)}
                     onOpenChange={(open) => {
                       if (open) onOpenOpalRange?.(collapsedOpal.agentEndId);
@@ -235,7 +285,7 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                       </Box>
                     </DisclosureTrigger>
                     <DisclosureContent>
-                      <Box display="flex" flexDirection="column" gap="16" pt="8">
+                      <Box display="flex" flexDirection="column" gap="16" pt="8" style={{ paddingLeft: 24 }}>
                         <Alert intent="neutral">
                           {collapsedOpal.agentName} is not aware of this conversation with Opal.
                         </Alert>

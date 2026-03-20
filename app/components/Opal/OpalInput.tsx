@@ -374,8 +374,11 @@ export function OpalInput({
               onMouseEnter={() => setFocusedAgentIndex(index)}
             >
               {agent.emoji && <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>}
-              <Box display="flex" flexDirection="column">
-                <Text fontSize="sm" fontWeight="600" color="fg.default">{agent.name}</Text>
+              <Box display="flex" flexDirection="column" flex="1">
+                <Box display="flex" alignItems="center" gap="8">
+                  <Text fontSize="sm" fontWeight="600" color="fg.default">{agent.name}</Text>
+                  <Text fontSize="xs" color="fg.link.visited">{agent.handle}</Text>
+                </Box>
                 {agent.subtitle && <Text fontSize="xs" color="fg.tertiary">{agent.subtitle}</Text>}
               </Box>
             </Box>
