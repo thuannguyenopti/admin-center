@@ -1,6 +1,6 @@
 "use client";
 
-import { Box } from "@optiaxiom/react";
+import { Alert, Box, Disclosure, DisclosureContent, DisclosureTrigger } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { OpalMessage } from "./OpalMessage";
 import { OpalSuggestions } from "./OpalSuggestions";
@@ -18,9 +18,14 @@ type OpalChatProps = {
   variant?: 'assistant' | 'home';
   collapsedSessionIds?: Set<string>;
   onExpandSession?: (sessionStartId: string) => void;
+  opalDisclosureIds?: Set<string>;
+  opalClosedIds?: Set<string>;
+  onOpenOpalRange?: (agentEndId: string) => void;
+  onCloseOpalRange?: (agentEndId: string) => void;
+  activeAgentCtx?: { emoji: string; name: string } | null;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, onOpenOpalRange, onCloseOpalRange, activeAgentCtx }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   let opalContext;
   try {
@@ -44,7 +49,9 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
   const augmented = useMemo(() => {
     const skipSet = new Set<number>();
     const collapsedAtIndex = new Map<number, { emoji: string; name: string; startId: string }>();
+    const collapsedOpalAfter = new Map<number, { agentEndId: string; agentName: string; opalRangeMessages: ChatMessage[] }>(); // agent-end idx → Opal disclosure
 
+    // Agent session collapses
     if (collapsedSessionIds?.size) {
       messages.forEach((msg, i) => {
         if (msg.role === 'event' && msg.eventType === 'agent-start' && collapsedSessionIds.has(msg.id)) {
@@ -63,14 +70,36 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
       });
     }
 
+    // Opal conversation disclosures (between agent-end and next agent-start)
+    if (opalDisclosureIds?.size) {
+      messages.forEach((msg, i) => {
+        if (msg.role === 'event' && msg.eventType === 'agent-end' && opalDisclosureIds.has(msg.id)) {
+          let nextAgentStartIdx = messages.length;
+          for (let j = i + 1; j < messages.length; j++) {
+            if (messages[j].role === 'event' && messages[j].eventType === 'agent-start') {
+              nextAgentStartIdx = j;
+              break;
+            }
+          }
+          // Collect the Opal range messages to render inside DisclosureContent
+          const opalRangeMessages = messages.slice(i + 1, nextAgentStartIdx);
+          collapsedOpalAfter.set(i, { agentEndId: msg.id, agentName: msg.agentName ?? '', opalRangeMessages });
+          for (let j = i + 1; j < nextAgentStartIdx; j++) {
+            skipSet.add(j);
+          }
+        }
+      });
+    }
+
     let agentCtx: { emoji: string; name: string } | null = null;
     let nextAssistantShowsOpal = false;
+    let seenAgentEnd = false; // prevent activeAgentCtx fallback from leaking into Opal messages
 
     return messages.map((msg, i) => {
       if (collapsedAtIndex.has(i)) {
         agentCtx = null;
         nextAssistantShowsOpal = true;
-        return { message: msg, skip: false, collapsed: collapsedAtIndex.get(i), agentContext: null, showOpalHeader: false };
+        return { message: msg, skip: false, collapsed: collapsedAtIndex.get(i), collapsedOpal: undefined, agentContext: null, showOpalHeader: false };
       }
 
       if (skipSet.has(i)) {
@@ -78,18 +107,21 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
           agentCtx = null;
           nextAssistantShowsOpal = true;
         }
-        return { message: msg, skip: true, collapsed: undefined, agentContext: null, showOpalHeader: false };
+        return { message: msg, skip: true, collapsed: undefined, collapsedOpal: undefined, agentContext: null, showOpalHeader: false };
       }
 
       if (msg.role === 'event') {
         if (msg.eventType === 'agent-start') {
           agentCtx = { emoji: msg.agentEmoji!, name: msg.agentName! };
           nextAssistantShowsOpal = false;
+          seenAgentEnd = false;
         } else if (msg.eventType === 'agent-end') {
           agentCtx = null;
           nextAssistantShowsOpal = true;
+          seenAgentEnd = true;
         }
-        return { message: msg, skip: false, collapsed: undefined, agentContext: null, showOpalHeader: false };
+        const opalCollapse = collapsedOpalAfter.get(i);
+        return { message: msg, skip: false, collapsed: undefined, collapsedOpal: opalCollapse, agentContext: null, showOpalHeader: false };
       }
 
       let showOpalHeader = false;
@@ -98,10 +130,12 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
         showOpalHeader = true;
       }
 
-      const result = { message: msg, skip: false, collapsed: undefined, agentContext: agentCtx ? { ...agentCtx } : null, showOpalHeader };
+      // Fall back to activeAgentCtx only if we haven't seen an agent-end (i.e. still in agent session with no event yet)
+      const resolvedCtx = agentCtx ?? (!seenAgentEnd ? (activeAgentCtx || null) : null);
+      const result = { message: msg, skip: false, collapsed: undefined, collapsedOpal: undefined, agentContext: resolvedCtx ? { ...resolvedCtx } : null, showOpalHeader };
       return result;
     });
-  }, [messages, collapsedSessionIds]);
+  }, [messages, collapsedSessionIds, opalDisclosureIds, activeAgentCtx]);
 
   const hasMessages = messages.length > 0;
 
@@ -147,7 +181,7 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
             width: '100%',
           }}
         >
-          {augmented.map(({ message, skip, collapsed, agentContext, showOpalHeader }) => {
+          {augmented.map(({ message, skip, collapsed, collapsedOpal, agentContext, showOpalHeader }) => {
             if (skip) return null;
             if (collapsed) {
               return (
@@ -177,14 +211,48 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
               );
             }
             return (
-              <OpalMessage
-                key={message.id}
-                message={message}
-                agentContext={agentContext}
-                showOpalHeader={showOpalHeader}
-                onRegenerate={onRegenerate}
-                onVersionChange={onVersionChange}
-              />
+              <Box key={message.id} display="flex" flexDirection="column" gap="8">
+                <OpalMessage
+                  message={message}
+                  agentContext={agentContext}
+                  showOpalHeader={showOpalHeader}
+                  onRegenerate={onRegenerate}
+                  onVersionChange={onVersionChange}
+                />
+                {collapsedOpal && (
+                  <Disclosure
+                    my="16"
+                    open={!opalClosedIds?.has(collapsedOpal.agentEndId)}
+                    onOpenChange={(open) => {
+                      if (open) onOpenOpalRange?.(collapsedOpal.agentEndId);
+                      else onCloseOpalRange?.(collapsedOpal.agentEndId);
+                    }}
+                  >
+                    <DisclosureTrigger>
+                      <Box display="flex" alignItems="center" gap="8">
+                        <img src="/opal.png" style={{ width: 16, height: 16, borderRadius: 4 }} alt="" />
+                        <Text color="fg.secondary" fontSize="md">Conversation with Opal</Text>
+                      </Box>
+                    </DisclosureTrigger>
+                    <DisclosureContent>
+                      <Box display="flex" flexDirection="column" gap="16" pt="8">
+                        <Alert intent="neutral">
+                          {collapsedOpal.agentName} is not aware of this conversation with Opal.
+                        </Alert>
+                        {collapsedOpal.opalRangeMessages.map((m) => (
+                          <OpalMessage
+                            key={m.id}
+                            message={m}
+                            showOpalHeader={m.role === 'assistant'}
+                            onRegenerate={onRegenerate}
+                            onVersionChange={onVersionChange}
+                          />
+                        ))}
+                      </Box>
+                    </DisclosureContent>
+                  </Disclosure>
+                )}
+              </Box>
             );
           })}
         </Box>

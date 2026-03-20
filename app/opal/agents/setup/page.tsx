@@ -83,7 +83,7 @@ import { TestRunTray } from "./components/TestRunTray";
 
 // Emoji lookup for agent avatars
 const AGENT_EMOJIS: Record<string, string> = {
-    "email-campaign": "📧",
+    "email-campaign": "✍️",
     "optimize-geo": "🌐",
     "analyze-competitors": "📊",
     "ab-experiment": "⚗️",
