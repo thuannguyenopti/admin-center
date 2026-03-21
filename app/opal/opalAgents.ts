@@ -12,3 +12,15 @@ export const FEATURED_AGENTS: FeaturedAgent[] = [
   { id: "ad_variations_agent", emoji: "⚡", name: "Ad variations", handle: "@ad_variations_agent", subtitle: "Generate ad copy variations for your campaigns" },
   { id: "brief_to_campaign", emoji: "🚀", name: "Brief to campaign", handle: "@brief_to_campaign", subtitle: "Turn a brief or case study into a full campaign" },
 ];
+
+/** Starter prompt templates shown in the input after an agent is activated. */
+export const AGENT_PROMPTS: Record<string, string> = {
+  email_gen_agent:       "Write an email campaign for [product or feature] targeting [audience] with the goal of [campaign goal]",
+  ab_test:               "Set up an A/B test for [page or element] to test [hypothesis], measuring [success metric]",
+  competitors_are_dust:  "Analyze competitors for [your product or market] focusing on [positioning / pricing / features]",
+  campaign_agent:        "Plan a marketing campaign for [product or service] targeting [audience], launching [date]",
+  audience_agent:        "Identify and segment audiences for [product or service] based on [behavioral / demographic criteria]",
+  social_media_pro:      "Create [platform] content for [product or topic] targeting [audience] for [week / campaign]",
+  ad_variations_agent:   "Generate ad copy variations for [product or service] on [platform] with the goal of [objective]",
+  brief_to_campaign:     "Turn this brief into a full campaign: [paste your brief or case study here]",
+};
