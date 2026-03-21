@@ -1,7 +1,18 @@
 "use client";
 
 import React from "react";
-import { Box, Button, Switch } from "@optiaxiom/react";
+import {
+  Box,
+  Button,
+  Switch,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  Listbox,
+  ListboxGroup,
+  ListboxItem,
+  ListboxLabel,
+} from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
 import {
@@ -55,7 +66,6 @@ export function OpalInput({
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [contextChip, setContextChip] = useState<string | null>(null);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -336,60 +346,6 @@ export function OpalInput({
         margin: variant === 'home' ? '0 auto' : '0',
       }}
     >
-      {/* Agent Dropdown */}
-      {showAgentDropdown && (
-        <Box
-          ref={dropdownRef}
-          bg="bg.default"
-          border="1"
-          borderColor="border.default"
-          rounded="lg"
-          style={{
-            position: 'absolute',
-            bottom: '100%',
-            left: '16px',
-            right: '16px',
-            boxShadow: 'var(--ax-shadows-md)',
-            zIndex: 100,
-            marginBottom: '8px',
-            maxHeight: '240px',
-            overflowY: 'auto',
-          }}
-        >
-          <Box px="8" pt="8" pb="4">
-            <Text fontSize="sm" color="fg.tertiary">Recently used agents</Text>
-          </Box>
-          {filteredAgents.map((agent, index) => (
-            <Box
-              key={agent.id}
-              px="8"
-              py="8"
-              display="flex"
-              flexDirection="row"
-              gap="8"
-              alignItems="center"
-              rounded="sm"
-              style={{
-                cursor: 'pointer',
-                backgroundColor: index === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : 'transparent',
-                margin: '0 4px',
-              }}
-              onClick={() => handleSelectAgent(agent)}
-              onMouseEnter={() => setFocusedAgentIndex(index)}
-            >
-              {agent.emoji && <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>}
-              <Box display="flex" flexDirection="column" flex="1">
-                <Box display="flex" alignItems="center" gap="8">
-                  <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
-                  <Text fontSize="sm" color="fg.link.visited">{agent.handle}</Text>
-                </Box>
-                {agent.subtitle && <Text fontSize="sm" color="fg.tertiary">{agent.subtitle}</Text>}
-              </Box>
-            </Box>
-          ))}
-          <Box pb="4" />
-        </Box>
-      )}
 
       {error && (
         <Text
@@ -416,26 +372,31 @@ export function OpalInput({
       )}
 
       {/* Input Container — always 8px radius all corners, sits on top */}
-      <Box
-        ref={containerRef}
-        display="flex"
-        flexDirection="column"
-        px="12"
-        border="1"
-        style={{
-          backgroundColor: 'var(--opal-bg-input)',
-          borderColor: borderColor,
-          borderRadius: '8px',
-          boxShadow: variant === 'home' ? 'var(--shadow-sm)' : 'none',
-          transition: 'all 0.2s ease',
-          minHeight: '88px',
-          boxSizing: 'border-box',
-          paddingTop: '8px',
-          paddingBottom: '8px',
-          position: 'relative',
-          zIndex: 1,
-        }}
+      <Popover
+        open={showAgentDropdown}
+        onOpenChange={(open) => { if (!open) setShowAgentDropdown(false); }}
       >
+        <PopoverAnchor asChild>
+        <Box
+          ref={containerRef}
+          display="flex"
+          flexDirection="column"
+          px="12"
+          border="1"
+          style={{
+            backgroundColor: 'var(--opal-bg-input)',
+            borderColor: borderColor,
+            borderRadius: '8px',
+            boxShadow: variant === 'home' ? 'var(--shadow-sm)' : 'none',
+            transition: 'all 0.2s ease',
+            minHeight: '88px',
+            boxSizing: 'border-box',
+            paddingTop: '8px',
+            paddingBottom: '8px',
+            position: 'relative',
+            zIndex: 1,
+          }}
+        >
         {/* Active Context Chips */}
         {contextChip && (
           <Box display="flex" gap="8" mb="8" flexWrap="wrap">
@@ -575,7 +536,51 @@ export function OpalInput({
             />
           </Box>
         </Box>
-      </Box>
+        </Box>{/* end containerRef Box */}
+        </PopoverAnchor>
+        <PopoverContent
+          side="top"
+          sideOffset={8}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          style={{
+            width: 'var(--radix-popover-trigger-width)',
+            padding: 0,
+            maxHeight: '280px',
+            overflowY: 'auto',
+          }}
+        >
+          <Listbox>
+            <ListboxGroup>
+              <ListboxLabel px="12" pt="8" pb="4">
+                Recently used agents
+              </ListboxLabel>
+              {filteredAgents.map((agent, index) => (
+                <ListboxItem
+                  key={agent.id}
+                  addonBefore={agent.emoji
+                    ? <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
+                    : undefined}
+                  description={agent.subtitle}
+                  onClick={() => handleSelectAgent(agent)}
+                  onMouseEnter={() => setFocusedAgentIndex(index)}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: index === focusedAgentIndex
+                      ? 'var(--ax-colors-bg-secondary)'
+                      : undefined,
+                  }}
+                >
+                  <Box display="flex" alignItems="center" gap="8">
+                    <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
+                    <Text fontSize="sm" color="fg.link.visited">{agent.handle}</Text>
+                  </Box>
+                </ListboxItem>
+              ))}
+            </ListboxGroup>
+          </Listbox>
+        </PopoverContent>
+      </Popover>
 
       {/* Footer Area: Disclaimer + Testing Toggle */}
       <Box
