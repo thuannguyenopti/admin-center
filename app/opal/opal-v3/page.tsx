@@ -716,12 +716,12 @@ export default function OpalPage() {
               onClick={() => {
                 const featured = FEATURED_AGENTS.find((f) => f.handle === selectedAgent.handle) ?? {
                   id: selectedAgent.handle.replace(/^@/, ""),
-                  emoji: selectedAgent.emoji,
                   name: selectedAgent.title,
                   handle: selectedAgent.handle,
                   subtitle: selectedAgent.description,
                 };
-                handleSelectAgent(featured);
+                // Always use the emoji from the agent directory card so AgentBar matches
+                handleSelectAgent({ ...featured, emoji: selectedAgent.emoji });
                 setSelectedAgent(null);
               }}
             >
