@@ -44,7 +44,12 @@ export default function OpalPage() {
     highlightedOpalEndId,
     handleOpenOpalRange,
     handleCloseOpalRange,
-  } = useAgentChatMode({ messages, inputValue, setInputValue, sendMessage, addMessage });
+  } = useAgentChatMode({
+    messages, inputValue, setInputValue, sendMessage, addMessage,
+    onCollapseComplete: () => {
+      (document.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
+    },
+  });
 
   const hasMessages = messages.length > 0;
 
