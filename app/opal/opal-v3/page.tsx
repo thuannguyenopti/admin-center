@@ -5,7 +5,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch, IconBrandFigma } from "@tabler/icons-react";
 import { IconAgent } from "@optimizely/axiom-icons";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -302,6 +302,16 @@ export default function OpalPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pageScrollRef = useRef<HTMLDivElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
+
+  // Wraps every agent-selection path: scroll to top + focus the chat input
+  const handleAgentActivated = useCallback((agent: Parameters<typeof handleSelectAgent>[0]) => {
+    handleSelectAgent(agent);
+    pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => {
+      inputContainerRef.current?.querySelector("textarea")?.focus();
+    }, 350);
+  }, [handleSelectAgent]);
 
   const hasMessages = messages.length > 0;
 
@@ -392,7 +402,7 @@ export default function OpalPage() {
                 size="md"
                 icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
                 style={{ borderRadius: "9999px" }}
-                onClick={() => { handleSelectAgent(agent); setShowAgents(false); setShowAllAgents(false); }}
+                onClick={() => { handleAgentActivated(agent); setShowAgents(false); setShowAllAgents(false); }}
               >
                 {agent.name}
               </Button>
@@ -410,18 +420,20 @@ export default function OpalPage() {
           </Box>
         }
         inputSlot={
-          <OpalInput
-            value={inputValue}
-            onChange={setInputValue}
-            onSend={handleSendMessage}
-            disabled={false}
-            isLoading={isLoading}
-            error={error}
-            variant="home"
-            agentBar={agentBarElement}
-            mentionableAgents={sortedAgents}
-            onMentionSelect={handleSelectAgent}
-          />
+          <div ref={inputContainerRef}>
+            <OpalInput
+              value={inputValue}
+              onChange={setInputValue}
+              onSend={handleSendMessage}
+              disabled={false}
+              isLoading={isLoading}
+              error={error}
+              variant="home"
+              agentBar={agentBarElement}
+              mentionableAgents={sortedAgents}
+              onMentionSelect={handleAgentActivated}
+            />
+          </div>
         }
         onSuggestionClick={handleSuggestionClick}
       />
@@ -722,10 +734,8 @@ export default function OpalPage() {
                   subtitle: selectedAgent.description,
                 };
                 // Always use the emoji from the agent directory card so AgentBar matches
-                handleSelectAgent({ ...featured, emoji: selectedAgent.emoji });
+                handleAgentActivated({ ...featured, emoji: selectedAgent.emoji });
                 setSelectedAgent(null);
-                // Scroll back up to the chat input
-                pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
               Run
