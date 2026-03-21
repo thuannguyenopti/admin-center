@@ -70,6 +70,16 @@ export function OpalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Always track the input container's current width so the dropdown matches exactly
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(() => setDropdownWidth(el.offsetWidth));
+    obs.observe(el);
+    setDropdownWidth(el.offsetWidth); // initial read
+    return () => obs.disconnect();
+  }, []);
+
   // Auto-focus textarea when value is set externally (e.g. suggestion/card click)
   const prevValueRef = useRef('');
   useEffect(() => {
@@ -128,7 +138,6 @@ export function OpalInput({
 
   useEffect(() => {
     if (value.startsWith('@') && mentionableAgents.length > 0) {
-      setDropdownWidth(containerRef.current?.offsetWidth);
       setShowAgentDropdown(true);
     } else {
       setShowAgentDropdown(false);
@@ -551,6 +560,8 @@ export function OpalInput({
           onInteractOutside={(e) => e.preventDefault()}
           style={{
             width: dropdownWidth ? `${dropdownWidth}px` : undefined,
+            minWidth: dropdownWidth ? `${dropdownWidth}px` : undefined,
+            maxWidth: dropdownWidth ? `${dropdownWidth}px` : undefined,
             padding: 0,
             maxHeight: '280px',
             overflowY: 'auto',
