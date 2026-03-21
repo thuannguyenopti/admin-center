@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import React from "react";
 import { AgentBar } from "@/app/components/Opal/AgentBar";
-import { FEATURED_AGENTS, type FeaturedAgent } from "@/app/opal/opalAgents";
+import { FEATURED_AGENTS, AGENT_PROMPTS, type FeaturedAgent } from "@/app/opal/opalAgents";
 import type { MentionableAgent } from "@/app/components/Opal/OpalInput";
 import type { ChatMessage } from "@/app/hooks/useOpalState";
 
@@ -54,8 +54,11 @@ export function useAgentChatMode({
         setAgentSession({ agent: featuredAgent, state: "default" });
       }
       setRecentAgentIds((prev) => [agent.id, ...prev.filter((id) => id !== agent.id)]);
+      // Pre-fill input with a starter prompt template for this agent
+      const prompt = AGENT_PROMPTS[featuredAgent.id];
+      if (prompt) setInputValue(prompt);
     },
-    [lastEndedSession]
+    [lastEndedSession, setInputValue]
   );
 
   const handleSendMessage = useCallback(
