@@ -93,6 +93,16 @@ export function OpalInput({
     }
   }, [value]);
 
+  // Auto-focus textarea when loading finishes (Opal/agent response complete)
+  const prevIsLoadingRef = useRef(false);
+  useEffect(() => {
+    const wasLoading = prevIsLoadingRef.current;
+    prevIsLoadingRef.current = !!isLoading;
+    if (wasLoading && !isLoading) {
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    }
+  }, [isLoading]);
+
   // Auto-resize textarea based on content — useLayoutEffect fires synchronously
   // before paint, so heights are always correct (including reset after send)
   useLayoutEffect(() => {
