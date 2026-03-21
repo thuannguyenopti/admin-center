@@ -1,13 +1,17 @@
 "use client";
 
-import { Box, Heading, Dialog, DialogContent, DialogBody, DialogFooter } from "@optiaxiom/react";
+import { Box, Dialog, DialogContent, DialogBody, DialogFooter } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch, IconBrandFigma } from "@tabler/icons-react";
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { IconAgent } from "@optimizely/axiom-icons";
+import React, { useState, useRef } from "react";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
+import { OpalChatView } from "@/app/components/Opal/OpalChatView";
 import { useOpalContext } from "@/app/context/OpalContext";
+import { OpalLanding } from "@/app/components/Opal/OpalLanding";
+import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
+import { FEATURED_AGENTS } from "@/app/opal/opalAgents";
 
 const LIBRARY_TABS = ["Recommended for you", "Featured", "Brainstorm & Plan", "Create", "Test & Experiment", "Optimize", "Search"];
 
@@ -177,107 +181,6 @@ const AGENTS = [
   },
 ];
 
-const QUICK_ACTIONS = [
-  {
-    emoji: "💥",
-    label: "Brainstorm",
-    suggestions: [
-      "Brainstorm campaign ideas for Q2 with @campaign_agent",
-      "Generate content angles for our product launch",
-      "Suggest A/B test variations for our homepage with @ab_test",
-      "Identify new audience segments to target with @audience_agent",
-      "Brainstorm ways to improve email open rates",
-    ],
-  },
-  {
-    emoji: "✏️",
-    label: "Create",
-    suggestions: [
-      "Write an email campaign for our new feature with @email_gen_agent",
-      "Draft a landing page for our spring sale",
-      "Create social media posts for this week with @social_media_pro",
-      "Generate ad copy variations for Google Ads with @ad_variations_agent",
-      "Write a product description for our homepage",
-    ],
-  },
-  {
-    emoji: "♻️",
-    label: "Repurpose",
-    suggestions: [
-      "Repurpose our blog post into social content with @social_media_pro",
-      "Turn this webinar transcript into a blog post",
-      "Convert our case study into an email campaign with @brief_to_campaign",
-      "Adapt our video script for LinkedIn",
-      "Reformat our whitepaper into a slide deck",
-    ],
-  },
-  {
-    emoji: "🧪",
-    label: "Test",
-    suggestions: [
-      "Set up an A/B test for our hero headline with @ab_test",
-      "Plan a multivariate test for our CTA button with @ab_test",
-      "Design an experiment for our checkout flow",
-      "Create a hypothesis for our email subject line",
-      "Define success metrics for our homepage test",
-    ],
-  },
-  {
-    emoji: "🔍",
-    label: "Optimize",
-    suggestions: [
-      "Optimize our homepage performance this month",
-      "Review our email open and click rates with @email_gen_agent",
-      "Identify drop-off points in our signup funnel with @audience_agent",
-      "Summarize results from our last campaign with @campaign_agent",
-      "Compare performance across audience segments",
-    ],
-  },
-  {
-    emoji: "🧠",
-    label: "Learn",
-    suggestions: [
-      "Explain what CMAB is and how it works",
-      "How do I set up a statistically valid A/B test?",
-      "What is GEO optimization?",
-      "How does multivariate testing differ from A/B?",
-      "What metrics should I track for content performance?",
-    ],
-  },
-];
-
-function renderWithMentions(text: string) {
-  const parts = text.split(/(@\w+)/g);
-  return (
-    <>
-      {parts.map((part, i) =>
-        /^@\w+$/.test(part) ? (
-          <span key={i} style={{
-            display: "inline-flex",
-            alignItems: "center",
-            background: "#F5F3FF",
-            border: "1px solid #7c3aed",
-            color: "#7c3aed",
-            borderRadius: "9999px",
-            padding: "2px 8px",
-            fontSize: "12px",
-            fontWeight: 500,
-            letterSpacing: "-0.1px",
-            margin: "0 4px",
-            verticalAlign: "middle",
-            lineHeight: "20px",
-            fontFamily: "Inter, sans-serif",
-          }}>
-            {part}
-          </span>
-        ) : (
-          part
-        )
-      )}
-    </>
-  );
-}
-
 type Agent = typeof AGENTS[number];
 
 function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => void }) {
@@ -358,271 +261,171 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
 }
 
 export default function OpalPage() {
-  const router = useRouter();
-  const { chatState } = useOpalContext();
-  const { inputValue, setInputValue, sendMessage } = chatState;
-  const [hoveredPill, setHoveredPill] = useState<string | null>(null);
-  const [activePill, setActivePill] = useState<string | null>(null);
-  const [focusedChipIndex, setFocusedChipIndex] = useState(-1);
-  const [focusedSuggestionIndex, setFocusedSuggestionIndex] = useState(0);
+  const opalContext = useOpalContext();
+  const {
+    messages,
+    inputValue,
+    isLoading,
+    error,
+    setInputValue,
+    sendMessage,
+    regenerate,
+    switchVersion,
+    addMessage,
+  } = opalContext.chatState;
+
+  const {
+    agentSession,
+    setAgentSession,
+    agentBarElement,
+    sortedAgents,
+    handleSelectAgent,
+    handleSendMessage,
+    handleSuggestionClick,
+    showAgents,
+    setShowAgents,
+    showAllAgents,
+    setShowAllAgents,
+    collapsedSessionIds,
+    handleExpandSession,
+    opalDisclosureIds,
+    opalClosedIds,
+    collapsingOpalEndId,
+    highlightedOpalEndId,
+    handleOpenOpalRange,
+    handleCloseOpalRange,
+  } = useAgentChatMode({ messages, inputValue, setInputValue, sendMessage, addMessage });
+
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [activeTab, setActiveTab] = useState("Recommended for you");
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const suggestionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const activeAction = QUICK_ACTIONS.find((a) => a.label === activePill);
+  const hasMessages = messages.length > 0;
 
-  // Reset focused suggestion index when dropdown opens
-  useEffect(() => {
-    if (activeAction) setFocusedSuggestionIndex(0);
-  }, [activePill]);
-
-  // Scroll focused suggestion into view
-  useEffect(() => {
-    suggestionRefs.current[focusedSuggestionIndex]?.scrollIntoView({ block: "nearest" });
-  }, [focusedSuggestionIndex]);
-
-  const handleSuggestionClick = useCallback((suggestion: string) => {
-    setInputValue(suggestion);
-    setActivePill(null);
-    // OpalInput auto-focuses when value changes from empty to non-empty
-  }, []);
-
-  // ↑/↓/Enter/Escape keyboard nav within suggestion dropdown
-  useEffect(() => {
-    if (!activeAction) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setFocusedSuggestionIndex((prev) => (prev + 1) % activeAction.suggestions.length);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setFocusedSuggestionIndex((prev) => (prev - 1 + activeAction.suggestions.length) % activeAction.suggestions.length);
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        handleSuggestionClick(activeAction.suggestions[focusedSuggestionIndex]);
-      } else if (e.key === "Escape") {
-        setActivePill(null);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [activeAction, focusedSuggestionIndex, handleSuggestionClick]);
-
-  // ←/→ keyboard nav between chips (skip when typing in textarea/input)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === "TEXTAREA" || target.tagName === "INPUT") return;
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        const next = focusedChipIndex < QUICK_ACTIONS.length - 1 ? focusedChipIndex + 1 : 0;
-        setFocusedChipIndex(next);
-        setActivePill(QUICK_ACTIONS[next].label);
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        const prev = focusedChipIndex > 0 ? focusedChipIndex - 1 : QUICK_ACTIONS.length - 1;
-        setFocusedChipIndex(prev);
-        setActivePill(QUICK_ACTIONS[prev].label);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [focusedChipIndex]);
-
-  const handlePillClick = (label: string) => {
-    const idx = QUICK_ACTIONS.findIndex((a) => a.label === label);
-    setFocusedChipIndex(idx);
-    setActivePill(activePill === label ? null : label);
-  };
+  // Once a conversation starts, show the full chat view
+  if (hasMessages) {
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        h="full"
+        w="full"
+        style={{ backgroundColor: 'var(--opal-bg-page)', overflow: 'hidden', minHeight: 0 }}
+      >
+        <OpalChatView
+          variant="home"
+          messages={messages}
+          inputValue={inputValue}
+          isLoading={isLoading}
+          error={error}
+          setInputValue={setInputValue}
+          onSend={handleSendMessage}
+          onSuggestionClick={sendMessage}
+          onToggleHistory={opalContext.history.toggleHistory}
+          onNewChat={opalContext.history.createNewChat}
+          isHistoryVisible={opalContext.history.isHistoryVisible}
+          groupedHistory={opalContext.history.groupedHistory}
+          activeChat={opalContext.history.activeChat}
+          searchQuery={opalContext.history.searchQuery}
+          onSearchChange={opalContext.history.setSearchQuery}
+          onDeleteChat={opalContext.history.deleteChat}
+          onSelectChat={opalContext.history.selectChat}
+          onMessageEdit={() => {}}
+          onRegenerate={regenerate}
+          onMessageVersionChange={switchVersion}
+          agentBar={agentBarElement}
+          collapsedSessionIds={collapsedSessionIds}
+          onExpandSession={handleExpandSession}
+          opalDisclosureIds={opalDisclosureIds}
+          opalClosedIds={opalClosedIds}
+          collapsingOpalEndId={collapsingOpalEndId}
+          highlightedOpalEndId={highlightedOpalEndId}
+          onOpenOpalRange={handleOpenOpalRange}
+          onCloseOpalRange={handleCloseOpalRange}
+          mentionableAgents={sortedAgents}
+          onMentionSelect={handleSelectAgent}
+          activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      style={{ paddingTop: "120px", paddingBottom: "32px", position: "relative", overflow: "hidden" }}
-    >
-      {/* Radial gradient glow behind input */}
-      <Box
-        style={{
-          position: "absolute",
-          top: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "1400px",
-          height: "600px",
-          background: "radial-gradient(ellipse 40% 40% at 50% 42%, rgba(167, 139, 250, 0.12) 0%, rgba(167, 139, 250, 0.07) 30%, rgba(167, 139, 250, 0.02) 55%, transparent 70%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
+
+      {/* Shared landing: heading + OpalInput + chips + dropdown */}
+      <OpalLanding
+        topSlot={
+          <Box
+            style={{
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: "768px",
+              marginBottom: "16px",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              flexWrap: "wrap",
+              gap: "8px",
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              appearance="default-opal"
+              size="md"
+              onClick={() => { setShowAgents(!showAgents); setShowAllAgents(false); }}
+              icon={<IconAgent />}
+              style={{ borderRadius: "9999px" }}
+            >
+              View Agents
+            </Button>
+            {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
+              <Button
+                key={agent.handle}
+                appearance="default-opal"
+                size="md"
+                icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
+                style={{ borderRadius: "9999px" }}
+                onClick={() => { handleSelectAgent(agent); setShowAgents(false); setShowAllAgents(false); }}
+              >
+                {agent.name}
+              </Button>
+            ))}
+            {showAgents && !showAllAgents && FEATURED_AGENTS.length > 3 && (
+              <Button
+                appearance="default-opal"
+                size="md"
+                style={{ borderRadius: "9999px" }}
+                onClick={() => setShowAllAgents(true)}
+              >
+                More agents
+              </Button>
+            )}
+          </Box>
+        }
+        inputSlot={
+          <OpalInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSendMessage}
+            disabled={false}
+            isLoading={isLoading}
+            error={error}
+            variant="home"
+            agentBar={agentBarElement}
+            mentionableAgents={sortedAgents}
+            onMentionSelect={handleSelectAgent}
+          />
+        }
+        onSuggestionClick={handleSuggestionClick}
       />
 
-      {/* Heading */}
-      <Heading
-        level="2"
-        style={{
-          position: "relative",
-          zIndex: 1,
-          fontSize: "29px",
-          fontWeight: 500,
-          color: "var(--ax-colors-fg-default)",
-          letterSpacing: "-0.6px",
-          lineHeight: "40px",
-          marginBottom: "40px",
-          textAlign: "center",
-        }}
-      >
-        What are we working on today?
-      </Heading>
-
-      {/* Input — main OpalInput with home variant */}
-      <Box style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "800px", marginBottom: "20px" }}>
-        <OpalInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSend={(content) => {
-            sendMessage(content ?? inputValue);
-            router.push('/opal');
-          }}
-          disabled={false}
-          variant="home"
-        />
-      </Box>
-
-      {/* Quick action pills */}
-      <Box
-        style={{
-          position: "relative",
-          zIndex: 1,
-          display: "flex",
-          gap: "12px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          maxWidth: "800px",
-          marginBottom: activeAction ? "12px" : "0",
-        }}
-      >
-        {QUICK_ACTIONS.map((action) => {
-          const isActive = activePill === action.label;
-          const isHovered = hoveredPill === action.label;
-          return (
-            <Box
-              key={action.label}
-              onClick={() => handlePillClick(action.label)}
-              onMouseEnter={() => setHoveredPill(action.label)}
-              onMouseLeave={() => setHoveredPill(null)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 16px",
-                background: isActive
-                  ? "#F5F3FF"
-                  : isHovered
-                  ? "#F5F3FF"
-                  : "var(--ax-colors-bg-default)",
-                border: isActive || isHovered ? "1px solid #7c3aed" : "1px solid var(--ax-colors-border-default)",
-                outline: focusedChipIndex === QUICK_ACTIONS.findIndex((a) => a.label === action.label) && !isActive ? "2px solid #c4b5fd" : "none",
-                outlineOffset: "2px",
-                borderRadius: "9999px",
-                cursor: "pointer",
-                fontSize: "14px",
-                color: "var(--ax-colors-fg-default)",
-                fontFamily: "Inter, sans-serif",
-                fontWeight: 400,
-                letterSpacing: "-0.21px",
-                whiteSpace: "nowrap",
-                transition: "background 0.15s ease, border-color 0.15s ease",
-              }}
-            >
-              <span>{action.emoji}</span>
-              <Text
-                style={{
-                  fontSize: "14px",
-                  color: "var(--ax-colors-fg-default)",
-                  letterSpacing: "-0.21px",
-                  lineHeight: "1.6",
-                  margin: 0,
-                  fontWeight: 400,
-                }}
-              >
-                {action.label}
-              </Text>
-            </Box>
-          );
-        })}
-      </Box>
-
-      {/* Suggestion dropdown card */}
-      {activeAction && (
-
-        <Box
-          bg="bg.default"
-          border="1"
-          borderColor="border.tertiary"
-          rounded="lg"
-          style={{
-            position: "relative",
-            zIndex: 1,
-            width: "100%",
-            maxWidth: "800px",
-            overflow: "hidden",
-            boxShadow: "var(--ax-shadows-sm)",
-          }}
-        >
-          {/* Card header */}
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="space-between"
-            p="12"
-          >
-            <Box display="flex" alignItems="center" gap="8">
-              <Text color="fg.tertiary" fontWeight="500" fontSize="md">
-                {activeAction.label}
-              </Text>
-            </Box>
-            <Button
-              appearance="subtle"
-              size="sm"
-              icon={<IconX size={14} />}
-              aria-label="Close"
-              onClick={() => setActivePill(null)}
-            />
-          </Box>
-
-          {/* Suggestion rows */}
-          {activeAction.suggestions.map((suggestion, i) => (
-            <Box
-              key={i}
-              ref={(el) => { suggestionRefs.current[i] = el as HTMLDivElement | null; }}
-              onClick={() => handleSuggestionClick(suggestion)}
-              onMouseEnter={() => setFocusedSuggestionIndex(i)}
-              px="16"
-              py="12"
-              borderB={i < activeAction.suggestions.length - 1 ? "1" : "0"}
-              borderColor="border.tertiary"
-              style={{
-                cursor: "pointer",
-                transition: "background 0.1s ease",
-                background: i === focusedSuggestionIndex
-                  ? "var(--ax-colors-bg-secondary)"
-                  : "var(--ax-colors-bg-default)",
-              }}
-            >
-              <Text color="fg.default" fontSize="md">
-                {renderWithMentions(suggestion)}
-              </Text>
-            </Box>
-          ))}
-        </Box>
-      )}
-
-    </Box>{/* end top section */}
+    {/* Scrollable agent library section */}
 
     {/* Scrollable agent library section */}
     <Box
@@ -911,9 +714,15 @@ export default function OpalPage() {
             <Button
               appearance="primary"
               onClick={() => {
-                sendMessage(selectedAgent.title);
+                const featured = FEATURED_AGENTS.find((f) => f.handle === selectedAgent.handle) ?? {
+                  id: selectedAgent.handle.replace(/^@/, ""),
+                  emoji: selectedAgent.emoji,
+                  name: selectedAgent.title,
+                  handle: selectedAgent.handle,
+                  subtitle: selectedAgent.description,
+                };
+                handleSelectAgent(featured);
                 setSelectedAgent(null);
-                router.push('/opal');
               }}
             >
               Run
