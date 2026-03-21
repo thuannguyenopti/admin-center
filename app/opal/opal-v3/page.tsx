@@ -301,6 +301,7 @@ export default function OpalPage() {
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const pageScrollRef = useRef<HTMLDivElement>(null);
 
   const hasMessages = messages.length > 0;
 
@@ -354,7 +355,7 @@ export default function OpalPage() {
   }
 
   return (
-    <Box style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
+    <Box ref={pageScrollRef} style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
 
       {/* Shared landing: heading + OpalInput + chips + dropdown */}
       <OpalLanding
@@ -723,6 +724,8 @@ export default function OpalPage() {
                 // Always use the emoji from the agent directory card so AgentBar matches
                 handleSelectAgent({ ...featured, emoji: selectedAgent.emoji });
                 setSelectedAgent(null);
+                // Scroll back up to the chat input
+                pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
               }}
             >
               Run
