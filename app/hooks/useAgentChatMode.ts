@@ -15,6 +15,8 @@ interface AgentChatModeDeps {
   setInputValue: (v: string) => void;
   sendMessage: (content: string) => void;
   addMessage: (msg: Omit<ChatMessage, "id" | "timestamp">) => ChatMessage;
+  /** Called when the collapse animation fully completes (after "Yes" on resume). */
+  onCollapseComplete?: () => void;
 }
 
 export function useAgentChatMode({
@@ -23,6 +25,7 @@ export function useAgentChatMode({
   setInputValue,
   sendMessage,
   addMessage,
+  onCollapseComplete,
 }: AgentChatModeDeps) {
   const [showAgents, setShowAgents] = useState(false);
   const [showAllAgents, setShowAllAgents] = useState(false);
@@ -125,7 +128,10 @@ export function useAgentChatMode({
       setTimeout(() => {
         setCollapsingOpalEndId(null);
         setHighlightedOpalEndId(endId);
-        setTimeout(() => setHighlightedOpalEndId(null), 550);
+        setTimeout(() => {
+          setHighlightedOpalEndId(null);
+          onCollapseComplete?.();
+        }, 550);
       }, lastAnimEnd + 120);
     }
     const startEvent = addMessage({
