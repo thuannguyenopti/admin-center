@@ -277,6 +277,7 @@ export default function OpalPage() {
   const {
     agentSession,
     setAgentSession,
+    lastEndedSession,
     agentBarElement,
     sortedAgents,
     handleSelectAgent,
@@ -409,8 +410,12 @@ export default function OpalPage() {
                 style={{ borderRadius: "9999px" }}
                 onClick={() => {
                   handleAgentActivated(agent);
-                  const prompt = AGENT_PROMPTS[agent.id];
-                  if (prompt) setInputValue(prompt);
+                  // Skip prompt if this is the resume flow — handleResumeNo will set it
+                  const isResume = lastEndedSession?.agent.id === agent.id;
+                  if (!isResume) {
+                    const prompt = AGENT_PROMPTS[agent.id];
+                    if (prompt) setInputValue(prompt);
+                  }
                   setShowAgents(false);
                   setShowAllAgents(false);
                 }}

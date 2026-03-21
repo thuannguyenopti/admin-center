@@ -143,6 +143,9 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
   }, [messages, collapsedSessionIds, opalDisclosureIds, collapsingOpalEndId, activeAgentCtx]);
 
   // Map of messageId → stagger order for tidy-up animation
+  // collapseAnimScale compresses all delays so total animation ≤ 3.5 s
+  const MAX_COLLAPSE_MS = 1830; // 2500ms - 670ms post-collapse overhead
+  const COLLAPSE_BASE_DELAY = 500;
   const collapsingOrder = useMemo(() => {
     const order = new Map<string, number>();
     if (!collapsingOpalEndId) return order;
@@ -161,6 +164,19 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
     }
     return order;
   }, [collapsingOpalEndId, messages]);
+
+  // Scale factor to keep total collapse animation ≤ 3.5 s when there are many messages
+  const collapseAnimScale = useMemo(() => {
+    const N = collapsingOrder.size;
+    if (N === 0) return 1;
+    const posFromBottom = N - 1;
+    const rawLastAnimEnd = COLLAPSE_BASE_DELAY + (
+      posFromBottom < 3
+        ? posFromBottom * 500 + 600
+        : 1200 + (posFromBottom - 3) * 180 + 280
+    );
+    return rawLastAnimEnd > MAX_COLLAPSE_MS ? MAX_COLLAPSE_MS / rawLastAnimEnd : 1;
+  }, [collapsingOrder.size]);
 
   const hasMessages = messages.length > 0;
 
@@ -243,12 +259,16 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
             const isSlow = posFromBottom < 3;
             // 500ms head-start so disclosure slide-in is visible before messages begin moving
             // First 3 from bottom: 500ms apart (500, 1000, 1500ms); rest: 180ms apart starting at 1700ms
-            const BASE_DELAY = 500;
-            const staggerDelay = isTidying
-              ? BASE_DELAY + (posFromBottom < 3
+            // collapseAnimScale compresses all timings proportionally when N is large
+            const rawStaggerDelay = isTidying
+              ? COLLAPSE_BASE_DELAY + (posFromBottom < 3
                 ? posFromBottom * 500
                 : 1200 + (posFromBottom - 3) * 180)
               : 0;
+            const staggerDelay = Math.round(rawStaggerDelay * collapseAnimScale);
+            const animDuration = isTidying
+              ? Math.round((isSlow ? 600 : 280) * collapseAnimScale)
+              : undefined;
             return (
               <Box
                 key={message.id}
@@ -256,7 +276,10 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 flexDirection="column"
                 gap="8"
                 className={isTidying ? (isSlow ? 'opal-pull-slow' : 'opal-pull-fast') : undefined}
-                style={isTidying ? { animationDelay: `${staggerDelay}ms` } : undefined}
+                style={isTidying ? {
+                  animationDelay: `${staggerDelay}ms`,
+                  animationDuration: `${animDuration}ms`,
+                } : undefined}
               >
                 <OpalMessage
                   message={message}
