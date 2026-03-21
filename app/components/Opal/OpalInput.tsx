@@ -340,35 +340,39 @@ export function OpalInput({
       {showAgentDropdown && (
         <Box
           ref={dropdownRef}
+          bg="bg.default"
+          border="1"
+          borderColor="border.default"
+          rounded="lg"
           style={{
             position: 'absolute',
             bottom: '100%',
             left: '16px',
             right: '16px',
-            backgroundColor: 'var(--opal-bg-input)',
-            border: '1px solid var(--opal-border-primary)',
-            borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+            boxShadow: 'var(--ax-shadows-md)',
             zIndex: 100,
             marginBottom: '8px',
             maxHeight: '240px',
             overflowY: 'auto',
           }}
         >
-          <Box p="8" borderB="1" borderColor="border.secondary" bg="bg.secondary">
-            <Text fontSize="xs" fontWeight="600" color="fg.tertiary">Recently used agents</Text>
+          <Box px="8" pt="8" pb="4">
+            <Text fontSize="sm" color="fg.tertiary">Recently used agents</Text>
           </Box>
           {filteredAgents.map((agent, index) => (
             <Box
               key={agent.id}
-              p="12"
+              px="8"
+              py="8"
               display="flex"
               flexDirection="row"
               gap="8"
               alignItems="center"
+              rounded="sm"
               style={{
                 cursor: 'pointer',
-                backgroundColor: index === focusedAgentIndex ? 'var(--opal-bg-sidebar)' : 'transparent'
+                backgroundColor: index === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : 'transparent',
+                margin: '0 4px',
               }}
               onClick={() => handleSelectAgent(agent)}
               onMouseEnter={() => setFocusedAgentIndex(index)}
@@ -376,13 +380,14 @@ export function OpalInput({
               {agent.emoji && <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>}
               <Box display="flex" flexDirection="column" flex="1">
                 <Box display="flex" alignItems="center" gap="8">
-                  <Text fontSize="sm" fontWeight="600" color="fg.default">{agent.name}</Text>
-                  <Text fontSize="xs" color="fg.link.visited">{agent.handle}</Text>
+                  <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
+                  <Text fontSize="sm" color="fg.link.visited">{agent.handle}</Text>
                 </Box>
-                {agent.subtitle && <Text fontSize="xs" color="fg.tertiary">{agent.subtitle}</Text>}
+                {agent.subtitle && <Text fontSize="sm" color="fg.tertiary">{agent.subtitle}</Text>}
               </Box>
             </Box>
           ))}
+          <Box pb="4" />
         </Box>
       )}
 
