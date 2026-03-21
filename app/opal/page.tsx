@@ -8,7 +8,7 @@ import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
 import { OpalLanding } from "@/app/components/Opal/OpalLanding";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
-import { FEATURED_AGENTS } from "@/app/opal/opalAgents";
+import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 
 export default function OpalPage() {
   const opalContext = useOpalContext();
@@ -139,7 +139,13 @@ export default function OpalPage() {
                 size="md"
                 icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
                 style={{ borderRadius: "9999px" }}
-                onClick={() => { handleSelectAgent(agent); setShowAgents(false); setShowAllAgents(false); }}
+                onClick={() => {
+                  handleSelectAgent(agent);
+                  const prompt = AGENT_PROMPTS[agent.id];
+                  if (prompt) setInputValue(prompt);
+                  setShowAgents(false);
+                  setShowAllAgents(false);
+                }}
               >
                 {agent.name}
               </Button>
