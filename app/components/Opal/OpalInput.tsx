@@ -466,6 +466,10 @@ export function OpalInput({
               icon={<IconAgent size={16} />}
               aria-label="Agent selection"
               style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
+              onClick={() => {
+                onChange('@');
+                setTimeout(() => textareaRef.current?.focus(), 0);
+              }}
             />
             <Button
               appearance="subtle"
