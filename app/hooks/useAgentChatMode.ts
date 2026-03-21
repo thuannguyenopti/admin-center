@@ -54,9 +54,13 @@ export function useAgentChatMode({
         setAgentSession({ agent: featuredAgent, state: "default" });
       }
       setRecentAgentIds((prev) => [agent.id, ...prev.filter((id) => id !== agent.id)]);
-      // Pre-fill input with a starter prompt template for this agent
-      const prompt = AGENT_PROMPTS[featuredAgent.id];
-      if (prompt) setInputValue(prompt);
+      // Pre-fill input with a starter prompt template — but NOT when entering resume state
+      // (the prompt will be set once the user clicks "No" in handleResumeNo)
+      const isResume = lastEndedSession?.agent.id === agent.id;
+      if (!isResume) {
+        const prompt = AGENT_PROMPTS[featuredAgent.id];
+        if (prompt) setInputValue(prompt);
+      }
     },
     [lastEndedSession, setInputValue]
   );
@@ -108,6 +112,8 @@ export function useAgentChatMode({
       setCollapsingOpalEndId(endId);
 
       const BASE_DELAY = 500;
+      // Maximum ms allowed for the collapse animation (3500ms total - 670ms post-collapse overhead)
+      const MAX_COLLAPSE_MS = 1830;
       const endIdx = messages.findIndex(
         (m) => m.role === "event" && m.eventType === "agent-end" && m.id === endId
       );
@@ -128,6 +134,8 @@ export function useAgentChatMode({
           lastAnimEnd = BASE_DELAY + 1200 + (posFromBottom - 3) * 180 + 280;
         }
       }
+      // Cap total animation at 2.5 s — OpalChat scales per-message delays proportionally
+      lastAnimEnd = Math.min(lastAnimEnd, MAX_COLLAPSE_MS);
       setTimeout(() => {
         setCollapsingOpalEndId(null);
         setHighlightedOpalEndId(endId);
@@ -152,7 +160,10 @@ export function useAgentChatMode({
     if (!agentSession) return;
     setAgentSession({ agent: agentSession.agent, state: "default" });
     setLastEndedSession(null);
-  }, [agentSession]);
+    // User wants a fresh start — now pre-fill the template
+    const prompt = AGENT_PROMPTS[agentSession.agent.id];
+    if (prompt) setInputValue(prompt);
+  }, [agentSession, setInputValue]);
 
   const handleExpandSession = useCallback((sessionStartId: string) => {
     setCollapsedSessionIds((prev) => {
@@ -217,6 +228,7 @@ export function useAgentChatMode({
     // Agent bar
     agentSession,
     setAgentSession,
+    lastEndedSession,
     agentBarElement,
     // Sorted agents for @mention
     sortedAgents,
