@@ -64,6 +64,7 @@ export function OpalInput({
 }: OpalInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const [dropdownWidth, setDropdownWidth] = useState<number | undefined>();
   const [contextChip, setContextChip] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -127,6 +128,7 @@ export function OpalInput({
 
   useEffect(() => {
     if (value.startsWith('@') && mentionableAgents.length > 0) {
+      setDropdownWidth(containerRef.current?.offsetWidth);
       setShowAgentDropdown(true);
     } else {
       setShowAgentDropdown(false);
@@ -548,7 +550,7 @@ export function OpalInput({
           onOpenAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           style={{
-            width: 'var(--radix-popover-anchor-width)',
+            width: dropdownWidth ? `${dropdownWidth}px` : undefined,
             padding: 0,
             maxHeight: '280px',
             overflowY: 'auto',
