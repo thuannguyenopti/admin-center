@@ -11,7 +11,7 @@ import { OpalChatView } from "@/app/components/Opal/OpalChatView";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalLanding } from "@/app/components/Opal/OpalLanding";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
-import { FEATURED_AGENTS } from "@/app/opal/opalAgents";
+import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 
 const LIBRARY_TABS = ["Recommended for you", "Featured", "Brainstorm & Plan", "Create", "Test & Experiment", "Optimize", "Search"];
 
@@ -407,7 +407,13 @@ export default function OpalPage() {
                 size="md"
                 icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
                 style={{ borderRadius: "9999px" }}
-                onClick={() => { handleAgentActivated(agent); setShowAgents(false); setShowAllAgents(false); }}
+                onClick={() => {
+                  handleAgentActivated(agent);
+                  const prompt = AGENT_PROMPTS[agent.id];
+                  if (prompt) setInputValue(prompt);
+                  setShowAgents(false);
+                  setShowAllAgents(false);
+                }}
               >
                 {agent.name}
               </Button>
