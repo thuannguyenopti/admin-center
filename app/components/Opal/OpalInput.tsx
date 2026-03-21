@@ -544,7 +544,7 @@ export function OpalInput({
           onOpenAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           style={{
-            width: 'var(--radix-popover-trigger-width)',
+            width: 'var(--radix-popover-anchor-width)',
             padding: 0,
             maxHeight: '280px',
             overflowY: 'auto',
