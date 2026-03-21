@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Button } from "@optiaxiom/react";
 
 export type AgentBarAgent = {
@@ -16,6 +17,8 @@ type AgentBarProps = {
   onDismiss?: () => void;
   onResumeYes?: () => void;
   onResumeNo?: () => void;
+  /** Flash the resume bar in error/alert color when the user tries to submit without choosing */
+  highlight?: boolean;
 };
 
 const BASE_STYLES = {
@@ -87,13 +90,24 @@ const NO_BTN: React.CSSProperties = {
   fontFamily: "Inter, sans-serif",
 };
 
-export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResumeNo }: AgentBarProps) {
+export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResumeNo, highlight }: AgentBarProps) {
+  const yesRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-focus "Yes" when the resume bar appears so the user can hit Enter / Tab
+  useEffect(() => {
+    if (state === "resume") {
+      // Small delay so the slide-in animation has started before focus shifts
+      const t = setTimeout(() => yesRef.current?.focus(), 150);
+      return () => clearTimeout(t);
+    }
+  }, [state]);
+
   if (state === "resume") {
     return (
       <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Gray resume bar — slides up from behind the purple bar */}
         <div style={{
-          background: "#e9edf5",
+          background: highlight ? "#FEE2E2" : "#e9edf5",
           padding: "8px 12px",
           borderRadius: "6px 6px 0 0",
           margin: "0 8px",
@@ -101,11 +115,13 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
           alignItems: "center",
           justifyContent: "space-between",
           fontFamily: "Inter, sans-serif",
-          animation: "resumeBarSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
+          animation: highlight
+            ? "resumeBarShake 0.6s ease"
+            : "resumeBarSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: "#2e3442" }}>Resume previous conversation?</span>
           <div style={{ display: "flex", gap: 6 }}>
-            <Button appearance="default" size="sm" onClick={onResumeYes}>Yes</Button>
+            <Button ref={yesRef} appearance="default" size="sm" onClick={onResumeYes}>Yes</Button>
             <Button appearance="default" size="sm" onClick={onResumeNo}>No</Button>
           </div>
         </div>

@@ -278,6 +278,8 @@ export default function OpalPage() {
     agentSession,
     setAgentSession,
     lastEndedSession,
+    isResuming,
+    triggerResumeHighlight,
     agentBarElement,
     sortedAgents,
     handleSelectAgent,
@@ -300,6 +302,9 @@ export default function OpalPage() {
     onCollapseComplete: () => {
       (document.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
     },
+    onResumeNoComplete: () => {
+      inputContainerRef.current?.querySelector('textarea')?.focus();
+    },
   });
 
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -312,12 +317,16 @@ export default function OpalPage() {
 
   // Wraps every agent-selection path: scroll to top + focus the chat input
   const handleAgentActivated = useCallback((agent: Parameters<typeof handleSelectAgent>[0]) => {
+    const isResume = lastEndedSession?.agent.id === agent.id;
     handleSelectAgent(agent);
     pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => {
-      inputContainerRef.current?.querySelector("textarea")?.focus();
-    }, 350);
-  }, [handleSelectAgent]);
+    // In resume state AgentBar focuses "Yes" — skip textarea focus to avoid fighting it
+    if (!isResume) {
+      setTimeout(() => {
+        inputContainerRef.current?.querySelector("textarea")?.focus();
+      }, 350);
+    }
+  }, [handleSelectAgent, lastEndedSession]);
 
   const hasMessages = messages.length > 0;
 
@@ -365,6 +374,8 @@ export default function OpalPage() {
           mentionableAgents={sortedAgents}
           onMentionSelect={handleSelectAgent}
           activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
+          disabled={isResuming}
+          onSubmitBlocked={triggerResumeHighlight}
         />
       </Box>
     );
@@ -441,13 +452,14 @@ export default function OpalPage() {
               value={inputValue}
               onChange={setInputValue}
               onSend={handleSendMessage}
-              disabled={false}
+              disabled={isResuming}
               isLoading={isLoading}
               error={error}
               variant="home"
               agentBar={agentBarElement}
               mentionableAgents={sortedAgents}
               onMentionSelect={handleAgentActivated}
+              onSubmitBlocked={triggerResumeHighlight}
             />
           </div>
         }
