@@ -46,6 +46,8 @@ type OpalInputProps = {
   agentBar?: React.ReactNode;
   mentionableAgents?: MentionableAgent[];
   onMentionSelect?: (agent: MentionableAgent) => void;
+  /** Called when the user tries to submit but is blocked (e.g. during resume flow) */
+  onSubmitBlocked?: () => void;
 };
 
 export function OpalInput({
@@ -61,6 +63,7 @@ export function OpalInput({
   agentBar,
   mentionableAgents = [],
   onMentionSelect,
+  onSubmitBlocked,
 }: OpalInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -158,6 +161,7 @@ export function OpalInput({
 
   // Build full message content and fire onSend
   const triggerSend = () => {
+    if (disabled) { onSubmitBlocked?.(); return; }
     if (!hasValue || isLoading) return;
     onSend(value.trim());
   };
@@ -179,10 +183,12 @@ export function OpalInput({
         setShowAgentDropdown(false);
         return;
       }
-      if (e.key === 'Enter' && filteredAgents[focusedAgentIndex]) {
+      if (e.key === 'Enter') {
         e.preventDefault();
-        handleSelectAgent(filteredAgents[focusedAgentIndex]);
-        return;
+        if (filteredAgents[focusedAgentIndex]) {
+          handleSelectAgent(filteredAgents[focusedAgentIndex]);
+        }
+        return; // never fall through to triggerSend while dropdown is open
       }
     }
 
@@ -439,7 +445,7 @@ export function OpalInput({
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          disabled={disabled && !isLoading}
+          disabled={isLoading}
           rows={1}
           style={{
             border: 'none',
@@ -517,38 +523,43 @@ export function OpalInput({
                 border: 'none',
               }}
             />
-            <Button
-              appearance="default"
-              size="md"
-              icon={isLoading ? <IconCircleStop size={20} /> : <IconArrowUp size={20} />}
-              aria-label={isLoading ? "Stop generating" : "Send message"}
-              onClick={() => {
-                if (isLoading) {
-                  onSend();
-                } else {
-                  triggerSend();
-                  setTimeout(() => textareaRef.current?.focus(), 50);
-                }
-              }}
-              disabled={!isLoading && !hasValue}
-              style={{
-                width: '32px',
-                height: '32px',
-                padding: 0,
-                borderRadius: '8px',
-                backgroundColor: isLoading
-                  ? 'var(--ax-colors-bg-secondary)'
-                  : '#7C3AED',
-                color: isLoading ? '#7C3AED' : 'var(--opal-send-btn-text)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                opacity: (!isLoading && !hasValue) ? 0.4 : 1,
-              }}
-            />
+            <span style={{
+              display: 'inline-flex',
+              opacity: ((!isLoading && !hasValue) || disabled) ? 0.4 : 1,
+              transition: 'opacity 0.2s ease',
+            }}>
+              <Button
+                appearance="default"
+                size="md"
+                icon={isLoading ? <IconCircleStop size={20} /> : <IconArrowUp size={20} />}
+                aria-label={isLoading ? "Stop generating" : "Send message"}
+                onClick={() => {
+                  if (isLoading) {
+                    onSend();
+                  } else {
+                    triggerSend();
+                    setTimeout(() => textareaRef.current?.focus(), 50);
+                  }
+                }}
+                disabled={!isLoading && !hasValue}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  padding: 0,
+                  borderRadius: '8px',
+                  backgroundColor: isLoading
+                    ? 'var(--ax-colors-bg-secondary)'
+                    : '#7C3AED',
+                  color: isLoading ? '#7C3AED' : 'var(--opal-send-btn-text)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            </span>
           </Box>
         </Box>
         </Box>{/* end containerRef Box */}
@@ -557,6 +568,7 @@ export function OpalInput({
           side="top"
           sideOffset={8}
           onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
           onInteractOutside={(e) => e.preventDefault()}
           style={{
             width: dropdownWidth ? `${dropdownWidth}px` : undefined,

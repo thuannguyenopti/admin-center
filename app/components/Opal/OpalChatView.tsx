@@ -51,6 +51,10 @@ type OpalChatViewProps = {
     mentionableAgents?: MentionableAgent[];
     onMentionSelect?: (agent: MentionableAgent) => void;
     activeAgentCtx?: { emoji: string; name: string } | null;
+    /** Disables the input independently of isLoading (e.g. during resume flow). */
+    disabled?: boolean;
+    /** Called when the user tries to submit while blocked (e.g. resume flow). */
+    onSubmitBlocked?: () => void;
 };
 
 export function OpalChatView({
@@ -90,6 +94,8 @@ export function OpalChatView({
     mentionableAgents,
     onMentionSelect,
     activeAgentCtx,
+    disabled,
+    onSubmitBlocked,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -121,13 +127,14 @@ export function OpalChatView({
                             value={inputValue}
                             onChange={setInputValue}
                             onSend={(content) => onSend(content ?? inputValue)}
-                            disabled={isLoading}
+                            disabled={isLoading || !!disabled}
                             isLoading={isLoading}
                             error={error}
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
+                            onSubmitBlocked={onSubmitBlocked}
                         />
                         {emptyState}
                     </Box>
@@ -223,7 +230,7 @@ export function OpalChatView({
                         value={inputValue}
                         onChange={setInputValue}
                         onSend={(content) => onSend(content ?? inputValue)}
-                        disabled={isLoading}
+                        disabled={isLoading || !!disabled}
                         isLoading={isLoading}
                         error={error}
                         enableAI={enableAI}
@@ -231,6 +238,7 @@ export function OpalChatView({
                         agentBar={agentBar}
                         mentionableAgents={mentionableAgents}
                         onMentionSelect={onMentionSelect}
+                        onSubmitBlocked={onSubmitBlocked}
                     />
                 </Box>
             </Box>

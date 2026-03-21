@@ -17,6 +17,8 @@ interface AgentChatModeDeps {
   addMessage: (msg: Omit<ChatMessage, "id" | "timestamp">) => ChatMessage;
   /** Called when the collapse animation fully completes (after "Yes" on resume). */
   onCollapseComplete?: () => void;
+  /** Called immediately after the user picks "No" on resume. */
+  onResumeNoComplete?: () => void;
 }
 
 export function useAgentChatMode({
@@ -26,6 +28,7 @@ export function useAgentChatMode({
   sendMessage,
   addMessage,
   onCollapseComplete,
+  onResumeNoComplete,
 }: AgentChatModeDeps) {
   const [showAgents, setShowAgents] = useState(false);
   const [showAllAgents, setShowAllAgents] = useState(false);
@@ -42,6 +45,7 @@ export function useAgentChatMode({
   const [opalClosedIds, setOpalClosedIds] = useState<Set<string>>(new Set());
   const [collapsingOpalEndId, setCollapsingOpalEndId] = useState<string | null>(null);
   const [highlightedOpalEndId, setHighlightedOpalEndId] = useState<string | null>(null);
+  const [resumeBarHighlight, setResumeBarHighlight] = useState(false);
 
   const handleSelectAgent = useCallback(
     (agent: MentionableAgent | FeaturedAgent) => {
@@ -69,6 +73,8 @@ export function useAgentChatMode({
     (content?: string) => {
       const text = (content ?? inputValue).trim();
       if (!text) return;
+      // Block submission while the user hasn't resolved the resume prompt
+      if (agentSession?.state === "resume") return;
 
       if (agentSession && agentSession.state === "default") {
         const startEvent = addMessage({
@@ -105,6 +111,7 @@ export function useAgentChatMode({
 
   const handleResumeYes = useCallback(() => {
     if (!agentSession) return;
+    setResumeBarHighlight(false);
     if (lastEndedSession?.endEventId) {
       const endId = lastEndedSession.endEventId;
       setOpalDisclosureIds((prev) => new Set([...prev, endId]));
@@ -160,10 +167,12 @@ export function useAgentChatMode({
     if (!agentSession) return;
     setAgentSession({ agent: agentSession.agent, state: "default" });
     setLastEndedSession(null);
+    setResumeBarHighlight(false);
     // User wants a fresh start — now pre-fill the template
     const prompt = AGENT_PROMPTS[agentSession.agent.id];
     if (prompt) setInputValue(prompt);
-  }, [agentSession, setInputValue]);
+    onResumeNoComplete?.();
+  }, [agentSession, setInputValue, onResumeNoComplete]);
 
   const handleExpandSession = useCallback((sessionStartId: string) => {
     setCollapsedSessionIds((prev) => {
@@ -221,6 +230,7 @@ export function useAgentChatMode({
         onDismiss: () => setAgentSession(null),
         onResumeYes: handleResumeYes,
         onResumeNo: handleResumeNo,
+        highlight: resumeBarHighlight,
       })
     : undefined;
 
@@ -229,7 +239,9 @@ export function useAgentChatMode({
     agentSession,
     setAgentSession,
     lastEndedSession,
+    isResuming: agentSession?.state === "resume",
     agentBarElement,
+    triggerResumeHighlight: () => setResumeBarHighlight(true),
     // Sorted agents for @mention
     sortedAgents,
     // Handlers

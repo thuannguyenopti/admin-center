@@ -28,6 +28,8 @@ export default function OpalPage() {
     agentSession,
     setAgentSession,
     lastEndedSession,
+    isResuming,
+    triggerResumeHighlight,
     agentBarElement,
     sortedAgents,
     handleSelectAgent,
@@ -48,6 +50,9 @@ export default function OpalPage() {
   } = useAgentChatMode({
     messages, inputValue, setInputValue, sendMessage, addMessage,
     onCollapseComplete: () => {
+      (document.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
+    },
+    onResumeNoComplete: () => {
       (document.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
     },
   });
@@ -98,6 +103,8 @@ export default function OpalPage() {
           mentionableAgents={sortedAgents}
           onMentionSelect={handleSelectAgent}
           activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
+          disabled={isResuming}
+          onSubmitBlocked={triggerResumeHighlight}
         />
       </Box>
     );
@@ -172,13 +179,14 @@ export default function OpalPage() {
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSendMessage}
-            disabled={false}
+            disabled={isResuming}
             isLoading={isLoading}
             error={error}
             variant="home"
             agentBar={agentBarElement}
             mentionableAgents={sortedAgents}
             onMentionSelect={handleSelectAgent}
+            onSubmitBlocked={triggerResumeHighlight}
           />
         }
         onSuggestionClick={handleSuggestionClick}
