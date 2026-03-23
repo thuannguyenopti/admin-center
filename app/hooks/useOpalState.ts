@@ -6,7 +6,7 @@ import { useOpalGeneration } from '@/app/context/OpalGenerationContext';
 
 export type ChatMessage = {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'event';
   content: string;
   timestamp: number;
   isLoading?: boolean;
@@ -22,6 +22,10 @@ export type ChatMessage = {
     loading?: boolean;
     loadingMessage?: string;
   };
+  // Agent conversation fields
+  eventType?: 'agent-start' | 'agent-end';
+  agentEmoji?: string;
+  agentName?: string;
 };
 
 export type OpalState = {

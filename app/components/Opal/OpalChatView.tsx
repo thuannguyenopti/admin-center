@@ -2,13 +2,14 @@
 
 import { Box } from "@optiaxiom/react";
 import { OpalChat } from "./OpalChat";
-import { OpalInput } from "./OpalInput";
+import { OpalInput, MentionableAgent } from "./OpalInput";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { ReactNode } from "react";
 import { OpalHeader } from "./OpalHeader";
 import { OpalHistorySidebar } from "./OpalHistorySidebar";
 import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
+
 
 type OpalChatViewProps = {
     messages: ChatMessage[];
@@ -38,6 +39,22 @@ type OpalChatViewProps = {
     onMessageEdit?: (id: string, newContent: string) => void;
     onRegenerate?: (id: string) => void;
     onMessageVersionChange?: (id: string, versionIndex: number, content: string) => void;
+    agentBar?: ReactNode;
+    collapsedSessionIds?: Set<string>;
+    onExpandSession?: (sessionStartId: string) => void;
+    opalDisclosureIds?: Set<string>;
+    opalClosedIds?: Set<string>;
+    collapsingOpalEndId?: string | null;
+    highlightedOpalEndId?: string | null;
+    onOpenOpalRange?: (agentEndId: string) => void;
+    onCloseOpalRange?: (agentEndId: string) => void;
+    mentionableAgents?: MentionableAgent[];
+    onMentionSelect?: (agent: MentionableAgent) => void;
+    activeAgentCtx?: { emoji: string; name: string } | null;
+    /** Disables the input independently of isLoading (e.g. during resume flow). */
+    disabled?: boolean;
+    /** Called when the user tries to submit while blocked (e.g. resume flow). */
+    onSubmitBlocked?: () => void;
 };
 
 export function OpalChatView({
@@ -64,7 +81,21 @@ export function OpalChatView({
     onEnableAIChange,
     onMessageEdit,
     onRegenerate,
-    onMessageVersionChange
+    onMessageVersionChange,
+    agentBar,
+    collapsedSessionIds,
+    onExpandSession,
+    opalDisclosureIds,
+    opalClosedIds,
+    collapsingOpalEndId,
+    highlightedOpalEndId,
+    onOpenOpalRange,
+    onCloseOpalRange,
+    mentionableAgents,
+    onMentionSelect,
+    activeAgentCtx,
+    disabled,
+    onSubmitBlocked,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -95,12 +126,15 @@ export function OpalChatView({
                             variant="home"
                             value={inputValue}
                             onChange={setInputValue}
-                            onSend={() => onSend(inputValue)}
-                            disabled={isLoading}
+                            onSend={(content) => onSend(content ?? inputValue)}
+                            disabled={isLoading || !!disabled}
                             isLoading={isLoading}
                             error={error}
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
+                            mentionableAgents={mentionableAgents}
+                            onMentionSelect={onMentionSelect}
+                            onSubmitBlocked={onSubmitBlocked}
                         />
                         {emptyState}
                     </Box>
@@ -170,6 +204,15 @@ export function OpalChatView({
                         onVersionChange={onMessageVersionChange}
                         hideSuggestions={!!emptyState}
                         variant={variant}
+                        collapsedSessionIds={collapsedSessionIds}
+                        onExpandSession={onExpandSession}
+                        opalDisclosureIds={opalDisclosureIds}
+                        opalClosedIds={opalClosedIds}
+                        collapsingOpalEndId={collapsingOpalEndId}
+                        highlightedOpalEndId={highlightedOpalEndId}
+                        onOpenOpalRange={onOpenOpalRange}
+                        onCloseOpalRange={onCloseOpalRange}
+                        activeAgentCtx={activeAgentCtx}
                     />
                 </Box>
 
@@ -186,12 +229,16 @@ export function OpalChatView({
                         variant={variant}
                         value={inputValue}
                         onChange={setInputValue}
-                        onSend={() => onSend(inputValue)}
-                        disabled={isLoading}
+                        onSend={(content) => onSend(content ?? inputValue)}
+                        disabled={isLoading || !!disabled}
                         isLoading={isLoading}
                         error={error}
                         enableAI={enableAI}
                         onEnableAIChange={onEnableAIChange}
+                        agentBar={agentBar}
+                        mentionableAgents={mentionableAgents}
+                        onMentionSelect={onMentionSelect}
+                        onSubmitBlocked={onSubmitBlocked}
                     />
                 </Box>
             </Box>
