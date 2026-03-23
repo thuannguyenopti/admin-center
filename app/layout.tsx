@@ -534,6 +534,7 @@ export default function RootLayout({
 				highlight: "cmp/settings",
 				url: "/cmp/settings",
 				icon: <IconSettings />,
+				hidePageHeader: true,
 				children: [
 					{label: "Stefan Svebeck (Admin)", url: "/cmp/settings/profile"},
 					{label: "Organization", url: "/cmp/settings/organization"},
