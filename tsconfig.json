@@ -23,9 +23,6 @@
       }
     ],
     "paths": {
-      "@optimizely/axiom-icons": [
-        "./app/lib/axiom-icons"
-      ],
       "@/*": [
         "./*"
       ]
