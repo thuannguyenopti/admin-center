@@ -385,12 +385,18 @@ export default function RootLayout({
 		],
 		opal: [
 			{
-				label: "Chat",
+				label: "Chats",
 				url: "/opal",
 				highlight: "/opal",
-				icon: <img src="/nav_icons/comments.svg" alt="Chat" width={20} height={20} />,
+				icon: <img src="/nav_icons/comments.svg" alt="Chats" width={20} height={20} />,
 				exact: true,
 				customLayout: true,
+			},
+			{
+				label: "Context",
+				url: "/opal/instructions",
+				highlight: "/opal/instructions",
+				icon: <img src="/nav_icons/folder-bookmark.svg" alt="Context" width={20} height={20} />,
 			},
 			{
 				label: "Prompt Library",
@@ -422,12 +428,6 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{label: "Configurations"},
-			{
-				label: "Instructions",
-				url: "/opal/instructions",
-				highlight: "/opal/instructions",
-				icon: <img src="/nav_icons/book.svg" alt="Instructions" width={20} height={20} />,
-			},
 			{
 				label: "Agents",
 				url: "/opal/agents",
