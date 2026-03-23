@@ -11,6 +11,24 @@ import {
 	IconSunFilled,
 	IconMoon,
 	IconDeviceDesktop,
+	IconBuilding,
+	IconUsers,
+	IconSparkles,
+	IconFolder,
+	IconCircleDot,
+	IconApps,
+	IconGitBranch,
+	IconTarget,
+	IconTemplate,
+	IconList,
+	IconFileDownload,
+	IconActivity,
+	IconTrash,
+	IconShare,
+	IconShieldCheck,
+	IconMail,
+	IconCloud,
+	IconWebhook,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,6 +44,15 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
 	const isCmpRoute = pathname.startsWith("/cmp");
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
+
+	const settingsGroups = {
+		userOrg: { label: "User", separator: false, hidden: true },
+		ai: { label: "AI", separator: true, hidden: true },
+		main: { label: "Main", separator: true, hidden: true },
+		management: { label: "Management", separator: true, hidden: true },
+		integrations: { label: "Integrations", separator: true, hidden: true },
+		social: { label: "Social", separator: false, hidden: true },
+	};
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
@@ -222,8 +249,105 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					<Menu
 						options={[
 							{
-								label: "Settings",
-								execute: () => router.push("/cmp/settings"),
+								group: settingsGroups.userOrg,
+								label: "Stefan Svebeck (Admin)",
+								addon: <IconUser size={16} />,
+							},
+							{
+								group: settingsGroups.userOrg,
+								label: "Organization",
+								addon: <IconBuilding size={16} />,
+							},
+							{
+								group: settingsGroups.userOrg,
+								label: "Users & Teams",
+								addon: <IconUsers size={16} />,
+							},
+							{
+								group: settingsGroups.ai,
+								label: "AI",
+								addon: <IconSparkles size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Assets",
+								addon: <IconFolder size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Fields",
+								addon: <IconCircleDot size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Integrations",
+								addon: <IconApps size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Routing Rules",
+								addon: <IconGitBranch size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Strategy",
+								addon: <IconTarget size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Templates",
+								addon: <IconTemplate size={16} />,
+								execute: () => router.push("/cmp/settings/content-models"),
+							},
+							{
+								group: settingsGroups.main,
+								label: "Workflows",
+								addon: <IconList size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Reports",
+								addon: <IconFileDownload size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Activity Log",
+								addon: <IconActivity size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Recycle Bin",
+								addon: <IconTrash size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Marketo",
+								addon: <IconMail size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Eloqua",
+								addon: <IconMail size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Salesforce",
+								addon: <IconCloud size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Apps & Webhooks",
+								addon: <IconWebhook size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Brand Compliance",
+								addon: <IconShieldCheck size={16} />,
+							},
+							{
+								group: settingsGroups.social,
+								label: "Social Accounts",
+								addon: <IconShare size={16} />,
 							},
 						]}
 					>
@@ -242,7 +366,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								)}
 							</Button>
 						</MenuTrigger>
-						<MenuContent />
+						<MenuContent style={{ minWidth: "240px" }} />
 					</Menu>
 				) : (
 					<Button appearance="subtle" size="md" aria-label="User profile">
