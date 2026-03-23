@@ -28,6 +28,17 @@ import {
 	IconSettingsSearch,
 } from "@tabler/icons-react";
 
+// CMP custom icons
+import CMPCreateIcon from "@/app/cmp/assets/plus-16.svg";
+import CMPHomeIcon from "@/app/cmp/assets/home.svg";
+import CMPPlanIcon from "@/app/cmp/assets/plan.svg";
+import CMPDashboardIcon from "@/app/cmp/assets/dashboard.svg";
+import CMPResourceManagementIcon from "@/app/cmp/assets/resource-management.svg";
+import CMPIdeaLabIcon from "@/app/cmp/assets/sparkles 16.svg";
+import CMPLibraryIcon from "@/app/cmp/assets/library.svg";
+import CMPMarketplaceIcon from "@/app/cmp/assets/marketplace.svg";
+import CMPWorkRequestIcon from "@/app/cmp/assets/workrequest.svg";
+
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -453,6 +464,70 @@ export default function RootLayout({
 				url: "/opal/settings",
 				highlight: "/opal/settings",
 				icon: <img src="/nav_icons/gear.svg" alt="Settings" width={20} height={20} />,
+			},
+		],
+		cmp: [
+			{
+				label: "Create",
+				icon: <CMPCreateIcon />,
+				isMenuTrigger: true,
+				menuOptions: [
+					{label: "Campaign", url: "/cmp/create/campaign"},
+					{label: "Task", url: "/cmp/create/task"},
+					{label: "Hypothesis", url: "/cmp/create/hypothesis"},
+					{label: "Event", url: "/cmp/create/event"},
+					{label: "Milestone", url: "/cmp/create/milestone"},
+					{label: "Work Request", url: "/cmp/create/work-request"},
+					{label: "Pitch Request", url: "/cmp/create/pitch-request"},
+				],
+			},
+			{
+				label: "Home",
+				url: "/cmp/dashboard",
+				highlight: "/cmp/dashboard",
+				icon: <CMPHomeIcon />,
+			},
+			{
+				label: "Plan",
+				url: "/cmp/plan-view",
+				highlight: "/cmp/plan-view",
+				icon: <CMPPlanIcon />,
+			},
+			{
+				label: "Library",
+				url: "/cmp/library",
+				highlight: "/cmp/library",
+				icon: <CMPLibraryIcon />,
+			},
+			{
+				label: "Stock Images",
+				url: "/cmp/stock-images",
+				highlight: "/cmp/stock-images",
+				icon: <CMPMarketplaceIcon />,
+			},
+			{
+				label: "Resource Management",
+				url: "/cmp/resource-management",
+				highlight: "/cmp/resource-management",
+				icon: <CMPResourceManagementIcon />,
+			},
+			{
+				label: "Idea Lab",
+				url: "/cmp/idea-lab",
+				highlight: "/cmp/idea-lab",
+				icon: <CMPIdeaLabIcon />,
+			},
+			{
+				label: "Analytics",
+				url: "/cmp/reports",
+				highlight: "/cmp/reports",
+				icon: <CMPDashboardIcon />,
+			},
+			{
+				label: "Requests",
+				url: "/cmp/work-request",
+				highlight: "/cmp/work-request",
+				icon: <CMPWorkRequestIcon />,
 			},
 		],
 	};

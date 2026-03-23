@@ -1,0 +1,48 @@
+## CMP Analytics Page DOM Structure
+## URL: /cloud/insights/content
+## Scraped: Feb 26, 2026
+
+### Header
+Title: "Analytics"
+Date range: "Past 30 Days" dropdown | "Jan 27 - Feb 25, 2026" (calendar icon)
+Compare: "Compare to Previous Period" dropdown | "Dec 23, 2025 - Jan 21, 2026" (calendar icon)
+
+### Tabs
+Content (active, blue underline)
+Export button (top-right, with icon)
+
+### Filter
+Filter icon button (left sidebar area)
+
+### Promo Banner (dismissible)
+Background: light blue/periwinkle
+Title: "NEW: A More Complete Analytics Experience"
+Subtitle: "Here's a breakdown of what's coming your way:"
+Sections:
+  - "New Metrics To Measure Your Content" - average attention time, engagement rate, social shares, top referral sources
+  - "Performance By Sources" - publish content by source
+  - "Robust Data Exports" - authors, custom fields, labels
+CTA button: "I Want The New Data" (blue)
+Link: "this support article"
+
+### Metrics Row (5 cards, horizontal)
+| Icon | Value | Label |
+|------|-------|-------|
+| Document | 0 | Articles Viewed |
+| Eye | 0 | Pageviews |
+| People/gear | 0 | Unique Visitors |
+| Clock | — | Attention Time |
+| Star | — | Engagement Rate |
+
+### Chart Section
+Metric selector: "Pageviews" dropdown
+View tabs: "Current & Previous" (active) | "By Channel"
+Time period: Daily (active, bordered) | Weekly | Monthly
+Toggle: ○ Value ● Percentage
+
+### Visual Details
+- Metrics displayed as large centered numbers with icon above and label below
+- Chart area below metrics (empty/flat due to zero data)
+- Blue accent for active tabs and primary actions
+- Date ranges displayed with calendar icons
+- Comparison period shown in secondary text

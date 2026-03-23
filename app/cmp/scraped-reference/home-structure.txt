@@ -1,0 +1,77 @@
+## CMP Home Page DOM Structure
+## URL: /cloud/home
+## Scraped: Feb 26, 2026
+
+### Accessibility Tree
+button "Skip to main content"
+list (Global Header Actions)
+  textbox "Search" placeholder="Search" + "mod" shortcut hint
+  button "Ask Opal"
+  button "Notifications" (with badge count 19)
+  button "Assignments"
+  button "Help resources"
+  button (User avatar menu)
+
+alert "Action required: social channel access tokens expired"
+  link "sync now" → /cloud/settings/social-accounts
+  button "close"
+
+navigation "Main"
+  link → /cloud/home (Optimizely logo)
+  button "CMP Design" (org picker)
+  list
+    button "Create new..." (with plus icon)
+    link "Home" → /cloud/home (active)
+    link "Plan" → /cloud/plan
+    link "Library" → /cloud/library
+    link "Stock Images" → /cloud/explorer
+    link "Idea Lab" → /cloud/ideation
+    link "Analytics" → /cloud/insights/content
+    link "Requests" → /cloud/work-request
+  button "Collapse"
+
+### Main Content
+"Thu, Feb 26, 2026"
+heading "Good morning, David"
+
+tablist
+  tab "My work" (selected)
+  tab "My team's work"
+  tab "Watching"
+
+button "Filters" (with badge)
+textbox (search, type="search")
+
+table
+  headers: "Title" | "Step" | "End/Due Date"
+  rows:
+    TSK-6 in "Social Media Campaign 2023" → "Make a splash (Test)"
+      Step: "1 of 1 Author, schedule, and publish a post" / "Step Due 3 years ago"
+      Due: Jul 31, 2023
+    TSK-5 in "Ultra Music Festival" → "Create Instagram Ads"
+      Step: "1 of 1" / "Step Due 3 years ago"
+      Due: Jul 31, 2023
+    TSK-4 in "Ultra Music Festival" → "Create LinkedIN Ads"
+      Step: "1 of 1" / "Step Due 3 years ago"
+      Due: Jul 31, 2023
+    WRQ-1 → "Image for social post"
+      Requested by: Hsiao-Pei Chien
+      Due: No end date
+
+### Recently Viewed Sidebar
+heading "Recently viewed"
+textbox (search)
+"No recently viewed items found"
+
+### DOM Classes (meaningful)
+- bse-App, bse-App-columns, bse-App-nav, bse-App-main
+- cmc-wrapper, main-pane-wrapper
+- dashboard-container, dashboard-wrapper, dashboard-content-container
+- dash-DashboardHeader, dash-DashboardHeader-user, dash-DashboardHeader-avatar
+- dash-DashboardHeader-greeting, dash-DashboardHeader-date, dash-DashboardHeader-name
+- dash-HomePageDashboard, dash-HomePageDashboard-content
+- dash-HomePageDashboard-mainContent, dash-HomePageDashboard-sideContent
+- dash-RecentlyViewed
+- base-GlobalHeader, base-GlobalHeader-actions
+- base-GlobalNav-orgSwitcher, base-GlobalHeader-orgLogo
+- base-GlobalHeader-orgPicker
