@@ -9,13 +9,12 @@ import {
   TabsContent,
   Badge,
   Avatar,
+  SearchInput,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { Input } from "@/app/components/Input";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
-  IconSearch,
   IconFilter,
   IconChevronDown,
 } from "@tabler/icons-react";
@@ -99,7 +98,6 @@ function RecentlyViewedCard({ item }: { item: RecentlyViewedItem }) {
       borderB="1"
       borderColor="border.tertiary"
       style={{ cursor: "pointer" }}
-      className="hover:bg-[var(--ax-colors-bg-default-hovered)]"
     >
       <Box display="flex" gap="8" alignItems="center" mb="4">
         <Text fontSize="sm" color="fg.tertiary">
@@ -254,23 +252,13 @@ export default function CMPDashboardPage() {
                 1
               </Box>
             </Button>
-            <Box flex="1" style={{ maxWidth: "300px", position: "relative" }}>
-              <Input
+            <Box flex="1" style={{ maxWidth: "300px" }}>
+              <SearchInput
                 placeholder="Search"
+                size="lg"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ paddingLeft: "40px" }}
               />
-              <Box
-                style={{
-                  position: "absolute",
-                  left: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                }}
-              >
-                <IconSearch size={16} color="#66708C" />
-              </Box>
             </Box>
           </Box>
 
@@ -322,24 +310,12 @@ export default function CMPDashboardPage() {
           <Text fontSize="lg" fontWeight="600" color="fg.default" mb="16">
             Recently viewed
           </Text>
-          <Box style={{ position: "relative" }}>
-            <Input
-              placeholder="Search"
-              value={recentSearchQuery}
-              onChange={(e) => setRecentSearchQuery(e.target.value)}
-              style={{ paddingLeft: "40px" }}
-            />
-            <Box
-              style={{
-                position: "absolute",
-                left: "12px",
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
-            >
-              <IconSearch size={16} color="#66708C" />
-            </Box>
-          </Box>
+          <SearchInput
+            placeholder="Search"
+            size="lg"
+            value={recentSearchQuery}
+            onChange={(e) => setRecentSearchQuery(e.target.value)}
+          />
         </Box>
         <Box>
           {filteredRecentItems.map((item) => (

@@ -1,199 +1,229 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Box, Badge } from '@optiaxiom/react';
-import { Text } from '@/app/components/Text';
-import { Input } from '@/app/components/Input';
-import { Button } from '@/app/components/Button';
+import { useState } from "react";
 import {
-  IconChevronDown as ChevronDown,
-  IconSearch as Search,
-  IconDownload as Download,
-  IconEye as Eye,
-} from '@tabler/icons-react';
+	Box,
+	Badge,
+	Checkbox,
+	Field,
+	Heading,
+	Radio,
+	RadioGroup,
+	SearchInput,
+	Select,
+	SelectContent,
+	SelectTrigger,
+} from "@optiaxiom/react";
+import { Text } from "@/app/components/Text";
+import { Input } from "@/app/components/Input";
+import { Button } from "@/app/components/Button";
+import { IconChevronDown, IconDownload } from "@tabler/icons-react";
+
+const countries = [
+	{ label: "United States", value: "United States" },
+	{ label: "Canada", value: "Canada" },
+	{ label: "United Kingdom", value: "United Kingdom" },
+	{ label: "Australia", value: "Australia" },
+	{ label: "Germany", value: "Germany" },
+	{ label: "France", value: "France" },
+];
 
 export default function IdeaLabPage() {
-  const [selectedTab, setSelectedTab] = useState('domain');
-  const [country, setCountry] = useState('United States');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showHidden, setShowHidden] = useState(false);
-  const [domains, setDomains] = useState(['', '', '', '', '']);
+	const [selectedTab, setSelectedTab] = useState("domain");
+	const [country, setCountry] = useState("United States");
+	const [searchQuery, setSearchQuery] = useState("");
+	const [showHidden, setShowHidden] = useState(false);
+	const [domains, setDomains] = useState(["", "", "", "", ""]);
 
-  const handleDomainChange = (index: number, value: string) => {
-    const newDomains = [...domains];
-    newDomains[index] = value;
-    setDomains(newDomains);
-  };
+	const handleDomainChange = (index: number, value: string) => {
+		const nextDomains = [...domains];
+		nextDomains[index] = value;
+		setDomains(nextDomains);
+	};
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header Section */}
-      <section className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-4xl font-bold text-slate-900">
-              Idea Lab
-            </h1>
-            <Button
-              className="flex items-center gap-2 bg-slate-100 text-slate-700 hover:bg-slate-200"
-              size="sm"
-            >
-              <Download size={16} />
-              Download As
-              <ChevronDown size={16} />
-            </Button>
-          </div>
-          <p className="text-lg text-slate-600">
-            Research topics and competitor keywords to help build your content strategy.
-          </p>
-        </div>
-      </section>
+	return (
+		<Box bg="bg.page" style={{ minHeight: "calc(100vh - 48px)" }}>
+			<Box
+				bg="bg.default"
+				borderB="1"
+				borderColor="border.tertiary"
+				px="24"
+				py="24"
+			>
+				<Box
+					alignItems="start"
+					display="flex"
+					justifyContent="space-between"
+					style={{ gap: 16 }}
+				>
+					<Box display="flex" flexDirection="column" gap="8">
+						<Heading level="2">Idea Lab</Heading>
+						<Text color="fg.secondary" fontSize="md">
+							Research topics and competitor keywords to help build your content
+							strategy.
+						</Text>
+					</Box>
+					<Button appearance="default" icon={<IconDownload size={16} />}>
+						Download As
+						<IconChevronDown size={16} />
+					</Button>
+				</Box>
+			</Box>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Controls Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          {/* Radio Toggle for Domain/Topic */}
-          <div className="flex items-center gap-8 mb-6">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="search-type"
-                value="domain"
-                checked={selectedTab === 'domain'}
-                onChange={(e) => setSelectedTab(e.target.value)}
-                className="w-4 h-4"
-              />
-              <Text className="text-slate-700 font-medium">Domain</Text>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="search-type"
-                value="topic"
-                checked={selectedTab === 'topic'}
-                onChange={(e) => setSelectedTab(e.target.value)}
-                className="w-4 h-4"
-              />
-              <Text className="text-slate-700 font-medium">Topic</Text>
-            </label>
-          </div>
+			<Box
+				display="flex"
+				flexDirection="column"
+				gap="24"
+				mx="auto"
+				px="24"
+				py="24"
+				style={{ maxWidth: 1200 }}
+			>
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					display="flex"
+					flexDirection="column"
+					gap="24"
+					p="24"
+					rounded="lg"
+				>
+					<Field label="Explore by">
+						<RadioGroup value={selectedTab} onValueChange={setSelectedTab}>
+							<Box display="flex" gap="24" flexWrap="wrap">
+								<Radio value="domain">Domain</Radio>
+								<Radio value="topic">Topic</Radio>
+							</Box>
+						</RadioGroup>
+					</Field>
 
-          {/* Country Selector */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Country
-            </label>
-            <div className="relative w-48">
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 appearance-none cursor-pointer hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option>United States</option>
-                <option>Canada</option>
-                <option>United Kingdom</option>
-                <option>Australia</option>
-                <option>Germany</option>
-                <option>France</option>
-              </select>
-              <ChevronDown
-                size={16}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-600"
-              />
-            </div>
-          </div>
+					<Box style={{ maxWidth: 320 }}>
+						<Field label="Country">
+							<Select
+								value={country}
+								onValueChange={(value) => setCountry(value as string)}
+								options={countries}
+							>
+								<SelectTrigger size="lg">{country}</SelectTrigger>
+								<SelectContent />
+							</Select>
+						</Field>
+					</Box>
 
-          {/* Search Input */}
-          <div className="relative">
-            <Input
-              placeholder="Enter Topic/Domain to Explore"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-4 pr-12 py-3 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400"
-            />
-            <Search size={20} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400" />
-          </div>
-        </div>
+					<SearchInput
+						placeholder="Enter topic or domain to explore"
+						size="lg"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+				</Box>
 
-        {/* Section 1: Recommended Keywords */}
-        <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <Badge variant="subtle">RECOMMENDED FOR YOU</Badge>
-              <h2 className="text-2xl font-bold text-slate-900">
-                Keywords with the Greatest Opportunity
-              </h2>
-            </div>
-          </div>
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					display="flex"
+					flexDirection="column"
+					gap="16"
+					p="24"
+					rounded="lg"
+				>
+					<Box
+						alignItems="center"
+						display="flex"
+						flexWrap="wrap"
+						gap="12"
+						justifyContent="space-between"
+					>
+						<Box alignItems="center" display="flex" flexWrap="wrap" gap="12">
+							<Badge intent="primary">Recommended for you</Badge>
+							<Heading level="4">Keywords with the greatest opportunity</Heading>
+						</Box>
+					</Box>
 
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showHidden}
-                onChange={(e) => setShowHidden(e.target.checked)}
-                className="w-4 h-4 text-blue-600 rounded"
-              />
-              <Text className="text-slate-600">Show hidden</Text>
-            </label>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-              Enter your targeted keywords
-            </button>
-          </div>
-        </section>
+					<Box alignItems="center" display="flex" flexWrap="wrap" gap="16">
+						<Checkbox
+							checked={showHidden}
+							onCheckedChange={(checked) => setShowHidden(Boolean(checked))}
+						>
+							Show hidden
+						</Checkbox>
+						<Button appearance="subtle" size="sm">
+							Enter your targeted keywords
+						</Button>
+					</Box>
+				</Box>
 
-        {/* Divider */}
-        <div className="h-px bg-slate-200 my-8" />
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					display="flex"
+					flexDirection="column"
+					gap="20"
+					p="24"
+					rounded="lg"
+				>
+					<Box display="flex" flexDirection="column" gap="8">
+						<Heading level="4">Keyword Rank Analysis</Heading>
+						<Text color="fg.secondary" fontSize="md">
+							Compare how your keywords rank across multiple domains. Enter up to
+							five domains to analyze competitive opportunities.
+						</Text>
+					</Box>
 
-        {/* Section 2: Keyword Rank Analysis */}
-        <section className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-3">
-            Keyword Rank Analysis
-          </h2>
-          <Text className="text-slate-600 mb-6">
-            Compare how your keywords rank across multiple domains. Enter up to 5 domains to analyze their keyword performance and find competitive opportunities.
-          </Text>
+					<Box
+						alignItems="end"
+						display="flex"
+						flexWrap="wrap"
+						gap="8"
+					>
+						{domains.map((domain, index) => (
+							<Box
+								key={index}
+								alignItems="center"
+								display="flex"
+								gap="8"
+							>
+								<Input
+									placeholder={`Domain ${index + 1}`}
+									type="text"
+									value={domain}
+									onChange={(e) => handleDomainChange(index, e.target.value)}
+									style={{ width: 160 }}
+								/>
+								{index < domains.length - 1 ? (
+									<Text color="fg.tertiary" fontSize="sm">
+										vs
+									</Text>
+								) : null}
+							</Box>
+						))}
+					</Box>
 
-          {/* Domain Input Fields */}
-          <div className="flex items-end gap-2 mb-6 flex-wrap">
-            {domains.map((domain, index) => (
-              <Box key={index} className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  placeholder={`Domain ${index + 1}`}
-                  value={domain}
-                  onChange={(e) => handleDomainChange(index, e.target.value)}
-                  className="px-4 py-2 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 w-40"
-                />
-                {index < domains.length - 1 && (
-                  <Text className="text-slate-400 font-medium px-2">vs</Text>
-                )}
-              </Box>
-            ))}
-          </div>
+					<Box>
+						<Button appearance="primary">Analyze</Button>
+					</Box>
+				</Box>
 
-          {/* Analyze Button */}
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-            Analyze
-          </Button>
-        </section>
-
-        {/* Divider */}
-        <div className="h-px bg-slate-200 my-8" />
-
-        {/* Section 3: Your Program's Targeted Keywords */}
-        <section className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Your Program's Targeted Keywords
-            </h2>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-              Manage Keywords
-            </button>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+				<Box
+					bg="bg.default"
+					border="1"
+					borderColor="border.tertiary"
+					display="flex"
+					flexWrap="wrap"
+					gap="16"
+					justifyContent="space-between"
+					p="24"
+					rounded="lg"
+				>
+					<Heading level="4">Your program&apos;s targeted keywords</Heading>
+					<Button appearance="subtle" size="sm">
+						Manage Keywords
+					</Button>
+				</Box>
+			</Box>
+		</Box>
+	);
 }
