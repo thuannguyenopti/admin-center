@@ -24,6 +24,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
+	const isCmpRoute = pathname.startsWith("/cmp");
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
 
 	const getCurrentProduct = () => {
@@ -217,19 +218,47 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					/>
 				</Box>
 				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
-				<Button appearance="subtle" size="md" aria-label="User profile">
-					{isCmpTaskDetail ? (
-						<Image
-							src="/avatars/aamr-fakhry.png"
-							alt="User profile"
-							width={24}
-							height={24}
-							style={{borderRadius: 999}}
-						/>
-					) : (
-						<IconUser size={20} />
-					)}
-				</Button>
+				{isCmpRoute ? (
+					<Menu
+						options={[
+							{
+								label: "Settings",
+								execute: () => router.push("/cmp/settings"),
+							},
+						]}
+					>
+						<MenuTrigger asChild>
+							<Button appearance="subtle" size="md" aria-label="User profile">
+								{isCmpTaskDetail ? (
+									<Image
+										src="/avatars/aamr-fakhry.png"
+										alt="User profile"
+										width={24}
+										height={24}
+										style={{borderRadius: 999}}
+									/>
+								) : (
+									<IconUser size={20} />
+								)}
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
+				) : (
+					<Button appearance="subtle" size="md" aria-label="User profile">
+						{isCmpTaskDetail ? (
+							<Image
+								src="/avatars/aamr-fakhry.png"
+								alt="User profile"
+								width={24}
+								height={24}
+								style={{borderRadius: 999}}
+							/>
+						) : (
+							<IconUser size={20} />
+						)}
+					</Button>
+				)}
 			</Box>
 		</Box>
 	);
