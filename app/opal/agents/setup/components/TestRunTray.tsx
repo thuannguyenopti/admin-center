@@ -18,7 +18,7 @@ import {
 import {
     IconPlay,
     IconArrowsRotate,
-} from "@optimizely/axiom-icons";
+} from "@/app/lib/axiom-icons";
 import { useState } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 
