@@ -1,8 +1,7 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator} from "@optiaxiom/react";
+import {Box, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
-import {ReactNode} from "react";
 import {useRouter, usePathname} from "next/navigation";
 import {
 	IconSearch,
@@ -10,7 +9,6 @@ import {
 	IconHelp,
 	IconUser,
 	IconSunFilled,
-	IconWashMachine,
 	IconMoon,
 	IconDeviceDesktop,
 } from "@tabler/icons-react";
@@ -25,10 +23,12 @@ type GlobalBarProps = {
 export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
+	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/cms")) return "CMS";
+		if (pathname.startsWith("/cmp")) return "CMP";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
@@ -79,17 +79,11 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						/>
 					</svg>
 				</Link>
-				<Box ml="32" display="flex" alignItems={"center"} gap="8">
+				<Box ml="32" display="flex" alignItems="center" gap="8">
 					<Text fontSize="md" fontWeight="500" color="fg.default">
 						Stride
 					</Text>
-					<svg
-						width="14"
-						height="12"
-						viewBox="0 0 14 12"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
-					>
+					<svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path
 							d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
 							fill="#2E3442"
@@ -108,7 +102,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						},
 						{
 							label: "Content Marketing Platform",
-							disabledReason: "TBD",
+							execute: () => router.push("/cmp/dashboard"),
 						},
 						{
 							label: "Connect Platform",
@@ -132,20 +126,15 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Box
 							ml="32"
 							display="flex"
-							alignItems={"center"}
+							alignItems="center"
 							gap="8"
 							style={{cursor: "pointer"}}
+							suppressHydrationWarning
 						>
 							<Text fontSize="md" fontWeight="500" color="fg.default">
 								{getCurrentProduct()}
 							</Text>
-							<svg
-								width="14"
-								height="12"
-								viewBox="0 0 14 12"
-								fill="none"
-								xmlns="http://www.w3.org/2000/svg"
-							>
+							<svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<path
 									d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
 									fill="#2E3442"
@@ -183,13 +172,11 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Button
 							appearance="subtle"
 							size="md"
-							icon={
-								{
-									system: <IconDeviceDesktop />,
-									light: <IconSunFilled />,
-									dark: <IconMoon />,
-								}[themePreference]
-							}
+							icon={{
+								system: <IconDeviceDesktop />,
+								light: <IconSunFilled />,
+								dark: <IconMoon />,
+							}[themePreference]}
 							aria-label="Theme"
 							className="capitalize"
 						>
@@ -198,20 +185,17 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconSearch size={20} />}
-					aria-label="Search"
-				/>
-				<Button
-					appearance="subtle"
-					size="md"
-					aria-label="Opal AI Assistant"
-					onClick={onOpalClick}
-				>
-					<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+				<Button appearance="subtle" size="md" aria-label="Opal AI Assistant" onClick={onOpalClick}>
+					<Box display="flex" alignItems="center" gap="8">
+						<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+						{isCmpTaskDetail && (
+							<Text fontSize="md" fontWeight="500" color="fg.default">
+								Ask Opal
+							</Text>
+						)}
+					</Box>
 				</Button>
+				<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 				<Box style={{position: "relative"}}>
 					<Button
 						appearance="subtle"
@@ -232,18 +216,20 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						rounded="full"
 					/>
 				</Box>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconHelp size={20} />}
-					aria-label="Help"
-				/>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconUser size={20} />}
-					aria-label="User profile"
-				/>
+				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
+				<Button appearance="subtle" size="md" aria-label="User profile">
+					{isCmpTaskDetail ? (
+						<Image
+							src="/avatars/aamr-fakhry.png"
+							alt="User profile"
+							width={24}
+							height={24}
+							style={{borderRadius: 999}}
+						/>
+					) : (
+						<IconUser size={20} />
+					)}
+				</Button>
 			</Box>
 		</Box>
 	);

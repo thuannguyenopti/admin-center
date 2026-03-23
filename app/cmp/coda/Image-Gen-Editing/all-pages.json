@@ -1,0 +1,4882 @@
+{
+  "items": [
+    {
+      "id": "canvas-b8UAYcSu1a",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-b8UAYcSu1a",
+      "name": "START HERE",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYcSu1a",
+      "children": [
+        {
+          "id": "canvas-g66JxAvKfF",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-g66JxAvKfF",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suxAvKfF",
+          "name": "Onboarding to Opal"
+        },
+        {
+          "id": "canvas-6vtvYRq3C1",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6vtvYRq3C1",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYRq3C1",
+          "name": "Meet the PM Team"
+        }
+      ],
+      "icon": {
+        "name": "start",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/start-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-30T20:56:01.117Z",
+      "updatedAt": "2025-10-30T21:17:40.532Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Patrick Lam",
+        "email": "patrick.lam@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-g66JxAvKfF",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-g66JxAvKfF",
+      "name": "Onboarding to Opal",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suxAvKfF",
+      "children": [],
+      "parent": {
+        "id": "canvas-b8UAYcSu1a",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-b8UAYcSu1a",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYcSu1a",
+        "name": "START HERE"
+      },
+      "icon": {
+        "name": "handshake",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/handshake-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-06T22:22:46.330Z",
+      "updatedAt": "2025-11-07T18:52:12.164Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-6vtvYRq3C1",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6vtvYRq3C1",
+      "name": "Meet the PM Team",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYRq3C1",
+      "children": [],
+      "parent": {
+        "id": "canvas-b8UAYcSu1a",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-b8UAYcSu1a",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYcSu1a",
+        "name": "START HERE"
+      },
+      "icon": {
+        "name": "so-so",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/so-so-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-19T14:47:21.666Z",
+      "updatedAt": "2025-12-16T21:28:32.699Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lauren Hammarstedt",
+        "email": "lauren.hammarstedt@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-ar7ITxAWng",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+      "name": "Opal Strategy",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+      "children": [
+        {
+          "id": "canvas-G1wxjbLsE-",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-G1wxjbLsE-",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sujbLsE-",
+          "name": "Goals"
+        },
+        {
+          "id": "canvas-pY1zIUsJqu",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-pY1zIUsJqu",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suIUsJqu",
+          "name": "Strategic Assumptions"
+        },
+        {
+          "id": "canvas-LMvuTk4lOt",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-LMvuTk4lOt",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTk4lOt",
+          "name": "Executive Summary"
+        },
+        {
+          "id": "canvas-dKtRfuTF_A",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+          "name": "Horizon 1"
+        },
+        {
+          "id": "canvas-Xrtf0A-FFO",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Xrtf0A-FFO",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su0A-FFO",
+          "name": "Catch all"
+        },
+        {
+          "id": "canvas-6qJzo2Rf2a",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6qJzo2Rf2a",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suo2Rf2a",
+          "name": "Feb 2026 Strategy Review"
+        },
+        {
+          "id": "canvas-Iq84K67jr4",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Iq84K67jr4",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suK67jr4",
+          "name": "Mar 2026 strategy review"
+        }
+      ],
+      "icon": {
+        "name": "light",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/light-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:20:07.655Z",
+      "updatedAt": "2025-10-24T15:20:11.356Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-G1wxjbLsE-",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-G1wxjbLsE-",
+      "name": "Goals",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sujbLsE-",
+      "children": [],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "icon": {
+        "name": "goal",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/goal-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:27:51.993Z",
+      "updatedAt": "2025-10-28T01:42:43.862Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-pY1zIUsJqu",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-pY1zIUsJqu",
+      "name": "Strategic Assumptions",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suIUsJqu",
+      "children": [],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "icon": {
+        "name": "proactivity",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/proactivity-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:20:29.935Z",
+      "updatedAt": "2025-11-05T23:50:55.717Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Conor.Leary@optimizely.com",
+        "email": "conor.leary@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-LMvuTk4lOt",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-LMvuTk4lOt",
+      "name": "Executive Summary",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTk4lOt",
+      "children": [],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:20:38.121Z",
+      "updatedAt": "2025-10-31T18:10:56.710Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-dKtRfuTF_A",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+      "name": "Horizon 1",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+      "children": [
+        {
+          "id": "canvas-HYUeY1z77M",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-HYUeY1z77M",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suY1z77M",
+          "name": "Key Use Cases"
+        },
+        {
+          "id": "canvas-7WcTAS6T5B",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-7WcTAS6T5B",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suAS6T5B",
+          "name": "Competitor Landscape"
+        },
+        {
+          "id": "canvas-LDTcMJZMdX",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-LDTcMJZMdX",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suMJZMdX",
+          "name": "(ICP) Customer Profile"
+        },
+        {
+          "id": "canvas-jerijB8ugb",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-jerijB8ugb",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sujB8ugb",
+          "name": "Product Strategy"
+        },
+        {
+          "id": "canvas-T0mIm6QMJW",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-T0mIm6QMJW",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sum6QMJW",
+          "name": "Partner Strategy"
+        },
+        {
+          "id": "canvas-Mx-c3ECSg7",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Mx-c3ECSg7",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su3ECSg7",
+          "name": "Commercialization Strategy"
+        }
+      ],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:23:08.226Z",
+      "updatedAt": "2025-10-31T18:04:45.010Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-HYUeY1z77M",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-HYUeY1z77M",
+      "name": "Key Use Cases",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suY1z77M",
+      "children": [],
+      "parent": {
+        "id": "canvas-dKtRfuTF_A",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+        "name": "Horizon 1"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:22:09.396Z",
+      "updatedAt": "2025-10-27T20:11:34.334Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-7WcTAS6T5B",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-7WcTAS6T5B",
+      "name": "Competitor Landscape",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suAS6T5B",
+      "children": [],
+      "parent": {
+        "id": "canvas-dKtRfuTF_A",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+        "name": "Horizon 1"
+      },
+      "icon": {
+        "name": "wrestling",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/wrestling-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:28:45.888Z",
+      "updatedAt": "2025-11-20T18:44:11.163Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-LDTcMJZMdX",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-LDTcMJZMdX",
+      "name": "(ICP) Customer Profile",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suMJZMdX",
+      "children": [],
+      "parent": {
+        "id": "canvas-dKtRfuTF_A",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+        "name": "Horizon 1"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:21:39.005Z",
+      "updatedAt": "2025-10-24T15:22:19.797Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-jerijB8ugb",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-jerijB8ugb",
+      "name": "Product Strategy",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sujB8ugb",
+      "children": [],
+      "parent": {
+        "id": "canvas-dKtRfuTF_A",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+        "name": "Horizon 1"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:27:18.854Z",
+      "updatedAt": "2025-10-27T19:52:34.759Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-T0mIm6QMJW",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-T0mIm6QMJW",
+      "name": "Partner Strategy",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sum6QMJW",
+      "children": [],
+      "parent": {
+        "id": "canvas-dKtRfuTF_A",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+        "name": "Horizon 1"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:27:05.637Z",
+      "updatedAt": "2025-10-27T20:11:56.034Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-Mx-c3ECSg7",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Mx-c3ECSg7",
+      "name": "Commercialization Strategy",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su3ECSg7",
+      "children": [
+        {
+          "id": "canvas-tO6fCh0Kpm",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-tO6fCh0Kpm",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suCh0Kpm",
+          "name": "Pricing & Packaging"
+        },
+        {
+          "id": "canvas-fk3lb5Fa5l",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fk3lb5Fa5l",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sub5Fa5l",
+          "name": "GTM"
+        }
+      ],
+      "parent": {
+        "id": "canvas-dKtRfuTF_A",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-dKtRfuTF_A",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufuTF_A",
+        "name": "Horizon 1"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:26:55.169Z",
+      "updatedAt": "2025-10-24T15:34:29.455Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-tO6fCh0Kpm",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-tO6fCh0Kpm",
+      "name": "Pricing & Packaging",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suCh0Kpm",
+      "children": [],
+      "parent": {
+        "id": "canvas-Mx-c3ECSg7",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Mx-c3ECSg7",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su3ECSg7",
+        "name": "Commercialization Strategy"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:30:32.836Z",
+      "updatedAt": "2025-10-27T20:12:34.819Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-fk3lb5Fa5l",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fk3lb5Fa5l",
+      "name": "GTM",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sub5Fa5l",
+      "children": [
+        {
+          "id": "canvas-o0aVl5iVkj",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-o0aVl5iVkj",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sul5iVkj",
+          "name": "Opal on top of competitors?"
+        },
+        {
+          "id": "canvas-ZY2FtEQPOT",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ZY2FtEQPOT",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sutEQPOT",
+          "name": "Opal ready for HIPAA?"
+        },
+        {
+          "id": "canvas-nIn6UK-aXM",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-nIn6UK-aXM",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suUK-aXM",
+          "name": "Opal hosting in EU?"
+        }
+      ],
+      "parent": {
+        "id": "canvas-Mx-c3ECSg7",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Mx-c3ECSg7",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su3ECSg7",
+        "name": "Commercialization Strategy"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T15:30:44.684Z",
+      "updatedAt": "2025-10-27T20:13:28.347Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-o0aVl5iVkj",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-o0aVl5iVkj",
+      "name": "Opal on top of competitors?",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sul5iVkj",
+      "children": [],
+      "parent": {
+        "id": "canvas-fk3lb5Fa5l",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fk3lb5Fa5l",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sub5Fa5l",
+        "name": "GTM"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-29T03:42:05.907Z",
+      "updatedAt": "2025-10-29T03:42:15.673Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-ZY2FtEQPOT",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ZY2FtEQPOT",
+      "name": "Opal ready for HIPAA?",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sutEQPOT",
+      "children": [],
+      "parent": {
+        "id": "canvas-fk3lb5Fa5l",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fk3lb5Fa5l",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sub5Fa5l",
+        "name": "GTM"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-29T03:42:20.977Z",
+      "updatedAt": "2025-10-29T03:42:28.422Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-nIn6UK-aXM",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-nIn6UK-aXM",
+      "name": "Opal hosting in EU?",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suUK-aXM",
+      "children": [],
+      "parent": {
+        "id": "canvas-fk3lb5Fa5l",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fk3lb5Fa5l",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sub5Fa5l",
+        "name": "GTM"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-29T03:42:32.695Z",
+      "updatedAt": "2025-10-29T03:42:37.605Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-Xrtf0A-FFO",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Xrtf0A-FFO",
+      "name": "Catch all",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su0A-FFO",
+      "children": [],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "icon": {
+        "name": "shopping-basket-2",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/shopping-basket-2-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-27T19:55:21.100Z",
+      "updatedAt": "2025-10-27T20:14:16.557Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-6qJzo2Rf2a",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6qJzo2Rf2a",
+      "name": "Feb 2026 Strategy Review",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suo2Rf2a",
+      "children": [
+        {
+          "id": "canvas-t7diEnGwXR",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-t7diEnGwXR",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suEnGwXR",
+          "name": "The Messy Middle"
+        },
+        {
+          "id": "canvas-eF6p7ziNXh",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-eF6p7ziNXh",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su7ziNXh",
+          "name": "The \"Bear Case\" against MX"
+        },
+        {
+          "id": "canvas-9lzDfQZV-I",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-9lzDfQZV-I",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufQZV-I",
+          "name": "Role of chat within Opal"
+        },
+        {
+          "id": "canvas-r7smt1Rdn3",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-r7smt1Rdn3",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1Rdn3",
+          "name": "MX + CX Use Cases"
+        }
+      ],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:45:25.717Z",
+      "updatedAt": "2026-02-24T20:07:48.832Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Michiel Dorjee",
+        "email": "michiel.dorjee@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-t7diEnGwXR",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-t7diEnGwXR",
+      "name": "The Messy Middle",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suEnGwXR",
+      "children": [],
+      "parent": {
+        "id": "canvas-6qJzo2Rf2a",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6qJzo2Rf2a",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suo2Rf2a",
+        "name": "Feb 2026 Strategy Review"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-19T21:16:32.268Z",
+      "updatedAt": "2026-02-19T22:11:27.903Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-eF6p7ziNXh",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-eF6p7ziNXh",
+      "name": "The \"Bear Case\" against MX",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su7ziNXh",
+      "children": [],
+      "parent": {
+        "id": "canvas-6qJzo2Rf2a",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6qJzo2Rf2a",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suo2Rf2a",
+        "name": "Feb 2026 Strategy Review"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-20T04:05:59.361Z",
+      "updatedAt": "2026-02-20T04:06:14.235Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-9lzDfQZV-I",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-9lzDfQZV-I",
+      "name": "Role of chat within Opal",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sufQZV-I",
+      "children": [],
+      "parent": {
+        "id": "canvas-6qJzo2Rf2a",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6qJzo2Rf2a",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suo2Rf2a",
+        "name": "Feb 2026 Strategy Review"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:53:04.729Z",
+      "updatedAt": "2026-02-16T02:55:30.944Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-r7smt1Rdn3",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-r7smt1Rdn3",
+      "name": "MX + CX Use Cases",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1Rdn3",
+      "children": [
+        {
+          "id": "canvas-f8prq3OtfQ",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-f8prq3OtfQ",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suq3OtfQ",
+          "name": "Aldus (infinite landing pages)"
+        },
+        {
+          "id": "canvas-cpxlaN9uhE",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-cpxlaN9uhE",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suaN9uhE",
+          "name": "Mercator (conversational agent for visitors)"
+        },
+        {
+          "id": "canvas-2uLYPaFCdj",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2uLYPaFCdj",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suPaFCdj",
+          "name": "Hokusai (ephemeral content)"
+        },
+        {
+          "id": "canvas-4ic-Gm7-bG",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-4ic-Gm7-bG",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suGm7-bG",
+          "name": "Biruni"
+        }
+      ],
+      "parent": {
+        "id": "canvas-6qJzo2Rf2a",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-6qJzo2Rf2a",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suo2Rf2a",
+        "name": "Feb 2026 Strategy Review"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-20T05:13:19.658Z",
+      "updatedAt": "2026-02-20T05:14:06.059Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-f8prq3OtfQ",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-f8prq3OtfQ",
+      "name": "Aldus (infinite landing pages)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suq3OtfQ",
+      "children": [
+        {
+          "id": "canvas-BcFatT-GF2",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-BcFatT-GF2",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sutT-GF2",
+          "name": "Aldus Pitch / Storyboard"
+        },
+        {
+          "id": "canvas-XCNSL9-Dxr",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-XCNSL9-Dxr",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suL9-Dxr",
+          "name": "Aldus Architecture (Kevin version)"
+        }
+      ],
+      "parent": {
+        "id": "canvas-r7smt1Rdn3",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-r7smt1Rdn3",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1Rdn3",
+        "name": "MX + CX Use Cases"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:48:58.171Z",
+      "updatedAt": "2026-03-13T15:10:44.720Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-BcFatT-GF2",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-BcFatT-GF2",
+      "name": "Aldus Pitch / Storyboard",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sutT-GF2",
+      "children": [],
+      "parent": {
+        "id": "canvas-f8prq3OtfQ",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-f8prq3OtfQ",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suq3OtfQ",
+        "name": "Aldus (infinite landing pages)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:49:28.525Z",
+      "updatedAt": "2026-02-16T02:49:51.355Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-XCNSL9-Dxr",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-XCNSL9-Dxr",
+      "name": "Aldus Architecture (Kevin version)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suL9-Dxr",
+      "children": [],
+      "parent": {
+        "id": "canvas-f8prq3OtfQ",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-f8prq3OtfQ",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suq3OtfQ",
+        "name": "Aldus (infinite landing pages)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:49:56.852Z",
+      "updatedAt": "2026-02-16T02:50:41.448Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-cpxlaN9uhE",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-cpxlaN9uhE",
+      "name": "Mercator (conversational agent for visitors)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suaN9uhE",
+      "children": [
+        {
+          "id": "canvas-0FxmTks9vq",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0FxmTks9vq",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTks9vq",
+          "name": "Mercator Pitch / Storyboard"
+        },
+        {
+          "id": "canvas-tmf4EvDhFo",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-tmf4EvDhFo",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suEvDhFo",
+          "name": "Mercator Architecture (Kevin version)"
+        }
+      ],
+      "parent": {
+        "id": "canvas-r7smt1Rdn3",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-r7smt1Rdn3",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1Rdn3",
+        "name": "MX + CX Use Cases"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:46:42.587Z",
+      "updatedAt": "2026-02-22T15:17:58.372Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Shafqat Islam",
+        "email": "shafqat.islam@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-0FxmTks9vq",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0FxmTks9vq",
+      "name": "Mercator Pitch / Storyboard",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTks9vq",
+      "children": [],
+      "parent": {
+        "id": "canvas-cpxlaN9uhE",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-cpxlaN9uhE",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suaN9uhE",
+        "name": "Mercator (conversational agent for visitors)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:47:17.338Z",
+      "updatedAt": "2026-02-16T02:47:48.829Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-tmf4EvDhFo",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-tmf4EvDhFo",
+      "name": "Mercator Architecture (Kevin version)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suEvDhFo",
+      "children": [],
+      "parent": {
+        "id": "canvas-cpxlaN9uhE",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-cpxlaN9uhE",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suaN9uhE",
+        "name": "Mercator (conversational agent for visitors)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:47:56.308Z",
+      "updatedAt": "2026-02-16T02:48:33.001Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-2uLYPaFCdj",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2uLYPaFCdj",
+      "name": "Hokusai (ephemeral content)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suPaFCdj",
+      "children": [
+        {
+          "id": "canvas-wthhP781Er",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-wthhP781Er",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suP781Er",
+          "name": "Hokusai Pitch / Storyboard"
+        },
+        {
+          "id": "canvas-829DgZ5p8D",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-829DgZ5p8D",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sugZ5p8D",
+          "name": "Hokusai Architecture (Kevin version)"
+        }
+      ],
+      "parent": {
+        "id": "canvas-r7smt1Rdn3",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-r7smt1Rdn3",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1Rdn3",
+        "name": "MX + CX Use Cases"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:50:52.004Z",
+      "updatedAt": "2026-02-16T02:51:13.116Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-wthhP781Er",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-wthhP781Er",
+      "name": "Hokusai Pitch / Storyboard",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suP781Er",
+      "children": [],
+      "parent": {
+        "id": "canvas-2uLYPaFCdj",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2uLYPaFCdj",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suPaFCdj",
+        "name": "Hokusai (ephemeral content)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:52:13.205Z",
+      "updatedAt": "2026-02-16T02:55:05.667Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-829DgZ5p8D",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-829DgZ5p8D",
+      "name": "Hokusai Architecture (Kevin version)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sugZ5p8D",
+      "children": [],
+      "parent": {
+        "id": "canvas-2uLYPaFCdj",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2uLYPaFCdj",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suPaFCdj",
+        "name": "Hokusai (ephemeral content)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-16T02:52:16.141Z",
+      "updatedAt": "2026-02-16T02:52:30.651Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-4ic-Gm7-bG",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-4ic-Gm7-bG",
+      "name": "Biruni",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suGm7-bG",
+      "children": [
+        {
+          "id": "canvas-P4PkqzXNV2",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-P4PkqzXNV2",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqzXNV2",
+          "name": "Biruni POC"
+        },
+        {
+          "id": "canvas-t2NYY93jPT",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-t2NYY93jPT",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suY93jPT",
+          "name": "POC output"
+        }
+      ],
+      "parent": {
+        "id": "canvas-r7smt1Rdn3",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-r7smt1Rdn3",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1Rdn3",
+        "name": "MX + CX Use Cases"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-27T19:40:15.439Z",
+      "updatedAt": "2026-03-19T19:14:04.371Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-P4PkqzXNV2",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-P4PkqzXNV2",
+      "name": "Biruni POC",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqzXNV2",
+      "children": [],
+      "parent": {
+        "id": "canvas-4ic-Gm7-bG",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-4ic-Gm7-bG",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suGm7-bG",
+        "name": "Biruni"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-19T16:03:40.770Z",
+      "updatedAt": "2026-03-19T16:27:32.006Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lancelot Lachartre",
+        "email": "lancelot.lachartre@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-t2NYY93jPT",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-t2NYY93jPT",
+      "name": "POC output",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suY93jPT",
+      "children": [],
+      "parent": {
+        "id": "canvas-4ic-Gm7-bG",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-4ic-Gm7-bG",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suGm7-bG",
+        "name": "Biruni"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-19T16:06:56.847Z",
+      "updatedAt": "2026-03-19T16:08:12.895Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-Iq84K67jr4",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Iq84K67jr4",
+      "name": "Mar 2026 strategy review",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suK67jr4",
+      "children": [],
+      "parent": {
+        "id": "canvas-ar7ITxAWng",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ar7ITxAWng",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTxAWng",
+        "name": "Opal Strategy"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Kevin.Li@optimizely.com",
+          "email": "kevin.li@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-12T20:14:55.175Z",
+      "updatedAt": "2026-03-16T02:09:05.152Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Shafqat Islam",
+        "email": "shafqat.islam@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-AVhcho2Kgx",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+      "name": "Opal Roadmap + Planning",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+      "children": [
+        {
+          "id": "canvas-0_K9Ry9DXy",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0_K9Ry9DXy",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suRy9DXy",
+          "name": "Q2 Roadmap"
+        },
+        {
+          "id": "canvas-fe4y1BxPU_",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fe4y1BxPU_",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su1BxPU_",
+          "name": "March 2026"
+        },
+        {
+          "id": "canvas-Dpb5J5Lz08",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Dpb5J5Lz08",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suJ5Lz08",
+          "name": "February 2026"
+        },
+        {
+          "id": "canvas-cU14c4aCc5",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-cU14c4aCc5",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suc4aCc5",
+          "name": "January 2026"
+        },
+        {
+          "id": "canvas-CosozNMIn3",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-CosozNMIn3",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suzNMIn3",
+          "name": "December 2025"
+        },
+        {
+          "id": "canvas-av4U9TXQ6o",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-av4U9TXQ6o",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su9TXQ6o",
+          "name": "November 2025"
+        },
+        {
+          "id": "canvas-rMmyLIqWFc",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-rMmyLIqWFc",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suLIqWFc",
+          "name": "September 2025"
+        },
+        {
+          "id": "canvas-8JEldMq07s",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-8JEldMq07s",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sudMq07s",
+          "name": "Q4 Planning Agenda"
+        },
+        {
+          "id": "canvas-ChENEOQzHG",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ChENEOQzHG",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suEOQzHG",
+          "name": "Post-Opticon"
+        },
+        {
+          "id": "canvas-nTWzumlDoE",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-nTWzumlDoE",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suumlDoE",
+          "name": "Q4 Planning (10/1 meeting)"
+        },
+        {
+          "id": "canvas-AAHcAtIC4s",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AAHcAtIC4s",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suAtIC4s",
+          "name": "Q4 Sprint Planning"
+        },
+        {
+          "id": "canvas-UoZuTQMHno",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-UoZuTQMHno",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTQMHno",
+          "name": "Q1 Planning"
+        },
+        {
+          "id": "canvas-uDETl7mId-",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-uDETl7mId-",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sul7mId-",
+          "name": "Holiday Break Notes"
+        },
+        {
+          "id": "canvas-c9QP-st1oS",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-c9QP-st1oS",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su-st1oS",
+          "name": "Opal ELT Meeting on January 13"
+        }
+      ],
+      "icon": {
+        "name": "tear-off-calendar",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/tear-off-calendar-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-08-06T20:10:20.403Z",
+      "updatedAt": "2026-03-18T20:20:46.743Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Patrick Lam",
+        "email": "patrick.lam@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-0_K9Ry9DXy",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0_K9Ry9DXy",
+      "name": "Q2 Roadmap",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su_-73yl",
+      "children": [
+        {
+          "id": "canvas-rICx6utg-H",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-rICx6utg-H",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su6utg-H",
+          "name": "RAG/Memory Deep-dive"
+        },
+        {
+          "id": "canvas-npgiTi7VqO",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-npgiTi7VqO",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTi7VqO",
+          "name": "Q2 Epics & Features"
+        },
+        {
+          "id": "canvas-QPyWTaDBQz",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-QPyWTaDBQz",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTaDBQz",
+          "name": "Telemetry"
+        },
+        {
+          "id": "canvas-bU5n3JR5Jd",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-bU5n3JR5Jd",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su3JR5Jd",
+          "name": "Q2 2026 Planning"
+        }
+      ],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-05T17:17:05.481Z",
+      "updatedAt": "2026-03-18T14:07:28.192Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-rICx6utg-H",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-rICx6utg-H",
+      "name": "RAG/Memory Deep-dive",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su6utg-H",
+      "children": [],
+      "parent": {
+        "id": "canvas-0_K9Ry9DXy",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0_K9Ry9DXy",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suRy9DXy",
+        "name": "Q2 Roadmap"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Mona Chen",
+          "email": "mona.chen@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-17T20:47:19.518Z",
+      "updatedAt": "2026-03-17T21:10:14.691Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Mona Chen",
+        "email": "mona.chen@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Mona Chen",
+        "email": "mona.chen@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-npgiTi7VqO",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-npgiTi7VqO",
+      "name": "Q2 Epics & Features",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTi7VqO",
+      "children": [],
+      "parent": {
+        "id": "canvas-0_K9Ry9DXy",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0_K9Ry9DXy",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suRy9DXy",
+        "name": "Q2 Roadmap"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-04T22:43:20.545Z",
+      "updatedAt": "2026-03-05T18:45:28.127Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Mona Chen",
+        "email": "mona.chen@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-QPyWTaDBQz",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-QPyWTaDBQz",
+      "name": "Telemetry",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTaDBQz",
+      "children": [],
+      "parent": {
+        "id": "canvas-0_K9Ry9DXy",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0_K9Ry9DXy",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suRy9DXy",
+        "name": "Q2 Roadmap"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-05T03:42:05.382Z",
+      "updatedAt": "2026-03-05T21:56:54.928Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-bU5n3JR5Jd",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-bU5n3JR5Jd",
+      "name": "Q2 2026 Planning",
+      "subtitle": "Prep for Q2 planning session",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suilCx0X",
+      "children": [],
+      "parent": {
+        "id": "canvas-0_K9Ry9DXy",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0_K9Ry9DXy",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suRy9DXy",
+        "name": "Q2 Roadmap"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-04T19:13:34.984Z",
+      "updatedAt": "2026-03-04T22:18:52.767Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-fe4y1BxPU_",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-fe4y1BxPU_",
+      "name": "March 2026",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su1BxPU_",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "icon": {
+        "name": "march",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/march-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-11T14:14:37.245Z",
+      "updatedAt": "2026-03-20T17:03:35.579Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Trisha.Hanlon@optimizely.com",
+        "email": "trisha.hanlon@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-Dpb5J5Lz08",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Dpb5J5Lz08",
+      "name": "February 2026",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suJ5Lz08",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "icon": {
+        "name": "february",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/february-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-11T14:14:08.128Z",
+      "updatedAt": "2026-02-11T14:14:31.604Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-cU14c4aCc5",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-cU14c4aCc5",
+      "name": "January 2026",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su5-rzOo",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "icon": {
+        "name": "january",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/january-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-06T18:42:24.356Z",
+      "updatedAt": "2026-01-14T11:40:48.635Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lancelot Lachartre",
+        "email": "lancelot.lachartre@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-CosozNMIn3",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-CosozNMIn3",
+      "name": "December 2025",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suzNMIn3",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "icon": {
+        "name": "december",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/december-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-29T03:19:20.141Z",
+      "updatedAt": "2026-03-05T15:04:45.884Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Erika Schreiber",
+        "email": "erika.schreiber@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-av4U9TXQ6o",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-av4U9TXQ6o",
+      "name": "November 2025",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sumMMsOz",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "icon": {
+        "name": "november",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/november-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-24T03:14:51.595Z",
+      "updatedAt": "2025-11-21T19:59:37.668Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Patrick Lam",
+        "email": "patrick.lam@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-rMmyLIqWFc",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-rMmyLIqWFc",
+      "name": "September 2025",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suLIqWFc",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "icon": {
+        "name": "september",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/september-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-08-06T21:12:52.681Z",
+      "updatedAt": "2025-10-24T03:37:47.135Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-8JEldMq07s",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-8JEldMq07s",
+      "name": "Q4 Planning Agenda",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sudMq07s",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-09-05T13:07:52.631Z",
+      "updatedAt": "2025-10-01T08:56:08.520Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-ChENEOQzHG",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ChENEOQzHG",
+      "name": "Post-Opticon",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suEOQzHG",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-09-23T13:40:47.130Z",
+      "updatedAt": "2025-10-24T02:42:36.056Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-nTWzumlDoE",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-nTWzumlDoE",
+      "name": "Q4 Planning (10/1 meeting)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suumlDoE",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-01T08:55:44.629Z",
+      "updatedAt": "2025-10-03T16:44:54.143Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-AAHcAtIC4s",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AAHcAtIC4s",
+      "name": "Q4 Sprint Planning",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suAtIC4s",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-21T15:46:07.403Z",
+      "updatedAt": "2025-10-21T16:21:33.204Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-UoZuTQMHno",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-UoZuTQMHno",
+      "name": "Q1 Planning",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTQMHno",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-24T17:31:45.845Z",
+      "updatedAt": "2025-12-04T14:39:49.829Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lauren Hammarstedt",
+        "email": "lauren.hammarstedt@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-uDETl7mId-",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-uDETl7mId-",
+      "name": "Holiday Break Notes",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sul7mId-",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Lauren Hammarstedt",
+          "email": "lauren.hammarstedt@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-19T14:59:05.172Z",
+      "updatedAt": "2025-12-30T18:34:11.239Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lauren Hammarstedt",
+        "email": "lauren.hammarstedt@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Christina Nelson",
+        "email": "christina.nelson@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-c9QP-st1oS",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-c9QP-st1oS",
+      "name": "Opal ELT Meeting on January 13",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su-st1oS",
+      "children": [],
+      "parent": {
+        "id": "canvas-AVhcho2Kgx",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AVhcho2Kgx",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suho2Kgx",
+        "name": "Opal Roadmap + Planning"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Lauren Hammarstedt",
+          "email": "lauren.hammarstedt@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-13T18:31:54.851Z",
+      "updatedAt": "2026-01-13T19:14:57.431Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lauren Hammarstedt",
+        "email": "lauren.hammarstedt@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lauren Hammarstedt",
+        "email": "lauren.hammarstedt@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-EB3qqABnWY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-EB3qqABnWY",
+      "name": "Opal Product Meetings",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqABnWY",
+      "children": [
+        {
+          "id": "canvas-xlRqDtvrp9",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+          "name": "Platform PM Standup (Monday)"
+        },
+        {
+          "id": "canvas-0xkeinnYW4",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+          "name": "Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-2mLr8EWCyt",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+          "name": "Platform PM Deep-Dive (Wednesday)"
+        }
+      ],
+      "icon": {
+        "name": "inspection",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/inspection-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-08-11T15:55:22.411Z",
+      "updatedAt": "2025-11-03T16:51:18.356Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-xlRqDtvrp9",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+      "name": "Platform PM Standup (Monday)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+      "children": [
+        {
+          "id": "canvas-iIas7fiq91",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-iIas7fiq91",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su7fiq91",
+          "name": "TEMPLATE"
+        },
+        {
+          "id": "canvas-U2ARDQRIQI",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-U2ARDQRIQI",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDQRIQI",
+          "name": "10.27.25"
+        },
+        {
+          "id": "canvas-AAzYn387kY",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AAzYn387kY",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sun387kY",
+          "name": "11.10.25"
+        },
+        {
+          "id": "canvas-T3jtMpIRj3",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-T3jtMpIRj3",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suMpIRj3",
+          "name": "11.17.25"
+        },
+        {
+          "id": "canvas-QOobmTPP2w",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-QOobmTPP2w",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sumTPP2w",
+          "name": "11.24.25"
+        },
+        {
+          "id": "canvas-786kM3nVVx",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-786kM3nVVx",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suM3nVVx",
+          "name": "12.01.25"
+        },
+        {
+          "id": "canvas-rCtQgtJO6V",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-rCtQgtJO6V",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sugtJO6V",
+          "name": "12.08.25"
+        },
+        {
+          "id": "canvas-sT06X8A8EK",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-sT06X8A8EK",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suX8A8EK",
+          "name": "12.15.25"
+        },
+        {
+          "id": "canvas-zO5XsVg3RB",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-zO5XsVg3RB",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_susVg3RB",
+          "name": "12.22.25"
+        },
+        {
+          "id": "canvas-AJ8p4MZ_LU",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AJ8p4MZ_LU",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su4MZ_LU",
+          "name": "01.05.2026"
+        },
+        {
+          "id": "canvas-tRGMnG4_4A",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-tRGMnG4_4A",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sunG4_4A",
+          "name": "01.12.2026"
+        },
+        {
+          "id": "canvas-x-c0jNlYVY",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-x-c0jNlYVY",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sujNlYVY",
+          "name": "02.02.2026"
+        },
+        {
+          "id": "canvas-CQrF4e1Ax3",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-CQrF4e1Ax3",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su4e1Ax3",
+          "name": "02.09.2026 Opal PM Standup"
+        },
+        {
+          "id": "canvas-vRZBYbb_FY",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-vRZBYbb_FY",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYbb_FY",
+          "name": "02.23.2026 Opal PM Standup"
+        },
+        {
+          "id": "canvas-g7fuqVNZ3h",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-g7fuqVNZ3h",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqVNZ3h",
+          "name": "03.02.2026 Opal PM Standup"
+        },
+        {
+          "id": "canvas-gva6QwZI_t",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-gva6QwZI_t",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suQwZI_t",
+          "name": "03.09.2026"
+        },
+        {
+          "id": "canvas-oMegD7X-NY",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-oMegD7X-NY",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suD7X-NY",
+          "name": "03.16.26"
+        }
+      ],
+      "parent": {
+        "id": "canvas-EB3qqABnWY",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-EB3qqABnWY",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqABnWY",
+        "name": "Opal Product Meetings"
+      },
+      "icon": {
+        "name": "::custom::ws-FdWQ1W-2Yo::1b6fc923-6623-4d79-bfdd-3757295e018a::opal",
+        "type": "application/octet-stream",
+        "browserLink": "https://codaio.imgix.net/workspaces/ws-FdWQ1W-2Yo/blobs/customIcons/1b6fc923-6623-4d79-bfdd-3757295e018a?fit=fill&fill=solid&w=128&h=128&fm=gif&bg=0FFF&fill-color=0FFF"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-03T15:37:34.771Z",
+      "updatedAt": "2025-11-10T14:50:16.536Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-iIas7fiq91",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-iIas7fiq91",
+      "name": "TEMPLATE",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sudQkyie",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-16T11:42:40.263Z",
+      "updatedAt": "2026-03-16T12:25:21.500Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-U2ARDQRIQI",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-U2ARDQRIQI",
+      "name": "10.27.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDQRIQI",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Lauren Hammarstedt",
+          "email": "lauren.hammarstedt@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-10-27T14:14:44.099Z",
+      "updatedAt": "2025-11-10T14:50:44.863Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Lauren Hammarstedt",
+        "email": "lauren.hammarstedt@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-AAzYn387kY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AAzYn387kY",
+      "name": "11.10.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sun387kY",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-10T03:46:40.559Z",
+      "updatedAt": "2025-11-12T13:48:51.195Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-T3jtMpIRj3",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-T3jtMpIRj3",
+      "name": "11.17.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8-yH50",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-16T09:23:33.387Z",
+      "updatedAt": "2025-11-24T06:57:24.104Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-QOobmTPP2w",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-QOobmTPP2w",
+      "name": "11.24.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sumTPP2w",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-24T06:55:28.751Z",
+      "updatedAt": "2025-11-25T17:35:09.379Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-786kM3nVVx",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-786kM3nVVx",
+      "name": "12.01.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suM3nVVx",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-01T11:08:55.014Z",
+      "updatedAt": "2025-12-01T14:42:53.211Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-rCtQgtJO6V",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-rCtQgtJO6V",
+      "name": "12.08.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sugtJO6V",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-08T09:56:42.317Z",
+      "updatedAt": "2025-12-08T14:48:05.519Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-sT06X8A8EK",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-sT06X8A8EK",
+      "name": "12.15.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suX8A8EK",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-15T11:32:23.361Z",
+      "updatedAt": "2025-12-15T15:50:39.055Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-zO5XsVg3RB",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-zO5XsVg3RB",
+      "name": "12.22.25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_susVg3RB",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-22T13:03:41.159Z",
+      "updatedAt": "2026-02-25T11:07:56.983Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Neil Mullarkey",
+        "email": "neil.mullarkey@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-AJ8p4MZ_LU",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-AJ8p4MZ_LU",
+      "name": "01.05.2026",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su4MZ_LU",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-05T12:19:31.539Z",
+      "updatedAt": "2026-02-25T11:07:51.226Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Saquif Anough",
+        "email": "ahmed.anough@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Neil Mullarkey",
+        "email": "neil.mullarkey@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-tRGMnG4_4A",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-tRGMnG4_4A",
+      "name": "01.12.2026",
+      "subtitle": "Weekly Opal Platform PM Standup",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sunG4_4A",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-12T13:33:52.934Z",
+      "updatedAt": "2026-02-25T11:07:43.833Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Whitney",
+        "email": "alexander.whitney@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Neil Mullarkey",
+        "email": "neil.mullarkey@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-x-c0jNlYVY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-x-c0jNlYVY",
+      "name": "02.02.2026",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suCIwZ6B",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Saquif Anough",
+          "email": "ahmed.anough@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-30T17:37:27.977Z",
+      "updatedAt": "2026-02-05T11:38:13.319Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Neil Mullarkey",
+        "email": "neil.mullarkey@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-CQrF4e1Ax3",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-CQrF4e1Ax3",
+      "name": "02.09.2026 Opal PM Standup",
+      "subtitle": "Weekly Opal Platform PM Standup",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su4e1Ax3",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-09T14:33:32.003Z",
+      "updatedAt": "2026-02-25T11:07:28.395Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Neil Mullarkey",
+        "email": "neil.mullarkey@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-vRZBYbb_FY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-vRZBYbb_FY",
+      "name": "02.23.2026 Opal PM Standup",
+      "subtitle": "Weekly Opal Platform PM Standup",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suU75PEC",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-23T14:19:08.678Z",
+      "updatedAt": "2026-03-02T14:45:30.838Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-g7fuqVNZ3h",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-g7fuqVNZ3h",
+      "name": "03.02.2026 Opal PM Standup",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suZ6HAeY",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-27T21:24:10.531Z",
+      "updatedAt": "2026-03-09T13:49:24.768Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-gva6QwZI_t",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-gva6QwZI_t",
+      "name": "03.09.2026",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suQwZI_t",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-09T13:36:48.037Z",
+      "updatedAt": "2026-03-09T13:57:42.206Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Whitney",
+        "email": "alexander.whitney@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-oMegD7X-NY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-oMegD7X-NY",
+      "name": "03.16.26",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sueBZ0Og",
+      "children": [],
+      "parent": {
+        "id": "canvas-xlRqDtvrp9",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-xlRqDtvrp9",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtvrp9",
+        "name": "Platform PM Standup (Monday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-16T12:25:21.500Z",
+      "updatedAt": "2026-03-18T13:37:00.366Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Angela Drake",
+        "email": "angela.drake@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-0xkeinnYW4",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+      "name": "Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+      "children": [
+        {
+          "id": "canvas-__dHWCqCg7",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-__dHWCqCg7",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suWCqCg7",
+          "name": "11.5.25 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-z_Kx7zzEjD",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-z_Kx7zzEjD",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su7zzEjD",
+          "name": "11.12.25 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-V9N880hm48",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-V9N880hm48",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su80hm48",
+          "name": "11.19.25 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-2nqMa_Bs_-",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2nqMa_Bs_-",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sua_Bs_-",
+          "name": "11.26.25 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-ojaX36Di9-",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ojaX36Di9-",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su36Di9-",
+          "name": "12.10.25 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-zr-EYr1BQF",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-zr-EYr1BQF",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYr1BQF",
+          "name": "12.18.25 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-_OraWy3cbn",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-_OraWy3cbn",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suWy3cbn",
+          "name": "1.8.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-FrBUTW0HwY",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-FrBUTW0HwY",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTW0HwY",
+          "name": "1.15.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-e6c6AlPh-6",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-e6c6AlPh-6",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suAlPh-6",
+          "name": "1.22.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-z29OFjbIL3",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-z29OFjbIL3",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suFjbIL3",
+          "name": "1.28.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-BxgYxrzMK9",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-BxgYxrzMK9",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suxrzMK9",
+          "name": "2.5.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-Kry4_RCkmn",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Kry4_RCkmn",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su_RCkmn",
+          "name": "2.12.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-sVtsD-0lqe",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-sVtsD-0lqe",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suD-0lqe",
+          "name": "2.19.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-H9CFHCYcAw",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-H9CFHCYcAw",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suHCYcAw",
+          "name": "2.26.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-eIWBV0SvpE",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-eIWBV0SvpE",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suV0SvpE",
+          "name": "3.05.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-DPFyDtndsY",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-DPFyDtndsY",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtndsY",
+          "name": "3.12.2026 Cross-Product Weekly"
+        },
+        {
+          "id": "canvas-pZ5V_egc5D",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-pZ5V_egc5D",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su_egc5D",
+          "name": "3.19.2026 Cross-Product Weekly"
+        }
+      ],
+      "parent": {
+        "id": "canvas-EB3qqABnWY",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-EB3qqABnWY",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqABnWY",
+        "name": "Opal Product Meetings"
+      },
+      "icon": {
+        "name": "teamwork",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/teamwork-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-03T15:36:28.092Z",
+      "updatedAt": "2026-03-18T20:48:12.501Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-__dHWCqCg7",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-__dHWCqCg7",
+      "name": "11.5.25 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suWCqCg7",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-03T15:47:57.390Z",
+      "updatedAt": "2026-02-19T13:57:01.649Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-z_Kx7zzEjD",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-z_Kx7zzEjD",
+      "name": "11.12.25 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su7zzEjD",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-12T04:14:32.850Z",
+      "updatedAt": "2025-11-18T12:40:35.601Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Maheen Neha",
+        "email": "maheen.neha@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-V9N880hm48",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-V9N880hm48",
+      "name": "11.19.25 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su80hm48",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-17T23:04:43.194Z",
+      "updatedAt": "2025-11-19T16:23:12.109Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-2nqMa_Bs_-",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2nqMa_Bs_-",
+      "name": "11.26.25 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sua_Bs_-",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-26T04:15:29.247Z",
+      "updatedAt": "2025-12-01T20:34:01.212Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Charlie Fitz",
+        "email": "charlie.fitz@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-ojaX36Di9-",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ojaX36Di9-",
+      "name": "12.10.25 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su36Di9-",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-09T14:14:43.845Z",
+      "updatedAt": "2025-12-10T16:18:54.082Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-zr-EYr1BQF",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-zr-EYr1BQF",
+      "name": "12.18.25 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sunGaPhW",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-12-17T19:58:36.437Z",
+      "updatedAt": "2025-12-18T14:57:30.925Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Charlie Fitz",
+        "email": "charlie.fitz@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-_OraWy3cbn",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-_OraWy3cbn",
+      "name": "1.8.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suWy3cbn",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Sarah.Mitchell@optimizely.com",
+          "email": "sarah.mitchell@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-06T14:17:50.087Z",
+      "updatedAt": "2026-01-08T16:13:16.334Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-FrBUTW0HwY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-FrBUTW0HwY",
+      "name": "1.15.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suTW0HwY",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Sarah.Mitchell@optimizely.com",
+          "email": "sarah.mitchell@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-15T12:57:57.047Z",
+      "updatedAt": "2026-01-16T13:43:33.727Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Whitney",
+        "email": "alexander.whitney@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-e6c6AlPh-6",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-e6c6AlPh-6",
+      "name": "1.22.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suAlPh-6",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Sarah.Mitchell@optimizely.com",
+          "email": "sarah.mitchell@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-21T20:56:16.713Z",
+      "updatedAt": "2026-01-23T18:05:10.291Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-z29OFjbIL3",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-z29OFjbIL3",
+      "name": "1.28.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suYX3yAr",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "icon": {
+        "name": "teamwork",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/teamwork-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-28T12:56:08.482Z",
+      "updatedAt": "2026-01-29T19:52:11.944Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-BxgYxrzMK9",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-BxgYxrzMK9",
+      "name": "2.5.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suxrzMK9",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-05T02:14:32.483Z",
+      "updatedAt": "2026-02-05T15:35:53.558Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "John Zoshak",
+        "email": "john.zoshak@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-Kry4_RCkmn",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-Kry4_RCkmn",
+      "name": "2.12.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su_RCkmn",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Sarah.Mitchell@optimizely.com",
+          "email": "sarah.mitchell@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-12T13:47:39.675Z",
+      "updatedAt": "2026-02-19T14:54:41.185Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Joshua Holt",
+        "email": "josh.holt@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-sVtsD-0lqe",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-sVtsD-0lqe",
+      "name": "2.19.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suD-0lqe",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-19T13:55:50.287Z",
+      "updatedAt": "2026-02-19T15:55:13.307Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-H9CFHCYcAw",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-H9CFHCYcAw",
+      "name": "2.26.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suHCYcAw",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Tom Bramley",
+          "email": "tom.bramley@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-26T12:01:09.049Z",
+      "updatedAt": "2026-02-26T16:04:13.569Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Tom Bramley",
+        "email": "tom.bramley@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Alexander Wald",
+        "email": "alex.wald@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-eIWBV0SvpE",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-eIWBV0SvpE",
+      "name": "3.05.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suV0SvpE",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Tom Bramley",
+          "email": "tom.bramley@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-04T08:56:21.335Z",
+      "updatedAt": "2026-03-05T15:10:11.991Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Tom Bramley",
+        "email": "tom.bramley@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Angela Drake",
+        "email": "angela.drake@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-DPFyDtndsY",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-DPFyDtndsY",
+      "name": "3.12.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDtndsY",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Sarah.Mitchell@optimizely.com",
+          "email": "sarah.mitchell@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-12T10:23:41.425Z",
+      "updatedAt": "2026-03-12T13:56:40.619Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Kevin.Li@optimizely.com",
+        "email": "kevin.li@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-pZ5V_egc5D",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-pZ5V_egc5D",
+      "name": "3.19.2026 Cross-Product Weekly",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suyP8fh6",
+      "children": [],
+      "parent": {
+        "id": "canvas-0xkeinnYW4",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-0xkeinnYW4",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suinnYW4",
+        "name": "Cross-Product Weekly"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-03-18T20:49:27.184Z",
+      "updatedAt": "2026-03-19T14:52:01.939Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Sarah.Mitchell@optimizely.com",
+        "email": "sarah.mitchell@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-2mLr8EWCyt",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+      "name": "Platform PM Deep-Dive (Wednesday)",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+      "children": [
+        {
+          "id": "canvas-W_KYoHaEtb",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-W_KYoHaEtb",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suoHaEtb",
+          "name": "Dec 15th week"
+        },
+        {
+          "id": "canvas-o5I12fl_8L",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-o5I12fl_8L",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su2fl_8L",
+          "name": "Jan 7th week"
+        },
+        {
+          "id": "canvas-ZEmKt1V2Wj",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ZEmKt1V2Wj",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1V2Wj",
+          "name": "Jan 16th"
+        },
+        {
+          "id": "canvas-NAPc-64Xx_",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-NAPc-64Xx_",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su-64Xx_",
+          "name": "Jan 28th"
+        },
+        {
+          "id": "canvas-ni6JDA96Hw",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ni6JDA96Hw",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDA96Hw",
+          "name": "Feb 25"
+        },
+        {
+          "id": "canvas-mCsv0X6RNB",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-mCsv0X6RNB",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su0X6RNB",
+          "name": "Mar 10"
+        },
+        {
+          "id": "canvas-YlNRp8rmUe",
+          "type": "page",
+          "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-YlNRp8rmUe",
+          "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sup8rmUe",
+          "name": "Mar 25"
+        }
+      ],
+      "parent": {
+        "id": "canvas-EB3qqABnWY",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-EB3qqABnWY",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suqABnWY",
+        "name": "Opal Product Meetings"
+      },
+      "icon": {
+        "name": "wednesday",
+        "type": "image/png",
+        "browserLink": "https://cdn.coda.io/icons/png/color/wednesday-128.png"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-10T14:49:59.902Z",
+      "updatedAt": "2025-12-15T14:40:21.866Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-W_KYoHaEtb",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-W_KYoHaEtb",
+      "name": "Dec 15th week",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suoHaEtb",
+      "children": [],
+      "parent": {
+        "id": "canvas-2mLr8EWCyt",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+        "name": "Platform PM Deep-Dive (Wednesday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2025-11-10T14:49:32.326Z",
+      "updatedAt": "2025-12-17T13:47:17.823Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Proggo.Pratik@optimizely.com",
+        "email": "proggo.pratik@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-o5I12fl_8L",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-o5I12fl_8L",
+      "name": "Jan 7th week",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su2fl_8L",
+      "children": [],
+      "parent": {
+        "id": "canvas-2mLr8EWCyt",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+        "name": "Platform PM Deep-Dive (Wednesday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-07T14:08:50.180Z",
+      "updatedAt": "2026-01-21T14:13:20.405Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-ZEmKt1V2Wj",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ZEmKt1V2Wj",
+      "name": "Jan 16th",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_sut1V2Wj",
+      "children": [],
+      "parent": {
+        "id": "canvas-2mLr8EWCyt",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+        "name": "Platform PM Deep-Dive (Wednesday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-16T15:05:25.292Z",
+      "updatedAt": "2026-01-23T14:46:03.142Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-NAPc-64Xx_",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-NAPc-64Xx_",
+      "name": "Jan 28th",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su-64Xx_",
+      "children": [],
+      "parent": {
+        "id": "canvas-2mLr8EWCyt",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+        "name": "Platform PM Deep-Dive (Wednesday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Amit.Shimshi@optimizely.com",
+          "email": "amit.shimshi@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-01-28T13:20:28.862Z",
+      "updatedAt": "2026-02-25T14:08:15.045Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Amit.Shimshi@optimizely.com",
+        "email": "amit.shimshi@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      }
+    },
+    {
+      "id": "canvas-ni6JDA96Hw",
+      "type": "page",
+      "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-ni6JDA96Hw",
+      "name": "Feb 25",
+      "subtitle": "",
+      "contentType": "canvas",
+      "isHidden": false,
+      "isEffectivelyHidden": false,
+      "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_suDA96Hw",
+      "children": [],
+      "parent": {
+        "id": "canvas-2mLr8EWCyt",
+        "type": "page",
+        "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages/canvas-2mLr8EWCyt",
+        "browserLink": "https://coda.io/d/_d0f_sY3MSh-/_su8EWCyt",
+        "name": "Platform PM Deep-Dive (Wednesday)"
+      },
+      "authors": [
+        {
+          "@context": "http://schema.org/",
+          "@type": "Person",
+          "name": "Nikita Bokil",
+          "email": "nikita.bokil@optimizely.com"
+        }
+      ],
+      "createdAt": "2026-02-11T14:04:50.223Z",
+      "updatedAt": "2026-02-25T14:40:19.612Z",
+      "createdBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Nikita Bokil",
+        "email": "nikita.bokil@optimizely.com"
+      },
+      "updatedBy": {
+        "@context": "http://schema.org/",
+        "@type": "Person",
+        "name": "Neil Mullarkey",
+        "email": "neil.mullarkey@optimizely.com"
+      }
+    }
+  ],
+  "href": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages?pageToken=eyJsaW1pdCI6IjEwMCIsIm9mZnNldCI6MCwib3BWZXJzaW9uIjozMzA3NjcsInNjaGVtYVZlcnNpb24iOjE3N30",
+  "nextPageToken": "eyJsaW1pdCI6IjEwMCIsIm9mZnNldCI6MTAwLCJvcFZlcnNpb24iOjMzMDc2Nywic2NoZW1hVmVyc2lvbiI6MTc3fQ",
+  "nextPageLink": "https://coda.io/apis/v1/docs/0f_sY3MSh-/pages?pageToken=eyJsaW1pdCI6IjEwMCIsIm9mZnNldCI6MTAwLCJvcFZlcnNpb24iOjMzMDc2Nywic2NoZW1hVmVyc2lvbiI6MTc3fQ"
+}

@@ -1,0 +1,41 @@
+## CMP Requests Page DOM Structure
+## URL: /cloud/work-request
+## Scraped: Feb 26, 2026
+
+### Tabs
+Pitch Requests | Work Requests (active, blue underline)
+
+### Toolbar
+Filter button with badge count (5)
+Search: "Search work requests" input
+"Share Request URL" dropdown
+"Export" dropdown
+"Add Request" button (blue, primary)
+
+### Column Selector
+"Columns" dropdown (right-aligned)
+
+### Table
+Headers:
+| Request | Related Activities | Priority | Status | Requested By | Submitted Date | Deliverable Due Date |
+
+Row 1:
+  Request: "Image for social post" / WRQ-1
+  Related Activities: 0
+  Priority: Low (gray dot)
+  Status: Accepted
+  Requested By: Hsiao-Pei Chien
+  Submitted Date: Apr 18, 2023 / "3 years ago"
+  Deliverable Due Date: (empty)
+
+### Pagination
+"Page Size 20" dropdown
+"1-1 of 1 requests"
+
+### Visual Details
+- Standard data table with column headers
+- Priority shown as colored dot + text
+- Status shown as plain text
+- Submitted date shows both absolute date and relative time
+- Horizontal scrollbar at bottom (table wider than viewport)
+- "Add Request" is the primary CTA

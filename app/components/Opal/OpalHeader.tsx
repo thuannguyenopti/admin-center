@@ -2,7 +2,7 @@
 
 import { Box, Button } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconXmark, IconBars, IconCirclePlus } from "@optimizely/axiom-icons";
+import { IconXmark, IconBars, IconCirclePlus } from "@/app/lib/axiom-icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
