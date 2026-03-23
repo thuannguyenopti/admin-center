@@ -121,8 +121,8 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
         }}>
           <span style={{ fontSize: 13, fontWeight: 500, color: "#2e3442" }}>Resume previous conversation?</span>
           <div style={{ display: "flex", gap: 6 }}>
-            <Button ref={yesRef} appearance="default" size="sm" onClick={onResumeYes}>Yes</Button>
-            <Button appearance="default" size="sm" onClick={onResumeNo}>No</Button>
+            <Button ref={yesRef} appearance="secondary" size="sm" onClick={onResumeYes}>Yes</Button>
+            <Button appearance="secondary" size="sm" onClick={onResumeNo}>No</Button>
           </div>
         </div>
         {/* Purple bar — standalone, full width */}
@@ -150,10 +150,10 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
           )}
         </div>
         {state === "in-chat" && (
-          <Button appearance="default" size="sm" onClick={onDone}>Done</Button>
+          <Button appearance="secondary" size="sm" onClick={onDone}>Done</Button>
         )}
         {state === "default" && (
-          <Button appearance="default" size="sm" onClick={onDismiss}>Done</Button>
+          <Button appearance="secondary" size="sm" onClick={onDismiss}>Done</Button>
         )}
       </div>
       {state === "default" && agent.subtitle && (
