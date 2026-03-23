@@ -209,6 +209,31 @@
     .token-card.med  .usecase { background: #FFFBEB; color: #92400e; }
     .token-card.high .usecase { background: #FEF2F2; color: #991b1b; }
 
+
+    /* ── CONTEXTUAL HIGHLIGHT ── */
+    .step {
+      border-radius: 8px;
+      border: 1.5px solid transparent;
+      padding: 8px 10px 6px;
+      margin: 0 -10px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+    }
+
+    .step:hover:not(.active) {
+      background: #f5f3ff44;
+    }
+
+    .step.active {
+      background: linear-gradient(135deg, #f5f3ff, #e5efff);
+      border-color: transparent;
+    }
+
+    .step.active .step-num {
+      background: #7c3aed;
+      color: #fff;
+    }
+
     /* ── BACK NAV ── */
     .back-nav {
       display: flex;
@@ -249,7 +274,7 @@
   <hr/>
 
   <!-- STEP 1 -->
-  <div class="step">
+  <div class="step" id="step-1">
     <div class="step-header">
       <div class="step-num">01</div>
       <span class="step-title">Enable Multi-Turn</span>
@@ -266,7 +291,7 @@
   <hr/>
 
   <!-- STEP 2 -->
-  <div class="step">
+  <div class="step" id="step-2">
     <div class="step-header">
       <div class="step-num">02</div>
       <span class="step-title">Write Your Prompt Template</span>
@@ -285,7 +310,7 @@
   <hr/>
 
   <!-- STEP 3 -->
-  <div class="step">
+  <div class="step" id="step-3">
     <div class="step-header">
       <div class="step-num">03</div>
       <span class="step-title">Set the System Prompt</span>
@@ -306,7 +331,7 @@
   <hr/>
 
   <!-- STEP 4 -->
-  <div class="step">
+  <div class="step" id="step-4">
     <div class="step-header">
       <div class="step-num">04</div>
       <span class="step-title">Dial In Memory Limit</span>
@@ -339,7 +364,7 @@
   <hr/>
 
   <!-- STEP 5 -->
-  <div class="step">
+  <div class="step" id="step-5">
     <div class="step-header">
       <div class="step-num">05</div>
       <span class="step-title">Craft the First Message</span>
@@ -356,7 +381,7 @@
   <hr/>
 
   <!-- STEP 6 -->
-  <div class="step">
+  <div class="step" id="step-6">
     <div class="step-header">
       <div class="step-num">06</div>
       <span class="step-title">Save, Test &amp; Iterate</span>
@@ -372,5 +397,31 @@
   </div>
 
 
+  <script>
+    // Page → guide: highlight the relevant step
+    window.addEventListener('message', function(e) {
+      if (!e.data || e.data.type !== 'highlightStep') return;
+      var step = e.data.step;
+      document.querySelectorAll('.step').forEach(function(el) {
+        el.classList.remove('active');
+      });
+      if (step) {
+        var target = document.getElementById('step-' + step);
+        if (target) {
+          target.classList.add('active');
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
+
+    // Guide → page: clicking a step navigates to that field
+    document.querySelectorAll('.step[id]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var id = el.id; // e.g. "step-2"
+        var num = parseInt(id.replace('step-', ''), 10);
+        window.parent.postMessage({ type: 'focusStep', step: num }, '*');
+      });
+    });
+  </script>
 </body>
 </html>
