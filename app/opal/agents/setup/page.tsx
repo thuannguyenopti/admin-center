@@ -1217,7 +1217,7 @@ function SpecializedAgentSetupContent() {
                                                                                         />
                                                                                     </Box>
                                                                                     {!isReadOnly && (
-                                                                                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />} onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
+                                                                                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />} aria-label="Remove prompt" onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
                                                                                     )}
                                                                                 </Box>
                                                                             ))}
