@@ -277,6 +277,15 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
+	// AvailableContentTypesAttribute (parent-side control)
+	availableContentTypes?: {
+		availability?: "All" | "None"; // Default behavior: All means all types allowed, None means no types allowed
+		include?: string[]; // Explicitly allow ONLY these child types (overrides availability)
+		exclude?: string[]; // Explicitly disallow these child types from otherwise allowed types
+	};
+	// Child-side control (IncludeOn/ExcludeOn on the attribute)
+	includeOn?: string[]; // This type can ONLY be created under these parent types
+	excludeOn?: string[]; // This type CANNOT be created under these parent types
 	properties: Property[];
 	variantDimensions?: VariantDimension[];
 	modifiedAt?: string;
@@ -365,12 +374,32 @@ export const initialContentTypes: ContentType[] = [
 		name: "Blog Post",
 		baseType: "Page",
 		description: "A standard blog/article page",
+		availableContentTypes: { availability: "None" }, // Blog posts don't allow any children
+		includeOn: ["ct-blog-listing"], // Can only be created under Blog Listing pages
 		properties: [
 			{ id: "title", name: "Title", type: "text", required: true },
 			{ id: "subtitle", name: "Subtitle", type: "text" },
 			{ id: "body", name: "Body", type: "richtext", required: true },
 			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
 			{ id: "seo", name: "SEO", type: "seo" },
+		],
+	},
+	{
+		id: "ct-blog-listing",
+		name: "Blog Listing",
+		displayName: "Blog Listing",
+		baseType: "Page",
+		description: "A blog listing page that can only contain blog posts",
+		groupName: "Standard",
+		guid: "c3d4e5f6-a7b8-9012-cdef-g34567890123",
+		isAvailable: true,
+		availableContentTypes: { include: ["ct-blog-post"] }, // Only allow blog posts as children
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+		properties: [
+			{ id: "title", name: "Title", displayName: "Title", type: "text", required: true },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "text" },
+			{ id: "seo", name: "SEO", displayName: "SEO", type: "seo" },
 		],
 	},
 	{
@@ -630,6 +659,16 @@ export type Page = {
 	tags?: string[];
 	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
 	categories?: string[];
+};
+
+export type Application = {
+	id: string;
+	name: string;
+	appId: string;
+	url?: string;
+	startPageId?: string;
+	modifiedAt?: string;
+	modifiedBy?: string;
 };
 
 export const initialPages: Page[] = [
@@ -1088,7 +1127,7 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-24",
-		contentTypeId: "ct-page",
+		contentTypeId: "ct-blog-listing",
 		data: {
 			seo: {
 				en: {
@@ -5422,3 +5461,71 @@ export const initialCategories = [
 		isExpanded: false,
 	},
 ];
+
+export const initialApplications: Application[] = [
+	{
+		id: "app-stride",
+		name: "Stride",
+		appId: "1234",
+		url: "www",
+		startPageId: "page-site-home",
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+	},
+];
+
+// Helper functions for content type restrictions
+export function getContentType(contentTypeId: string): ContentType | undefined {
+	return initialContentTypes.find(ct => ct.id === contentTypeId);
+}
+
+export function canCreateChildType(
+	parentContentTypeId: string,
+	childContentTypeId: string
+): boolean {
+	const parentType = getContentType(parentContentTypeId);
+	const childType = getContentType(childContentTypeId);
+
+	// Check parent-side restrictions (AvailableContentTypesAttribute)
+	if (parentType?.availableContentTypes) {
+		const { availability, include, exclude } = parentType.availableContentTypes;
+
+		// If availability is explicitly set to None, no children allowed
+		if (availability === "None") {
+			return false;
+		}
+
+		// If include is set, ONLY those types are allowed
+		if (include && include.length > 0) {
+			if (!include.includes(childContentTypeId)) {
+				return false;
+			}
+		}
+
+		// If exclude is set, those types are NOT allowed
+		if (exclude && exclude.length > 0) {
+			if (exclude.includes(childContentTypeId)) {
+				return false;
+			}
+		}
+
+		// If availability is "All" (or undefined), and no include/exclude, all types allowed
+	}
+
+	// Check child-side restrictions (IncludeOn/ExcludeOn)
+	// IncludeOn: This child can ONLY be created under these parent types
+	if (childType?.includeOn && childType.includeOn.length > 0) {
+		if (!childType.includeOn.includes(parentContentTypeId)) {
+			return false;
+		}
+	}
+
+	// ExcludeOn: This child CANNOT be created under these parent types
+	if (childType?.excludeOn && childType.excludeOn.length > 0) {
+		if (childType.excludeOn.includes(parentContentTypeId)) {
+			return false;
+		}
+	}
+
+	return true;
+}

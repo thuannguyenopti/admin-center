@@ -44,7 +44,7 @@ import {
 } from "@tabler/icons-react";
 import {IconList} from "@optimizely/axiom-icons";
 import Item from "@/app/components/Item";
-import {Page, ContentType, initialContentTypes} from "@/app/db/initialData";
+import {Page, ContentType, initialContentTypes, canCreateChildType} from "@/app/db/initialData";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 import usePersistentState from "@/app/usePersistentState";
 import {opalActions as initialOpalActions, OpalAction} from "@/app/cms/settings/opal-actions/mockData";
@@ -63,26 +63,31 @@ const LocationTreeNode = ({
 	level = 0,
 	selectedLocation,
 	onSelectLocation,
+	validLocationIds = [],
 }: {
 	node: PageNode;
 	level?: number;
 	selectedLocation: string | null;
 	onSelectLocation: (id: string) => void;
+	validLocationIds?: string[];
 }) => {
 	const [expanded, setExpanded] = useState(true);
 	const hasChildren = node.children.length > 0;
 	const isSelected = selectedLocation === node.id;
+	const isValid = validLocationIds.length === 0 || validLocationIds.includes(node.id);
 
 	return (
 		<Box>
 			<Box
-				onClick={() => onSelectLocation(node.id)}
-				cursor="pointer"
+				onClick={() => isValid && onSelectLocation(node.id)}
+				cursor={isValid ? "pointer" : undefined}
 				p="8"
 				rounded="sm"
 				bg={isSelected ? "bg.accent.subtle" : undefined}
 				style={{
 					paddingLeft: level * 24 + 8,
+					opacity: isValid ? 1 : 0.5,
+					cursor: isValid ? "pointer" : "not-allowed",
 				}}
 			>
 				<Group gap="8" alignItems="center">
@@ -114,6 +119,7 @@ const LocationTreeNode = ({
 						level={level + 1}
 						selectedLocation={selectedLocation}
 						onSelectLocation={onSelectLocation}
+						validLocationIds={validLocationIds}
 					/>
 				))}
 		</Box>
@@ -274,21 +280,45 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 	}, [language]);
 
 	// Get templates from content types - filter by Page and Experience base types
-	const templates = selectedLocation
-		? initialContentTypes
-				.filter((ct) => ct.baseType === "Page" || ct.baseType === "Experience")
-				.filter((ct) => categoryFilter === "any" || ct.baseType === categoryFilter)
-				.filter((ct) =>
-					templateSearch
-						? (ct.displayName || ct.name).toLowerCase().includes(templateSearch.toLowerCase())
-						: true
-				)
-				.map((ct) => ({
-					id: ct.id,
-					name: ct.displayName || ct.name,
-					category: ct.baseType,
-				}))
-		: [];
+	// Templates are now shown immediately, not dependent on location selection
+	const templates = initialContentTypes
+		.filter((ct) => ct.baseType === "Page" || ct.baseType === "Experience")
+		.filter((ct) => categoryFilter === "any" || ct.baseType === categoryFilter)
+		.filter((ct) =>
+			templateSearch
+				? (ct.displayName || ct.name).toLowerCase().includes(templateSearch.toLowerCase())
+				: true
+		)
+		.map((ct) => ({
+			id: ct.id,
+			name: ct.displayName || ct.name,
+			category: ct.baseType,
+		}));
+
+	// Get valid locations for the selected template
+	const validLocations = useMemo(() => {
+		if (!selectedTemplate) return [];
+
+		// Include root as a valid location
+		const allLocations = [rootNode, ...pages];
+
+		return allLocations.filter(page => {
+			// Use helper function to check if child can be created under parent
+			return canCreateChildType(page.contentTypeId, selectedTemplate);
+		});
+	}, [selectedTemplate, pages, rootNode]);
+
+	// Auto-select location if only one valid location exists
+	useMemo(() => {
+		if (selectedTemplate && validLocations.length === 1 && !selectedLocation) {
+			setSelectedLocation(validLocations[0].id);
+		}
+	}, [selectedTemplate, validLocations, selectedLocation]);
+
+	// Get valid location IDs for disabling invalid nodes
+	const validLocationIds = useMemo(() => {
+		return validLocations.map(loc => loc.id);
+	}, [validLocations]);
 
 	const validateForm = () => {
 		const newErrors: {name?: string; location?: string; template?: string} = {};
@@ -296,11 +326,16 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		if (!name.trim()) {
 			newErrors.name = "Page name is required";
 		}
-		if (!selectedLocation) {
-			newErrors.location = "Please select a location";
-		}
 		if (!selectedTemplate) {
 			newErrors.template = "Please select a template";
+		}
+		// Location is only required if there are multiple valid locations
+		if (selectedTemplate && validLocations.length > 1 && !selectedLocation) {
+			newErrors.location = "Please select a location";
+		}
+		// Show error if no valid locations exist
+		if (selectedTemplate && validLocations.length === 0) {
+			newErrors.location = "This content type cannot be created anywhere in the current tree";
 		}
 
 		setErrors(newErrors);
@@ -447,15 +482,9 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 
 				<DialogBody>
 					<Group flexDirection="column" gap="16">
-						
-
-						{/* Location and Templates */}
-						<Group gap="16" style={{minHeight: "400px"}} alignItems={"normal"}>
-
-							{/* Left: Location Tree - Fixed width */}
-
-							<Group w="384" flexDirection="column" rounded="md" gap="16">
-								{/* Name and Language */}
+						{/* Name and Language */}
+						<Group gap="16">
+							<Box style={{flex: 1}}>
 								<Field label="Name" required error={errors.name}>
 									<Input
 										placeholder="Enter page name"
@@ -468,6 +497,8 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 										}}
 									/>
 								</Field>
+							</Box>
+							<Box style={{width: "200px"}}>
 								<Field label="Language">
 									<Select
 										value={languageValue}
@@ -478,186 +509,212 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 										<SelectContent />
 									</Select>
 								</Field>
-								<Group flexDirection="column" gap="8" style={{flex: 1}}>
-									<Field label="Search" error={errors.location}>
-										<SearchInput placeholder="Search locations..." />
-									</Field>
-									<Box overflow="auto" style={{maxHeight: "240px"}}>
-										<LocationTreeNode
-											node={rootNode}
-											selectedLocation={selectedLocation}
-											onSelectLocation={(id) => {
-												setSelectedLocation(id);
-												if (errors.location) {
-													setErrors({...errors, location: undefined});
-												}
-											}}
-										/>
-									</Box>
-								</Group>
-							</Group>
+							</Box>
+						</Group>
 
-							<Separator orientation="vertical" />
-
-							{/* Right: Templates - Takes remaining space */}
+						{/* Templates and Location */}
+						<Group gap="16" style={{minHeight: "400px"}} alignItems={"normal"}>
+							{/* Left: Template Selection */}
 							<Box style={{flex: 1}} rounded="md">
-								{!selectedLocation ? (
-									<Group
-										flexDirection="column"
-										alignItems="center"
-										justifyContent="center"
-										h="full"
-										gap="8"
-									>
-										<Text fontSize="sm" color="fg.secondary" textAlign="center">
-											Select a location to view available templates
-										</Text>
-									</Group>
-								) : (
-									<Group flexDirection="column" gap="16">
-
-										{/* Filters Row */}
-										<Group gap="12" alignItems="end">
-											<Box style={{flex: 1}}>
-												<Field label="Search Templates" error={errors.template}>
-													<SearchInput
-														placeholder="Filter by Name"
-														value={templateSearch}
-														onChange={(e) => setTemplateSearch(e.target.value)}
-													/>
-												</Field>
-											</Box>
-											<Box style={{width: "100px"}}>
-												<Field label="Category">
-													<Select
-														value={categoryFilter}
-														onValueChange={setCategoryFilter}
-														options={CATEGORY_OPTIONS}
-													>
-														<SelectTrigger />
-														<SelectContent />
-													</Select>
-												</Field>
-											</Box>
-											<Group gap="0">
-												<ToggleButton
-													appearance="subtle"
-													pressed={viewMode === "grid"}
-													onPressedChange={() => setViewMode("grid")}
-													aria-label="Grid view"
+								<Group flexDirection="column" gap="16">
+									{/* Filters Row */}
+									<Group gap="12" alignItems="end">
+										<Box style={{flex: 1}}>
+											<Field label="Search Templates" error={errors.template}>
+												<SearchInput
+													placeholder="Filter by Name"
+													value={templateSearch}
+													onChange={(e) => setTemplateSearch(e.target.value)}
+												/>
+											</Field>
+										</Box>
+										<Box style={{width: "100px"}}>
+											<Field label="Category">
+												<Select
+													value={categoryFilter}
+													onValueChange={setCategoryFilter}
+													options={CATEGORY_OPTIONS}
 												>
-													<IconLayoutGrid size={16} />
-												</ToggleButton>
-												<ToggleButton
-													appearance="subtle"
-													pressed={viewMode === "list"}
-													onPressedChange={() => setViewMode("list")}
-													aria-label="List view"
-												>
-													<IconList size={16} />
-												</ToggleButton>
-											</Group>
-										</Group>
-
-										{/* Templates Grid/List */}
-										{viewMode === "grid" ? (
-											<Box
-												display="grid"
-												gap="12"
-												style={{
-													gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-													maxHeight: "320px",
-													overflow: "auto",
-												}}
+													<SelectTrigger />
+													<SelectContent />
+												</Select>
+											</Field>
+										</Box>
+										<Group gap="0">
+											<ToggleButton
+												appearance="subtle"
+												pressed={viewMode === "grid"}
+												onPressedChange={() => setViewMode("grid")}
+												aria-label="Grid view"
 											>
-												{templates.map((template) => (
-													<TemplateCard
-														key={template.id}
-														name={template.name}
-														category={template.category}
-														onSelect={() => {
-															setSelectedTemplate(template.id);
-															if (errors.template) {
-																setErrors({...errors, template: undefined});
+												<IconLayoutGrid size={16} />
+											</ToggleButton>
+											<ToggleButton
+												appearance="subtle"
+												pressed={viewMode === "list"}
+												onPressedChange={() => setViewMode("list")}
+												aria-label="List view"
+											>
+												<IconList size={16} />
+											</ToggleButton>
+										</Group>
+									</Group>
+
+									{/* Templates Grid/List */}
+									{viewMode === "grid" ? (
+										<Box
+											display="grid"
+											gap="12"
+											style={{
+												gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+												maxHeight: "320px",
+												overflow: "auto",
+											}}
+										>
+											{templates.map((template) => (
+												<TemplateCard
+													key={template.id}
+													name={template.name}
+													category={template.category}
+													onSelect={() => {
+														setSelectedTemplate(template.id);
+														if (errors.template) {
+															setErrors({...errors, template: undefined});
+														}
+													}}
+													viewMode={viewMode}
+													isSelected={selectedTemplate === template.id}
+												/>
+											))}
+										</Box>
+									) : (
+										<Box style={{maxHeight: "320px", overflow: "auto"}}>
+											<Table>
+												<TableHeader>
+													<TableRow>
+														<TableHeaderCell style={{width: "48px"}}></TableHeaderCell>
+														<TableHeaderCell>Preview</TableHeaderCell>
+														<TableHeaderCell>Name</TableHeaderCell>
+														<TableHeaderCell>Category</TableHeaderCell>
+													</TableRow>
+												</TableHeader>
+												<TableBody>
+													{templates.map((template) => (
+														<TableRow
+															key={template.id}
+															onClick={() => {
+																setSelectedTemplate(template.id);
+																if (errors.template) {
+																	setErrors({...errors, template: undefined});
+																}
+															}}
+															cursor="pointer"
+															bg={
+																selectedTemplate === template.id
+																	? "bg.accent.subtle"
+																	: undefined
 															}
-														}}
-														viewMode={viewMode}
-														isSelected={selectedTemplate === template.id}
-													/>
-												))}
-											</Box>
-										) : (
-											<Box style={{maxHeight: "320px", overflow: "auto"}}>
-												<Table>
-													<TableHeader>
-														<TableRow>
-															<TableHeaderCell style={{width: "48px"}}></TableHeaderCell>
-															<TableHeaderCell>Preview</TableHeaderCell>
-															<TableHeaderCell>Name</TableHeaderCell>
-															<TableHeaderCell>Category</TableHeaderCell>
-														</TableRow>
-													</TableHeader>
-													<TableBody>
-														{templates.map((template) => (
-															<TableRow
-																key={template.id}
-																onClick={() => {
+														>
+															<TableCell
+																onClick={(e) => {
+																	e.stopPropagation();
 																	setSelectedTemplate(template.id);
 																	if (errors.template) {
 																		setErrors({...errors, template: undefined});
 																	}
 																}}
-																cursor="pointer"
-																bg={
-																	selectedTemplate === template.id
-																		? "bg.accent.subtle"
-																		: undefined
-																}
 															>
-																<TableCell
-																	onClick={(e) => {
-																		e.stopPropagation();
-																		setSelectedTemplate(template.id);
-																		if (errors.template) {
-																			setErrors({...errors, template: undefined});
-																		}
-																	}}
+																<Checkbox checked={selectedTemplate === template.id} />
+															</TableCell>
+															<TableCell>
+																<Box
+																	bg="bg.secondary"
+																	rounded="sm"
+																	style={{width: "48px", height: "48px"}}
+																	display="flex"
+																	alignItems="center"
+																	justifyContent="center"
 																>
-																	<Checkbox checked={selectedTemplate === template.id} />
-																</TableCell>
-																<TableCell>
-																	<Box
-																		bg="bg.secondary"
-																		rounded="sm"
-																		style={{width: "48px", height: "48px"}}
-																		display="flex"
-																		alignItems="center"
-																		justifyContent="center"
-																	>
-																		<Text fontSize="xs" color="fg.tertiary">
-																			Preview
-																		</Text>
-																	</Box>
-																</TableCell>
-																<TableCell>
-																	<Text fontSize="md" fontWeight="600">
-																		{template.name}
+																	<Text fontSize="xs" color="fg.tertiary">
+																		Preview
 																	</Text>
-																</TableCell>
-																<TableCell>
-																	<Text fontSize="sm" color="fg.secondary">
-																		{template.category}
-																	</Text>
-																</TableCell>
-															</TableRow>
-														))}
-													</TableBody>
-												</Table>
-											</Box>
-										)}
-									</Group>
-								)}
+																</Box>
+															</TableCell>
+															<TableCell>
+																<Text fontSize="md" fontWeight="600">
+																	{template.name}
+																</Text>
+															</TableCell>
+															<TableCell>
+																<Text fontSize="sm" color="fg.secondary">
+																	{template.category}
+																</Text>
+															</TableCell>
+														</TableRow>
+													))}
+												</TableBody>
+											</Table>
+										</Box>
+									)}
+								</Group>
 							</Box>
+
+							{/* Right: Location Selection - Conditional */}
+							{selectedTemplate && validLocations.length > 1 && (
+								<>
+									<Separator orientation="vertical" />
+
+									<Group w="384" flexDirection="column" rounded="md" gap="16">
+										<Group flexDirection="column" gap="8" style={{flex: 1}}>
+											<Field label="Location" required error={errors.location}>
+												<SearchInput placeholder="Search locations..." />
+											</Field>
+											<Box overflow="auto" style={{maxHeight: "320px"}}>
+												<LocationTreeNode
+													node={rootNode}
+													selectedLocation={selectedLocation}
+													onSelectLocation={(id) => {
+														setSelectedLocation(id);
+														if (errors.location) {
+															setErrors({...errors, location: undefined});
+														}
+													}}
+													validLocationIds={validLocationIds}
+												/>
+											</Box>
+										</Group>
+									</Group>
+								</>
+							)}
+
+							{/* Show message if single valid location */}
+							{selectedTemplate && validLocations.length === 1 && (
+								<>
+									<Separator orientation="vertical" />
+									<Group w="384" flexDirection="column" rounded="md" gap="16" p="16">
+										<Text fontSize="sm" color="fg.secondary">
+											This content type can only be created under:
+										</Text>
+										<Box p="12" rounded="md" bg="bg.secondary">
+											<Text fontWeight="600">{validLocations[0].name}</Text>
+										</Box>
+									</Group>
+								</>
+							)}
+
+							{/* Show error if no valid locations */}
+							{selectedTemplate && validLocations.length === 0 && (
+								<>
+									<Separator orientation="vertical" />
+									<Group w="384" flexDirection="column" rounded="md" gap="16" p="16">
+										<Box p="12" rounded="md" bg="bg.error.subtle" style={{border: "1px solid var(--border-error)"}}>
+											<Text fontSize="sm" color="fg.error">
+												This content type cannot be created anywhere in the current tree. Create a parent page that allows this type first.
+											</Text>
+										</Box>
+									</Group>
+								</>
+							)}
 						</Group>
 					</Group>
 				</DialogBody>
