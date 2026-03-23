@@ -73,7 +73,7 @@ import {
     IconPlus,
     IconTrashCan,
 } from "@optimizely/axiom-icons";
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -294,6 +294,8 @@ function SpecializedAgentSetupContent() {
 
     // Cheat sheet guide modal
     const [showGuidePanel, setShowGuidePanel] = useState(false);
+    const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
+    const guideIframeRef = useRef<HTMLIFrameElement>(null);
 
     // Idea 6: first-time banner (dismissed via localStorage)
     const dismissBanner = () => {
@@ -597,6 +599,82 @@ function SpecializedAgentSetupContent() {
         // In real app, show dialog to name the version
     };
 
+    // Listen for guide → page navigation (bi-directional)
+    useEffect(() => {
+        const STEP_MAP: Record<number, { fieldId: string; openInput?: boolean; openAdvanced?: boolean }> = {
+            1: { fieldId: "field-multiturn" },
+            2: { fieldId: "field-prompt-template", openInput: true },
+            3: { fieldId: "field-system-prompt", openInput: true, openAdvanced: true },
+            4: { fieldId: "field-memory-limit", openInput: true, openAdvanced: true },
+            5: { fieldId: "field-first-message", openInput: true, openAdvanced: true },
+        };
+
+        function flashEl(el: HTMLElement) {
+            el.style.transition = "outline 0s, box-shadow 0.2s ease";
+            el.style.borderRadius = "8px";
+            el.style.boxShadow = "0 0 0 3px #c4b5fd, 0 0 0 1px #7c3aed22";
+            setTimeout(() => { el.style.boxShadow = ""; }, 1400);
+        }
+
+        function handleMessage(e: MessageEvent) {
+            if (!e.data || e.data.type !== "focusStep") return;
+            const step = e.data.step as number;
+            const target = STEP_MAP[step];
+            if (!target) return;
+
+            // Open Input disclosure if needed
+            if (target.openInput) {
+                const inputTrigger = [...document.querySelectorAll<HTMLElement>("button")]
+                    .find(b => b.textContent?.trim().startsWith("Input"));
+                if (inputTrigger) {
+                    const disclosure = inputTrigger.closest("[data-state]");
+                    if (disclosure?.getAttribute("data-state") === "closed") {
+                        inputTrigger.click();
+                    }
+                }
+            }
+
+            // Open Advanced Settings disclosure if needed
+            if (target.openAdvanced) {
+                setTimeout(() => {
+                    const advBtn = [...document.querySelectorAll<HTMLElement>("button")]
+                        .find(b => b.textContent?.includes("Advanced Settings"));
+                    if (advBtn) {
+                        const disclosure = advBtn.closest("[data-state]");
+                        if (disclosure?.getAttribute("data-state") === "closed") {
+                            advBtn.click();
+                        }
+                    }
+                }, 100);
+            }
+
+            // Scroll and flash the field
+            setTimeout(() => {
+                const el = document.getElementById(target.fieldId);
+                if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    flashEl(el);
+                }
+            }, target.openAdvanced ? 300 : 150);
+        }
+
+        window.addEventListener("message", handleMessage);
+        return () => window.removeEventListener("message", handleMessage);
+    }, []);
+
+    // Sync active guide step to iframe via postMessage
+    useEffect(() => {
+        if (!showGuidePanel || !guideIframeRef.current) return;
+        const send = () => guideIframeRef.current?.contentWindow?.postMessage(
+            { type: "highlightStep", step: activeGuideStep },
+            "*"
+        );
+        // iframe may not be loaded yet; send on load too
+        const iframe = guideIframeRef.current;
+        iframe.addEventListener("load", send);
+        send();
+        return () => iframe.removeEventListener("load", send);
+    }, [activeGuideStep, showGuidePanel]);
     // Initialize state based on mode and search params
     useEffect(() => {
         const id = searchParams.get("id");
@@ -940,7 +1018,7 @@ function SpecializedAgentSetupContent() {
                                                 </Field>
 
                                                 {/* Interaction Mode */}
-                                                <Box>
+                                                <Box id="field-multiturn" onFocus={() => setActiveGuideStep(1)} onBlur={() => setActiveGuideStep(null)}>
                                                     <Text fontWeight="600" fontSize="md" mb="4">Interaction Mode</Text>
                                                     <Text fontSize="sm" color="fg.secondary" mb="16">Configure how users interact with this agent</Text>
                                                     <Box display="flex" flexDirection="column" gap="12">
@@ -984,6 +1062,7 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
+                                                <div id="field-prompt-template" onFocus={() => setActiveGuideStep(2)} onBlur={() => setActiveGuideStep(null)}>
                                                 <HoverCard openDelay={300}>
                                                 <Field
                                                     label={
@@ -1069,6 +1148,7 @@ function SpecializedAgentSetupContent() {
                                                     </Box>
                                                 </HoverCardContent>
                                                 </HoverCard>
+                                                </div>
 
                                                 {/* Advanced Settings */}
                                                 <Disclosure suppressHydrationWarning>
@@ -1085,7 +1165,7 @@ function SpecializedAgentSetupContent() {
                                                             {multiTurnMode ? (
                                                                 <>
                                                                     {/* System Prompt */}
-                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                    <Box id="field-system-prompt" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(3)} onBlur={() => setActiveGuideStep(null)}>
                                                                         <Box display="flex" justifyContent="space-between" alignItems="center">
                                                                             <HoverCard openDelay={300}>
                                                                                 <HoverCardTrigger asChild>
@@ -1125,7 +1205,7 @@ function SpecializedAgentSetupContent() {
                                                                         </Field>
                                                                     </Box>
                                                                     {/* Memory Limit */}
-                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                    <Box id="field-memory-limit" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(4)} onBlur={() => setActiveGuideStep(null)}>
                                                                         <HoverCard openDelay={300}>
                                                                             <HoverCardTrigger asChild>
                                                                                 <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
@@ -1151,7 +1231,7 @@ function SpecializedAgentSetupContent() {
                                                                     </Box>
 
                                                                     {/* First Message */}
-                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                    <Box id="field-first-message" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(5)} onBlur={() => setActiveGuideStep(null)}>
                                                                         <Box display="flex" gap="4" alignItems="center">
                                                                             <Text fontSize="md" fontWeight="500">First Message</Text>
                                                                             <Tooltip delayDuration={300} content="A static greeting shown to the user before they begin typing. Not sent to the model.">
@@ -2056,6 +2136,7 @@ function SpecializedAgentSetupContent() {
                         </Box>
                         <Box style={{ flex: 1, overflow: "hidden" }}>
                             <iframe
+                                ref={guideIframeRef}
                                 src="/agent-cheat-sheet.html"
                                 style={{ width: "100%", height: "100%", border: "none", display: "block" }}
                                 title="Multi-turn agent quick-start guide"
