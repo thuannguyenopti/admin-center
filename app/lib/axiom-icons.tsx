@@ -14,6 +14,9 @@ const iconMap: Record<string, string[]> = {
 	IconArrowRotateLeft: ["IconRotate", "IconHistory"],
 	IconArrowsLeftRight: ["IconArrowsLeftRight"],
 	IconArrowsRepeat: ["IconRepeat"],
+	IconArrowsRotate: ["IconRefresh", "IconRotate"],
+	IconArrowUp: ["IconArrowUp"],
+	IconBars: ["IconMenu2", "IconMenu"],
 	IconBook: ["IconBook"],
 	IconBracketsCurly: ["IconBraces"],
 	IconBracketsSquare: ["IconBrackets"],
@@ -27,7 +30,9 @@ const iconMap: Record<string, string[]> = {
 	IconCircleExclamation: ["IconAlertCircle"],
 	IconCircleInfo: ["IconInfoCircle", "IconAlertCircle"],
 	IconCirclePause: ["IconPlayerPause"],
+	IconCirclePlus: ["IconCirclePlus"],
 	IconCircleQuestion: ["IconHelpCircle"],
+	IconCircleStop: ["IconPlayerStop", "IconCircleX"],
 	IconClock: ["IconClock"],
 	IconClockRotateLeft: ["IconHistory"],
 	IconCodeBranch: ["IconGitBranch", "IconCodeDots"],
@@ -61,6 +66,8 @@ const iconMap: Record<string, string[]> = {
 	IconTableCells: ["IconTable"],
 	IconTag: ["IconTag"],
 	IconTerminal: ["IconTerminal2", "IconTerminal"],
+	IconThumbsDown: ["IconThumbDown"],
+	IconThumbsUp: ["IconThumbUp"],
 	IconToggleOff: ["IconToggleLeft"],
 	IconTrashCan: ["IconTrash"],
 	IconTriangleExclamation: ["IconAlertTriangle"],
@@ -99,6 +106,9 @@ export const IconArrowLeft = createIcon("IconArrowLeft");
 export const IconArrowRotateLeft = createIcon("IconArrowRotateLeft");
 export const IconArrowsLeftRight = createIcon("IconArrowsLeftRight");
 export const IconArrowsRepeat = createIcon("IconArrowsRepeat");
+export const IconArrowsRotate = createIcon("IconArrowsRotate");
+export const IconArrowUp = createIcon("IconArrowUp");
+export const IconBars = createIcon("IconBars");
 export const IconBook = createIcon("IconBook");
 export const IconBracketsCurly = createIcon("IconBracketsCurly");
 export const IconBracketsSquare = createIcon("IconBracketsSquare");
@@ -112,7 +122,9 @@ export const IconCircleCheck = createIcon("IconCircleCheck");
 export const IconCircleExclamation = createIcon("IconCircleExclamation");
 export const IconCircleInfo = createIcon("IconCircleInfo");
 export const IconCirclePause = createIcon("IconCirclePause");
+export const IconCirclePlus = createIcon("IconCirclePlus");
 export const IconCircleQuestion = createIcon("IconCircleQuestion");
+export const IconCircleStop = createIcon("IconCircleStop");
 export const IconClock = createIcon("IconClock");
 export const IconClockRotateLeft = createIcon("IconClockRotateLeft");
 export const IconCodeBranch = createIcon("IconCodeBranch");
@@ -146,6 +158,8 @@ export const IconSplit = createIcon("IconSplit");
 export const IconTableCells = createIcon("IconTableCells");
 export const IconTag = createIcon("IconTag");
 export const IconTerminal = createIcon("IconTerminal");
+export const IconThumbsDown = createIcon("IconThumbsDown");
+export const IconThumbsUp = createIcon("IconThumbsUp");
 export const IconToggleOff = createIcon("IconToggleOff");
 export const IconTrashCan = createIcon("IconTrashCan");
 export const IconTriangleExclamation = createIcon("IconTriangleExclamation");
