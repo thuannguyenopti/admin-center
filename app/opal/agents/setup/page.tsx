@@ -5,6 +5,7 @@ import {
     Heading,
     Text,
     Button,
+    Alert,
     Textarea,
     Switch,
     Field,
@@ -44,6 +45,7 @@ import {
     IconHelp,
     IconSparkles,
     IconDots,
+    IconX,
 } from "@tabler/icons-react";
 import {
     IconFileImport,
@@ -200,8 +202,12 @@ function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isMounted, setIsMounted] = useState(false);
+    const [showGuideBanner, setShowGuideBanner] = useState(false);
     useEffect(() => {
         setIsMounted(true);
+        if (!localStorage.getItem("opal_agent_guide_dismissed")) {
+            setShowGuideBanner(true);
+        }
     }, []);
 
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
@@ -280,6 +286,15 @@ function SpecializedAgentSetupContent() {
 
     // Test Run State
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
+
+    // Cheat sheet guide modal
+    const [showGuidePanel, setShowGuidePanel] = useState(false);
+
+    // Idea 6: first-time banner (dismissed via localStorage)
+    const dismissBanner = () => {
+        localStorage.setItem("opal_agent_guide_dismissed", "1");
+        setShowGuideBanner(false);
+    };
 
     // Version History State
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -722,7 +737,7 @@ function SpecializedAgentSetupContent() {
                                             disabled={isReadOnly}
                                             onClick={() => {
                                                 setIsTestRunOpen(!isTestRunOpen);
-                                                if (!isTestRunOpen) setIsVersionHistoryOpen(false);
+                                                if (!isTestRunOpen) { setIsVersionHistoryOpen(false); setShowGuidePanel(false); }
                                             }}
                                         >
                                             Test Run
@@ -735,9 +750,27 @@ function SpecializedAgentSetupContent() {
                                                 aria-label="Version History"
                                                 onClick={() => {
                                                     setIsVersionHistoryOpen(!isVersionHistoryOpen);
-                                                    if (!isVersionHistoryOpen) setIsTestRunOpen(false);
+                                                    if (!isVersionHistoryOpen) { setIsTestRunOpen(false); setShowGuidePanel(false); }
                                                 }}
                                                 suppressHydrationWarning
+                                            />
+                                        </Tooltip>
+                                        <Tooltip content="Quick-start guide">
+                                            <Button
+                                                appearance="default"
+                                                size="lg"
+                                                icon={<IconBook size={20} />}
+                                                aria-label="Quick-start guide"
+                                                onClick={() => {
+                                                    setShowGuidePanel(!showGuidePanel);
+                                                    if (!showGuidePanel) { setIsTestRunOpen(false); setIsVersionHistoryOpen(false); }
+                                                }}
+                                                suppressHydrationWarning
+                                                style={showGuidePanel ? {
+                                                    backgroundColor: "var(--ax-colors-bg-secondary)",
+                                                    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.10)",
+                                                    borderColor: "var(--ax-colors-border-secondary)",
+                                                } : {}}
                                             />
                                         </Tooltip>
                                         <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" disabled={isReadOnly} />
@@ -804,6 +837,26 @@ function SpecializedAgentSetupContent() {
                                         gap: "24px"
                                     }}
                                 >
+                                    {/* Idea 6: First-time guide banner */}
+                                    {showGuideBanner && (
+                                        <Alert
+                                            intent="opal"
+                                            onDismiss={dismissBanner}
+                                            style={{ flexShrink: 0 }}
+                                        >
+                                            <span>
+                                                New to multi-turn agents?{" "}
+                                                <button
+                                                    onClick={() => { setShowGuidePanel(true); dismissBanner(); }}
+                                                    style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontWeight: 500, textDecoration: "underline" }}
+                                                >
+                                                    Open the quick-start guide
+                                                </button>
+                                                {" "}to configure your first multi-turn agent in 6 steps.
+                                            </span>
+                                        </Alert>
+                                    )}
+
                                     {/* Details Section */}
                                     <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
@@ -894,6 +947,12 @@ function SpecializedAgentSetupContent() {
                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                 </Box>
                                                             </Tooltip>
+                                                            <button
+                                                                onClick={() => setShowGuidePanel(true)}
+                                                                style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: "0 4px", font: "inherit", fontSize: "12px", textDecoration: "underline", lineHeight: 1 }}
+                                                            >
+                                                                View guide
+                                                            </button>
                                                         </Box>
                                                         <Box display="flex" alignItems="center" gap="8">
                                                             <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
@@ -920,7 +979,17 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
-                                                <Field label="Prompt Template" info="Define the system instructions">
+                                                <HoverCard openDelay={300}>
+                                                <Field
+                                                    label={
+                                                        <HoverCardTrigger asChild>
+                                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", cursor: "default" }}>
+                                                                Prompt Template
+                                                                <span style={{ display: "inline-flex" }}><IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" /></span>
+                                                            </span>
+                                                        </HoverCardTrigger>
+                                                    }
+                                                >
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
                                                             previousValue={comparisonData.promptTemplate}
@@ -981,6 +1050,20 @@ function SpecializedAgentSetupContent() {
                                                         />
                                                     )}
                                                 </Field>
+                                                <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
+                                                    <Box display="flex" flexDirection="column" gap="8" p="4">
+                                                        <Text fontWeight="600" fontSize="sm">Step 2 of 6 — Prompt Template</Text>
+                                                        <Text fontSize="sm" color="fg.secondary">Your main instruction to the agent. Describe the role, task, and output format.</Text>
+                                                        <Text fontSize="sm" color="fg.secondary">Use <code style={{ background: "var(--ax-colors-bg-tertiary)", padding: "1px 4px", borderRadius: "3px" }}>{"[[variable]]"}</code> for dynamic inputs, <code style={{ background: "var(--ax-colors-bg-tertiary)", padding: "1px 4px", borderRadius: "3px" }}>{"{ Instruction }"}</code> for directives.</Text>
+                                                        <button
+                                                            onClick={() => setShowGuidePanel(true)}
+                                                            style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
+                                                        >
+                                                            View full guide →
+                                                        </button>
+                                                    </Box>
+                                                </HoverCardContent>
+                                                </HoverCard>
 
                                                 {/* Advanced Settings */}
                                                 <Disclosure suppressHydrationWarning>
@@ -999,12 +1082,27 @@ function SpecializedAgentSetupContent() {
                                                                     {/* System Prompt */}
                                                                     <Box display="flex" flexDirection="column" gap="8">
                                                                         <Box display="flex" justifyContent="space-between" alignItems="center">
-                                                                            <Tooltip delayDuration={300} content="Defines the agent's persona and behavioral guidelines. Supports variables and directives for dynamic instruction.">
-                                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                                    <Text fontSize="md" fontWeight="500">System Prompt</Text>
-                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                </Box>
-                                                                            </Tooltip>
+                                                                            <HoverCard openDelay={300}>
+                                                                                <HoverCardTrigger asChild>
+                                                                                    <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                                        <Text fontSize="md" fontWeight="500">System Prompt</Text>
+                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                    </Box>
+                                                                                </HoverCardTrigger>
+                                                                                <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
+                                                                                    <Box display="flex" flexDirection="column" gap="8" p="4">
+                                                                                        <Text fontWeight="600" fontSize="sm">Step 3 of 6 — System Prompt</Text>
+                                                                                        <Text fontSize="sm" color="fg.secondary">Sets the agent's permanent persona and guardrails — hidden from users, always active.</Text>
+                                                                                        <Text fontSize="sm" color="fg.secondary">Keep it short and authoritative. e.g. <em>"You are a concise marketing assistant. Never fabricate data."</em></Text>
+                                                                                        <button
+                                                                                            onClick={() => setShowGuidePanel(true)}
+                                                                                            style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
+                                                                                        >
+                                                                                            View full guide →
+                                                                                        </button>
+                                                                                    </Box>
+                                                                                </HoverCardContent>
+                                                                            </HoverCard>
                                                                             {!isReadOnly && (
                                                                                 <Button appearance="subtle" size="sm" onClick={() => setSystemPrompt("You are a helpful AI assistant. You have access to tools and can use them to help users. Always be concise, accurate, and professional.")}>
                                                                                     ↺ Reset
@@ -1023,12 +1121,27 @@ function SpecializedAgentSetupContent() {
                                                                     </Box>
                                                                     {/* Memory Limit */}
                                                                     <Box display="flex" flexDirection="column" gap="8">
-                                                                        <Tooltip delayDuration={300} content="Maximum number of conversation turns retained in memory for context.">
-                                                                            <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                                <Text fontSize="md" fontWeight="500">Memory Limit</Text>
-                                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                            </Box>
-                                                                        </Tooltip>
+                                                                        <HoverCard openDelay={300}>
+                                                                            <HoverCardTrigger asChild>
+                                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                                    <Text fontSize="md" fontWeight="500">Memory Limit</Text>
+                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                </Box>
+                                                                            </HoverCardTrigger>
+                                                                            <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
+                                                                                <Box display="flex" flexDirection="column" gap="8" p="4">
+                                                                                    <Text fontWeight="600" fontSize="sm">Step 4 of 6 — Token Budget</Text>
+                                                                                    <Text fontSize="sm" color="fg.secondary">Max conversation turns kept in context. Higher values give the agent more memory but increase cost and latency.</Text>
+                                                                                    <Text fontSize="sm" color="fg.secondary">Recommended: <strong>10</strong> turns for most agents. Use 20+ only for long research tasks.</Text>
+                                                                                    <button
+                                                                                        onClick={() => setShowGuidePanel(true)}
+                                                                                        style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
+                                                                                    >
+                                                                                        View full guide →
+                                                                                    </button>
+                                                                                </Box>
+                                                                            </HoverCardContent>
+                                                                        </HoverCard>
                                                                         <Input type="number" placeholder="10" readOnly={isReadOnly} />
                                                                     </Box>
                                                                 </>
@@ -1829,6 +1942,49 @@ function SpecializedAgentSetupContent() {
                 onClose={() => setIsTestRunOpen(false)}
                 variables={variables}
             />
+
+            {/* Idea 2 + 6: Multi-turn agent quick-start guide sidebar */}
+            <Box
+                style={{
+                    width: showGuidePanel ? "420px" : "0px",
+                    transition: "width 0.3s ease-in-out",
+                    overflow: "hidden",
+                    borderLeft: showGuidePanel ? "1px solid var(--ax-colors-border-secondary)" : "none",
+                    backgroundColor: "var(--ax-colors-bg-default)",
+                    display: "flex",
+                    flexDirection: "column",
+                    flexShrink: 0,
+                }}
+            >
+                {showGuidePanel && (
+                    <>
+                        <Box
+                            px="16"
+                            py="12"
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}
+                        >
+                            <Text fontWeight="600" fontSize="md">Quick-Start Guide</Text>
+                            <Button
+                                appearance="subtle"
+                                size="sm"
+                                icon={<IconX size={16} />}
+                                aria-label="Close guide"
+                                onClick={() => setShowGuidePanel(false)}
+                            />
+                        </Box>
+                        <Box style={{ flex: 1, overflow: "hidden" }}>
+                            <iframe
+                                src="/agent-cheat-sheet.html"
+                                style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+                                title="Multi-turn agent quick-start guide"
+                            />
+                        </Box>
+                    </>
+                )}
+            </Box>
         </Box>
     );
 }
