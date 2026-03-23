@@ -1,0 +1,66 @@
+## CMP Plan Page DOM Structure
+## URL: /cloud/plan?activeTab=list&sortBy=-end
+## Scraped: Feb 26, 2026
+
+### Component Hierarchy
+nc-router-app
+  div.plan-PlanApp
+    div.plan-PlanPage
+      div.plan-PlanPage-nav (tab bar)
+        tablist
+          tab "List" (active)
+          tab "Calendar"
+          tab "Timeline"
+          tab "Board"
+        button "Saved Views" (with chevron)
+
+      div.plan-PlanPage-main
+        div.plan-PlanPage-toolbar
+          button "Filters" (with badge count: 5)
+          textbox "Search..." (type="search")
+          button (people/assignee filter)
+          button "Save View"
+          button "..." (more options)
+
+        div.plan-PlanPage-actions
+          toggle "Show campaign hierarchy" (checked)
+          button "Add" (dropdown)
+          button "Columns" (dropdown)
+
+        div.plan-PlanPage-list
+          table
+            headers:
+              checkbox (bulk select)
+              "Title" (with + button and sort)
+              "Type" (sortable)
+              "Reference" (sortable)
+              "Owner" (sortable)
+              "Creation Date" (sortable)
+              "Start Date" (sortable)
+              "End/Due Date" (sortable, default sorted desc)
+              "Depends On"
+
+### Table Data
+Row 1: Article post | Task | TSK-8 | Hsiao-Pei Chien | May 22, 2023 | No start date | No end date
+Row 2: Ultra Music Festival (3) | Campaign | CPN-4 | David Steinberg | Apr 21, 2023 | Apr 21, 2023 | No end date | —
+  Child: Launch social media adverts | Event | EVT-1 | David Steinberg | Apr 21, 2023 | Apr 24, 2023 | Aug 31, 2023
+  Child: Create Instagram Ads | Task | TSK-5 | David Steinberg | Apr 21, 2023 | May 1, 2023 | Jul 31, 2023 (overdue)
+  Child: Create LinkedIN Ads | Task | TSK-4 | David Steinberg | Apr 21, 2023 | May 1, 2023 | Jul 31, 2023 (overdue)
+Row 3: Social campaign 2023 (1) | Campaign | CPN-3 | Hsiao-Pei Chien | Apr 18, 2023 | Apr 18, 2023 | No end date | —
+  Child: Earlybird tickets for WMC 2023 no... | Task | TSK-7 | David Steinberg | May 8, 2023 | May 12, 2023 | Dec 31, 2023 (overdue)
+Row 4: Social Media Campaign 2023 (1) | Campaign | CPN-5 | David Steinberg | May 8, 2023 | Dec 31, 2023 | —
+  Child: Make a splash (Test) | Task | TSK-6 | David Steinberg | Apr 21, 2023 | May 1, 2023 | Jul 31, 2023 (overdue)
+
+### Visual Details
+- Campaigns have expand/collapse chevron and blue child count badge
+- Overdue dates shown in red with red dot indicator
+- Owner column shows avatar (initials) + name
+- Campaigns are indented; their children are further indented
+- Type column shows text: "Task", "Campaign", "Event"
+
+### DOM Classes (meaningful)
+- plan-PlanApp, plan-PlanPage
+- plan-PlanPage-nav, plan-PlanPage-main
+- plan-PlanPage-toolbar, plan-PlanPage-actions
+- plan-PlanPage-list
+- plan-PlanPage-table (implied)

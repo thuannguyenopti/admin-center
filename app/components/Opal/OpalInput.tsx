@@ -21,7 +21,7 @@ import {
   IconArrowUp,
   IconCircleStop,
   IconXmark
-} from "@optimizely/axiom-icons";
+} from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 

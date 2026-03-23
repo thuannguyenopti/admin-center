@@ -6,7 +6,7 @@ import type {
 } from "@/app/components/ai/PreflightAuditTypes";
 
 /**
- * Import audit functions from parent route
+ * Import audit functions from utils
  * These are the same functions used in the non-streaming endpoint
  */
 import {
@@ -19,7 +19,7 @@ import {
 	checkGEO,
 	checkProofreading,
 	checkBrandTone,
-} from "../route";
+} from "../utils";
 
 /**
  * Checklist item representing the status of an individual audit

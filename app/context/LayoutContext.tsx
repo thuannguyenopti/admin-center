@@ -16,6 +16,8 @@ type OpalPanelControls = {
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	footerContent: ReactNode | null;
+	setFooterContent: (content: ReactNode | null) => void;
 	hidePageHeader: boolean;
 	setHidePageHeader: (hide: boolean) => void;
 	opalPanelControls: OpalPanelControls | null;
@@ -28,12 +30,13 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({children}: {children: ReactNode}) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [footerContent, setFooterContent] = useState<ReactNode | null>(null);
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth}}>
+		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth}}>
 			{children}
 		</LayoutContext.Provider>
 	);
@@ -47,15 +50,49 @@ export function useLayout() {
 	return context;
 }
 
-// Helper component to use in pages
+/**
+ * Aside component for rendering content in the right sidebar panel.
+ *
+ * @example
+ * ```tsx
+ * <Aside>
+ *   <ContentDetails item={selectedItem} />
+ * </Aside>
+ * ```
+ */
 export function Aside({children}: {children: ReactNode}) {
 	const {setAsideContent} = useLayout();
 
-	// Update the aside content when this component mounts
 	useEffect(() => {
 		setAsideContent(children);
-		return () => setAsideContent(null); // Cleanup on unmount
+		return () => setAsideContent(null);
 	}, [children, setAsideContent]);
 
-	return null; // Renders nothing in the main flow
+	return null;
+}
+
+/**
+ * Footer component for rendering a fixed footer at the bottom of the page.
+ * The footer automatically:
+ * - Positions itself at the bottom of the viewport
+ * - Respects sidebars and panels (doesn't cover them)
+ * - Adds appropriate padding to page content
+ * - Transitions smoothly when sidebars expand/collapse
+ *
+ * @example
+ * ```tsx
+ * <Footer>
+ *   <Button onClick={handleSave}>Save</Button>
+ * </Footer>
+ * ```
+ */
+export function Footer({children}: {children: ReactNode}) {
+	const {setFooterContent} = useLayout();
+
+	useEffect(() => {
+		setFooterContent(children);
+		return () => setFooterContent(null);
+	}, [children, setFooterContent]);
+
+	return null;
 }
