@@ -1,17 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,
+  compress: true,
+  output: "standalone",
+  transpilePackages: ["@optiaxiom/react"],
+  experimental: {
+    optimizePackageImports: ["@optiaxiom/react", "@tabler/icons-react"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
       { protocol: "https", hostname: "images.pexels.com", pathname: "/**" },
+      { protocol: "https", hostname: "pixabay.com", pathname: "/**" },
     ],
   },
   turbopack: {
     rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },
@@ -24,6 +32,30 @@ const nextConfig: NextConfig = {
         path: false,
       };
     }
+    config.resolve.alias = {
+      ...(config.resolve.alias ?? {}),
+      "@optimizely/axiom-icons": require("path").resolve(__dirname, "app/lib/axiom-icons.tsx"),
+    };
+
+    const assetRule = config.module.rules.find((rule: any) => rule?.test?.test?.(".svg"));
+    if (assetRule) {
+      assetRule.exclude = /\.svg$/i;
+    }
+
+    config.module.rules.push(
+      {
+        ...assetRule,
+        test: /\.svg$/i,
+        resourceQuery: /url/,
+      },
+      {
+        test: /\.svg$/i,
+        issuer: assetRule?.issuer,
+        resourceQuery: { not: [/url/] },
+        use: ["@svgr/webpack"],
+      }
+    );
+
     return config;
   },
 };

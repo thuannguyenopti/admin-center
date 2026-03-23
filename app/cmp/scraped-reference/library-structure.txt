@@ -1,0 +1,69 @@
+## CMP Library Page DOM Structure
+## URL: /cloud/library
+## Scraped: Feb 26, 2026
+
+### Component Hierarchy
+nc-library-page
+  div.library-LibraryPage
+    div.tabbed-view
+      tablist
+        tab "Assets" (active)
+        tab "Collections"
+        tab "Templates"
+        tab "Dashboards"
+      button "Saved Views" (with chevron)
+
+    div.content-library-v3
+      div.library-header-container
+        div.folder-access-message
+      div.library-panel-container
+        // Filter button
+        // Bulk select checkbox
+        // View toggle (grid/list) dropdown
+        // Sort: "Last Modified" dropdown + direction arrow
+        // "Save View" button
+        // "Add" dropdown button (blue primary)
+
+      div.library-items-container
+        // Grid of asset cards
+
+### Asset Card Structure
+Each card:
+  div (card container with hover effects)
+    div (thumbnail area)
+      img (preview image) OR icon (for non-image files)
+    div (info area)
+      span.badge (file type: "JPG", "PY", "Folder", etc.)
+      span (file name, truncated with ellipsis)
+
+### Assets Observed
+Row 1 (images):
+  - photo-1700469880... (JPG) - mountain/landscape
+  - photo-1682687982... (JPG) - coral reef
+  - photo-1700429422... (JPG) - portrait
+  - photo-1682687982... (JPG) - starfish
+  - photo-1700234272... (JPG) - landscape
+  - Music Event (JPG) - DJ/music image
+
+Row 2 (files/folders):
+  - d.py (PY) - purple background, document icon
+  - my-asset-files-ssol... (Folder)
+  - my-asset-videos-s... (Folder)
+  - my-asset-images-s... (Folder)
+  - my-asset-articles-... (Folder)
+
+### Visual Details
+- Grid layout: 6 columns for images, responsive
+- Card has subtle border and rounded corners
+- File type badges: colored labels (JPG=green, PY=purple, Folder=blue)
+- Thumbnails maintain aspect ratio with cover fit
+- Non-image files show centered icon on colored background
+- Folder cards have light blue background
+
+### DOM Classes (meaningful)
+- library-LibraryPage
+- tabbed-view
+- content-library-v3
+- library-header-container
+- library-panel-container
+- library-items-container

@@ -1,9 +1,22 @@
 "use client";
 
-import {Box, Sidebar, NavBody, NavFooter, NavItem, NavList, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
+import {
+	Box,
+	Sidebar,
+	NavBody,
+	NavFooter,
+	NavItem,
+	NavList,
+	Nav,
+	Heading,
+	SubNav,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+} from "@optiaxiom/react";
 import {Button} from "./Button";
 import {Text} from "./Text";
-import {useEffect, useState, Suspense} from "react";
+import React, {useEffect, useState, Suspense} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
@@ -33,8 +46,12 @@ function TemplateContent({
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
+	const [mounted, setMounted] = useState(false);
 
-	// Opal panel state
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
 	const {
 		groupedHistory,
 		activeChat,
@@ -87,11 +104,14 @@ function TemplateContent({
 	};
 
 	const menuItems = Array.isArray(structure) ? structure : [];
-
 	const highlight1 = menuItems
 		.filter((item: any) => item?.highlight != null && path.includes(item.highlight))
 		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
-	const lvl2 = highlight1?.children
+	const isCmpTaskDetail = path.startsWith("/cmp/task/");
+	const routeHighlight = isCmpTaskDetail
+		? menuItems.find((item: any) => item.label === "Plan") || highlight1
+		: highlight1;
+	const lvl2 = routeHighlight?.children
 		?.filter((item: any) => (item.url ? path.includes(item.url) : false))
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
 	const lvl3 = lvl2?.children?.children
@@ -103,24 +123,16 @@ function TemplateContent({
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
 	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
-
-	// Check if we're on the Content Manager page
 	const isContentManager = path.includes("/cms/content");
-
 	const showVT =
-		highlight1?.children?.length > 1 ||
+		routeHighlight?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
-
-	// Show secondary sidebar for Content Manager or hierarchical navigation
 	const showSecondarySidebar = isContentManager || showVT;
-	const { contentSubNavExpanded } = useContentManagerLayout();
+	const {contentSubNavExpanded} = useContentManagerLayout();
 	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
-	const secondarySidebarWidth = isContentManager
-		? (contentSubNavExpanded ? 224 : 56)
-		: 224;
-
-	const customLayout = highlight1?.customLayout;
+	const secondarySidebarWidth = isContentManager ? (contentSubNavExpanded ? 224 : 56) : 224;
+	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail;
 
 	// Primary sidebar width: 56px collapsed, 224px expanded
 	const primarySidebarWidth = isExpanded ? 224 : 56;
@@ -131,7 +143,9 @@ function TemplateContent({
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
-	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
+	if (!isHydrated || !mounted) {
+		return <Box style={{height: "100vh"}} bg="bg.page" />;
+	}
 
 	if (isWorkflowBuilder) {
 		return (
@@ -144,47 +158,54 @@ function TemplateContent({
 	return (
 		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
 			<GlobalBar onOpalClick={toggleOpal} />
-			<Box display="flex" z="10" style={{ minHeight: 0 }}>
+			<Box display="flex" z="10" style={{minHeight: 0}}>
 				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
 					<Nav>
 						<NavBody>
-							{menuItems.map((menuItem: any) =>
-								menuItem.url ? (
-									<NavItem
-										onClick={() => menuClick(menuItem.url)}
-										active={
-											menuItem.exact
-												? path === menuItem.highlight
-												: path.includes(menuItem.highlight)
-										}
-										key={menuItem.label}
-										aria-label={menuItem.label}
-										icon={
-											menuItem.label === "Notifications" &&
-											!path.startsWith("/opal/notifications") ? (
-												<Box style={{position: "relative"}}>
-													{menuItem.icon}
-													<Box
-														style={{
-															position: "absolute",
-															top: "-2px",
-															right: "-2px",
-															height: "8px",
-															width: "8px",
-															border: "1.5px solid #FFFFFF",
-														}}
-														bg="bg.error"
-														rounded="full"
-													/>
-												</Box>
-											) : (
-												menuItem.icon
-											)
-										}
-									>
-										{menuItem.label}
-									</NavItem>
-								) : (
+							{menuItems.map((menuItem: any) => {
+								if (menuItem.isMenuTrigger) {
+									return (
+										<React.Fragment key={menuItem.label}>
+											<Menu
+												options={menuItem.menuOptions.map((opt: any) => ({
+													label: opt.label,
+													execute: () => menuClick(opt.url),
+												}))}
+											>
+												<MenuTrigger asChild>
+													<NavItem
+														aria-label={menuItem.label}
+														icon={menuItem.icon}
+														className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+													>
+														{menuItem.label}
+													</NavItem>
+												</MenuTrigger>
+												<MenuContent />
+											</Menu>
+											<Box className="h-2" />
+										</React.Fragment>
+									);
+								}
+
+								if (menuItem.url) {
+									return (
+										<NavItem
+											onClick={() => menuClick(menuItem.url)}
+											active={
+												routeHighlight?.label === menuItem.label ||
+												(menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight))
+											}
+											key={menuItem.label}
+											aria-label={menuItem.label}
+											icon={menuItem.icon}
+										>
+											{menuItem.label}
+										</NavItem>
+									);
+								}
+
+								return (
 									<Box
 										key={menuItem.label}
 										px="16"
@@ -199,8 +220,8 @@ function TemplateContent({
 											</Text>
 										)}
 									</Box>
-								)
-							)}
+								);
+							})}
 						</NavBody>
 						<NavFooter>
 							<NavList>
@@ -241,11 +262,7 @@ function TemplateContent({
 					{isContentManager ? (
 						<ContentManagerSidebar />
 					) : showVT ? (
-						<Sidebar
-							className="flex"
-							h="full"
-							style={{overflowY: "auto", overflowX: "hidden"}}
-						>
+						<Sidebar className="flex" h="full" style={{overflowY: "auto", overflowX: "hidden"}}>
 							<SubNav
 								style={{
 									height: "100%",
@@ -257,25 +274,25 @@ function TemplateContent({
 								<div
 									className="flex w-[500%]"
 									style={{
-										transform: `translateX(-${
-											224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
-										}px)`,
+										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
 										transition: ".7s cubic-bezier(0, 1, 0, 1)",
 										minHeight: "100%",
 										overflowX: "hidden",
 									}}
 								>
-									{showVT && highlight1?.children && (
+									{showVT && routeHighlight?.children && (
 										<VT
 											backLink={undefined}
-											title={highlight1?.children?.title || highlight1?.label}
-											items={highlight1?.children}
+											title={routeHighlight.children?.title || routeHighlight.label}
+											description={routeHighlight.children?.description}
+											items={routeHighlight.children}
 										/>
 									)}
 									{showVT && lvl3 && (
 										<VT
 											backLink={lvl2}
 											title={lvl2.children?.title}
+											description={lvl2.children?.description}
 											items={lvl2.children?.children}
 										/>
 									)}
@@ -283,6 +300,7 @@ function TemplateContent({
 										<VT
 											backLink={lvl3}
 											title={lvl3.children?.title}
+											description={lvl3.children?.description}
 											items={lvl3.children?.children}
 										/>
 									)}
@@ -299,11 +317,7 @@ function TemplateContent({
 				fontSize="md"
 				color="fg.default"
 				h="full"
-				style={{
-				minHeight: 0,
-				marginRight: opalPanelWidth ? `${opalPanelWidth}px` : 0,
-				transition: 'margin-right 0.3s cubic-bezier(0, 1, 0, 1)',
-			}}
+				style={{minHeight: 0}}
 			>
 				<Box
 					flex="1"
@@ -328,13 +342,13 @@ function TemplateContent({
 							overflow="auto"
 							px="32"
 							py="24"
-							pb={footerContent ? "80" : "24"}
+					pb={footerContent ? "80" : "24"}
 						>
 							<>
 								{!hidePageHeader && (
 									<Box w="full" className="min-w-0" overflow="hidden">
 										<Heading level="3" mb="16" truncate>
-											{heading || highlight1?.label}
+											{heading || routeHighlight?.label}
 										</Heading>
 										{desc && (
 											<Text
@@ -342,7 +356,7 @@ function TemplateContent({
 												color="fg.secondary"
 												display="block"
 												w="full"
-												style={{ width: "100%", maxWidth: "none" }}
+												style={{width: "100%", maxWidth: "none"}}
 											>
 												{desc}
 											</Text>
@@ -354,7 +368,7 @@ function TemplateContent({
 									z="10"
 									className="relative"
 									w="full"
-									style={{ width: "100%", maxWidth: "none" }}
+									style={{width: "100%", maxWidth: "none"}}
 								>
 									{children}
 								</Box>
@@ -369,33 +383,34 @@ function TemplateContent({
 						bg="bg.default"
 						h="full"
 						overflow="auto"
+						style={{width: "384px", minWidth: "384px"}}
 					>
 						{asideContent}
 					</Box>
 				)}
 			</Box>
-			{footerContent && (
-				<Box
-					style={{
-						position: "fixed",
-						bottom: 0,
-						left: `${footerLeftOffset}px`,
-						right: `${opalPanelWidth}px`,
-						transition: "left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)"
-					}}
-					borderT="1"
-					borderL="1"
-					borderColor="border.secondary"
-					bg="bg.default"
-					px="32"
-					py="16"
-					display="flex"
-					justifyContent="end"
-					z="20"
-				>
-					{footerContent}
-				</Box>
-			)}
+		{footerContent && (
+			<Box
+				style={{
+					position: "fixed",
+					bottom: 0,
+					left: `${footerLeftOffset}px`,
+					right: `${opalPanelWidth}px`,
+					transition: "left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)"
+				}}
+				borderT="1"
+				borderL="1"
+				borderColor="border.secondary"
+				bg="bg.default"
+				px="32"
+				py="16"
+				display="flex"
+				justifyContent="end"
+				z="20"
+			>
+				{footerContent}
+			</Box>
+		)}
 			<OpalPanel
 				isOpen={isOpalOpen}
 				onClose={closeOpal}
@@ -403,10 +418,10 @@ function TemplateContent({
 				inputValue={inputValue}
 				isLoading={isLoading}
 				error={error}
-				isInputDisabled={isInputDisabled}
+			isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
-				regenerate={regenerate}
+			regenerate={regenerate}
 				groupedHistory={groupedHistory}
 				activeChat={activeChat}
 				searchQuery={searchQuery}
