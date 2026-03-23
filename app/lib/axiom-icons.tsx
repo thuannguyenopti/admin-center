@@ -9,7 +9,7 @@ type CompatIconProps = SVGProps<SVGSVGElement> & {
 const fallbackIcon = TablerIcons.IconCircle;
 
 const iconMap: Record<string, string[]> = {
-	IconAgent: ["IconRobot", "IconSparkles"],
+	IconAgent: ["IconSparkles"],
 	IconArrowLeft: ["IconArrowLeft"],
 	IconArrowRotateLeft: ["IconRotate", "IconHistory"],
 	IconArrowsLeftRight: ["IconArrowsLeftRight"],
