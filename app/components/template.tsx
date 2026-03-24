@@ -18,7 +18,7 @@ import {Button} from "./Button";
 import {Text} from "./Text";
 import React, {useEffect, useState, Suspense} from "react";
 
-import {useRouter, usePathname} from "next/navigation";
+import {useRouter, usePathname, useSearchParams} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
@@ -45,8 +45,10 @@ function TemplateContent({
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
+	const searchParams = useSearchParams();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
+	const isOpalStudio = path.startsWith("/cmp/opal-studio");
 
 	useEffect(() => {
 		setMounted(true);
@@ -77,6 +79,7 @@ function TemplateContent({
 		closePanel: closeOpal,
 		openPanel: openOpal,
 		setInputValue,
+		clearHistory,
 		setInputDisabled,
 		sendMessage,
 		regenerate,
@@ -85,19 +88,32 @@ function TemplateContent({
 		removeMessage,
 	} = useOpalState({activeChatId: activeChat, opalContext});
 
+	const closeOpalWithRouteAwareness = () => {
+		if (isOpalStudio) {
+			const returnTo = searchParams.get("returnTo") || "/cmp/library";
+			closeOpal();
+			router.push(returnTo);
+			return;
+		}
+
+		closeOpal();
+	};
+
 	// Provide Opal panel controls through LayoutContext
 	useEffect(() => {
 		setOpalPanelControls({
 			openPanel: openOpal,
 			togglePanel: toggleOpal,
 			closePanel: closeOpal,
+			clearHistory,
+			setInputValue,
 			addMessage,
 			updateMessage,
 			removeMessage,
 			setInputDisabled,
 		});
 		return () => setOpalPanelControls(null);
-	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, addMessage, updateMessage, removeMessage, setInputDisabled]);
+	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, clearHistory, setInputValue, addMessage, updateMessage, removeMessage, setInputDisabled]);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -128,14 +144,14 @@ function TemplateContent({
 		routeHighlight?.children?.length > 1 ||
 		typeof lvl3 !== "undefined" ||
 		typeof lvl4 !== "undefined";
-	const showSecondarySidebar = isContentManager || showVT;
+	const showSecondarySidebar = !isOpalStudio && (isContentManager || showVT);
 	const {contentSubNavExpanded} = useContentManagerLayout();
 	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
 	const secondarySidebarWidth = isContentManager ? (contentSubNavExpanded ? 224 : 56) : 224;
-	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail;
+	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail || isOpalStudio;
 
 	// Primary sidebar width: 56px collapsed, 224px expanded
-	const primarySidebarWidth = isExpanded ? 224 : 56;
+	const primarySidebarWidth = isOpalStudio ? 0 : isExpanded ? 224 : 56;
 
 	// Calculate total left offset for footer
 	const footerLeftOffset = primarySidebarWidth + (showSecondarySidebar ? secondarySidebarWidth : 0);
@@ -158,158 +174,160 @@ function TemplateContent({
 	return (
 		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
 			<GlobalBar onOpalClick={toggleOpal} />
-			<Box display="flex" z="10" style={{minHeight: 0}}>
-				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
-					<Nav>
-						<NavBody>
-							{menuItems.map((menuItem: any) => {
-								if (menuItem.isMenuTrigger) {
-									return (
-										<React.Fragment key={menuItem.label}>
-											<Menu
-												options={menuItem.menuOptions.map((opt: any) => ({
-													label: opt.label,
-													execute: () => menuClick(opt.url),
-												}))}
-											>
-												<MenuTrigger asChild>
-													<NavItem
-														aria-label={menuItem.label}
-														icon={menuItem.icon}
-														className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
-													>
-														{menuItem.label}
-													</NavItem>
-												</MenuTrigger>
-												<MenuContent />
-											</Menu>
-											<Box className="h-2" />
-										</React.Fragment>
-									);
-								}
-
-								if (menuItem.url) {
-									return (
-										<NavItem
-											onClick={() => menuClick(menuItem.url)}
-											active={
-												routeHighlight?.label === menuItem.label ||
-												(menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight))
-											}
-											key={menuItem.label}
-											aria-label={menuItem.label}
-											icon={menuItem.icon}
-										>
-											{menuItem.label}
-										</NavItem>
-									);
-								}
-
-								return (
-									<Box
-										key={menuItem.label}
-										px="16"
-										py="8"
-										mt="4"
-										borderT="1"
-										borderColor="border.tertiary"
-									>
-										{isExpanded && (
-											<Text fontSize="sm" color="fg.tertiary" mt="2">
-												{menuItem.label}
-											</Text>
-										)}
-									</Box>
-								);
-							})}
-						</NavBody>
-						<NavFooter>
-							<NavList>
-								<Button
-									aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-									icon={
-										!isExpanded ? (
-											<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
-										) : (
-											<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
-										)
+			{!isOpalStudio ? (
+				<Box display="flex" z="10" style={{minHeight: 0}}>
+					<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
+						<Nav>
+							<NavBody>
+								{menuItems.map((menuItem: any) => {
+									if (menuItem.isMenuTrigger) {
+										return (
+											<React.Fragment key={menuItem.label}>
+												<Menu
+													options={menuItem.menuOptions.map((opt: any) => ({
+														label: opt.label,
+														execute: () => menuClick(opt.url),
+													}))}
+												>
+													<MenuTrigger asChild>
+														<NavItem
+															aria-label={menuItem.label}
+															icon={menuItem.icon}
+															className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+														>
+															{menuItem.label}
+														</NavItem>
+													</MenuTrigger>
+													<MenuContent />
+												</Menu>
+												<Box className="h-2" />
+											</React.Fragment>
+										);
 									}
-									onClick={() => setIsExpanded(!isExpanded)}
-									appearance="subtle"
-								/>
-							</NavList>
-						</NavFooter>
-					</Nav>
-				</Sidebar>
-				<Box
-					style={{
-						marginLeft: -secondarySidebarWidth,
-						transform: showSecondarySidebar ? `translateX(${secondarySidebarWidth}px)` : "translateX(0px)",
-						overflowX: "hidden",
-						overflowY: isContentManager ? "hidden" : undefined,
-						minHeight: isContentManager ? 0 : undefined,
-						width: secondarySidebarWidth,
-						minWidth: secondarySidebarWidth,
-						flexShrink: 0,
-						height: "100%",
-					}}
-					borderR="1"
-					borderColor="border.tertiary"
-					bg="bg.default"
-					overflow="hidden"
-					className="slide"
-				>
-					{isContentManager ? (
-						<ContentManagerSidebar />
-					) : showVT ? (
-						<Sidebar className="flex" h="full" style={{overflowY: "auto", overflowX: "hidden"}}>
-							<SubNav
-								style={{
-									height: "100%",
-									overflowY: "auto",
-									overflowX: "hidden",
-									borderRight: 0,
-								}}
-							>
-								<div
-									className="flex w-[500%]"
+
+									if (menuItem.url) {
+										return (
+											<NavItem
+												onClick={() => menuClick(menuItem.url)}
+												active={
+													routeHighlight?.label === menuItem.label ||
+													(menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight))
+												}
+												key={menuItem.label}
+												aria-label={menuItem.label}
+												icon={menuItem.icon}
+											>
+												{menuItem.label}
+											</NavItem>
+										);
+									}
+
+									return (
+										<Box
+											key={menuItem.label}
+											px="16"
+											py="8"
+											mt="4"
+											borderT="1"
+											borderColor="border.tertiary"
+										>
+											{isExpanded && (
+												<Text fontSize="sm" color="fg.tertiary" mt="2">
+													{menuItem.label}
+												</Text>
+											)}
+										</Box>
+									);
+								})}
+							</NavBody>
+							<NavFooter>
+								<NavList>
+									<Button
+										aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
+										icon={
+											!isExpanded ? (
+												<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
+											) : (
+												<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
+											)
+										}
+										onClick={() => setIsExpanded(!isExpanded)}
+										appearance="subtle"
+									/>
+								</NavList>
+							</NavFooter>
+						</Nav>
+					</Sidebar>
+					<Box
+						style={{
+							marginLeft: -secondarySidebarWidth,
+							transform: showSecondarySidebar ? `translateX(${secondarySidebarWidth}px)` : "translateX(0px)",
+							overflowX: "hidden",
+							overflowY: isContentManager ? "hidden" : undefined,
+							minHeight: isContentManager ? 0 : undefined,
+							width: secondarySidebarWidth,
+							minWidth: secondarySidebarWidth,
+							flexShrink: 0,
+							height: "100%",
+						}}
+						borderR="1"
+						borderColor="border.tertiary"
+						bg="bg.default"
+						overflow="hidden"
+						className="slide"
+					>
+						{isContentManager ? (
+							<ContentManagerSidebar />
+						) : showVT ? (
+							<Sidebar className="flex" h="full" style={{overflowY: "auto", overflowX: "hidden"}}>
+								<SubNav
 									style={{
-										transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
-										transition: ".7s cubic-bezier(0, 1, 0, 1)",
-										minHeight: "100%",
+										height: "100%",
+										overflowY: "auto",
 										overflowX: "hidden",
+										borderRight: 0,
 									}}
 								>
-									{showVT && routeHighlight?.children && (
-										<VT
-											backLink={undefined}
-											title={routeHighlight.children?.title || routeHighlight.label}
-											description={routeHighlight.children?.description}
-											items={routeHighlight.children}
-										/>
-									)}
-									{showVT && lvl3 && (
-										<VT
-											backLink={lvl2}
-											title={lvl2.children?.title}
-											description={lvl2.children?.description}
-											items={lvl2.children?.children}
-										/>
-									)}
-									{showVT && lvl4 && (
-										<VT
-											backLink={lvl3}
-											title={lvl3.children?.title}
-											description={lvl3.children?.description}
-											items={lvl3.children?.children}
-										/>
-									)}
-								</div>
-							</SubNav>
-						</Sidebar>
-					) : null}
+									<div
+										className="flex w-[500%]"
+										style={{
+											transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
+											transition: ".7s cubic-bezier(0, 1, 0, 1)",
+											minHeight: "100%",
+											overflowX: "hidden",
+										}}
+									>
+										{showVT && routeHighlight?.children && (
+											<VT
+												backLink={undefined}
+												title={routeHighlight.children?.title || routeHighlight.label}
+												description={routeHighlight.children?.description}
+												items={routeHighlight.children}
+											/>
+										)}
+										{showVT && lvl3 && (
+											<VT
+												backLink={lvl2}
+												title={lvl2.children?.title}
+												description={lvl2.children?.description}
+												items={lvl2.children?.children}
+											/>
+										)}
+										{showVT && lvl4 && (
+											<VT
+												backLink={lvl3}
+												title={lvl3.children?.title}
+												description={lvl3.children?.description}
+												items={lvl3.children?.children}
+											/>
+										)}
+									</div>
+								</SubNav>
+							</Sidebar>
+						) : null}
+					</Box>
 				</Box>
-			</Box>
+			) : null}
 			<Box
 				overflowX="hidden"
 				display="flex"
@@ -413,7 +431,7 @@ function TemplateContent({
 		)}
 			<OpalPanel
 				isOpen={isOpalOpen}
-				onClose={closeOpal}
+				onClose={closeOpalWithRouteAwareness}
 				messages={messages}
 				inputValue={inputValue}
 				isLoading={isLoading}
