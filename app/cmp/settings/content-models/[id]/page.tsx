@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
 	Box,
+	Breadcrumb,
 	Heading,
 	Tabs,
 	TabsList,
@@ -11,15 +12,37 @@ import {
 	Field,
 	Input,
 	Textarea,
-	Flex,
-	Badge,
+	Group,
 	Switch,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	LabelMenuButton,
+	Card,
+	Disclosure,
+	DisclosureContent,
+	DisclosureTrigger,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { useRouter, useParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import { IconPhoto, IconPlus, IconGripVertical, IconLink } from "@tabler/icons-react";
+import {
+	IconPhoto,
+	IconLink,
+	IconLetterT,
+	IconNumbers,
+	IconCalendar,
+	IconFileText,
+	IconCircleDot,
+	IconSquareCheck,
+	IconExternalLink,
+	IconBraces,
+	IconAlignLeft,
+	IconGripVertical,
+	IconMapPin,
+} from "@tabler/icons-react";
+import { initialCmpContentModels } from "@/app/db/cmpInitialData";
 
 type CmpContentModel = {
 	id: string;
@@ -38,12 +61,46 @@ type CmpContentModel = {
 	coverImage?: string;
 };
 
+const LOCALE_OPTIONS = [
+	{ label: "English (US)", value: "en-US" },
+	{ label: "English (UK)", value: "en-GB" },
+	{ label: "Spanish", value: "es-ES" },
+	{ label: "French", value: "fr-FR" },
+	{ label: "German", value: "de-DE" },
+	{ label: "Italian", value: "it-IT" },
+	{ label: "Portuguese", value: "pt-PT" },
+	{ label: "Japanese", value: "ja-JP" },
+	{ label: "Chinese (Simplified)", value: "zh-CN" },
+	{ label: "Swedish", value: "sv-SE" },
+];
+
+const FIELD_TYPES = [
+	{ label: "Text", value: "text", icon: <IconLetterT size={24} /> },
+	{ label: "Long Text", value: "longText", icon: <IconAlignLeft size={24} /> },
+	{ label: "Number", value: "number", icon: <IconNumbers size={24} /> },
+	{ label: "Boolean", value: "boolean", icon: <IconSquareCheck size={24} /> },
+	{ label: "Date & Time", value: "datetime", icon: <IconCalendar size={24} /> },
+	{ label: "Rich Text", value: "richText", icon: <IconFileText size={24} /> },
+	{ label: "Choice", value: "choice", icon: <IconCircleDot size={24} /> },
+	{ label: "URL", value: "url", icon: <IconExternalLink size={24} /> },
+	{ label: "Location", value: "location", icon: <IconMapPin size={24} /> },
+	{ label: "JSON Object", value: "json", icon: <IconBraces size={24} /> },
+	{ label: "Library Asset", value: "libraryAsset", icon: <IconPhoto size={24} /> },
+	{ label: "Content Reference", value: "contentReference", icon: <IconLink size={24} /> },
+];
+
+// Get icon for field type
+const getFieldTypeIcon = (type: string) => {
+	const fieldType = FIELD_TYPES.find((ft) => ft.value === type);
+	return fieldType?.icon || <IconLetterT size={20} />;
+};
+
 export default function ContentModelDetailPage() {
 	const router = useRouter();
 	const params = useParams();
 	const contentModelId = params.id as string;
 
-	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", []) as [
+	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", initialCmpContentModels) as [
 		CmpContentModel[],
 		(value: CmpContentModel[]) => void,
 	];
@@ -51,23 +108,81 @@ export default function ContentModelDetailPage() {
 	const contentModel = cmpContentModels.find((model: CmpContentModel) => model.id === contentModelId);
 
 	const [activeTab, setActiveTab] = useState("details");
+	const [displayName, setDisplayName] = useState("");
 	const [apiIdentifier, setApiIdentifier] = useState("");
 	const [version, setVersion] = useState("_v1");
 	const [description, setDescription] = useState("");
-	const [defaultLocale, setDefaultLocale] = useState("");
+	const [defaultLocale, setDefaultLocale] = useState("en-US");
 	const [modelType, setModelType] = useState<"component" | "content">("component");
 	const [coverImage, setCoverImage] = useState("");
+	const [isEditingTitle, setIsEditingTitle] = useState(false);
+	const titleInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		if (contentModel) {
+			setDisplayName(contentModel.displayName);
 			setApiIdentifier(contentModel.apiIdentifier || contentModel.name);
 			setVersion(contentModel.version || "_v1");
 			setDescription(contentModel.description || "");
-			setDefaultLocale(contentModel.defaultLocale || "");
+			setDefaultLocale(contentModel.defaultLocale || "en-US");
 			setModelType(contentModel.modelType || "component");
 			setCoverImage(contentModel.coverImage || "");
 		}
 	}, [contentModel]);
+
+	const handleTitleClick = () => {
+		setIsEditingTitle(true);
+	};
+
+	const handleTitleBlur = () => {
+		setIsEditingTitle(false);
+		handleSave();
+	};
+
+	const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === "Enter") {
+			setIsEditingTitle(false);
+			handleSave();
+		}
+	};
+
+	// Focus input when editing starts
+	useEffect(() => {
+		if (isEditingTitle && titleInputRef.current) {
+			titleInputRef.current.focus();
+			titleInputRef.current.select();
+		}
+	}, [isEditingTitle]);
+
+	const handleSave = () => {
+		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+			if (model.id === contentModelId) {
+				return {
+					...model,
+					displayName,
+					apiIdentifier,
+					version,
+					description,
+					defaultLocale,
+					modelType,
+					coverImage,
+					modifiedAt: new Date().toISOString(),
+				};
+			}
+			return model;
+		});
+		setCmpContentModels(updatedModels);
+	};
+
+	const handleAddField = () => {
+		// TODO: Implement field addition dialog
+		console.log("Add field clicked");
+	};
+
+	const handleDone = () => {
+		handleSave();
+		router.push("/cmp/settings/content-models");
+	};
 
 	if (!contentModel) {
 		return (
@@ -91,47 +206,46 @@ export default function ContentModelDetailPage() {
 		);
 	}
 
-	const handleSave = () => {
-		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
-			if (model.id === contentModelId) {
-				return {
-					...model,
-					apiIdentifier,
-					version,
-					description,
-					defaultLocale,
-					modelType,
-					coverImage,
-					modifiedAt: new Date().toISOString(),
-				};
-			}
-			return model;
-		});
-		setCmpContentModels(updatedModels);
-	};
-
-	const handleAddField = () => {
-		// TODO: Implement field addition dialog
-		console.log("Add field clicked");
-	};
-
 	return (
 		<Box p="24">
 			<Box mb="24">
-				<Flex alignItems="center" gap="8" mb="8">
-					<Text fontSize="sm" color="fg.secondary">
-						Content Templates
-					</Text>
-					<Text fontSize="sm" color="fg.secondary">
-						/
-					</Text>
-					<Text fontSize="sm" color="fg.secondary">
-						{contentModel.displayName}
-					</Text>
-				</Flex>
-				<Heading level="2" fontSize="xl" fontWeight="500" mb="16">
-					{contentModel.displayName}
-				</Heading>
+				<Breadcrumb
+					mb="16"
+					items={[
+						{ href: "/cmp/settings/content-models", label: "Templates" },
+						{ label: contentModel.displayName },
+					]}
+				/>
+
+				{isEditingTitle ? (
+					<Input
+						ref={titleInputRef}
+						value={displayName}
+						onChange={(e) => setDisplayName(e.target.value)}
+						onBlur={handleTitleBlur}
+						onKeyDown={handleTitleKeyDown}
+						fontSize="lg"
+						fontWeight="500"
+						mb="16"
+						style={{
+							border: "none",
+							padding: 0,
+							height: "auto",
+						}}
+					/>
+				) : (
+					<Heading
+						level="3"
+						fontSize="lg"
+						fontWeight="500"
+						mb="16"
+						onClick={handleTitleClick}
+						style={{ cursor: "pointer" }}
+						className="hover:text-fg-secondary"
+					>
+						{displayName}
+					</Heading>
+				)}
 
 				<Tabs value={activeTab} onValueChange={setActiveTab}>
 					<TabsList>
@@ -141,7 +255,7 @@ export default function ContentModelDetailPage() {
 
 					<TabsContent value="details">
 						<Box mt="24" style={{ maxWidth: "600px" }}>
-							<Flex flexDirection="column" gap="24">
+							<Group flexDirection="column" gap="24">
 								<Box>
 									<Text fontSize="sm" fontWeight="500" mb="8" color="fg.secondary">
 										Cover Image
@@ -170,14 +284,14 @@ export default function ContentModelDetailPage() {
 								</Box>
 
 								<Field label="API Identifier">
-									<Flex gap="8" alignItems="center">
+									<Group gap="8" alignItems="center">
 										<Input
 											value={apiIdentifier}
 											onChange={(e) => setApiIdentifier(e.target.value)}
 											onBlur={handleSave}
 											flex="1"
 										/>
-										<Flex alignItems="center" gap="8">
+										<Group alignItems="center" gap="8">
 											<Text fontSize="sm" color="fg.secondary">
 												Version:
 											</Text>
@@ -188,8 +302,8 @@ export default function ContentModelDetailPage() {
 												style={{ width: "80px" }}
 											/>
 											<Button appearance="subtle" size="sm" icon={<IconLink size={16} />} />
-										</Flex>
-									</Flex>
+										</Group>
+									</Group>
 								</Field>
 
 								<Field label="Description" info="Optional">
@@ -206,89 +320,237 @@ export default function ContentModelDetailPage() {
 								</Field>
 
 								<Field label="Default Locale" info="Optional">
-									<Input
-										value={defaultLocale}
-										onChange={(e) => setDefaultLocale(e.target.value)}
-										onBlur={handleSave}
-										placeholder="e.g., en-US"
-									/>
+									<Menu
+										options={LOCALE_OPTIONS.map((opt) => ({
+											label: opt.label,
+											execute: () => {
+												setDefaultLocale(opt.value);
+												handleSave();
+											},
+											...(defaultLocale === opt.value && { selected: true }),
+										}))}
+									>
+										<MenuTrigger asChild>
+											<LabelMenuButton label="">
+												{LOCALE_OPTIONS.find((opt) => opt.value === defaultLocale)?.label || "Select locale"}
+											</LabelMenuButton>
+										</MenuTrigger>
+										<MenuContent />
+									</Menu>
 								</Field>
 
-								<Box>
-									<Field label="What's the model type?" info="Optional">
-										<Flex gap="16" alignItems="center">
-											<Text fontSize="sm" color="fg.secondary">
-												Component Type
-											</Text>
-											<Switch
-												checked={modelType === "content"}
-												onCheckedChange={(checked) => {
-													setModelType(checked ? "content" : "component");
-													handleSave();
-												}}
-											/>
-											<Text fontSize="sm" color="fg.secondary">
-												Content Type
-											</Text>
-										</Flex>
-									</Field>
-								</Box>
-							</Flex>
+								<Group gap="16" alignItems="center">
+									<Text fontSize="sm" fontWeight="500">
+										What's the model type?
+									</Text>
+									<Text fontSize="sm" color="fg.secondary">
+										Component Type
+									</Text>
+									<Switch
+										checked={modelType === "content"}
+										onCheckedChange={(checked) => {
+											setModelType(checked ? "content" : "component");
+											handleSave();
+										}}
+									/>
+									<Text fontSize="sm" color="fg.secondary">
+										Content Type
+									</Text>
+								</Group>
+							</Group>
 
-							<Flex justifyContent="space-between" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
-								<Text fontSize="xs" color="fg.tertiary">
-									Last updated {new Date(contentModel.modifiedAt).toLocaleString()}
-								</Text>
-								<Button appearance="primary" onClick={() => router.push("/cmp/settings/content-models")}>
+							<Group justifyContent="flex-end" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
+								<Button appearance="primary" onClick={handleDone}>
 									Done
 								</Button>
-							</Flex>
+							</Group>
 						</Box>
 					</TabsContent>
 
 					<TabsContent value="fields">
 						<Box mt="24">
-							<Flex justifyContent="flex-end" mb="16">
-								<Button appearance="primary" onClick={handleAddField}>
+							<Group justifyContent="flex-end" mb="16">
+								<Button appearance="default" onClick={handleAddField}>
 									Add Field
 								</Button>
-							</Flex>
+							</Group>
 
 							{contentModel.properties && contentModel.properties.length > 0 ? (
-								<Box>
-									{contentModel.properties.map((property: any) => (
-										<Box
-											key={property.id}
-											p="16"
-											rounded="md"
-											border="1"
-											borderColor="border.tertiary"
-											bg="bg.default"
-											mb="8"
-											display="flex"
-											alignItems="center"
-											gap="12"
-											style={{ cursor: "pointer" }}
-											className="hover:bg-bg-secondary"
-										>
-											<IconGripVertical size={20} color="var(--ax-colors-fg-tertiary)" />
-											<IconLink size={20} color="var(--ax-colors-fg-secondary)" />
-											<Text fontSize="md" fontWeight="500" flex="1">
-												{property.displayName || property.name}
-											</Text>
-											<Text fontSize="sm" color="fg.secondary">
-												{property.type}
-											</Text>
-										</Box>
+								<Group flexDirection="column" gap="8">
+									{contentModel.properties.map((property: any, index: number) => (
+										<Card key={property.id}>
+											<Disclosure>
+												<DisclosureTrigger chevronPosition="end">
+													<Group gap="12" w="full" alignItems="center">
+														<Box color="fg.tertiary" style={{ cursor: "grab" }}>
+															<IconGripVertical size={20} />
+														</Box>
+														<Box color="fg.secondary">
+															{getFieldTypeIcon(property.type)}
+														</Box>
+														<Text fontSize="md" fontWeight="500">
+															{property.displayName || property.name}
+														</Text>
+													</Group>
+												</DisclosureTrigger>
+												<DisclosureContent>
+													<Box p="16" borderT="1" borderColor="border.tertiary">
+														<Group flexDirection="column" gap="16">
+															<Field label="Display Name">
+																<Input
+																	value={property.displayName || ""}
+																	onChange={(e) => {
+																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																			if (model.id === contentModelId) {
+																				const updatedProperties = [...model.properties];
+																				updatedProperties[index] = {
+																					...updatedProperties[index],
+																					displayName: e.target.value,
+																				};
+																				return {
+																					...model,
+																					properties: updatedProperties,
+																					modifiedAt: new Date().toISOString(),
+																				};
+																			}
+																			return model;
+																		});
+																		setCmpContentModels(updatedModels);
+																	}}
+																/>
+															</Field>
+															<Field label="Field Name">
+																<Input
+																	value={property.name || ""}
+																	onChange={(e) => {
+																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																			if (model.id === contentModelId) {
+																				const updatedProperties = [...model.properties];
+																				updatedProperties[index] = {
+																					...updatedProperties[index],
+																					name: e.target.value,
+																				};
+																				return {
+																					...model,
+																					properties: updatedProperties,
+																					modifiedAt: new Date().toISOString(),
+																				};
+																			}
+																			return model;
+																		});
+																		setCmpContentModels(updatedModels);
+																	}}
+																/>
+															</Field>
+															<Field label="Description" info="Optional">
+																<Textarea
+																	value={property.description || ""}
+																	onChange={(e) => {
+																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																			if (model.id === contentModelId) {
+																				const updatedProperties = [...model.properties];
+																				updatedProperties[index] = {
+																					...updatedProperties[index],
+																					description: e.target.value,
+																				};
+																				return {
+																					...model,
+																					properties: updatedProperties,
+																					modifiedAt: new Date().toISOString(),
+																				};
+																			}
+																			return model;
+																		});
+																		setCmpContentModels(updatedModels);
+																	}}
+																	rows={3}
+																/>
+															</Field>
+															<Group gap="16" alignItems="center">
+																<Switch
+																	checked={property.required || false}
+																	onCheckedChange={(checked) => {
+																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																			if (model.id === contentModelId) {
+																				const updatedProperties = [...model.properties];
+																				updatedProperties[index] = {
+																					...updatedProperties[index],
+																					required: checked,
+																				};
+																				return {
+																					...model,
+																					properties: updatedProperties,
+																					modifiedAt: new Date().toISOString(),
+																				};
+																			}
+																			return model;
+																		});
+																		setCmpContentModels(updatedModels);
+																	}}
+																/>
+																<Text fontSize="sm">Required</Text>
+															</Group>
+															<Group gap="16" alignItems="center">
+																<Switch
+																	checked={property.list || false}
+																	onCheckedChange={(checked) => {
+																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																			if (model.id === contentModelId) {
+																				const updatedProperties = [...model.properties];
+																				updatedProperties[index] = {
+																					...updatedProperties[index],
+																					list: checked,
+																				};
+																				return {
+																					...model,
+																					properties: updatedProperties,
+																					modifiedAt: new Date().toISOString(),
+																				};
+																			}
+																			return model;
+																		});
+																		setCmpContentModels(updatedModels);
+																	}}
+																/>
+																<Text fontSize="sm">Allow multiple values</Text>
+															</Group>
+															<Group gap="16" alignItems="center">
+																<Switch
+																	checked={property.localized || false}
+																	onCheckedChange={(checked) => {
+																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																			if (model.id === contentModelId) {
+																				const updatedProperties = [...model.properties];
+																				updatedProperties[index] = {
+																					...updatedProperties[index],
+																					localized: checked,
+																				};
+																				return {
+																					...model,
+																					properties: updatedProperties,
+																					modifiedAt: new Date().toISOString(),
+																				};
+																			}
+																			return model;
+																		});
+																		setCmpContentModels(updatedModels);
+																	}}
+																/>
+																<Text fontSize="sm">Localized</Text>
+															</Group>
+														</Group>
+													</Box>
+												</DisclosureContent>
+											</Disclosure>
+										</Card>
 									))}
-								</Box>
+								</Group>
 							) : (
 								<Box
 									display="flex"
 									flexDirection="column"
 									alignItems="center"
 									justifyContent="center"
-									gap="16"
 									py="64"
 									rounded="md"
 									border="1"
@@ -298,20 +560,14 @@ export default function ContentModelDetailPage() {
 									<Text fontSize="md" color="fg.secondary">
 										No fields yet
 									</Text>
-									<Button appearance="primary" onClick={handleAddField}>
-										Add Your First Field
-									</Button>
 								</Box>
 							)}
 
-							<Flex justifyContent="space-between" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
-								<Text fontSize="xs" color="fg.tertiary">
-									Last updated {new Date(contentModel.modifiedAt).toLocaleString()}
-								</Text>
-								<Button appearance="primary" onClick={() => router.push("/cmp/settings/content-models")}>
+							<Group justifyContent="flex-end" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
+								<Button appearance="primary" onClick={handleDone}>
 									Done
 								</Button>
-							</Flex>
+							</Group>
 						</Box>
 					</TabsContent>
 				</Tabs>

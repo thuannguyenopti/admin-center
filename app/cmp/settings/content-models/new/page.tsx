@@ -12,17 +12,43 @@ import {
 	Field,
 	Input,
 	Textarea,
-	Flex,
+	Group,
 	Switch,
 	Menu,
 	MenuTrigger,
 	MenuContent,
+	LabelMenuButton,
+	Card,
+	CardHeader,
+	Disclosure,
+	DisclosureContent,
+	DisclosureTrigger,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogBody,
+	DialogFooter,
+	DialogClose,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { useRouter } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import { IconPhoto, IconFile, IconLayoutGrid, IconBox, IconColumns, IconChevronDown, IconLink } from "@tabler/icons-react";
+import {
+	IconPhoto,
+	IconLink,
+	IconLetterT,
+	IconNumbers,
+	IconCalendar,
+	IconFileText,
+	IconCircleDot,
+	IconSquareCheck,
+	IconExternalLink,
+	IconBraces,
+	IconAlignLeft,
+	IconGripVertical,
+	IconMapPin,
+} from "@tabler/icons-react";
 import { ContentType } from "@/app/db/initialData";
 
 type CmpContentModel = {
@@ -44,13 +70,39 @@ type CmpContentModel = {
 
 type BaseType = ContentType["baseType"];
 
-const BASE_TYPE_OPTIONS: { label: string; value: BaseType; icon: React.ReactNode }[] = [
-	{ label: "Page Type", value: "Page", icon: <IconFile size={20} /> },
-	{ label: "Block Type", value: "Block", icon: <IconLayoutGrid size={20} /> },
-	{ label: "Media Type", value: "Media", icon: <IconPhoto size={20} /> },
-	{ label: "Experience Type", value: "Experience", icon: <IconColumns size={20} /> },
-	{ label: "Product Type", value: "Product", icon: <IconBox size={20} /> },
+const LOCALE_OPTIONS = [
+	{ label: "English (US)", value: "en-US" },
+	{ label: "English (UK)", value: "en-GB" },
+	{ label: "Spanish", value: "es-ES" },
+	{ label: "French", value: "fr-FR" },
+	{ label: "German", value: "de-DE" },
+	{ label: "Italian", value: "it-IT" },
+	{ label: "Portuguese", value: "pt-PT" },
+	{ label: "Japanese", value: "ja-JP" },
+	{ label: "Chinese (Simplified)", value: "zh-CN" },
+	{ label: "Swedish", value: "sv-SE" },
 ];
+
+const FIELD_TYPES = [
+	{ label: "Text", value: "text", icon: <IconLetterT size={24} /> },
+	{ label: "Long Text", value: "longText", icon: <IconAlignLeft size={24} /> },
+	{ label: "Number", value: "number", icon: <IconNumbers size={24} /> },
+	{ label: "Boolean", value: "boolean", icon: <IconSquareCheck size={24} /> },
+	{ label: "Date & Time", value: "datetime", icon: <IconCalendar size={24} /> },
+	{ label: "Rich Text", value: "richText", icon: <IconFileText size={24} /> },
+	{ label: "Choice", value: "choice", icon: <IconCircleDot size={24} /> },
+	{ label: "URL", value: "url", icon: <IconExternalLink size={24} /> },
+	{ label: "Location", value: "location", icon: <IconMapPin size={24} /> },
+	{ label: "JSON Object", value: "json", icon: <IconBraces size={24} /> },
+	{ label: "Library Asset", value: "libraryAsset", icon: <IconPhoto size={24} /> },
+	{ label: "Content Reference", value: "contentReference", icon: <IconLink size={24} /> },
+];
+
+// Get icon for field type
+const getFieldTypeIcon = (type: string) => {
+	const fieldType = FIELD_TYPES.find((ft) => ft.value === type);
+	return fieldType?.icon || <IconLetterT size={20} />;
+};
 
 // Convert display name to a system-safe name (snake_case, no special chars)
 const toSystemName = (displayName: string): string => {
@@ -81,13 +133,26 @@ export default function NewContentModelPage() {
 	const [apiIdentifier, setApiIdentifier] = useState("");
 	const [version, setVersion] = useState("_v1");
 	const [description, setDescription] = useState("");
-	const [defaultLocale, setDefaultLocale] = useState("");
-	const [baseType, setBaseType] = useState<BaseType>("Page");
+	const [defaultLocale, setDefaultLocale] = useState("en-US");
+	const [baseType] = useState<BaseType>("Page");
 	const [modelType, setModelType] = useState<"component" | "content">("component");
 	const [coverImage, setCoverImage] = useState("");
 	const [nameManuallyEdited, setNameManuallyEdited] = useState(false);
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
+	const [properties, setProperties] = useState<any[]>([]);
 	const titleInputRef = useRef<HTMLInputElement>(null);
+
+	// Add Field Dialog state
+	const [isFieldDialogOpen, setIsFieldDialogOpen] = useState(false);
+	const [fieldDialogStep, setFieldDialogStep] = useState(1);
+	const [selectedFieldType, setSelectedFieldType] = useState("");
+	const [fieldDisplayName, setFieldDisplayName] = useState("");
+	const [fieldName, setFieldName] = useState("");
+	const [fieldDescription, setFieldDescription] = useState("");
+	const [fieldRequired, setFieldRequired] = useState(false);
+	const [fieldList, setFieldList] = useState(false);
+	const [fieldLocalized, setFieldLocalized] = useState(false);
+	const [fieldNameManuallyEdited, setFieldNameManuallyEdited] = useState(false);
 
 	// Auto-generate name from display name
 	useEffect(() => {
@@ -98,7 +163,58 @@ export default function NewContentModelPage() {
 		}
 	}, [displayName, nameManuallyEdited]);
 
-	const handleSave = () => {
+	// Auto-generate field name from field display name
+	useEffect(() => {
+		if (!fieldNameManuallyEdited && fieldDisplayName) {
+			setFieldName(toSystemName(fieldDisplayName));
+		}
+	}, [fieldDisplayName, fieldNameManuallyEdited]);
+
+	const handleAddField = () => {
+		setIsFieldDialogOpen(true);
+		setFieldDialogStep(1);
+	};
+
+	const handleFieldTypeSelect = (type: string) => {
+		setSelectedFieldType(type);
+		setFieldDialogStep(2);
+	};
+
+	const handleFieldDialogClose = () => {
+		setIsFieldDialogOpen(false);
+		setFieldDialogStep(1);
+		setSelectedFieldType("");
+		setFieldDisplayName("");
+		setFieldName("");
+		setFieldDescription("");
+		setFieldRequired(false);
+		setFieldList(false);
+		setFieldLocalized(false);
+		setFieldNameManuallyEdited(false);
+	};
+
+	const handleFieldBack = () => {
+		setFieldDialogStep(1);
+		setSelectedFieldType("");
+	};
+
+	const handleFieldAdd = () => {
+		const newField = {
+			id: `field-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+			name: fieldName || toSystemName(fieldDisplayName),
+			displayName: fieldDisplayName,
+			type: selectedFieldType,
+			description: fieldDescription,
+			required: fieldRequired,
+			list: fieldList,
+			localized: fieldLocalized,
+		};
+
+		setProperties([...properties, newField]);
+		handleFieldDialogClose();
+	};
+
+	const handleDone = () => {
 		if (!displayName.trim()) {
 			alert("Display name is required");
 			return;
@@ -110,7 +226,7 @@ export default function NewContentModelPage() {
 			displayName: displayName,
 			baseType: baseType,
 			description: description,
-			properties: [],
+			properties: properties,
 			modifiedAt: new Date().toISOString(),
 			modifiedBy: "Current User",
 			isActive: true,
@@ -122,10 +238,6 @@ export default function NewContentModelPage() {
 		};
 
 		setCmpContentModels([...cmpContentModels, newContentModel]);
-		router.push(`/cmp/settings/content-models/${newContentModel.id}`);
-	};
-
-	const handleCancel = () => {
 		router.push("/cmp/settings/content-models");
 	};
 
@@ -198,7 +310,7 @@ export default function NewContentModelPage() {
 
 					<TabsContent value="details">
 						<Box mt="24" style={{ maxWidth: "600px" }}>
-							<Flex flexDirection="column" gap="24">
+							<Group flexDirection="column" gap="24">
 								<Field label="Display Name" required>
 									<Input
 										value={displayName}
@@ -236,7 +348,7 @@ export default function NewContentModelPage() {
 								</Box>
 
 								<Field label="API Identifier">
-									<Flex gap="8" alignItems="center">
+									<Group gap="8" alignItems="center">
 										<Input
 											value={apiIdentifier}
 											onChange={(e) => {
@@ -246,7 +358,7 @@ export default function NewContentModelPage() {
 											flex="1"
 											placeholder="e.g., landing_page"
 										/>
-										<Flex alignItems="center" gap="8">
+										<Group alignItems="center" gap="8">
 											<Text fontSize="sm" color="fg.secondary">
 												Version:
 											</Text>
@@ -256,8 +368,8 @@ export default function NewContentModelPage() {
 												style={{ width: "80px" }}
 											/>
 											<Button appearance="subtle" size="sm" icon={<IconLink size={16} />} />
-										</Flex>
-									</Flex>
+										</Group>
+									</Group>
 								</Field>
 
 								<Field label="Description" info="Optional">
@@ -272,100 +384,320 @@ export default function NewContentModelPage() {
 									</Text>
 								</Field>
 
-								<Field label="Base Type" required>
+								<Field label="Default Locale" info="Optional">
 									<Menu
-										options={BASE_TYPE_OPTIONS.map((opt) => ({
+										options={LOCALE_OPTIONS.map((opt) => ({
 											label: opt.label,
-											addon: opt.icon,
-											execute: () => setBaseType(opt.value),
-											...(baseType === opt.value && { selected: true }),
+											execute: () => setDefaultLocale(opt.value),
+											...(defaultLocale === opt.value && { selected: true }),
 										}))}
 									>
 										<MenuTrigger asChild>
-											<Button appearance="default" w="full">
-												<Flex alignItems="center" gap="8" w="full">
-													{BASE_TYPE_OPTIONS.find((opt) => opt.value === baseType)?.icon}
-													<Text fontSize="sm" fontWeight="500" flex="1" textAlign="start">
-														{BASE_TYPE_OPTIONS.find((opt) => opt.value === baseType)?.label}
-													</Text>
-													<IconChevronDown size={16} />
-												</Flex>
-											</Button>
+											<LabelMenuButton label="">
+												{LOCALE_OPTIONS.find((opt) => opt.value === defaultLocale)?.label || "Select locale"}
+											</LabelMenuButton>
 										</MenuTrigger>
 										<MenuContent />
 									</Menu>
 								</Field>
 
-								<Field label="Default Locale" info="Optional">
-									<Input
-										value={defaultLocale}
-										onChange={(e) => setDefaultLocale(e.target.value)}
-										placeholder="e.g., en-US"
+								<Group gap="16" alignItems="center">
+									<Text fontSize="sm" fontWeight="500">
+										What's the model type?
+									</Text>
+									<Text fontSize="sm" color="fg.secondary">
+										Component Type
+									</Text>
+									<Switch
+										checked={modelType === "content"}
+										onCheckedChange={(checked) => {
+											setModelType(checked ? "content" : "component");
+										}}
 									/>
-								</Field>
+									<Text fontSize="sm" color="fg.secondary">
+										Content Type
+									</Text>
+								</Group>
+							</Group>
 
-								<Box>
-									<Field label="What's the model type?" info="Optional">
-										<Flex gap="16" alignItems="center">
-											<Text fontSize="sm" color="fg.secondary">
-												Component Type
-											</Text>
-											<Switch
-												checked={modelType === "content"}
-												onCheckedChange={(checked) => {
-													setModelType(checked ? "content" : "component");
-												}}
-											/>
-											<Text fontSize="sm" color="fg.secondary">
-												Content Type
-											</Text>
-										</Flex>
-									</Field>
-								</Box>
-							</Flex>
-
-							<Flex justifyContent="space-between" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
-								<Button appearance="subtle" onClick={handleCancel}>
-									Cancel
+							<Group justifyContent="flex-end" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
+								<Button appearance="primary" onClick={handleDone}>
+									Done
 								</Button>
-								<Button appearance="primary" onClick={handleSave} disabled={!displayName.trim()}>
-									Create
-								</Button>
-							</Flex>
+							</Group>
 						</Box>
 					</TabsContent>
 
 					<TabsContent value="fields">
 						<Box mt="24">
-							<Box
-								display="flex"
-								flexDirection="column"
-								alignItems="center"
-								justifyContent="center"
-								gap="16"
-								py="64"
-								rounded="md"
-								border="1"
-								borderColor="border.tertiary"
-								bg="bg.secondary"
-							>
-								<Text fontSize="md" color="fg.secondary">
-									Save the content model to add fields
-								</Text>
-							</Box>
+							<Group justifyContent="flex-end" mb="16">
+								<Button appearance="default" onClick={handleAddField}>
+									Add Field
+								</Button>
+							</Group>
 
-							<Flex justifyContent="space-between" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
-								<Button appearance="subtle" onClick={handleCancel}>
-									Cancel
+							{properties && properties.length > 0 ? (
+								<Group flexDirection="column" gap="8">
+									{properties.map((property: any, index: number) => (
+										<Card key={property.id}>
+											<Disclosure>
+												<DisclosureTrigger chevronPosition="end">
+													<Group gap="12" w="full" alignItems="center">
+														<Box color="fg.tertiary" style={{ cursor: "grab" }}>
+															<IconGripVertical size={20} />
+														</Box>
+														<Box color="fg.secondary">
+															{getFieldTypeIcon(property.type)}
+														</Box>
+														<Text fontSize="md" fontWeight="500">
+															{property.displayName || property.name}
+														</Text>
+													</Group>
+												</DisclosureTrigger>
+												<DisclosureContent>
+													<Box p="16" borderT="1" borderColor="border.tertiary">
+														<Group flexDirection="column" gap="16">
+															<Field label="Display Name">
+																<Input
+																	value={property.displayName || ""}
+																	onChange={(e) => {
+																		const updatedProperties = [...properties];
+																		updatedProperties[index] = {
+																			...updatedProperties[index],
+																			displayName: e.target.value,
+																		};
+																		setProperties(updatedProperties);
+																	}}
+																/>
+															</Field>
+															<Field label="Field Name">
+																<Input
+																	value={property.name || ""}
+																	onChange={(e) => {
+																		const updatedProperties = [...properties];
+																		updatedProperties[index] = {
+																			...updatedProperties[index],
+																			name: e.target.value,
+																		};
+																		setProperties(updatedProperties);
+																	}}
+																/>
+															</Field>
+															<Field label="Description" info="Optional">
+																<Textarea
+																	value={property.description || ""}
+																	onChange={(e) => {
+																		const updatedProperties = [...properties];
+																		updatedProperties[index] = {
+																			...updatedProperties[index],
+																			description: e.target.value,
+																		};
+																		setProperties(updatedProperties);
+																	}}
+																	rows={3}
+																/>
+															</Field>
+															<Group gap="16" alignItems="center">
+																<Switch
+																	checked={property.required || false}
+																	onCheckedChange={(checked) => {
+																		const updatedProperties = [...properties];
+																		updatedProperties[index] = {
+																			...updatedProperties[index],
+																			required: checked,
+																		};
+																		setProperties(updatedProperties);
+																	}}
+																/>
+																<Text fontSize="sm">Required</Text>
+															</Group>
+															<Group gap="16" alignItems="center">
+																<Switch
+																	checked={property.list || false}
+																	onCheckedChange={(checked) => {
+																		const updatedProperties = [...properties];
+																		updatedProperties[index] = {
+																			...updatedProperties[index],
+																			list: checked,
+																		};
+																		setProperties(updatedProperties);
+																	}}
+																/>
+																<Text fontSize="sm">Allow multiple values</Text>
+															</Group>
+															<Group gap="16" alignItems="center">
+																<Switch
+																	checked={property.localized || false}
+																	onCheckedChange={(checked) => {
+																		const updatedProperties = [...properties];
+																		updatedProperties[index] = {
+																			...updatedProperties[index],
+																			localized: checked,
+																		};
+																		setProperties(updatedProperties);
+																	}}
+																/>
+																<Text fontSize="sm">Localized</Text>
+															</Group>
+														</Group>
+													</Box>
+												</DisclosureContent>
+											</Disclosure>
+										</Card>
+									))}
+								</Group>
+							) : (
+								<Box
+									display="flex"
+									flexDirection="column"
+									alignItems="center"
+									justifyContent="center"
+									py="64"
+									rounded="md"
+									border="1"
+									borderColor="border.tertiary"
+									bg="bg.secondary"
+								>
+									<Text fontSize="md" color="fg.secondary">
+										No fields yet
+									</Text>
+								</Box>
+							)}
+
+							<Group justifyContent="flex-end" alignItems="center" mt="32" pt="24" borderT="1" borderColor="border.tertiary">
+								<Button appearance="primary" onClick={handleDone}>
+									Done
 								</Button>
-								<Button appearance="primary" onClick={handleSave} disabled={!displayName.trim()}>
-									Create
-								</Button>
-							</Flex>
+							</Group>
 						</Box>
 					</TabsContent>
 				</Tabs>
 			</Box>
+
+			{/* Add Field Dialog */}
+			<Dialog open={isFieldDialogOpen} onOpenChange={setIsFieldDialogOpen}>
+				<DialogContent size="md">
+					<DialogHeader>
+						{fieldDialogStep === 1 ? "Select Field Type" : `Add ${FIELD_TYPES.find(t => t.value === selectedFieldType)?.label} Field`}
+					</DialogHeader>
+					<DialogBody>
+						{fieldDialogStep === 1 ? (
+							<Box
+								display="grid"
+								gap="12"
+								style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+							>
+								{FIELD_TYPES.map((type) => (
+									<Box
+										key={type.value}
+										p="16"
+										border="1"
+										borderColor="border.tertiary"
+										rounded="md"
+										display="flex"
+										flexDirection="column"
+										alignItems="center"
+										justifyContent="center"
+										gap="8"
+										style={{ cursor: "pointer" }}
+										className="hover:bg-bg-secondary"
+										onClick={() => handleFieldTypeSelect(type.value)}
+									>
+										<Box color="fg.secondary">
+											{type.icon}
+										</Box>
+										<Text fontSize="sm" fontWeight="500" textAlign="center">
+											{type.label}
+										</Text>
+									</Box>
+								))}
+							</Box>
+						) : (
+							<Group flexDirection="column" gap="16">
+								<Field label="Display Name" required>
+									<Input
+										value={fieldDisplayName}
+										onChange={(e) => setFieldDisplayName(e.target.value)}
+										placeholder="e.g., Hero Title"
+										autoFocus
+									/>
+								</Field>
+
+								<Field label="Field Name">
+									<Input
+										value={fieldName}
+										onChange={(e) => {
+											setFieldName(e.target.value);
+											setFieldNameManuallyEdited(true);
+										}}
+										placeholder="e.g., hero_title"
+									/>
+								</Field>
+
+								<Field label="Description" info="Optional">
+									<Textarea
+										value={fieldDescription}
+										onChange={(e) => setFieldDescription(e.target.value)}
+										placeholder="Add a description for editors..."
+										rows={3}
+									/>
+								</Field>
+
+								<Group gap="16" alignItems="center">
+									<Switch
+										checked={fieldRequired}
+										onCheckedChange={setFieldRequired}
+									/>
+									<Text fontSize="sm">Required field</Text>
+								</Group>
+
+								<Group gap="16" alignItems="center">
+									<Switch
+										checked={fieldList}
+										onCheckedChange={setFieldList}
+									/>
+									<Text fontSize="sm">Allow multiple values</Text>
+								</Group>
+
+								<Group gap="16" alignItems="center">
+									<Switch
+										checked={fieldLocalized}
+										onCheckedChange={setFieldLocalized}
+									/>
+									<Text fontSize="sm">Localized (translatable)</Text>
+								</Group>
+							</Group>
+						)}
+					</DialogBody>
+					<DialogFooter>
+						<Group w="full" justifyContent="space-between">
+							<Box>
+								{fieldDialogStep === 2 && (
+									<Button appearance="subtle" onClick={handleFieldBack}>
+										Back
+									</Button>
+								)}
+							</Box>
+							<Group gap="8">
+								<DialogClose asChild>
+									<Button appearance="subtle" onClick={handleFieldDialogClose}>
+										Cancel
+									</Button>
+								</DialogClose>
+								{fieldDialogStep === 2 && (
+									<Button
+										appearance="primary"
+										onClick={handleFieldAdd}
+										disabled={!fieldDisplayName.trim()}
+									>
+										Add
+									</Button>
+								)}
+							</Group>
+						</Group>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Box>
 	);
 }

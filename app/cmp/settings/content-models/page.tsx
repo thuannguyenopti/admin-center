@@ -16,6 +16,7 @@ import {
 	TabsTrigger,
 	TabsContent,
 	Switch,
+	Heading,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
@@ -23,6 +24,7 @@ import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { ContentType } from "@/app/db/initialData";
 import { useRouter, useSearchParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
+import { initialCmpContentModels } from "@/app/db/cmpInitialData";
 
 type CmpContentModel = {
 	id: string;
@@ -68,7 +70,7 @@ export default function ContentModelsPage() {
 	const [secondaryTab, setSecondaryTab] = useState("all");
 
 	// Persistent content models
-	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", []) as [
+	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", initialCmpContentModels) as [
 		CmpContentModel[],
 		(value: CmpContentModel[]) => void,
 	];
@@ -121,6 +123,9 @@ export default function ContentModelsPage() {
 	return (
 		<Box p="24">
 			<Box mb="24">
+				<Heading level="3" mb="16">
+					Templates
+				</Heading>
 				<Text fontSize="md" color="fg.secondary" mb="16">
 					Create and customize templates to better structure how work is collaboratively planned.
 					Templates can be applied as Campaign Briefs, Task Briefs, or Request Forms.{" "}
