@@ -35,19 +35,18 @@ import { Text } from "@/app/components/Text";
 import { useRouter } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {
-	IconPhoto,
-	IconLink,
 	IconLetterT,
-	IconNumbers,
+	IconAlignLeft,
+	IconHash,
+	IconCheck,
 	IconCalendar,
 	IconFileText,
 	IconCircleDot,
-	IconSquareCheck,
-	IconExternalLink,
-	IconBraces,
-	IconAlignLeft,
-	IconGripVertical,
+	IconLink,
 	IconMapPin,
+	IconCode,
+	IconPhoto,
+	IconGripVertical,
 } from "@tabler/icons-react";
 import { ContentType } from "@/app/db/initialData";
 
@@ -86,14 +85,14 @@ const LOCALE_OPTIONS = [
 const FIELD_TYPES = [
 	{ label: "Text", value: "text", icon: <IconLetterT size={24} /> },
 	{ label: "Long Text", value: "longText", icon: <IconAlignLeft size={24} /> },
-	{ label: "Number", value: "number", icon: <IconNumbers size={24} /> },
-	{ label: "Boolean", value: "boolean", icon: <IconSquareCheck size={24} /> },
+	{ label: "Number", value: "number", icon: <IconHash size={24} /> },
+	{ label: "Boolean", value: "boolean", icon: <IconCheck size={24} /> },
 	{ label: "Date & Time", value: "datetime", icon: <IconCalendar size={24} /> },
 	{ label: "Rich Text", value: "richText", icon: <IconFileText size={24} /> },
 	{ label: "Choice", value: "choice", icon: <IconCircleDot size={24} /> },
-	{ label: "URL", value: "url", icon: <IconExternalLink size={24} /> },
+	{ label: "URL", value: "url", icon: <IconLink size={24} /> },
 	{ label: "Location", value: "location", icon: <IconMapPin size={24} /> },
-	{ label: "JSON Object", value: "json", icon: <IconBraces size={24} /> },
+	{ label: "JSON Object", value: "json", icon: <IconCode size={24} /> },
 	{ label: "Library Asset", value: "libraryAsset", icon: <IconPhoto size={24} /> },
 	{ label: "Content Reference", value: "contentReference", icon: <IconLink size={24} /> },
 ];
