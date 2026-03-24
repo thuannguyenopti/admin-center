@@ -268,7 +268,7 @@ export type ContentType = {
 	id: string;
 	name: string;
 	displayName?: string;
-	baseType: "Page" | "Experience" | "Media" | "Product" | "Block";
+	baseType: "Page" | "Experience" | "Media" | "Product" | "Block" | "Section";
 	mediaType?: MediaType;
 	description?: string;
 	guid?: string;
