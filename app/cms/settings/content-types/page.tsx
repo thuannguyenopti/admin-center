@@ -30,16 +30,19 @@ import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, ContentType, Property, MediaType } from "@/app/db/initialData";
 import { useRouter } from "next/navigation";
-import { IconChevronDown } from "@tabler/icons-react";
 import {
-	IconFilePlus,
-	IconFile,
-	IconLayoutGrid,
-	IconPhoto,
+	IconChevronDown,
 	IconBox,
-	IconColumns,
+	IconUpload,
+	IconBlocks,
+	IconSection,
 	IconCloudDownload,
 } from "@tabler/icons-react";
+import {
+	IconFile,
+	IconImage,
+	IconColumns3,
+} from "@optimizely/axiom-icons";
 
 const MEDIA_TYPE_OPTIONS: { label: MediaType; extensions: string }[] = [
 	{ label: "Image", extensions: "jpg, png, webp, svg" },
@@ -55,11 +58,12 @@ import usePersistentState from "@/app/usePersistentState";
 type BaseType = ContentType["baseType"];
 
 const BASE_TYPE_OPTIONS: { label: string; value: BaseType; icon: React.ReactNode; description: string }[] = [
-	{ label: "Page Type", value: "Page", icon: <IconFile size={20} />, description: "Content that can be displayed with a template and unique URL." },
-	{ label: "Block Type", value: "Block", icon: <IconLayoutGrid size={20} />, description: "Re-usable content that can be displayed with a template. But it has no URL." },
-	{ label: "Media Type", value: "Media", icon: <IconPhoto size={20} />, description: "Content that contains a media file, either from a DAM or uploaded in CMS." },
-	{ label: "Experience Type", value: "Experience", icon: <IconColumns size={20} />, description: "Lorem ipsum" },
-	{ label: "Product Type", value: "Product", icon: <IconBox size={20} />, description: "Lorem ipsum" },
+	{ label: "Page Type", value: "Page", icon: <IconFile size={16} />, description: "Content that can be displayed with a template and unique URL." },
+	{ label: "Block Type", value: "Block", icon: <IconBlocks size={16} />, description: "Re-usable content that can be displayed with a template. But it has no URL." },
+	{ label: "Section Type", value: "Section", icon: <IconSection size={16} />, description: "Structural content used to organize and group other content types." },
+	{ label: "Media Type", value: "Media", icon: <IconImage size={16} />, description: "Content that contains a media file, either from a DAM or uploaded in CMS." },
+	{ label: "Experience Type", value: "Experience", icon: <IconColumns3 size={16} />, description: "Personalized content experiences with A/B testing and targeting." },
+	{ label: "Product Type", value: "Product", icon: <IconBox size={16} />, description: "Product catalog items with variants and pricing." },
 ];
 
 const generateContentTypeId = (): string => {
@@ -123,6 +127,7 @@ export default function ContentTypesSettings() {
 		{ label: "Page", value: "Page" },
 		{ label: "Experience", value: "Experience" },
 		{ label: "Block", value: "Block" },
+		{ label: "Section", value: "Section" },
 		{ label: "Product", value: "Product" },
 		{ label: "Media", value: "Media" },
 	];
@@ -218,14 +223,20 @@ export default function ContentTypesSettings() {
 					options={[
 						{
 							label: "Generate from File(s)…",
+							addon: <IconUpload size={16} />,
+							description: "Generate content types from uploaded files",
 							execute: () => { },
 						},
 						...BASE_TYPE_OPTIONS.map((opt) => ({
 							label: opt.label,
+							addon: opt.icon,
+							description: opt.description,
 							execute: () => openCreateDialog(opt.value),
 						})),
 						{
 							label: "Connect From Graph",
+							addon: <IconCloudDownload size={16} />,
+							description: "Import content types from a knowledge graph",
 							execute: () => { },
 						},
 					]}
