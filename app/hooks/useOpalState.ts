@@ -39,6 +39,8 @@ export type OpalState = {
 const PANEL_STATE_KEY = 'opal_panel_state';
 const OPAL_LOADER_DEV_STORAGE_KEY = 'opal_loader_dev';
 const DEV_LOADER_MIN_PREVIEW_MS = 8500;
+const CMP_OPAL_MODE_KEY = 'cmp_opal_mode';
+const CMP_OPAL_QUICK_DRAFT_KEY = 'cmp_opal_quick_draft';
 
 type UseOpalStateProps = {
   activeChatId?: string | null;
@@ -143,6 +145,46 @@ function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null 
       ];
     default:
       return null;
+  }
+}
+
+function getImageGenResponse(content: string, returnTo = '/cmp/library'): string {
+  const prompt = content.trim();
+  const lower = prompt.toLowerCase();
+  const draftImage = "/hero-cycling.jpg";
+  const isVideoRequest =
+    lower.includes('video') ||
+    lower.includes('clip') ||
+    lower.includes('reel') ||
+    lower.includes('animation');
+
+  if (isVideoRequest) {
+    return [
+      `I created a quick video concept for: "${prompt}"`,
+      "",
+      "I kept it aligned to Stride's premium endurance positioning and social-safe pacing.",
+      "",
+      "If you want a full editing surface next, we can add the advanced video canvas in the next prototype pass.",
+    ].join("\n");
+  }
+
+  return [
+    `I created a quick image draft for: "${prompt}"`,
+    "",
+    "It follows Stride's athletic visual direction, preserves copy space, and stays inside brand-safe composition rules.",
+    "",
+    `![Triathlon draft](${draftImage})`,
+    "",
+    `[Use advanced editor](/cmp/opal-studio?flow=create&asset=image&stage=advanced&prompt=${encodeURIComponent(prompt)}&draft=${encodeURIComponent(draftImage)}&returnTo=${encodeURIComponent(returnTo)})`,
+  ].join("\n");
+}
+
+function getCmpOpalMode(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(CMP_OPAL_MODE_KEY);
+  } catch {
+    return null;
   }
 }
 
@@ -329,6 +371,46 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
       }
 
       if (!isIterating) {
+        const isOpalStudio = opalContext?.currentPage?.path?.startsWith('/cmp/opal-studio');
+        const isLibraryImageGen =
+          opalContext?.currentPage?.path?.startsWith('/cmp/library') &&
+          getCmpOpalMode() === 'image-gen';
+
+        if (isOpalStudio || isLibraryImageGen) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const returnTo = opalContext?.currentPage?.path?.startsWith('/cmp/library')
+            ? opalContext.currentPage.path
+            : '/cmp/library';
+          const responseContent = getImageGenResponse(content.trim(), returnTo);
+          updateMessage(loadingMessage.id, {
+            content: responseContent,
+            isLoading: false,
+          });
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem(
+                CMP_OPAL_QUICK_DRAFT_KEY,
+                JSON.stringify({
+                  prompt: content.trim(),
+                  image: '/hero-cycling.jpg',
+                  returnTo,
+                  messages: [
+                    ...messages,
+                    userMessage,
+                    {
+                      role: 'assistant',
+                      content: responseContent,
+                    },
+                  ],
+                }),
+              );
+            } catch (storageError) {
+              console.error('Failed to persist CMP Opal quick draft:', storageError);
+            }
+          }
+          return;
+        }
+
         requestBody = {
           userMessage: content.trim(),
           context: opalContext
