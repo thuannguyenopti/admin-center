@@ -208,6 +208,9 @@ function SpecializedAgentSetupContent() {
         if (!localStorage.getItem("opal_agent_guide_dismissed")) {
             setShowGuideBanner(true);
         }
+        if (!localStorage.getItem("opal_coach_mark_dismissed")) {
+            setShowCoachMark(true);
+        }
     }, []);
 
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
@@ -296,6 +299,7 @@ function SpecializedAgentSetupContent() {
     const [showGuidePanel, setShowGuidePanel] = useState(false);
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const guideIframeRef = useRef<HTMLIFrameElement>(null);
+    const [showCoachMark, setShowCoachMark] = useState(false);
 
     // Idea 6: first-time banner (dismissed via localStorage)
     const dismissBanner = () => {
@@ -602,7 +606,7 @@ function SpecializedAgentSetupContent() {
     // Listen for guide → page navigation (bi-directional)
     useEffect(() => {
         const STEP_MAP: Record<number, { fieldId: string; openInput?: boolean; openAdvanced?: boolean }> = {
-            1: { fieldId: "field-multiturn" },
+            1: { fieldId: "field-multiturn-toggle" },
             2: { fieldId: "field-prompt-template", openInput: true },
             3: { fieldId: "field-system-prompt", openInput: true, openAdvanced: true },
             4: { fieldId: "field-memory-limit", openInput: true, openAdvanced: true },
@@ -610,10 +614,16 @@ function SpecializedAgentSetupContent() {
         };
 
         function flashEl(el: HTMLElement) {
-            el.style.transition = "outline 0s, box-shadow 0.2s ease";
+            el.style.transition = "box-shadow 0.2s ease";
             el.style.borderRadius = "8px";
+            el.style.padding = "8px";
+            el.style.margin = "-8px";
             el.style.boxShadow = "0 0 0 3px #c4b5fd, 0 0 0 1px #7c3aed22";
-            setTimeout(() => { el.style.boxShadow = ""; }, 1400);
+            setTimeout(() => {
+                el.style.boxShadow = "";
+                el.style.padding = "";
+                el.style.margin = "";
+            }, 1400);
         }
 
         function handleMessage(e: MessageEvent) {
@@ -638,7 +648,7 @@ function SpecializedAgentSetupContent() {
             if (target.openAdvanced) {
                 setTimeout(() => {
                     const advBtn = [...document.querySelectorAll<HTMLElement>("button")]
-                        .find(b => b.textContent?.includes("Advanced Settings"));
+                        .find(b => b.textContent?.includes("Multi-turn agent settings"));
                     if (advBtn) {
                         const disclosure = advBtn.closest("[data-state]");
                         if (disclosure?.getAttribute("data-state") === "closed") {
@@ -1018,24 +1028,35 @@ function SpecializedAgentSetupContent() {
                                                 </Field>
 
                                                 {/* Interaction Mode */}
-                                                <Box id="field-multiturn" onFocus={() => setActiveGuideStep(1)} onBlur={() => setActiveGuideStep(null)}>
+                                                <Box onFocus={() => setActiveGuideStep(1)} onBlur={() => setActiveGuideStep(null)}>
                                                     <Text fontWeight="600" fontSize="md" mb="4">Interaction Mode</Text>
                                                     <Text fontSize="sm" color="fg.secondary" mb="16">Configure how users interact with this agent</Text>
                                                     <Box display="flex" flexDirection="column" gap="12">
-                                                        <Box display="flex" alignItems="center" gap="8">
+                                                        <Box id="field-multiturn-toggle" display="inline-flex" alignItems="center" gap="8">
                                                             <Switch checked={multiTurnMode} onCheckedChange={setMultiTurnMode} disabled={isReadOnly} />
                                                             <Tooltip delayDuration={300} content="Select this option for multi-turn conversations for this agent, facilitating interactive guidance, clarification, and personalized user experiences.">
                                                                 <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
                                                                     <Text>Support multi-turn conversation</Text>
-                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                    <Box style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                        {showCoachMark && (
+                                                                            <Box style={{ position: "absolute", left: "calc(100% + 14px)", top: "50%", transform: "translateY(-50%)", zIndex: 50 }}>
+                                                                                {/* Left-pointing arrow via rotated square */}
+                                                                                <Box style={{ position: "absolute", left: "-4px", top: "50%", transform: "translateY(-50%) rotate(45deg)", width: "6px", height: "6px", background: "var(--ax-colors-bg-default)", borderLeft: "1px solid var(--ax-colors-border-secondary)", borderBottom: "1px solid var(--ax-colors-border-secondary)" }} />
+                                                                                <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", color: "var(--ax-colors-fg-default)", lineHeight: 1.5, whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
+                                                                                    Learn how to build your first conversational agent.{" "}
+                                                                                    <button
+                                                                                        onClick={() => { setShowGuidePanel(true); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
+                                                                                        style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textDecoration: "underline" }}
+                                                                                    >
+                                                                                        View guide
+                                                                                    </button>
+                                                                                </Box>
+                                                                            </Box>
+                                                                        )}
+                                                                    </Box>
                                                                 </Box>
                                                             </Tooltip>
-                                                            <button
-                                                                onClick={() => setShowGuidePanel(true)}
-                                                                style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: "0 4px", font: "inherit", fontSize: "12px", textDecoration: "underline", lineHeight: 1 }}
-                                                            >
-                                                                View guide
-                                                            </button>
                                                         </Box>
                                                         <Box display="flex" alignItems="center" gap="8">
                                                             <Switch checked={enabledInChat} onCheckedChange={setEnabledInChat} disabled={isReadOnly} />
@@ -1149,167 +1170,6 @@ function SpecializedAgentSetupContent() {
                                                 </HoverCardContent>
                                                 </HoverCard>
                                                 </div>
-
-                                                {/* Advanced Settings */}
-                                                <Disclosure suppressHydrationWarning>
-                                                    <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
-                                                        <Tooltip delayDuration={300} content="Configure advanced settings for multi-turn conversation including system prompt, memory limits, and first message.">
-                                                            <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                Advanced Settings
-                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                            </Box>
-                                                        </Tooltip>
-                                                    </DisclosureTrigger>
-                                                    <DisclosureContent pb="8" suppressHydrationWarning>
-                                                        <Box pl="24" display="flex" flexDirection="column" gap="24" pt="16">
-                                                            {multiTurnMode ? (
-                                                                <>
-                                                                    {/* System Prompt */}
-                                                                    <Box id="field-system-prompt" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(3)} onBlur={() => setActiveGuideStep(null)}>
-                                                                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                                                                            <HoverCard openDelay={300}>
-                                                                                <HoverCardTrigger asChild>
-                                                                                    <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                                        <Text fontSize="md" fontWeight="500">System Prompt</Text>
-                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                    </Box>
-                                                                                </HoverCardTrigger>
-                                                                                <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
-                                                                                    <Box display="flex" flexDirection="column" gap="8" p="4">
-                                                                                        <Text fontWeight="600" fontSize="sm">Step 3 of 6 — System Prompt</Text>
-                                                                                        <Text fontSize="sm" color="fg.secondary">Sets the agent's permanent persona and guardrails — hidden from users, always active.</Text>
-                                                                                        <Text fontSize="sm" color="fg.secondary">Keep it short and authoritative. e.g. <em>"You are a concise marketing assistant. Never fabricate data."</em></Text>
-                                                                                        <button
-                                                                                            onClick={() => setShowGuidePanel(true)}
-                                                                                            style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
-                                                                                        >
-                                                                                            View full guide →
-                                                                                        </button>
-                                                                                    </Box>
-                                                                                </HoverCardContent>
-                                                                            </HoverCard>
-                                                                            {!isReadOnly && (
-                                                                                <Button appearance="subtle" size="sm" onClick={() => setSystemPrompt("You are a helpful AI assistant. You have access to tools and can use them to help users. Always be concise, accurate, and professional.")}>
-                                                                                    ↺ Reset
-                                                                                </Button>
-                                                                            )}
-                                                                        </Box>
-                                                                        <Field description="Wrap dynamic variables in double brackets, e.g. [[variable_name]].">
-                                                                            <Textarea
-                                                                                value={systemPrompt}
-                                                                                onChange={(e) => setSystemPrompt(e.target.value)}
-                                                                                placeholder="You are a helpful assistant..."
-                                                                                className="h-40"
-                                                                                readOnly={isReadOnly}
-                                                                            />
-                                                                        </Field>
-                                                                    </Box>
-                                                                    {/* Memory Limit */}
-                                                                    <Box id="field-memory-limit" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(4)} onBlur={() => setActiveGuideStep(null)}>
-                                                                        <HoverCard openDelay={300}>
-                                                                            <HoverCardTrigger asChild>
-                                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                                    <Text fontSize="md" fontWeight="500">Memory Limit</Text>
-                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                </Box>
-                                                                            </HoverCardTrigger>
-                                                                            <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
-                                                                                <Box display="flex" flexDirection="column" gap="8" p="4">
-                                                                                    <Text fontWeight="600" fontSize="sm">Step 4 of 6 — Token Budget</Text>
-                                                                                    <Text fontSize="sm" color="fg.secondary">Max conversation turns kept in context. Higher values give the agent more memory but increase cost and latency.</Text>
-                                                                                    <Text fontSize="sm" color="fg.secondary">Recommended: <strong>10</strong> turns for most agents. Use 20+ only for long research tasks.</Text>
-                                                                                    <button
-                                                                                        onClick={() => setShowGuidePanel(true)}
-                                                                                        style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
-                                                                                    >
-                                                                                        View full guide →
-                                                                                    </button>
-                                                                                </Box>
-                                                                            </HoverCardContent>
-                                                                        </HoverCard>
-                                                                        <Input type="number" placeholder="10" readOnly={isReadOnly} />
-                                                                    </Box>
-
-                                                                    {/* First Message */}
-                                                                    <Box id="field-first-message" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(5)} onBlur={() => setActiveGuideStep(null)}>
-                                                                        <Box display="flex" gap="4" alignItems="center">
-                                                                            <Text fontSize="md" fontWeight="500">First Message</Text>
-                                                                            <Tooltip delayDuration={300} content="A static greeting shown to the user before they begin typing. Not sent to the model.">
-                                                                                <Box display="inline-flex" suppressHydrationWarning>
-                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                </Box>
-                                                                            </Tooltip>
-                                                                        </Box>
-                                                                        <Textarea
-                                                                            value={initialMessage}
-                                                                            onChange={(e) => setInitialMessage(e.target.value)}
-                                                                            placeholder="Hi! I can help you with this task..."
-                                                                            className="h-28"
-                                                                            readOnly={isReadOnly}
-                                                                        />
-                                                                    </Box>
-
-                                                                    {/* Configured Prompts */}
-                                                                    <Box display="flex" flexDirection="column" gap="8">
-                                                                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                                                                            <Box display="flex" gap="4" alignItems="center">
-                                                                                <Text fontSize="md" fontWeight="500">Configured Prompts</Text>
-                                                                                <Tooltip delayDuration={300} content="Clickable suggestion buttons shown to users to guide the conversation.">
-                                                                                    <Box display="inline-flex" suppressHydrationWarning>
-                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
-                                                                                    </Box>
-                                                                                </Tooltip>
-                                                                            </Box>
-                                                                            {!isReadOnly && (
-                                                                                <Button appearance="subtle" size="sm" icon={<IconPlus />} onClick={() => setSuggestedPrompts([...suggestedPrompts, { label: "", prompt: "" }])}>
-                                                                                    Add
-                                                                                </Button>
-                                                                            )}
-                                                                        </Box>
-                                                                        <Text fontSize="sm" color="fg.secondary">Clickable buttons that offer suggested prompts to guide the conversation.</Text>
-                                                                        <Box display="flex" flexDirection="column" gap="12">
-                                                                            {suggestedPrompts.map((item, index) => (
-                                                                                <Box key={index} display="flex" gap="12" alignItems="end">
-                                                                                    <Box flex="1">
-                                                                                        <Text fontSize="sm" mb="4" color="fg.secondary">Label</Text>
-                                                                                        <Input
-                                                                                            value={item.label}
-                                                                                            onChange={(e) => {
-                                                                                                const next = [...suggestedPrompts];
-                                                                                                next[index] = { ...next[index], label: e.target.value };
-                                                                                                setSuggestedPrompts(next);
-                                                                                            }}
-                                                                                            placeholder="Summarize"
-                                                                                            readOnly={isReadOnly}
-                                                                                        />
-                                                                                    </Box>
-                                                                                    <Box style={{ flex: 2 }}>
-                                                                                        <Text fontSize="sm" mb="4" color="fg.secondary">Prompt to model</Text>
-                                                                                        <Input
-                                                                                            value={item.prompt}
-                                                                                            onChange={(e) => {
-                                                                                                const next = [...suggestedPrompts];
-                                                                                                next[index] = { ...next[index], prompt: e.target.value };
-                                                                                                setSuggestedPrompts(next);
-                                                                                            }}
-                                                                                            placeholder="Please summarize the key points."
-                                                                                            readOnly={isReadOnly}
-                                                                                        />
-                                                                                    </Box>
-                                                                                    {!isReadOnly && (
-                                                                                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />} aria-label="Remove prompt" onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
-                                                                                    )}
-                                                                                </Box>
-                                                                            ))}
-                                                                        </Box>
-                                                                    </Box>
-                                                                </>
-                                                            ) : (
-                                                                <Text fontSize="sm" color="fg.tertiary">Enable multi-turn conversation in the Interaction Mode section to configure advanced chat settings.</Text>
-                                                            )}
-                                                        </Box>
-                                                    </DisclosureContent>
-                                                </Disclosure>
 
                                                 <Box>
                                                     <Box display="flex" justifyContent="space-between" mb="8">
@@ -1488,53 +1348,166 @@ function SpecializedAgentSetupContent() {
                                                     )}
                                                 </Field>
 
-                                                <Field label="Creativity" info="Adjust temperature" style={{ maxWidth: "400px" }}>
-                                                    {isComparing && comparisonData ? (
-                                                        <FieldComparison
-                                                            previousValue={comparisonData.creativity?.toFixed(1) || (creativity / 100).toFixed(1)}
-                                                            currentValue={(MOCK_AGENTS_DATA["content-localizer"].creativity / 100).toFixed(1)}
-                                                        />
-                                                    ) : showDiffs && viewingVersion ? (
-                                                        <FieldComparison
-                                                            previousValue={(creativity / 100).toFixed(1)}
-                                                            currentValue={(MOCK_AGENTS_DATA["content-localizer"].creativity / 100).toFixed(1)}
-                                                            mode="stacked"
-                                                        />
-                                                    ) : (
-                                                        <Box display="flex" alignItems="start" gap="12">
-                                                            <Box flex="1" pt="6">
-                                                                <Range
-                                                                    value={creativity}
-                                                                    onValueChange={setCreativity}
-                                                                    max={100}
-                                                                    min={0}
-                                                                    step={1}
-                                                                    suppressHydrationWarning
-                                                                    marks={[
-                                                                        { value: 0, label: "0.0" },
-                                                                        { value: 100, label: "1.0" },
-                                                                    ]}
-                                                                    disabled={isReadOnly}
-                                                                />
+                                                {/* Multi-turn agent settings */}
+                                                <Disclosure suppressHydrationWarning>
+                                                    <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
+                                                        <Tooltip delayDuration={300} content="Configure multi-turn agent settings including system prompt, memory limits, and first message.">
+                                                            <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                Multi-turn agent settings
+                                                                <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                             </Box>
-                                                            <Input
-                                                                type="number"
-                                                                value={(creativity / 100).toFixed(1)}
-                                                                onChange={(e) => {
-                                                                    const val = parseFloat(e.target.value);
-                                                                    if (!isNaN(val) && val >= 0 && val <= 1) {
-                                                                        setCreativity(Math.round(val * 100));
-                                                                    }
-                                                                }}
-                                                                style={{ width: "80px" }}
-                                                                readOnly={isReadOnly}
-                                                                tabIndex={isReadOnly ? -1 : 0}
-                                                                size="md"
-                                                                suppressHydrationWarning
-                                                            />
+                                                        </Tooltip>
+                                                    </DisclosureTrigger>
+                                                    <DisclosureContent pb="8" suppressHydrationWarning>
+                                                        <Box pl="24" display="flex" flexDirection="column" gap="24" pt="16">
+                                                            {multiTurnMode ? (
+                                                                <>
+                                                                    {/* System Prompt */}
+                                                                    <Box id="field-system-prompt" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(3)} onBlur={() => setActiveGuideStep(null)}>
+                                                                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                                                                            <HoverCard openDelay={300}>
+                                                                                <HoverCardTrigger asChild>
+                                                                                    <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                                        <Text fontSize="md" fontWeight="500">System Prompt</Text>
+                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                    </Box>
+                                                                                </HoverCardTrigger>
+                                                                                <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
+                                                                                    <Box display="flex" flexDirection="column" gap="8" p="4">
+                                                                                        <Text fontWeight="600" fontSize="sm">Step 3 of 6 — System Prompt</Text>
+                                                                                        <Text fontSize="sm" color="fg.secondary">Sets the agent's permanent persona and guardrails — hidden from users, always active.</Text>
+                                                                                        <Text fontSize="sm" color="fg.secondary">Keep it short and authoritative. e.g. <em>"You are a concise marketing assistant. Never fabricate data."</em></Text>
+                                                                                        <button
+                                                                                            onClick={() => setShowGuidePanel(true)}
+                                                                                            style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
+                                                                                        >
+                                                                                            View full guide →
+                                                                                        </button>
+                                                                                    </Box>
+                                                                                </HoverCardContent>
+                                                                            </HoverCard>
+                                                                            {!isReadOnly && (
+                                                                                <Button appearance="subtle" size="sm" onClick={() => setSystemPrompt("You are a helpful AI assistant. You have access to tools and can use them to help users. Always be concise, accurate, and professional.")}>
+                                                                                    ↺ Reset
+                                                                                </Button>
+                                                                            )}
+                                                                        </Box>
+                                                                        <Field description="Wrap dynamic variables in double brackets, e.g. [[variable_name]].">
+                                                                            <Textarea
+                                                                                value={systemPrompt}
+                                                                                onChange={(e) => setSystemPrompt(e.target.value)}
+                                                                                placeholder="You are a helpful assistant..."
+                                                                                className="h-40"
+                                                                                readOnly={isReadOnly}
+                                                                            />
+                                                                        </Field>
+                                                                    </Box>
+                                                                    {/* Memory Limit */}
+                                                                    <Box id="field-memory-limit" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(4)} onBlur={() => setActiveGuideStep(null)}>
+                                                                        <HoverCard openDelay={300}>
+                                                                            <HoverCardTrigger asChild>
+                                                                                <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                                    <Text fontSize="md" fontWeight="500">Memory Limit</Text>
+                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                </Box>
+                                                                            </HoverCardTrigger>
+                                                                            <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
+                                                                                <Box display="flex" flexDirection="column" gap="8" p="4">
+                                                                                    <Text fontWeight="600" fontSize="sm">Step 4 of 6 — Token Budget</Text>
+                                                                                    <Text fontSize="sm" color="fg.secondary">Max conversation turns kept in context. Higher values give the agent more memory but increase cost and latency.</Text>
+                                                                                    <Text fontSize="sm" color="fg.secondary">Recommended: <strong>10</strong> turns for most agents. Use 20+ only for long research tasks.</Text>
+                                                                                    <button
+                                                                                        onClick={() => setShowGuidePanel(true)}
+                                                                                        style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
+                                                                                    >
+                                                                                        View full guide →
+                                                                                    </button>
+                                                                                </Box>
+                                                                            </HoverCardContent>
+                                                                        </HoverCard>
+                                                                        <Input type="number" placeholder="10" readOnly={isReadOnly} />
+                                                                    </Box>
+
+                                                                    {/* First Message */}
+                                                                    <Box id="field-first-message" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(5)} onBlur={() => setActiveGuideStep(null)}>
+                                                                        <Box display="flex" gap="4" alignItems="center">
+                                                                            <Text fontSize="md" fontWeight="500">First Message</Text>
+                                                                            <Tooltip delayDuration={300} content="A static greeting shown to the user before they begin typing. Not sent to the model.">
+                                                                                <Box display="inline-flex" suppressHydrationWarning>
+                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                </Box>
+                                                                            </Tooltip>
+                                                                        </Box>
+                                                                        <Textarea
+                                                                            value={initialMessage}
+                                                                            onChange={(e) => setInitialMessage(e.target.value)}
+                                                                            placeholder="Hi! I can help you with this task..."
+                                                                            className="h-28"
+                                                                            readOnly={isReadOnly}
+                                                                        />
+                                                                    </Box>
+
+                                                                    {/* Configured Prompts */}
+                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                                                                            <Box display="flex" gap="4" alignItems="center">
+                                                                                <Text fontSize="md" fontWeight="500">Configured Prompts</Text>
+                                                                                <Tooltip delayDuration={300} content="Clickable suggestion buttons shown to users to guide the conversation.">
+                                                                                    <Box display="inline-flex" suppressHydrationWarning>
+                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                    </Box>
+                                                                                </Tooltip>
+                                                                            </Box>
+                                                                            {!isReadOnly && (
+                                                                                <Button appearance="subtle" size="sm" icon={<IconPlus />} onClick={() => setSuggestedPrompts([...suggestedPrompts, { label: "", prompt: "" }])}>
+                                                                                    Add
+                                                                                </Button>
+                                                                            )}
+                                                                        </Box>
+                                                                        <Text fontSize="sm" color="fg.secondary">Clickable buttons that offer suggested prompts to guide the conversation.</Text>
+                                                                        <Box display="flex" flexDirection="column" gap="12">
+                                                                            {suggestedPrompts.map((item, index) => (
+                                                                                <Box key={index} display="flex" gap="12" alignItems="end">
+                                                                                    <Box flex="1">
+                                                                                        <Text fontSize="sm" mb="4" color="fg.secondary">Label</Text>
+                                                                                        <Input
+                                                                                            value={item.label}
+                                                                                            onChange={(e) => {
+                                                                                                const next = [...suggestedPrompts];
+                                                                                                next[index] = { ...next[index], label: e.target.value };
+                                                                                                setSuggestedPrompts(next);
+                                                                                            }}
+                                                                                            placeholder="Summarize"
+                                                                                            readOnly={isReadOnly}
+                                                                                        />
+                                                                                    </Box>
+                                                                                    <Box style={{ flex: 2 }}>
+                                                                                        <Text fontSize="sm" mb="4" color="fg.secondary">Prompt to model</Text>
+                                                                                        <Input
+                                                                                            value={item.prompt}
+                                                                                            onChange={(e) => {
+                                                                                                const next = [...suggestedPrompts];
+                                                                                                next[index] = { ...next[index], prompt: e.target.value };
+                                                                                                setSuggestedPrompts(next);
+                                                                                            }}
+                                                                                            placeholder="Please summarize the key points."
+                                                                                            readOnly={isReadOnly}
+                                                                                        />
+                                                                                    </Box>
+                                                                                    {!isReadOnly && (
+                                                                                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />} aria-label="Remove prompt" onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
+                                                                                    )}
+                                                                                </Box>
+                                                                            ))}
+                                                                        </Box>
+                                                                    </Box>
+                                                                </>
+                                                            ) : (
+                                                                <Text fontSize="sm" color="fg.tertiary">Enable multi-turn conversation in the Interaction Mode section to configure advanced chat settings.</Text>
+                                                            )}
                                                         </Box>
-                                                    )}
-                                                </Field>
+                                                    </DisclosureContent>
+                                                </Disclosure>
 
                                                 {/* Files Section nested inside Input per instruction */}
                                                 <Box mt="8">
@@ -2125,7 +2098,10 @@ function SpecializedAgentSetupContent() {
                             alignItems="center"
                             style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}
                         >
-                            <Text fontWeight="600" fontSize="md">Quick-Start Guide</Text>
+                            <Box display="flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                <IconChevronLeft size={14} color="var(--ax-colors-fg-secondary)" />
+                                <Text fontWeight="400" fontSize="sm" color="fg.secondary">All guides</Text>
+                            </Box>
                             <Button
                                 appearance="subtle"
                                 size="sm"
