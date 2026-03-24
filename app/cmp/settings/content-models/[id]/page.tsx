@@ -18,29 +18,25 @@ import {
 	MenuTrigger,
 	MenuContent,
 	LabelMenuButton,
-	Card,
-	Disclosure,
-	DisclosureContent,
-	DisclosureTrigger,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
+import { FieldEditorAccordion } from "@/app/components/FieldEditorAccordion";
 import { useRouter, useParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {
-	IconLetterT,
+	IconText,
 	IconAlignLeft,
-	IconHash,
+	IconHashtag,
 	IconCheck,
 	IconCalendar,
-	IconFileText,
 	IconCircleDot,
 	IconLink,
-	IconMapPin,
+	IconLocationDot,
 	IconCode,
-	IconPhoto,
+	IconImage,
 	IconGripVertical,
-} from "@tabler/icons-react";
+} from "@/app/lib/axiom-icons";
 import { initialCmpContentModels } from "@/app/db/cmpInitialData";
 
 type CmpContentModel = {
@@ -74,24 +70,23 @@ const LOCALE_OPTIONS = [
 ];
 
 const FIELD_TYPES = [
-	{ label: "Text", value: "text", icon: <IconLetterT size={24} /> },
-	{ label: "Long Text", value: "longText", icon: <IconAlignLeft size={24} /> },
-	{ label: "Number", value: "number", icon: <IconHash size={24} /> },
+	{ label: "Text Field", value: "text", icon: <IconText size={24} /> },
+	{ label: "Rich Text Field", value: "richText", icon: <IconAlignLeft size={24} /> },
 	{ label: "Boolean", value: "boolean", icon: <IconCheck size={24} /> },
-	{ label: "Date & Time", value: "datetime", icon: <IconCalendar size={24} /> },
-	{ label: "Rich Text", value: "richText", icon: <IconFileText size={24} /> },
+	{ label: "Datetime", value: "datetime", icon: <IconCalendar size={24} /> },
+	{ label: "Number", value: "number", icon: <IconHashtag size={24} /> },
+	{ label: "Library Asset", value: "libraryAsset", icon: <IconImage size={24} /> },
+	{ label: "Content Type Reference", value: "contentReference", icon: <IconLink size={24} /> },
 	{ label: "Choice", value: "choice", icon: <IconCircleDot size={24} /> },
 	{ label: "URL", value: "url", icon: <IconLink size={24} /> },
-	{ label: "Location", value: "location", icon: <IconMapPin size={24} /> },
-	{ label: "JSON Object", value: "json", icon: <IconCode size={24} /> },
-	{ label: "Library Asset", value: "libraryAsset", icon: <IconPhoto size={24} /> },
-	{ label: "Content Reference", value: "contentReference", icon: <IconLink size={24} /> },
+	{ label: "Location", value: "location", icon: <IconLocationDot size={24} /> },
+	{ label: "JSON", value: "json", icon: <IconCode size={24} /> },
 ];
 
 // Get icon for field type
 const getFieldTypeIcon = (type: string) => {
 	const fieldType = FIELD_TYPES.find((ft) => ft.value === type);
-	return fieldType?.icon || <IconLetterT size={20} />;
+	return fieldType?.icon || <IconText size={20} />;
 };
 
 export default function ContentModelDetailPage() {
@@ -272,7 +267,7 @@ export default function ContentModelDetailPage() {
 										bg="bg.secondary"
 										style={{ cursor: "pointer" }}
 									>
-										<IconPhoto size={32} color="var(--ax-colors-fg-tertiary)" />
+										<IconImage size={32} color="var(--ax-colors-fg-tertiary)" />
 										<Text fontSize="sm" fontWeight="500" color="fg.default">
 											Add Cover Image
 										</Text>
@@ -300,7 +295,7 @@ export default function ContentModelDetailPage() {
 												onBlur={handleSave}
 												style={{ width: "80px" }}
 											/>
-											<Button appearance="subtle" size="sm" icon={<IconLink size={16} />} />
+											<Button appearance="subtle" size="sm" icon={<IconLink size={16} />} aria-label="Copy link" />
 										</Group>
 									</Group>
 								</Field>
@@ -377,24 +372,19 @@ export default function ContentModelDetailPage() {
 							{contentModel.properties && contentModel.properties.length > 0 ? (
 								<Group flexDirection="column" gap="8">
 									{contentModel.properties.map((property: any, index: number) => (
-										<Card key={property.id}>
-											<Disclosure>
-												<DisclosureTrigger chevronPosition="end">
-													<Group gap="12" w="full" alignItems="center">
-														<Box color="fg.tertiary" style={{ cursor: "grab" }}>
-															<IconGripVertical size={20} />
-														</Box>
-														<Box color="fg.secondary">
-															{getFieldTypeIcon(property.type)}
-														</Box>
-														<Text fontSize="md" fontWeight="500">
-															{property.displayName || property.name}
-														</Text>
-													</Group>
-												</DisclosureTrigger>
-												<DisclosureContent>
-													<Box p="16" borderT="1" borderColor="border.tertiary">
-														<Group flexDirection="column" gap="16">
+										<FieldEditorAccordion
+											key={property.id}
+											icon={
+												<>
+													<Box color="fg.tertiary" style={{ cursor: "grab" }}>
+														<IconGripVertical size={20} />
+													</Box>
+													<Box color="fg.secondary">{getFieldTypeIcon(property.type)}</Box>
+												</>
+											}
+											title={property.displayName || property.name}
+										>
+											<Group flexDirection="column" gap="16">
 															<Field label="Display Name">
 																<Input
 																	value={property.displayName || ""}
@@ -537,11 +527,8 @@ export default function ContentModelDetailPage() {
 																/>
 																<Text fontSize="sm">Localized</Text>
 															</Group>
-														</Group>
-													</Box>
-												</DisclosureContent>
-											</Disclosure>
-										</Card>
+											</Group>
+										</FieldEditorAccordion>
 									))}
 								</Group>
 							) : (

@@ -10,6 +10,7 @@ const fallbackIcon = TablerIcons.IconCircle;
 
 const iconMap: Record<string, string[]> = {
 	IconAgent: ["IconRobot", "IconSparkles"],
+	IconAlignLeft: ["IconAlignLeft"],
 	IconArrowLeft: ["IconArrowLeft"],
 	IconArrowRotateLeft: ["IconRotate", "IconHistory"],
 	IconArrowsLeftRight: ["IconArrowsLeftRight"],
@@ -23,10 +24,13 @@ const iconMap: Record<string, string[]> = {
 	IconBrowser: ["IconBrowser"],
 	IconCalendar: ["IconCalendar"],
 	IconChartLine: ["IconChartLine"],
+	IconCheck: ["IconCheck"],
 	IconCheckCircleSolid: ["IconCircleCheckFilled", "IconCircleCheck"],
+	IconChevronDown: ["IconChevronDown"],
 	IconChevronLeft: ["IconChevronLeft"],
 	IconChevronRight: ["IconChevronRight"],
 	IconCircleCheck: ["IconCircleCheck"],
+	IconCircleDot: ["IconCircleDot"],
 	IconCircleExclamation: ["IconAlertCircle"],
 	IconCircleInfo: ["IconInfoCircle", "IconAlertCircle"],
 	IconCirclePause: ["IconPlayerPause"],
@@ -35,6 +39,7 @@ const iconMap: Record<string, string[]> = {
 	IconCircleStop: ["IconPlayerStop", "IconCircleX"],
 	IconClock: ["IconClock"],
 	IconClockRotateLeft: ["IconHistory"],
+	IconCode: ["IconCode"],
 	IconCodeBranch: ["IconGitBranch", "IconCodeDots"],
 	IconColumns3: ["IconColumns3"],
 	IconComments: ["IconMessages"],
@@ -49,12 +54,14 @@ const iconMap: Record<string, string[]> = {
 	IconFileImport: ["IconFileImport", "IconFileArrowLeft"],
 	IconGripVertical: ["IconGripVertical"],
 	IconHandPointer: ["IconHandFinger", "IconPointer"],
+	IconHashtag: ["IconHash"],
 	IconImage: ["IconPhoto", "IconImageInPicture"],
 	IconInputNumeric: ["Icon123", "IconNumbers"],
 	IconInputText: ["IconTypography", "IconLetterT"],
 	IconLaptopMobile: ["IconDevices", "IconDeviceLaptop"],
 	IconLink: ["IconLink"],
 	IconList: ["IconList"],
+	IconLocationDot: ["IconMapPin"],
 	IconPaperPlaneTop: ["IconSend"],
 	IconPen: ["IconPencil"],
 	IconPlay: ["IconPlayerPlay"],
@@ -66,6 +73,7 @@ const iconMap: Record<string, string[]> = {
 	IconTableCells: ["IconTable"],
 	IconTag: ["IconTag"],
 	IconTerminal: ["IconTerminal2", "IconTerminal"],
+	IconText: ["IconLetterT", "IconTypography"],
 	IconThumbsDown: ["IconThumbDown"],
 	IconThumbsUp: ["IconThumbUp"],
 	IconToggleOff: ["IconToggleLeft"],
@@ -102,6 +110,7 @@ function createIcon(name: string) {
 }
 
 export const IconAgent = createIcon("IconAgent");
+export const IconAlignLeft = createIcon("IconAlignLeft");
 export const IconArrowLeft = createIcon("IconArrowLeft");
 export const IconArrowRotateLeft = createIcon("IconArrowRotateLeft");
 export const IconArrowsLeftRight = createIcon("IconArrowsLeftRight");
@@ -115,10 +124,13 @@ export const IconBracketsSquare = createIcon("IconBracketsSquare");
 export const IconBrowser = createIcon("IconBrowser");
 export const IconCalendar = createIcon("IconCalendar");
 export const IconChartLine = createIcon("IconChartLine");
+export const IconCheck = createIcon("IconCheck");
 export const IconCheckCircleSolid = createIcon("IconCheckCircleSolid");
+export const IconChevronDown = createIcon("IconChevronDown");
 export const IconChevronLeft = createIcon("IconChevronLeft");
 export const IconChevronRight = createIcon("IconChevronRight");
 export const IconCircleCheck = createIcon("IconCircleCheck");
+export const IconCircleDot = createIcon("IconCircleDot");
 export const IconCircleExclamation = createIcon("IconCircleExclamation");
 export const IconCircleInfo = createIcon("IconCircleInfo");
 export const IconCirclePause = createIcon("IconCirclePause");
@@ -127,6 +139,7 @@ export const IconCircleQuestion = createIcon("IconCircleQuestion");
 export const IconCircleStop = createIcon("IconCircleStop");
 export const IconClock = createIcon("IconClock");
 export const IconClockRotateLeft = createIcon("IconClockRotateLeft");
+export const IconCode = createIcon("IconCode");
 export const IconCodeBranch = createIcon("IconCodeBranch");
 export const IconColumns3 = createIcon("IconColumns3");
 export const IconComments = createIcon("IconComments");
@@ -141,12 +154,14 @@ export const IconFileArrowUp = createIcon("IconFileArrowUp");
 export const IconFileImport = createIcon("IconFileImport");
 export const IconGripVertical = createIcon("IconGripVertical");
 export const IconHandPointer = createIcon("IconHandPointer");
+export const IconHashtag = createIcon("IconHashtag");
 export const IconImage = createIcon("IconImage");
 export const IconInputNumeric = createIcon("IconInputNumeric");
 export const IconInputText = createIcon("IconInputText");
 export const IconLaptopMobile = createIcon("IconLaptopMobile");
 export const IconLink = createIcon("IconLink");
 export const IconList = createIcon("IconList");
+export const IconLocationDot = createIcon("IconLocationDot");
 export const IconPaperPlaneTop = createIcon("IconPaperPlaneTop");
 export const IconPen = createIcon("IconPen");
 export const IconPlay = createIcon("IconPlay");
@@ -158,6 +173,7 @@ export const IconSplit = createIcon("IconSplit");
 export const IconTableCells = createIcon("IconTableCells");
 export const IconTag = createIcon("IconTag");
 export const IconTerminal = createIcon("IconTerminal");
+export const IconText = createIcon("IconText");
 export const IconThumbsDown = createIcon("IconThumbsDown");
 export const IconThumbsUp = createIcon("IconThumbsUp");
 export const IconToggleOff = createIcon("IconToggleOff");
