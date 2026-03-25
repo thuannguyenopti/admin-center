@@ -822,11 +822,6 @@ export default function VBPrototype({
 								setEditingSectionId(null);
 							},
 						},
-						{
-							addon: <IconCopy size={16} />,
-							label: "Duplicate",
-							execute: duplicateActiveOutline,
-						},
 					]}
 				>
 					<MenuTrigger
@@ -1902,9 +1897,6 @@ export default function VBPrototype({
 																)?.label || "Properties"}
 													</Heading>
 													<div className="flex-1" />
-													<div className="flex items-center gap-1">
-														{HeaderActions}
-													</div>
 												</div>
 											</div>
 										)}
