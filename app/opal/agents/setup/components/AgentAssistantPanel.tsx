@@ -116,19 +116,27 @@ export function AgentAssistantPanel({
     return (
         <Box
             style={{
-                width: isOpen ? "320px" : "0px",
+                width: isOpen ? "348px" : "0px",
                 transition: "width 0.3s ease-in-out",
                 overflow: "hidden",
-                borderLeft: isOpen ? "1px solid var(--ax-colors-border-secondary)" : "none",
-                backgroundColor: "var(--ax-colors-bg-default)",
                 display: "flex",
-                flexDirection: "column",
                 flexShrink: 0,
+                padding: isOpen ? "16px 16px 16px 0" : "0",
+                alignItems: "flex-start",
             }}
         >
             {isOpen && (
                 view === "assistant" ? (
-                    <Box display="flex" flexDirection="column" style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+                    <Box display="flex" flexDirection="column" style={{
+                        flex: 1,
+                        position: "relative",
+                        overflow: "hidden",
+                        border: "1px solid var(--ax-colors-border-secondary)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                        backgroundColor: "var(--ax-colors-bg-default)",
+                        maxHeight: "calc(100vh - 112px)",
+                    }}>
                         {/* Purple gradient background ellipse */}
                         <Box
                             style={{
@@ -256,7 +264,7 @@ export function AgentAssistantPanel({
                                     </Box>
                                     <Box display="flex" flexDirection="column" gap="4">
                                         {COMMON_ACTIONS.map((action) => (
-                                            <Disclosure key={action} rounded="sm">
+                                            <Disclosure key={action} rounded="sm" defaultOpen={false}>
                                                 <DisclosureTrigger fontSize="sm">
                                                     <Box display="flex" gap="8" alignItems="center">
                                                         <IconGripVertical
@@ -285,7 +293,15 @@ export function AgentAssistantPanel({
                     </Box>
                 ) : (
                     /* Guide view */
-                    <Box display="flex" flexDirection="column" style={{ flex: 1 }}>
+                    <Box display="flex" flexDirection="column" style={{
+                        flex: 1,
+                        border: "1px solid var(--ax-colors-border-secondary)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+                        backgroundColor: "var(--ax-colors-bg-default)",
+                        overflow: "hidden",
+                        maxHeight: "calc(100vh - 112px)",
+                    }}>
                         <Box
                             px="16"
                             py="12"
