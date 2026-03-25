@@ -10,7 +10,7 @@ import {
 } from "@optiaxiom/react";
 import { IconChevronLeft, IconPlus } from "@optimizely/axiom-icons";
 import {
-    IconSparkles,
+    IconBulb,
     IconX,
     IconGripVertical,
     IconLayoutList,
@@ -168,7 +168,7 @@ export function AgentAssistantPanel({
                             }}
                         >
                             <Box display="flex" alignItems="center" gap="8">
-                                <IconSparkles size={18} color="var(--ax-colors-fg-tertiary)" />
+                                <IconBulb size={18} color="var(--ax-colors-fg-tertiary)" />
                                 <Text fontWeight="500" fontSize="md" color="fg.default">
                                     {content.title}
                                 </Text>
