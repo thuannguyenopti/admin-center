@@ -1033,7 +1033,7 @@ function SpecializedAgentSetupContent() {
                                                                                 <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", color: "var(--ax-colors-fg-default)", lineHeight: 1.5, whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                                                                                     Get step-by-step help building your first agent.{" "}
                                                                                     <button
-                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
+                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); setActiveGuideStep(null); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
                                                                                         style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textDecoration: "underline" }}
                                                                                     >
                                                                                         Open Setup Assistant
