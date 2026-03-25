@@ -229,7 +229,7 @@ export default function RootLayout({
 					{label: "Opal Actions", url: "/cms/settings/opal-actions"},
 					{label: "Config"},
 					{label: "Languages", url: "/cms/settings/languages"},
-					{label: "Edit Tabs", url: "/cms/settings/edit-tabs"},
+					{label: "Property Groups", url: "/cms/settings/edit-tabs"},
 					{label: "Tools"},
 					{label: "Change Log", url: "/cms/settings/change-log"},
 					{label: "Convert Pages", url: "/cms/settings/convert-pages"},

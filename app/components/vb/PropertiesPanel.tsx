@@ -19,6 +19,8 @@ import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
 import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
 import { initialContentTypes, Property } from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
+import type { PropertyGroup } from "@/app/cms/settings/edit-tabs/page";
 
 export type PageProperties = {
 	seoTitle?: string;
@@ -139,6 +141,49 @@ export default function PropertiesPanel({
 	onRegisterGenerateTrigger,
 	onGenerateLoadingChange,
 }: Props) {
+	// Load property groups from settings
+	const initialPropertyGroups: PropertyGroup[] = [
+		{
+			id: "content-settings",
+			name: "ContentSettings",
+			displayName: "Content Settings",
+			sortIndex: 10,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+		{
+			id: "geo-seo",
+			name: "GeoSeo",
+			displayName: "GEO & SEO",
+			sortIndex: 20,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+		{
+			id: "categories-tags",
+			name: "CategoriesTags",
+			displayName: "Categories & Tags",
+			sortIndex: 30,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+	];
+
+	const [propertyGroups] = usePersistentState(
+		"propertyGroups",
+		initialPropertyGroups
+	) as [PropertyGroup[], (value: PropertyGroup[]) => void];
+
+	// Convert property groups to navigation items format
+	const navigationItemsFromSettings = useMemo(() => {
+		return [...propertyGroups]
+			.sort((a, b) => a.sortIndex - b.sortIndex)
+			.map((group) => ({
+				id: group.id,
+				label: group.displayName,
+			}));
+	}, [propertyGroups]);
+
 	// Load content type definition
 	const contentType = useMemo(() => {
 		if (!contentTypeId) return null;
@@ -146,7 +191,7 @@ export default function PropertiesPanel({
 	}, [contentTypeId]);
 
 	// Group properties by groupName for dynamic sections
-	const propertyGroups = useMemo(() => {
+	const contentTypePropertyGroups = useMemo(() => {
 		if (!contentType) return {};
 
 		const groups: Record<string, Property[]> = {};
@@ -172,14 +217,14 @@ export default function PropertiesPanel({
 
 	// Generate navigation items dynamically from property groups
 	const dynamicNavigationItems = useMemo(() => {
-		const groupNames = Object.keys(propertyGroups);
-		if (groupNames.length === 0) return navigationItems; // Fallback to static
+		const groupNames = Object.keys(contentTypePropertyGroups);
+		if (groupNames.length === 0) return navigationItemsFromSettings; // Fallback to settings
 
 		return groupNames.map((groupName) => ({
 			id: groupName.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, ""),
 			label: groupName,
 		}));
-	}, [propertyGroups]);
+	}, [contentTypePropertyGroups, navigationItemsFromSettings]);
 
 	// Get global tags and categories from CMS settings
 	const { tags: allTags, tagNames: availableTagNames, addTag, tagExists } = useGlobalTags();
@@ -493,8 +538,8 @@ export default function PropertiesPanel({
 			const sectionId = effectiveSection;
 			const groupName = dynamicNavigationItems.find((item) => item.id === sectionId)?.label;
 
-			if (groupName && propertyGroups[groupName]) {
-				const properties = propertyGroups[groupName];
+			if (groupName && contentTypePropertyGroups[groupName]) {
+				const properties = contentTypePropertyGroups[groupName];
 
 				return (
 					<Box display="flex" flexDirection="column" gap="12">
