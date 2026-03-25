@@ -82,6 +82,7 @@ import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
 import { ComparisonBanner } from "./components/ComparisonBanner";
 import { FieldComparison } from "./components/FieldComparison";
 import { TestRunTray } from "./components/TestRunTray";
+import { AgentAssistantPanel } from "./components/AgentAssistantPanel";
 
 // Emoji lookup for agent avatars
 const AGENT_EMOJIS: Record<string, string> = {
@@ -202,12 +203,8 @@ function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isMounted, setIsMounted] = useState(false);
-    const [showGuideBanner, setShowGuideBanner] = useState(false);
     useEffect(() => {
         setIsMounted(true);
-        if (!localStorage.getItem("opal_agent_guide_dismissed")) {
-            setShowGuideBanner(true);
-        }
         if (!localStorage.getItem("opal_coach_mark_dismissed")) {
             setShowCoachMark(true);
         }
@@ -295,17 +292,11 @@ function SpecializedAgentSetupContent() {
     // Test Run State
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
 
-    // Cheat sheet guide modal
-    const [showGuidePanel, setShowGuidePanel] = useState(false);
+    // Assistant panel
+    const [showGuidePanel, setShowGuidePanel] = useState(true);
+    const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">("assistant");
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
-    const guideIframeRef = useRef<HTMLIFrameElement>(null);
     const [showCoachMark, setShowCoachMark] = useState(false);
-
-    // Idea 6: first-time banner (dismissed via localStorage)
-    const dismissBanner = () => {
-        localStorage.setItem("opal_agent_guide_dismissed", "1");
-        setShowGuideBanner(false);
-    };
 
     // Version History State
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -672,19 +663,6 @@ function SpecializedAgentSetupContent() {
         return () => window.removeEventListener("message", handleMessage);
     }, []);
 
-    // Sync active guide step to iframe via postMessage
-    useEffect(() => {
-        if (!showGuidePanel || !guideIframeRef.current) return;
-        const send = () => guideIframeRef.current?.contentWindow?.postMessage(
-            { type: "highlightStep", step: activeGuideStep },
-            "*"
-        );
-        // iframe may not be loaded yet; send on load too
-        const iframe = guideIframeRef.current;
-        iframe.addEventListener("load", send);
-        send();
-        return () => iframe.removeEventListener("load", send);
-    }, [activeGuideStep, showGuidePanel]);
     // Initialize state based on mode and search params
     useEffect(() => {
         const id = searchParams.get("id");
@@ -830,7 +808,7 @@ function SpecializedAgentSetupContent() {
                                             disabled={isReadOnly}
                                             onClick={() => {
                                                 setIsTestRunOpen(!isTestRunOpen);
-                                                if (!isTestRunOpen) { setIsVersionHistoryOpen(false); setShowGuidePanel(false); }
+                                                if (!isTestRunOpen) { setIsVersionHistoryOpen(false); }
                                             }}
                                         >
                                             Test Run
@@ -843,7 +821,7 @@ function SpecializedAgentSetupContent() {
                                                 aria-label="Version History"
                                                 onClick={() => {
                                                     setIsVersionHistoryOpen(!isVersionHistoryOpen);
-                                                    if (!isVersionHistoryOpen) { setIsTestRunOpen(false); setShowGuidePanel(false); }
+                                                    if (!isVersionHistoryOpen) { setIsTestRunOpen(false); }
                                                 }}
                                                 suppressHydrationWarning
                                             />
@@ -930,26 +908,6 @@ function SpecializedAgentSetupContent() {
                                         gap: "24px"
                                     }}
                                 >
-                                    {/* Idea 6: First-time guide banner */}
-                                    {showGuideBanner && (
-                                        <Alert
-                                            intent="opal"
-                                            onDismiss={dismissBanner}
-                                            style={{ flexShrink: 0 }}
-                                        >
-                                            <span>
-                                                New to multi-turn agents?{" "}
-                                                <button
-                                                    onClick={() => { setShowGuidePanel(true); dismissBanner(); }}
-                                                    style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontWeight: 500, textDecoration: "underline" }}
-                                                >
-                                                    Open the quick-start guide
-                                                </button>
-                                                {" "}to configure your first multi-turn agent in 6 steps.
-                                            </span>
-                                        </Alert>
-                                    )}
-
                                     {/* Details Section */}
                                     <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
@@ -1046,7 +1004,7 @@ function SpecializedAgentSetupContent() {
                                                                                 <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", color: "var(--ax-colors-fg-default)", lineHeight: 1.5, whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
                                                                                     Learn how to build your first conversational agent.{" "}
                                                                                     <button
-                                                                                        onClick={() => { setShowGuidePanel(true); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
+                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
                                                                                         style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textDecoration: "underline" }}
                                                                                     >
                                                                                         View guide
@@ -1161,7 +1119,7 @@ function SpecializedAgentSetupContent() {
                                                         <Text fontSize="sm" color="fg.secondary">Your main instruction to the agent. Describe the role, task, and output format.</Text>
                                                         <Text fontSize="sm" color="fg.secondary">Use <code style={{ background: "var(--ax-colors-bg-tertiary)", padding: "1px 4px", borderRadius: "3px" }}>{"[[variable]]"}</code> for dynamic inputs, <code style={{ background: "var(--ax-colors-bg-tertiary)", padding: "1px 4px", borderRadius: "3px" }}>{"{ Instruction }"}</code> for directives.</Text>
                                                         <button
-                                                            onClick={() => setShowGuidePanel(true)}
+                                                            onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); }}
                                                             style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
                                                         >
                                                             View full guide →
@@ -1378,7 +1336,7 @@ function SpecializedAgentSetupContent() {
                                                                                         <Text fontSize="sm" color="fg.secondary">Sets the agent's permanent persona and guardrails — hidden from users, always active.</Text>
                                                                                         <Text fontSize="sm" color="fg.secondary">Keep it short and authoritative. e.g. <em>"You are a concise marketing assistant. Never fabricate data."</em></Text>
                                                                                         <button
-                                                                                            onClick={() => setShowGuidePanel(true)}
+                                                                                            onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); }}
                                                                                             style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
                                                                                         >
                                                                                             View full guide →
@@ -1417,7 +1375,7 @@ function SpecializedAgentSetupContent() {
                                                                                     <Text fontSize="sm" color="fg.secondary">Max conversation turns kept in context. Higher values give the agent more memory but increase cost and latency.</Text>
                                                                                     <Text fontSize="sm" color="fg.secondary">Recommended: <strong>10</strong> turns for most agents. Use 20+ only for long research tasks.</Text>
                                                                                     <button
-                                                                                        onClick={() => setShowGuidePanel(true)}
+                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); }}
                                                                                         style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
                                                                                     >
                                                                                         View full guide →
@@ -2075,52 +2033,14 @@ function SpecializedAgentSetupContent() {
                 variables={variables}
             />
 
-            {/* Idea 2 + 6: Multi-turn agent quick-start guide sidebar */}
-            <Box
-                style={{
-                    width: showGuidePanel ? "420px" : "0px",
-                    transition: "width 0.3s ease-in-out",
-                    overflow: "hidden",
-                    borderLeft: showGuidePanel ? "1px solid var(--ax-colors-border-secondary)" : "none",
-                    backgroundColor: "var(--ax-colors-bg-default)",
-                    display: "flex",
-                    flexDirection: "column",
-                    flexShrink: 0,
-                }}
-            >
-                {showGuidePanel && (
-                    <>
-                        <Box
-                            px="16"
-                            py="12"
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}
-                        >
-                            <Box display="flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                <IconChevronLeft size={14} color="var(--ax-colors-fg-secondary)" />
-                                <Text fontWeight="400" fontSize="sm" color="fg.secondary">All guides</Text>
-                            </Box>
-                            <Button
-                                appearance="subtle"
-                                size="sm"
-                                icon={<IconX size={16} />}
-                                aria-label="Close guide"
-                                onClick={() => setShowGuidePanel(false)}
-                            />
-                        </Box>
-                        <Box style={{ flex: 1, overflow: "hidden" }}>
-                            <iframe
-                                ref={guideIframeRef}
-                                src="/agent-cheat-sheet.html"
-                                style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-                                title="Multi-turn agent quick-start guide"
-                            />
-                        </Box>
-                    </>
-                )}
-            </Box>
+            {/* Agent builder assistant panel */}
+            <AgentAssistantPanel
+                activeStep={activeGuideStep}
+                isOpen={showGuidePanel}
+                onClose={() => setShowGuidePanel(false)}
+                view={guidePanelView}
+                onViewChange={setGuidePanelView}
+            />
         </Box>
     );
 }
