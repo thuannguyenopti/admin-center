@@ -1167,8 +1167,9 @@ function AdvancedCanvasWorkspace({
 		<Box
 			bg="bg.page"
 			display="flex"
+			flex="1"
 			flexDirection="column"
-			style={{ minHeight: "calc(100vh - 57px)" }}
+			style={{ height: "100%", minHeight: 0 }}
 		>
 			<Box
 				bg="bg.default"
@@ -1180,7 +1181,7 @@ function AdvancedCanvasWorkspace({
 					display: "flex",
 					flex: 1,
 					flexDirection: "column",
-					margin: "24px 24px 24px 0",
+					margin: "16px 16px 16px 16px",
 					minHeight: 0,
 					overflow: "hidden",
 				}}
@@ -2852,9 +2853,11 @@ export default function OpalStudioPrototypePage() {
 		<Box
 			bg="bg.secondary"
 			display="flex"
+			flex="1"
 			flexDirection="column"
 			style={{
-				height: "100vh",
+				height: "100%",
+				minHeight: 0,
 				width:
 					opalPanelWidth > 0
 						? `calc(100% - ${opalPanelWidth}px)`
@@ -2863,8 +2866,6 @@ export default function OpalStudioPrototypePage() {
 				overflow: "hidden",
 			}}
 		>
-	<Box flex="1">
-				<Box style={{ height: "100%", width: "100%" }}>
 					{planOpen ? (
 						<Box bg="bg.default" border="1" borderColor="border.tertiary" mb="20" p="16" rounded="xl" shadow="sm">
 						<Box alignItems="center" display="flex" justifyContent="space-between">
@@ -2914,8 +2915,6 @@ export default function OpalStudioPrototypePage() {
 							}}
 						/>
 					)}
-				</Box>
-			</Box>
 		</Box>
 	);
 }
