@@ -24,7 +24,6 @@ import {
 	Textarea,
 	Separator,
 	Link,
-	Switch,
 	Badge,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
@@ -88,7 +87,7 @@ export default function ContentTypesSettings() {
 	const [search, setSearch] = useState("");
 	const [typeFilter, setTypeFilter] = useState<string | null>(null);
 	const [accessFilter, setAccessFilter] = useState<string | null>(null);
-	const [showCmpModels, setShowCmpModels] = useState(false);
+	const [sourceFilter, setSourceFilter] = useState<string | null>(null);
 
 	// Dialog state
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -139,10 +138,23 @@ export default function ContentTypesSettings() {
 	};
 	const currentType = typeOptions.find((opt) => opt.value === typeFilter) || typeOptions[0];
 
+	const sourceOptions = [
+		{ label: "All Sources", value: null },
+		{ label: "CMS", value: "cms" },
+		{ label: "CMP", value: "cmp" },
+	];
+	const onSourceChange = (value: string | null) => {
+		setSourceFilter(value);
+	};
+	const currentSource = sourceOptions.find((opt) => opt.value === sourceFilter) || sourceOptions[0];
+
 	const filtered = useMemo(() => {
 		return contentTypes.filter((ct) => {
-			// Filter out CMP models by default unless showCmpModels is true
-			if (!showCmpModels && ct.source === "cmp") return false;
+			// Source filter
+			if (sourceFilter) {
+				const ctSource = ct.source || "cms"; // Treat undefined as "cms"
+				if (ctSource !== sourceFilter) return false;
+			}
 
 			if (search && !ct.name.toLowerCase().includes(search.toLowerCase())) return false;
 			if (typeFilter) {
@@ -153,7 +165,7 @@ export default function ContentTypesSettings() {
 			}
 			return true;
 		});
-	}, [contentTypes, search, typeFilter, accessFilter, showCmpModels]);
+	}, [contentTypes, search, typeFilter, accessFilter, sourceFilter]);
 
 	const handleRowClick = (contentType: ContentType) => {
 		router.push(`/cms/settings/content-types/${contentType.id}/properties`);
@@ -222,11 +234,15 @@ export default function ContentTypesSettings() {
 					<MenuContent />
 				</Menu>
 
-				{/* CMP Models Toggle */}
-				<Box display="flex" alignItems="center" gap="8" px="12" py="8" bg="bg.default" border="1" borderColor="border.default" rounded="md">
-					<Switch checked={showCmpModels} onCheckedChange={setShowCmpModels} />
-					<Text fontSize="sm">Show CMP Models</Text>
-				</Box>
+				{/* Source Filter */}
+				<Menu options={sourceOptions.map((opt) => ({ label: opt.label, execute: () => onSourceChange(opt.value) }))}>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Source" h="40">
+							{currentSource?.label}
+						</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
 
 				<Box flex="1" />
 
