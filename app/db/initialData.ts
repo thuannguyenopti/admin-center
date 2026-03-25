@@ -405,11 +405,7 @@ export const initialContentTypes: ContentType[] = [
 			},
 
 			// GEO & SEO group
-			{ id: "seoTitle", name: "SEO Title", displayName: "SEO Title", type: "String", groupName: "GEO & SEO", order: 1, description: "Title tag for search engines" },
-			{ id: "keywords", name: "Keywords", displayName: "Keywords", type: "String", groupName: "GEO & SEO", order: 2, description: "Meta keywords" },
-			{ id: "description", name: "Description", displayName: "Meta Description", type: "LongString", groupName: "GEO & SEO", order: 3, description: "Meta description for search engines" },
-			{ id: "meta", name: "Meta", displayName: "Additional Meta Tags", type: "LongString", groupName: "GEO & SEO", order: 4, description: "Additional meta tags" },
-			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "GEO & SEO", order: 5 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 
 			// Categories & Tags group
 			{ id: "categories", name: "Categories", displayName: "Categories", type: "SelectMany", groupName: "Categories & Tags", order: 1, description: "Page categories" },
@@ -425,11 +421,11 @@ export const initialContentTypes: ContentType[] = [
 		availableContentTypes: { availability: "None" }, // Blog posts don't allow any children
 		includeOn: ["ct-blog-listing"], // Can only be created under Blog Listing pages
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "subtitle", name: "Subtitle", type: "text" },
-			{ id: "body", name: "Body", type: "richtext", required: true },
-			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "title", name: "Title", type: "String", required: true },
+			{ id: "subtitle", name: "Subtitle", type: "String" },
+			{ id: "body", name: "Body", type: "XhtmlString", required: true },
+			{ id: "author", name: "Author", type: "ContentReference", required: true },
+			{ id: "seo", name: "SEO", type: "ContentReference", allowedTypes: ["ct-seo"] },
 		],
 	},
 	{
@@ -445,9 +441,9 @@ export const initialContentTypes: ContentType[] = [
 		modifiedAt: new Date().toISOString(),
 		modifiedBy: "System",
 		properties: [
-			{ id: "title", name: "Title", displayName: "Title", type: "text", required: true },
-			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "text" },
-			{ id: "seo", name: "SEO", displayName: "SEO", type: "seo" },
+			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String" },
+			{ id: "seo", name: "SEO", displayName: "SEO", type: "ContentReference", allowedTypes: ["ct-seo"] },
 		],
 	},
 	{
@@ -457,11 +453,11 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Page",
 		description: "Company about page",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "about", name: "About (Stride)", type: "richtext" },
-			{ id: "history", name: "History", type: "textarea" },
-			{ id: "orgAddress", name: "Org address", type: "address" },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "title", name: "Title", type: "String", required: true },
+			{ id: "about", name: "About (Stride)", type: "XhtmlString" },
+			{ id: "history", name: "History", type: "LongString" },
+			{ id: "orgAddress", name: "Org address", type: "String" },
+			{ id: "seo", name: "SEO", type: "ContentReference", allowedTypes: ["ct-seo"] },
 		],
 	},
 	{
@@ -473,7 +469,7 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "mainOutline", name: "Main", type: "outline" },
 			{ id: "asideOutline", name: "Aside", type: "outline" },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "seo", name: "SEO", type: "ContentReference", allowedTypes: ["ct-seo"] },
 		],
 		variantDimensions: [
 			{ id: "experiment", name: "A/B Test", values: ["Control", "Variant A", "Variant B"] },
@@ -487,9 +483,9 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Product",
 		description: "A standard product",
 		properties: [
-			{ id: "name", name: "Name", type: "text", required: true },
-			{ id: "description", name: "Description", type: "text" },
-			{ id: "price", name: "Price", type: "text" },
+			{ id: "name", name: "Name", type: "String", required: true },
+			{ id: "description", name: "Description", type: "LongString" },
+			{ id: "price", name: "Price", type: "String" },
 		],
 		variantDimensions: [
 			{ id: "size", name: "Size", values: ["Small", "Medium", "Large", "XL"] },
@@ -502,7 +498,7 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Block",
 		baseType: "Block",
 		description: "A reusable content block",
-		properties: [{ id: "title", name: "Title", type: "text", required: true }],
+		properties: [{ id: "title", name: "Title", type: "String", required: true }],
 	},
 	{
 		id: "ct-image",
@@ -511,10 +507,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "src", name: "Image URL", type: "text", required: true },
-			{ id: "alt", name: "Alt Text", type: "text" },
-			{ id: "width", name: "Width", type: "text" },
-			{ id: "height", name: "Height", type: "text" },
+			{ id: "src", name: "Image URL", type: "String", required: true },
+			{ id: "alt", name: "Alt Text", type: "String" },
+			{ id: "width", name: "Width", type: "Int" },
+			{ id: "height", name: "Height", type: "Int" },
 		],
 		variantDimensions: [
 			{ id: "size", name: "Size", values: ["Original", "Large (1920px)", "Medium (800px)", "Thumbnail (200px)"] },
@@ -529,7 +525,7 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "A heading block",
 		properties: [
-			{ id: "text", name: "Text", type: "text", required: true },
+			{ id: "text", name: "Text", type: "String", required: true },
 			{
 				id: "level",
 				name: "Level",
@@ -570,7 +566,7 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "A text block",
 		properties: [
-			{ id: "text", name: "Text", type: "text", required: true },
+			{ id: "text", name: "Text", type: "String", required: true },
 			{
 				id: "template",
 				name: "Template",
@@ -592,7 +588,7 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
-		properties: [{ id: "richtext", name: "Rich Text", type: "richtext", required: true }],
+		properties: [{ id: "richtext", name: "Rich Text", type: "XhtmlString", required: true }],
 	},
 	{
 		id: "ct-button",
@@ -601,8 +597,8 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "A button block",
 		properties: [
-			{ id: "label", name: "Label", type: "text", required: true },
-			{ id: "url", name: "URL", type: "link" },
+			{ id: "label", name: "Label", type: "String", required: true },
+			{ id: "url", name: "URL", type: "Url" },
 			{
 				id: "template",
 				name: "Template",
@@ -625,10 +621,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Block",
 		description: "An input block",
 		properties: [
-			{ id: "label", name: "Label", type: "text", required: true },
-			{ id: "placeholder", name: "Placeholder", type: "text" },
-			{ id: "tooltip", name: "Tooltip", type: "text" },
-			{ id: "required", name: "Required", type: "checkbox" },
+			{ id: "label", name: "Label", type: "String", required: true },
+			{ id: "placeholder", name: "Placeholder", type: "String" },
+			{ id: "tooltip", name: "Tooltip", type: "String" },
+			{ id: "required", name: "Required", type: "Boolean" },
 		],
 	},
 	{
