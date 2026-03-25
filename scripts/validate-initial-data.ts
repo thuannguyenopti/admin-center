@@ -6,7 +6,7 @@
  * Ensures that initialPages instances match their initialContentTypes definitions
  */
 
-import { initialPages, initialContentTypes, type Property, type ContentType } from "../app/db/initialData";
+import { initialPages, initialContentTypes, initialPropertyGroups, type Property, type ContentType } from "../app/db/initialData";
 
 // Inline validation logic (copied from contentTypeValidation.ts)
 type ValidationError = {
@@ -298,32 +298,30 @@ initialContentTypes.forEach((contentType) => {
 });
 
 // Validate property group naming consistency
-console.log("\n\n📋 Validating property group naming consistency:");
+console.log("\n\n📋 Validating property group naming:");
 
-// Check for SEO-related properties using inconsistent group names
-const seoGroupInconsistencies: string[] = [];
+// Create a set of valid group names
+const validGroupNames = new Set(initialPropertyGroups.map(g => g.name));
+
+// Check for properties using undefined group names
+const invalidGroupNames: string[] = [];
 initialContentTypes.forEach((contentType) => {
   contentType.properties.forEach((prop) => {
-    // Check if this is an SEO-related property
-    const isSeoProperty =
-      (prop.type === "ContentReference" && prop.allowedTypes?.includes("ct-seo")) ||
-      prop.id.toLowerCase().includes("seo") ||
-      prop.name.toLowerCase().includes("seo");
-
-    if (isSeoProperty && prop.groupName && prop.groupName !== "GEO & SEO") {
-      seoGroupInconsistencies.push(
-        `Content type "${contentType.name}" has SEO property "${prop.name}" with groupName "${prop.groupName}" (should be "GEO & SEO")`
+    if (prop.groupName && !validGroupNames.has(prop.groupName)) {
+      invalidGroupNames.push(
+        `Content type "${contentType.name}" has property "${prop.name}" with invalid groupName "${prop.groupName}"`
       );
     }
   });
 });
 
-if (seoGroupInconsistencies.length > 0) {
-  console.error("❌ SEO property group naming inconsistencies found:");
-  seoGroupInconsistencies.forEach((msg) => console.error(`   • ${msg}`));
+if (invalidGroupNames.length > 0) {
+  console.error("❌ Properties using undefined property groups:");
+  invalidGroupNames.forEach((msg) => console.error(`   • ${msg}`));
+  console.error(`\nValid property groups: ${Array.from(validGroupNames).join(", ")}`);
   hasErrors = true;
 } else {
-  console.log("✅ All SEO-related properties use consistent group name");
+  console.log(`✅ All property groups are valid (${validGroupNames.size} groups defined)`);
 }
 
 // Check for properties without groupName (except outline properties)

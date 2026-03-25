@@ -197,6 +197,61 @@ export const initialUsers: User[] = [
 	},
 ];
 
+// Property Groups - Central registry for organizing properties in the UI
+export type PropertyGroup = {
+	id: string;
+	name: string;
+	description?: string;
+};
+
+export const initialPropertyGroups: PropertyGroup[] = [
+	{
+		id: "content",
+		name: "Content",
+		description: "Main content and data fields",
+	},
+	{
+		id: "design",
+		name: "Design",
+		description: "Visual elements, images, and layout",
+	},
+	{
+		id: "actions",
+		name: "Actions",
+		description: "Call-to-actions, buttons, and links",
+	},
+	{
+		id: "settings",
+		name: "Settings",
+		description: "Configuration and behavior options",
+	},
+	{
+		id: "appearance",
+		name: "Appearance",
+		description: "Visual styles and templates",
+	},
+	{
+		id: "geo-seo",
+		name: "GEO & SEO",
+		description: "Geographic targeting and search engine optimization",
+	},
+	{
+		id: "categories-tags",
+		name: "Categories & Tags",
+		description: "Taxonomy and content classification",
+	},
+	{
+		id: "basic",
+		name: "Basic",
+		description: "Basic or essential fields",
+	},
+	{
+		id: "social",
+		name: "Social",
+		description: "Social media related fields",
+	},
+];
+
 export type PropertyType =
 	| "String"
 	| "LongString"
@@ -455,9 +510,9 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Product",
 		description: "A standard product",
 		properties: [
-			{ id: "name", name: "Name", displayName: "Name", type: "String", required: true, groupName: "Product Info", order: 1 },
-			{ id: "description", name: "Description", displayName: "Description", type: "LongString", groupName: "Product Info", order: 2 },
-			{ id: "price", name: "Price", displayName: "Price", type: "String", groupName: "Product Info", order: 3 },
+			{ id: "name", name: "Name", displayName: "Name", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "description", name: "Description", displayName: "Description", type: "LongString", groupName: "Content", order: 2 },
+			{ id: "price", name: "Price", displayName: "Price", type: "String", groupName: "Content", order: 3 },
 		],
 		variantDimensions: [
 			{ id: "size", name: "Size", values: ["Small", "Medium", "Large", "XL"] },
@@ -479,10 +534,10 @@ export const initialContentTypes: ContentType[] = [
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "src", name: "Image URL", displayName: "Image URL", type: "String", required: true, groupName: "Image", order: 1 },
-			{ id: "alt", name: "Alt Text", displayName: "Alt Text", type: "String", groupName: "Image", order: 2 },
-			{ id: "width", name: "Width", displayName: "Width", type: "Int", groupName: "Dimensions", order: 1 },
-			{ id: "height", name: "Height", displayName: "Height", type: "Int", groupName: "Dimensions", order: 2 },
+			{ id: "src", name: "Image URL", displayName: "Image URL", type: "String", required: true, groupName: "Design", order: 1 },
+			{ id: "alt", name: "Alt Text", displayName: "Alt Text", type: "String", groupName: "Design", order: 2 },
+			{ id: "width", name: "Width", displayName: "Width", type: "Int", groupName: "Design", order: 1 },
+			{ id: "height", name: "Height", displayName: "Height", type: "Int", groupName: "Design", order: 2 },
 		],
 		variantDimensions: [
 			{ id: "size", name: "Size", values: ["Original", "Large (1920px)", "Medium (800px)", "Thumbnail (200px)"] },
@@ -630,7 +685,7 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "field-bp-title", name: "title", displayName: "Title", type: "String", required: true, cultureSpecific: true, description: "The main title of the blog post", groupName: "Content", order: 1 },
 			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Name of the blog post author", groupName: "Content", order: 2 },
-			{ id: "field-bp-publish-date", name: "publish_date", displayName: "Publish Date", type: "DateTime", required: true, description: "When the post should be published", groupName: "Publishing", order: 1 },
+			{ id: "field-bp-publish-date", name: "publish_date", displayName: "Publish Date", type: "DateTime", required: true, description: "When the post should be published", groupName: "Content", order: 1 },
 			{ id: "field-bp-excerpt", name: "excerpt", displayName: "Excerpt", type: "LongString", cultureSpecific: true, description: "Short summary for previews and SEO", groupName: "Content", order: 3 },
 			{ id: "field-bp-content", name: "content", displayName: "Content", type: "XhtmlString", required: true, cultureSpecific: true, description: "The main blog post content", groupName: "Content", order: 4 },
 			{ id: "field-bp-featured-image", name: "featured_image", displayName: "Featured Image", type: "ImageReference", description: "Main image for the blog post", groupName: "Design", order: 1 },
@@ -658,7 +713,7 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "field-art-byline", name: "byline", displayName: "Byline", type: "String", required: true, description: "Author and publication information", groupName: "Content", order: 3 },
 			{ id: "field-art-body", name: "body", displayName: "Body", type: "XhtmlString", required: true, cultureSpecific: true, description: "Main article content", groupName: "Content", order: 4 },
 			{ id: "field-art-hero-image", name: "hero_image", displayName: "Hero Image", type: "ImageReference", description: "Large header image", groupName: "Design", order: 1 },
-			{ id: "field-art-related-articles", name: "related_articles", displayName: "Related Articles", type: "ContentReference", description: "Links to related content", groupName: "Related", order: 1 },
+			{ id: "field-art-related-articles", name: "related_articles", displayName: "Related Articles", type: "ContentReference", description: "Links to related content", groupName: "Content", order: 1 },
 		],
 		modifiedAt: new Date("2024-03-20T10:30:00Z").toISOString(),
 		modifiedBy: "System",
