@@ -276,6 +276,11 @@ function SpecializedAgentSetupContent() {
     const [multiTurnMode, setMultiTurnMode] = useState(true);
     const [enabledInChat, setEnabledInChat] = useState(true);
     const [systemPrompt, setSystemPrompt] = useState("You are a helpful AI assistant. You have access to tools and can use them to help users. Always be concise, accurate, and professional.");
+    const [initialMessage, setInitialMessage] = useState("Hi! I can help you with this task. What would you like to work on?");
+    const [suggestedPrompts, setSuggestedPrompts] = useState<{ label: string; prompt: string }[]>([
+        { label: "Summarize", prompt: "Please summarize the key points." },
+        { label: "Analyze", prompt: "Analyze this in detail." },
+    ]);
     const [tools, setTools] = useState("");
     const [inferenceLevel, setInferenceLevel] = useState("balanced");
     const [variables, setVariables] = useState<any[]>([]);
@@ -1143,6 +1148,80 @@ function SpecializedAgentSetupContent() {
                                                                             </HoverCardContent>
                                                                         </HoverCard>
                                                                         <Input type="number" placeholder="10" readOnly={isReadOnly} />
+                                                                    </Box>
+
+                                                                    {/* First Message */}
+                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                        <Box display="flex" gap="4" alignItems="center">
+                                                                            <Text fontSize="md" fontWeight="500">First Message</Text>
+                                                                            <Tooltip delayDuration={300} content="A static greeting shown to the user before they begin typing. Not sent to the model.">
+                                                                                <Box display="inline-flex" suppressHydrationWarning>
+                                                                                    <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                </Box>
+                                                                            </Tooltip>
+                                                                        </Box>
+                                                                        <Textarea
+                                                                            value={initialMessage}
+                                                                            onChange={(e) => setInitialMessage(e.target.value)}
+                                                                            placeholder="Hi! I can help you with this task..."
+                                                                            className="h-28"
+                                                                            readOnly={isReadOnly}
+                                                                        />
+                                                                    </Box>
+
+                                                                    {/* Configured Prompts */}
+                                                                    <Box display="flex" flexDirection="column" gap="8">
+                                                                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                                                                            <Box display="flex" gap="4" alignItems="center">
+                                                                                <Text fontSize="md" fontWeight="500">Configured Prompts</Text>
+                                                                                <Tooltip delayDuration={300} content="Clickable suggestion buttons shown to users to guide the conversation.">
+                                                                                    <Box display="inline-flex" suppressHydrationWarning>
+                                                                                        <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
+                                                                                    </Box>
+                                                                                </Tooltip>
+                                                                            </Box>
+                                                                            {!isReadOnly && (
+                                                                                <Button appearance="subtle" size="sm" icon={<IconPlus />} onClick={() => setSuggestedPrompts([...suggestedPrompts, { label: "", prompt: "" }])}>
+                                                                                    Add
+                                                                                </Button>
+                                                                            )}
+                                                                        </Box>
+                                                                        <Text fontSize="sm" color="fg.secondary">Clickable buttons that offer suggested prompts to guide the conversation.</Text>
+                                                                        <Box display="flex" flexDirection="column" gap="12">
+                                                                            {suggestedPrompts.map((item, index) => (
+                                                                                <Box key={index} display="flex" gap="12" alignItems="end">
+                                                                                    <Box flex="1">
+                                                                                        <Text fontSize="sm" mb="4" color="fg.secondary">Label</Text>
+                                                                                        <Input
+                                                                                            value={item.label}
+                                                                                            onChange={(e) => {
+                                                                                                const next = [...suggestedPrompts];
+                                                                                                next[index] = { ...next[index], label: e.target.value };
+                                                                                                setSuggestedPrompts(next);
+                                                                                            }}
+                                                                                            placeholder="Summarize"
+                                                                                            readOnly={isReadOnly}
+                                                                                        />
+                                                                                    </Box>
+                                                                                    <Box style={{ flex: 2 }}>
+                                                                                        <Text fontSize="sm" mb="4" color="fg.secondary">Prompt to model</Text>
+                                                                                        <Input
+                                                                                            value={item.prompt}
+                                                                                            onChange={(e) => {
+                                                                                                const next = [...suggestedPrompts];
+                                                                                                next[index] = { ...next[index], prompt: e.target.value };
+                                                                                                setSuggestedPrompts(next);
+                                                                                            }}
+                                                                                            placeholder="Please summarize the key points."
+                                                                                            readOnly={isReadOnly}
+                                                                                        />
+                                                                                    </Box>
+                                                                                    {!isReadOnly && (
+                                                                                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />} aria-label="Remove prompt" onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
+                                                                                    )}
+                                                                                </Box>
+                                                                            ))}
+                                                                        </Box>
                                                                     </Box>
                                                                 </>
                                                             ) : (
