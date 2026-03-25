@@ -315,10 +315,36 @@ function SpecializedAgentSetupContent() {
             2: "field-variables",
             3: "field-tools",
             4: "button-test-run",
+            // wizard step 5 = multi-turn settings section
+            5: "field-multiturn-settings",
         };
         const fieldId = fieldMap[step];
-        // Don't scroll for step 4 — the Test Run button is always visible in the toolbar
-        if (fieldId && step !== 4) {
+
+        // Step 4: always visible toolbar — skip scroll
+        if (step === 4) {
+            setTimeout(() => setHighlightedField(null), 2500);
+            return;
+        }
+
+        // Step 5: open the multi-turn disclosure first, then scroll
+        if (step === 5) {
+            const advBtn = [...document.querySelectorAll<HTMLElement>("button")]
+                .find(b => b.textContent?.includes("Multi-turn agent settings"));
+            if (advBtn) {
+                const disclosure = advBtn.closest("[data-state]");
+                if (disclosure?.getAttribute("data-state") === "closed") {
+                    advBtn.click();
+                }
+            }
+            setTimeout(() => {
+                const el = document.getElementById("field-system-prompt");
+                if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                setTimeout(() => setHighlightedField(null), 2500);
+            }, 250);
+            return;
+        }
+
+        if (fieldId) {
             document.getElementById(fieldId)?.scrollIntoView({ behavior: "smooth", block: "center" });
         }
         setTimeout(() => setHighlightedField(null), 2500);
@@ -2111,6 +2137,7 @@ function SpecializedAgentSetupContent() {
                 activeFieldStep={activeGuideStep}
                 onWizardStepChange={handleWizardStepChange}
                 onRunPreview={() => setIsTestRunOpen(true)}
+                multiTurnMode={multiTurnMode}
             />
         </Box>
     );

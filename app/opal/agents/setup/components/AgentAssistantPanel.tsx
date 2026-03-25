@@ -515,7 +515,24 @@ interface AgentAssistantPanelProps {
     activeFieldStep: number | null;
     onWizardStepChange: (step: number) => void;
     onRunPreview?: () => void;
+    multiTurnMode?: boolean;
 }
+
+// ─── Multi-turn Step 5 Data ───────────────────────────────────────────────────
+
+const MULTITURN_STEP: typeof WIZARD_STEPS[0] = {
+    step: 5,
+    label: "Multi-Turn Settings",
+    title: "Configure conversational settings",
+    intro: "Great — you've enabled multi-turn. Now configure the three settings that shape how your agent behaves across a full conversation.",
+    bullets: [
+        { bold: "System Prompt", text: "A hidden, permanent instruction that sets the agent's persona and guardrails. Users never see it." },
+        { bold: "Memory Limit", text: "How many conversation turns the agent keeps in context. More memory = better recall, higher cost." },
+        { bold: "First Message", text: "A static greeting shown to the user before they type anything. Sets the tone immediately." },
+    ],
+    keyConcept: `The system prompt is the most powerful lever here: keep it authoritative and concise.\n\nExample: "You are a concise marketing assistant. Never fabricate data. Always ask for clarification when the request is ambiguous."`,
+    checkLabel: "Continue",
+};
 
 export function AgentAssistantPanel({
     isOpen,
@@ -529,6 +546,7 @@ export function AgentAssistantPanel({
     activeFieldStep,
     onWizardStepChange,
     onRunPreview,
+    multiTurnMode = false,
 }: AgentAssistantPanelProps) {
     const [isOverview, setIsOverview] = useState(true);
     const [wizardStep, setWizardStep] = useState(1);
@@ -567,8 +585,18 @@ export function AgentAssistantPanel({
         setHasChecked(true);
     };
 
-    const currentStep = WIZARD_STEPS[wizardStep - 1];
+    const totalSteps = multiTurnMode ? 5 : 4;
+    const allSteps = multiTurnMode ? [...WIZARD_STEPS, MULTITURN_STEP] : WIZARD_STEPS;
+    const currentStep = allSteps[wizardStep - 1] ?? WIZARD_STEPS[0];
     const suggestedTools = wizardStep === 3 ? suggestTools(promptTemplate) : [];
+
+    const stepperItems = [
+        { step: 1, label: "Write Instructions", description: "Define your agent's role and behavior" },
+        { step: 2, label: "Add an Input Variable", description: "Make your agent dynamic with [[variables]]" },
+        { step: 3, label: "Add Tools", description: "Extend your agent with actions and integrations" },
+        { step: 4, label: "See It Live", description: "Test your agent with real inputs" },
+        ...(multiTurnMode ? [{ step: 5, label: "Multi-Turn Settings", description: "System prompt, memory limit & first message" }] : []),
+    ];
 
     return (
         <Box
@@ -710,8 +738,8 @@ export function AgentAssistantPanel({
                                 )}
                                 <Text fontSize="sm" color="fg.tertiary">
                                     {isOverview
-                                        ? "Build your first agent in 4 steps"
-                                        : `Step ${wizardStep} of 4 · ${currentStep.label}`}
+                                        ? `Build your first agent in ${totalSteps} steps`
+                                        : `Step ${wizardStep} of ${totalSteps} · ${currentStep.label}`}
                                 </Text>
                             </Box>
                         </Box>
@@ -733,9 +761,27 @@ export function AgentAssistantPanel({
                             {/* ── Overview screen ─────────────────────────── */}
                             {isOverview && (
                                 <Box display="flex" flexDirection="column" gap="4">
+                                    {/* Mode badge */}
+                                    {multiTurnMode && (
+                                        <Box
+                                            display="inline-flex"
+                                            alignItems="center"
+                                            gap="4"
+                                            style={{
+                                                alignSelf: "flex-start",
+                                                background: "rgba(99,102,241,0.08)",
+                                                border: "1px solid rgba(99,102,241,0.20)",
+                                                borderRadius: "20px",
+                                                padding: "2px 10px",
+                                                marginBottom: "4px",
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: "11px", fontWeight: 600, color: "#4338ca" }}>Multi-turn enabled</Text>
+                                        </Box>
+                                    )}
                                     {/* Stepper */}
                                     <Box display="flex" flexDirection="column" gap="2">
-                                        {STEPPER_ITEMS.map((item) => (
+                                        {stepperItems.map((item) => (
                                             <Box
                                                 key={item.step}
                                                 display="flex"
@@ -1039,13 +1085,89 @@ export function AgentAssistantPanel({
                                             {para}
                                         </Text>
                                     ))}
+                                    <Box display="flex" gap="8" alignItems="center">
+                                        <Button
+                                            appearance="inverse"
+                                            style={{ alignSelf: "flex-start" }}
+                                            size="sm"
+                                            onClick={onRunPreview}
+                                        >
+                                            Run Preview
+                                        </Button>
+                                        {multiTurnMode && (
+                                            <Button
+                                                appearance="subtle"
+                                                size="sm"
+                                                onClick={() => goToStep(5)}
+                                            >
+                                                Configure multi-turn →
+                                            </Button>
+                                        )}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {/* Step 5 content — multi-turn only */}
+                            {wizardStep === 5 && multiTurnMode && (
+                                <Box display="flex" flexDirection="column" gap="12">
+                                    {currentStep.intro && (
+                                        <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                            {currentStep.intro}
+                                        </Text>
+                                    )}
+                                    <Box display="flex" flexDirection="column" gap="6">
+                                        {MULTITURN_STEP.bullets?.map((b, i) => (
+                                            <Box key={i} display="flex" gap="8" style={{ alignItems: "flex-start" }}>
+                                                <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0, lineHeight: "1.55" }}>•</Text>
+                                                <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                                    <strong>{b.bold}:</strong> {b.text}
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                    <KeyConceptCallout text={MULTITURN_STEP.keyConcept!} />
+                                    {/* Quick-jump buttons */}
+                                    <Box display="flex" flexDirection="column" gap="6">
+                                        <Text fontSize="sm" fontWeight="500" color="fg.default">Jump to field</Text>
+                                        {[
+                                            { label: "System Prompt", step: 3 },
+                                            { label: "Memory Limit", step: 4 },
+                                            { label: "First Message", step: 5 },
+                                        ].map((item) => (
+                                            <Box
+                                                key={item.label}
+                                                display="flex"
+                                                alignItems="center"
+                                                gap="8"
+                                                onClick={() => onWizardStepChange(item.step)}
+                                                onMouseEnter={(e: React.MouseEvent<HTMLElement>) => {
+                                                    (e.currentTarget as HTMLElement).style.background = "#f5f6fa";
+                                                }}
+                                                onMouseLeave={(e: React.MouseEvent<HTMLElement>) => {
+                                                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                                                }}
+                                                style={{
+                                                    padding: "8px 10px",
+                                                    borderRadius: "8px",
+                                                    cursor: "pointer",
+                                                    transition: "background 0.15s",
+                                                    border: "1px solid #e9edf5",
+                                                }}
+                                            >
+                                                <Text fontSize="sm" fontWeight="500" color="fg.default" style={{ flex: 1 }}>
+                                                    {item.label}
+                                                </Text>
+                                                <IconChevronRight size={13} color="var(--ax-colors-fg-tertiary)" />
+                                            </Box>
+                                        ))}
+                                    </Box>
                                     <Button
                                         appearance="inverse"
-                                        style={{ alignSelf: "flex-start" }}
                                         size="sm"
-                                        onClick={onRunPreview}
+                                        style={{ alignSelf: "flex-start" }}
+                                        onClick={() => onWizardStepChange(3)}
                                     >
-                                        Run Preview
+                                        Start with System Prompt →
                                     </Button>
                                 </Box>
                             )}
