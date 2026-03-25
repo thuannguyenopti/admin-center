@@ -2849,72 +2849,26 @@ export default function OpalStudioPrototypePage() {
 		setLastGeneratedSignature(configSignature);
 	};
 
+	const canvasDraft = effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0];
+	const canvasPrompt = chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt;
+
 	return (
-		<Box
-			bg="bg.secondary"
-			display="flex"
-			flex="1"
-			flexDirection="column"
-			style={{
-				height: "100%",
-				minHeight: 0,
-				width:
-					opalPanelWidth > 0
-						? `calc(100% - ${opalPanelWidth}px)`
-						: "100%",
-				transition: "width 0.3s cubic-bezier(0, 1, 0, 1)",
-				overflow: "hidden",
-			}}
-		>
-					{planOpen ? (
-						<Box bg="bg.default" border="1" borderColor="border.tertiary" mb="20" p="16" rounded="xl" shadow="sm">
-						<Box alignItems="center" display="flex" justifyContent="space-between">
-							<Text fontSize="sm" fontWeight="700">
-								Execution plan
-							</Text>
-							<AxiomButton appearance="default" size="sm" onClick={() => setPlanOpen(false)}>
-								Close
-							</AxiomButton>
-						</Box>
-						<Box display="grid" gap="10" mt="12">
-							{[
-								`Use ${brandPack.toLowerCase()} rules and ${themePack.toLowerCase()} style direction`,
-								`Generate ${draftMode ? "two fast drafts" : "production-first outputs"} for ${channelPack.toLowerCase()}`,
-								`Apply ${aspectRatio} preview math immediately and ${outputVariants.length} output formula${outputVariants.length === 1 ? "" : "s"} on production`,
-							].map((line) => (
-								<Box key={line} bg="bg.secondary" border="1" borderColor="border.tertiary" p="12" rounded="xl">
-									<Text fontSize="sm">{line}</Text>
-								</Box>
-							))}
-						</Box>
-						</Box>
-					) : null}
-					{flowMode === "create" ? (
-						createStage === "advanced" && assetMode === "image" ? (
-							<AdvancedCanvasWorkspace
-								prompt={chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt}
-								selectedDraft={effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0]}
-								saveState={saveState}
-								onCloseAdvanced={() => {
-									setCreateStage("panel");
-									setGenerated(false);
-									setProduced(false);
-								}}
-							/>
-						) : (
-							<CreatePanelOnlyState />
-						)
-					) : (
-						<AdvancedCanvasWorkspace
-							prompt={editPrompt}
-							selectedDraft={effectiveDrafts.find((draft) => draft.id === selectedDraftId) ?? effectiveDrafts[0]}
-							saveState={saveState}
-							onCloseAdvanced={() => {
-								setFlowMode("create");
-								setCreateStage("panel");
-							}}
-						/>
-					)}
-		</Box>
+		<div style={{
+			display: "flex",
+			flexDirection: "column",
+			height: "100%",
+			width: opalPanelWidth > 0 ? `calc(100% - ${opalPanelWidth}px)` : "100%",
+		}}>
+			<AdvancedCanvasWorkspace
+				prompt={canvasPrompt}
+				selectedDraft={canvasDraft}
+				saveState={saveState}
+				onCloseAdvanced={() => {
+					setCreateStage("panel");
+					setGenerated(false);
+					setProduced(false);
+				}}
+			/>
+		</div>
 	);
 }
