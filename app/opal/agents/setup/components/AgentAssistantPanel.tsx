@@ -256,7 +256,7 @@ export function AgentAssistantPanel({
                                     </Box>
                                     <Box display="flex" flexDirection="column" gap="4">
                                         {COMMON_ACTIONS.map((action) => (
-                                            <Disclosure key={action} bg="bg.secondary" rounded="sm">
+                                            <Disclosure key={action} rounded="sm">
                                                 <DisclosureTrigger fontSize="sm">
                                                     <Box display="flex" gap="8" alignItems="center">
                                                         <IconGripVertical
