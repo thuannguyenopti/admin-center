@@ -66,6 +66,7 @@ import {
     IconShieldCheck,
     IconEye,
     IconBook,
+    IconLightbulb,
     IconChevronRight,
     IconChevronLeft,
     IconLink,
@@ -73,7 +74,7 @@ import {
     IconPlus,
     IconTrashCan,
 } from "@optimizely/axiom-icons";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -296,7 +297,31 @@ function SpecializedAgentSetupContent() {
     const [showGuidePanel, setShowGuidePanel] = useState(true);
     const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">("assistant");
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
+    const [highlightedField, setHighlightedField] = useState<number | null>(null);
     const [showCoachMark, setShowCoachMark] = useState(false);
+
+    const handleInsertToPrompt = useCallback((text: string) => {
+        setPromptTemplate(prev => {
+            const trimmed = prev.trimEnd();
+            return trimmed ? trimmed + "\n\n" + text : text;
+        });
+    }, []);
+
+    const handleWizardStepChange = useCallback((step: number) => {
+        setHighlightedField(step);
+        const fieldMap: Record<number, string> = {
+            1: "field-prompt-template",
+            2: "field-variables",
+            3: "field-tools",
+            4: "button-test-run",
+        };
+        const fieldId = fieldMap[step];
+        // Don't scroll for step 4 — the Test Run button is always visible in the toolbar
+        if (fieldId && step !== 4) {
+            document.getElementById(fieldId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        setTimeout(() => setHighlightedField(null), 2500);
+    }, []);
 
     // Version History State
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -801,50 +826,53 @@ function SpecializedAgentSetupContent() {
                                         >
                                             Save
                                         </Button>
-                                        <Button
-                                            appearance="default"
-                                            size="lg"
-                                            icon={<IconPlay />}
-                                            disabled={isReadOnly}
-                                            onClick={() => {
-                                                setIsTestRunOpen(!isTestRunOpen);
-                                                if (!isTestRunOpen) { setIsVersionHistoryOpen(false); }
+                                        <div
+                                            id="button-test-run"
+                                            style={{
+                                                outline: highlightedField === 4 ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                outlineOffset: "8px",
+                                                borderRadius: "8px",
+                                                transition: "outline-color 0.3s ease",
                                             }}
                                         >
-                                            Test Run
-                                        </Button>
-                                        <Tooltip content="Version History">
                                             <Button
                                                 appearance="default"
                                                 size="lg"
-                                                icon={<IconClockRotateLeft size={20} />}
-                                                aria-label="Version History"
+                                                icon={<IconPlay />}
+                                                disabled={isReadOnly}
                                                 onClick={() => {
-                                                    setIsVersionHistoryOpen(!isVersionHistoryOpen);
-                                                    if (!isVersionHistoryOpen) { setIsTestRunOpen(false); }
+                                                    setIsTestRunOpen(!isTestRunOpen);
+                                                    if (!isTestRunOpen) { setIsVersionHistoryOpen(false); }
                                                 }}
-                                                suppressHydrationWarning
-                                            />
-                                        </Tooltip>
-                                        <Tooltip content="Quick-start guide">
-                                            <Button
-                                                appearance="default"
-                                                size="lg"
-                                                icon={<IconBook size={20} />}
-                                                aria-label="Quick-start guide"
-                                                onClick={() => {
-                                                    setShowGuidePanel(!showGuidePanel);
-                                                    if (!showGuidePanel) { setIsTestRunOpen(false); setIsVersionHistoryOpen(false); }
-                                                }}
-                                                suppressHydrationWarning
-                                                style={showGuidePanel ? {
-                                                    backgroundColor: "var(--ax-colors-bg-secondary)",
-                                                    boxShadow: "inset 0 1px 3px rgba(0,0,0,0.10)",
-                                                    borderColor: "var(--ax-colors-border-secondary)",
-                                                } : {}}
-                                            />
-                                        </Tooltip>
-                                        <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" disabled={isReadOnly} />
+                                            >
+                                                Test Run
+                                            </Button>
+                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild suppressHydrationWarning>
+                                                <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" suppressHydrationWarning />
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem
+                                                    icon={<IconClockRotateLeft size={16} />}
+                                                    onClick={() => {
+                                                        setIsVersionHistoryOpen(!isVersionHistoryOpen);
+                                                        if (!isVersionHistoryOpen) { setIsTestRunOpen(false); }
+                                                    }}
+                                                >
+                                                    Version History
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    icon={<IconLightbulb size={16} />}
+                                                    onClick={() => {
+                                                        setShowGuidePanel(!showGuidePanel);
+                                                        if (!showGuidePanel) { setIsTestRunOpen(false); setIsVersionHistoryOpen(false); }
+                                                    }}
+                                                >
+                                                    {showGuidePanel ? "Hide Setup Guide" : "Setup Guide"}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </Box>
                                 </Box>
                             </Box>
@@ -1041,7 +1069,19 @@ function SpecializedAgentSetupContent() {
                                         </DisclosureTrigger>
                                         <DisclosureContent pl="32" pb="32" suppressHydrationWarning>
                                             <Box style={{ maxWidth: isComparing ? "none" : "980px" }} display="flex" flexDirection="column" gap="24">
-                                                <div id="field-prompt-template" onFocus={() => setActiveGuideStep(2)} onBlur={() => setActiveGuideStep(null)}>
+                                                <div
+                                                    id="field-prompt-template"
+                                                    onFocus={() => setActiveGuideStep(1)}
+                                                    onBlur={() => setActiveGuideStep(null)}
+                                                    onDragOver={(e) => e.preventDefault()}
+                                                    onDrop={(e) => { e.preventDefault(); const t = e.dataTransfer.getData("text/plain"); if (t) handleInsertToPrompt(t); }}
+                                                    style={{
+                                                        outline: highlightedField === 1 ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                        outlineOffset: "8px",
+                                                        borderRadius: "8px",
+                                                        transition: "outline-color 0.3s ease",
+                                                    }}
+                                                >
                                                 <HoverCard openDelay={300}>
                                                 <Field
                                                     label={
@@ -1129,6 +1169,17 @@ function SpecializedAgentSetupContent() {
                                                 </HoverCard>
                                                 </div>
 
+                                                <div
+                                                    id="field-variables"
+                                                    onFocus={() => setActiveGuideStep(2)}
+                                                    onBlur={() => setActiveGuideStep(null)}
+                                                    style={{
+                                                        outline: highlightedField === 2 ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                        outlineOffset: "8px",
+                                                        borderRadius: "8px",
+                                                        transition: "outline-color 0.3s ease",
+                                                    }}
+                                                >
                                                 <Box>
                                                     <Box display="flex" justifyContent="space-between" mb="8">
                                                         <Text fontWeight="400" fontSize="md">Variables</Text>
@@ -1189,7 +1240,19 @@ function SpecializedAgentSetupContent() {
                                                         )}
                                                     </Box>
                                                 </Box>
+                                                </div>
 
+                                                <div
+                                                    id="field-tools"
+                                                    onFocus={() => setActiveGuideStep(3)}
+                                                    onBlur={() => setActiveGuideStep(null)}
+                                                    style={{
+                                                        outline: highlightedField === 3 ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                        outlineOffset: "8px",
+                                                        borderRadius: "8px",
+                                                        transition: "outline-color 0.3s ease",
+                                                    }}
+                                                >
                                                 <Field label="Tools" info="Select tools for the agent">
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
@@ -1255,6 +1318,7 @@ function SpecializedAgentSetupContent() {
                                                         </Box>
                                                     )}
                                                 </Field>
+                                                </div>
 
                                                 <Field label="Inference Level" info="Select model intelligence" style={{ maxWidth: "320px" }}>
                                                     {isComparing && comparisonData ? (
@@ -2035,11 +2099,17 @@ function SpecializedAgentSetupContent() {
 
             {/* Agent builder assistant panel */}
             <AgentAssistantPanel
-                activeStep={activeGuideStep}
                 isOpen={showGuidePanel}
                 onClose={() => setShowGuidePanel(false)}
                 view={guidePanelView}
                 onViewChange={setGuidePanelView}
+                promptTemplate={promptTemplate}
+                variables={variables}
+                onInsertToPrompt={handleInsertToPrompt}
+                onApplyTemplate={(prompt) => setPromptTemplate(prompt)}
+                activeFieldStep={activeGuideStep}
+                onWizardStepChange={handleWizardStepChange}
+                onRunPreview={() => setIsTestRunOpen(true)}
             />
         </Box>
     );
