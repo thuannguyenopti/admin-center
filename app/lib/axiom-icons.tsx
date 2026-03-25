@@ -8,7 +8,46 @@ type CompatIconProps = SVGProps<SVGSVGElement> & {
 
 const fallbackIcon = TablerIcons.IconCircle;
 
-// Custom SVG component matching the real @optimizely/axiom-icons IconAgent
+// Custom SVG components matching the real @optimizely/axiom-icons (FontAwesome Pro Light)
+
+function AxiomIconBook({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
+	const w = width ?? size;
+	const h = height ?? size;
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 448 512"
+			width={w}
+			height={h}
+			fill="currentColor"
+			style={style}
+			className={className}
+			{...rest}
+		>
+			<path d="M448 368v-320C448 21.49 426.5 0 400 0h-320C35.82 0 0 35.82 0 80V448c0 35.35 28.65 64 64 64h368c8.844 0 16-7.156 16-16S440.8 480 432 480H416v-66.95C434.6 406.4 448 388.8 448 368zM32 80C32 53.49 53.49 32 80 32H96v352H64c-11.71 0-22.55 3.389-32 8.9V80zM384 480H64c-17.64 0-32-14.36-32-32s14.36-32 32-32h320V480zM400 384H128V32h272C408.8 32 416 39.17 416 48v320C416 376.8 408.8 384 400 384zM352 128H192C183.2 128 176 135.2 176 144S183.2 160 192 160h160c8.844 0 16-7.156 16-16S360.8 128 352 128zM352 224H192C183.2 224 176 231.2 176 240S183.2 256 192 256h160c8.844 0 16-7.156 16-16S360.8 224 352 224z" />
+		</svg>
+	);
+}
+
+function AxiomIconClockRotateLeft({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
+	const w = width ?? size;
+	const h = height ?? size;
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 512 512"
+			width={w}
+			height={h}
+			fill="currentColor"
+			style={style}
+			className={className}
+			{...rest}
+		>
+			<path d="M256 0C397.4 0 512 114.6 512 256C512 397.4 397.4 512 256 512C172.2 512 97.87 471.8 51.19 409.6C45.88 402.5 47.31 392.5 54.37 387.2C61.44 381.9 71.47 383.3 76.78 390.4C117.7 444.8 182.7 480 256 480C379.7 480 480 379.7 480 256C480 132.3 379.7 32 256 32C166.7 32 89.51 84.3 53.55 160H144C152.8 160 160 167.2 160 176C160 184.8 152.8 192 144 192H16C7.164 192 0 184.8 0 176V48C0 39.16 7.164 32 16 32C24.84 32 32 39.16 32 48V131.1C75.66 53.29 159.6 0 256 0zM256 128C264.8 128 272 135.2 272 144V249.4L347.3 324.7C353.6 330.9 353.6 341.1 347.3 347.3C341.1 353.6 330.9 353.6 324.7 347.3L244.7 267.3C241.7 264.3 239.1 260.2 239.1 256V144C239.1 135.2 247.2 128 255.1 128H256z" />
+		</svg>
+	);
+}
+
 function AxiomIconAgent({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
 	const w = width ?? size;
 	const h = height ?? size;
@@ -37,7 +76,7 @@ const iconMap: Record<string, string[]> = {
 	IconArrowsRotate: ["IconRefresh", "IconRotate"],
 	IconArrowUp: ["IconArrowUp"],
 	IconBars: ["IconMenu2", "IconMenu"],
-	IconBook: ["IconBook"],
+	// IconBook uses AxiomIconBook (custom SVG)
 	IconBracketsCurly: ["IconBraces"],
 	IconBracketsSquare: ["IconBrackets"],
 	IconBrowser: ["IconBrowser"],
@@ -54,7 +93,7 @@ const iconMap: Record<string, string[]> = {
 	IconCircleQuestion: ["IconHelpCircle"],
 	IconCircleStop: ["IconPlayerStop", "IconCircleX"],
 	IconClock: ["IconClock"],
-	IconClockRotateLeft: ["IconHistory"],
+	// IconClockRotateLeft uses AxiomIconClockRotateLeft (custom SVG)
 	IconCodeBranch: ["IconGitBranch", "IconCodeDots"],
 	IconColumns3: ["IconColumns3"],
 	IconComments: ["IconMessages"],
@@ -71,7 +110,7 @@ const iconMap: Record<string, string[]> = {
 	IconHandPointer: ["IconHandFinger", "IconPointer"],
 	IconImage: ["IconPhoto", "IconImageInPicture"],
 	IconInputNumeric: ["Icon123", "IconNumbers"],
-	IconInputText: ["IconTypography", "IconLetterT"],
+	IconInputText: ["IconLetterT", "IconTypography"],
 	IconLaptopMobile: ["IconDevices", "IconDeviceLaptop"],
 	IconLink: ["IconLink"],
 	IconList: ["IconList"],
@@ -122,6 +161,7 @@ function createIcon(name: string) {
 }
 
 export const IconAgent = AxiomIconAgent;
+
 export const IconArrowLeft = createIcon("IconArrowLeft");
 export const IconArrowRotateLeft = createIcon("IconArrowRotateLeft");
 export const IconArrowsLeftRight = createIcon("IconArrowsLeftRight");
@@ -129,7 +169,7 @@ export const IconArrowsRepeat = createIcon("IconArrowsRepeat");
 export const IconArrowsRotate = createIcon("IconArrowsRotate");
 export const IconArrowUp = createIcon("IconArrowUp");
 export const IconBars = createIcon("IconBars");
-export const IconBook = createIcon("IconBook");
+export const IconBook = AxiomIconBook;
 export const IconBracketsCurly = createIcon("IconBracketsCurly");
 export const IconBracketsSquare = createIcon("IconBracketsSquare");
 export const IconBrowser = createIcon("IconBrowser");
@@ -146,7 +186,7 @@ export const IconCirclePlus = createIcon("IconCirclePlus");
 export const IconCircleQuestion = createIcon("IconCircleQuestion");
 export const IconCircleStop = createIcon("IconCircleStop");
 export const IconClock = createIcon("IconClock");
-export const IconClockRotateLeft = createIcon("IconClockRotateLeft");
+export const IconClockRotateLeft = AxiomIconClockRotateLeft;
 export const IconCodeBranch = createIcon("IconCodeBranch");
 export const IconColumns3 = createIcon("IconColumns3");
 export const IconComments = createIcon("IconComments");
