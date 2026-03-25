@@ -34,7 +34,6 @@ import styles from "./VBPrototype.module.css";
 import PropertiesPanel, {
 	PageProperties,
 	PropertySection,
-	navigationItems,
 } from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
@@ -416,10 +415,7 @@ export default function VBPrototype({
 		setPreview((p) => ({...p, ...patch}));
 	};
 
-	const defaultProps: PageProperties = {
-		campaignMode: "no",
-		someOtherSetting: "setting1",
-	};
+	const defaultProps: PageProperties = {};
 
 	const [properties, setProperties] = useState<PageProperties>(() => {
 		return {
@@ -1669,13 +1665,7 @@ export default function VBPrototype({
 												</div>
 												<div className="flex items-center gap-2">
 													<Heading level="4">
-														{activePropertiesSection === "menu"
-															? "Properties"
-															: navigationItems.find(
-																	(item) =>
-																		item.id ===
-																		activePropertiesSection
-																)?.label || "Properties"}
+														Properties
 													</Heading>
 													<div className="flex-1" />
 												</div>
@@ -1910,13 +1900,7 @@ export default function VBPrototype({
 												</div>
 												<div className="flex items-center gap-2">
 													<Heading level="4">
-														{activePropertiesSection === "menu"
-															? "Properties"
-															: navigationItems.find(
-																	(item) =>
-																		item.id ===
-																		activePropertiesSection
-																)?.label || "Properties"}
+														Properties
 													</Heading>
 													<div className="flex-1" />
 												</div>

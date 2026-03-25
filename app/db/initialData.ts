@@ -376,34 +376,6 @@ export const initialContentTypes: ContentType[] = [
 			// Content group
 			{ id: "mainOutline", name: "Main", displayName: "Main Content", type: "outline", groupName: "Content", order: 1 },
 
-			// Content Settings group
-			{
-				id: "campaignMode",
-				name: "Campaign Mode",
-				displayName: "Campaign Mode",
-				type: "SelectOne",
-				groupName: "Content Settings",
-				order: 1,
-				options: [
-					{ label: "No", value: "no" },
-					{ label: "Yes", value: "yes" }
-				],
-				defaultValue: "no"
-			},
-			{
-				id: "someOtherSetting",
-				name: "Some Other Setting",
-				displayName: "Some Other Setting",
-				type: "SelectOne",
-				groupName: "Content Settings",
-				order: 2,
-				options: [
-					{ label: "Setting 1", value: "setting1" },
-					{ label: "Setting 2", value: "setting2" }
-				],
-				defaultValue: "setting1"
-			},
-
 			// GEO & SEO group
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 
