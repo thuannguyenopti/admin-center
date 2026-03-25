@@ -2854,21 +2854,159 @@ export default function OpalStudioPrototypePage() {
 
 	return (
 		<div style={{
+			position: "absolute",
+			top: 0,
+			left: 0,
+			bottom: 0,
+			right: opalPanelWidth > 0 ? opalPanelWidth : 0,
 			display: "flex",
 			flexDirection: "column",
-			height: "100%",
-			width: opalPanelWidth > 0 ? `calc(100% - ${opalPanelWidth}px)` : "100%",
+			background: "var(--ax-colors-bg-page, #f8f9fb)",
 		}}>
-			<AdvancedCanvasWorkspace
-				prompt={canvasPrompt}
-				selectedDraft={canvasDraft}
-				saveState={saveState}
-				onCloseAdvanced={() => {
-					setCreateStage("panel");
-					setGenerated(false);
-					setProduced(false);
-				}}
-			/>
+			{/* Top Bar */}
+			<div style={{
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "space-between",
+				padding: "12px 24px",
+				borderBottom: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+				background: "var(--ax-colors-bg-default, #fff)",
+				minHeight: 56,
+				flexShrink: 0,
+			}}>
+				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+					<div style={{
+						display: "inline-flex",
+						gap: 4,
+						padding: 4,
+						background: "var(--ax-colors-bg-secondary, #f3f4f6)",
+						borderRadius: 999,
+					}}>
+						<button type="button" style={{
+							background: "var(--ax-colors-bg-default, #fff)",
+							border: 0, borderRadius: 999, cursor: "pointer",
+							fontSize: 14, fontWeight: 600, height: 36, padding: "0 16px",
+							color: "var(--ax-colors-fg-default, #111)",
+						}}>Generate</button>
+						<button type="button" style={{
+							background: "transparent",
+							border: 0, borderRadius: 999, cursor: "pointer",
+							fontSize: 14, fontWeight: 500, height: 36, padding: "0 16px",
+							color: "var(--ax-colors-fg-secondary, #6b7280)",
+						}}>Edit</button>
+					</div>
+				</div>
+				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+					<span style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)" }}>
+						{saveState === "saved" ? "Changes saved" : "Saving..."}
+					</span>
+					<AxiomButton appearance="default" size="sm" icon={<IconCopy size={16} />} aria-label="Copy" />
+					<AxiomButton appearance="primary" size="sm" icon={<IconChevronDown size={14} />}>Add to</AxiomButton>
+				</div>
+			</div>
+
+			{/* Main Content Area */}
+			<div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
+				{/* Canvas */}
+				<div style={{ flex: 1, padding: 32, overflow: "auto", background: "var(--ax-colors-bg-page, #f8f9fb)" }}>
+					{canvasDraft?.image ? (
+						<>
+							<div style={{ marginBottom: 20 }}>
+								<h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 8px" }}>{canvasDraft.title}</h2>
+								<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #6b7280)", margin: 0 }}>{canvasPrompt}</p>
+							</div>
+							<div style={{
+								background: "var(--ax-colors-bg-default, #fff)",
+								border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+								borderRadius: 16, padding: 24, textAlign: "center" as const,
+							}}>
+								<img src={canvasDraft.image} alt={canvasDraft.title} style={{
+									maxWidth: "100%", maxHeight: "calc(100vh - 300px)",
+									borderRadius: 12, objectFit: "contain" as const,
+								}} />
+							</div>
+							<div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+								<AxiomButton appearance="default" size="sm" icon={<IconWand size={16} />}>Regenerate</AxiomButton>
+								<AxiomButton appearance="primary" size="sm" icon={<IconCheck size={16} />}>Generate Pack</AxiomButton>
+							</div>
+						</>
+					) : (
+						<div style={{
+							display: "flex", flexDirection: "column" as const, alignItems: "center",
+							justifyContent: "center", height: "100%", textAlign: "center" as const,
+							border: "2px dashed var(--ax-colors-border-tertiary, #e5e7eb)", borderRadius: 16,
+						}}>
+							<IconSparkles size={48} style={{ color: "var(--ax-colors-fg-accent, #7c3aed)", marginBottom: 16 }} />
+							<h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>Start Generating with Opal</h2>
+							<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #6b7280)", maxWidth: 400 }}>
+								Use the Opal chat to describe what you want to create, then open the advanced editor.
+							</p>
+						</div>
+					)}
+				</div>
+
+				{/* Settings Sidebar */}
+				<div style={{
+					width: 340, flexShrink: 0, borderLeft: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+					background: "var(--ax-colors-bg-default, #fff)", overflow: "auto", padding: 20,
+				}}>
+					<h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 20px" }}>Settings</h3>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Intent</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{intentOptions.map(o => <option key={o}>{o}</option>)}
+						</select>
+						<p style={{ fontSize: 12, color: "var(--ax-colors-fg-secondary, #6b7280)", marginTop: 6 }}>Determines AI skills and output style</p>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Aspect Ratio</label>
+						<div style={{ display: "flex", gap: 4, background: "var(--ax-colors-bg-secondary, #f3f4f6)", borderRadius: 999, padding: 4, width: "fit-content" }}>
+							{aspectRatios.map(r => (
+								<button key={r} type="button" style={{
+									background: r === aspectRatio ? "var(--ax-colors-bg-default, #fff)" : "transparent",
+									border: 0, borderRadius: 999, cursor: "pointer", fontSize: 13,
+									fontWeight: r === aspectRatio ? 600 : 400, height: 32, padding: "0 12px",
+								}} onClick={() => setAspectRatio(r)}>{r}</button>
+							))}
+						</div>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Channel Pack</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{channelPacks.map(o => <option key={o}>{o}</option>)}
+						</select>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Theme Package</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{themePacks.map(o => <option key={o}>{o}</option>)}
+						</select>
+					</div>
+
+					<div style={{ marginBottom: 20 }}>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Brand Pack</label>
+						<select style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #d1d5db)", padding: "0 12px", fontSize: 14 }}>
+							{brandPacks.map(o => <option key={o}>{o}</option>)}
+						</select>
+					</div>
+
+					<div>
+						<label style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em", color: "var(--ax-colors-fg-secondary, #6b7280)", display: "block", marginBottom: 8 }}>Reference Images</label>
+						<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+							{referenceAssets.slice(0, 4).map(a => (
+								<div key={a.id} style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)" }}>
+									<img src={a.image} alt={a.title} style={{ width: "100%", height: 72, objectFit: "cover" as const, display: "block" }} />
+									<div style={{ padding: "6px 8px", fontSize: 11, fontWeight: 600 }}>{a.title}</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	);
 }
