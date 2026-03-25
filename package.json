@@ -5,7 +5,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "next build --webpack",
+		"validate": "npx tsx scripts/validate-initial-data.ts",
+		"build": "npm run validate && next build --webpack",
 		"start": "next start",
 		"lint": "next lint",
 		"install:auth": "npx dotenv-cli -e .env -- npm install"

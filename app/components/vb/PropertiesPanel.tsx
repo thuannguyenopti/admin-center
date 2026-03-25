@@ -413,7 +413,10 @@ export default function PropertiesPanel({
 			const referencedTypeId = prop.allowedTypes[0];
 			const referencedType = initialContentTypes.find(ct => ct.id === referencedTypeId);
 
-			if (referencedType && referencedType.baseType === "Block" && typeof propValue === "object" && propValue !== null) {
+			// Always render Block types as inline Cards, even if data doesn't exist yet
+			if (referencedType && referencedType.baseType === "Block") {
+				// Ensure propValue is an object (initialize if undefined)
+				const blockData = (typeof propValue === "object" && propValue !== null) ? propValue : {};
 				// This is a local block - render its properties inline
 				const blockProperties = referencedType.properties || [];
 
@@ -450,7 +453,7 @@ export default function PropertiesPanel({
 												</>
 											)}
 											{blockGroups[groupName].map((blockProp) => {
-												const blockPropValue = propValue[blockProp.id];
+												const blockPropValue = blockData[blockProp.id];
 
 												// Render different field types for block properties
 												if (blockProp.type === "String" || blockProp.type === "text") {
@@ -465,7 +468,7 @@ export default function PropertiesPanel({
 																onChange={(e: any) => {
 																	onChange({
 																		[prop.id]: {
-																			...propValue,
+																			...blockData,
 																			[blockProp.id]: e.target.value
 																		}
 																	});
@@ -486,7 +489,7 @@ export default function PropertiesPanel({
 																onChange={(e: any) => {
 																	onChange({
 																		[prop.id]: {
-																			...propValue,
+																			...blockData,
 																			[blockProp.id]: e.target.value
 																		}
 																	});
@@ -507,7 +510,7 @@ export default function PropertiesPanel({
 																onChange={(e: any) => {
 																	onChange({
 																		[prop.id]: {
-																			...propValue,
+																			...blockData,
 																			[blockProp.id]: e.target.value
 																		}
 																	});
@@ -530,7 +533,7 @@ export default function PropertiesPanel({
 															onChange={(e: any) => {
 																onChange({
 																	[prop.id]: {
-																		...propValue,
+																		...blockData,
 																		[blockProp.id]: e.target.value
 																	}
 																});
