@@ -206,7 +206,8 @@ function SpecializedAgentSetupContent() {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
         setIsMounted(true);
-        if (!localStorage.getItem("opal_coach_mark_dismissed")) {
+        // Only show coach mark if panel is closed and user hasn't dismissed it
+        if (!localStorage.getItem("opal_coach_mark_dismissed") && !showGuidePanel) {
             setShowCoachMark(true);
         }
     }, []);
@@ -294,7 +295,7 @@ function SpecializedAgentSetupContent() {
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
 
     // Assistant panel
-    const [showGuidePanel, setShowGuidePanel] = useState(true);
+    const [showGuidePanel, setShowGuidePanel] = useState(false);
     const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">("assistant");
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const [highlightedField, setHighlightedField] = useState<number | null>(null);
@@ -1030,12 +1031,12 @@ function SpecializedAgentSetupContent() {
                                                                                 {/* Left-pointing arrow via rotated square */}
                                                                                 <Box style={{ position: "absolute", left: "-4px", top: "50%", transform: "translateY(-50%) rotate(45deg)", width: "6px", height: "6px", background: "var(--ax-colors-bg-default)", borderLeft: "1px solid var(--ax-colors-border-secondary)", borderBottom: "1px solid var(--ax-colors-border-secondary)" }} />
                                                                                 <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", color: "var(--ax-colors-fg-default)", lineHeight: 1.5, whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                                                                                    Learn how to build your first conversational agent.{" "}
+                                                                                    Get step-by-step help building your first agent.{" "}
                                                                                     <button
-                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
+                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
                                                                                         style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textDecoration: "underline" }}
                                                                                     >
-                                                                                        View guide
+                                                                                        Open Setup Assistant
                                                                                     </button>
                                                                                 </Box>
                                                                             </Box>
