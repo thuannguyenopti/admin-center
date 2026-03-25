@@ -290,6 +290,14 @@ export type ContentType = {
 	variantDimensions?: VariantDimension[];
 	modifiedAt?: string;
 	modifiedBy?: string;
+	// CMP-specific optional fields (for unified CMP/CMS content types)
+	source?: "cmp" | "cms"; // Track origin system
+	apiIdentifier?: string; // CMP: External API identifier for programmatic access
+	version?: string; // CMP: Version tracking (e.g., "_v1")
+	defaultLocale?: string; // CMP: Default language locale (e.g., "en-US")
+	modelType?: "component" | "content"; // CMP: Classification as component or content type
+	coverImage?: string; // CMP: Cover image URL for visual representation
+	isActive?: boolean; // CMP: Active/inactive status
 };
 
 export const initialContentTypes: ContentType[] = [
@@ -593,6 +601,129 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "twitterDescription", name: "TwitterDescription", displayName: "Twitter Description", type: "LongString", groupName: "Social", order: 5 },
 			{ id: "twitterImage", name: "TwitterImage", displayName: "Twitter Image", type: "ImageReference", groupName: "Social", order: 6 },
 		],
+	},
+	// CMP Content Models (migrated to unified repository)
+	{
+		id: "cm-blog-post",
+		name: "blog_post",
+		displayName: "Blog Post",
+		baseType: "Page",
+		description: "A standard blog post with title, author, content, and metadata",
+		properties: [
+			{ id: "field-bp-title", name: "title", displayName: "Title", type: "String", required: true, cultureSpecific: true, description: "The main title of the blog post" },
+			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Name of the blog post author" },
+			{ id: "field-bp-publish-date", name: "publish_date", displayName: "Publish Date", type: "DateTime", required: true, description: "When the post should be published" },
+			{ id: "field-bp-excerpt", name: "excerpt", displayName: "Excerpt", type: "LongString", cultureSpecific: true, description: "Short summary for previews and SEO" },
+			{ id: "field-bp-content", name: "content", displayName: "Content", type: "XhtmlString", required: true, cultureSpecific: true, description: "The main blog post content" },
+			{ id: "field-bp-featured-image", name: "featured_image", displayName: "Featured Image", type: "ImageReference", description: "Main image for the blog post" },
+			{ id: "field-bp-tags", name: "tags", displayName: "Tags", type: "String", description: "Tags for categorizing the post" },
+			{ id: "field-bp-seo-keywords", name: "seo_keywords", displayName: "SEO Keywords", type: "String", cultureSpecific: true, description: "Keywords for search engine optimization" },
+		],
+		modifiedAt: new Date("2024-03-20T10:00:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "blog_post",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "content",
+		isActive: true,
+	},
+	{
+		id: "cm-article",
+		name: "article",
+		displayName: "Article",
+		baseType: "Page",
+		description: "Long-form editorial content with sections and rich media",
+		properties: [
+			{ id: "field-art-headline", name: "headline", displayName: "Headline", type: "String", required: true, cultureSpecific: true, description: "Main article headline" },
+			{ id: "field-art-subheadline", name: "subheadline", displayName: "Subheadline", type: "String", cultureSpecific: true, description: "Supporting headline text" },
+			{ id: "field-art-byline", name: "byline", displayName: "Byline", type: "String", required: true, description: "Author and publication information" },
+			{ id: "field-art-body", name: "body", displayName: "Body", type: "XhtmlString", required: true, cultureSpecific: true, description: "Main article content" },
+			{ id: "field-art-hero-image", name: "hero_image", displayName: "Hero Image", type: "ImageReference", description: "Large header image" },
+			{ id: "field-art-related-articles", name: "related_articles", displayName: "Related Articles", type: "ContentReference", description: "Links to related content" },
+		],
+		modifiedAt: new Date("2024-03-20T10:30:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "article",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "content",
+		isActive: true,
+	},
+	{
+		id: "cm-banner",
+		name: "banner",
+		displayName: "Banner",
+		baseType: "Block",
+		description: "Promotional banner for campaigns and announcements",
+		properties: [
+			{ id: "field-ban-message", name: "message", displayName: "Message", type: "String", required: true, cultureSpecific: true, description: "Banner message text" },
+			{ id: "field-ban-cta-text", name: "cta_text", displayName: "CTA Text", type: "String", cultureSpecific: true, description: "Call-to-action button text" },
+			{ id: "field-ban-cta-link", name: "cta_link", displayName: "CTA Link", type: "Url", description: "Call-to-action destination URL" },
+			{ id: "field-ban-background-image", name: "background_image", displayName: "Background Image", type: "ImageReference", description: "Optional background image" },
+			{ id: "field-ban-dismissible", name: "dismissible", displayName: "Dismissible", type: "Boolean", description: "Allow users to dismiss the banner" },
+			{ id: "field-ban-display-duration", name: "display_duration", displayName: "Display Duration", type: "Int", description: "How long to show banner (in days)" },
+		],
+		modifiedAt: new Date("2024-03-20T11:00:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "banner",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "component",
+		isActive: true,
+	},
+	{
+		id: "cm-hero-component",
+		name: "hero_component",
+		displayName: "Hero Component",
+		baseType: "Block",
+		description: "Large hero section with image, headline, and call-to-action",
+		properties: [
+			{ id: "field-hero-headline", name: "headline", displayName: "Headline", type: "String", required: true, cultureSpecific: true, description: "Main hero headline" },
+			{ id: "field-hero-subheadline", name: "subheadline", displayName: "Subheadline", type: "String", cultureSpecific: true, description: "Supporting text below headline" },
+			{ id: "field-hero-description", name: "description", displayName: "Description", type: "LongString", cultureSpecific: true, description: "Detailed description text" },
+			{ id: "field-hero-background", name: "background_image", displayName: "Background Image", type: "ImageReference", required: true, description: "Large background image" },
+			{ id: "field-hero-primary-cta", name: "primary_cta_text", displayName: "Primary CTA Text", type: "String", cultureSpecific: true, description: "Primary button text" },
+			{ id: "field-hero-primary-link", name: "primary_cta_link", displayName: "Primary CTA Link", type: "Url", description: "Primary button destination" },
+			{ id: "field-hero-secondary-cta", name: "secondary_cta_text", displayName: "Secondary CTA Text", type: "String", cultureSpecific: true, description: "Secondary button text" },
+			{ id: "field-hero-secondary-link", name: "secondary_cta_link", displayName: "Secondary CTA Link", type: "Url", description: "Secondary button destination" },
+		],
+		modifiedAt: new Date("2024-03-20T11:30:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "hero_component",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "component",
+		isActive: true,
+	},
+	{
+		id: "cm-email",
+		name: "email",
+		displayName: "Email",
+		baseType: "Media",
+		description: "Email template for marketing campaigns",
+		properties: [
+			{ id: "field-email-subject", name: "subject_line", displayName: "Subject Line", type: "String", required: true, cultureSpecific: true, description: "Email subject line" },
+			{ id: "field-email-preheader", name: "preheader", displayName: "Preheader Text", type: "String", cultureSpecific: true, description: "Preview text shown in inbox" },
+			{ id: "field-email-from-name", name: "from_name", displayName: "From Name", type: "String", required: true, description: "Sender name" },
+			{ id: "field-email-from-address", name: "from_address", displayName: "From Address", type: "String", required: true, description: "Sender email address" },
+			{ id: "field-email-body", name: "body", displayName: "Email Body", type: "XhtmlString", required: true, cultureSpecific: true, description: "Main email content (HTML)" },
+			{ id: "field-email-cta", name: "cta_text", displayName: "CTA Text", type: "String", cultureSpecific: true, description: "Call-to-action button text" },
+			{ id: "field-email-cta-link", name: "cta_link", displayName: "CTA Link", type: "Url", description: "Call-to-action destination" },
+			{ id: "field-email-footer", name: "footer_text", displayName: "Footer Text", type: "LongString", cultureSpecific: true, description: "Email footer content" },
+			{ id: "field-email-unsubscribe", name: "unsubscribe_link", displayName: "Unsubscribe Link", type: "Url", required: true, description: "Unsubscribe page URL" },
+		],
+		modifiedAt: new Date("2024-03-20T12:00:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "email",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "content",
+		isActive: true,
 	},
 ];
 
