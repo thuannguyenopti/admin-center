@@ -82,7 +82,7 @@ export default function ContentModelsPage() {
 			const searchLower = search.toLowerCase();
 			const matchesSearch =
 				!search ||
-				model.displayName.toLowerCase().includes(searchLower) ||
+				(model.displayName?.toLowerCase().includes(searchLower) ?? false) ||
 				model.name.toLowerCase().includes(searchLower);
 
 			const matchesActive = showInactive || model.isActive !== false;
@@ -102,9 +102,9 @@ export default function ContentModelsPage() {
 
 		// Sort models
 		if (sortBy === "title") {
-			models.sort((a, b) => a.displayName.localeCompare(b.displayName));
+			models.sort((a, b) => (a.displayName || a.name).localeCompare(b.displayName || b.name));
 		} else if (sortBy === "modified") {
-			models.sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime());
+			models.sort((a, b) => new Date(b.modifiedAt || 0).getTime() - new Date(a.modifiedAt || 0).getTime());
 		}
 
 		return models;
@@ -237,7 +237,7 @@ export default function ContentModelsPage() {
 														<Td>
 															<Badge intent="neutral">{model.baseType}</Badge>
 														</Td>
-														<Td>{new Date(model.modifiedAt).toLocaleDateString()}</Td>
+														<Td>{new Date(model.modifiedAt || 0).toLocaleDateString()}</Td>
 														<Td>{model.modifiedBy}</Td>
 														<Td>
 															<Badge intent={model.isActive !== false ? "success" : "neutral"}>
@@ -323,7 +323,7 @@ export default function ContentModelsPage() {
 													<Td>
 														<Badge intent="neutral">{model.baseType}</Badge>
 													</Td>
-													<Td>{new Date(model.modifiedAt).toLocaleDateString()}</Td>
+													<Td>{new Date(model.modifiedAt || 0).toLocaleDateString()}</Td>
 													<Td>{model.modifiedBy}</Td>
 													<Td>
 														<Badge intent={model.isActive !== false ? "success" : "neutral"}>
@@ -400,7 +400,7 @@ export default function ContentModelsPage() {
 													<Td>
 														<Badge intent="neutral">{model.baseType}</Badge>
 													</Td>
-													<Td>{new Date(model.modifiedAt).toLocaleDateString()}</Td>
+													<Td>{new Date(model.modifiedAt || 0).toLocaleDateString()}</Td>
 													<Td>{model.modifiedBy}</Td>
 													<Td>
 														<Badge intent={model.isActive !== false ? "success" : "neutral"}>

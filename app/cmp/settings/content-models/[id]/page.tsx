@@ -97,7 +97,7 @@ export default function ContentModelDetailPage() {
 
 	useEffect(() => {
 		if (contentModel) {
-			setDisplayName(contentModel.displayName);
+			setDisplayName(contentModel.displayName || contentModel.name);
 			setApiIdentifier(contentModel.apiIdentifier || contentModel.name);
 			setVersion(contentModel.version || "_v1");
 			setDescription(contentModel.description || "");
@@ -190,7 +190,7 @@ export default function ContentModelDetailPage() {
 					mb="16"
 					items={[
 						{ href: "/cmp/settings/content-models", label: "Templates" },
-						{ label: contentModel.displayName },
+						{ label: contentModel.displayName || contentModel.name },
 					]}
 				/>
 

@@ -215,6 +215,7 @@ export type PropertyType =
 	| "VideoReference"
 	| "SelectOne"
 	| "SelectMany"
+	| "Guid"
 	// Legacy types for backwards compatibility
 	| "text"
 	| "textarea"
@@ -242,6 +243,8 @@ export type Property = {
 	of?: string;
 	/** For reference types - allowed content types */
 	allowedTypes?: string[];
+	/** For reference types - restricted/excluded content types */
+	restrictedTypes?: string[];
 	/** For selection types */
 	options?: { label: string; value: string }[];
 	/** Validation rules */
@@ -264,10 +267,44 @@ export type MediaType = "Image" | "Video" | "Audio" | "Documents" | "Archives" |
 
 export type CompositionDisplayAs = "Section" | "Element" | "FormElement";
 
-export type ContentType = {
+export type MappingTransformationType =
+	| "direct"          // Direct 1:1 mapping
+	| "concat"          // Concatenate multiple fields
+	| "default";        // Use default value if source is empty
+
+export type PropertyMapping = {
+	id: string;
+	sourcePropertyId: string;       // Property ID from source
+	targetPropertyId: string;       // Property ID from target
+	transformation: MappingTransformationType;
+	transformationConfig?: {
+		// For concat
+		separator?: string;
+		sourcePropertyIds?: string[];
+
+		// For default
+		defaultValue?: any;
+	};
+	required?: boolean;
+	description?: string;
+};
+
+export type ContentTypeMapping = {
 	id: string;
 	name: string;
 	displayName?: string;
+	description?: string;
+	sourceContentTypeId: string;    // Content type being mapped FROM
+	targetContentTypeId: string;    // Content type being mapped TO
+	propertyMappings: PropertyMapping[];
+	createdAt: string;
+	modifiedAt?: string;
+};
+
+export type ContentType = {
+	id: string;
+	name: string;
+	displayName: string;
 	baseType: "Page" | "Experience" | "Media" | "Product" | "Block" | "Section";
 	mediaType?: MediaType;
 	description?: string;
@@ -298,6 +335,8 @@ export type ContentType = {
 	modelType?: "component" | "content"; // CMP: Classification as component or content type
 	coverImage?: string; // CMP: Cover image URL for visual representation
 	isActive?: boolean; // CMP: Active/inactive status
+	// Content type mappings
+	mappings?: ContentTypeMapping[]; // Mappings defined for this content type
 };
 
 export const initialContentTypes: ContentType[] = [
@@ -380,6 +419,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-blog-post",
 		name: "Blog Post",
+		displayName: "Blog Post",
 		baseType: "Page",
 		description: "A standard blog/article page",
 		availableContentTypes: { availability: "None" }, // Blog posts don't allow any children
@@ -413,6 +453,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-about-page",
 		name: "About Page",
+		displayName: "About Page",
 		baseType: "Page",
 		description: "Company about page",
 		properties: [
@@ -426,6 +467,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "exp-landing-page",
 		name: "Landing Page",
+		displayName: "Landing Page",
 		baseType: "Experience",
 		description: "Landing page experience with main and aside outlines",
 		properties: [
@@ -441,6 +483,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-product",
 		name: "Product",
+		displayName: "Product",
 		baseType: "Product",
 		description: "A standard product",
 		properties: [
@@ -456,6 +499,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-block",
 		name: "Block",
+		displayName: "Block",
 		baseType: "Block",
 		description: "A reusable content block",
 		properties: [{ id: "title", name: "Title", type: "text", required: true }],
@@ -463,6 +507,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-image",
 		name: "Image",
+		displayName: "Image",
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
@@ -480,6 +525,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-heading",
 		name: "Heading",
+		displayName: "Heading",
 		baseType: "Block",
 		description: "A heading block",
 		properties: [
@@ -520,6 +566,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-text",
 		name: "Text",
+		displayName: "Text",
 		baseType: "Block",
 		description: "A text block",
 		properties: [
@@ -542,6 +589,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-rich-text",
 		name: "Rich Text",
+		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
 		properties: [{ id: "richtext", name: "Rich Text", type: "richtext", required: true }],
@@ -549,6 +597,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-button",
 		name: "Button",
+		displayName: "Button",
 		baseType: "Block",
 		description: "A button block",
 		properties: [
@@ -572,6 +621,7 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-input",
 		name: "Input",
+		displayName: "Input",
 		baseType: "Block",
 		description: "An input block",
 		properties: [
@@ -790,6 +840,15 @@ export type Page = {
 	tags?: string[];
 	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
 	categories?: string[];
+	/** CMP connection metadata - tracks connection to CMP content instance */
+	cmpConnection?: {
+		instanceId: string; // ID of connected CMP content instance
+		modelId: string; // CMP model/content type ID
+		mappingId?: string; // Optional: specific mapping to use
+		syncStatus: "synced" | "out-of-sync" | "manual-override";
+		lastSyncedAt?: string;
+		syncMode: "auto" | "manual"; // Auto-sync on CMP changes or manual only
+	};
 };
 
 export type Application = {
