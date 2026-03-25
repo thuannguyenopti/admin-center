@@ -21,22 +21,11 @@ import {
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { ContentType } from "@/app/db/initialData";
+import { ContentType, initialContentTypes } from "@/app/db/initialData";
 import { useRouter, useSearchParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
-import { initialCmpContentModels } from "@/app/db/cmpInitialData";
-
-type CmpContentModel = {
-	id: string;
-	name: string;
-	displayName: string;
-	baseType: ContentType["baseType"];
-	description?: string;
-	properties: any[];
-	modifiedAt: string;
-	modifiedBy: string;
-	isActive?: boolean;
-};
+import { performMigration, isCmpType } from "@/app/lib/contentTypeMigration";
+import { useEffect } from "react";
 
 
 function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
@@ -69,14 +58,27 @@ export default function ContentModelsPage() {
 	const [primaryTab, setPrimaryTab] = useState("content-model");
 	const [secondaryTab, setSecondaryTab] = useState("all");
 
-	// Persistent content models
-	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", initialCmpContentModels) as [
-		CmpContentModel[],
-		(value: CmpContentModel[]) => void,
+	// Persistent content types (unified CMP and CMS repository)
+	const [contentTypes, setContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
 	];
 
+	// Run migration on first load
+	useEffect(() => {
+		const migratedTypes = performMigration(contentTypes);
+		if (migratedTypes) {
+			setContentTypes(migratedTypes);
+		}
+	}, []); // Only run once on mount
+
+	// Filter to CMP content models only
+	const cmpContentModels = useMemo(() => {
+		return contentTypes.filter((ct) => isCmpType(ct));
+	}, [contentTypes]);
+
 	const filteredContentModels = useMemo(() => {
-		let models = cmpContentModels.filter((model: CmpContentModel) => {
+		let models = cmpContentModels.filter((model: ContentType) => {
 			const searchLower = search.toLowerCase();
 			const matchesSearch =
 				!search ||
@@ -226,7 +228,7 @@ export default function ContentModelsPage() {
 												</tr>
 											</thead>
 											<tbody>
-												{filteredContentModels.map((model: CmpContentModel) => (
+												{filteredContentModels.map((model: ContentType) => (
 													<Tr
 														key={model.id}
 														url={`/cmp/settings/content-models/${model.id}`}
@@ -312,7 +314,7 @@ export default function ContentModelsPage() {
 											</tr>
 										</thead>
 										<tbody>
-											{filteredContentModels.map((model: CmpContentModel) => (
+											{filteredContentModels.map((model: ContentType) => (
 												<Tr
 													key={model.id}
 													url={`/cmp/settings/content-models/${model.id}`}
@@ -389,7 +391,7 @@ export default function ContentModelsPage() {
 											</tr>
 										</thead>
 										<tbody>
-											{filteredContentModels.map((model: CmpContentModel) => (
+											{filteredContentModels.map((model: ContentType) => (
 												<Tr
 													key={model.id}
 													url={`/cmp/settings/content-models/${model.id}`}
