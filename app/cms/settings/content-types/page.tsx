@@ -24,6 +24,8 @@ import {
 	Textarea,
 	Separator,
 	Link,
+	Switch,
+	Badge,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -86,6 +88,7 @@ export default function ContentTypesSettings() {
 	const [search, setSearch] = useState("");
 	const [typeFilter, setTypeFilter] = useState<string | null>(null);
 	const [accessFilter, setAccessFilter] = useState<string | null>(null);
+	const [showCmpModels, setShowCmpModels] = useState(false);
 
 	// Dialog state
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -138,6 +141,9 @@ export default function ContentTypesSettings() {
 
 	const filtered = useMemo(() => {
 		return contentTypes.filter((ct) => {
+			// Filter out CMP models by default unless showCmpModels is true
+			if (!showCmpModels && ct.source === "cmp") return false;
+
 			if (search && !ct.name.toLowerCase().includes(search.toLowerCase())) return false;
 			if (typeFilter) {
 				if (ct.baseType !== typeFilter) return false;
@@ -147,7 +153,7 @@ export default function ContentTypesSettings() {
 			}
 			return true;
 		});
-	}, [contentTypes, search, typeFilter, accessFilter]);
+	}, [contentTypes, search, typeFilter, accessFilter, showCmpModels]);
 
 	const handleRowClick = (contentType: ContentType) => {
 		router.push(`/cms/settings/content-types/${contentType.id}/properties`);
@@ -216,6 +222,12 @@ export default function ContentTypesSettings() {
 					<MenuContent />
 				</Menu>
 
+				{/* CMP Models Toggle */}
+				<Box display="flex" alignItems="center" gap="8" px="12" py="8" bg="bg.default" border="1" borderColor="border.default" rounded="md">
+					<Switch checked={showCmpModels} onCheckedChange={setShowCmpModels} />
+					<Text fontSize="sm">Show CMP Models</Text>
+				</Box>
+
 				<Box flex="1" />
 
 				{/* Create Content Type Dropdown */}
@@ -271,7 +283,14 @@ export default function ContentTypesSettings() {
 								onClick={() => handleRowClick(ct)}
 								style={{ cursor: "pointer" }}
 							>
-								<Td type="header">{ct.displayName || ct.name}</Td>
+								<Td type="header">
+									<Box display="flex" alignItems="center" gap="8">
+										{ct.displayName || ct.name}
+										{ct.source === "cmp" && (
+											<Badge intent="neutral" variant="subtle">CMP</Badge>
+										)}
+									</Box>
+								</Td>
 								<Td>{ct.baseType}</Td>
 								<Td>{ct.modifiedAt ? new Date(ct.modifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 13, 2024"}</Td>
 								<Td>Everyone</Td>
