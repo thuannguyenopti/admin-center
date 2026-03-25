@@ -19,7 +19,9 @@ import {
 import { Text } from "@/app/components/Text";
 import { IconX } from "@tabler/icons-react";
 import { Property, PropertyType } from "@/app/db/initialData";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import usePersistentState from "@/app/usePersistentState";
+import type { PropertyGroup } from "@/app/cms/settings/edit-tabs/page";
 
 interface ConfigurePropertyPaneProps {
 	property: Property;
@@ -133,6 +135,49 @@ export default function ConfigurePropertyPane({
 	onSave,
 	isNew = false,
 }: ConfigurePropertyPaneProps) {
+	// Load property groups from settings
+	const initialPropertyGroups: PropertyGroup[] = [
+		{
+			id: "content-settings",
+			name: "ContentSettings",
+			displayName: "Content Settings",
+			sortIndex: 10,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+		{
+			id: "geo-seo",
+			name: "GeoSeo",
+			displayName: "GEO & SEO",
+			sortIndex: 20,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+		{
+			id: "categories-tags",
+			name: "CategoriesTags",
+			displayName: "Categories & Tags",
+			sortIndex: 30,
+			accessLevel: "Read",
+			fromCode: false,
+		},
+	];
+
+	const [propertyGroups] = usePersistentState(
+		"propertyGroups",
+		initialPropertyGroups
+	) as [PropertyGroup[], (value: PropertyGroup[]) => void];
+
+	// Convert property groups to select options
+	const propertyGroupOptions = useMemo(() => {
+		return [...propertyGroups]
+			.sort((a, b) => a.sortIndex - b.sortIndex)
+			.map((group) => ({
+				value: group.displayName,
+				label: group.displayName,
+			}));
+	}, [propertyGroups]);
+
 	const normalizedType = normalizeType(property.type);
 	const [displayName, setDisplayName] = useState(property.displayName || property.name);
 	const [systemName, setSystemName] = useState(property.name);
@@ -149,6 +194,7 @@ export default function ConfigurePropertyPane({
 	const [defaultValueType, setDefaultValueType] = useState<string>(
 		property.defaultValue !== undefined ? "custom" : "none"
 	);
+	const [groupName, setGroupName] = useState(property.groupName || (propertyGroupOptions.length > 0 ? propertyGroupOptions[0].value : "Other"));
 
 	// Reset state when property changes
 	useEffect(() => {
@@ -166,7 +212,8 @@ export default function ConfigurePropertyPane({
 		setMaxLength(property.validation?.maxLength?.toString() || "");
 		setPattern(property.validation?.pattern || "");
 		setDefaultValueType(property.defaultValue !== undefined ? "custom" : "none");
-	}, [property]);
+		setGroupName(property.groupName || (propertyGroupOptions.length > 0 ? propertyGroupOptions[0].value : "Other"));
+	}, [property, propertyGroupOptions]);
 
 	// When category changes, reset to first sub-type of that category
 	const handleCategoryChange = (category: TypeCategory) => {
@@ -189,6 +236,7 @@ export default function ConfigurePropertyPane({
 				searchable,
 				cultureSpecific,
 				description,
+				groupName,
 				validation: maxLength || pattern ? {
 					...(maxLength ? { maxLength: parseInt(maxLength, 10) } : {}),
 					...(pattern ? { pattern } : {}),
@@ -408,17 +456,12 @@ export default function ConfigurePropertyPane({
 
 				<Field label="Property Group" mb="16">
 					<Select
-						value={property.groupName || "Content"}
-						options={[
-							{ value: "Content", label: "Content" },
-							{ value: "Settings", label: "Settings" },
-							{ value: "SEO", label: "SEO" },
-							{ value: "Social", label: "Social" },
-							{ value: "Basic", label: "Basic" },
-						]}
+						value={groupName}
+						onValueChange={(value) => setGroupName(value)}
+						options={propertyGroupOptions}
 					>
 						<SelectTrigger w="full">
-							{property.groupName || "Content"}
+							{groupName}
 						</SelectTrigger>
 						<SelectContent />
 					</Select>
