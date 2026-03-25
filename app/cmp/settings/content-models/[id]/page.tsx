@@ -37,24 +37,7 @@ import {
 	IconImage,
 	IconGripVertical,
 } from "@/app/lib/axiom-icons";
-import { initialCmpContentModels } from "@/app/db/cmpInitialData";
-
-type CmpContentModel = {
-	id: string;
-	name: string;
-	displayName: string;
-	baseType: string;
-	description?: string;
-	properties: any[];
-	modifiedAt: string;
-	modifiedBy: string;
-	isActive?: boolean;
-	apiIdentifier?: string;
-	version?: string;
-	defaultLocale?: string;
-	modelType?: "component" | "content";
-	coverImage?: string;
-};
+import { ContentType, initialContentTypes } from "@/app/db/initialData";
 
 const LOCALE_OPTIONS = [
 	{ label: "English (US)", value: "en-US" },
@@ -94,12 +77,12 @@ export default function ContentModelDetailPage() {
 	const params = useParams();
 	const contentModelId = params.id as string;
 
-	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", initialCmpContentModels) as [
-		CmpContentModel[],
-		(value: CmpContentModel[]) => void,
+	const [contentTypes, setContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
 	];
 
-	const contentModel = cmpContentModels.find((model: CmpContentModel) => model.id === contentModelId);
+	const contentModel = contentTypes.find((model: ContentType) => model.id === contentModelId);
 
 	const [activeTab, setActiveTab] = useState("details");
 	const [displayName, setDisplayName] = useState("");
@@ -149,7 +132,7 @@ export default function ContentModelDetailPage() {
 	}, [isEditingTitle]);
 
 	const handleSave = () => {
-		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+		const updatedModels = contentTypes.map((model: ContentType) => {
 			if (model.id === contentModelId) {
 				return {
 					...model,
@@ -165,7 +148,7 @@ export default function ContentModelDetailPage() {
 			}
 			return model;
 		});
-		setCmpContentModels(updatedModels);
+		setContentTypes(updatedModels);
 	};
 
 	const handleAddField = () => {
@@ -389,7 +372,7 @@ export default function ContentModelDetailPage() {
 																<Input
 																	value={property.displayName || ""}
 																	onChange={(e) => {
-																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																		const updatedModels = contentTypes.map((model: ContentType) => {
 																			if (model.id === contentModelId) {
 																				const updatedProperties = [...model.properties];
 																				updatedProperties[index] = {
@@ -404,7 +387,7 @@ export default function ContentModelDetailPage() {
 																			}
 																			return model;
 																		});
-																		setCmpContentModels(updatedModels);
+																		setContentTypes(updatedModels);
 																	}}
 																/>
 															</Field>
@@ -412,7 +395,7 @@ export default function ContentModelDetailPage() {
 																<Input
 																	value={property.name || ""}
 																	onChange={(e) => {
-																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																		const updatedModels = contentTypes.map((model: ContentType) => {
 																			if (model.id === contentModelId) {
 																				const updatedProperties = [...model.properties];
 																				updatedProperties[index] = {
@@ -427,7 +410,7 @@ export default function ContentModelDetailPage() {
 																			}
 																			return model;
 																		});
-																		setCmpContentModels(updatedModels);
+																		setContentTypes(updatedModels);
 																	}}
 																/>
 															</Field>
@@ -435,7 +418,7 @@ export default function ContentModelDetailPage() {
 																<Textarea
 																	value={property.description || ""}
 																	onChange={(e) => {
-																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																		const updatedModels = contentTypes.map((model: ContentType) => {
 																			if (model.id === contentModelId) {
 																				const updatedProperties = [...model.properties];
 																				updatedProperties[index] = {
@@ -450,7 +433,7 @@ export default function ContentModelDetailPage() {
 																			}
 																			return model;
 																		});
-																		setCmpContentModels(updatedModels);
+																		setContentTypes(updatedModels);
 																	}}
 																	rows={3}
 																/>
@@ -459,7 +442,7 @@ export default function ContentModelDetailPage() {
 																<Switch
 																	checked={property.required || false}
 																	onCheckedChange={(checked) => {
-																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																		const updatedModels = contentTypes.map((model: ContentType) => {
 																			if (model.id === contentModelId) {
 																				const updatedProperties = [...model.properties];
 																				updatedProperties[index] = {
@@ -474,22 +457,22 @@ export default function ContentModelDetailPage() {
 																			}
 																			return model;
 																		});
-																		setCmpContentModels(updatedModels);
+																		setContentTypes(updatedModels);
 																	}}
 																/>
 																<Text fontSize="sm">Required</Text>
 															</Group>
 															<Group gap="16" alignItems="center">
 																<Switch
-																	checked={property.list || false}
+																	checked={(property as any).list || false}
 																	onCheckedChange={(checked) => {
-																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																		const updatedModels = contentTypes.map((model: ContentType) => {
 																			if (model.id === contentModelId) {
 																				const updatedProperties = [...model.properties];
 																				updatedProperties[index] = {
 																					...updatedProperties[index],
 																					list: checked,
-																				};
+																				} as any;
 																				return {
 																					...model,
 																					properties: updatedProperties,
@@ -498,21 +481,21 @@ export default function ContentModelDetailPage() {
 																			}
 																			return model;
 																		});
-																		setCmpContentModels(updatedModels);
+																		setContentTypes(updatedModels);
 																	}}
 																/>
 																<Text fontSize="sm">Allow multiple values</Text>
 															</Group>
 															<Group gap="16" alignItems="center">
 																<Switch
-																	checked={property.localized || false}
+																	checked={property.cultureSpecific || false}
 																	onCheckedChange={(checked) => {
-																		const updatedModels = cmpContentModels.map((model: CmpContentModel) => {
+																		const updatedModels = contentTypes.map((model: ContentType) => {
 																			if (model.id === contentModelId) {
 																				const updatedProperties = [...model.properties];
 																				updatedProperties[index] = {
 																					...updatedProperties[index],
-																					localized: checked,
+																					cultureSpecific: checked,
 																				};
 																				return {
 																					...model,
@@ -522,7 +505,7 @@ export default function ContentModelDetailPage() {
 																			}
 																			return model;
 																		});
-																		setCmpContentModels(updatedModels);
+																		setContentTypes(updatedModels);
 																	}}
 																/>
 																<Text fontSize="sm">Localized</Text>

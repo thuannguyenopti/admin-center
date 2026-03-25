@@ -43,24 +43,7 @@ import {
 	IconImage,
 	IconGripVertical,
 } from "@/app/lib/axiom-icons";
-import { ContentType } from "@/app/db/initialData";
-
-type CmpContentModel = {
-	id: string;
-	name: string;
-	displayName: string;
-	baseType: string;
-	description?: string;
-	properties: any[];
-	modifiedAt: string;
-	modifiedBy: string;
-	isActive?: boolean;
-	apiIdentifier?: string;
-	version?: string;
-	defaultLocale?: string;
-	modelType?: "component" | "content";
-	coverImage?: string;
-};
+import { ContentType, initialContentTypes } from "@/app/db/initialData";
 
 type BaseType = ContentType["baseType"];
 
@@ -115,9 +98,9 @@ const generateContentModelId = (): string => {
 export default function NewContentModelPage() {
 	const router = useRouter();
 
-	const [cmpContentModels, setCmpContentModels] = usePersistentState("cmpContentModels", []) as [
-		CmpContentModel[],
-		(value: CmpContentModel[]) => void,
+	const [contentTypes, setContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
 	];
 
 	const [activeTab, setActiveTab] = useState("details");
@@ -213,7 +196,7 @@ export default function NewContentModelPage() {
 			return;
 		}
 
-		const newContentModel: CmpContentModel = {
+		const newContentModel: ContentType = {
 			id: generateContentModelId(),
 			name: name || toSystemName(displayName),
 			displayName: displayName,
@@ -228,9 +211,10 @@ export default function NewContentModelPage() {
 			defaultLocale: defaultLocale,
 			modelType: modelType,
 			coverImage: coverImage,
+			source: "cmp", // Mark as CMP content model
 		};
 
-		setCmpContentModels([...cmpContentModels, newContentModel]);
+		setContentTypes([...contentTypes, newContentModel]);
 		router.push("/cmp/settings/content-models");
 	};
 

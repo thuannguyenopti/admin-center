@@ -33,7 +33,8 @@ import {
 import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
-import { initialCmpContentModels, type CmpContentModel } from "@/app/db/cmpInitialData";
+import { initialContentTypes, type ContentType } from "@/app/db/initialData";
+import { isCmpType } from "@/app/lib/contentTypeMigration";
 import usePersistentState from "@/app/usePersistentState";
 import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
@@ -986,7 +987,7 @@ export function CmpOpalAssetRecommendation() {
 		setScene("content");
 	};
 
-	const addContentInstanceFromModel = (model: CmpContentModel) => {
+	const addContentInstanceFromModel = (model: ContentType) => {
 		const instanceId = `ci-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 		// Initialize field values based on model properties
@@ -2843,13 +2844,16 @@ function ContentEmptyPage({
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
-	onAddContentFromModel: (model: CmpContentModel) => void;
+	onAddContentFromModel: (model: ContentType) => void;
 	onTabChange: (tab: string) => void;
 }) {
-	const [cmpContentModels] = usePersistentState("cmpContentModels", initialCmpContentModels) as [
-		CmpContentModel[],
-		(value: CmpContentModel[]) => void,
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
 	];
+
+	// Filter to CMP content models only
+	const cmpContentModels = contentTypes.filter(isCmpType);
 
 	return (
 		<Box pb="40" style={{ minHeight: "calc(100vh - 48px)", position: "relative" }}>
@@ -2959,7 +2963,7 @@ function ContentFilledPage({
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
-	onAddContentFromModel: (model: CmpContentModel) => void;
+	onAddContentFromModel: (model: ContentType) => void;
 	onOpenSuggested: () => void;
 	onSelectTaskAsset: (assetId: string) => void;
 	selectedTaskAssetId: string | null;
@@ -2970,10 +2974,13 @@ function ContentFilledPage({
 	onSelectContentInstance: (id: string) => void;
 	onTabChange: (tab: string) => void;
 }) {
-	const [cmpContentModels] = usePersistentState("cmpContentModels", initialCmpContentModels) as [
-		CmpContentModel[],
-		(value: CmpContentModel[]) => void,
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
 	];
+
+	// Filter to CMP content models only
+	const cmpContentModels = contentTypes.filter(isCmpType);
 
 	const selectedTaskAsset =
 		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
