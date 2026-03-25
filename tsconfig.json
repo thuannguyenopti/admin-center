@@ -23,11 +23,11 @@
       }
     ],
     "paths": {
-      "@optimizely/axiom-icons": [
-        "./app/lib/axiom-icons"
-      ],
       "@/*": [
         "./*"
+      ],
+      "@optimizely/axiom-icons": [
+        "./app/lib/axiom-icons"
       ]
     }
   },
