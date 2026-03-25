@@ -48,6 +48,44 @@ function AxiomIconClockRotateLeft({ size = 16, width, height, style, className, 
 	);
 }
 
+function AxiomIconInputText({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
+	const w = width ?? size;
+	const h = height ?? size;
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 640 512"
+			width={w}
+			height={h}
+			fill="currentColor"
+			style={style}
+			className={className}
+			{...rest}
+		>
+			<path d="M176 160C182.5 160 188.4 163.1 190.9 170.1L254.9 330.1C258.1 338.3 254.1 347.6 245.9 350.9C237.7 354.1 228.4 350.1 225.1 341.9L216.4 319.1L216 320H136L135.6 319.1L126.9 341.9C123.6 350.1 114.3 354.1 106.1 350.9C97.85 347.6 93.86 338.3 97.14 330.1L161.1 170.1C163.6 163.1 169.5 160 176 160H176zM148.4 288H203.6L176 219.1L148.4 288zM288 176C288 167.2 295.2 160 304 160H360C390.9 160 416 185.1 416 216C416 228.1 412.2 239.3 405.6 248.5C421.5 258.4 432 275.1 432 296C432 326.9 406.9 352 376 352H304C295.2 352 288 344.8 288 336V176zM320 272V320H376C389.3 320 400 309.3 400 296C400 282.7 389.3 272 376 272H320zM360 240C373.3 240 384 229.3 384 216C384 202.7 373.3 192 360 192H320V240H360zM0 128C0 92.65 28.65 64 64 64H576C611.3 64 640 92.65 640 128V384C640 419.3 611.3 448 576 448H64C28.65 448 0 419.3 0 384V128zM32 128V384C32 401.7 46.33 416 64 416H576C593.7 416 608 401.7 608 384V128C608 110.3 593.7 96 576 96H64C46.33 96 32 110.3 32 128z" />
+		</svg>
+	);
+}
+
+function AxiomIconLightbulb({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
+	const w = width ?? size;
+	const h = height ?? size;
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 384 512"
+			width={w}
+			height={h}
+			fill="currentColor"
+			style={style}
+			className={className}
+			{...rest}
+		>
+			<path d="M255.9 415.1H128.1c-8.846 0-15.98 7.179-15.97 16.03L112.1 454.3c.0098 6.273 1.81 12.47 5.284 17.69l17.14 25.69c5.225 7.855 17.2 14.28 26.64 14.28h61.67c9.418 0 21.39-6.436 26.61-14.28l17.08-25.68c2.953-4.441 5.341-12.37 5.348-17.7l-.0521-22.33C271.8 423.2 264.7 415.1 255.9 415.1zM239.9 454.4l-16.11 24.45c-.4766 .4336-1.686 1.082-.8672 1.117l-60.29 .1172c-.4238-.1055-1.138-.2793-1.423-.2793c-.1406 0-.1348-.2265 0 0l-17.1-25.48l-.0098-6.37h95.94l.0039 5.179C239.9 453.6 239.7 454.4 239.9 454.4C239.9 454.4 239.8 454.5 239.9 454.4zM315.8 51.3c-33.33-33.22-78.22-52.47-124.3-51.28C94.7 .2944 16 79.89 16 177.4c0 42.9 15.47 84.34 43.55 116.6c13.33 15.31 35.84 49.59 43.73 76.02c1.078 8.687 8.844 14.62 17.64 13.72c8.703-.9687 14.98-8.968 14.11-17.65l-.6094-3.312c-10.31-34.97-36-72.84-50.73-89.77C60.67 246.5 48 212.6 48 177.4c0-81.24 63.05-145.1 143.5-145.3H192c38.13 0 74.05 14.87 101.2 41.93C320.8 101.5 336 138.2 336 177.4c0 35.18-12.67 69.15-35.67 95.62c-14.75 16.94-40.44 54.81-50.75 89.77l-.625 3.343c-1.047 8.749 4.938 17.59 13.67 18.69c.7813 .0938 1.531 .1562 2.281 .1562c7.797 0 14.36-5.124 15.36-13.12c8.344-28.25 30.86-62.52 44.2-77.84C352.5 261.7 368 220.3 368 177.4C368 129.7 349.5 84.89 315.8 51.3zM208 80.01c0-8.843-7.156-16-16-16c-61.75 0-112 50.24-112 111.1C80 184.8 87.16 192 96 192s16-7.158 16-16c0-44.1 35.88-79.1 80-79.1C200.8 96.01 208 88.86 208 80.01z" />
+		</svg>
+	);
+}
+
 function AxiomIconAgent({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
 	const w = width ?? size;
 	const h = height ?? size;
@@ -110,8 +148,9 @@ const iconMap: Record<string, string[]> = {
 	IconHandPointer: ["IconHandFinger", "IconPointer"],
 	IconImage: ["IconPhoto", "IconImageInPicture"],
 	IconInputNumeric: ["Icon123", "IconNumbers"],
-	IconInputText: ["IconLetterT", "IconTypography"],
+	// IconInputText uses AxiomIconInputText (custom SVG)
 	IconLaptopMobile: ["IconDevices", "IconDeviceLaptop"],
+	// IconLightbulb uses AxiomIconLightbulb (custom SVG)
 	IconLink: ["IconLink"],
 	IconList: ["IconList"],
 	IconPaperPlaneTop: ["IconSend"],
@@ -203,8 +242,9 @@ export const IconGripVertical = createIcon("IconGripVertical");
 export const IconHandPointer = createIcon("IconHandPointer");
 export const IconImage = createIcon("IconImage");
 export const IconInputNumeric = createIcon("IconInputNumeric");
-export const IconInputText = createIcon("IconInputText");
+export const IconInputText = AxiomIconInputText;
 export const IconLaptopMobile = createIcon("IconLaptopMobile");
+export const IconLightbulb = AxiomIconLightbulb;
 export const IconLink = createIcon("IconLink");
 export const IconList = createIcon("IconList");
 export const IconPaperPlaneTop = createIcon("IconPaperPlaneTop");
