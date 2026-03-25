@@ -227,8 +227,7 @@ export default function PropertyGroupsPage() {
 										{
 											label: "Delete",
 											execute: () => openDeleteDialog(group),
-											disabled: group.fromCode,
-										},
+											},
 									]}
 								>
 									<MenuTrigger
@@ -252,7 +251,7 @@ export default function PropertyGroupsPage() {
 				setOpen={setIsCreateDialogOpen}
 				footerPrimaryText="Create"
 				footerPrimaryAction={handleCreate}
-				footerPrimaryAppearance="primary"
+				footerAppearance="primary"
 				blockPrimaryAction={!formName.trim() || !formDisplayName.trim()}
 				size="md"
 			>
@@ -304,7 +303,7 @@ export default function PropertyGroupsPage() {
 				setOpen={setIsEditDialogOpen}
 				footerPrimaryText="Save"
 				footerPrimaryAction={handleEdit}
-				footerPrimaryAppearance="primary"
+				footerAppearance="primary"
 				blockPrimaryAction={!formName.trim() || !formDisplayName.trim()}
 				size="md"
 			>

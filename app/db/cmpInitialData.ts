@@ -15,6 +15,15 @@ export type CmpContentModel = {
 	coverImage?: string;
 };
 
+export type ContentInstance = {
+	id: string;
+	modelId: string; // References CmpContentModel.id or ContentType.id
+	modelDisplayName: string;
+	createdAt: string;
+	modifiedAt?: string;
+	fields: Record<string, any>; // Field values conforming to model properties
+};
+
 export const initialCmpContentModels: CmpContentModel[] = [
 	{
 		id: "cm-blog-post",
@@ -466,4 +475,83 @@ export const initialCmpContentModels: CmpContentModel[] = [
 		defaultLocale: "en-US",
 		modelType: "content",
 	},
+];
+
+export const initialContentInstances: ContentInstance[] = [
+	{
+		id: "ci-blog-1",
+		modelId: "cm-blog-post",
+		modelDisplayName: "Blog Post",
+		createdAt: "2024-03-20T10:00:00Z",
+		fields: {
+			title: "Getting Started with Running",
+			author: "Alice Johnson",
+			publish_date: "2024-03-20",
+			excerpt: "Everything you need to know to start your running journey",
+			content: "<p>Welcome to our comprehensive guide for beginner runners...</p>",
+			featured_image: "asset-runner-1",
+			tags: ["running", "beginner", "fitness"],
+			seo_keywords: ["running tips", "beginner running", "fitness guide"]
+		}
+	},
+	{
+		id: "ci-blog-2",
+		modelId: "cm-blog-post",
+		modelDisplayName: "Blog Post",
+		createdAt: "2024-03-21T14:30:00Z",
+		fields: {
+			title: "Marathon Training Tips",
+			author: "Bob Smith",
+			publish_date: "2024-03-21",
+			excerpt: "Expert advice for marathon preparation",
+			content: "<p>Training for a marathon requires dedication and proper planning...</p>",
+			featured_image: "asset-marathon-1",
+			tags: ["marathon", "training", "advanced"],
+			seo_keywords: ["marathon training", "running tips", "endurance"]
+		}
+	},
+	{
+		id: "ci-article-1",
+		modelId: "cm-article",
+		modelDisplayName: "Article",
+		createdAt: "2024-03-22T09:00:00Z",
+		fields: {
+			headline: "The Science of Running Form",
+			subheadline: "How biomechanics can improve your performance",
+			byline: "Dr. Carol Williams, Sports Scientist",
+			body: "<p>Understanding proper running form is crucial for injury prevention...</p>",
+			hero_image: "asset-running-form-1",
+			related_articles: ["ci-blog-1", "ci-blog-2"]
+		}
+	},
+	{
+		id: "ci-banner-1",
+		modelId: "cm-banner",
+		modelDisplayName: "Banner",
+		createdAt: "2024-03-23T08:00:00Z",
+		fields: {
+			message: "Spring Sale! Up to 40% off running gear",
+			cta_text: "Shop Now",
+			cta_link: "https://stride.com/sale",
+			background_image: "asset-spring-sale-bg",
+			dismissible: true,
+			display_duration: 7
+		}
+	},
+	{
+		id: "ci-hero-1",
+		modelId: "cm-hero-component",
+		modelDisplayName: "Hero Component",
+		createdAt: "2024-03-24T10:00:00Z",
+		fields: {
+			headline: "Run Faster, Go Further",
+			subheadline: "Introducing the new Stride Elite Runner",
+			description: "Our most advanced running shoe featuring cutting-edge cushioning and energy return technology",
+			background_image: "asset-elite-runner-hero",
+			primary_cta_text: "Shop Elite Runner",
+			primary_cta_link: "https://stride.com/products/elite-runner",
+			secondary_cta_text: "Learn More",
+			secondary_cta_link: "https://stride.com/technology"
+		}
+	}
 ];

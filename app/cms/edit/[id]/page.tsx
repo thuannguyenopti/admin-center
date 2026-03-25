@@ -6,11 +6,14 @@ import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
 import {useEffect, useState, useCallback} from "react";
-import {Box, Heading, Spinner, Text} from "@optiaxiom/react";
+import {Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
+import ContentInstancePicker from "@/app/components/ContentInstancePicker";
+import {initialContentInstances, ContentInstance} from "@/app/db/cmpInitialData";
+import {connectInstanceToPage, syncPageWithInstance, disconnectPage, getCompatibleInstances} from "@/app/lib/contentConnection";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -26,6 +29,10 @@ export default function EditPageDetail() {
 	const [renderKey, setRenderKey] = useState(0);
 	const [hasPendingGeneration, setHasPendingGeneration] = useState(false);
 	const versionHistory = useVersionHistory(id);
+
+	// CMP Content Connection
+	const [contentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+	const [isContentPickerOpen, setIsContentPickerOpen] = useState(false);
 
 	// Check for pending generation immediately on mount
 	useEffect(() => {
@@ -100,6 +107,60 @@ export default function EditPageDetail() {
 			firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
 		});
 	}, [page, id, setPages]);
+
+	// CMP Content Connection Handlers
+	const handleConnectInstance = useCallback((instance: ContentInstance) => {
+		if (!page) return;
+
+		const connectedPage = connectInstanceToPage(
+			instance,
+			page,
+			initialContentTypes
+		);
+
+		setPages((prev: Page[]) =>
+			prev.map(p => p.id === page.id ? connectedPage : p)
+		);
+
+		setPage(connectedPage);
+		setIsContentPickerOpen(false);
+		toaster.create("Content connected successfully", { intent: "success" });
+	}, [page, setPages]);
+
+	const handleSyncContent = useCallback(() => {
+		if (!page) return;
+
+		const syncedPage = syncPageWithInstance(
+			page,
+			contentInstances,
+			initialContentTypes
+		);
+
+		if (syncedPage) {
+			setPages((prev: Page[]) =>
+				prev.map(p => p.id === page.id ? syncedPage : p)
+			);
+			setPage(syncedPage);
+			toaster.create("Content synced successfully", { intent: "success" });
+		} else {
+			toaster.create("Could not sync content - instance not found", { intent: "danger" });
+		}
+	}, [page, contentInstances, setPages]);
+
+	const handleDisconnect = useCallback(() => {
+		if (!page) return;
+
+		const disconnectedPage = disconnectPage(page);
+
+		setPages((prev: Page[]) =>
+			prev.map(p => p.id === page.id ? disconnectedPage : p)
+		);
+
+		setPage(disconnectedPage);
+		toaster.create("Content disconnected", { intent: "information" });
+	}, [page, setPages]);
+
+	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, initialContentTypes) : [];
 
 	// Opal page generation hook (must be after handleSave is defined)
 	const {isGenerating} = useOpalPageGeneration(
@@ -347,26 +408,39 @@ export default function EditPageDetail() {
 	};
 
 	return (
-		<VBPrototype
-			key={`${id}-${renderKey}`}
-			initialData={page}
-			contentType={contentType}
-			onSave={handleSave}
-			onPublish={handlePublish}
-			pageName={page.name}
-			pageId={page.id}
-			pageStatus={page.status}
-			variations={page.variations}
-			onAddVariation={handleAddVariation}
-			onDeleteVariation={handleDeleteVariation}
-			onRenameVariation={handleRenameVariation}
-			onRenamePage={handleRenamePage}
-			onTrash={handleTrash}
-			onViewOnWebsite={handleViewOnWebsite}
-			versionHistory={versionHistory}
-			onRestoreVersion={handleRestoreVersion}
-			isOpalGenerating={isGenerating}
-			hasPendingGeneration={hasPendingGeneration}
-		/>
+		<>
+			<VBPrototype
+				key={`${id}-${renderKey}`}
+				initialData={page}
+				contentType={contentType}
+				onSave={handleSave}
+				onPublish={handlePublish}
+				pageName={page.name}
+				pageId={page.id}
+				pageStatus={page.status}
+				variations={page.variations}
+				onAddVariation={handleAddVariation}
+				onDeleteVariation={handleDeleteVariation}
+				onRenameVariation={handleRenameVariation}
+				onRenamePage={handleRenamePage}
+				onTrash={handleTrash}
+				onViewOnWebsite={handleViewOnWebsite}
+				versionHistory={versionHistory}
+				onRestoreVersion={handleRestoreVersion}
+				isOpalGenerating={isGenerating}
+				hasPendingGeneration={hasPendingGeneration}
+				onConnectContent={() => setIsContentPickerOpen(true)}
+				onSyncContent={page?.cmpConnection ? handleSyncContent : undefined}
+				onDisconnectContent={page?.cmpConnection ? handleDisconnect : undefined}
+				hasConnection={!!page?.cmpConnection}
+			/>
+
+			<ContentInstancePicker
+				open={isContentPickerOpen}
+				onClose={() => setIsContentPickerOpen(false)}
+				instances={compatibleInstances}
+				onSelect={handleConnectInstance}
+			/>
+		</>
 	);
 }

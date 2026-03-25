@@ -38,6 +38,7 @@ import PropertiesPanel, {
 } from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
+import ConnectionStatus from "./ConnectionStatus";
 // @ts-ignore
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
@@ -204,6 +205,14 @@ type PageInput = {
 	variationId?: string;
 	contentTypeId?: string;
 	id?: string;
+	cmpConnection?: {
+		instanceId: string;
+		modelId: string;
+		mappingId?: string;
+		syncStatus: "synced" | "out-of-sync" | "manual-override";
+		lastSyncedAt?: string;
+		syncMode: "auto" | "manual";
+	};
 };
 
 /** -----------------------------
@@ -251,6 +260,10 @@ export default function VBPrototype({
 	onRestoreVersion,
 	isOpalGenerating,
 	hasPendingGeneration,
+	onConnectContent,
+	onSyncContent,
+	onDisconnectContent,
+	hasConnection,
 }: {
 	initialData?: PageInput;
 	contentType?: ContentType | null;
@@ -278,6 +291,10 @@ export default function VBPrototype({
 	onRestoreVersion?: (version: any) => void;
 	isOpalGenerating?: boolean;
 	hasPendingGeneration?: boolean;
+	onConnectContent?: () => void;
+	onSyncContent?: () => void;
+	onDisconnectContent?: () => void;
+	hasConnection?: boolean;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
@@ -822,6 +839,11 @@ export default function VBPrototype({
 								setEditingSectionId(null);
 							},
 						},
+						...(onConnectContent ? [{
+							addon: <IconPlus size={16} />,
+							label: hasConnection ? "Change connected content..." : "Connect content...",
+							execute: onConnectContent,
+						}] : []),
 					]}
 				>
 					<MenuTrigger
@@ -1925,19 +1947,30 @@ export default function VBPrototype({
 													{/* Add section specific fields here later */}
 												</Box>
 											) : (
-												<PropertiesPanel
-													value={properties}
-													onChange={setPropertiesPatch}
-													activeSection={activePropertiesSection}
-													onSectionChange={setActivePropertiesSection}
-													pageName={pageName ?? undefined}
-													pageId={initialData?.id}
-													contentTypeId={contentType?.id}
-													onRegisterGenerateTrigger={(fn) => {
-														generateTriggerRef.current = fn;
-													}}
-													onGenerateLoadingChange={setGenerateLoading}
-												/>
+												<>
+													{hasConnection && initialData?.cmpConnection && (
+														<ConnectionStatus
+															instanceId={initialData.cmpConnection.instanceId}
+															syncStatus={initialData.cmpConnection.syncStatus}
+															lastSyncedAt={initialData.cmpConnection.lastSyncedAt}
+															onSync={onSyncContent}
+															onDisconnect={onDisconnectContent}
+														/>
+													)}
+													<PropertiesPanel
+														value={properties}
+														onChange={setPropertiesPatch}
+														activeSection={activePropertiesSection}
+														onSectionChange={setActivePropertiesSection}
+														pageName={pageName ?? undefined}
+														pageId={initialData?.id}
+														contentTypeId={contentType?.id}
+														onRegisterGenerateTrigger={(fn) => {
+															generateTriggerRef.current = fn;
+														}}
+														onGenerateLoadingChange={setGenerateLoading}
+													/>
+												</>
 											)}
 										</div>
 									</div>

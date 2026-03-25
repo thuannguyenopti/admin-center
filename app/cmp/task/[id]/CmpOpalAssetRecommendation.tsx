@@ -34,6 +34,7 @@ import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, type ContentType } from "@/app/db/initialData";
+import { initialContentInstances, type ContentInstance } from "@/app/db/cmpInitialData";
 import { isCmpType } from "@/app/lib/contentTypeMigration";
 import usePersistentState from "@/app/usePersistentState";
 import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
@@ -98,14 +99,6 @@ type SearchAssetItem = AssetItem & {
 	keywords: string[];
 	thumbnailSrc?: string;
 	width: number;
-};
-
-type ContentInstance = {
-	id: string;
-	modelId: string;
-	modelDisplayName: string;
-	createdAt: string;
-	fields: Record<string, any>;
 };
 
 type WorkflowTemplateIconKind = "calendar" | "copy" | "sparkles" | "tag" | "check";
@@ -812,7 +805,7 @@ export function CmpOpalAssetRecommendation() {
 		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
-	const [contentInstances, setContentInstances] = useState<ContentInstance[]>([]);
+	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
@@ -1009,12 +1002,12 @@ export function CmpOpalAssetRecommendation() {
 		const newInstance: ContentInstance = {
 			id: instanceId,
 			modelId: model.id,
-			modelDisplayName: model.displayName,
+			modelDisplayName: model.displayName || model.name,
 			createdAt: new Date().toISOString(),
 			fields,
 		};
 
-		setContentInstances((current) => [newInstance, ...current]);
+		setContentInstances((current: ContentInstance[]) => [newInstance, ...current]);
 		setSelectedContentInstanceId(instanceId);
 		setSelectedTaskAssetId(null);
 		setHasTaskContent(true);
@@ -2907,8 +2900,8 @@ function ContentEmptyPage({
 								subOptions: cmpContentModels
 									.filter((model) => model.isActive !== false)
 									.map((model) => ({
-										label: model.displayName,
-										description: model.description || `Create a new ${model.displayName.toLowerCase()}`,
+										label: model.displayName || model.name,
+										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
 										execute: () => onAddContentFromModel(model),
 									})),
 							},
@@ -3037,8 +3030,8 @@ function ContentFilledPage({
 								subOptions: cmpContentModels
 									.filter((model) => model.isActive !== false)
 									.map((model) => ({
-										label: model.displayName,
-										description: model.description || `Create a new ${model.displayName.toLowerCase()}`,
+										label: model.displayName || model.name,
+										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
 										execute: () => onAddContentFromModel(model),
 									})),
 							},
