@@ -34,3 +34,11 @@ On every new conversation, check if the files you're about to touch are monolith
 - Prefer `@optiaxiom/react` imports over local wrappers unless the wrapper's defaults are specifically needed
 - Ensure premium, modern aesthetics using Axiom design tokens
 - Verify build after changes to core components
+
+## Git & Deployment
+
+- **Repo**: `Ben-Holme/axiom-play` — **Hosting**: Vercel (auto-deploys)
+- **Never push directly to `main`** — always create a PR
+- **Never merge locally** — merge via GitHub so checks run and Vercel auto-deploys
+- Always verify build (`yarn build`) before pushing
+- Preview deploys happen automatically per PR branch

@@ -48,3 +48,23 @@ Never create or extend monolithic files. See the full splitting guide in [DESIGN
 ## Layout
 
 The shared `app/components/template.tsx` provides the sidebar + content grid. Pages access layout controls via `useLayout()` from `app/context/LayoutContext`.
+
+## Git & Deployment Workflow
+
+**Repo**: `Ben-Holme/axiom-play` on GitHub
+**Hosting**: Vercel (auto-deploys from GitHub)
+**Live URL**: https://axiom-play-lac.vercel.app
+
+### How to ship changes:
+1. **Commit** to your feature branch
+2. **Push** to `origin`
+3. **Create a PR** against `main` using `gh pr create`
+4. **GitHub runs checks** — wait for them to pass
+5. **Merge via GitHub** (not locally) — Vercel auto-deploys to production on merge to `main`
+6. Preview deploys happen automatically for every PR branch
+
+### Rules:
+- **Never push directly to `main`** — always go through a PR
+- **Never merge locally** — merge via GitHub so checks run first
+- **Always verify build** (`yarn build` or `npx next build`) before pushing
+- The team reviews PRs on GitHub; Vercel deploys the preview automatically per branch
