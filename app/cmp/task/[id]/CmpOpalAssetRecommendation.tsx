@@ -840,6 +840,17 @@ export function CmpOpalAssetRecommendation() {
 		}
 	}, [contentInstances, taskArticles, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedArticleId]);
 
+	// Switch to empty state when all items are removed
+	useEffect(() => {
+		const hasContent = contentInstances.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+		if (!hasContent && (scene === "content" || scene === "content-panel")) {
+			console.log('[Main] All items removed, switching to empty state');
+			setScene("content-empty");
+			setHasTaskContent(false);
+			setSuggestedPanelOpen(false);
+		}
+	}, [contentInstances.length, taskArticles.length, taskAssets.length, scene]);
+
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
 	const [briefContent, setBriefContent] = useState(initialBriefHtml);
@@ -3409,18 +3420,30 @@ function ContentFilledPage({
 											if (selectedContentInstance) {
 												const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
 												setContentInstances(updatedInstances);
-												// Select first remaining item or clear selection
-												if (updatedInstances.length > 0) {
-													onSelectContentInstance(updatedInstances[0].id);
+
+												// Check if any items remain (content instances, articles, or assets)
+												const hasRemainingItems = updatedInstances.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+
+												if (hasRemainingItems) {
+													// Select first remaining item
+													if (updatedInstances.length > 0) {
+														onSelectContentInstance(updatedInstances[0].id);
+													} else if (taskArticles.length > 0) {
+														onSelectArticle(taskArticles[0].id);
+													} else if (taskAssets.length > 0) {
+														onSelectTaskAsset(taskAssets[0].id);
+													}
 												} else {
+													// No items left - navigate to empty state
 													onSelectContentInstance(null);
+													onTabChange('content'); // Trigger re-evaluation of hasTaskContent
 												}
 											} else if (selectedArticle) {
 												const updatedArticles = taskArticles.filter(article => article.id !== selectedArticle.id);
-												// TODO: Need setTaskArticles setter
+												// TODO: Need setTaskArticles setter to properly update
 												console.log('Remove article:', selectedArticle.id);
 											} else if (selectedTaskAsset) {
-												// TODO: Remove task asset
+												// TODO: Need setTaskAssets setter to properly update
 												console.log('Remove asset:', selectedTaskAsset.id);
 											}
 										},
