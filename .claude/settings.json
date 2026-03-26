@@ -1,4 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npx tsx:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/stefan.svebeck/dev/axiom-play/app/components/property-renderers"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -52,11 +60,6 @@
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(npx tsx:*)"
     ]
   }
 }

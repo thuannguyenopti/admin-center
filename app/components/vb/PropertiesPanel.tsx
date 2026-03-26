@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
 	Box,
-	Button,
 	Field,
 	Text,
 	Input as Input2,
@@ -22,7 +21,8 @@ import { PillMenu, PillMenuTrigger, PillMenuContent } from "@optiaxiom/react/uns
 import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
 import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
-import { initialContentTypes, Property } from "@/app/db/initialData";
+import { initialContentTypes, Property, type ContentType } from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
 
 export type PageProperties = {
 	seoTitle?: string;
@@ -137,11 +137,17 @@ export default function PropertiesPanel({
 	onRegisterGenerateTrigger,
 	onGenerateLoadingChange,
 }: Props) {
-	// Load content type definition
+	// Load runtime content types from localStorage (includes user-created properties)
+	const [runtimeContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		any,
+	];
+
+	// Load content type definition from runtime state
 	const contentType = useMemo(() => {
 		if (!contentTypeId) return null;
-		return initialContentTypes.find((ct) => ct.id === contentTypeId) || null;
-	}, [contentTypeId]);
+		return runtimeContentTypes?.find((ct) => ct.id === contentTypeId) || null;
+	}, [contentTypeId, runtimeContentTypes]);
 
 	// Group properties by groupName for dynamic sections
 	const contentTypePropertyGroups = useMemo(() => {
@@ -153,15 +159,9 @@ export default function PropertiesPanel({
 		const nonOutlineProps = contentType.properties.filter((p) => p.type !== "outline");
 
 		nonOutlineProps.forEach((prop) => {
-			// Skip properties without groupName (no "Other" group)
-			if (!prop.groupName) {
-				if (process.env.NODE_ENV === 'development') {
-					console.warn(`Property ${prop.id} (${prop.name}) has no groupName and will be hidden`);
-				}
-				return;
-			}
+			// Use "Content" as default group for properties without groupName
+			const groupName = prop.groupName || "Content";
 
-			const groupName = prop.groupName;
 			if (!groups[groupName]) {
 				groups[groupName] = [];
 			}
@@ -409,9 +409,9 @@ export default function PropertiesPanel({
 
 		// Handle ContentReference to Block types (local blocks)
 		if (prop.type === "ContentReference" && prop.allowedTypes && prop.allowedTypes.length > 0) {
-			// Check if this references a Block type
+			// Check if this references a Block type (use runtime content types)
 			const referencedTypeId = prop.allowedTypes[0];
-			const referencedType = initialContentTypes.find(ct => ct.id === referencedTypeId);
+			const referencedType = runtimeContentTypes?.find(ct => ct.id === referencedTypeId);
 
 			// Always render Block types as inline Cards, even if data doesn't exist yet
 			if (referencedType && referencedType.baseType === "Block") {
