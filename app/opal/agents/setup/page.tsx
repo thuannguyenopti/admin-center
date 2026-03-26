@@ -76,14 +76,29 @@ import {
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { VersionHistory, Version } from "./components/VersionHistory";
-import { VersionPreviewBanner } from "./components/VersionPreviewBanner";
-import { ComparisonBanner } from "./components/ComparisonBanner";
-import { FieldComparison } from "./components/FieldComparison";
-import { TestRunTray } from "./components/TestRunTray";
+import type { Version } from "./components/VersionHistory";
 import { AgentAssistantPanel } from "./components/AgentAssistantPanel";
+
+const VersionHistory = dynamic(
+    () => import("./components/VersionHistory").then((mod) => mod.VersionHistory),
+    { ssr: false }
+);
+const VersionPreviewBanner = dynamic(
+    () => import("./components/VersionPreviewBanner").then((mod) => mod.VersionPreviewBanner)
+);
+const ComparisonBanner = dynamic(
+    () => import("./components/ComparisonBanner").then((mod) => mod.ComparisonBanner)
+);
+const FieldComparison = dynamic(
+    () => import("./components/FieldComparison").then((mod) => mod.FieldComparison)
+);
+const TestRunTray = dynamic(
+    () => import("./components/TestRunTray").then((mod) => mod.TestRunTray),
+    { ssr: false }
+);
 
 // Emoji lookup for agent avatars
 const AGENT_EMOJIS: Record<string, string> = {
@@ -179,6 +194,97 @@ const MOCK_AGENTS_DATA: Record<string, any> = {
     }
 };
 
+const PROMPT_TEMPLATE_PLACEHOLDER = [
+    {
+        title: "Role: 🕵️",
+        body: "You are a market research analyst, responsible for conducting 30-day competitor and market research. You will monitor competitor activities, industry trends, and keyword opportunities, and synthesize your findings into a 30-day Competitive Intelligence Report with clear, actionable recommendations for marketing and sales.",
+    },
+    {
+        title: "Goal: 🎯",
+        body: "To assist users in generating on-brand, impactful content and strategies, making their work easier and more effective.",
+    },
+    {
+        title: "Instruction Steps: 👇",
+        body: "1. First, I'll carefully read your request to grasp the core task, desired tone, and any specific requirements.\n2. I'll access relevant information from our knowledge base (like product messaging or competitor intel) and past conversations to ensure context-aware and personalized responses.\n3. I'll generate content or suggestions that directly address your needs, always keeping your brand and your objectives in mind.\n4. Before presenting, I'll double-check for clarity, accuracy, and adherence to all your specifications.",
+    },
+    {
+        title: "Output Specification: 📝",
+        body: "Your response will be clear, concise, and actionable, delivered in a format that's easy to understand and use. I'll use Markdown for structure, and if applicable, I'll include relevant links or suggestions for next steps. Expect a friendly and professional tone. Here’s the example of how the output should be formatted.",
+    },
+];
+
+const TOOL_DESCRIPTIONS: Record<string, string> = {
+    send_email: "Send emails directly from your agent",
+    convert_to_pdf: "Convert agent output to PDF format",
+    web_search: "Search the web for live information",
+    write_content_to_file: "Save output to a file",
+    take_screenshot: "Capture a screenshot when needed",
+    translate: "Translates text between languages with context awareness",
+    "style-guide-checker": "Validates content against brand style guidelines and tone",
+    "regional-thesaurus": "Provides region-specific synonyms and terminology alternatives",
+    "Style Guide Checker": "Validates content against brand style guidelines and tone",
+    "Regional Thesaurus": "Provides region-specific synonyms and terminology alternatives",
+    "Email Validator": "Checks email content for formatting and delivery-readiness",
+    "Template Gallery": "Provides reusable content templates for agent output",
+};
+
+const PROMPT_ACTION_DETAILS: Record<string, string> = {
+    "Create PDF": "Export the full agent output as a formatted PDF document.",
+    "Export to CSV": "Save structured data from the output to a downloadable CSV file.",
+    "Send Email": "Send the agent's output via email to a specified recipient.",
+};
+
+const AUTO_GROW_TEXTAREA_MAX_VIEWPORT_OFFSET = 120;
+const FIELD_HIGHLIGHT_DURATION_MS = 2200;
+
+type AutoGrowTextareaProps = React.ComponentProps<typeof Textarea> & {
+    minHeight?: string;
+    textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
+};
+
+function AutoGrowTextarea({ minHeight = "256px", textareaRef, style, ...props }: AutoGrowTextareaProps) {
+    const internalRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const setTextareaNode = useCallback((node: HTMLTextAreaElement | null) => {
+        internalRef.current = node;
+        if (textareaRef) {
+            textareaRef.current = node;
+        }
+    }, [textareaRef]);
+
+    const syncHeight = useCallback(() => {
+        const el = internalRef.current;
+        if (!el) return;
+
+        const maxHeight = Math.max(240, window.innerHeight - AUTO_GROW_TEXTAREA_MAX_VIEWPORT_OFFSET);
+        el.style.height = "0px";
+        el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
+        el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+    }, []);
+
+    useEffect(() => {
+        syncHeight();
+    }, [props.value, syncHeight]);
+
+    useEffect(() => {
+        window.addEventListener("resize", syncHeight);
+        return () => window.removeEventListener("resize", syncHeight);
+    }, [syncHeight]);
+
+    return (
+        <Textarea
+            {...props}
+            ref={setTextareaNode}
+            resize="none"
+            style={{
+                minHeight,
+                maxHeight: "calc(100vh - 120px)",
+                ...style,
+            }}
+        />
+    );
+}
+
 export default function SpecializedAgentSetup() {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
@@ -203,6 +309,8 @@ export default function SpecializedAgentSetup() {
 function SpecializedAgentSetupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const shouldAutoOpenAssistant = searchParams.get("capturePanel") === "assistant";
+    const promptTemplateRef = useRef<HTMLTextAreaElement | null>(null);
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => {
         setIsMounted(true);
@@ -295,11 +403,59 @@ function SpecializedAgentSetupContent() {
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
 
     // Assistant panel
-    const [showGuidePanel, setShowGuidePanel] = useState(false);
-    const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">("assistant");
+    const [showGuidePanel, setShowGuidePanel] = useState(shouldAutoOpenAssistant);
+    const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">(shouldAutoOpenAssistant ? "assistant" : "assistant");
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const [highlightedField, setHighlightedField] = useState<number | null>(null);
+    const [assistantHoveredField, setAssistantHoveredField] = useState<"system-prompt" | "memory-limit" | "first-message" | null>(null);
     const [showCoachMark, setShowCoachMark] = useState(false);
+
+    useEffect(() => {
+        if (!shouldAutoOpenAssistant) return;
+        setShowGuidePanel(true);
+        setGuidePanelView("assistant");
+        setShowCoachMark(false);
+    }, [shouldAutoOpenAssistant]);
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        if (!window.location.hash.includes("figmacapture=")) return;
+
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const captureId = hashParams.get("figmacapture");
+        const endpoint = hashParams.get("figmaendpoint");
+        const selector = hashParams.get("figmaselector") || "#figma-agent-assistant-panel";
+
+        if (!captureId || !endpoint) return;
+
+        const submittedKey = `figma-capture-submitted:${captureId}`;
+        if (window.sessionStorage.getItem(submittedKey)) return;
+
+        let attempts = 0;
+        const maxAttempts = 30;
+
+        const tryCapture = () => {
+            const figmaCapture = (window as any).figma?.captureForDesign;
+            const target = document.querySelector(selector);
+
+            if (typeof figmaCapture === "function" && target) {
+                window.sessionStorage.setItem(submittedKey, "1");
+                figmaCapture({
+                    captureId,
+                    endpoint,
+                    selector,
+                });
+                return;
+            }
+
+            attempts += 1;
+            if (attempts < maxAttempts) {
+                window.setTimeout(tryCapture, 500);
+            }
+        };
+
+        window.setTimeout(tryCapture, 1200);
+    }, [showGuidePanel]);
 
     const handleInsertToPrompt = useCallback((text: string) => {
         setPromptTemplate(prev => {
@@ -308,47 +464,98 @@ function SpecializedAgentSetupContent() {
         });
     }, []);
 
+    const handleAddTool = useCallback((toolName: string) => {
+        setTools((prev) => {
+            const normalized = prev
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean);
+
+            if (normalized.some((item) => item.toLowerCase() === toolName.toLowerCase())) {
+                return prev;
+            }
+
+            return [...normalized, toolName].join(", ");
+        });
+    }, []);
+
+    const openInputDisclosure = useCallback(() => {
+        const inputTrigger = [...document.querySelectorAll<HTMLElement>("button")]
+            .find((b) => b.textContent?.trim().startsWith("Input"));
+        if (inputTrigger) {
+            const disclosure = inputTrigger.closest("[data-state]");
+            if (disclosure?.getAttribute("data-state") === "closed") {
+                inputTrigger.click();
+            }
+        }
+    }, []);
+
+    const openMultiTurnDisclosure = useCallback(() => {
+        openInputDisclosure();
+        const multiTurnTrigger = [...document.querySelectorAll<HTMLElement>("button")]
+            .find((b) => b.textContent?.includes("Multi-turn agent settings"));
+        if (multiTurnTrigger) {
+            const disclosure = multiTurnTrigger.closest("[data-state]");
+            if (disclosure?.getAttribute("data-state") === "closed") {
+                multiTurnTrigger.click();
+            }
+        }
+    }, [openInputDisclosure]);
+
     const handleWizardStepChange = useCallback((step: number) => {
         setHighlightedField(step);
-        const fieldMap: Record<number, string> = {
-            1: "field-prompt-template",
-            2: "field-variables",
-            3: "field-tools",
-            4: "button-test-run",
-            // wizard step 5 = multi-turn settings section
-            5: "field-multiturn-settings",
-        };
+        const fieldMap: Record<number, string> = multiTurnMode
+            ? {
+                1: "field-prompt-template",
+                2: "field-variables",
+                3: "field-tools",
+                4: "field-multiturn-settings",
+                5: "button-test-run",
+            }
+            : {
+                1: "field-prompt-template",
+                2: "field-variables",
+                3: "field-tools",
+                4: "button-test-run",
+            };
         const fieldId = fieldMap[step];
 
         // Step 4: always visible toolbar — skip scroll
-        if (step === 4) {
-            setTimeout(() => setHighlightedField(null), 2500);
+        if (!multiTurnMode && step === 4) {
+            setTimeout(() => setHighlightedField(null), FIELD_HIGHLIGHT_DURATION_MS);
             return;
         }
 
-        // Step 5: open the multi-turn disclosure first, then scroll
-        if (step === 5) {
-            const advBtn = [...document.querySelectorAll<HTMLElement>("button")]
-                .find(b => b.textContent?.includes("Multi-turn agent settings"));
-            if (advBtn) {
-                const disclosure = advBtn.closest("[data-state]");
-                if (disclosure?.getAttribute("data-state") === "closed") {
-                    advBtn.click();
-                }
-            }
+        // Multi-turn settings step: open the disclosure first, then scroll
+        if (multiTurnMode && step === 4) {
+            openMultiTurnDisclosure();
             setTimeout(() => {
                 const el = document.getElementById("field-system-prompt");
                 if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-                setTimeout(() => setHighlightedField(null), 2500);
+                setTimeout(() => setHighlightedField(null), FIELD_HIGHLIGHT_DURATION_MS);
             }, 250);
             return;
         }
 
-        if (fieldId) {
-            document.getElementById(fieldId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (multiTurnMode && step === 5) {
+            setTimeout(() => setHighlightedField(null), FIELD_HIGHLIGHT_DURATION_MS);
+            return;
         }
-        setTimeout(() => setHighlightedField(null), 2500);
-    }, []);
+
+        openInputDisclosure();
+        if (fieldId) {
+            setTimeout(() => {
+                document.getElementById(fieldId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 150);
+        }
+        setTimeout(() => setHighlightedField(null), FIELD_HIGHLIGHT_DURATION_MS);
+    }, [multiTurnMode, openInputDisclosure, openMultiTurnDisclosure]);
+
+    const handleAssistantFieldHover = useCallback((field: "system-prompt" | "memory-limit" | "first-message" | null) => {
+        setAssistantHoveredField(field);
+        if (!field) return;
+        openMultiTurnDisclosure();
+    }, [openMultiTurnDisclosure]);
 
     // Version History State
     const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
@@ -527,6 +734,10 @@ function SpecializedAgentSetupContent() {
     };
 
     const isReadOnly = !!viewingVersion || isComparing;
+    const configuredTools = tools
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
 
     // Helper for syntax highlighting in prompt template
     const HighlightedPrompt = ({ text }: { text: string }) => {
@@ -557,6 +768,35 @@ function SpecializedAgentSetupContent() {
                         return <span key={i} style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: "600" }}>{part}</span>;
                     }
                     if (part.startsWith("`") && part.endsWith("`")) {
+                        const actionLabel = part.slice(1, -1);
+                        const actionDescription = PROMPT_ACTION_DETAILS[actionLabel];
+                        if (actionDescription) {
+                            return (
+                                <HoverCard key={i} openDelay={200}>
+                                    <HoverCardTrigger asChild>
+                                        <span style={{
+                                            color: "var(--ax-colors-fg-secondary)",
+                                            fontWeight: "600",
+                                            backgroundColor: "var(--ax-colors-bg-tertiary)",
+                                            padding: "1px 8px",
+                                            borderRadius: "999px",
+                                            border: "1px solid var(--ax-colors-border-secondary)",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            marginRight: "4px",
+                                            cursor: "default",
+                                        }}>
+                                            {actionLabel}
+                                        </span>
+                                    </HoverCardTrigger>
+                                    <HoverCardContent side="top" align="start" style={{ maxWidth: "260px" }}>
+                                        <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+                                            {actionDescription}
+                                        </Text>
+                                    </HoverCardContent>
+                                </HoverCard>
+                            );
+                        }
                         return (
                             <span key={i} style={{
                                 color: "var(--ax-colors-fg-secondary)",
@@ -1054,10 +1294,11 @@ function SpecializedAgentSetupContent() {
                                                                         <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                         {showCoachMark && (
                                                                             <Box style={{ position: "absolute", left: "calc(100% + 14px)", top: "50%", transform: "translateY(-50%)", zIndex: 50 }}>
-                                                                                {/* Left-pointing arrow via rotated square */}
-                                                                                <Box style={{ position: "absolute", left: "-4px", top: "50%", transform: "translateY(-50%) rotate(45deg)", width: "6px", height: "6px", background: "var(--ax-colors-bg-default)", borderLeft: "1px solid var(--ax-colors-border-secondary)", borderBottom: "1px solid var(--ax-colors-border-secondary)" }} />
+                                                                                {/* Left-pointing callout arrow */}
+                                                                                <Box style={{ position: "absolute", left: "-9px", top: "50%", transform: "translateY(-50%)", width: 0, height: 0, borderTop: "9px solid transparent", borderBottom: "9px solid transparent", borderRight: "9px solid var(--ax-colors-border-secondary)" }} />
+                                                                                <Box style={{ position: "absolute", left: "-8px", top: "50%", transform: "translateY(-50%)", width: 0, height: 0, borderTop: "8px solid transparent", borderBottom: "8px solid transparent", borderRight: "8px solid var(--ax-colors-bg-default)" }} />
                                                                                 <Box style={{ background: "var(--ax-colors-bg-default)", border: "1px solid var(--ax-colors-border-secondary)", borderRadius: "8px", padding: "8px 12px", fontSize: "12px", color: "var(--ax-colors-fg-default)", lineHeight: 1.5, whiteSpace: "nowrap", boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                                                                                    Get step-by-step help building your first agent.{" "}
+                                                                                    Get step-by-step help building your first multi-turn agent.{" "}
                                                                                     <button
                                                                                         onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); setActiveGuideStep(null); setShowCoachMark(false); localStorage.setItem("opal_coach_mark_dismissed", "1"); }}
                                                                                         style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textDecoration: "underline" }}
@@ -1147,37 +1388,61 @@ function SpecializedAgentSetupContent() {
                                                                 border: "1px solid var(--ax-colors-border-secondary)"
                                                             }}
                                                         >
-                                                            {promptTemplate.split(/(\[\[.*?\]\]|\{.*?\}|`.*?`)/g).map((part, i) => {
-                                                                if (part.startsWith("[[") && part.endsWith("]]")) {
-                                                                    return <span key={i} style={{ color: "var(--ax-colors-fg-warning-strong)", fontWeight: "600" }}>{part}</span>;
-                                                                }
-                                                                if (part.startsWith("{") && part.endsWith("}")) {
-                                                                    return <span key={i} style={{ color: "var(--ax-colors-fg-accent-strong)", fontWeight: "600" }}>{part}</span>;
-                                                                }
-                                                                if (part.startsWith("`") && part.endsWith("`")) {
-                                                                    return (
-                                                                        <span key={i} style={{
-                                                                            color: "var(--ax-colors-fg-secondary)",
-                                                                            fontWeight: "600",
-                                                                            backgroundColor: "var(--ax-colors-bg-tertiary)",
-                                                                            padding: "0 4px",
-                                                                            borderRadius: "4px",
-                                                                            border: "1px solid var(--ax-colors-border-secondary)"
-                                                                        }}>
-                                                                            {part}
-                                                                        </span>
-                                                                    );
-                                                                }
-                                                                return <span key={i}>{part}</span>;
-                                                            })}
+                                                            <HighlightedPrompt text={promptTemplate} />
                                                         </Box>
                                                     ) : (
-                                                        <Textarea
-                                                            value={promptTemplate}
-                                                            onChange={(e) => setPromptTemplate(e.target.value)}
-                                                            placeholder="Role: You are a marketing copy expert..."
-                                                            className="h-64"
-                                                        />
+                                                        <Box style={{ position: "relative" }}>
+                                                            {!promptTemplate && (
+                                                                <Box
+                                                                    onClick={() => promptTemplateRef.current?.focus()}
+                                                                    style={{
+                                                                        position: "absolute",
+                                                                        inset: "1px",
+                                                                        zIndex: 1,
+                                                                        pointerEvents: "auto",
+                                                                        padding: "10px 12px",
+                                                                        color: "var(--ax-colors-fg-secondary)",
+                                                                        whiteSpace: "pre-wrap",
+                                                                        overflow: "hidden",
+                                                                        cursor: "text",
+                                                                        lineHeight: 1.45,
+                                                                    }}
+                                                                >
+                                                                    {PROMPT_TEMPLATE_PLACEHOLDER.map((section, index) => (
+                                                                        <Box key={section.title} mb={index === PROMPT_TEMPLATE_PLACEHOLDER.length - 1 ? "0" : "20"}>
+                                                                            <Text
+                                                                                fontSize="md"
+                                                                                fontWeight="600"
+                                                                                color="fg.tertiary"
+                                                                                style={{ lineHeight: "1.35", marginBottom: "4px" }}
+                                                                            >
+                                                                                {section.title}
+                                                                            </Text>
+                                                                            <Text
+                                                                                fontSize="md"
+                                                                                color="fg.tertiary"
+                                                                                style={{ lineHeight: "1.45", whiteSpace: "pre-wrap" }}
+                                                                            >
+                                                                                {section.body}
+                                                                            </Text>
+                                                                        </Box>
+                                                                    ))}
+                                                                </Box>
+                                                            )}
+                                                            <AutoGrowTextarea
+                                                                minHeight={!promptTemplate ? "540px" : "256px"}
+                                                                textareaRef={promptTemplateRef}
+                                                                value={promptTemplate}
+                                                                onChange={(e) => setPromptTemplate(e.target.value)}
+                                                                placeholder=""
+                                                                color={!promptTemplate ? "transparent" : "fg.default"}
+                                                                style={{
+                                                                    position: "relative",
+                                                                    zIndex: 0,
+                                                                    caretColor: "var(--ax-colors-fg-default)",
+                                                                }}
+                                                            />
+                                                        </Box>
                                                     )}
                                                 </Field>
                                                 <HoverCardContent side="right" align="start" style={{ maxWidth: "280px" }}>
@@ -1294,21 +1559,7 @@ function SpecializedAgentSetupContent() {
                                                         />
                                                     ) : (
                                                         <Box display="flex" flexDirection="column" gap="8">
-                                                            {/* Mock tools data */}
-                                                            {[
-                                                                {
-                                                                    name: "translate",
-                                                                    description: "Translates text between languages with context awareness"
-                                                                },
-                                                                {
-                                                                    name: "style-guide-checker",
-                                                                    description: "Validates content against brand style guidelines and tone"
-                                                                },
-                                                                {
-                                                                    name: "regional-thesaurus",
-                                                                    description: "Provides region-specific synonyms and terminology alternatives"
-                                                                }
-                                                            ].map((tool, index) => (
+                                                            {configuredTools.length > 0 ? configuredTools.map((toolName, index) => (
                                                                 <Box
                                                                     key={index}
                                                                     p="12"
@@ -1322,8 +1573,10 @@ function SpecializedAgentSetupContent() {
                                                                     gap="12"
                                                                 >
                                                                     <Box flex="1">
-                                                                        <Text fontWeight="500" fontSize="md">{tool.name}</Text>
-                                                                        <Text color="fg.secondary" fontSize="sm" mt="4">{tool.description}</Text>
+                                                                        <Text fontWeight="500" fontSize="md">{toolName}</Text>
+                                                                        <Text color="fg.secondary" fontSize="sm" mt="4">
+                                                                            {TOOL_DESCRIPTIONS[toolName] || "Added from the assistant tool recommendations."}
+                                                                        </Text>
                                                                     </Box>
                                                                     <DropdownMenu>
                                                                         <DropdownMenuTrigger asChild suppressHydrationWarning>
@@ -1341,7 +1594,9 @@ function SpecializedAgentSetupContent() {
                                                                         </DropdownMenuContent>
                                                                     </DropdownMenu>
                                                                 </Box>
-                                                            ))}
+                                                            )) : (
+                                                                <Text color="fg.tertiary" fontSize="sm">No tools selected yet.</Text>
+                                                            )}
                                                         </Box>
                                                     )}
                                                 </Field>
@@ -1412,7 +1667,20 @@ function SpecializedAgentSetupContent() {
                                                             {multiTurnMode ? (
                                                                 <>
                                                                     {/* System Prompt */}
-                                                                    <Box id="field-system-prompt" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(3)} onBlur={() => setActiveGuideStep(null)}>
+                                                                    <Box
+                                                                        id="field-system-prompt"
+                                                                        display="flex"
+                                                                        flexDirection="column"
+                                                                        gap="8"
+                                                                        onFocus={() => setActiveGuideStep(3)}
+                                                                        onBlur={() => setActiveGuideStep(null)}
+                                                                        style={{
+                                                                            outline: assistantHoveredField === "system-prompt" ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                                            outlineOffset: "8px",
+                                                                            borderRadius: "8px",
+                                                                            transition: "outline-color 0.2s ease",
+                                                                        }}
+                                                                    >
                                                                         <Box display="flex" justifyContent="space-between" alignItems="center">
                                                                             <HoverCard openDelay={300}>
                                                                                 <HoverCardTrigger asChild>
@@ -1442,17 +1710,29 @@ function SpecializedAgentSetupContent() {
                                                                             )}
                                                                         </Box>
                                                                         <Field description="Wrap dynamic variables in double brackets, e.g. [[variable_name]].">
-                                                                            <Textarea
+                                                                            <AutoGrowTextarea
                                                                                 value={systemPrompt}
                                                                                 onChange={(e) => setSystemPrompt(e.target.value)}
                                                                                 placeholder="You are a helpful assistant..."
-                                                                                className="h-40"
                                                                                 readOnly={isReadOnly}
                                                                             />
                                                                         </Field>
                                                                     </Box>
                                                                     {/* Memory Limit */}
-                                                                    <Box id="field-memory-limit" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(4)} onBlur={() => setActiveGuideStep(null)}>
+                                                                    <Box
+                                                                        id="field-memory-limit"
+                                                                        display="flex"
+                                                                        flexDirection="column"
+                                                                        gap="8"
+                                                                        onFocus={() => setActiveGuideStep(4)}
+                                                                        onBlur={() => setActiveGuideStep(null)}
+                                                                        style={{
+                                                                            outline: assistantHoveredField === "memory-limit" ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                                            outlineOffset: "8px",
+                                                                            borderRadius: "8px",
+                                                                            transition: "outline-color 0.2s ease",
+                                                                        }}
+                                                                    >
                                                                         <HoverCard openDelay={300}>
                                                                             <HoverCardTrigger asChild>
                                                                                 <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
@@ -1478,7 +1758,20 @@ function SpecializedAgentSetupContent() {
                                                                     </Box>
 
                                                                     {/* First Message */}
-                                                                    <Box id="field-first-message" display="flex" flexDirection="column" gap="8" onFocus={() => setActiveGuideStep(5)} onBlur={() => setActiveGuideStep(null)}>
+                                                                    <Box
+                                                                        id="field-first-message"
+                                                                        display="flex"
+                                                                        flexDirection="column"
+                                                                        gap="8"
+                                                                        onFocus={() => setActiveGuideStep(5)}
+                                                                        onBlur={() => setActiveGuideStep(null)}
+                                                                        style={{
+                                                                            outline: assistantHoveredField === "first-message" ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
+                                                                            outlineOffset: "8px",
+                                                                            borderRadius: "8px",
+                                                                            transition: "outline-color 0.2s ease",
+                                                                        }}
+                                                                    >
                                                                         <Box display="flex" gap="4" alignItems="center">
                                                                             <Text fontSize="md" fontWeight="500">First Message</Text>
                                                                             <Tooltip delayDuration={300} content="A static greeting shown to the user before they begin typing. Not sent to the model.">
@@ -1507,11 +1800,6 @@ function SpecializedAgentSetupContent() {
                                                                                     </Box>
                                                                                 </Tooltip>
                                                                             </Box>
-                                                                            {!isReadOnly && (
-                                                                                <Button appearance="subtle" size="sm" icon={<IconPlus />} onClick={() => setSuggestedPrompts([...suggestedPrompts, { label: "", prompt: "" }])}>
-                                                                                    Add
-                                                                                </Button>
-                                                                            )}
                                                                         </Box>
                                                                         <Text fontSize="sm" color="fg.secondary">Clickable buttons that offer suggested prompts to guide the conversation.</Text>
                                                                         <Box display="flex" flexDirection="column" gap="12">
@@ -1544,11 +1832,18 @@ function SpecializedAgentSetupContent() {
                                                                                         />
                                                                                     </Box>
                                                                                     {!isReadOnly && (
-                                                                                        <Button appearance="subtle" size="sm" icon={<IconX size={14} />} aria-label="Remove prompt" onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
+                                                                                        <Button appearance="subtle" size="sm" icon={<IconTrashCan size={14} />} aria-label="Remove prompt" onClick={() => setSuggestedPrompts(suggestedPrompts.filter((_, i) => i !== index))} />
                                                                                     )}
                                                                                 </Box>
                                                                             ))}
                                                                         </Box>
+                                                                        {!isReadOnly && (
+                                                                            <Box display="flex" justifyContent="flex-end">
+                                                                                <Button appearance="subtle" size="sm" icon={<IconPlus />} onClick={() => setSuggestedPrompts([...suggestedPrompts, { label: "", prompt: "" }])}>
+                                                                                    Add
+                                                                                </Button>
+                                                                            </Box>
+                                                                        )}
                                                                     </Box>
                                                                 </>
                                                             ) : (
@@ -2125,20 +2420,25 @@ function SpecializedAgentSetupContent() {
             />
 
             {/* Agent builder assistant panel */}
-            <AgentAssistantPanel
-                isOpen={showGuidePanel}
-                onClose={() => setShowGuidePanel(false)}
-                view={guidePanelView}
-                onViewChange={setGuidePanelView}
-                promptTemplate={promptTemplate}
-                variables={variables}
-                onInsertToPrompt={handleInsertToPrompt}
-                onApplyTemplate={(prompt) => setPromptTemplate(prompt)}
-                activeFieldStep={activeGuideStep}
-                onWizardStepChange={handleWizardStepChange}
-                onRunPreview={() => setIsTestRunOpen(true)}
-                multiTurnMode={multiTurnMode}
-            />
+            <div id="figma-agent-assistant-panel">
+                <AgentAssistantPanel
+                    isOpen={showGuidePanel}
+                    onClose={() => setShowGuidePanel(false)}
+                    view={guidePanelView}
+                    onViewChange={setGuidePanelView}
+                    promptTemplate={promptTemplate}
+                    tools={tools}
+                    variables={variables}
+                    onInsertToPrompt={handleInsertToPrompt}
+                    onAddTool={handleAddTool}
+                    onApplyTemplate={(prompt) => setPromptTemplate(prompt)}
+                    activeFieldStep={activeGuideStep}
+                    onWizardStepChange={handleWizardStepChange}
+                    onAssistantFieldHover={handleAssistantFieldHover}
+                    onRunPreview={() => setIsTestRunOpen(true)}
+                    multiTurnMode={multiTurnMode}
+                />
+            </div>
         </Box>
     );
 }

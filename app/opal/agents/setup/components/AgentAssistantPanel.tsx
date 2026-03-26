@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Box, Text, Button } from "@optiaxiom/react";
-import { IconChevronLeft, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb } from "@optimizely/axiom-icons";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@optiaxiom/react/unstable";
+import { IconBook, IconChevronLeft, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb } from "@optimizely/axiom-icons";
 import {
     IconX,
     IconGripVertical,
-    IconCircleCheck,
     IconAlertCircle,
 } from "@tabler/icons-react";
+import { LayoutGroup, motion } from "framer-motion";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,9 +54,9 @@ const WIZARD_STEPS = [
         step: 2,
         label: "Add an Input Variable",
         title: "Make your agent dynamic with variables",
-        intro: "Right now, your agent has fixed instructions. But real agents need to handle different inputs each time they run.\n\nInput variables are placeholders in your instructions that get filled in when someone uses the agent. They use double bracket syntax:",
+        intro: "Use variables to make the same instructions work with different inputs each time the agent runs.\n\nTo make one work, set it up in the Variables section below and reference it in the Prompt Template using double bracket syntax:",
         codeSnippet: "[[variable_name]]",
-        keyConcept: `Input variables use [[double_brackets]] syntax. They turn a static prompt into a reusable tool that handles different inputs every time.\n\nFor example, if your agent answers customer questions, you'd add a variable called customer_question and use it like:\n\n"Answer the following customer question: [[customer_question]]"\n\nYour task: Define a variable below, then update your instructions to include [[variable_name]] at least once.`,
+        keyConcept: `Variables only work when both pieces match: create the variable in the Variables section and use the same name in the Prompt Template with [[double_brackets]].\n\nFor example, if your agent answers customer questions, create a variable called customer_question below and use it like:\n\n"Answer the following customer question: [[customer_question]]"\n\nYour task: Add a variable below, then update your instructions to include [[variable_name]] at least once.`,
         checkLabel: "Check my variable",
     },
     {
@@ -78,19 +83,22 @@ const COMMON_ACTIONS = [
         id: "create-pdf",
         name: "Create PDF",
         description: "Export the full agent output as a formatted PDF document.",
-        prompt: `Put this entire report (including the overall assessment and both tables) into an HTML file using the write_content_to_file tool. Ensure the tables are properly formatted in HTML. Then, convert this HTML file to a PDF using convert_to_pdf tool.`,
+        prompt: "`Create PDF`",
+        details: `Put this entire report (including the overall assessment and both tables) into an HTML file using the write_content_to_file tool. Ensure the tables are properly formatted in HTML. Then, convert this HTML file to a PDF using convert_to_pdf tool.`,
     },
     {
         id: "export-csv",
         name: "Export to CSV",
         description: "Save structured data from the output to a downloadable CSV file.",
-        prompt: `Export the data as a CSV file using the write_content_to_file tool. Ensure all columns are properly formatted and include a header row.`,
+        prompt: "`Export to CSV`",
+        details: `Export the data as a CSV file using the write_content_to_file tool. Ensure all columns are properly formatted and include a header row.`,
     },
     {
         id: "send-email",
         name: "Send Email",
         description: "Send the agent's output via email to a specified recipient.",
-        prompt: `Send the output via email using the send_email tool. Include a clear subject line and format the body content for readability.`,
+        prompt: "`Send Email`",
+        details: `Send the output via email using the send_email tool. Include a clear subject line and format the body content for readability.`,
     },
 ];
 
@@ -211,7 +219,7 @@ function evaluateStep2(prompt: string, variables: any[]): CheckerResult {
     return { total, maxTotal: 100, passed, categories, suggestions, summary };
 }
 
-function suggestTools(prompt: string): { name: string; description: string }[] {
+function suggestTools(prompt: string): { name: string; description: string; snippet: string }[] {
     const lower = prompt.toLowerCase();
     const tools: { name: string; description: string; snippet: string }[] = [];
     if (/email|send mail/.test(lower)) tools.push({ name: "send_email", description: "Send emails directly from your agent", snippet: "\n\nUse the send_email tool to send the output to the recipient." });
@@ -242,11 +250,11 @@ function KeyConceptCallout({ text }: { text: string }) {
                 padding: "10px 12px",
             }}
         >
-            <IconLightbulb size={15} style={{ flexShrink: 0, marginTop: "2px", color: "#6366f1" }} />
+            <IconBook size={15} style={{ flexShrink: 0, marginTop: "2px", color: "#6366f1" }} />
             <Box display="flex" flexDirection="column" gap="4">
-                <Text fontSize="sm" fontWeight="500" style={{ color: "#4338ca" }}>Key Concept:</Text>
+                <Text fontSize="md" fontWeight="500" style={{ color: "#4338ca" }}>Key Concept:</Text>
                 {text.split("\n").filter(Boolean).map((line, i) => (
-                    <Text key={i} fontSize="sm" style={{ color: "#4f576e", lineHeight: "1.55" }}>
+                    <Text key={i} fontSize="md" style={{ color: "#4f576e", lineHeight: "1.55" }}>
                         {line}
                     </Text>
                 ))}
@@ -255,7 +263,7 @@ function KeyConceptCallout({ text }: { text: string }) {
     );
 }
 
-function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep: () => void }) {
+function CheckerCard({ result }: { result: CheckerResult }) {
     const passedColor = result.passed ? "#166534" : "#92400e";
     const passBg = result.passed ? "#f0fdf4" : "#fffbeb";
     const passBorder = result.passed ? "#bbf7d0" : "#fde68a";
@@ -276,10 +284,10 @@ function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep
                     }}
                 >
                     {result.passed
-                        ? <IconCircleCheck size={13} color={passedColor} />
+                        ? <IconCircleCheckAxiom size={13} color={passedColor} />
                         : <IconAlertCircle size={13} color={passedColor} />
                     }
-                    <Text fontSize="sm" fontWeight="500" style={{ color: passedColor }}>
+                    <Text fontSize="md" fontWeight="500" style={{ color: passedColor }}>
                         {result.passed ? "Passed" : "Needs work"}
                     </Text>
                 </Box>
@@ -301,10 +309,10 @@ function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box display="flex" alignItems="center" gap="6">
                         {result.passed
-                            ? <IconCircleCheck size={16} color={passedColor} />
+                            ? <IconCircleCheckAxiom size={16} color={passedColor} />
                             : <IconAlertCircle size={16} color={passedColor} />
                         }
-                        <Text fontWeight="600" fontSize="md" style={{ color: passedColor }}>
+                        <Text fontWeight="600" fontSize="lg" style={{ color: passedColor }}>
                             {result.passed ? "Passed!" : "Needs work"}
                         </Text>
                     </Box>
@@ -316,14 +324,14 @@ function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep
                             padding: "1px 10px",
                         }}
                     >
-                        <Text fontWeight="600" fontSize="sm" style={{ color: passedColor }}>
+                        <Text fontWeight="600" fontSize="md" style={{ color: passedColor }}>
                             {result.total}/{result.maxTotal}
                         </Text>
                     </Box>
                 </Box>
 
                 {/* Summary text */}
-                <Text fontSize="sm" style={{ color: passedColor, lineHeight: "1.55" }}>
+                <Text fontSize="md" style={{ color: passedColor, lineHeight: "1.55" }}>
                     {result.summary}
                 </Text>
 
@@ -347,12 +355,12 @@ function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep
                                         flexShrink: 0,
                                     }}
                                 >
-                                    <Text style={{ fontSize: "9px", fontWeight: 700, color: catPassed ? "#166534" : "#92400e" }}>
+                                    <Text style={{ fontSize: "10px", fontWeight: 700, color: catPassed ? "#166534" : "#92400e" }}>
                                         {cat.key}
                                     </Text>
                                 </Box>
                                 {/* Label */}
-                                <Text fontSize="sm" style={{ flex: 1, color: "#4f576e", minWidth: 0 }}>{cat.label}</Text>
+                                <Text fontSize="md" style={{ flex: 1, color: "#4f576e", minWidth: 0 }}>{cat.label}</Text>
                                 {/* Progress bar */}
                                 <Box style={{ width: "60px", height: "4px", background: "rgba(0,0,0,0.08)", borderRadius: "2px", flexShrink: 0 }}>
                                     <Box style={{
@@ -364,12 +372,12 @@ function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep
                                     }} />
                                 </Box>
                                 {/* Score */}
-                                <Text style={{ fontSize: "11px", color: "#4f576e", width: "24px", textAlign: "right", flexShrink: 0 }}>
+                                <Text style={{ fontSize: "12px", color: "#4f576e", width: "24px", textAlign: "right", flexShrink: 0 }}>
                                     {cat.score}
                                 </Text>
                                 {/* Check circle */}
                                 {catPassed
-                                    ? <IconCircleCheck size={13} color="#16a34a" style={{ flexShrink: 0 }} />
+                                    ? <IconCircleCheckAxiom size={13} color="#16a34a" style={{ flexShrink: 0 }} />
                                     : <Box style={{ width: 13, height: 13, borderRadius: "50%", border: "1.5px solid #d1d5db", flexShrink: 0 }} />
                                 }
                             </Box>
@@ -382,122 +390,80 @@ function CheckerCard({ result, onNextStep }: { result: CheckerResult; onNextStep
                     <Box display="flex" flexDirection="column" gap="4">
                         {result.suggestions.map((s, i) => (
                             <Box key={i} display="flex" gap="6" style={{ alignItems: "flex-start" }}>
-                                <Text style={{ color: passedColor, fontSize: "12px", flexShrink: 0, lineHeight: "1.6" }}>–</Text>
-                                <Text style={{ fontSize: "12px", color: passedColor, lineHeight: "1.6" }}>{s}</Text>
+                                <Text style={{ color: passedColor, fontSize: "13px", flexShrink: 0, lineHeight: "1.6" }}>–</Text>
+                                <Text style={{ fontSize: "13px", color: passedColor, lineHeight: "1.6" }}>{s}</Text>
                             </Box>
                         ))}
                     </Box>
                 )}
             </Box>
-
-            {/* Next Step button */}
-            <Button
-                appearance="inverse"
-                size="sm"
-                style={{ alignSelf: "flex-start" }}
-                onClick={onNextStep}
-            >
-                Next Step →
-            </Button>
         </Box>
     );
 }
 
 function CommonActionCard({
     action,
-    isExpanded,
-    onToggle,
     onInsert,
 }: {
     action: typeof COMMON_ACTIONS[0];
-    isExpanded: boolean;
-    onToggle: () => void;
     onInsert: () => void;
 }) {
+    const promptInsertion = `${action.prompt} | ${action.details}`;
+
     return (
-        <Box
-            draggable
-            onDragStart={(e: React.DragEvent) => {
-                e.dataTransfer.setData("text/plain", action.prompt);
-                e.dataTransfer.effectAllowed = "copy";
-            }}
-            style={{
-                background: "#ffffff",
-                border: "1px solid #e9edf5",
-                borderRadius: "12px",
-                cursor: "grab",
-            }}
-        >
-            {/* Collapsed row */}
-            <Box
-                display="flex"
-                alignItems="center"
-                gap="8"
-                style={{ padding: "10px 12px", cursor: "pointer" }}
-                onClick={onToggle}
-            >
-                <IconGripVertical
-                    size={16}
-                    color="var(--ax-colors-fg-tertiary)"
-                    style={{ flexShrink: 0, cursor: "grab" }}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                />
-                <Text fontSize="sm" color="fg.default" style={{ flex: 1, fontWeight: 500 }}>
-                    {action.name}
-                </Text>
-                <Button
-                    appearance="subtle"
-                    size="sm"
-                    icon={<IconPlus size={13} />}
-                    onClick={(e: React.MouseEvent) => { e.stopPropagation(); onInsert(); }}
-                    style={{ flexShrink: 0 }}
-                >
-                    Add to prompt
-                </Button>
+        <HoverCard openDelay={200}>
+            <HoverCardTrigger asChild>
                 <Box
+                    draggable
+                    onDragStart={(e: React.DragEvent) => {
+                        e.dataTransfer.setData("text/plain", promptInsertion);
+                        e.dataTransfer.effectAllowed = "copy";
+                    }}
+                    onClick={onInsert}
+                    display="inline-flex"
+                    alignItems="center"
+                    gap="8"
                     style={{
-                        flexShrink: 0,
-                        transition: "transform 0.15s ease",
-                        transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
-                        display: "flex",
-                        alignItems: "center",
+                        background: "#ffffff",
+                        border: "1px solid #dadfeb",
+                        borderRadius: "999px",
+                        padding: "8px 12px",
+                        cursor: "pointer",
                     }}
                 >
-                    <IconChevronRight size={14} color="var(--ax-colors-fg-tertiary)" />
+                    <IconGripVertical
+                        size={14}
+                        color="var(--ax-colors-fg-tertiary)"
+                        style={{ flexShrink: 0, cursor: "grab" }}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    />
+                    <Text fontSize="md" color="fg.default" style={{ fontWeight: 500 }}>
+                        {action.name}
+                    </Text>
+                    <IconPlus size={13} color="var(--ax-colors-fg-tertiary)" />
                 </Box>
-            </Box>
-
-            {/* Expanded content */}
-            {isExpanded && (
-                <Box
-                    display="flex"
-                    flexDirection="column"
-                    gap="10"
-                    style={{ padding: "0 12px 12px 12px" }}
-                >
-                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="start" style={{ maxWidth: "320px" }}>
+                <Box display="flex" flexDirection="column" gap="8" p="4">
+                    <Text fontWeight="600" fontSize="md">{action.name}</Text>
+                    <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
                         {action.description}
                     </Text>
-                    {/* Prompt capsule */}
                     <Box
                         style={{
                             background: "#f5f6fa",
                             border: "1px solid #dadfeb",
-                            borderRadius: "6px",
+                            borderRadius: "8px",
                             padding: "8px 10px",
-                            fontFamily: "ui-monospace, 'Menlo', monospace",
-                            fontSize: "11.5px",
-                            color: "#4f576e",
-                            lineHeight: "1.55",
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
                         }}
                     >
-                        {action.prompt}
+                        <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5", whiteSpace: "pre-wrap" }}>
+                            {action.details}
+                        </Text>
                     </Box>
                 </Box>
-            )}
-        </Box>
+            </HoverCardContent>
+        </HoverCard>
     );
 }
 
@@ -509,11 +475,14 @@ interface AgentAssistantPanelProps {
     view: "assistant" | "guide";
     onViewChange: (v: "assistant" | "guide") => void;
     promptTemplate: string;
+    tools: string;
     variables: any[];
     onInsertToPrompt: (text: string) => void;
+    onAddTool: (toolName: string) => void;
     onApplyTemplate: (prompt: string) => void;
     activeFieldStep: number | null;
     onWizardStepChange: (step: number) => void;
+    onAssistantFieldHover?: (field: "system-prompt" | "memory-limit" | "first-message" | null) => void;
     onRunPreview?: () => void;
     multiTurnMode?: boolean;
 }
@@ -540,26 +509,35 @@ export function AgentAssistantPanel({
     view,
     onViewChange,
     promptTemplate,
+    tools,
     variables,
     onInsertToPrompt,
+    onAddTool,
     onApplyTemplate,
     activeFieldStep,
     onWizardStepChange,
+    onAssistantFieldHover,
     onRunPreview,
     multiTurnMode = false,
 }: AgentAssistantPanelProps) {
+    const DEFAULT_PANEL_WIDTH = 348;
+    const MIN_PANEL_WIDTH = 320;
+    const MAX_PANEL_WIDTH = 640;
     const [isOverview, setIsOverview] = useState(true);
     const [wizardStep, setWizardStep] = useState(1);
+    const [visitedSteps, setVisitedSteps] = useState<number[]>([1]);
     const [checkerResult, setCheckerResult] = useState<CheckerResult | null>(null);
     const [hasChecked, setHasChecked] = useState(false);
-    const [expandedAction, setExpandedAction] = useState<string | null>(null);
     const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
+    const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
+    const [isResizing, setIsResizing] = useState(false);
 
     // Field focus → wizard step sync (exits overview)
     useEffect(() => {
         if (activeFieldStep !== null && activeFieldStep !== undefined) {
             setIsOverview(false);
             setWizardStep(activeFieldStep);
+            setVisitedSteps((prev) => prev.includes(activeFieldStep) ? prev : [...prev, activeFieldStep]);
             setCheckerResult(null);
             setHasChecked(false);
         }
@@ -568,9 +546,14 @@ export function AgentAssistantPanel({
     const goToStep = (step: number) => {
         setIsOverview(false);
         setWizardStep(step);
+        setVisitedSteps((prev) => prev.includes(step) ? prev : [...prev, step]);
         setCheckerResult(null);
         setHasChecked(false);
         onWizardStepChange(step);
+    };
+
+    const goToStepAndHighlight = (step: number) => {
+        goToStep(step);
     };
 
     const goToOverview = () => {
@@ -585,24 +568,115 @@ export function AgentAssistantPanel({
         setHasChecked(true);
     };
 
+    const handleResizeStart = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+        event.preventDefault();
+        const startX = event.clientX;
+        const startWidth = panelWidth;
+        setIsResizing(true);
+        document.body.style.userSelect = "none";
+        document.body.style.cursor = "col-resize";
+
+        const handlePointerMove = (moveEvent: PointerEvent) => {
+            const nextWidth = Math.min(
+                MAX_PANEL_WIDTH,
+                Math.max(MIN_PANEL_WIDTH, startWidth - (moveEvent.clientX - startX))
+            );
+            setPanelWidth(nextWidth);
+        };
+
+        const handlePointerUp = () => {
+            setIsResizing(false);
+            document.body.style.userSelect = "";
+            document.body.style.cursor = "";
+            window.removeEventListener("pointermove", handlePointerMove);
+            window.removeEventListener("pointerup", handlePointerUp);
+        };
+
+        window.addEventListener("pointermove", handlePointerMove);
+        window.addEventListener("pointerup", handlePointerUp);
+    }, [panelWidth]);
+
     const totalSteps = multiTurnMode ? 5 : 4;
-    const allSteps = multiTurnMode ? [...WIZARD_STEPS, MULTITURN_STEP] : WIZARD_STEPS;
+    const allSteps = multiTurnMode
+        ? [WIZARD_STEPS[0], WIZARD_STEPS[1], WIZARD_STEPS[2], MULTITURN_STEP, WIZARD_STEPS[3]]
+        : WIZARD_STEPS;
     const currentStep = allSteps[wizardStep - 1] ?? WIZARD_STEPS[0];
     const suggestedTools = wizardStep === 3 ? suggestTools(promptTemplate) : [];
+    const addedTools = new Set(
+        tools
+            .split(",")
+            .map((item) => item.trim().toLowerCase())
+            .filter(Boolean)
+    );
+    const completedSteps = new Set<number>();
+
+    if (promptTemplate.trim().length > 0) completedSteps.add(1);
+    if (/\[\[.+?\]\]/.test(promptTemplate) && variables.length > 0) completedSteps.add(2);
+    if (tools.trim().length > 0) completedSteps.add(3);
+    if (Boolean((promptTemplate || "").trim()) && Boolean((variables[0]?.name || "").trim())) {
+        completedSteps.add(4);
+    }
+    if (multiTurnMode && visitedSteps.includes(5)) {
+        completedSteps.add(5);
+    }
 
     const stepperItems = [
         { step: 1, label: "Write Instructions", description: "Define your agent's role and behavior" },
         { step: 2, label: "Add an Input Variable", description: "Make your agent dynamic with [[variables]]" },
         { step: 3, label: "Add Tools", description: "Extend your agent with actions and integrations" },
-        { step: 4, label: "See It Live", description: "Test your agent with real inputs" },
-        ...(multiTurnMode ? [{ step: 5, label: "Multi-Turn Settings", description: "System prompt, memory limit & first message" }] : []),
+        ...(multiTurnMode
+            ? [
+                { step: 4, label: "Multi-Turn Settings", description: "System prompt, memory limit & first message" },
+                { step: 5, label: "See It Live", description: "Test your agent with real inputs" },
+            ]
+            : [{ step: 4, label: "See It Live", description: "Test your agent with real inputs" }]),
+    ];
+    const multiTurnInfoCards = [
+        {
+            title: "System Prompt",
+            text: "A hidden, permanent instruction that sets the agent's persona and guardrails. Users never see it.",
+        },
+        {
+            title: "Memory Limit",
+            text: "How many conversation turns the agent keeps in context. More memory = better recall, higher cost.",
+        },
+        {
+            title: "First Message",
+            text: "A static greeting shown to the user before they type anything. Sets the tone immediately.",
+        },
+    ];
+    const memoryLevelCards = [
+        {
+            level: "LOW",
+            range: "5–10",
+            details: "Simple tasks, stateless queries and lookups.",
+            chip: "Q&A · Calc",
+            accent: "#0f9b8e",
+            chipBackground: "#e8f7f4",
+        },
+        {
+            level: "MEDIUM",
+            range: "10–20",
+            details: "Multi-step reasoning, 1–2 knowledge bases.",
+            chip: "Research",
+            accent: "#dd7a00",
+            chipBackground: "#fff1db",
+        },
+        {
+            level: "HIGH",
+            range: "20–50",
+            details: "Full history, deep iterative refinement.",
+            chip: "Exploration",
+            accent: "#e23d32",
+            chipBackground: "#fde9e7",
+        },
     ];
 
     return (
         <Box
             style={{
-                width: isOpen ? "348px" : "0px",
-                transition: "width 0.3s ease-in-out",
+                width: isOpen ? `${panelWidth}px` : "0px",
+                transition: isResizing ? "none" : "width 0.3s ease-in-out",
                 overflow: "hidden",
                 display: "flex",
                 flexShrink: 0,
@@ -614,6 +688,7 @@ export function AgentAssistantPanel({
                 view === "guide" ? (
                     /* ── Guide view ─────────────────────────────────────── */
                     <Box
+                        id="figma-agent-assistant-panel"
                         display="flex"
                         flexDirection="column"
                         style={{
@@ -623,9 +698,24 @@ export function AgentAssistantPanel({
                             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
                             backgroundColor: "var(--ax-colors-bg-default)",
                             overflow: "hidden",
-                            maxHeight: "calc(100vh - 112px)",
+                            height: "calc(100vh - 80px)",
                         }}
                     >
+                        <Box
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-label="Resize assistant panel"
+                            onPointerDown={handleResizeStart}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "18px",
+                                height: "100%",
+                                cursor: "col-resize",
+                                zIndex: 3,
+                            }}
+                        />
                         <Box
                             px="16"
                             py="12"
@@ -637,18 +727,18 @@ export function AgentAssistantPanel({
                             <Box display="flex" alignItems="center" gap="4">
                                 <Button
                                     appearance="subtle"
-                                    size="sm"
+                                    size="md"
                                     icon={<IconChevronLeft size={16} />}
                                     aria-label="Back to assistant"
                                     onClick={() => onViewChange("assistant")}
                                 />
-                                <Text fontWeight="500" fontSize="md" color="fg.default">
+                                <Text fontWeight="500" fontSize="lg" color="fg.default">
                                     Quick-start guide
                                 </Text>
                             </Box>
                             <Button
                                 appearance="subtle"
-                                size="sm"
+                                size="md"
                                 icon={<IconX size={16} />}
                                 aria-label="Close panel"
                                 onClick={onClose}
@@ -664,6 +754,7 @@ export function AgentAssistantPanel({
                     </Box>
                 ) : (
                     /* ── Wizard / Assistant view ─────────────────────────── */
+                    <LayoutGroup id="agent-assistant-steps">
                     <Box
                         display="flex"
                         flexDirection="column"
@@ -675,9 +766,24 @@ export function AgentAssistantPanel({
                             borderRadius: "12px",
                             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
                             backgroundColor: "var(--ax-colors-bg-default)",
-                            maxHeight: "calc(100vh - 112px)",
+                            height: "calc(100vh - 80px)",
                         }}
                     >
+                        <Box
+                            role="separator"
+                            aria-orientation="vertical"
+                            aria-label="Resize assistant panel"
+                            onPointerDown={handleResizeStart}
+                            style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                width: "18px",
+                                height: "100%",
+                                cursor: "col-resize",
+                                zIndex: 3,
+                            }}
+                        />
                         {/* Purple gradient bg */}
                         <Box
                             style={{
@@ -710,41 +816,93 @@ export function AgentAssistantPanel({
                         >
                             {/* Title row */}
                             <Box display="flex" alignItems="center">
-                                {isOverview && (
-                                    <IconLightbulb size={18} style={{ flexShrink: 0, color: "var(--ax-colors-fg-tertiary)", marginRight: "6px" }} />
-                                )}
-                                <Text fontWeight="500" fontSize="md" color="fg.default" style={{ flex: 1 }}>
+                                <Button
+                                    appearance="subtle"
+                                    size="md"
+                                    icon={<IconLightbulb size={18} />}
+                                    aria-label="Back to assistant overview"
+                                    onClick={goToOverview}
+                                    style={{ flexShrink: 0, marginRight: "2px" }}
+                                />
+                                <Text fontWeight="500" fontSize="lg" color="fg.default" style={{ flex: 1 }}>
                                     Agent Setup Assistant
                                 </Text>
                                 <Button
                                     appearance="subtle"
-                                    size="sm"
+                                    size="md"
                                     icon={<IconXmark size={16} />}
                                     aria-label="Close assistant"
                                     onClick={onClose}
                                 />
                             </Box>
-                            {/* Step / subtitle row */}
-                            <Box display="flex" alignItems="center" gap="4">
-                                {!isOverview && (
-                                    <Button
-                                        appearance="subtle"
-                                        size="sm"
-                                        icon={<IconChevronLeft size={16} />}
-                                        aria-label="Back"
-                                        style={{ marginLeft: "-6px" }}
-                                        onClick={() => wizardStep > 1 ? goToStep(wizardStep - 1) : goToOverview()}
-                                    />
-                                )}
-                                <Text fontSize="sm" color="fg.tertiary">
-                                    {isOverview
-                                        ? `Build your first agent in ${totalSteps} steps`
-                                        : `Step ${wizardStep} of ${totalSteps} · ${currentStep.label}`}
+                            {isOverview ? (
+                                <Text fontSize="md" color="fg.tertiary" mt="4">
+                                    {`Build your agent in ${totalSteps} steps`}
                                 </Text>
-                            </Box>
+                            ) : (
+                                <Box display="flex" flexDirection="column" gap="12" mt="12">
+                                    <Box display="flex" alignItems="center" justifyContent="space-between" gap="12">
+                                        <Box display="flex" alignItems="center" gap="12">
+                                        {stepperItems.map((item) => {
+                                            const isActive = item.step === wizardStep;
+                                            const isDone = visitedSteps.includes(item.step) && completedSteps.has(item.step);
+                                            return (
+                                                <motion.div
+                                                    key={item.step}
+                                                    layoutId={isResizing ? undefined : `assistant-step-${item.step}`}
+                                                    onClick={() => goToStepAndHighlight(item.step)}
+                                                    style={{
+                                                        display: "inline-flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        width: "32px",
+                                                        height: "32px",
+                                                        borderRadius: "999px",
+                                                        boxShadow: isActive ? "0 0 0 2px rgba(99,102,241,0.28)" : "none",
+                                                        background: isDone
+                                                            ? "rgba(3,166,93,0.08)"
+                                                            : isActive
+                                                              ? "rgba(91,92,235,0.18)"
+                                                              : "rgba(91,92,235,0.10)",
+                                                        color: isDone
+                                                            ? "var(--ax-colors-fg-success)"
+                                                            : "#5B5CEB",
+                                                        cursor: "pointer",
+                                                        fontSize: "16px",
+                                                        fontWeight: 600,
+                                                        flexShrink: 0,
+                                                    }}
+                                                    transition={isResizing ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                                                >
+                                                    {isDone ? <IconCircleCheckAxiom size={18} /> : item.step}
+                                                </motion.div>
+                                            );
+                                        })}
+                                        </Box>
+                                        <Button
+                                            appearance="subtle"
+                                            size="md"
+                                            icon={<IconBook size={16} />}
+                                            aria-label="Open setup documentation"
+                                            onClick={() => onViewChange("guide")}
+                                        />
+                                    </Box>
+                                </Box>
+                            )}
                         </Box>
 
                         {/* Scrollable body */}
+                        <Box
+                            style={{
+                                flex: 1,
+                                minHeight: 0,
+                                overflow: "hidden",
+                                position: "relative",
+                                zIndex: 1,
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
                         <Box
                             px="16"
                             py="16"
@@ -753,9 +911,8 @@ export function AgentAssistantPanel({
                             gap="16"
                             style={{
                                 flex: 1,
+                                minHeight: 0,
                                 overflowY: "auto",
-                                position: "relative",
-                                zIndex: 1,
                             }}
                         >
                             {/* ── Overview screen ─────────────────────────── */}
@@ -776,7 +933,7 @@ export function AgentAssistantPanel({
                                                 marginBottom: "4px",
                                             }}
                                         >
-                                            <Text style={{ fontSize: "11px", fontWeight: 600, color: "#4338ca" }}>Multi-turn enabled</Text>
+                                            <Text style={{ fontSize: "12px", fontWeight: 600, color: "#4338ca" }}>Multi-turn enabled</Text>
                                         </Box>
                                     )}
                                     {/* Stepper */}
@@ -787,10 +944,7 @@ export function AgentAssistantPanel({
                                                 display="flex"
                                                 alignItems="center"
                                                 gap="10"
-                                                onClick={() => {
-                                                    onWizardStepChange(item.step);
-                                                    goToStep(item.step);
-                                                }}
+                                                onClick={() => goToStepAndHighlight(item.step)}
                                                 onMouseEnter={(e: React.MouseEvent<HTMLElement>) => {
                                                     (e.currentTarget as HTMLElement).style.background = "#f5f6fa";
                                                     onWizardStepChange(item.step);
@@ -806,28 +960,30 @@ export function AgentAssistantPanel({
                                                 }}
                                             >
                                                 {/* Number badge */}
-                                                <Box
+                                                <motion.div
+                                                    layoutId={isResizing ? undefined : `assistant-step-${item.step}`}
                                                     style={{
-                                                        width: "24px",
-                                                        height: "24px",
+                                                        width: "32px",
+                                                        height: "32px",
                                                         borderRadius: "50%",
-                                                        background: "rgba(99,102,241,0.1)",
+                                                        background: "rgba(91,92,235,0.10)",
                                                         display: "flex",
                                                         alignItems: "center",
                                                         justifyContent: "center",
                                                         flexShrink: 0,
                                                     }}
+                                                    transition={isResizing ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
                                                 >
-                                                    <Text style={{ fontSize: "11px", fontWeight: 700, color: "#4338ca" }}>
+                                                    <Text style={{ fontSize: "15px", fontWeight: 600, color: "#5B5CEB" }}>
                                                         {item.step}
                                                     </Text>
-                                                </Box>
+                                                </motion.div>
                                                 {/* Labels */}
                                                 <Box display="flex" flexDirection="column" style={{ flex: 1, gap: "1px" }}>
-                                                    <Text fontWeight="500" fontSize="sm" color="fg.default">
+                                                    <Text fontWeight="500" fontSize="md" color="fg.default">
                                                         {item.label}
                                                     </Text>
-                                                    <Text style={{ fontSize: "12px", color: "var(--ax-colors-fg-tertiary)", lineHeight: "1.4" }}>
+                                                    <Text style={{ fontSize: "13px", color: "var(--ax-colors-fg-tertiary)", lineHeight: "1.4" }}>
                                                         {item.description}
                                                     </Text>
                                                 </Box>
@@ -838,7 +994,7 @@ export function AgentAssistantPanel({
 
                                     {/* Suggested Templates */}
                                     <Box display="flex" flexDirection="column" gap="8" style={{ marginTop: "16px" }}>
-                                        <Text fontWeight="500" fontSize="sm" color="fg.default">
+                                        <Text fontWeight="500" fontSize="md" color="fg.default">
                                             Suggested Templates
                                         </Text>
                                         <Box display="flex" flexDirection="column" gap="6">
@@ -859,7 +1015,7 @@ export function AgentAssistantPanel({
                                                         onClick={() => setExpandedTemplate(expandedTemplate === tmpl.id ? null : tmpl.id)}
                                                         style={{ padding: "12px 14px", cursor: "pointer" }}
                                                     >
-                                                        <Text fontWeight="500" fontSize="sm" color="fg.default" style={{ flex: 1 }}>
+                                                        <Text fontWeight="500" fontSize="md" color="fg.default" style={{ flex: 1 }}>
                                                             {tmpl.name}
                                                         </Text>
                                                         <Box
@@ -882,12 +1038,12 @@ export function AgentAssistantPanel({
                                                             gap="10"
                                                             style={{ padding: "0 14px 14px" }}
                                                         >
-                                                            <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+                                                            <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
                                                                 {tmpl.description}
                                                             </Text>
                                                             <Button
                                                                 appearance="inverse"
-                                                                size="sm"
+                                                                size="md"
                                                                 icon={<IconCircleCheckAxiom size={14} />}
                                                                 style={{ alignSelf: "flex-start" }}
                                                                 onClick={() => {
@@ -906,7 +1062,7 @@ export function AgentAssistantPanel({
                                             ))}
                                         </Box>
                                         <Box display="flex" justifyContent="flex-end">
-                                            <Button appearance="subtle" size="sm">
+                                            <Button appearance="subtle" size="md">
                                                 Load more
                                             </Button>
                                         </Box>
@@ -927,27 +1083,21 @@ export function AgentAssistantPanel({
                             {wizardStep === 1 && (
                                 <Box display="flex" flexDirection="column" gap="12">
                                     {currentStep.intro?.split("\n\n").map((para, i) => (
-                                        <Text key={i} fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                        <Text key={i} fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                             {para}
                                         </Text>
                                     ))}
                                     <Box display="flex" flexDirection="column" gap="6">
                                         {WIZARD_STEPS[0].bullets?.map((b, i) => (
                                             <Box key={i} display="flex" gap="8" style={{ alignItems: "flex-start" }}>
-                                                <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0, lineHeight: "1.55" }}>•</Text>
-                                                <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                                <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0, lineHeight: "1.55" }}>•</Text>
+                                                <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                                     <strong>{b.bold}:</strong> {b.text}
                                                 </Text>
                                             </Box>
                                         ))}
                                     </Box>
                                     <KeyConceptCallout text={WIZARD_STEPS[0].keyConcept!} />
-                                    {!hasChecked && (
-                                        <Button appearance="inverse"
-                                        style={{ alignSelf: "flex-start" }} size="sm" onClick={handleCheck}>
-                                            {currentStep.checkLabel}
-                                        </Button>
-                                    )}
                                 </Box>
                             )}
 
@@ -955,7 +1105,7 @@ export function AgentAssistantPanel({
                             {wizardStep === 2 && (
                                 <Box display="flex" flexDirection="column" gap="12">
                                     {currentStep.intro?.split("\n\n").map((para, i) => (
-                                        <Text key={i} fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                        <Text key={i} fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                             {para}
                                         </Text>
                                     ))}
@@ -968,7 +1118,7 @@ export function AgentAssistantPanel({
                                             borderRadius: "6px",
                                             padding: "4px 10px",
                                             fontFamily: "ui-monospace, 'Menlo', monospace",
-                                            fontSize: "13px",
+                                            fontSize: "14px",
                                             color: "#2e3442",
                                             alignSelf: "flex-start",
                                         }}
@@ -976,22 +1126,16 @@ export function AgentAssistantPanel({
                                         {WIZARD_STEPS[1].codeSnippet}
                                     </Box>
                                     <KeyConceptCallout text={WIZARD_STEPS[1].keyConcept!} />
-                                    {!hasChecked && (
-                                        <Button appearance="inverse"
-                                        style={{ alignSelf: "flex-start" }} size="sm" onClick={handleCheck}>
-                                            {currentStep.checkLabel}
-                                        </Button>
-                                    )}
                                 </Box>
                             )}
 
                             {/* Step 3 content */}
                             {wizardStep === 3 && (
                                 <Box display="flex" flexDirection="column" gap="12">
-                                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                    <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                         {currentStep.intro}
                                     </Text>
-                                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                    <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                         {WIZARD_STEPS[2].keyConcept}
                                     </Text>
                                     {/* Tool suggestion cards */}
@@ -1008,49 +1152,33 @@ export function AgentAssistantPanel({
                                                     borderRadius: "8px",
                                                     padding: "8px 12px",
                                                 }}
-                                            >
+                                                >
                                                 <Box style={{ flex: 1 }}>
-                                                    <Text fontSize="sm" fontWeight="500" color="fg.default"
+                                                    <Text fontSize="md" fontWeight="500" color="fg.default"
                                                         style={{ fontFamily: "ui-monospace, monospace" }}>
                                                         {tool.name}
                                                     </Text>
-                                                    <Text style={{ fontSize: "11.5px", color: "#66708c", lineHeight: "1.4" }}>
+                                                    <Text style={{ fontSize: "13.5px", color: "#66708c", lineHeight: "1.4" }}>
                                                         {tool.description}
                                                     </Text>
                                                 </Box>
                                                 <Button
                                                     appearance="subtle"
-                                                    size="sm"
+                                                    size="md"
                                                     style={{ flexShrink: 0 }}
-                                                    onClick={() => onInsertToPrompt(tool.snippet)}
+                                                    onClick={() => onAddTool(tool.name)}
+                                                    disabled={addedTools.has(tool.name.toLowerCase())}
                                                 >
-                                                    Add to prompt
+                                                    {addedTools.has(tool.name.toLowerCase()) ? "Added" : "Add"}
                                                 </Button>
                                             </Box>
                                         ))}
-                                    </Box>
-                                    {/* Add all + Next Step row */}
-                                    <Box display="flex" alignItems="center" gap="8">
-                                        <Button
-                                            appearance="subtle"
-                                            size="sm"
-                                            onClick={() => suggestedTools.forEach(t => onInsertToPrompt(t.snippet))}
-                                        >
-                                            Add all
-                                        </Button>
-                                        <Button
-                                            appearance="inverse"
-                                            size="sm"
-                                            onClick={() => goToStep(4)}
-                                        >
-                                            Next Step →
-                                        </Button>
                                     </Box>
                                 </Box>
                             )}
 
                             {/* Step 4 content */}
-                            {wizardStep === 4 && (
+                            {wizardStep === (multiTurnMode ? 5 : 4) && (
                                 <Box display="flex" flexDirection="column" gap="12">
                                     {/* Summary of what was built */}
                                     <Box
@@ -1064,117 +1192,150 @@ export function AgentAssistantPanel({
                                             padding: "12px",
                                         }}
                                     >
-                                        <Text fontSize="sm" fontWeight="500" color="fg.default">You've built an agent with:</Text>
+                                        <Text fontSize="md" fontWeight="500" color="fg.default">You've built an agent with:</Text>
                                         <Box display="flex" gap="6" style={{ alignItems: "flex-start" }}>
-                                            <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>•</Text>
-                                            <Text fontSize="sm" color="fg.secondary">
+                                            <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0 }}>•</Text>
+                                            <Text fontSize="md" color="fg.secondary">
                                                 <strong>Instructions:</strong> Written
                                             </Text>
                                         </Box>
                                         {variables.length > 0 && (
                                             <Box display="flex" gap="6" style={{ alignItems: "flex-start" }}>
-                                                <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>•</Text>
-                                                <Text fontSize="sm" color="fg.secondary">
+                                                <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0 }}>•</Text>
+                                                <Text fontSize="md" color="fg.secondary">
                                                     <strong>Variable:</strong> [[{variables[0]?.name ?? "variable"}]]
                                                 </Text>
                                             </Box>
                                         )}
                                     </Box>
                                     {currentStep.intro?.split("\n\n").map((para, i) => (
-                                        <Text key={i} fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                        <Text key={i} fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                             {para}
                                         </Text>
                                     ))}
-                                    <Box display="flex" gap="8" alignItems="center">
-                                        <Button
-                                            appearance="inverse"
-                                            style={{ alignSelf: "flex-start" }}
-                                            size="sm"
-                                            onClick={onRunPreview}
-                                        >
-                                            Run Preview
-                                        </Button>
-                                        {multiTurnMode && (
-                                            <Button
-                                                appearance="subtle"
-                                                size="sm"
-                                                onClick={() => goToStep(5)}
-                                            >
-                                                Configure multi-turn →
-                                            </Button>
-                                        )}
-                                    </Box>
                                 </Box>
                             )}
 
-                            {/* Step 5 content — multi-turn only */}
-                            {wizardStep === 5 && multiTurnMode && (
+                            {/* Step 4 content — multi-turn only */}
+                            {wizardStep === 4 && multiTurnMode && (
                                 <Box display="flex" flexDirection="column" gap="12">
                                     {currentStep.intro && (
-                                        <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                        <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                             {currentStep.intro}
                                         </Text>
                                     )}
-                                    <Box display="flex" flexDirection="column" gap="6">
-                                        {MULTITURN_STEP.bullets?.map((b, i) => (
-                                            <Box key={i} display="flex" gap="8" style={{ alignItems: "flex-start" }}>
-                                                <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0, lineHeight: "1.55" }}>•</Text>
-                                                <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
-                                                    <strong>{b.bold}:</strong> {b.text}
-                                                </Text>
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                    <KeyConceptCallout text={MULTITURN_STEP.keyConcept!} />
-                                    {/* Quick-jump buttons */}
-                                    <Box display="flex" flexDirection="column" gap="6">
-                                        <Text fontSize="sm" fontWeight="500" color="fg.default">Jump to field</Text>
-                                        {[
-                                            { label: "System Prompt", step: 3 },
-                                            { label: "Memory Limit", step: 4 },
-                                            { label: "First Message", step: 5 },
-                                        ].map((item) => (
+                                    <Box display="flex" flexDirection="column" gap="8">
+                                        {multiTurnInfoCards.map((item) => (
                                             <Box
-                                                key={item.label}
+                                                key={item.title}
                                                 display="flex"
-                                                alignItems="center"
-                                                gap="8"
-                                                onClick={() => onWizardStepChange(item.step)}
-                                                onMouseEnter={(e: React.MouseEvent<HTMLElement>) => {
-                                                    (e.currentTarget as HTMLElement).style.background = "#f5f6fa";
-                                                }}
-                                                onMouseLeave={(e: React.MouseEvent<HTMLElement>) => {
-                                                    (e.currentTarget as HTMLElement).style.background = "transparent";
-                                                }}
+                                                flexDirection="column"
+                                                gap="4"
+                                                onMouseEnter={() => onAssistantFieldHover?.(
+                                                    item.title === "System Prompt"
+                                                        ? "system-prompt"
+                                                        : item.title === "Memory Limit"
+                                                          ? "memory-limit"
+                                                          : "first-message"
+                                                )}
+                                                onMouseLeave={() => onAssistantFieldHover?.(null)}
                                                 style={{
-                                                    padding: "8px 10px",
-                                                    borderRadius: "8px",
-                                                    cursor: "pointer",
-                                                    transition: "background 0.15s",
+                                                    padding: "10px 12px",
+                                                    borderRadius: "10px",
                                                     border: "1px solid #e9edf5",
+                                                    background: "#ffffff",
+                                                    cursor: "default",
+                                                    transition: "border-color 0.2s ease, background-color 0.2s ease",
                                                 }}
                                             >
-                                                <Text fontSize="sm" fontWeight="500" color="fg.default" style={{ flex: 1 }}>
-                                                    {item.label}
+                                                <Text fontSize="md" fontWeight="600" color="fg.default">
+                                                    {item.title}
                                                 </Text>
-                                                <IconChevronRight size={13} color="var(--ax-colors-fg-tertiary)" />
+                                                <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+                                                    {item.text}
+                                                </Text>
                                             </Box>
                                         ))}
                                     </Box>
-                                    <Button
-                                        appearance="inverse"
-                                        size="sm"
-                                        style={{ alignSelf: "flex-start" }}
-                                        onClick={() => onWizardStepChange(3)}
-                                    >
-                                        Start with System Prompt →
-                                    </Button>
+                                    <Box display="flex" flexDirection="column" gap="8">
+                                        <Text fontSize="md" fontWeight="600" color="fg.default" style={{ paddingTop: "4px" }}>
+                                            Dial In Memory Limit
+                                        </Text>
+                                        <Text
+                                            fontSize="md"
+                                            color="fg.secondary"
+                                            style={{ lineHeight: "1.55" }}
+                                        >
+                                            How many turns the agent retains. Start at 10 and increase only if needed.
+                                        </Text>
+                                        <Box
+                                            display="flex"
+                                            gap="12"
+                                            style={{
+                                                flexWrap: "wrap",
+                                            }}
+                                        >
+                                            {memoryLevelCards.map((card) => (
+                                                <Box
+                                                    key={card.level}
+                                                    display="flex"
+                                                    flexDirection="column"
+                                                    gap="8"
+                                                    style={{
+                                                        flex: "1 1 0",
+                                                        minWidth: "112px",
+                                                        padding: "14px 14px 16px",
+                                                        borderRadius: "14px",
+                                                        border: "1px solid #dadfeb",
+                                                        background: "#f7f8fc",
+                                                    }}
+                                                >
+                                                    <Text
+                                                        fontSize="sm"
+                                                        fontWeight="700"
+                                                        style={{
+                                                            color: card.accent,
+                                                            letterSpacing: "0.08em",
+                                                        }}
+                                                    >
+                                                        {card.level}
+                                                    </Text>
+                                                    <Text fontSize="lg" fontWeight="700" color="fg.default">
+                                                        {card.range}
+                                                    </Text>
+                                                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+                                                        {card.details}
+                                                    </Text>
+                                                    <Box>
+                                                        <Box
+                                                            display="inline-flex"
+                                                            alignItems="center"
+                                                            style={{
+                                                                padding: "6px 10px",
+                                                                borderRadius: "10px",
+                                                                background: card.chipBackground,
+                                                            }}
+                                                        >
+                                                            <Text
+                                                                fontSize="sm"
+                                                                fontWeight="600"
+                                                                style={{ color: card.accent }}
+                                                            >
+                                                                {card.chip}
+                                                            </Text>
+                                                        </Box>
+                                                    </Box>
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                    <KeyConceptCallout text={MULTITURN_STEP.keyConcept!} />
                                 </Box>
                             )}
 
                             {/* Checker result (steps 1–2) */}
                             {hasChecked && checkerResult && wizardStep <= 2 && (
-                                <CheckerCard result={checkerResult} onNextStep={() => goToStep(wizardStep + 1)} />
+                                <CheckerCard result={checkerResult} />
                             )}
 
                             </Box>
@@ -1189,29 +1350,91 @@ export function AgentAssistantPanel({
                                     gap="6"
                                     style={{ paddingTop: "8px" }}
                                 >
-                                    <Text fontWeight="500" fontSize="sm" color="fg.default">
+                                    <Text fontWeight="500" fontSize="md" color="fg.default">
                                         Common Actions
                                     </Text>
                                 </Box>
-                                <Box display="flex" flexDirection="column" gap="6">
+                                <Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
                                     {COMMON_ACTIONS.map((action) => (
                                         <CommonActionCard
                                             key={action.id}
                                             action={action}
-                                            isExpanded={expandedAction === action.id}
-                                            onToggle={() =>
-                                                setExpandedAction(
-                                                    expandedAction === action.id ? null : action.id
-                                                )
-                                            }
-                                            onInsert={() => onInsertToPrompt(action.prompt)}
+                                            onInsert={() => onInsertToPrompt(`${action.prompt} | ${action.details}`)}
                                         />
                                     ))}
                                 </Box>
                             </Box>
                             )} {/* end common actions */}
+
+                        </Box>
+
+                            {!isOverview && (
+                                <Box
+                                    px="16"
+                                    py="12"
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    gap="8"
+                                    style={{
+                                        flexShrink: 0,
+                                        background: "var(--ax-colors-bg-default)",
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        {wizardStep === 1 && (
+                                            <Button
+                                                size="md"
+                                                icon={<IconCircleCheckAxiom size={14} />}
+                                                onClick={handleCheck}
+                                            >
+                                                {hasChecked ? "Review Again" : "Review Instruction"}
+                                            </Button>
+                                        )}
+                                        {wizardStep === 2 && (
+                                            <Button
+                                                size="md"
+                                                icon={<IconCircleCheckAxiom size={14} />}
+                                                onClick={handleCheck}
+                                            >
+                                                {hasChecked ? "Review Again" : "Review Variable"}
+                                            </Button>
+                                        )}
+                                        {wizardStep === 3 && (
+                                            <Button
+                                                appearance="subtle"
+                                                size="md"
+                                                onClick={() => suggestedTools.forEach((t) => onAddTool(t.name))}
+                                            >
+                                                Add all
+                                            </Button>
+                                        )}
+                                    </Box>
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        {(wizardStep === 1 || wizardStep === 2 || wizardStep === 3 || (wizardStep === 4 && multiTurnMode)) && (
+                                            <Button
+                                                appearance="inverse"
+                                                size="md"
+                                                onClick={() => goToStep(wizardStep + 1)}
+                                            >
+                                                Next Step
+                                            </Button>
+                                        )}
+                                        {wizardStep === (multiTurnMode ? 5 : 4) && (
+                                            <Button
+                                                appearance="inverse"
+                                                size="md"
+                                                onClick={onRunPreview}
+                                            >
+                                                Run Preview
+                                            </Button>
+                                        )}
+                                    </Box>
+                                </Box>
+                            )}
                         </Box>
                     </Box>
+                    </LayoutGroup>
                 )
             )}
         </Box>
