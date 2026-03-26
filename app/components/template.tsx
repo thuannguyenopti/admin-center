@@ -174,8 +174,13 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 		);
 	}
 
+	const sidebarColWidth = isOpalStudio ? 0 : primarySidebarWidth;
 	return (
-		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
+		<Box
+			className="grid grid-rows-[auto_1fr] h-screen"
+			style={{ gridTemplateColumns: `${sidebarColWidth}px 1fr`, transition: "grid-template-columns 0.2s ease-out" }}
+			bg="bg.page"
+		>
 			<GlobalBar onOpalClick={toggleOpal} />
 			{!isOpalStudio ? (
 				<Box display="flex" z="10" style={{minHeight: 0}}>

@@ -1,65 +1,23 @@
-# Claude Code Instructions - CMP/Opal Project
+# app/ — Claude Code Context
 
-## Design System: Optiaxiom
+> Design system rules, tokens, and components are in **[../DESIGN_SYSTEM.md](../DESIGN_SYSTEM.md)**.
+> This file covers only app-level specifics.
 
-**ALWAYS** use the Optiaxiom design system for this project.
+## Local Component Wrappers
 
-### Primary Reference
-- Docs: https://optimizely-axiom.github.io/optiaxiom/
-- Package: `@optiaxiom/react`
-- See: `OPTIAXIOM_DESIGN_SYSTEM.md` in this directory for full token reference
+`app/components/` contains wrappers like `Button.tsx`, `Input.tsx`, `Text.tsx` that override Axiom defaults for this prototype. Prefer raw `@optiaxiom/react` imports unless the wrapper provides specific defaults you need (e.g., `Input` for `size="lg"`, `Flex` for default row direction).
 
-### Critical Rules
+## Visual Builder Exception
 
-1. **NEVER use arbitrary values**
-   - ❌ `padding: 17px` or `gap: 11px`
-   - ✅ `p="16"` or `gap="12"` (use tokens)
+Files in `app/components/vb/blocks/` represent the customer's website preview. Use **raw HTML + Tailwind** here, NOT Axiom components.
 
-2. **NEVER use hex colors**
-   - ❌ `color="#333"` or `background="#f5f5f5"`
-   - ✅ `color="fg.default"` or `bg="bg.secondary"`
+## AI Integration
 
-3. **ALWAYS use component library**
-   - ❌ Custom `<button>` elements
-   - ✅ `<Button variant="solid" intent="primary">`
+- `app/api/llm/route.js` — proxy for OpenAI completions (text generation, summarization)
+- `app/api/chat/route.js` — Visual Builder AI layout generation
 
-4. **Font: Inter only** (already in design system)
+## Data Visualization
 
-### Component Imports
-
-```tsx
-import { 
-  // Primitives
-  Box, Grid, Group, Heading, Text, Separator,
-  
-  // Components
-  Button, Input, Field, Card, Badge, Avatar,
-  Alert, Dialog, Popover, Tooltip, Menu,
-  Checkbox, Switch, Select, Tabs,
-  
-  // Provider (wrap app)
-  AxiomProvider
-} from "@optiaxiom/react";
-```
-
-### Spacing Scale (px)
-`0, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64`
-
-### When Implementing Figma Designs
-
-1. Identify the component type (button, card, input, etc.)
-2. Match to Optiaxiom component
-3. Use semantic color tokens (fg.*, bg.*, border.*)
-4. Use spacing tokens for padding/margins/gaps
-5. Use border-radius tokens (sm, md, lg, xl, full)
-
-### File Structure
-```
-app/
-├── fonts/
-│   └── (Inter font files)
-├── components/
-│   └── (Use Optiaxiom components)
-├── OPTIAXIOM_DESIGN_SYSTEM.md  ← Full reference
-└── CLAUDE.md                    ← This file
-```
+- Use Axiom UI tokens for product chrome, surfaces, and text
+- Use the shared data-viz palette only for charts/legends/heatmaps
+- See [DATA_VISUALIZATION_COLORS.md](DATA_VISUALIZATION_COLORS.md) for the canonical palette
