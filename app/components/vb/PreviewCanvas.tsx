@@ -201,12 +201,9 @@ export default function PreviewCanvas({
 				const nextElements: EleMap = {
 					...o.elements,
 					[uKey]: {
-						type: "ct-image",
+						type: "ct-image-block",
 						properties: {
-							src: {value: imageUrl},
-							alt: {value: imageAlt || "Untitled Image"},
-							width: {value: "auto"},
-							height: {value: "auto"},
+							image: {value: imageUrl},
 						},
 					},
 				};
@@ -445,8 +442,9 @@ export default function PreviewCanvas({
 																				);
 																			case "Image":
 																			case "ct-image":
-																				return (
-																					<IconPhoto
+																			case "ct-image-block":
+																			return (
+																				<IconPhoto
 																						size={12}
 																					/>
 																				);

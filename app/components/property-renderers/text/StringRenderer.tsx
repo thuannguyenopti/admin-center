@@ -12,15 +12,20 @@ export const StringRenderer: React.FC<PropertyRendererProps> = ({
 	const useTextarea = property.displayAs === "textarea";
 
 	if (mode === "readonly") {
+		// Handle array values (e.g., tags, keywords)
+		const displayValue = Array.isArray(value)
+			? value.join(", ")
+			: (value || "—");
+
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{value || "—"}</Text>
+				<Text>{displayValue}</Text>
 			</Field>
 		);
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			{useTextarea ? (
 				<Textarea
 					placeholder={`Enter ${property.displayName || property.name}`}

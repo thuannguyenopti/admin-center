@@ -13,6 +13,9 @@ export function convertCmpPropertyTypeToCms(cmpType: string): PropertyType {
 		number: "Int",
 		boolean: "Boolean",
 		libraryAsset: "ImageReference",
+		ImageReference: "ImageReference", // Allow direct ImageReference type
+		VideoReference: "VideoReference", // Allow direct VideoReference type
+		PageReference: "PageReference", // Allow direct PageReference type
 		contentReference: "ContentReference",
 		url: "Url",
 		choice: "SelectOne",

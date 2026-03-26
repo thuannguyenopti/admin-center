@@ -34,9 +34,12 @@ import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, type ContentType } from "@/app/db/initialData";
-import { initialContentInstances, type ContentInstance } from "@/app/db/cmpInitialData";
-import { isCmpType } from "@/app/lib/contentTypeMigration";
+import { initialContentInstances, type ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
+import { isCmpType, convertCmpModelToContentType, convertCmpPropertyToCms } from "@/app/lib/contentTypeMigration";
 import usePersistentState from "@/app/usePersistentState";
+import { PropertyRenderer } from "@/app/components/property-renderers";
+// Import to register all property renderers
+import "@/app/components/property-renderers";
 import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import Grid3Icon from "@/app/cmp/assets/grid3.svg";
@@ -805,7 +808,7 @@ export function CmpOpalAssetRecommendation() {
 		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
-	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", []) as [ContentInstance[], any];
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
@@ -817,6 +820,13 @@ export function CmpOpalAssetRecommendation() {
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+
+	// Initialize hasTaskContent based on existing content instances or task assets
+	useEffect(() => {
+		if (contentInstances.length > 0 || taskAssets.length > 0) {
+			setHasTaskContent(true);
+		}
+	}, [contentInstances.length, taskAssets.length]); // Re-check when content loads from localStorage
 
 	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
 	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
@@ -895,7 +905,12 @@ export function CmpOpalAssetRecommendation() {
 	}, [deferredWorkflowSearch]);
 
 	const openContentTab = () => {
-		setScene(hasTaskContent ? "content" : "content-empty");
+		// Check if there's actually content (instances or assets)
+		const hasContent = contentInstances.length > 0 || taskAssets.length > 0;
+		setScene(hasContent ? "content" : "content-empty");
+		if (hasContent) {
+			setHasTaskContent(true);
+		}
 	};
 
 	const openBriefEdit = () => {
@@ -1158,6 +1173,7 @@ export function CmpOpalAssetRecommendation() {
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
 								contentInstances={contentInstances}
+								setContentInstances={setContentInstances}
 								selectedContentInstanceId={selectedContentInstanceId}
 								onSelectContentInstance={setSelectedContentInstanceId}
 								onTabChange={handleTabChange}
@@ -1190,6 +1206,7 @@ export function CmpOpalAssetRecommendation() {
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
 								contentInstances={contentInstances}
+								setContentInstances={setContentInstances}
 								selectedContentInstanceId={selectedContentInstanceId}
 								onSelectContentInstance={setSelectedContentInstanceId}
 								onTabChange={handleTabChange}
@@ -2845,8 +2862,11 @@ function ContentEmptyPage({
 		(value: ContentType[]) => void,
 	];
 
-	// Filter to CMP content models only
-	const cmpContentModels = contentTypes.filter(isCmpType);
+	// Use CMP content models directly, converted to ContentType format
+	const cmpContentModels = useMemo(
+		() => initialCmpContentModels.map(convertCmpModelToContentType),
+		[]
+	);
 
 	return (
 		<Box pb="40" style={{ minHeight: "calc(100vh - 48px)", position: "relative" }}>
@@ -2950,6 +2970,7 @@ function ContentFilledPage({
 	suggestedOpen = false,
 	taskAssets,
 	contentInstances,
+	setContentInstances,
 	selectedContentInstanceId,
 	onSelectContentInstance,
 	onTabChange,
@@ -2963,6 +2984,7 @@ function ContentFilledPage({
 	suggestedOpen?: boolean;
 	taskAssets: AssetItem[];
 	contentInstances: ContentInstance[];
+	setContentInstances: (instances: ContentInstance[]) => void;
 	selectedContentInstanceId: string | null;
 	onSelectContentInstance: (id: string) => void;
 	onTabChange: (tab: string) => void;
@@ -2971,14 +2993,23 @@ function ContentFilledPage({
 		ContentType[],
 		(value: ContentType[]) => void,
 	];
+	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
 
-	// Filter to CMP content models only
-	const cmpContentModels = contentTypes.filter(isCmpType);
+	// Use CMP content models directly, converted to ContentType format
+	const cmpContentModels = useMemo(
+		() => initialCmpContentModels.map(convertCmpModelToContentType),
+		[]
+	);
 
 	const selectedTaskAsset =
 		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
 	const selectedContentInstance =
 		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
+
+	// Reset edit mode when switching content instances
+	useEffect(() => {
+		setIsEditingContentInstance(false);
+	}, [selectedContentInstanceId]);
 
 	// If nothing is selected, default to first content instance or first asset
 	const effectiveSelectedAssetId = selectedTaskAssetId ?? (contentInstances.length === 0 && taskAssets.length > 0 ? taskAssets[0]?.id : null);
@@ -3123,11 +3154,11 @@ function ContentFilledPage({
 											isSuggestedTrigger ? onOpenSuggested :
 											isContentInstance ? () => {
 												onSelectContentInstance(item.id);
-												onSelectTaskAsset(''); // Deselect assets
+												onSelectTaskAsset(null); // Deselect assets
 											} :
 											item ? () => {
 												onSelectTaskAsset(item.id);
-												onSelectContentInstance(''); // Deselect content instances
+												onSelectContentInstance(null); // Deselect content instances
 											} : undefined
 										}
 										style={{
@@ -3199,6 +3230,12 @@ function ContentFilledPage({
 								<SparklesIcon height={16} style={{ color: "var(--ax-colors-fg-secondary)" }} width={16} />
 							</button>
 							<IconLink size={16} color="var(--ax-colors-fg-secondary)" />
+							<IconPencil
+								size={16}
+								color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
+								style={{ cursor: "pointer" }}
+								onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
+							/>
 							<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
 						</Box>
 					</Box>
@@ -3208,22 +3245,53 @@ function ContentFilledPage({
 							<Text color="fg.secondary" fontSize="sm">
 								Content instance created on {new Date(selectedContentInstance.createdAt).toLocaleDateString()}
 							</Text>
-							{Object.entries(selectedContentInstance.fields).map(([fieldName, fieldValue]) => (
-								<Box key={fieldName} display="flex" flexDirection="column" gap="4">
-									<Text color="fg.default" fontSize="sm" fontWeight="500" style={{ textTransform: "capitalize" }}>
-										{fieldName.replace(/_/g, " ")}
-									</Text>
-									<Input
-										value={typeof fieldValue === "string" ? fieldValue : JSON.stringify(fieldValue) || ""}
-										onChange={() => {}}
-										placeholder={`Enter ${fieldName.replace(/_/g, " ")}`}
-										style={{
-											borderRadius: 6,
-											padding: "8px 12px",
-										}}
-									/>
-								</Box>
-							))}
+							{(() => {
+								// Find the content model for this instance
+								const contentModel = cmpContentModels.find(model => model.id === selectedContentInstance.modelId);
+								if (!contentModel) {
+									return (
+										<Text color="fg.tertiary" fontSize="sm">
+											Content model not found
+										</Text>
+									);
+								}
+
+								// Render each property using PropertyRenderer
+								return contentModel.properties?.map((cmpProperty) => {
+									const fieldValue = selectedContentInstance.fields[cmpProperty.name];
+									// Convert CMP property to CMS Property format
+									const cmsProperty = convertCmpPropertyToCms(cmpProperty);
+
+									const handleChange = (newValue: any) => {
+										// Update the content instance in localStorage
+										const updatedInstance = {
+											...selectedContentInstance,
+											fields: {
+												...selectedContentInstance.fields,
+												[cmpProperty.name]: newValue
+											}
+										};
+
+										// Update the instances array
+										const updatedInstances = contentInstances.map(inst =>
+											inst.id === selectedContentInstance.id ? updatedInstance : inst
+										);
+										setContentInstances(updatedInstances);
+									};
+
+									return (
+										<PropertyRenderer
+											key={cmpProperty.id}
+											property={cmsProperty}
+											value={fieldValue}
+											onChange={handleChange}
+											enableAI={isEditingContentInstance}
+											context={{ runtimeContentTypes: contentTypes }}
+											mode={isEditingContentInstance ? "edit" : "readonly"}
+										/>
+									);
+								});
+							})()}
 						</Box>
 					) : (
 						<>
