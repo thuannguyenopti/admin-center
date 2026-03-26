@@ -69,7 +69,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			py="12"
 			px="20"
 			bg="bg.default"
-			gridColumn="2"
+			style={{ gridColumn: "1 / -1" }}
 			borderB="1"
 			borderColor="border.tertiary"
 			display="flex"

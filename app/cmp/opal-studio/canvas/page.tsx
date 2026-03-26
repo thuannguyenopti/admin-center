@@ -118,28 +118,84 @@ export default function OpalStudioCanvasPage() {
 	const textShadow = brandPack === "Tour de France"
 		? "0 2px 10px rgba(255,255,255,0.32)"
 		: "0 6px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)";
+	/*
+	 * Ratio-aware type sizing
+	 * ────────────────────────────────────────────────────────
+	 * 16:9  — landscape (Facebook banner, YouTube thumb, web hero)
+	 *         Wide & short → headline must be compact, narrower maxWidth
+	 * 4:5   — portrait feed (Instagram feed, Facebook feed)
+	 *         Taller canvas → headline can be larger
+	 * 1:1   — square (Instagram post, LinkedIn, Facebook post)
+	 *         Balanced → medium headline
+	 * 9:16  — stories / reels (IG Story, TikTok, Reels, Snapchat)
+	 *         Very tall, narrow → needs wider maxWidth%, slightly smaller headline
+	 * Auto  — defaults to 16:9 behavior
+	 */
+	type RatioKey = "16:9" | "4:5" | "1:1" | "9:16";
+	const r = (aspectRatio === "Auto" ? "16:9" : aspectRatio) as RatioKey;
+
 	const textLayoutStyle = useMemo(() => {
 		const base = {
 			position: "absolute" as const,
-			maxWidth: aspectRatio === "16:9" ? "48%" : aspectRatio === "9:16" ? "72%" : "56%",
 			color: textOverlayColor,
 			textShadow,
 			textTransform: "uppercase" as const,
 		};
 
+		const ratioMap = {
+			"Hero left": {
+				"16:9":  { headlineSize: 56, maxWidth: "46%", subheadlineSize: 14, headlineLetterSpacing: -1.5, subheadlineLetterSpacing: 2.5, pad: 36 },
+				"4:5":   { headlineSize: 72, maxWidth: "54%", subheadlineSize: 15, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 3,   pad: 40 },
+				"1:1":   { headlineSize: 64, maxWidth: "52%", subheadlineSize: 15, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 3,   pad: 38 },
+				"9:16":  { headlineSize: 60, maxWidth: "80%", subheadlineSize: 14, headlineLetterSpacing: -1.5, subheadlineLetterSpacing: 2.5, pad: 32 },
+			},
+			"Tall stack": {
+				"16:9":  { headlineSize: 60, maxWidth: "42%", subheadlineSize: 14, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 3,   pad: 36 },
+				"4:5":   { headlineSize: 80, maxWidth: "50%", subheadlineSize: 16, headlineLetterSpacing: -2.5, subheadlineLetterSpacing: 3,   pad: 40 },
+				"1:1":   { headlineSize: 72, maxWidth: "48%", subheadlineSize: 15, headlineLetterSpacing: -2.5, subheadlineLetterSpacing: 3,   pad: 38 },
+				"9:16":  { headlineSize: 68, maxWidth: "82%", subheadlineSize: 14, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 2.5, pad: 32 },
+			},
+			"Bottom left": {
+				"16:9":  { headlineSize: 48, maxWidth: "48%", subheadlineSize: 13, headlineLetterSpacing: -1,   subheadlineLetterSpacing: 2.5, pad: 36 },
+				"4:5":   { headlineSize: 64, maxWidth: "58%", subheadlineSize: 15, headlineLetterSpacing: -1.5, subheadlineLetterSpacing: 2.5, pad: 40 },
+				"1:1":   { headlineSize: 56, maxWidth: "56%", subheadlineSize: 14, headlineLetterSpacing: -1.5, subheadlineLetterSpacing: 2.5, pad: 38 },
+				"9:16":  { headlineSize: 52, maxWidth: "82%", subheadlineSize: 13, headlineLetterSpacing: -1,   subheadlineLetterSpacing: 2,   pad: 32 },
+			},
+			"Centered": {
+				"16:9":  { headlineSize: 54, maxWidth: "60%", subheadlineSize: 14, headlineLetterSpacing: -1.5, subheadlineLetterSpacing: 4,   pad: 0 },
+				"4:5":   { headlineSize: 72, maxWidth: "64%", subheadlineSize: 15, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 4,   pad: 0 },
+				"1:1":   { headlineSize: 64, maxWidth: "62%", subheadlineSize: 15, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 4,   pad: 0 },
+				"9:16":  { headlineSize: 60, maxWidth: "80%", subheadlineSize: 14, headlineLetterSpacing: -1.5, subheadlineLetterSpacing: 3.5, pad: 0 },
+			},
+			"Impact": {
+				"16:9":  { headlineSize: 80,  maxWidth: "78%", subheadlineSize: 15, headlineLetterSpacing: -3,   subheadlineLetterSpacing: 6,   pad: 0 },
+				"4:5":   { headlineSize: 100, maxWidth: "82%", subheadlineSize: 16, headlineLetterSpacing: -4,   subheadlineLetterSpacing: 6,   pad: 0 },
+				"1:1":   { headlineSize: 88,  maxWidth: "80%", subheadlineSize: 16, headlineLetterSpacing: -3.5, subheadlineLetterSpacing: 6,   pad: 0 },
+				"9:16":  { headlineSize: 76,  maxWidth: "92%", subheadlineSize: 14, headlineLetterSpacing: -3,   subheadlineLetterSpacing: 5,   pad: 0 },
+			},
+			"Editorial": {
+				"16:9":  { headlineSize: 64, maxWidth: "50%", subheadlineSize: 13, headlineLetterSpacing: -2.5, subheadlineLetterSpacing: 5,   pad: 36 },
+				"4:5":   { headlineSize: 84, maxWidth: "62%", subheadlineSize: 14, headlineLetterSpacing: -3,   subheadlineLetterSpacing: 5,   pad: 40 },
+				"1:1":   { headlineSize: 72, maxWidth: "58%", subheadlineSize: 14, headlineLetterSpacing: -2.5, subheadlineLetterSpacing: 5,   pad: 38 },
+				"9:16":  { headlineSize: 68, maxWidth: "80%", subheadlineSize: 13, headlineLetterSpacing: -2,   subheadlineLetterSpacing: 4,   pad: 32 },
+			},
+		} as const;
+
+		const v = ratioMap[textLayoutPreset][r];
+
 		switch (textLayoutPreset) {
 			case "Tall stack":
 				return {
 					...base,
-					left: 40,
-					top: 40,
-					maxWidth: aspectRatio === "9:16" ? "78%" : "44%",
-					headlineSize: aspectRatio === "16:9" ? 68 : 80,
+					left: v.pad,
+					top: v.pad,
+					maxWidth: v.maxWidth,
+					headlineSize: v.headlineSize,
 					headlineWeight: 900,
-					headlineLetterSpacing: -2.5,
-					subheadlineSize: 16,
+					headlineLetterSpacing: v.headlineLetterSpacing,
+					subheadlineSize: v.subheadlineSize,
 					subheadlineWeight: 600,
-					subheadlineLetterSpacing: 3,
+					subheadlineLetterSpacing: v.subheadlineLetterSpacing,
 					headlineLineHeight: 0.88,
 					subheadlineMarginTop: 20,
 					alignItems: "flex-start" as const,
@@ -148,15 +204,15 @@ export default function OpalStudioCanvasPage() {
 			case "Bottom left":
 				return {
 					...base,
-					left: 40,
-					bottom: 40,
-					maxWidth: aspectRatio === "16:9" ? "50%" : "60%",
-					headlineSize: aspectRatio === "16:9" ? 56 : 64,
+					left: v.pad,
+					bottom: v.pad,
+					maxWidth: v.maxWidth,
+					headlineSize: v.headlineSize,
 					headlineWeight: 900,
-					headlineLetterSpacing: -1.5,
-					subheadlineSize: 15,
+					headlineLetterSpacing: v.headlineLetterSpacing,
+					subheadlineSize: v.subheadlineSize,
 					subheadlineWeight: 500,
-					subheadlineLetterSpacing: 2.5,
+					subheadlineLetterSpacing: v.subheadlineLetterSpacing,
 					headlineLineHeight: 0.92,
 					subheadlineMarginTop: 14,
 					alignItems: "flex-start" as const,
@@ -168,13 +224,13 @@ export default function OpalStudioCanvasPage() {
 					left: "50%",
 					top: "50%",
 					transform: "translate(-50%, -50%)",
-					maxWidth: aspectRatio === "9:16" ? "80%" : "64%",
-					headlineSize: aspectRatio === "16:9" ? 60 : 72,
+					maxWidth: v.maxWidth,
+					headlineSize: v.headlineSize,
 					headlineWeight: 900,
-					headlineLetterSpacing: -2,
-					subheadlineSize: 15,
+					headlineLetterSpacing: v.headlineLetterSpacing,
+					subheadlineSize: v.subheadlineSize,
 					subheadlineWeight: 500,
-					subheadlineLetterSpacing: 4,
+					subheadlineLetterSpacing: v.subheadlineLetterSpacing,
 					headlineLineHeight: 0.90,
 					subheadlineMarginTop: 18,
 					alignItems: "center" as const,
@@ -186,13 +242,13 @@ export default function OpalStudioCanvasPage() {
 					left: "50%",
 					top: "50%",
 					transform: "translate(-50%, -50%)",
-					maxWidth: aspectRatio === "9:16" ? "92%" : "80%",
-					headlineSize: aspectRatio === "16:9" ? 96 : aspectRatio === "9:16" ? 88 : 100,
+					maxWidth: v.maxWidth,
+					headlineSize: v.headlineSize,
 					headlineWeight: 900,
-					headlineLetterSpacing: -4,
-					subheadlineSize: 16,
+					headlineLetterSpacing: v.headlineLetterSpacing,
+					subheadlineSize: v.subheadlineSize,
 					subheadlineWeight: 600,
-					subheadlineLetterSpacing: 6,
+					subheadlineLetterSpacing: v.subheadlineLetterSpacing,
 					headlineLineHeight: 0.85,
 					subheadlineMarginTop: 24,
 					alignItems: "center" as const,
@@ -201,16 +257,16 @@ export default function OpalStudioCanvasPage() {
 			case "Editorial":
 				return {
 					...base,
-					right: 40,
-					bottom: 48,
+					right: v.pad,
+					bottom: v.pad + 8,
 					left: undefined,
-					maxWidth: aspectRatio === "16:9" ? "52%" : "65%",
-					headlineSize: aspectRatio === "16:9" ? 72 : 84,
+					maxWidth: v.maxWidth,
+					headlineSize: v.headlineSize,
 					headlineWeight: 900,
-					headlineLetterSpacing: -3,
-					subheadlineSize: 14,
+					headlineLetterSpacing: v.headlineLetterSpacing,
+					subheadlineSize: v.subheadlineSize,
 					subheadlineWeight: 400,
-					subheadlineLetterSpacing: 5,
+					subheadlineLetterSpacing: v.subheadlineLetterSpacing,
 					headlineLineHeight: 0.86,
 					subheadlineMarginTop: 20,
 					alignItems: "flex-end" as const,
@@ -220,22 +276,22 @@ export default function OpalStudioCanvasPage() {
 			default:
 				return {
 					...base,
-					left: 40,
-					top: 40,
-					maxWidth: aspectRatio === "16:9" ? "48%" : "54%",
-					headlineSize: aspectRatio === "16:9" ? 64 : 72,
+					left: v.pad,
+					top: v.pad,
+					maxWidth: v.maxWidth,
+					headlineSize: v.headlineSize,
 					headlineWeight: 900,
-					headlineLetterSpacing: -2,
-					subheadlineSize: 15,
+					headlineLetterSpacing: v.headlineLetterSpacing,
+					subheadlineSize: v.subheadlineSize,
 					subheadlineWeight: 500,
-					subheadlineLetterSpacing: 3,
+					subheadlineLetterSpacing: v.subheadlineLetterSpacing,
 					headlineLineHeight: 0.90,
 					subheadlineMarginTop: 16,
 					alignItems: "flex-start" as const,
 					textAlign: "left" as const,
 				};
 		}
-	}, [aspectRatio, brandPack, textLayoutPreset, textOverlayColor, textShadow]);
+	}, [r, brandPack, textLayoutPreset, textOverlayColor, textShadow]);
 
 	const selectedReferences = useMemo(
 		() => referenceImages.filter((_, index) => selectedReferenceIndexes.includes(index)),
