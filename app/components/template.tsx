@@ -18,7 +18,7 @@ import {Button} from "./Button";
 import {Text} from "./Text";
 import React, {useEffect, useState, Suspense} from "react";
 
-import {useRouter, usePathname, useSearchParams} from "next/navigation";
+import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
 import {LayoutProvider, useLayout} from "../context/LayoutContext";
@@ -45,7 +45,6 @@ function TemplateContent({
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
-	const searchParams = useSearchParams();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
 	const isOpalStudio = path.startsWith("/cmp/opal-studio");
@@ -90,7 +89,10 @@ function TemplateContent({
 
 	const closeOpalWithRouteAwareness = () => {
 		if (isOpalStudio) {
-			const returnTo = searchParams.get("returnTo") || "/cmp/library";
+			const returnTo =
+				typeof window !== "undefined"
+					? new URLSearchParams(window.location.search).get("returnTo") || "/cmp/library"
+					: "/cmp/library";
 			closeOpal();
 			router.push(returnTo);
 			return;
