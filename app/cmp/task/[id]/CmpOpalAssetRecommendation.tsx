@@ -62,6 +62,7 @@ import {
 	IconPencil,
 	IconPhoto,
 	IconPlus,
+	IconTrash,
 	IconPuzzle,
 	IconSearch,
 	IconTag,
@@ -3390,13 +3391,60 @@ function ContentFilledPage({
 								<SparklesIcon height={16} style={{ color: "var(--ax-colors-fg-secondary)" }} width={16} />
 							</button>
 							<IconLink size={16} color="var(--ax-colors-fg-secondary)" />
-							<IconPencil
-								size={16}
-								color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
-								style={{ cursor: "pointer" }}
-								onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
-							/>
-							<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
+							{selectedContentInstance && (
+								<IconPencil
+									size={16}
+									color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
+									style={{ cursor: "pointer" }}
+									onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
+								/>
+							)}
+							<Menu
+								options={[
+									{
+										label: "Remove from task",
+										addon: <IconTrash size={16} />,
+										description: "Remove this item from the task",
+										execute: () => {
+											if (selectedContentInstance) {
+												const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
+												setContentInstances(updatedInstances);
+												// Select first remaining item or clear selection
+												if (updatedInstances.length > 0) {
+													onSelectContentInstance(updatedInstances[0].id);
+												} else {
+													onSelectContentInstance(null);
+												}
+											} else if (selectedArticle) {
+												const updatedArticles = taskArticles.filter(article => article.id !== selectedArticle.id);
+												// TODO: Need setTaskArticles setter
+												console.log('Remove article:', selectedArticle.id);
+											} else if (selectedTaskAsset) {
+												// TODO: Remove task asset
+												console.log('Remove asset:', selectedTaskAsset.id);
+											}
+										},
+									},
+								]}
+							>
+								<MenuTrigger asChild>
+									<button
+										aria-label="More options"
+										style={{
+											alignItems: "center",
+											background: "transparent",
+											border: "none",
+											cursor: "pointer",
+											display: "flex",
+											padding: 0,
+										}}
+										type="button"
+									>
+										<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
+									</button>
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
 						</Box>
 					</Box>
 
