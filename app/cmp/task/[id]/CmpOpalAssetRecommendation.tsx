@@ -21,6 +21,9 @@ import {
 	Avatar,
 	Badge,
 	Box,
+	Menu,
+	MenuTrigger,
+	MenuContent,
 	Tabs,
 	TabsList,
 	TabsTrigger,
@@ -30,12 +33,17 @@ import {
 import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
+import { initialContentTypes, type ContentType } from "@/app/db/initialData";
+import { initialContentInstances, type ContentInstance } from "@/app/db/cmpInitialData";
+import { isCmpType } from "@/app/lib/contentTypeMigration";
+import usePersistentState from "@/app/usePersistentState";
 import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import Grid3Icon from "@/app/cmp/assets/grid3.svg";
 import Grid4Icon from "@/app/cmp/assets/grid4.svg";
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
 import {
+	IconBroadcast,
 	IconCalendar,
 	IconCheck,
 	IconChevronDown,
@@ -44,11 +52,14 @@ import {
 	IconCopy,
 	IconDots,
 	IconEye,
+	IconFileText,
 	IconLink,
 	IconMaximize,
 	IconMinus,
 	IconPencil,
+	IconPhoto,
 	IconPlus,
+	IconPuzzle,
 	IconSearch,
 	IconTag,
 	IconUpload,
@@ -794,6 +805,8 @@ export function CmpOpalAssetRecommendation() {
 		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
+	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
 	const [briefContent, setBriefContent] = useState(initialBriefHtml);
@@ -967,6 +980,40 @@ export function CmpOpalAssetRecommendation() {
 		setScene("content");
 	};
 
+	const addContentInstanceFromModel = (model: ContentType) => {
+		const instanceId = `ci-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+		// Initialize field values based on model properties
+		const fields: Record<string, any> = {};
+		model.properties.forEach((prop: any) => {
+			if (prop.type === "text") {
+				fields[prop.name] = "";
+			} else if (prop.type === "longText" || prop.type === "richText") {
+				fields[prop.name] = "";
+			} else if (prop.type === "datetime") {
+				fields[prop.name] = new Date().toISOString();
+			} else if (prop.list) {
+				fields[prop.name] = [];
+			} else {
+				fields[prop.name] = null;
+			}
+		});
+
+		const newInstance: ContentInstance = {
+			id: instanceId,
+			modelId: model.id,
+			modelDisplayName: model.displayName || model.name,
+			createdAt: new Date().toISOString(),
+			fields,
+		};
+
+		setContentInstances((current: ContentInstance[]) => [newInstance, ...current]);
+		setSelectedContentInstanceId(instanceId);
+		setSelectedTaskAssetId(null);
+		setHasTaskContent(true);
+		setScene("content");
+	};
+
 	const closeWorkflowDialog = () => {
 		setWorkflowDialogOpen(false);
 		setPendingWorkflowId(null);
@@ -1083,7 +1130,7 @@ export function CmpOpalAssetRecommendation() {
 			case "content-empty":
 				return (
 					<TaskCanvas
-						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onTabChange={handleTabChange} />}
+						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onTabChange={handleTabChange} />}
 						right={
 							<WorkflowSidebar
 								filteredTemplates={filteredWorkflowTemplates}
@@ -1104,11 +1151,15 @@ export function CmpOpalAssetRecommendation() {
 							<ContentFilledPage
 								activeTab={activeTab}
 								onAddContent={() => openSearch("content")}
+								onAddContentFromModel={addContentInstanceFromModel}
 								onOpenSuggested={() => setScene("content-panel")}
 								onSelectTaskAsset={setSelectedTaskAssetId}
 								suggestedOpen={false}
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
+								contentInstances={contentInstances}
+								selectedContentInstanceId={selectedContentInstanceId}
+								onSelectContentInstance={setSelectedContentInstanceId}
 								onTabChange={handleTabChange}
 							/>
 						}
@@ -1132,11 +1183,15 @@ export function CmpOpalAssetRecommendation() {
 							<ContentFilledPage
 								activeTab={activeTab}
 								onAddContent={() => openSearch("content")}
+								onAddContentFromModel={addContentInstanceFromModel}
 								onOpenSuggested={() => setScene("content-panel")}
 								onSelectTaskAsset={setSelectedTaskAssetId}
 								suggestedOpen={true}
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
+								contentInstances={contentInstances}
+								selectedContentInstanceId={selectedContentInstanceId}
+								onSelectContentInstance={setSelectedContentInstanceId}
 								onTabChange={handleTabChange}
 							/>
 						}
@@ -2777,12 +2832,22 @@ function PreviewPage({
 function ContentEmptyPage({
 	activeTab,
 	onAddContent,
+	onAddContentFromModel,
 	onTabChange,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
+	onAddContentFromModel: (model: ContentType) => void;
 	onTabChange: (tab: string) => void;
 }) {
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
+	];
+
+	// Filter to CMP content models only
+	const cmpContentModels = contentTypes.filter(isCmpType);
+
 	return (
 		<Box pb="40" style={{ minHeight: "calc(100vh - 48px)", position: "relative" }}>
 			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
@@ -2808,12 +2873,51 @@ function ContentEmptyPage({
 							"Add Content" button.
 						</Text>
 					</Box>
-					<Button appearance="primary" onClick={onAddContent} size="lg">
-						<Box alignItems="center" display="flex" gap="8">
-							<IconPlus size={16} />
-							<span>Add Content</span>
-						</Box>
-					</Button>
+					<Menu
+						options={[
+							{
+								label: "Asset",
+								addon: <IconPhoto size={20} />,
+								description: "Add assets from recommendations",
+								execute: () => onAddContent(),
+							},
+							{
+								label: "Channel",
+								addon: <IconBroadcast size={20} />,
+								description: "Add content from a channel",
+								execute: () => { /* TODO: Implement channel selection */ },
+							},
+							{
+								label: "Component",
+								addon: <IconPuzzle size={20} />,
+								description: "Add a reusable component",
+								execute: () => { /* TODO: Implement component selection */ },
+							},
+							{
+								label: "Content Type",
+								addon: <IconFileText size={20} />,
+								description: "Add content from a content model",
+								subOptions: cmpContentModels
+									.filter((model) => model.isActive !== false)
+									.map((model) => ({
+										label: model.displayName || model.name,
+										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
+										execute: () => onAddContentFromModel(model),
+									})),
+							},
+						]}
+					>
+						<MenuTrigger asChild>
+							<Button appearance="primary" size="lg">
+								<Box alignItems="center" display="flex" gap="8">
+									<IconPlus size={16} />
+									<span>Add Content</span>
+									<IconChevronDown size={16} />
+								</Box>
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 				</Box>
 
 				<img
@@ -2839,24 +2943,47 @@ function ContentEmptyPage({
 function ContentFilledPage({
 	activeTab,
 	onAddContent,
+	onAddContentFromModel,
 	onOpenSuggested,
 	onSelectTaskAsset,
 	selectedTaskAssetId,
 	suggestedOpen = false,
 	taskAssets,
+	contentInstances,
+	selectedContentInstanceId,
+	onSelectContentInstance,
 	onTabChange,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
+	onAddContentFromModel: (model: ContentType) => void;
 	onOpenSuggested: () => void;
 	onSelectTaskAsset: (assetId: string) => void;
 	selectedTaskAssetId: string | null;
 	suggestedOpen?: boolean;
 	taskAssets: AssetItem[];
+	contentInstances: ContentInstance[];
+	selectedContentInstanceId: string | null;
+	onSelectContentInstance: (id: string) => void;
 	onTabChange: (tab: string) => void;
 }) {
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
+	];
+
+	// Filter to CMP content models only
+	const cmpContentModels = contentTypes.filter(isCmpType);
+
 	const selectedTaskAsset =
-		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? taskAssets[0] ?? null;
+		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
+	const selectedContentInstance =
+		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
+
+	// If nothing is selected, default to first content instance or first asset
+	const effectiveSelectedAssetId = selectedTaskAssetId ?? (contentInstances.length === 0 && taskAssets.length > 0 ? taskAssets[0]?.id : null);
+	const effectiveSelectedInstanceId = selectedContentInstanceId ?? (taskAssets.length === 0 && contentInstances.length > 0 ? contentInstances[0]?.id : null);
+
 	const heroImageSrc =
 		selectedTaskAsset?.preview === "image"
 			? selectedTaskAsset.heroSrc ?? selectedTaskAsset.src
@@ -2876,22 +3003,60 @@ function ContentFilledPage({
 			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
 			<Box display="flex" flexDirection="column" style={{ gap: 18, maxWidth: 812, padding: "20px 32px 0" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Button
-						appearance="primary"
-						onClick={onAddContent}
-						size="sm"
-						style={{
-							background: "#0037FF",
-							borderRadius: 6,
-							height: 40,
-							padding: "0 12px",
-						}}
+					<Menu
+						options={[
+							{
+								label: "Asset",
+								addon: <IconPhoto size={20} />,
+								description: "Add assets from recommendations",
+								execute: () => onAddContent(),
+							},
+							{
+								label: "Channel",
+								addon: <IconBroadcast size={20} />,
+								description: "Add content from a channel",
+								execute: () => { /* TODO: Implement channel selection */ },
+							},
+							{
+								label: "Component",
+								addon: <IconPuzzle size={20} />,
+								description: "Add a reusable component",
+								execute: () => { /* TODO: Implement component selection */ },
+							},
+							{
+								label: "Content Type",
+								addon: <IconFileText size={20} />,
+								description: "Add content from a content model",
+								subOptions: cmpContentModels
+									.filter((model) => model.isActive !== false)
+									.map((model) => ({
+										label: model.displayName || model.name,
+										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
+										execute: () => onAddContentFromModel(model),
+									})),
+							},
+						]}
 					>
-						<Box alignItems="center" display="flex" gap="4">
-							<IconPlus size={16} />
-							<span>Add Content</span>
-						</Box>
-					</Button>
+						<MenuTrigger asChild>
+							<Button
+								appearance="primary"
+								size="sm"
+								style={{
+									background: "#0037FF",
+									borderRadius: 6,
+									height: 40,
+									padding: "0 12px",
+								}}
+							>
+								<Box alignItems="center" display="flex" gap="4">
+									<IconPlus size={16} />
+									<span>Add Content</span>
+									<IconChevronDown size={16} />
+								</Box>
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 					<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
 							<IconCopy size={16} color="var(--ax-colors-fg-secondary)" />
@@ -2914,11 +3079,16 @@ function ContentFilledPage({
 				</Box>
 
 				<Box alignItems="center" display="flex" gap="8">
-					{[null, ...taskAssets].map((asset, index) => {
+					{[null, ...contentInstances, ...taskAssets].map((item, index) => {
 						const isSuggestedTrigger = index === 0;
+						const isContentInstance = item && 'modelId' in item;
+						const isAsset = item && !isContentInstance;
 						const isSelected = isSuggestedTrigger
 							? suggestedOpen
-							: !suggestedOpen && asset?.id === selectedTaskAssetId;
+							: !suggestedOpen && (
+								(isContentInstance && item.id === selectedContentInstanceId) ||
+								(isAsset && item.id === selectedTaskAssetId)
+							);
 
 							return (
 								<Box
@@ -2944,8 +3114,22 @@ function ContentFilledPage({
 									}}
 								>
 									<button
-										aria-label={isSuggestedTrigger ? "Open suggested assets" : `View ${asset?.title ?? "task asset"}`}
-										onClick={isSuggestedTrigger ? onOpenSuggested : asset ? () => onSelectTaskAsset(asset.id) : undefined}
+										aria-label={
+											isSuggestedTrigger ? "Open suggested assets" :
+											isContentInstance ? `View ${item.modelDisplayName}` :
+											`View ${item?.title ?? "task asset"}`
+										}
+										onClick={
+											isSuggestedTrigger ? onOpenSuggested :
+											isContentInstance ? () => {
+												onSelectContentInstance(item.id);
+												onSelectTaskAsset(''); // Deselect assets
+											} :
+											item ? () => {
+												onSelectTaskAsset(item.id);
+												onSelectContentInstance(''); // Deselect content instances
+											} : undefined
+										}
 										style={{
 											alignItems: "center",
 											background: "transparent",
@@ -2962,10 +3146,12 @@ function ContentFilledPage({
 									>
 										{isSuggestedTrigger ? (
 											<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
-										) : asset?.thumbnailSrc || asset?.src ? (
+										) : isContentInstance ? (
+											<IconFileText size={16} color="var(--ax-colors-fg-accent)" />
+										) : item?.thumbnailSrc || item?.src ? (
 											<img
 												alt=""
-												src={asset?.thumbnailSrc ?? asset?.src}
+												src={item?.thumbnailSrc ?? item?.src}
 												style={{
 													display: "block",
 													flexShrink: 0,
@@ -2975,7 +3161,7 @@ function ContentFilledPage({
 												}}
 											/>
 										) : (
-											<Text fontSize="lg">{asset?.title?.charAt(0) ?? "?"}</Text>
+											<Text fontSize="lg">{item?.title?.charAt(0) ?? "?"}</Text>
 										)}
 									</button>
 								</Box>
@@ -2991,7 +3177,9 @@ function ContentFilledPage({
 					style={{ overflow: "hidden" }}
 				>
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
-						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>The runner sponsoring package</Text>
+						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
+							{selectedContentInstance ? selectedContentInstance.modelDisplayName : selectedTaskAsset?.title ?? "The runner sponsoring package"}
+						</Text>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
 							<button
@@ -3015,64 +3203,90 @@ function ContentFilledPage({
 						</Box>
 					</Box>
 
-					<img
-						alt="Runner sponsorship package"
-						src={heroImageSrc}
-						style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
-					/>
+					{selectedContentInstance ? (
+						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+							<Text color="fg.secondary" fontSize="sm">
+								Content instance created on {new Date(selectedContentInstance.createdAt).toLocaleDateString()}
+							</Text>
+							{Object.entries(selectedContentInstance.fields).map(([fieldName, fieldValue]) => (
+								<Box key={fieldName} display="flex" flexDirection="column" gap="4">
+									<Text color="fg.default" fontSize="sm" fontWeight="500" style={{ textTransform: "capitalize" }}>
+										{fieldName.replace(/_/g, " ")}
+									</Text>
+									<Input
+										value={typeof fieldValue === "string" ? fieldValue : JSON.stringify(fieldValue) || ""}
+										onChange={() => {}}
+										placeholder={`Enter ${fieldName.replace(/_/g, " ")}`}
+										style={{
+											borderRadius: 6,
+											padding: "8px 12px",
+										}}
+									/>
+								</Box>
+							))}
+						</Box>
+					) : (
+						<>
+							<img
+								alt="Runner sponsorship package"
+								src={heroImageSrc}
+								style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
+							/>
 
-					<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
-						<Box asChild>
-							<div style={articleBodyStyle}>
-								<>
-									<p style={{ margin: 0 }}>
-										When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
-									</p>
-									<div style={{ marginTop: 10 }}>
-										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
-										<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
-											<li>Headline billing on all event promotions.</li>
-											<li>Logo placement on runner jerseys.</li>
-											<li>Exclusive naming rights for the finish line.</li>
-											<li>VIP access for 50 guests.</li>
-											<li>Full-page ad in the event program.</li>
-										</ul>
-										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
-										<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
-											<li>Prominent logo placement on event banners.</li>
-											<li>Opportunity to set up an interactive booth at the event.</li>
-											<li>VIP access for 30 guests.</li>
-											<li>Half-page ad in the event program.</li>
-										</ul>
-										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
-										<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
-											<li>Logo placement on event signage.</li>
-											<li>Opportunity to distribute promotional materials.</li>
-										</ul>
+							<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
+								<Box asChild>
+									<div style={articleBodyStyle}>
+										<>
+											<p style={{ margin: 0 }}>
+												When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
+											</p>
+											<div style={{ marginTop: 10 }}>
+												<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
+												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
+													<li>Headline billing on all event promotions.</li>
+													<li>Logo placement on runner jerseys.</li>
+													<li>Exclusive naming rights for the finish line.</li>
+													<li>VIP access for 50 guests.</li>
+													<li>Full-page ad in the event program.</li>
+												</ul>
+												<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
+												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
+													<li>Prominent logo placement on event banners.</li>
+													<li>Opportunity to set up an interactive booth at the event.</li>
+													<li>VIP access for 30 guests.</li>
+													<li>Half-page ad in the event program.</li>
+												</ul>
+												<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
+												<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
+													<li>Logo placement on event signage.</li>
+													<li>Opportunity to distribute promotional materials.</li>
+												</ul>
+											</div>
+										</>
 									</div>
-								</>
-							</div>
-						</Box>
-					</Box>
+								</Box>
+							</Box>
 
-					<Box display="flex" flexDirection="column" gap="10" style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", marginTop: 12, padding: "12px 18px 18px" }}>
-						<Box alignItems="center" display="flex" gap="6">
-							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Image</Text>
+							<Box display="flex" flexDirection="column" gap="10" style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", marginTop: 12, padding: "12px 18px 18px" }}>
+								<Box alignItems="center" display="flex" gap="6">
+									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Image</Text>
+									</Box>
+									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Marathoner</Text>
+									</Box>
+									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Millenials</Text>
+									</Box>
+									<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
+								</Box>
+								<MetadataRow icon={<IconCalendar size={12} />} label="Instance Name here • By Author name" />
+								<MetadataRow icon={<IconCopy size={12} />} label="Will be saved in Library > Images" />
+								<MetadataRow icon={<IconCalendar size={12} />} label="Expiry Date" />
+								<MetadataRow icon={<IconLink size={12} />} label="Preview URL: https://www.stride.com/ironmanmiami" link />
 							</Box>
-							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Marathoner</Text>
-							</Box>
-							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Millenials</Text>
-							</Box>
-							<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
-						</Box>
-						<MetadataRow icon={<IconCalendar size={12} />} label="Instance Name here • By Author name" />
-						<MetadataRow icon={<IconCopy size={12} />} label="Will be saved in Library > Images" />
-						<MetadataRow icon={<IconCalendar size={12} />} label="Expiry Date" />
-						<MetadataRow icon={<IconLink size={12} />} label="Preview URL: https://www.stride.com/ironmanmiami" link />
-					</Box>
+						</>
+					)}
 				</Box>
 			</Box>
 

@@ -1,4 +1,5 @@
 import * as TablerIcons from "@tabler/icons-react";
+import Head from "next/head";
 import type { ComponentType, SVGProps } from "react";
 
 type CompatIconProps = SVGProps<SVGSVGElement> & {
@@ -8,8 +9,29 @@ type CompatIconProps = SVGProps<SVGSVGElement> & {
 
 const fallbackIcon = TablerIcons.IconCircle;
 
+// Custom SVG component matching the real @optimizely/axiom-icons IconAgent
+function AxiomIconAgent({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
+	const w = width ?? size;
+	const h = height ?? size;
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 20 16"
+			width={w}
+			height={h}
+			fill="currentColor"
+			style={style}
+			className={className}
+			{...rest}
+		>
+			<path d="M9.434 6.727c.15-.043.359-.005.505.051l7.983 2.76a.659.659 0 0 1 .38.414.714.714 0 0 1-.5.896l-3.114 1.127c-.744.238-.766.644-.766.644l-.965 3a.628.628 0 0 1-.424.35c-.393.112-.745-.084-.857-.478l-2.733-7.84c-.111-.393.097-.813.49-.924ZM14.774 0a2.01 2.01 0 0 1 2.016 2.017v3.528c0 .252-.252.504-.504.504a.518.518 0 0 1-.504-.504V2.017c0-.567-.472-1.009-1.008-1.01H3.686a.996.996 0 0 0-1.01 1.01v11.088c0 .536.443 1.008 1.01 1.008h3.528c.252 0 .504.22.504.504 0 .252-.252.504-.504.504H3.686a2.01 2.01 0 0 1-2.017-2.016V2.018C1.669.883 2.551 0 3.686 0h11.088Zm-2.45 14.291.63-1.956c.008-.03.014-.064.025-.098.046-.139.122-.297.242-.457.24-.32.612-.582 1.126-.753l2.344-.85L10.096 7.9l2.228 6.392ZM4.55 8.01l2.15.676c.269.084.43.371.346.64a.518.518 0 0 1-.64.345l-2.151-.676c-.269-.084-.407-.394-.345-.64.085-.27.394-.408.64-.345Zm1.503-3.615a.518.518 0 0 1 .713-.012l1.45 1.401c.18.175.186.53.012.712a.518.518 0 0 1-.713.013l-1.45-1.402a.498.498 0 0 1-.012-.712Zm3.93-2.146a.518.518 0 0 1 .652.323l.749 2.126a.518.518 0 0 1-.322.653.518.518 0 0 1-.653-.324L9.66 2.901c-.07-.243.058-.558.323-.652Z" />
+		</svg>
+	);
+}
+
 const iconMap: Record<string, string[]> = {
-	IconAgent: ["IconRobot", "IconSparkles"],
+	IconAgent: ["IconSparkles"], // fallback only; IconAgent is overridden below
+	IconAlignLeft: ["IconAlignLeft"],
 	IconArrowLeft: ["IconArrowLeft"],
 	IconArrowRotateLeft: ["IconRotate", "IconHistory"],
 	IconArrowsLeftRight: ["IconArrowsLeftRight"],
@@ -23,10 +45,13 @@ const iconMap: Record<string, string[]> = {
 	IconBrowser: ["IconBrowser"],
 	IconCalendar: ["IconCalendar"],
 	IconChartLine: ["IconChartLine"],
+	IconCheck: ["IconCheck"],
 	IconCheckCircleSolid: ["IconCircleCheckFilled", "IconCircleCheck"],
+	IconChevronDown: ["IconChevronDown"],
 	IconChevronLeft: ["IconChevronLeft"],
 	IconChevronRight: ["IconChevronRight"],
 	IconCircleCheck: ["IconCircleCheck"],
+	IconCircleDot: ["IconCircleDot"],
 	IconCircleExclamation: ["IconAlertCircle"],
 	IconCircleInfo: ["IconInfoCircle", "IconAlertCircle"],
 	IconCirclePause: ["IconPlayerPause"],
@@ -35,6 +60,7 @@ const iconMap: Record<string, string[]> = {
 	IconCircleStop: ["IconPlayerStop", "IconCircleX"],
 	IconClock: ["IconClock"],
 	IconClockRotateLeft: ["IconHistory"],
+	IconCode: ["IconCode"],
 	IconCodeBranch: ["IconGitBranch", "IconCodeDots"],
 	IconColumns3: ["IconColumns3"],
 	IconComments: ["IconMessages"],
@@ -49,12 +75,14 @@ const iconMap: Record<string, string[]> = {
 	IconFileImport: ["IconFileImport", "IconFileArrowLeft"],
 	IconGripVertical: ["IconGripVertical"],
 	IconHandPointer: ["IconHandFinger", "IconPointer"],
+	IconHashtag: ["IconHash"],
 	IconImage: ["IconPhoto", "IconImageInPicture"],
 	IconInputNumeric: ["Icon123", "IconNumbers"],
 	IconInputText: ["IconTypography", "IconLetterT"],
 	IconLaptopMobile: ["IconDevices", "IconDeviceLaptop"],
 	IconLink: ["IconLink"],
 	IconList: ["IconList"],
+	IconLocationDot: ["IconMapPin"],
 	IconPaperPlaneTop: ["IconSend"],
 	IconPen: ["IconPencil"],
 	IconPlay: ["IconPlayerPlay"],
@@ -66,6 +94,7 @@ const iconMap: Record<string, string[]> = {
 	IconTableCells: ["IconTable"],
 	IconTag: ["IconTag"],
 	IconTerminal: ["IconTerminal2", "IconTerminal"],
+	IconText: ["IconLetterT", "IconTypography"],
 	IconThumbsDown: ["IconThumbDown"],
 	IconThumbsUp: ["IconThumbUp"],
 	IconToggleOff: ["IconToggleLeft"],
@@ -101,7 +130,8 @@ function createIcon(name: string) {
 	return CompatIcon;
 }
 
-export const IconAgent = createIcon("IconAgent");
+export const IconAlignLeft = createIcon("IconAlignLeft");
+export const IconAgent = AxiomIconAgent;
 export const IconArrowLeft = createIcon("IconArrowLeft");
 export const IconArrowRotateLeft = createIcon("IconArrowRotateLeft");
 export const IconArrowsLeftRight = createIcon("IconArrowsLeftRight");
@@ -115,10 +145,13 @@ export const IconBracketsSquare = createIcon("IconBracketsSquare");
 export const IconBrowser = createIcon("IconBrowser");
 export const IconCalendar = createIcon("IconCalendar");
 export const IconChartLine = createIcon("IconChartLine");
+export const IconCheck = createIcon("IconCheck");
 export const IconCheckCircleSolid = createIcon("IconCheckCircleSolid");
+export const IconChevronDown = createIcon("IconChevronDown");
 export const IconChevronLeft = createIcon("IconChevronLeft");
 export const IconChevronRight = createIcon("IconChevronRight");
 export const IconCircleCheck = createIcon("IconCircleCheck");
+export const IconCircleDot = createIcon("IconCircleDot");
 export const IconCircleExclamation = createIcon("IconCircleExclamation");
 export const IconCircleInfo = createIcon("IconCircleInfo");
 export const IconCirclePause = createIcon("IconCirclePause");
@@ -127,6 +160,7 @@ export const IconCircleQuestion = createIcon("IconCircleQuestion");
 export const IconCircleStop = createIcon("IconCircleStop");
 export const IconClock = createIcon("IconClock");
 export const IconClockRotateLeft = createIcon("IconClockRotateLeft");
+export const IconCode = createIcon("IconCode");
 export const IconCodeBranch = createIcon("IconCodeBranch");
 export const IconColumns3 = createIcon("IconColumns3");
 export const IconComments = createIcon("IconComments");
@@ -141,12 +175,14 @@ export const IconFileArrowUp = createIcon("IconFileArrowUp");
 export const IconFileImport = createIcon("IconFileImport");
 export const IconGripVertical = createIcon("IconGripVertical");
 export const IconHandPointer = createIcon("IconHandPointer");
+export const IconHashtag = createIcon("IconHashtag");
 export const IconImage = createIcon("IconImage");
 export const IconInputNumeric = createIcon("IconInputNumeric");
 export const IconInputText = createIcon("IconInputText");
 export const IconLaptopMobile = createIcon("IconLaptopMobile");
 export const IconLink = createIcon("IconLink");
 export const IconList = createIcon("IconList");
+export const IconLocationDot = createIcon("IconLocationDot");
 export const IconPaperPlaneTop = createIcon("IconPaperPlaneTop");
 export const IconPen = createIcon("IconPen");
 export const IconPlay = createIcon("IconPlay");
@@ -158,6 +194,7 @@ export const IconSplit = createIcon("IconSplit");
 export const IconTableCells = createIcon("IconTableCells");
 export const IconTag = createIcon("IconTag");
 export const IconTerminal = createIcon("IconTerminal");
+export const IconText = createIcon("IconText");
 export const IconThumbsDown = createIcon("IconThumbsDown");
 export const IconThumbsUp = createIcon("IconThumbsUp");
 export const IconToggleOff = createIcon("IconToggleOff");
