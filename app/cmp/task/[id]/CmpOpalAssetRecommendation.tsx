@@ -808,8 +808,37 @@ export function CmpOpalAssetRecommendation() {
 		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
+	const [taskArticles, setTaskArticles] = useState<Array<{ id: string; title: string }>>([]);
 	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", []) as [ContentInstance[], any];
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
+	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
+
+	// Debug: Log when selection state changes
+	useEffect(() => {
+		console.log('[Main] State updated:', {
+			selectedContentInstanceId,
+			selectedArticleId,
+			selectedTaskAssetId,
+		});
+	}, [selectedContentInstanceId, selectedArticleId, selectedTaskAssetId]);
+
+	// Auto-select first item on load if nothing is selected
+	useEffect(() => {
+		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedArticleId) {
+			if (contentInstances.length > 0) {
+				console.log('[Main] Auto-selecting first content instance:', contentInstances[0].id);
+				setSelectedContentInstanceId(contentInstances[0].id);
+			} else if (taskArticles.length > 0) {
+				console.log('[Main] Auto-selecting first article:', taskArticles[0].id);
+				setSelectedArticleId(taskArticles[0].id);
+			} else if (taskAssets.length > 0) {
+				console.log('[Main] Auto-selecting first task asset:', taskAssets[0].id);
+				setSelectedTaskAssetId(taskAssets[0].id);
+			}
+		}
+	}, [contentInstances, taskArticles, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedArticleId]);
+
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
 	const [briefContent, setBriefContent] = useState(initialBriefHtml);
@@ -821,12 +850,12 @@ export function CmpOpalAssetRecommendation() {
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
 
-	// Initialize hasTaskContent based on existing content instances or task assets
+	// Initialize hasTaskContent based on existing content instances, task assets, or articles
 	useEffect(() => {
-		if (contentInstances.length > 0 || taskAssets.length > 0) {
+		if (contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0) {
 			setHasTaskContent(true);
 		}
-	}, [contentInstances.length, taskAssets.length]); // Re-check when content loads from localStorage
+	}, [contentInstances.length, taskAssets.length, taskArticles.length]); // Re-check when content loads from localStorage
 
 	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
 	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
@@ -905,8 +934,8 @@ export function CmpOpalAssetRecommendation() {
 	}, [deferredWorkflowSearch]);
 
 	const openContentTab = () => {
-		// Check if there's actually content (instances or assets)
-		const hasContent = contentInstances.length > 0 || taskAssets.length > 0;
+		// Check if there's actually content (instances, assets, or articles)
+		const hasContent = contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0;
 		setScene(hasContent ? "content" : "content-empty");
 		if (hasContent) {
 			setHasTaskContent(true);
@@ -1024,6 +1053,21 @@ export function CmpOpalAssetRecommendation() {
 
 		setContentInstances((current: ContentInstance[]) => [newInstance, ...current]);
 		setSelectedContentInstanceId(instanceId);
+		setSelectedTaskAssetId(null);
+		setSelectedArticleId(null);
+		setHasTaskContent(true);
+		setScene("content");
+	};
+
+	const addArticle = () => {
+		const articleId = `article-${Date.now()}`;
+		const newArticle = {
+			id: articleId,
+			title: "The runner sponsoring package",
+		};
+		setTaskArticles((current) => [...current, newArticle]);
+		setSelectedArticleId(articleId);
+		setSelectedContentInstanceId(null);
 		setSelectedTaskAssetId(null);
 		setHasTaskContent(true);
 		setScene("content");
@@ -1145,7 +1189,7 @@ export function CmpOpalAssetRecommendation() {
 			case "content-empty":
 				return (
 					<TaskCanvas
-						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onTabChange={handleTabChange} />}
+						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onAddArticle={addArticle} onTabChange={handleTabChange} />}
 						right={
 							<WorkflowSidebar
 								filteredTemplates={filteredWorkflowTemplates}
@@ -1160,67 +1204,49 @@ export function CmpOpalAssetRecommendation() {
 					/>
 				);
 			case "content":
-				return (
-					<TaskCanvas
-						left={
-							<ContentFilledPage
-								activeTab={activeTab}
-								onAddContent={() => openSearch("content")}
-								onAddContentFromModel={addContentInstanceFromModel}
-								onOpenSuggested={() => setScene("content-panel")}
-								onSelectTaskAsset={setSelectedTaskAssetId}
-								suggestedOpen={false}
-								selectedTaskAssetId={selectedTaskAssetId}
-								taskAssets={taskAssets}
-								contentInstances={contentInstances}
-								setContentInstances={setContentInstances}
-								selectedContentInstanceId={selectedContentInstanceId}
-								onSelectContentInstance={setSelectedContentInstanceId}
-								onTabChange={handleTabChange}
-							/>
-						}
-						right={
-							<WorkflowSidebar
-								filteredTemplates={filteredWorkflowTemplates}
-								isMenuOpen={workflowMenuOpen}
-								onRequestWorkflowChange={handleWorkflowSelect}
-								onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
-								onWorkflowSearchChange={setWorkflowSearch}
-								searchValue={workflowSearch}
-								workflow={activeWorkflow}
-							/>
-						}
-					/>
-				);
 			case "content-panel":
 				return (
 					<TaskCanvas
 						left={
 							<ContentFilledPage
 								activeTab={activeTab}
-								onAddContent={() => openSearch("content")}
+								onAddContent={() => openSearch(scene)}
 								onAddContentFromModel={addContentInstanceFromModel}
-								onOpenSuggested={() => setScene("content-panel")}
-								onSelectTaskAsset={setSelectedTaskAssetId}
-								suggestedOpen={true}
+								onAddArticle={addArticle}
+								onOpenSuggested={() => setSuggestedPanelOpen(true)}
+								onSelectTaskAsset={(id) => {
+									console.log('[Main] setSelectedTaskAssetId called with:', id);
+									setSelectedTaskAssetId(id);
+								}}
+								suggestedOpen={suggestedPanelOpen}
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
+								taskArticles={taskArticles}
+								selectedArticleId={selectedArticleId}
+								onSelectArticle={(id) => {
+									console.log('[Main] setSelectedArticleId called with:', id);
+									setSelectedArticleId(id);
+								}}
 								contentInstances={contentInstances}
 								setContentInstances={setContentInstances}
 								selectedContentInstanceId={selectedContentInstanceId}
-								onSelectContentInstance={setSelectedContentInstanceId}
+								onSelectContentInstance={(id) => {
+									console.log('[Main] setSelectedContentInstanceId called with:', id);
+									setSelectedContentInstanceId(id);
+								}}
 								onTabChange={handleTabChange}
 							/>
 						}
-							right={
+						right={
+							suggestedPanelOpen ? (
 								<SuggestedAssetsPanel
 									assets={panelAssetsWithSelection}
 									onAddToTask={() =>
 										addAssetsToTask(panelAssetsWithSelection.filter((asset) => asset.selected))
 									}
 									onClearSelection={() => setSelectedPanelAssetIds([])}
-									onClose={() => setScene("content")}
-									onEditSearch={() => openSearch("content-panel")}
+									onClose={() => setSuggestedPanelOpen(false)}
+									onEditSearch={() => openSearch(scene)}
 									onToggleSelect={(assetId) =>
 										setSelectedPanelAssetIds((current) =>
 											current.includes(assetId)
@@ -1229,13 +1255,24 @@ export function CmpOpalAssetRecommendation() {
 										)
 									}
 								/>
-							}
-						/>
+							) : (
+								<WorkflowSidebar
+									filteredTemplates={filteredWorkflowTemplates}
+									isMenuOpen={workflowMenuOpen}
+									onRequestWorkflowChange={handleWorkflowSelect}
+									onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
+									onWorkflowSearchChange={setWorkflowSearch}
+									searchValue={workflowSearch}
+									workflow={activeWorkflow}
+								/>
+							)
+						}
+					/>
 				);
 			default:
 				return null;
 		}
-	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, panelAssetsWithSelection, perspectives, rankedSearchAssets, scene, searchReturnScene, selectedAsset, selectedTaskAssetId, taskAssets, workflowMenuOpen, workflowSearch]);
+	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, panelAssetsWithSelection, perspectives, rankedSearchAssets, scene, searchReturnScene, selectedAsset, selectedTaskAssetId, selectedContentInstanceId, selectedArticleId, taskAssets, taskArticles, contentInstances, suggestedPanelOpen, workflowMenuOpen, workflowSearch]);
 
 	return (
 		<Box
@@ -2850,11 +2887,13 @@ function ContentEmptyPage({
 	activeTab,
 	onAddContent,
 	onAddContentFromModel,
+	onAddArticle,
 	onTabChange,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
 	onAddContentFromModel: (model: ContentType) => void;
+	onAddArticle: () => void;
 	onTabChange: (tab: string) => void;
 }) {
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
@@ -2900,6 +2939,12 @@ function ContentEmptyPage({
 								addon: <IconPhoto size={20} />,
 								description: "Add assets from recommendations",
 								execute: () => onAddContent(),
+							},
+							{
+								label: "Article",
+								addon: <IconFileText size={20} />,
+								description: "Add a hardcoded article example",
+								execute: () => onAddArticle(),
 							},
 							{
 								label: "Channel",
@@ -2964,11 +3009,15 @@ function ContentFilledPage({
 	activeTab,
 	onAddContent,
 	onAddContentFromModel,
+	onAddArticle,
 	onOpenSuggested,
 	onSelectTaskAsset,
 	selectedTaskAssetId,
 	suggestedOpen = false,
 	taskAssets,
+	taskArticles,
+	selectedArticleId,
+	onSelectArticle,
 	contentInstances,
 	setContentInstances,
 	selectedContentInstanceId,
@@ -2978,15 +3027,19 @@ function ContentFilledPage({
 	activeTab: TaskTab;
 	onAddContent: () => void;
 	onAddContentFromModel: (model: ContentType) => void;
+	onAddArticle: () => void;
 	onOpenSuggested: () => void;
-	onSelectTaskAsset: (assetId: string) => void;
+	onSelectTaskAsset: (assetId: string | null) => void;
 	selectedTaskAssetId: string | null;
 	suggestedOpen?: boolean;
 	taskAssets: AssetItem[];
+	taskArticles: Array<{ id: string; title: string }>;
+	selectedArticleId: string | null;
+	onSelectArticle: (id: string | null) => void;
 	contentInstances: ContentInstance[];
 	setContentInstances: (instances: ContentInstance[]) => void;
 	selectedContentInstanceId: string | null;
-	onSelectContentInstance: (id: string) => void;
+	onSelectContentInstance: (id: string | null) => void;
 	onTabChange: (tab: string) => void;
 }) {
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
@@ -2994,6 +3047,21 @@ function ContentFilledPage({
 		(value: ContentType[]) => void,
 	];
 	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
+
+	// Component mount/unmount logging
+	useEffect(() => {
+		console.log('[ContentFilledPage] MOUNTED');
+		return () => {
+			console.log('[ContentFilledPage] UNMOUNTED');
+		};
+	}, []);
+
+	// Render logging
+	console.log('[ContentFilledPage] RENDER:', {
+		selectedContentInstanceId,
+		selectedTaskAssetId,
+		suggestedOpen,
+	});
 
 	// Use CMP content models directly, converted to ContentType format
 	const cmpContentModels = useMemo(
@@ -3005,29 +3073,49 @@ function ContentFilledPage({
 		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
 	const selectedContentInstance =
 		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
+	const selectedArticle =
+		taskArticles.find((article) => article.id === selectedArticleId) ?? null;
+
+	// Debug: Log what we found
+	console.log('[ContentFilledPage] Selected items:', {
+		selectedContentInstanceId,
+		foundInstance: selectedContentInstance ? { id: selectedContentInstance.id, name: selectedContentInstance.modelDisplayName } : null,
+		selectedArticleId,
+		foundArticle: selectedArticle,
+		selectedTaskAssetId,
+		foundAsset: selectedTaskAsset,
+	});
 
 	// Reset edit mode when switching content instances
 	useEffect(() => {
 		setIsEditingContentInstance(false);
 	}, [selectedContentInstanceId]);
 
-	// If nothing is selected, default to first content instance or first asset
-	const effectiveSelectedAssetId = selectedTaskAssetId ?? (contentInstances.length === 0 && taskAssets.length > 0 ? taskAssets[0]?.id : null);
-	const effectiveSelectedInstanceId = selectedContentInstanceId ?? (taskAssets.length === 0 && contentInstances.length > 0 ? contentInstances[0]?.id : null);
+	// Debug logging for content instances and assets
+	useEffect(() => {
+		console.log('[ContentTab] Content instances updated:', {
+			count: contentInstances.length,
+			instances: contentInstances.map(ci => ({ id: ci.id, modelDisplayName: ci.modelDisplayName })),
+		});
+	}, [contentInstances]);
 
-	const heroImageSrc =
-		selectedTaskAsset?.preview === "image"
-			? selectedTaskAsset.heroSrc ?? selectedTaskAsset.src
-			: figmaAssets.contentHero;
-	const articleBodyStyle = {
-		color: "var(--ax-colors-fg-default)",
-		fontFamily: "Inter, sans-serif",
-		fontSize: 14,
-		fontStyle: "normal" as const,
-		fontWeight: 400,
-		letterSpacing: "-0.1px",
-		lineHeight: "20px",
-	};
+	useEffect(() => {
+		console.log('[ContentTab] Task assets updated:', {
+			count: taskAssets.length,
+			assets: taskAssets.map(a => ({ id: a.id, title: a.title })),
+		});
+	}, [taskAssets]);
+
+	// Debug logging for selection state
+	useEffect(() => {
+		console.log('[ContentTab] Selection state:', {
+			selectedContentInstanceId,
+			selectedTaskAssetId,
+			suggestedOpen,
+			contentInstancesCount: contentInstances.length,
+			taskAssetsCount: taskAssets.length,
+		});
+	}, [selectedContentInstanceId, selectedTaskAssetId, suggestedOpen, contentInstances.length, taskAssets.length]);
 
 	return (
 		<Box pb="32" style={{ position: "relative" }}>
@@ -3041,6 +3129,12 @@ function ContentFilledPage({
 								addon: <IconPhoto size={20} />,
 								description: "Add assets from recommendations",
 								execute: () => onAddContent(),
+							},
+							{
+								label: "Article",
+								addon: <IconFileText size={20} />,
+								description: "Add a hardcoded article example",
+								execute: () => onAddArticle(),
 							},
 							{
 								label: "Channel",
@@ -3110,94 +3204,155 @@ function ContentFilledPage({
 				</Box>
 
 				<Box alignItems="center" display="flex" gap="8">
-					{[null, ...contentInstances, ...taskAssets].map((item, index) => {
+					{(() => {
+						const buttonList = [null, ...contentInstances, ...taskArticles, ...taskAssets];
+						console.log('[ContentTab] Rendering button list:', {
+							totalButtons: buttonList.length,
+							items: buttonList.map((item, i) => ({
+								index: i,
+								type: i === 0 ? 'suggested' :
+									item && 'modelId' in item ? 'content-instance' :
+									item && 'title' in item && !('src' in item) ? 'article' :
+									'asset',
+								id: item?.id,
+								key: i === 0 ? 'suggested' : item?.id ?? i,
+							})),
+						});
+						return buttonList;
+					})().map((item, index) => {
+						// Determine button type
 						const isSuggestedTrigger = index === 0;
 						const isContentInstance = item && 'modelId' in item;
-						const isAsset = item && !isContentInstance;
+						const isArticle = item && 'title' in item && !('src' in item) && !('modelId' in item);
+						const isAsset = item && !isContentInstance && !isArticle;
+
+						// Determine if this button is selected
 						const isSelected = isSuggestedTrigger
-							? suggestedOpen
-							: !suggestedOpen && (
+							? false // Sparkles button is never "selected", it just toggles the panel
+							: (
 								(isContentInstance && item.id === selectedContentInstanceId) ||
+								(isArticle && item.id === selectedArticleId) ||
 								(isAsset && item.id === selectedTaskAssetId)
 							);
 
-							return (
-								<Box
-									key={index}
-									alignItems="center"
-									bg={isSelected ? "bg.default" : "bg.secondary"}
-									border="1"
-									borderColor={isSelected ? "border.accent" : "border.tertiary"}
-									display="flex"
-									justifyContent="center"
-									rounded="md"
+						// Handle click events
+						const handleClick = () => {
+							console.log('[ContentTab] Button clicked:', {
+								index,
+								isSuggestedTrigger,
+								isContentInstance,
+								isArticle,
+								isAsset,
+								itemId: item?.id,
+								itemType: isContentInstance ? 'content-instance' : isArticle ? 'article' : isAsset ? 'asset' : 'suggested',
+							});
+
+							if (isSuggestedTrigger) {
+								console.log('[ContentTab] Opening suggested assets');
+								onOpenSuggested();
+								return;
+							}
+
+							if (isContentInstance) {
+								// Select this content instance, deselect others
+								console.log('[ContentTab] Selecting content instance:', item.id);
+								onSelectContentInstance(item.id);
+								onSelectArticle(null);
+								onSelectTaskAsset(null);
+								return;
+							}
+
+							if (isArticle && item) {
+								// Select this article, deselect others
+								console.log('[ContentTab] Selecting article:', item.id);
+								onSelectArticle(item.id);
+								onSelectContentInstance(null);
+								onSelectTaskAsset(null);
+								return;
+							}
+
+							if (isAsset && item) {
+								// Select this asset, deselect others
+								console.log('[ContentTab] Selecting task asset:', item.id);
+								onSelectTaskAsset(item.id);
+								onSelectContentInstance(null);
+								onSelectArticle(null);
+								return;
+							}
+
+							console.warn('[ContentTab] Click handler did not match any condition');
+						};
+
+						return (
+							<Box
+								key={isSuggestedTrigger ? 'suggested' : item?.id ?? index}
+								alignItems="center"
+								bg={isSelected ? "bg.default" : "bg.secondary"}
+								border="1"
+								borderColor={isSelected ? "border.accent" : "border.tertiary"}
+								display="flex"
+								justifyContent="center"
+								rounded="md"
+								style={{
+									background: "#FFF",
+									boxShadow: isSelected
+										? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7"
+										: "none",
+									flexShrink: 0,
+									height: 32,
+									minHeight: 32,
+									minWidth: 32,
+									overflow: "hidden",
+									width: 32,
+								}}
+							>
+								<button
+									aria-label={
+										isSuggestedTrigger ? "Open suggested assets" :
+										isContentInstance ? `View ${item.modelDisplayName}` :
+										isArticle ? `View ${item.title}` :
+										`View ${item?.title ?? "task asset"}`
+									}
+									onClick={handleClick}
 									style={{
-										background: "#FFF",
-										boxShadow: isSelected
-											? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7"
-											: "none",
+										alignItems: "center",
+										background: "transparent",
+										border: "none",
+										cursor: "pointer",
+										display: "flex",
 										flexShrink: 0,
 										height: 32,
-										minHeight: 32,
-										minWidth: 32,
-										overflow: "hidden",
+										justifyContent: "center",
+										padding: 0,
 										width: 32,
 									}}
+									type="button"
 								>
-									<button
-										aria-label={
-											isSuggestedTrigger ? "Open suggested assets" :
-											isContentInstance ? `View ${item.modelDisplayName}` :
-											`View ${item?.title ?? "task asset"}`
-										}
-										onClick={
-											isSuggestedTrigger ? onOpenSuggested :
-											isContentInstance ? () => {
-												onSelectContentInstance(item.id);
-												onSelectTaskAsset(null); // Deselect assets
-											} :
-											item ? () => {
-												onSelectTaskAsset(item.id);
-												onSelectContentInstance(null); // Deselect content instances
-											} : undefined
-										}
-										style={{
-											alignItems: "center",
-											background: "transparent",
-											border: "none",
-											cursor: "pointer",
-											display: "flex",
-											flexShrink: 0,
-											height: 32,
-											justifyContent: "center",
-											padding: 0,
-											width: 32,
-										}}
-										type="button"
-									>
-										{isSuggestedTrigger ? (
-											<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
-										) : isContentInstance ? (
-											<IconFileText size={16} color="var(--ax-colors-fg-accent)" />
-										) : item?.thumbnailSrc || item?.src ? (
-											<img
-												alt=""
-												src={item?.thumbnailSrc ?? item?.src}
-												style={{
-													display: "block",
-													flexShrink: 0,
-													height: 32,
-													objectFit: "cover",
-													width: 32,
-												}}
-											/>
-										) : (
-											<Text fontSize="lg">{item?.title?.charAt(0) ?? "?"}</Text>
-										)}
-									</button>
-								</Box>
-							);
-						})}
+									{isSuggestedTrigger ? (
+										<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
+									) : isContentInstance ? (
+										<IconFileText size={16} color="var(--ax-colors-fg-accent)" />
+									) : isArticle ? (
+										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
+									) : isAsset && item && 'src' in item ? (
+										<img
+											alt=""
+											src={('thumbnailSrc' in item ? item.thumbnailSrc : item.src) as string}
+											style={{
+												display: "block",
+												flexShrink: 0,
+												height: 32,
+												objectFit: "cover",
+												width: 32,
+											}}
+										/>
+									) : (
+										<Text fontSize="lg">{item?.title?.charAt(0) ?? "?"}</Text>
+									)}
+								</button>
+							</Box>
+						);
+					})}
 				</Box>
 
 				<Box
@@ -3209,7 +3364,12 @@ function ContentFilledPage({
 				>
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
 						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
-							{selectedContentInstance ? selectedContentInstance.modelDisplayName : selectedTaskAsset?.title ?? "The runner sponsoring package"}
+							{selectedContentInstance
+								? selectedContentInstance.modelDisplayName
+								: selectedArticle
+								? selectedArticle.title
+								: selectedTaskAsset?.title
+								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedArticleId ?? selectedTaskAssetId ?? 'unknown'}`}
 						</Text>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
@@ -3293,23 +3453,31 @@ function ContentFilledPage({
 								});
 							})()}
 						</Box>
-					) : (
+					) : selectedArticle ? (
 						<>
 							<img
 								alt="Runner sponsorship package"
-								src={heroImageSrc}
+								src={figmaAssets.contentHero}
 								style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
 							/>
 
 							<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
 								<Box asChild>
-									<div style={articleBodyStyle}>
+									<div style={{
+										color: "var(--ax-colors-fg-default)",
+										fontFamily: "Inter, sans-serif",
+										fontSize: 14,
+										fontStyle: "normal" as const,
+										fontWeight: 400,
+										letterSpacing: "-0.1px",
+										lineHeight: "20px",
+									}}>
 										<>
 											<p style={{ margin: 0 }}>
 												When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
 											</p>
 											<div style={{ marginTop: 10 }}>
-												<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
+												<p style={{ fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
 												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
 													<li>Headline billing on all event promotions.</li>
 													<li>Logo placement on runner jerseys.</li>
@@ -3317,14 +3485,14 @@ function ContentFilledPage({
 													<li>VIP access for 50 guests.</li>
 													<li>Full-page ad in the event program.</li>
 												</ul>
-												<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
+												<p style={{ fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
 												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
 													<li>Prominent logo placement on event banners.</li>
 													<li>Opportunity to set up an interactive booth at the event.</li>
 													<li>VIP access for 30 guests.</li>
 													<li>Half-page ad in the event program.</li>
 												</ul>
-												<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
+												<p style={{ fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
 												<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
 													<li>Logo placement on event signage.</li>
 													<li>Opportunity to distribute promotional materials.</li>
@@ -3348,35 +3516,27 @@ function ContentFilledPage({
 									</Box>
 									<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
 								</Box>
-								<MetadataRow icon={<IconCalendar size={12} />} label="Instance Name here • By Author name" />
-								<MetadataRow icon={<IconCopy size={12} />} label="Will be saved in Library > Images" />
-								<MetadataRow icon={<IconCalendar size={12} />} label="Expiry Date" />
-								<MetadataRow icon={<IconLink size={12} />} label="Preview URL: https://www.stride.com/ironmanmiami" link />
 							</Box>
 						</>
+					) : selectedTaskAsset ? (
+						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+							<Text color="fg.secondary" fontSize="sm">
+								Task asset selected
+							</Text>
+							<Text color="fg.tertiary" fontSize="sm">
+								Task asset rendering not yet implemented
+							</Text>
+						</Box>
+					) : (
+						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+							<Text color="fg.error" fontSize="sm">
+								No content selected
+							</Text>
+						</Box>
 					)}
 				</Box>
 			</Box>
 
-		</Box>
-	);
-}
-
-function MetadataRow({
-	icon,
-	label,
-	link = false,
-}: {
-	icon: ReactNode;
-	label: string;
-	link?: boolean;
-}) {
-	return (
-		<Box alignItems="center" display="flex" gap="10">
-			<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 18, width: 18 }}>
-				{icon}
-			</Box>
-			<Text color={link ? "fg.accent" : "fg.secondary"} style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>{label}</Text>
 		</Box>
 	);
 }
