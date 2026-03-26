@@ -294,6 +294,8 @@ export type Property = {
 	order?: number;
 	description?: string;
 	defaultValue?: any;
+	/** Controls how String type properties are rendered - input (default) or textarea */
+	displayAs?: "input" | "textarea";
 	/** when type is reference this points to a collection like 'users' */
 	of?: string;
 	/** For reference types - allowed content types */
