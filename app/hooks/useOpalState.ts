@@ -175,7 +175,7 @@ function getImageGenResponse(content: string, returnTo = '/cmp/library'): string
     "",
     `![Triathlon draft](${draftImage})`,
     "",
-    `[Use advanced editor](/cmp/opal-studio?flow=create&asset=image&stage=advanced&prompt=${encodeURIComponent(prompt)}&draft=${encodeURIComponent(draftImage)}&returnTo=${encodeURIComponent(returnTo)})`,
+    `[Use advanced editor](/cmp/opal-studio/canvas?flow=create&asset=image&prompt=${encodeURIComponent(prompt)}&draft=${encodeURIComponent(draftImage)}&returnTo=${encodeURIComponent(returnTo)})`,
   ].join("\n");
 }
 
