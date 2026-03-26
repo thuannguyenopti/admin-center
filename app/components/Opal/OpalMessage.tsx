@@ -80,7 +80,17 @@ const MarkdownContent = ({ content }: { content: string }) => {
             ),
           strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
           em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-          a: ({ node, ...props }) => <a style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" {...props} />,
+          a: ({ node, href, ...props }) => {
+            const isInternal = typeof href === 'string' && href.startsWith('/');
+            return (
+              <a
+                href={href}
+                style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }}
+                {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+                {...props}
+              />
+            );
+          },
         }}
       >
         {content}

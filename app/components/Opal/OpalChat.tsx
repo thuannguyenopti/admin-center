@@ -39,6 +39,7 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
 
   const isCMS = opalContext?.currentPage?.path?.startsWith('/cms') ||
     opalContext?.currentPage?.productArea?.includes('CMS');
+  const isImageGen = opalContext?.currentPage?.path?.startsWith('/cmp/opal-studio');
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -203,11 +204,21 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 color: 'var(--opal-text-body)',
               }}
             >
-              Hi, I&apos;m Opal, Optimizely&apos;s AI. I can help answer your questions about using Optimizely, analyze your website and suggest effective tests, plus do web research to boost conversions.
-              <br /><br />
-              What can I help you with?
+              {isImageGen ? (
+                <>
+                  Hi, I&apos;m Opal, Optimizely&apos;s AI. I can help create brand-safe visuals for campaigns, social, and event content.
+                  <br /><br />
+                  Tell me what image you want to create. I&apos;ll generate a first draft here, and you can decide whether to open the advanced editor.
+                </>
+              ) : (
+                <>
+                  Hi, I&apos;m Opal, Optimizely&apos;s AI. I can help answer your questions about using Optimizely, analyze your website and suggest effective tests, plus do web research to boost conversions.
+                  <br /><br />
+                  What can I help you with?
+                </>
+              )}
             </Text>
-            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={isCMS ? 'cms' : 'default'} />
+            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
           </>
         )
       ) : (
