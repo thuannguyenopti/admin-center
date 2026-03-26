@@ -1,7 +1,7 @@
 "use client";
 
-import React, { Fragment, useEffect, useRef, useState } from "react";
-import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import React, { Fragment, useEffect, useRef, useState, useMemo } from "react";
+import { Box, Field, Text, Input as AxiomInput, Checkbox, Heading, Textarea, Menu, MenuTrigger, MenuContent, Separator } from "@optiaxiom/react";
 import { IconPalette } from "@tabler/icons-react";
 import { BLOCK_SCHEMAS } from "./blocks/schemas";
 import { AIInputField } from "@/app/components/ai/AIInputField";
@@ -9,6 +9,8 @@ import { AITextArea } from "@/app/components/ai/AITextArea";
 import { FieldWithAIActions } from "./FieldWithAIActions";
 import { usePropertyEditorActions } from "@/app/hooks/usePropertyEditorActions";
 import { PropertyType } from "@/app/cms/settings/opal-actions/mockData";
+import { initialContentTypes, Property } from "@/app/db/initialData";
+import { groupPropertiesByGroup } from "./utils/propertyGroups";
 
 type Props = {
   currentEle: string;
@@ -147,8 +149,18 @@ export default function ElementEditor({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Get content type definition and group properties
+  const contentType = useMemo(() => {
+    return initialContentTypes.find((ct) => ct.id === elementType);
+  }, [elementType]);
+
+  const propertyGroups = useMemo(() => {
+    if (!contentType) return {};
+    return groupPropertiesByGroup(contentType.properties, true);
+  }, [contentType]);
+
   useEffect(() => {
-    // Don’t focus when “closed”
+    // Don't focus when "closed"
     if (!currentEle || currentEle === "none") return;
 
     // Match your slide duration (you use `duration-300`)
@@ -175,7 +187,7 @@ export default function ElementEditor({
         el.focus?.();
       }
 
-      // Optional: select text if it’s a real input/textarea
+      // Optional: select text if it's a real input/textarea
       /*if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
         try {
           el.select?.();
@@ -237,59 +249,94 @@ export default function ElementEditor({
         const schema = BLOCK_SCHEMAS[elementType];
         if (!schema) return null;
 
-        return Object.entries(schema.properties).map(([key, def]) => {
-          // Skip template property - it's accessed via context menu "Style" option
-          if (key === "template" || def.type === "SelectOne") {
-            return null;
+        // Map schema type to PropertyType
+        const getPropertyType = (schemaType: string): PropertyType => {
+          switch (schemaType) {
+            case "text":
+            case "String":
+              return "String";
+            case "textarea":
+            case "LongString":
+              return "LongString";
+            case "richtext":
+            case "XhtmlString":
+              return "XhtmlString";
+            case "link":
+            case "Url":
+              return "Url";
+            default:
+              return "String";
           }
+        };
 
-          const propData = properties ? properties[key] : null;
-          const value = propData ? propData.value : (def.default ?? "");
+        // Calculate groups with visible properties
+        const groupsWithVisibleProps = Object.entries(propertyGroups).filter(([_, groupProps]) => {
+          const visibleProps = groupProps.filter((prop) => {
+            return !(prop.id === "template" || prop.type === "SelectOne");
+          });
+          return visibleProps.length > 0;
+        });
 
-          // Map schema type to PropertyType
-          const getPropertyType = (schemaType: string): PropertyType => {
-            switch (schemaType) {
-              case "text":
-                return "String";
-              case "textarea":
-                return "LongString";
-              case "richtext":
-                return "XhtmlString";
-              case "link":
-                return "Url";
-              default:
-                return "String";
-            }
-          };
+        // Only show headers if there are 2 or more groups with visible properties
+        const shouldShowHeaders = groupsWithVisibleProps.length > 1;
+
+        // Render properties grouped by groupName
+        return Object.entries(propertyGroups).map(([groupName, groupProps]) => {
+          // Filter out properties that should be hidden
+          const visibleProps = groupProps.filter((prop) => {
+            // Skip template property - it's accessed via context menu "Style" option
+            return !(prop.id === "template" || prop.type === "SelectOne");
+          });
+
+          // Don't render the group at all if no visible properties
+          if (visibleProps.length === 0) return null;
 
           return (
-            <Fragment key={key}>
-              {(def.type === "text" || def.type === "textarea" || def.type === "link") && (
-                <Input
-                  label={def.label}
-                  value={value}
-                  onChange={(val: any) => onInputChange(val, key)}
-                  propertyType={getPropertyType(def.type)}
-                />
+            <Fragment key={groupName}>
+              {shouldShowHeaders && (
+                <Box mb="12" mt="16">
+                  <Heading level="4" fontSize="xs" color="fg.tertiary" mb="8" textTransform="uppercase">
+                    {groupName}
+                  </Heading>
+                  <Separator />
+                </Box>
               )}
-              {def.type === "richtext" && (
-                <RichTextInput
-                  label={def.label}
-                  value={value}
-                  onChange={(val: any) => onInputChange(val, key)}
-                  propertyType="XhtmlString"
-                />
-              )}
-              {def.type === "checkbox" && (
-                <div className="p-6 pr-0 py-2">
-                  <Checkbox
-                    checked={value === true || value === "true"}
-                    onChange={(e: any) => onInputChange(e.currentTarget.checked, key)}
-                  >
-                    {def.label}
-                  </Checkbox>
-                </div>
-              )}
+
+              {visibleProps.map((prop) => {
+                const propData = properties ? properties[prop.id] : null;
+                const value = propData ? propData.value : (prop.defaultValue ?? "");
+
+                return (
+                  <Fragment key={prop.id}>
+                  {(prop.type === "text" || prop.type === "String" || prop.type === "textarea" || prop.type === "LongString" || prop.type === "link" || prop.type === "Url") && (
+                    <Input
+                      label={prop.displayName || prop.name}
+                      value={value}
+                      onChange={(val: any) => onInputChange(val, prop.id)}
+                      propertyType={getPropertyType(prop.type)}
+                    />
+                  )}
+                  {(prop.type === "richtext" || prop.type === "XhtmlString") && (
+                    <RichTextInput
+                      label={prop.displayName || prop.name}
+                      value={value}
+                      onChange={(val: any) => onInputChange(val, prop.id)}
+                      propertyType="XhtmlString"
+                    />
+                  )}
+                  {(prop.type === "checkbox" || prop.type === "Boolean") && (
+                    <div className="p-6 pr-0 py-2">
+                      <Checkbox
+                        checked={value === true || value === "true"}
+                        onChange={(e: any) => onInputChange(e.currentTarget.checked, prop.id)}
+                      >
+                        {prop.displayName || prop.name}
+                      </Checkbox>
+                    </div>
+                  )}
+                </Fragment>
+                );
+              })}
             </Fragment>
           );
         });
