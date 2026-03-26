@@ -24,10 +24,10 @@ import { useLayout } from "@/app/context/LayoutContext";
 
 const ratioOptions = ["Auto", "1:1", "4:5", "16:9", "9:16"] as const;
 const channelPacks = ["Social pack", "Ads pack", "Email + web pack", "Event campaign pack"];
-const brandPacks = ["General", "Olympics", "Tour de France"] as const;
+const brandPacks = ["General", "Stride", "Olympics", "Tour de France"] as const;
 const intentOptions = ["Create", "Variation", "Resize", "Upscale", "Product placement", "Text overlay"] as const;
 const editToolOptions = ["Reframe", "Resize", "Upscale", "Text overlay", "Remove background"] as const;
-const textLayoutOptions = ["Hero left", "Tall stack", "Bottom left", "Centered"] as const;
+const textLayoutOptions = ["Hero left", "Tall stack", "Bottom left", "Centered", "Impact", "Editorial"] as const;
 
 const referenceImages = [
 	{ src: "/hero-cycling.jpg", label: "Ride hero", source: "Library" },
@@ -117,13 +117,14 @@ export default function OpalStudioCanvasPage() {
 	const textOverlayColor = brandPack === "Tour de France" ? "#111827" : "#ffffff";
 	const textShadow = brandPack === "Tour de France"
 		? "0 2px 10px rgba(255,255,255,0.32)"
-		: "0 4px 24px rgba(15,23,42,0.42)";
+		: "0 6px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)";
 	const textLayoutStyle = useMemo(() => {
 		const base = {
 			position: "absolute" as const,
-			maxWidth: aspectRatio === "16:9" ? "40%" : aspectRatio === "9:16" ? "66%" : "50%",
+			maxWidth: aspectRatio === "16:9" ? "48%" : aspectRatio === "9:16" ? "72%" : "56%",
 			color: textOverlayColor,
 			textShadow,
+			textTransform: "uppercase" as const,
 		};
 
 		switch (textLayoutPreset) {
@@ -132,11 +133,15 @@ export default function OpalStudioCanvasPage() {
 					...base,
 					left: 40,
 					top: 40,
-					maxWidth: aspectRatio === "9:16" ? "70%" : "38%",
-					headlineSize: aspectRatio === "16:9" ? 54 : 60,
-					subheadlineSize: 20,
-					headlineLineHeight: 0.94,
-					subheadlineMarginTop: 16,
+					maxWidth: aspectRatio === "9:16" ? "78%" : "44%",
+					headlineSize: aspectRatio === "16:9" ? 68 : 80,
+					headlineWeight: 900,
+					headlineLetterSpacing: -2.5,
+					subheadlineSize: 16,
+					subheadlineWeight: 600,
+					subheadlineLetterSpacing: 3,
+					headlineLineHeight: 0.88,
+					subheadlineMarginTop: 20,
 					alignItems: "flex-start" as const,
 					textAlign: "left" as const,
 				};
@@ -145,11 +150,15 @@ export default function OpalStudioCanvasPage() {
 					...base,
 					left: 40,
 					bottom: 40,
-					maxWidth: aspectRatio === "16:9" ? "42%" : "52%",
-					headlineSize: aspectRatio === "16:9" ? 42 : 48,
-					subheadlineSize: 18,
-					headlineLineHeight: 0.98,
-					subheadlineMarginTop: 12,
+					maxWidth: aspectRatio === "16:9" ? "50%" : "60%",
+					headlineSize: aspectRatio === "16:9" ? 56 : 64,
+					headlineWeight: 900,
+					headlineLetterSpacing: -1.5,
+					subheadlineSize: 15,
+					subheadlineWeight: 500,
+					subheadlineLetterSpacing: 2.5,
+					headlineLineHeight: 0.92,
+					subheadlineMarginTop: 14,
 					alignItems: "flex-start" as const,
 					textAlign: "left" as const,
 				};
@@ -159,13 +168,53 @@ export default function OpalStudioCanvasPage() {
 					left: "50%",
 					top: "50%",
 					transform: "translate(-50%, -50%)",
-					maxWidth: aspectRatio === "9:16" ? "72%" : "56%",
-					headlineSize: aspectRatio === "16:9" ? 44 : 52,
-					subheadlineSize: 19,
-					headlineLineHeight: 0.98,
-					subheadlineMarginTop: 14,
+					maxWidth: aspectRatio === "9:16" ? "80%" : "64%",
+					headlineSize: aspectRatio === "16:9" ? 60 : 72,
+					headlineWeight: 900,
+					headlineLetterSpacing: -2,
+					subheadlineSize: 15,
+					subheadlineWeight: 500,
+					subheadlineLetterSpacing: 4,
+					headlineLineHeight: 0.90,
+					subheadlineMarginTop: 18,
 					alignItems: "center" as const,
 					textAlign: "center" as const,
+				};
+			case "Impact":
+				return {
+					...base,
+					left: "50%",
+					top: "50%",
+					transform: "translate(-50%, -50%)",
+					maxWidth: aspectRatio === "9:16" ? "92%" : "80%",
+					headlineSize: aspectRatio === "16:9" ? 96 : aspectRatio === "9:16" ? 88 : 100,
+					headlineWeight: 900,
+					headlineLetterSpacing: -4,
+					subheadlineSize: 16,
+					subheadlineWeight: 600,
+					subheadlineLetterSpacing: 6,
+					headlineLineHeight: 0.85,
+					subheadlineMarginTop: 24,
+					alignItems: "center" as const,
+					textAlign: "center" as const,
+				};
+			case "Editorial":
+				return {
+					...base,
+					right: 40,
+					bottom: 48,
+					left: undefined,
+					maxWidth: aspectRatio === "16:9" ? "52%" : "65%",
+					headlineSize: aspectRatio === "16:9" ? 72 : 84,
+					headlineWeight: 900,
+					headlineLetterSpacing: -3,
+					subheadlineSize: 14,
+					subheadlineWeight: 400,
+					subheadlineLetterSpacing: 5,
+					headlineLineHeight: 0.86,
+					subheadlineMarginTop: 20,
+					alignItems: "flex-end" as const,
+					textAlign: "right" as const,
 				};
 			case "Hero left":
 			default:
@@ -173,11 +222,15 @@ export default function OpalStudioCanvasPage() {
 					...base,
 					left: 40,
 					top: 40,
-					maxWidth: aspectRatio === "16:9" ? "42%" : "48%",
-					headlineSize: aspectRatio === "16:9" ? 48 : 56,
-					subheadlineSize: 20,
-					headlineLineHeight: 0.96,
-					subheadlineMarginTop: 14,
+					maxWidth: aspectRatio === "16:9" ? "48%" : "54%",
+					headlineSize: aspectRatio === "16:9" ? 64 : 72,
+					headlineWeight: 900,
+					headlineLetterSpacing: -2,
+					subheadlineSize: 15,
+					subheadlineWeight: 500,
+					subheadlineLetterSpacing: 3,
+					headlineLineHeight: 0.90,
+					subheadlineMarginTop: 16,
 					alignItems: "flex-start" as const,
 					textAlign: "left" as const,
 				};
@@ -626,14 +679,15 @@ export default function OpalStudioCanvasPage() {
 										objectFit: "cover",
 									}}
 								/>
+								{/* Cinematic gradient overlay for text contrast */}
 								<div
 									style={{
 										position: "absolute",
 										inset: 0,
-										background:
-											canvasMode === "edit"
-												? "linear-gradient(180deg, rgba(15,23,42,0.08) 0%, rgba(15,23,42,0) 28%, rgba(15,23,42,0.24) 100%)"
-												: "linear-gradient(180deg, rgba(15,23,42,0.12) 0%, rgba(15,23,42,0) 32%, rgba(15,23,42,0.18) 100%)",
+										background: [
+											"linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.45) 100%)",
+											"radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.2) 100%)",
+										].join(", "),
 									}}
 								/>
 
@@ -641,14 +695,18 @@ export default function OpalStudioCanvasPage() {
 									<div
 										style={{
 											...textLayoutStyle,
+											display: "flex",
+											flexDirection: "column",
+											alignItems: textLayoutStyle.alignItems,
 										}}
 									>
 										<div
 											style={{
 												fontSize: textLayoutStyle.headlineSize,
 												lineHeight: textLayoutStyle.headlineLineHeight,
-												fontWeight: 800,
-												letterSpacing: -1.2,
+												fontWeight: textLayoutStyle.headlineWeight,
+												letterSpacing: textLayoutStyle.headlineLetterSpacing,
+												textTransform: "uppercase" as const,
 											}}
 										>
 											{headline}
@@ -656,8 +714,11 @@ export default function OpalStudioCanvasPage() {
 										<div
 											style={{
 												fontSize: textLayoutStyle.subheadlineSize,
-												lineHeight: 1.35,
-												opacity: 0.96,
+												lineHeight: 1.4,
+												fontWeight: textLayoutStyle.subheadlineWeight,
+												letterSpacing: textLayoutStyle.subheadlineLetterSpacing,
+												textTransform: "uppercase" as const,
+												opacity: 0.88,
 												marginTop: textLayoutStyle.subheadlineMarginTop,
 												maxWidth: "92%",
 											}}
@@ -666,6 +727,24 @@ export default function OpalStudioCanvasPage() {
 										</div>
 									</div>
 								) : null}
+
+								{/* Brand logo overlay */}
+								{brandPack === "Stride" && (
+									<img
+										src="/stride-wordmark.svg"
+										alt="Stride"
+										style={{
+											position: "absolute",
+											bottom: 28,
+											left: 40,
+											height: 18,
+											width: "auto",
+											opacity: 0.92,
+											filter: "brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.4))",
+											pointerEvents: "none",
+										}}
+									/>
+								)}
 
 							</div>
 						</div>
