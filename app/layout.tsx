@@ -1,6 +1,7 @@
 "use client";
 import Template from "./components/template";
 import "./globals.css";
+import Script from "next/script";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
 import {OpalGenerationProvider} from "@/app/context/OpalGenerationContext";
@@ -543,6 +544,7 @@ export default function RootLayout({
 					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
 					rel="stylesheet"
 				/>
+				<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />
 			</head>
 			<body suppressHydrationWarning>
 				<ThemeProvider>
