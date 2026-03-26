@@ -99,7 +99,7 @@ export default function ContentTypeSettingsPage() {
 				? {
 						...ct,
 						name: name.trim() || ct.name,
-						displayName: displayName.trim() || undefined,
+						displayName: displayName.trim() || name.trim() || ct.name,
 						description: description.trim() || undefined,
 						sortOrder,
 						isAvailable,

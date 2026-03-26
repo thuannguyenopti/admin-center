@@ -133,6 +133,7 @@ function TemplateContent({
 	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
 	const secondarySidebarWidth = isContentManager ? (contentSubNavExpanded ? 224 : 56) : 224;
 	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail;
+	const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	// Primary sidebar width: 56px collapsed, 224px expanded
 	const primarySidebarWidth = isExpanded ? 224 : 56;
@@ -345,7 +346,7 @@ function TemplateContent({
 					pb={footerContent ? "80" : "24"}
 						>
 							<>
-								{!hidePageHeader && (
+								{!shouldHidePageHeader && (
 									<Box w="full" className="min-w-0" overflow="hidden">
 										<Heading level="3" mb="16" truncate>
 											{heading || routeHighlight?.label}
@@ -364,7 +365,7 @@ function TemplateContent({
 									</Box>
 								)}
 								<Box
-									mt={!hidePageHeader && desc ? "0" : !hidePageHeader ? "24" : "0"}
+									mt={!shouldHidePageHeader && desc ? "0" : !shouldHidePageHeader ? "24" : "0"}
 									z="10"
 									className="relative"
 									w="full"
