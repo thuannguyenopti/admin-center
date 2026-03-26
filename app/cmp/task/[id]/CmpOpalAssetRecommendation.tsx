@@ -810,31 +810,19 @@ export function CmpOpalAssetRecommendation() {
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
 	const [taskArticles, setTaskArticles] = useState<Array<{ id: string; title: string }>>([]);
-	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", []) as [ContentInstance[], any];
+	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
-
-	// Debug: Log when selection state changes
-	useEffect(() => {
-		console.log('[Main] State updated:', {
-			selectedContentInstanceId,
-			selectedArticleId,
-			selectedTaskAssetId,
-		});
-	}, [selectedContentInstanceId, selectedArticleId, selectedTaskAssetId]);
 
 	// Auto-select first item on load if nothing is selected
 	useEffect(() => {
 		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedArticleId) {
 			if (contentInstances.length > 0) {
-				console.log('[Main] Auto-selecting first content instance:', contentInstances[0].id);
 				setSelectedContentInstanceId(contentInstances[0].id);
 			} else if (taskArticles.length > 0) {
-				console.log('[Main] Auto-selecting first article:', taskArticles[0].id);
 				setSelectedArticleId(taskArticles[0].id);
 			} else if (taskAssets.length > 0) {
-				console.log('[Main] Auto-selecting first task asset:', taskAssets[0].id);
 				setSelectedTaskAssetId(taskAssets[0].id);
 			}
 		}
@@ -844,7 +832,6 @@ export function CmpOpalAssetRecommendation() {
 	useEffect(() => {
 		const hasContent = contentInstances.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
 		if (!hasContent && (scene === "content" || scene === "content-panel")) {
-			console.log('[Main] All items removed, switching to empty state');
 			setScene("content-empty");
 			setHasTaskContent(false);
 			setSuggestedPanelOpen(false);

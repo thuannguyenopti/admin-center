@@ -6,7 +6,8 @@
     "additionalDirectories": [
       "/Users/stefan.svebeck/dev/axiom-play/app/components/property-renderers",
       "/Users/stefan.svebeck/.claude/plans",
-      "/Users/stefan.svebeck/dev/axiom-play"
+      "/Users/stefan.svebeck/dev/axiom-play",
+      "/Users/stefan.svebeck/dev/axiom-play/app/cmp/task/[id]"
     ]
   },
   "hooks": {
