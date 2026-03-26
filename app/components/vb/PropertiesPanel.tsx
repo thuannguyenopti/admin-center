@@ -22,7 +22,8 @@ import { PillMenu, PillMenuTrigger, PillMenuContent } from "@optiaxiom/react/uns
 import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
 import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
-import { initialContentTypes, Property } from "@/app/db/initialData";
+import { initialContentTypes, type Property } from "@/app/db/initialData";
+import { groupPropertiesByGroup, shouldShowGroupHeaders } from "./utils/propertyGroups";
 
 export type PageProperties = {
 	seoTitle?: string;
@@ -146,34 +147,7 @@ export default function PropertiesPanel({
 	// Group properties by groupName for dynamic sections
 	const contentTypePropertyGroups = useMemo(() => {
 		if (!contentType) return {};
-
-		const groups: Record<string, Property[]> = {};
-
-		// Filter out outline properties (they're handled separately in the outline tree)
-		const nonOutlineProps = contentType.properties.filter((p) => p.type !== "outline");
-
-		nonOutlineProps.forEach((prop) => {
-			// Skip properties without groupName (no "Other" group)
-			if (!prop.groupName) {
-				if (process.env.NODE_ENV === 'development') {
-					console.warn(`Property ${prop.id} (${prop.name}) has no groupName and will be hidden`);
-				}
-				return;
-			}
-
-			const groupName = prop.groupName;
-			if (!groups[groupName]) {
-				groups[groupName] = [];
-			}
-			groups[groupName].push(prop);
-		});
-
-		// Sort properties within each group by order
-		Object.keys(groups).forEach((groupName) => {
-			groups[groupName].sort((a, b) => (a.order || 0) - (b.order || 0));
-		});
-
-		return groups;
+		return groupPropertiesByGroup(contentType.properties, false);
 	}, [contentType]);
 
 	// Generate filter items from property groups
@@ -704,15 +678,17 @@ export default function PropertiesPanel({
 			);
 		}
 
+		const totalGroups = Object.keys(contentTypePropertyGroups).length;
+		const showHeaders = shouldShowGroupHeaders(totalGroups, activeFilter === "all");
+
 		return (
 			<Box display="flex" flexDirection="column" gap="32">
 				{groupsToShow.map((groupName) => {
 					const properties = contentTypePropertyGroups[groupName];
-					const showHeader = activeFilter === "all"; // Only show headers when viewing all
 
 					return (
 						<Box key={groupName} display="flex" flexDirection="column" gap="12">
-							{showHeader && (
+							{showHeaders && (
 								<Box mb="4">
 									<Heading level="4" fontSize="sm" color="fg.tertiary" mb="8">
 										{groupName}
