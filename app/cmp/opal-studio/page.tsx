@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Badge, Box, Button as AxiomButton, SearchInput, Text, Textarea, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
 import {
 	IconArrowBackUp,
@@ -1161,159 +1161,308 @@ function AdvancedCanvasWorkspace({
 		() => getOutputVariants(channelPack, "image", aspectRatio),
 		[aspectRatio, channelPack],
 	);
-
+	const imageSrc = selectedDraft?.image || referenceAssets[0].image;
+	const title = selectedDraft?.title || "Quick draft";
 
 	return (
-		<Box
-			bg="bg.page"
-			display="flex"
-			flex="1"
-			flexDirection="column"
-			style={{ height: "100%", minHeight: 0 }}
+		<div
+			style={{
+				display: "flex",
+				flexDirection: "column",
+				height: "100%",
+				minHeight: 0,
+				background: "var(--ax-colors-bg-page, #f8f9fb)",
+			}}
 		>
-			<Box
-				bg="bg.default"
-				border="1"
-				borderColor="border.tertiary"
-				rounded="xl"
-				shadow="lg"
+			<div
 				style={{
 					display: "flex",
-					flex: 1,
-					flexDirection: "column",
-					margin: "16px 16px 16px 16px",
-					minHeight: 0,
-					overflow: "hidden",
+					alignItems: "center",
+					justifyContent: "space-between",
+					padding: "14px 24px",
+					borderBottom: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+					background: "var(--ax-colors-bg-default, #ffffff)",
+					flexShrink: 0,
 				}}
 			>
-				<CanvasTopBar
-					canvasMode={canvasMode}
-					onCanvasModeChange={setCanvasMode}
-					saveState={saveState}
-					onClose={onCloseAdvanced}
-				/>
+				<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+					<button
+						type="button"
+						onClick={() => setCanvasMode("generate")}
+						style={{
+							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+							background: canvasMode === "generate" ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+							borderRadius: 999,
+							padding: "8px 16px",
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: "pointer",
+						}}
+					>
+						Generate
+					</button>
+					<button
+						type="button"
+						onClick={() => setCanvasMode("edit")}
+						style={{
+							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+							background: canvasMode === "edit" ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+							borderRadius: 999,
+							padding: "8px 16px",
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: "pointer",
+						}}
+					>
+						Edit
+					</button>
+				</div>
+				<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+					<span style={{ color: "var(--ax-colors-fg-secondary, #667085)", fontSize: 14 }}>
+						{saveState === "saved" ? "Changes saved." : saveState === "saving" ? "Saving..." : "Unsaved changes"}
+					</span>
+					<button
+						type="button"
+						style={{
+							border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+							background: "var(--ax-colors-bg-default, #fff)",
+							borderRadius: 10,
+							padding: "8px 14px",
+							fontSize: 14,
+							cursor: "pointer",
+						}}
+					>
+						Preview
+					</button>
+					<button
+						type="button"
+						style={{
+							border: "1px solid var(--ax-colors-border-accent, #2457ff)",
+							background: "var(--ax-colors-bg-accent, #2457ff)",
+							color: "white",
+							borderRadius: 10,
+							padding: "8px 14px",
+							fontSize: 14,
+							fontWeight: 600,
+							cursor: "pointer",
+						}}
+					>
+						Add to
+					</button>
+					<button
+						type="button"
+						onClick={onCloseAdvanced}
+						style={{
+							border: "none",
+							background: "transparent",
+							fontSize: 22,
+							lineHeight: 1,
+							cursor: "pointer",
+							color: "var(--ax-colors-fg-default, #1f2937)",
+						}}
+						aria-label="Close advanced editor"
+					>
+						×
+					</button>
+				</div>
+			</div>
 
-				{/* Main content area with sidebar */}
-				<Box display="flex" flex="1" style={{ minHeight: 0 }}>
-					{/* Canvas Area */}
-					<Box bg="bg.page" flex="1" p="40" style={{ minHeight: 0, overflow: "auto" }}>
-						{selectedDraft && selectedDraft.image ? (
-							<>
-								<Box display="flex" alignItems="center" justifyContent="space-between" mb="24">
-									<Box display="flex" flexDirection="column" gap="8">
-										<Text fontSize="2xl" fontWeight="700">
-											{selectedDraft.title}
-										</Text>
-										<Text color="fg.secondary" fontSize="sm">
-											{prompt}
-										</Text>
-									</Box>
-									<Box display="flex" gap="8">
-										<AxiomButton appearance="default" size="sm" icon={<IconWand size={16} />}>
-											Regenerate
-										</AxiomButton>
-										<AxiomButton appearance="primary" size="sm" icon={<IconCheck size={16} />}>
-											Generate Pack
-										</AxiomButton>
-									</Box>
-								</Box>
-								<Box
-									alignItems="center"
-									bg="bg.default"
-									border="1"
-									borderColor="border.tertiary"
-									display="flex"
-									justifyContent="center"
-									rounded="xl"
-									shadow="md"
-									p="24"
-									style={{ minHeight: "calc(100vh - 340px)", overflow: "hidden" }}
-								>
-									<img
-										alt={selectedDraft.title}
-										src={selectedDraft.image}
+			<div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+				<div style={{ flex: 1, minWidth: 0, overflow: "auto", padding: 24 }}>
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "minmax(0, 1fr) 320px",
+							gap: 24,
+							minHeight: "100%",
+						}}
+					>
+						<div
+							style={{
+								background: "var(--ax-colors-bg-default, #fff)",
+								border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+								borderRadius: 20,
+								padding: 24,
+								boxShadow: "0 8px 28px rgba(15, 23, 42, 0.06)",
+								minHeight: "calc(100vh - 180px)",
+								display: "flex",
+								flexDirection: "column",
+							}}
+						>
+							<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+								<div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)", marginBottom: 8 }}>
+										Image generation
+									</div>
+									<h2 style={{ fontSize: 28, lineHeight: 1.2, margin: 0, fontWeight: 700 }}>{title}</h2>
+									<p style={{ fontSize: 14, color: "var(--ax-colors-fg-secondary, #667085)", margin: "8px 0 0" }}>
+										{prompt}
+									</p>
+								</div>
+								<div style={{ display: "flex", gap: 8 }}>
+									<button
+										type="button"
 										style={{
-											borderRadius: 12,
-											display: "block",
-											height: "auto",
-											maxHeight: "calc(100vh - 400px)",
-											maxWidth: "100%",
-											objectFit: "contain",
-											width: "100%",
+											border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+											background: "var(--ax-colors-bg-default, #fff)",
+											borderRadius: 10,
+											padding: "8px 12px",
+											fontSize: 14,
+											cursor: "pointer",
 										}}
-									/>
-								</Box>
-							</>
-						) : (
-							<Box
-								alignItems="center"
-								bg="bg.default"
-								border="1"
-								borderColor="border.tertiary"
-								display="flex"
-								flexDirection="column"
-								justifyContent="center"
-								rounded="xl"
-								shadow="sm"
+									>
+										Regenerate
+									</button>
+									<button
+										type="button"
+										style={{
+											border: "1px solid var(--ax-colors-border-accent, #2457ff)",
+											background: "var(--ax-colors-bg-accent, #2457ff)",
+											color: "white",
+											borderRadius: 10,
+											padding: "8px 12px",
+											fontSize: 14,
+											fontWeight: 600,
+											cursor: "pointer",
+										}}
+									>
+										Generate Pack
+									</button>
+								</div>
+							</div>
+
+							<div
 								style={{
-									background: "linear-gradient(135deg, var(--ax-colors-bg-default) 0%, var(--ax-colors-bg-secondary) 100%)",
-									border: "2px dashed var(--ax-colors-border-tertiary)",
-									minHeight: "calc(100vh - 200px)",
+									flex: 1,
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "center",
+									background: "linear-gradient(180deg, #f7fafc 0%, #eef3fb 100%)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									overflow: "hidden",
+									padding: 24,
+									minHeight: 520,
 								}}
 							>
-								<Box
-									alignItems="center"
-									bg="bg.accent.subtle"
-									display="flex"
-									justifyContent="center"
-									rounded="full"
-									style={{ height: 80, width: 80, marginBottom: 24 }}
-								>
-									<IconSparkles size={40} style={{ color: "var(--ax-colors-fg-accent)" }} />
-								</Box>
-								<Text fontSize="xl" fontWeight="700" mb="12">
-									Start Generating with Opal
-								</Text>
-								<Text color="fg.secondary" fontSize="sm" style={{ maxWidth: 480, textAlign: "center", marginBottom: 24 }}>
-									Your canvas is ready. Use the Opal chat to describe what you want to create, or adjust the settings on the right to configure your output.
-								</Text>
-								<Box display="flex" gap="12">
-									<AxiomButton appearance="default" size="md">
-										View Examples
-									</AxiomButton>
-									<AxiomButton appearance="primary" size="md" icon={<IconSparkles size={16} />}>
-										Open Opal Chat
-									</AxiomButton>
-								</Box>
-							</Box>
-						)}
-					</Box>
+								<img
+									src={imageSrc}
+									alt={title}
+									style={{
+										display: "block",
+										width: "100%",
+										height: "auto",
+										maxHeight: "100%",
+										objectFit: "contain",
+										borderRadius: 14,
+										boxShadow: "0 12px 40px rgba(15, 23, 42, 0.12)",
+									}}
+								/>
+							</div>
+						</div>
 
-					{/* Settings Sidebar */}
-					<CanvasSettingsSidebar
-						canvasMode={canvasMode}
-						intent={intent}
-						onIntentChange={setIntent}
-						aspectRatio={aspectRatio}
-						onAspectRatioChange={(value) => setAspectRatio(value as (typeof aspectRatios)[number])}
-						channelPack={channelPack}
-						onChannelPackChange={setChannelPack}
-						themePack={themePack}
-						onThemePackChange={setThemePack}
-						brandPack={brandPack}
-						onBrandPackChange={setBrandPack}
-						referenceAssets={referenceAssets}
-						selectedReferenceId={selectedReferenceId}
-						onSelectReference={setSelectedReferenceId}
-						textOverlayEnabled={textOverlayEnabled}
-						onTextOverlayChange={setTextOverlayEnabled}
-						referenceStrength={referenceStrength}
-						onReferenceStrengthChange={setReferenceStrength}
-						outputVariants={outputVariants}
-					/>
-				</Box>
-			</Box>
-		</Box>
+						<div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 20,
+								}}
+							>
+								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Output</div>
+								<div style={{ display: "grid", gap: 14 }}>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Intent</div>
+										<select value={intent} onChange={(event) => setIntent(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{intentOptions.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Aspect ratio</div>
+										<div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+											{aspectRatios.map((ratio) => (
+												<button
+													key={ratio}
+													type="button"
+													onClick={() => setAspectRatio(ratio)}
+													style={{
+														border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)",
+														background: ratio === aspectRatio ? "var(--ax-colors-bg-secondary, #eef2ff)" : "var(--ax-colors-bg-default, #fff)",
+														borderRadius: 999,
+														padding: "6px 12px",
+														fontSize: 13,
+														cursor: "pointer",
+													}}
+												>
+													{ratio}
+												</button>
+											))}
+										</div>
+									</div>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Channel pack</div>
+										<select value={channelPack} onChange={(event) => setChannelPack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{channelPacks.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 20,
+								}}
+							>
+								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Brand</div>
+								<div style={{ display: "grid", gap: 14 }}>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Theme pack</div>
+										<select value={themePack} onChange={(event) => setThemePack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{themePacks.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+									<div>
+										<div style={{ fontSize: 12, fontWeight: 700, color: "var(--ax-colors-fg-secondary, #667085)", textTransform: "uppercase", marginBottom: 8 }}>Brand pack</div>
+										<select value={brandPack} onChange={(event) => setBrandPack(event.target.value)} style={{ width: "100%", height: 40, borderRadius: 10, border: "1px solid var(--ax-colors-border-secondary, #cfd5e3)", padding: "0 12px", fontSize: 14 }}>
+											{brandPacks.map((option) => <option key={option}>{option}</option>)}
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div
+								style={{
+									background: "var(--ax-colors-bg-default, #fff)",
+									border: "1px solid var(--ax-colors-border-tertiary, #e5e7eb)",
+									borderRadius: 16,
+									padding: 20,
+								}}
+							>
+								<div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Advanced</div>
+								<div style={{ display: "grid", gap: 12 }}>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Selected reference: {referenceAssets.find((asset) => asset.id === selectedReferenceId)?.title ?? referenceAssets[0].title}
+									</div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Text overlay: {textOverlayEnabled ? "Enabled" : "Disabled"}
+									</div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Reference strength: {referenceStrength}%
+									</div>
+									<div style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary, #667085)" }}>
+										Output variants: {outputVariants.map((variant) => variant.label).join(", ")}
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	);
 }
 
@@ -2536,13 +2685,45 @@ function EditWorkspace({
 }
 
 export default function OpalStudioPrototypePage() {
+	const router = useRouter();
 	const searchParams = useSearchParams();
+	const routeFlow = searchParams.get("flow");
+	const routeAsset = searchParams.get("asset");
+	const routeStage = searchParams.get("stage");
+	const routePrompt = searchParams.get("prompt");
+	const routeDraft = searchParams.get("draft");
+	const routeReturnTo = searchParams.get("returnTo") || "/cmp/library";
+	const [resolvedRouteParams, setResolvedRouteParams] = useState<{
+		flow: string | null;
+		asset: string | null;
+		stage: string | null;
+		prompt: string | null;
+		draft: string | null;
+		returnTo: string;
+	} | null>(null);
+	const resolvedRouteFlow = resolvedRouteParams?.flow ?? null;
+	const resolvedRouteAsset = resolvedRouteParams?.asset ?? null;
+	const resolvedRouteStage = resolvedRouteParams?.stage ?? null;
+	const resolvedRoutePrompt = resolvedRouteParams?.prompt ?? null;
+	const resolvedRouteDraft = resolvedRouteParams?.draft ?? null;
+	const resolvedRouteReturnTo = resolvedRouteParams?.returnTo || "/cmp/library";
+
+	useEffect(() => {
+		if (!resolvedRouteParams) {
+			return;
+		}
+
+		if (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") {
+			const params = new URLSearchParams(window.location.search);
+			router.replace(`/cmp/opal-studio/canvas?${params.toString()}`);
+		}
+	}, [resolvedRouteAsset, resolvedRouteParams, resolvedRouteStage, router]);
 	const { opalPanelControls, opalPanelWidth, setHidePageHeader } = useLayout();
 	const opalContext = useOpalContext();
 	const seededPanelKeyRef = useRef<string | null>(null);
 	const [flowMode, setFlowMode] = useState<FlowMode>("create");
 	const [assetMode, setAssetMode] = useState<AssetMode>("image");
-	const [createStage, setCreateStage] = useState<CreateStage>("advanced");
+	const [createStage, setCreateStage] = useState<CreateStage>("panel");
 	const [createPrompt, setCreatePrompt] = useState(
 		"Create a premium Stride campaign image for spring race season with clean headline space, high-end athletic photography, and brand-safe composition.",
 	);
@@ -2572,11 +2753,39 @@ export default function OpalStudioPrototypePage() {
 		returnTo?: string;
 		messages?: Array<{ role: "user" | "assistant"; content: string }>;
 	} | null>(null);
+	const [forceAdvancedImageEditor, setForceAdvancedImageEditor] = useState(false);
 
 	useEffect(() => {
 		setHidePageHeader(true);
 		return () => setHidePageHeader(false);
 	}, [setHidePageHeader]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const params = new URLSearchParams(window.location.search);
+		setForceAdvancedImageEditor(
+			params.get("stage") === "advanced" && params.get("asset") === "image",
+		);
+	}, [searchParams]);
+
+	useEffect(() => {
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const urlParams = new URLSearchParams(window.location.search);
+		setResolvedRouteParams({
+			flow: urlParams.get("flow") || routeFlow,
+			asset: urlParams.get("asset") || routeAsset,
+			stage: urlParams.get("stage") || routeStage,
+			prompt: urlParams.get("prompt") || routePrompt,
+			draft: urlParams.get("draft") || routeDraft,
+			returnTo: urlParams.get("returnTo") || routeReturnTo,
+		});
+	}, [routeAsset, routeDraft, routeFlow, routePrompt, routeReturnTo, routeStage, searchParams]);
 
 	useEffect(() => {
 		try {
@@ -2605,34 +2814,30 @@ export default function OpalStudioPrototypePage() {
 	}, []);
 
 	useEffect(() => {
-		const flow = searchParams.get("flow");
-		const asset = searchParams.get("asset");
-		const stage = searchParams.get("stage");
-		const prompt = searchParams.get("prompt");
-		const draft = searchParams.get("draft");
-		if (flow === "create" || flow === "edit") {
-			setFlowMode(flow);
+		if (resolvedRouteFlow === "create" || resolvedRouteFlow === "edit") {
+			setFlowMode(resolvedRouteFlow);
 		}
-		if (asset === "image" || asset === "video") {
-			setAssetMode(asset);
+		if (resolvedRouteAsset === "image" || resolvedRouteAsset === "video") {
+			setAssetMode(resolvedRouteAsset);
 		}
-		if (stage === "advanced" && asset === "image") {
+		if (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") {
 			setFlowMode("create");
 			setAssetMode("image");
 			setCreateStage("advanced");
 			setGenerated(true);
 			setProduced(false);
-			if (prompt) {
-				setCreatePrompt(prompt);
+			if (resolvedRoutePrompt) {
+				setCreatePrompt(resolvedRoutePrompt);
 			}
-			if (draft) {
+			if (resolvedRouteDraft) {
 				setSelectedDraftId("chat-draft");
 			}
-		} else if (flow !== "edit") {
+		} else if (resolvedRouteFlow !== "edit") {
 			setCreateStage("panel");
 		}
-	}, [searchParams]);
+	}, [resolvedRouteAsset, resolvedRouteDraft, resolvedRouteFlow, resolvedRoutePrompt, resolvedRouteStage]);
 
+	const isAdvancedImageRoute = forceAdvancedImageEditor || (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image");
 	const drafts = useMemo(() => (assetMode === "image" ? imageDrafts : videoDrafts), [assetMode]);
 	const effectiveDrafts = useMemo(() => {
 		const sourceDraft = chatDraft ?? (storedQuickDraft
@@ -2661,6 +2866,21 @@ export default function OpalStudioPrototypePage() {
 		// Default to standard drafts
 		return drafts;
 	}, [assetMode, chatDraft, createStage, drafts, flowMode, storedQuickDraft]);
+	const handoffPrompt = resolvedRoutePrompt || routePrompt || chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt;
+	const handoffDraftImage = resolvedRouteDraft || routeDraft || chatDraft?.image || storedQuickDraft?.image || "";
+	const handoffDraft = useMemo<DraftResult | null>(() => {
+		if (!handoffDraftImage) {
+			return null;
+		}
+
+		return {
+			id: "chat-draft",
+			title: "Quick draft",
+			image: handoffDraftImage,
+			ratio: "4:5",
+			score: 96,
+		};
+	}, [handoffDraftImage]);
 	const draftConfig = useMemo(
 		() => ({
 			flowMode,
@@ -2702,11 +2922,6 @@ export default function OpalStudioPrototypePage() {
 	);
 
 	useEffect(() => {
-		const routeStage = searchParams.get("stage");
-		const routeFlow = searchParams.get("flow");
-		const routeAsset = searchParams.get("asset");
-		const routePrompt = searchParams.get("prompt");
-		const routeDraft = searchParams.get("draft");
 		try {
 			const saved = window.localStorage.getItem("cmp-opal-studio-draft");
 			if (!saved) {
@@ -2714,13 +2929,13 @@ export default function OpalStudioPrototypePage() {
 			}
 
 			const parsed = JSON.parse(saved) as Partial<typeof draftConfig>;
-			if (!routeFlow && (parsed.flowMode === "create" || parsed.flowMode === "edit")) {
+			if (!resolvedRouteFlow && (parsed.flowMode === "create" || parsed.flowMode === "edit")) {
 				setFlowMode(parsed.flowMode);
 			}
-			if (!routeAsset && (parsed.assetMode === "image" || parsed.assetMode === "video")) {
+			if (!resolvedRouteAsset && (parsed.assetMode === "image" || parsed.assetMode === "video")) {
 				setAssetMode(parsed.assetMode);
 			}
-			if (!routePrompt && typeof parsed.createPrompt === "string") setCreatePrompt(parsed.createPrompt);
+			if (!resolvedRoutePrompt && typeof parsed.createPrompt === "string") setCreatePrompt(parsed.createPrompt);
 			if (typeof parsed.editPrompt === "string") setEditPrompt(parsed.editPrompt);
 			if (typeof parsed.intent === "string") setIntent(parsed.intent);
 			if (typeof parsed.editTool === "string") setEditTool(parsed.editTool);
@@ -2730,16 +2945,16 @@ export default function OpalStudioPrototypePage() {
 			if (typeof parsed.brandPack === "string") setBrandPack(parsed.brandPack);
 			if (typeof parsed.showReferences === "boolean") setShowReferences(parsed.showReferences);
 			if (typeof parsed.selectedReferenceId === "string") setSelectedReferenceId(parsed.selectedReferenceId);
-			if (parsed.flowMode === "create" && routeStage !== "advanced") {
+			if (parsed.flowMode === "create" && resolvedRouteStage !== "advanced") {
 				setCreateStage("panel");
 			}
-			if (routeDraft) {
+			if (resolvedRouteDraft) {
 				setSelectedDraftId("chat-draft");
 			}
 		} catch {
 			// Ignore invalid saved drafts in prototype mode.
 		}
-	}, [searchParams]);
+	}, [resolvedRouteAsset, resolvedRouteDraft, resolvedRouteFlow, resolvedRoutePrompt, resolvedRouteStage]);
 
 	useEffect(() => {
 		setSaveState("saving");
@@ -2761,26 +2976,23 @@ export default function OpalStudioPrototypePage() {
 	}, [effectiveDrafts, selectedDraftId]);
 
 	useEffect(() => {
-		const stage = searchParams.get("stage");
-		if (flowMode === "create" && assetMode === "image" && stage === "advanced") {
+		if (flowMode === "create" && assetMode === "image" && resolvedRouteStage === "advanced") {
 			setLastGeneratedSignature(configSignature);
 		}
-	}, [assetMode, configSignature, flowMode, searchParams]);
+	}, [assetMode, configSignature, flowMode, resolvedRouteStage]);
 
 	useEffect(() => {
-		const restoredPrompt = chatDraftPayload?.prompt || storedQuickDraft?.prompt;
-		if (flowMode === "create" && createStage === "advanced" && assetMode === "image" && restoredPrompt) {
-			setCreatePrompt(restoredPrompt);
+		if (flowMode === "create" && createStage === "advanced" && assetMode === "image" && handoffPrompt) {
+			setCreatePrompt(handoffPrompt);
 		}
-	}, [assetMode, chatDraftPayload, createStage, flowMode, storedQuickDraft]);
+	}, [assetMode, createStage, flowMode, handoffPrompt]);
 
 	useEffect(() => {
 		if (
-			flowMode !== "create" ||
-			createStage !== "advanced" ||
-			assetMode !== "image" ||
+			!isAdvancedImageRoute ||
+			(resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") ||
 			!opalPanelControls ||
-			!storedQuickDraft?.messages?.length
+			(!storedQuickDraft?.messages?.length && (!handoffPrompt || !handoffDraftImage))
 		) {
 			return;
 		}
@@ -2788,23 +3000,44 @@ export default function OpalStudioPrototypePage() {
 		const alreadyHasDraftThread = panelMessages.some(
 			(message) =>
 				message.role === "assistant" &&
-				message.content.includes("I created a quick image draft for"),
+				(message.content.includes("I created a quick image draft for") ||
+					(handoffDraftImage ? message.content.includes(handoffDraftImage) : false)),
 		);
 
 		if (alreadyHasDraftThread) {
+			opalPanelControls.openPanel();
 			return;
 		}
 
 		opalPanelControls.clearHistory();
-		storedQuickDraft.messages.forEach((message) => {
-			opalPanelControls.addMessage({
-				role: message.role,
-				content: message.content,
+		if (storedQuickDraft?.messages?.length) {
+			storedQuickDraft.messages.forEach((message) => {
+				opalPanelControls.addMessage({
+					role: message.role,
+					content: message.content,
+				});
 			});
-		});
+		} else if (handoffPrompt && handoffDraftImage) {
+			opalPanelControls.addMessage({
+				role: "user",
+				content: handoffPrompt,
+			});
+			opalPanelControls.addMessage({
+				role: "assistant",
+				content: [
+					`I created a quick image draft for: "${handoffPrompt}"`,
+					"",
+					"It follows Stride's athletic visual direction, preserves copy space, and stays inside brand-safe composition rules.",
+					"",
+					`![Triathlon draft](${handoffDraftImage})`,
+					"",
+					"[Use advanced editor](#)",
+				].join("\n"),
+			});
+		}
 		opalPanelControls.setInputValue("");
 		opalPanelControls.openPanel();
-	}, [assetMode, createStage, flowMode, opalPanelControls, panelMessages, storedQuickDraft]);
+	}, [handoffDraftImage, handoffPrompt, isAdvancedImageRoute, opalPanelControls, panelMessages, resolvedRouteAsset, resolvedRouteStage, storedQuickDraft]);
 
 	useEffect(() => {
 		if (flowMode !== "create" || createStage !== "panel") {
@@ -2849,8 +3082,45 @@ export default function OpalStudioPrototypePage() {
 		setLastGeneratedSignature(configSignature);
 	};
 
-	const canvasDraft = effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0];
-	const canvasPrompt = chatDraftPayload?.prompt || storedQuickDraft?.prompt || createPrompt;
+	const canvasDraft = isAdvancedImageRoute
+		? handoffDraft ?? effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0]
+		: effectiveDrafts.find((d) => d.id === selectedDraftId) ?? effectiveDrafts[0] ?? imageDrafts[0];
+	const canvasPrompt = handoffPrompt;
+
+	if (!resolvedRouteParams && !forceAdvancedImageEditor) {
+		return <CreatePanelOnlyState />;
+	}
+
+	if (resolvedRouteStage === "advanced" && resolvedRouteAsset === "image") {
+		return null;
+	}
+
+	if (isAdvancedImageRoute) {
+		return (
+			<div
+				style={{
+					position: "absolute",
+					top: 0,
+					left: 0,
+					bottom: 0,
+					right: opalPanelWidth > 0 ? opalPanelWidth : 0,
+					background: "var(--ax-colors-bg-page, #f8f9fb)",
+					minHeight: 0,
+				}}
+			>
+				<AdvancedCanvasWorkspace
+					prompt={canvasPrompt}
+					selectedDraft={canvasDraft}
+					saveState={saveState}
+					onCloseAdvanced={() => router.push(resolvedRouteReturnTo)}
+				/>
+			</div>
+		);
+	}
+
+	if (flowMode === "create") {
+		return <CreatePanelOnlyState />;
+	}
 
 	return (
 		<div style={{

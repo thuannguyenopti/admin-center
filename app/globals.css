@@ -8,22 +8,12 @@
 
 /* Light mode as default, but defer to OS preference */
 :root {
-	color-scheme: light dark;
+	color-scheme: light;
 }
 
-/* Dark mode support based on OS preference */
-@media (prefers-color-scheme: dark) {
-	:root {
-		color-scheme: dark;
-	}
-
-	html {
-		color-scheme: dark;
-	}
-}
-
-/* Dark mode via data-theme attribute - takes precedence over OS preference */
-[data-theme="dark"] {
+/* Dark mode via data-theme/class attribute - controlled by useTheme hook */
+[data-theme="dark"],
+html.dark {
 	color-scheme: dark;
 }
 
@@ -396,18 +386,6 @@ body.dark ::-webkit-scrollbar-thumb:hover {
 	}
 	100% {
 		background-color: transparent;
-	}
-}
-
-/* Dark mode variant */
-@media (prefers-color-scheme: dark) {
-	@keyframes highlight-fade {
-		0% {
-			background-color: rgba(16, 185, 129, 0.2);
-		}
-		100% {
-			background-color: transparent;
-		}
 	}
 }
 

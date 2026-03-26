@@ -109,13 +109,7 @@
 }
 
 /* Dark Mode - Gradients need special handling since they can't use light-dark() */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --opal-bg-suggest: linear-gradient(135deg, #1e1b3a 0%, #1a2b45 100%);
-    --opal-bg-suggest-hover: linear-gradient(135deg, #2a2650 0%, #243654 100%);
-  }
-}
-
+/* Only use data-attribute/class selectors so app theme overrides OS preference */
 [data-theme="dark"],
 html.dark,
 body.dark {
