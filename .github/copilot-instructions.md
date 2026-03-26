@@ -37,3 +37,11 @@ On every new conversation, check if the files you're about to touch are monolith
 - `useLayout()` from `app/context/LayoutContext` for layout controls
 - `useTheme()` from `app/hooks/useTheme.tsx` for theme management
 - Local wrappers in `app/components/` override Axiom defaults — prefer raw `@optiaxiom/react` unless the wrapper's defaults are needed
+
+## Git & Deployment
+
+- **Repo**: `Ben-Holme/axiom-play` — **Hosting**: Vercel (auto-deploys)
+- **Never push directly to `main`** — always create a PR
+- **Never merge locally** — merge via GitHub so checks run and Vercel auto-deploys
+- Always verify build (`yarn build`) before pushing
+- Preview deploys happen automatically per PR branch
