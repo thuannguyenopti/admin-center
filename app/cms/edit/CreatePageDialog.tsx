@@ -283,6 +283,7 @@ const CATEGORY_OPTIONS = [
 	{label: "Page", value: "Page"},
 	{label: "Experience", value: "Experience"},
 	{label: "Block", value: "Block"},
+	{label: "Section", value: "Section"},
 ];
 
 export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
@@ -328,9 +329,9 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 			: LANGUAGE_OPTIONS[0].value;
 	}, [language]);
 
-	// Get templates from content types - filter by Page and Experience base types
+	// Get templates from content types - filter by Page, Experience, Block, and Section base types
 	const templates = initialContentTypes
-		.filter((ct) => ct.baseType === "Page" || ct.baseType === "Experience")
+		.filter((ct) => ct.baseType === "Page" || ct.baseType === "Experience" || ct.baseType === "Block" || ct.baseType === "Section")
 		.filter((ct) => categoryFilter === "any" || ct.baseType === categoryFilter)
 		.filter((ct) =>
 			templateSearch

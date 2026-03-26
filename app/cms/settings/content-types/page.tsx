@@ -24,22 +24,26 @@ import {
 	Textarea,
 	Separator,
 	Link,
+	Badge,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Text } from "@/app/components/Text";
 import { initialContentTypes, ContentType, Property, MediaType } from "@/app/db/initialData";
 import { useRouter } from "next/navigation";
-import { IconChevronDown } from "@tabler/icons-react";
 import {
-	IconFilePlus,
-	IconFile,
-	IconLayoutGrid,
-	IconPhoto,
+	IconChevronDown,
 	IconBox,
-	IconColumns,
+	IconUpload,
+	IconBlocks,
+	IconSection,
 	IconCloudDownload,
 } from "@tabler/icons-react";
+import {
+	IconFile,
+	IconImage,
+	IconColumns3,
+} from "@optimizely/axiom-icons";
 
 const MEDIA_TYPE_OPTIONS: { label: MediaType; extensions: string }[] = [
 	{ label: "Image", extensions: "jpg, png, webp, svg" },
@@ -55,11 +59,12 @@ import usePersistentState from "@/app/usePersistentState";
 type BaseType = ContentType["baseType"];
 
 const BASE_TYPE_OPTIONS: { label: string; value: BaseType; icon: React.ReactNode; description: string }[] = [
-	{ label: "Page Type", value: "Page", icon: <IconFile size={20} />, description: "Content that can be displayed with a template and unique URL." },
-	{ label: "Block Type", value: "Block", icon: <IconLayoutGrid size={20} />, description: "Re-usable content that can be displayed with a template. But it has no URL." },
-	{ label: "Media Type", value: "Media", icon: <IconPhoto size={20} />, description: "Content that contains a media file, either from a DAM or uploaded in CMS." },
-	{ label: "Experience Type", value: "Experience", icon: <IconColumns size={20} />, description: "Lorem ipsum" },
-	{ label: "Product Type", value: "Product", icon: <IconBox size={20} />, description: "Lorem ipsum" },
+	{ label: "Page Type", value: "Page", icon: <IconFile size={16} />, description: "Content that can be displayed with a template and unique URL." },
+	{ label: "Block Type", value: "Block", icon: <IconBlocks size={16} />, description: "Re-usable content that can be displayed with a template. But it has no URL." },
+	{ label: "Section Type", value: "Section", icon: <IconSection size={16} />, description: "Structural content used to organize and group other content types." },
+	{ label: "Media Type", value: "Media", icon: <IconImage size={16} />, description: "Content that contains a media file, either from a DAM or uploaded in CMS." },
+	{ label: "Experience Type", value: "Experience", icon: <IconColumns3 size={16} />, description: "Personalized content experiences with A/B testing and targeting." },
+	{ label: "Product Type", value: "Product", icon: <IconBox size={16} />, description: "Product catalog items with variants and pricing." },
 ];
 
 const generateContentTypeId = (): string => {
@@ -82,6 +87,7 @@ export default function ContentTypesSettings() {
 	const [search, setSearch] = useState("");
 	const [typeFilter, setTypeFilter] = useState<string | null>(null);
 	const [accessFilter, setAccessFilter] = useState<string | null>(null);
+	const [sourceFilter, setSourceFilter] = useState<string | null>(null);
 
 	// Dialog state
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -123,6 +129,7 @@ export default function ContentTypesSettings() {
 		{ label: "Page", value: "Page" },
 		{ label: "Experience", value: "Experience" },
 		{ label: "Block", value: "Block" },
+		{ label: "Section", value: "Section" },
 		{ label: "Product", value: "Product" },
 		{ label: "Media", value: "Media" },
 	];
@@ -131,8 +138,24 @@ export default function ContentTypesSettings() {
 	};
 	const currentType = typeOptions.find((opt) => opt.value === typeFilter) || typeOptions[0];
 
+	const sourceOptions = [
+		{ label: "All Sources", value: null },
+		{ label: "CMS", value: "cms" },
+		{ label: "CMP", value: "cmp" },
+	];
+	const onSourceChange = (value: string | null) => {
+		setSourceFilter(value);
+	};
+	const currentSource = sourceOptions.find((opt) => opt.value === sourceFilter) || sourceOptions[0];
+
 	const filtered = useMemo(() => {
 		return contentTypes.filter((ct) => {
+			// Source filter
+			if (sourceFilter) {
+				const ctSource = ct.source || "cms"; // Treat undefined as "cms"
+				if (ctSource !== sourceFilter) return false;
+			}
+
 			if (search && !ct.name.toLowerCase().includes(search.toLowerCase())) return false;
 			if (typeFilter) {
 				if (ct.baseType !== typeFilter) return false;
@@ -142,7 +165,7 @@ export default function ContentTypesSettings() {
 			}
 			return true;
 		});
-	}, [contentTypes, search, typeFilter, accessFilter]);
+	}, [contentTypes, search, typeFilter, accessFilter, sourceFilter]);
 
 	const handleRowClick = (contentType: ContentType) => {
 		router.push(`/cms/settings/content-types/${contentType.id}/properties`);
@@ -211,6 +234,16 @@ export default function ContentTypesSettings() {
 					<MenuContent />
 				</Menu>
 
+				{/* Source Filter */}
+				<Menu options={sourceOptions.map((opt) => ({ label: opt.label, execute: () => onSourceChange(opt.value) }))}>
+					<MenuTrigger asChild>
+						<LabelMenuButton label="Source" h="40">
+							{currentSource?.label}
+						</LabelMenuButton>
+					</MenuTrigger>
+					<MenuContent />
+				</Menu>
+
 				<Box flex="1" />
 
 				{/* Create Content Type Dropdown */}
@@ -218,14 +251,20 @@ export default function ContentTypesSettings() {
 					options={[
 						{
 							label: "Generate from File(s)…",
+							addon: <IconUpload size={16} />,
+							description: "Generate content types from uploaded files",
 							execute: () => { },
 						},
 						...BASE_TYPE_OPTIONS.map((opt) => ({
 							label: opt.label,
+							addon: opt.icon,
+							description: opt.description,
 							execute: () => openCreateDialog(opt.value),
 						})),
 						{
 							label: "Connect From Graph",
+							addon: <IconCloudDownload size={16} />,
+							description: "Import content types from a knowledge graph",
 							execute: () => { },
 						},
 					]}
@@ -260,7 +299,14 @@ export default function ContentTypesSettings() {
 								onClick={() => handleRowClick(ct)}
 								style={{ cursor: "pointer" }}
 							>
-								<Td type="header">{ct.displayName || ct.name}</Td>
+								<Td type="header">
+									<Box display="flex" alignItems="center" gap="8">
+										{ct.displayName || ct.name}
+										{ct.source === "cmp" && (
+											<Badge intent="neutral" variant="subtle">CMP</Badge>
+										)}
+									</Box>
+								</Td>
 								<Td>{ct.baseType}</Td>
 								<Td>{ct.modifiedAt ? new Date(ct.modifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Jan 13, 2024"}</Td>
 								<Td>Everyone</Td>
