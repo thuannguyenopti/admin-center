@@ -17,7 +17,7 @@ export const UrlRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			<Input
 				type="url"
 				placeholder={`Enter ${property.displayName || property.name}`}

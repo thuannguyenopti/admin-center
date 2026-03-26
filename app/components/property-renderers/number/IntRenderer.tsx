@@ -17,7 +17,7 @@ export const IntRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			<Input
 				type="number"
 				placeholder={`Enter ${property.displayName || property.name}`}

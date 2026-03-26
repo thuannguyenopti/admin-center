@@ -20,7 +20,7 @@ export const SelectOneRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			<Select value={value ?? property.defaultValue} onValueChange={(newValue) => onChange(newValue)} options={options}>
 				<SelectTrigger />
 				<SelectContent />

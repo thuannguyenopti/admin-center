@@ -17,7 +17,7 @@ export const LongStringRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			<Textarea
 				placeholder={`Enter ${property.displayName || property.name}`}
 				value={value ?? property.defaultValue ?? ""}

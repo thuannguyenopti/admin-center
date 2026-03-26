@@ -548,6 +548,44 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
+		id: "ct-image-block",
+		name: "Image Block",
+		displayName: "Image Block",
+		baseType: "Block",
+		description: "An image block for page layouts",
+		properties: [
+			{
+				id: "image",
+				name: "Image",
+				displayName: "Image",
+				type: "ImageReference",
+				required: true,
+				groupName: "Content",
+				order: 1
+			},
+			{
+				id: "width",
+				name: "Width Override",
+				displayName: "Width Override",
+				type: "String",
+				groupName: "Design",
+				order: 2,
+				description: "Override width (e.g., '100%', '400px', 'auto')",
+				defaultValue: "auto"
+			},
+			{
+				id: "height",
+				name: "Height Override",
+				displayName: "Height Override",
+				type: "String",
+				groupName: "Design",
+				order: 3,
+				description: "Override height (e.g., '300px', 'auto')",
+				defaultValue: "auto"
+			}
+		]
+	},
+	{
 		id: "ct-heading",
 		name: "Heading",
 		displayName: "Heading",
@@ -2125,10 +2163,9 @@ export const initialPages: Page[] = [
 								},
 							},
 							"ele-landing-hero-broken-image": {
-								type: "ct-image",
+								type: "ct-image-block",
 								properties: {
-									src: { value: "https://example.com/missing-image-404.jpg" },
-									alt: { value: "" },
+									image: { value: "https://example.com/missing-image-404.jpg" },
 								},
 							},
 							"ele-landing-hero-cta-primary": {
@@ -4536,10 +4573,9 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-31-img": {
-						type: "ct-image",
+						type: "ct-image-block",
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling1/400/300" },
-							alt: { value: "Cycle Computer Pro" },
+							image: { value: "https://picsum.photos/seed/cycling1/400/300" },
 						},
 					},
 					"ele-prod-31-heading": {
@@ -4614,11 +4650,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-32-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling3/400/300" },
-							alt: { value: "HR Monitor Band" },
+
+							image: { value: "https://picsum.photos/seed/cycling3/400/300" },
+
 						},
+
 					},
 					"ele-prod-32-heading": {
 						type: "ct-heading",
@@ -4692,11 +4732,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-33-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling2/400/300" },
-							alt: { value: "Smart Bike Trainer" },
+
+							image: { value: "https://picsum.photos/seed/cycling2/400/300" },
+
 						},
+
 					},
 					"ele-prod-33-heading": {
 						type: "ct-heading",
@@ -4770,11 +4814,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-34-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling4/400/300" },
-							alt: { value: "Cadence Sensor" },
+
+							image: { value: "https://picsum.photos/seed/cycling4/400/300" },
+
 						},
+
 					},
 					"ele-prod-34-heading": {
 						type: "ct-heading",
@@ -4846,11 +4894,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-35-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling8/400/300" },
-							alt: { value: "Power Meter" },
+
+							image: { value: "https://picsum.photos/seed/cycling8/400/300" },
+
 						},
+
 					},
 					"ele-prod-35-heading": {
 						type: "ct-heading",
@@ -4924,11 +4976,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-36-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling9/400/300" },
-							alt: { value: "Speed Sensor" },
+
+							image: { value: "https://picsum.photos/seed/cycling9/400/300" },
+
 						},
+
 					},
 					"ele-prod-36-heading": {
 						type: "ct-heading",

@@ -17,7 +17,7 @@ export const DateTimeRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			<Input
 				type="datetime-local"
 				value={value ?? property.defaultValue ?? ""}

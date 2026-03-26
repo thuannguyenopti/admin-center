@@ -17,7 +17,7 @@ export const BooleanRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} error={error} description={property.description}>
+		<Field label={property.displayName || property.name} error={error} info={property.description}>
 			<Checkbox
 				checked={value ?? property.defaultValue ?? false}
 				onCheckedChange={(checked: boolean) => onChange(checked)}
