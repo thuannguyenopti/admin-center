@@ -1,29 +1,36 @@
-# Axiom Play Development Rules
+# Axiom Play — Cursor Rules
 
-You are Antigravity, an expert AI coding assistant. Follow these rules for all interactions in this codebase.
+## Design System (MANDATORY)
 
-## Core Technologies
-- **Framework**: Next.js (App Router)
-- **Design System**: Optimizely Axiom (@optiaxiom/react)
-- **Icons**: Axiom Icons (@optimizely/axiom-icons)
-- **Styling**: Tailwind CSS (integrated with Axiom)
+Read **DESIGN_SYSTEM.md** at the repo root before writing any UI code. It is the single source of truth for all tokens, components, colors, spacing, and patterns.
 
-## Design & UI Rules
-- **ALWAYS** use Axiom components from `@optiaxiom/react` for UI elements.
-- **NEVER** use raw HTML elements (like `button`, `input`, `div` for layout) if an Axiom equivalent exists.
-- **Premium Aesthetics**: Ensure all UI changes look modern, premium, and follow Axiom design tokens. Use appropriate spacing (`gap`, `p`, `m`) and semantic colors.
-- **Icons**: Use `@optimizely/axiom-icons`. Prefer specific Axiom icons over generic ones.
+**Non-negotiable rules:**
+- Always use `@optiaxiom/react` components — never raw HTML for product UI
+- Always use spacing tokens (`p="16"`, `gap="12"`) — never arbitrary px
+- Always use semantic color tokens (`bg.default`, `fg.secondary`) — never hex
+- Exception: `app/components/vb/blocks/` uses raw HTML + Tailwind (customer website, not CMS UI)
+- Use `[data-theme="dark"]` for dark mode — never `@media (prefers-color-scheme: dark)`
+
+## MCP
+
+An Axiom MCP server (`@optiaxiom/mcp`) is available. Use it to look up component APIs, props, and live examples when unsure about a component.
+
+## Tech Stack
+
+- **Framework**: Next.js (App Router), TypeScript, React
+- **Package manager**: Yarn (`corepack enable` if missing)
+- **Dev server**: `yarn dev`
+- **State**: `app/usePersistentState.js` for localStorage-backed prototype state. Check `isHydrated` before rendering.
+- **Icons**: `@tabler/icons-react` (primary), `@fortawesome` (secondary)
+
+## No Monolithic Files (MANDATORY)
+
+On every new conversation, check if the files you're about to touch are monolithic (300+ lines, multiple concerns). If so, split them first. Never create or extend monolithic files. See full guide in `DESIGN_SYSTEM.md`.
 
 ## Coding Standards
-- **Component Structure**: Use functional components with TypeScript.
-- **Client Components**: Use `"use client"` directive only when necessary (e.g., for state, effects, or Axiom components that require client-side interactivity).
-- **File Organization**: Keep Opal-related logic within the `app/opal` directory.
 
-## Axiom MCP Usage
-- Leverage the Axiom MCP server (`@optiaxiom/mcp`) to fetch component documentation, props, and examples.
-- When in doubt about a component's API, use the MCP to verify.
-
-## Communication
-- Be proactive but concise.
-- Explain design decisions if they deviate from common patterns.
-- Always verify build status after making changes to core components.
+- Use functional components with TypeScript
+- Use `"use client"` only when needed (state, effects, Axiom client components)
+- Prefer `@optiaxiom/react` imports over local wrappers unless the wrapper's defaults are specifically needed
+- Ensure premium, modern aesthetics using Axiom design tokens
+- Verify build after changes to core components
