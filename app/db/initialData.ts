@@ -549,8 +549,8 @@ export const initialContentTypes: ContentType[] = [
 	},
 	{
 		id: "ct-image-block",
-		name: "Image Block",
-		displayName: "Image Block",
+		name: "Image",
+		displayName: "Image",
 		baseType: "Block",
 		description: "An image block for page layouts",
 		properties: [
