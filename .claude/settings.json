@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(echo:*)"
     ],
     "additionalDirectories": [
       "/Users/stefan.svebeck/dev/axiom-play/app/components/property-renderers",
