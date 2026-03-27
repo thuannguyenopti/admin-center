@@ -20,7 +20,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-15").toISOString(),
-		updatedAt: new Date("2024-01-15").toISOString(),
+		modifiedAt: new Date("2024-01-15").toISOString(),
 	},
 	{
 		id: "img-stride-2",
@@ -32,7 +32,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-15").toISOString(),
-		updatedAt: new Date("2024-01-15").toISOString(),
+		modifiedAt: new Date("2024-01-15").toISOString(),
 	},
 	{
 		id: "img-stride-3",
@@ -44,7 +44,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-15").toISOString(),
-		updatedAt: new Date("2024-01-15").toISOString(),
+		modifiedAt: new Date("2024-01-15").toISOString(),
 	},
 	{
 		id: "img-stride-4",
@@ -56,7 +56,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-16").toISOString(),
-		updatedAt: new Date("2024-01-16").toISOString(),
+		modifiedAt: new Date("2024-01-16").toISOString(),
 	},
 	{
 		id: "img-stride-5",
@@ -68,7 +68,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-16").toISOString(),
-		updatedAt: new Date("2024-01-16").toISOString(),
+		modifiedAt: new Date("2024-01-16").toISOString(),
 	},
 	{
 		id: "img-stride-6",
@@ -80,7 +80,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-17").toISOString(),
-		updatedAt: new Date("2024-01-17").toISOString(),
+		modifiedAt: new Date("2024-01-17").toISOString(),
 	},
 	{
 		id: "img-stride-7",
@@ -92,7 +92,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-17").toISOString(),
-		updatedAt: new Date("2024-01-17").toISOString(),
+		modifiedAt: new Date("2024-01-17").toISOString(),
 	},
 	{
 		id: "img-stride-8",
@@ -104,7 +104,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-18").toISOString(),
-		updatedAt: new Date("2024-01-18").toISOString(),
+		modifiedAt: new Date("2024-01-18").toISOString(),
 	},
 	{
 		id: "img-stride-9",
@@ -116,7 +116,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-18").toISOString(),
-		updatedAt: new Date("2024-01-18").toISOString(),
+		modifiedAt: new Date("2024-01-18").toISOString(),
 	},
 	{
 		id: "img-stride-10",
@@ -128,7 +128,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-19").toISOString(),
-		updatedAt: new Date("2024-01-19").toISOString(),
+		modifiedAt: new Date("2024-01-19").toISOString(),
 	},
 	{
 		id: "img-stride-11",
@@ -140,7 +140,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-19").toISOString(),
-		updatedAt: new Date("2024-01-19").toISOString(),
+		modifiedAt: new Date("2024-01-19").toISOString(),
 	},
 	{
 		id: "img-stride-12",
@@ -152,7 +152,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-20").toISOString(),
-		updatedAt: new Date("2024-01-20").toISOString(),
+		modifiedAt: new Date("2024-01-20").toISOString(),
 	},
 	{
 		id: "img-stride-13",
@@ -164,7 +164,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-20").toISOString(),
-		updatedAt: new Date("2024-01-20").toISOString(),
+		modifiedAt: new Date("2024-01-20").toISOString(),
 	},
 	{
 		id: "img-stride-14",
@@ -176,7 +176,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-21").toISOString(),
-		updatedAt: new Date("2024-01-21").toISOString(),
+		modifiedAt: new Date("2024-01-21").toISOString(),
 	},
 	{
 		id: "img-stride-15",
@@ -188,7 +188,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-21").toISOString(),
-		updatedAt: new Date("2024-01-21").toISOString(),
+		modifiedAt: new Date("2024-01-21").toISOString(),
 	},
 	{
 		id: "img-stride-16",
@@ -200,7 +200,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-22").toISOString(),
-		updatedAt: new Date("2024-01-22").toISOString(),
+		modifiedAt: new Date("2024-01-22").toISOString(),
 	},
 	{
 		id: "img-stride-17",
@@ -212,7 +212,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-22").toISOString(),
-		updatedAt: new Date("2024-01-22").toISOString(),
+		modifiedAt: new Date("2024-01-22").toISOString(),
 	},
 	{
 		id: "img-stride-18",
@@ -224,7 +224,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-23").toISOString(),
-		updatedAt: new Date("2024-01-23").toISOString(),
+		modifiedAt: new Date("2024-01-23").toISOString(),
 	},
 	{
 		id: "img-stride-19",
@@ -236,7 +236,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-23").toISOString(),
-		updatedAt: new Date("2024-01-23").toISOString(),
+		modifiedAt: new Date("2024-01-23").toISOString(),
 	},
 	{
 		id: "img-stride-20",
@@ -248,7 +248,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-24").toISOString(),
-		updatedAt: new Date("2024-01-24").toISOString(),
+		modifiedAt: new Date("2024-01-24").toISOString(),
 	},
 	{
 		id: "img-stride-21",
@@ -260,7 +260,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-24").toISOString(),
-		updatedAt: new Date("2024-01-24").toISOString(),
+		modifiedAt: new Date("2024-01-24").toISOString(),
 	},
 	{
 		id: "img-stride-22",
@@ -272,7 +272,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-25").toISOString(),
-		updatedAt: new Date("2024-01-25").toISOString(),
+		modifiedAt: new Date("2024-01-25").toISOString(),
 	},
 	{
 		id: "img-stride-23",
@@ -284,7 +284,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-25").toISOString(),
-		updatedAt: new Date("2024-01-25").toISOString(),
+		modifiedAt: new Date("2024-01-25").toISOString(),
 	},
 	{
 		id: "img-stride-24",
@@ -296,7 +296,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-26").toISOString(),
-		updatedAt: new Date("2024-01-26").toISOString(),
+		modifiedAt: new Date("2024-01-26").toISOString(),
 	},
 	{
 		id: "img-stride-25",
@@ -308,7 +308,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-26").toISOString(),
-		updatedAt: new Date("2024-01-26").toISOString(),
+		modifiedAt: new Date("2024-01-26").toISOString(),
 	},
 	{
 		id: "img-stride-26",
@@ -320,7 +320,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-27").toISOString(),
-		updatedAt: new Date("2024-01-27").toISOString(),
+		modifiedAt: new Date("2024-01-27").toISOString(),
 	},
 	{
 		id: "img-stride-27",
@@ -332,7 +332,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-27").toISOString(),
-		updatedAt: new Date("2024-01-27").toISOString(),
+		modifiedAt: new Date("2024-01-27").toISOString(),
 	},
 	{
 		id: "img-stride-28",
@@ -344,7 +344,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-28").toISOString(),
-		updatedAt: new Date("2024-01-28").toISOString(),
+		modifiedAt: new Date("2024-01-28").toISOString(),
 	},
 	{
 		id: "img-stride-29",
@@ -356,7 +356,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-28").toISOString(),
-		updatedAt: new Date("2024-01-28").toISOString(),
+		modifiedAt: new Date("2024-01-28").toISOString(),
 	},
 	{
 		id: "img-stride-30",
@@ -368,7 +368,7 @@ export const imageSelectorInstances: ContentInstance[] = [
 			source: "ImageSelector",
 		},
 		createdAt: new Date("2024-01-29").toISOString(),
-		updatedAt: new Date("2024-01-29").toISOString(),
+		modifiedAt: new Date("2024-01-29").toISOString(),
 	},
 ];
 
@@ -385,7 +385,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Nature",
 		},
 		createdAt: new Date("2024-02-01").toISOString(),
-		updatedAt: new Date("2024-02-01").toISOString(),
+		modifiedAt: new Date("2024-02-01").toISOString(),
 	},
 	{
 		id: "stock-img-2",
@@ -398,7 +398,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Business",
 		},
 		createdAt: new Date("2024-02-01").toISOString(),
-		updatedAt: new Date("2024-02-01").toISOString(),
+		modifiedAt: new Date("2024-02-01").toISOString(),
 	},
 	{
 		id: "stock-img-3",
@@ -411,7 +411,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Technology",
 		},
 		createdAt: new Date("2024-02-02").toISOString(),
-		updatedAt: new Date("2024-02-02").toISOString(),
+		modifiedAt: new Date("2024-02-02").toISOString(),
 	},
 	{
 		id: "stock-img-4",
@@ -424,7 +424,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "People",
 		},
 		createdAt: new Date("2024-02-02").toISOString(),
-		updatedAt: new Date("2024-02-02").toISOString(),
+		modifiedAt: new Date("2024-02-02").toISOString(),
 	},
 	{
 		id: "stock-img-5",
@@ -437,7 +437,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Food",
 		},
 		createdAt: new Date("2024-02-03").toISOString(),
-		updatedAt: new Date("2024-02-03").toISOString(),
+		modifiedAt: new Date("2024-02-03").toISOString(),
 	},
 	{
 		id: "stock-img-6",
@@ -450,7 +450,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Architecture",
 		},
 		createdAt: new Date("2024-02-03").toISOString(),
-		updatedAt: new Date("2024-02-03").toISOString(),
+		modifiedAt: new Date("2024-02-03").toISOString(),
 	},
 	{
 		id: "stock-img-7",
@@ -463,7 +463,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Travel",
 		},
 		createdAt: new Date("2024-02-04").toISOString(),
-		updatedAt: new Date("2024-02-04").toISOString(),
+		modifiedAt: new Date("2024-02-04").toISOString(),
 	},
 	{
 		id: "stock-img-8",
@@ -476,7 +476,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Abstract",
 		},
 		createdAt: new Date("2024-02-04").toISOString(),
-		updatedAt: new Date("2024-02-04").toISOString(),
+		modifiedAt: new Date("2024-02-04").toISOString(),
 	},
 	{
 		id: "stock-img-9",
@@ -489,7 +489,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Nature",
 		},
 		createdAt: new Date("2024-02-05").toISOString(),
-		updatedAt: new Date("2024-02-05").toISOString(),
+		modifiedAt: new Date("2024-02-05").toISOString(),
 	},
 	{
 		id: "stock-img-10",
@@ -502,7 +502,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Travel",
 		},
 		createdAt: new Date("2024-02-05").toISOString(),
-		updatedAt: new Date("2024-02-05").toISOString(),
+		modifiedAt: new Date("2024-02-05").toISOString(),
 	},
 	{
 		id: "stock-img-11",
@@ -515,7 +515,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Business",
 		},
 		createdAt: new Date("2024-02-06").toISOString(),
-		updatedAt: new Date("2024-02-06").toISOString(),
+		modifiedAt: new Date("2024-02-06").toISOString(),
 	},
 	{
 		id: "stock-img-12",
@@ -528,7 +528,7 @@ export const stockImageInstances: ContentInstance[] = [
 			category: "Abstract",
 		},
 		createdAt: new Date("2024-02-06").toISOString(),
-		updatedAt: new Date("2024-02-06").toISOString(),
+		modifiedAt: new Date("2024-02-06").toISOString(),
 	},
 ];
 

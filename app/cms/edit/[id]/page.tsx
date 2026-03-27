@@ -109,11 +109,15 @@ export default function EditPageDetail() {
 	}, [page, id, setPages]);
 
 	// CMP Content Connection Handlers
-	const handleConnectInstance = useCallback((instance: ContentInstance) => {
+	const handleConnectInstance = useCallback((instance: ContentInstance | ContentInstance[]) => {
 		if (!page) return;
 
+		// Only handle single instance selection (not multi-select)
+		const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
+		if (!selectedInstance) return;
+
 		const connectedPage = connectInstanceToPage(
-			instance,
+			selectedInstance,
 			page,
 			initialContentTypes
 		);
