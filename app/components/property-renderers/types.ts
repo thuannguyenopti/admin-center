@@ -1,3 +1,4 @@
+import React from "react";
 import { Property, PropertyType, ContentType } from "@/app/db/initialData";
 
 // Base props for all renderers
