@@ -39,6 +39,7 @@ const Col: React.FC<{
             case "ct-button":
                 return <IconRectangle size={16} />;
             case "ct-image":
+            case "ct-image-block":
                 return <IconPhoto size={16} />;
             default:
                 return <IconBrackets size={16} />;
@@ -50,7 +51,7 @@ const Col: React.FC<{
         { type: "ct-text", label: "Text" },
         { type: "ct-input", label: "Input" },
         { type: "ct-button", label: "Button" },
-        { type: "ct-image", label: "Image" },
+        { type: "ct-image-block", label: "Image" },
     ];
 
     const optionsSource = (elementOptions && elementOptions.length > 0) ? elementOptions : fallbackOptions;

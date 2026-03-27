@@ -1,29 +1,29 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
 	Box,
-	Button,
 	Field,
-	Text,
-	Input as Input2,
-	Select,
-	SelectTrigger,
-	SelectContent,
-	Textarea,
 	type MenuOption,
-	SegmentedControl,
-	SegmentedControlItem,
+	Tabs,
+	TabsList,
+	TabsTrigger,
+	TabsContent,
 	Heading,
 	Separator,
-	Card,
+	Text,
 } from "@optiaxiom/react";
 import { PillMenu, PillMenuTrigger, PillMenuContent } from "@optiaxiom/react/unstable";
 import { useGlobalTags } from "@/app/cms/hooks/useGlobalTags";
 import { useGlobalCategories } from "@/app/cms/hooks/useGlobalCategories";
 import { getThumbnailForContent } from "@/app/cms/content/contentThumbnails";
-import { initialContentTypes, type Property } from "@/app/db/initialData";
+import { initialContentTypes, type Property, type ContentType } from "@/app/db/initialData";
+import usePersistentState from "@/app/usePersistentState";
 import { groupPropertiesByGroup, shouldShowGroupHeaders } from "./utils/propertyGroups";
+import { PropertyRenderer } from "@/app/components/property-renderers";
+
+// Import to register all property renderers
+import "@/app/components/property-renderers";
 
 export type PageProperties = {
 	seoTitle?: string;
@@ -138,11 +138,17 @@ export default function PropertiesPanel({
 	onRegisterGenerateTrigger,
 	onGenerateLoadingChange,
 }: Props) {
-	// Load content type definition
+	// Load runtime content types from localStorage (includes user-created properties)
+	const [runtimeContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		any,
+	];
+
+	// Load content type definition from runtime state
 	const contentType = useMemo(() => {
 		if (!contentTypeId) return null;
-		return initialContentTypes.find((ct) => ct.id === contentTypeId) || null;
-	}, [contentTypeId]);
+		return runtimeContentTypes?.find((ct) => ct.id === contentTypeId) || null;
+	}, [contentTypeId, runtimeContentTypes]);
 
 	// Group properties by groupName for dynamic sections
 	const contentTypePropertyGroups = useMemo(() => {
@@ -153,12 +159,10 @@ export default function PropertiesPanel({
 	// Generate filter items from property groups
 	const filterItems = useMemo(() => {
 		const groupNames = Object.keys(contentTypePropertyGroups);
-		if (groupNames.length === 0) return [{ id: "all", label: "All" }];
-
-		// Always include "All" as first option
-		const items = [{ id: "all", label: "All" }];
+		if (groupNames.length === 0) return [];
 
 		// Add each group as a filter option
+		const items: { id: string; label: string }[] = [];
 		groupNames.forEach((groupName) => {
 			items.push({
 				id: groupName.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, ""),
@@ -186,7 +190,17 @@ export default function PropertiesPanel({
 	const [noCategorySuggestions, setNoCategorySuggestions] = useState(false);
 
 	// Filter state for property groups
-	const [activeFilter, setActiveFilter] = useState<string>("all");
+	const [activeFilter, setActiveFilter] = useState<string>("");
+
+	// Update activeFilter when filterItems changes
+	useEffect(() => {
+		if (filterItems.length > 0) {
+			const currentFilterExists = filterItems.some(item => item.id === activeFilter);
+			if (!currentFilterExists) {
+				setActiveFilter(filterItems[0].id);
+			}
+		}
+	}, [filterItems, activeFilter]);
 
 	// Categories handlers
 	const selectedCategories = value.categories || [];
@@ -381,234 +395,52 @@ export default function PropertiesPanel({
 	const renderPropertyField = (prop: Property) => {
 		const propValue = (value as any)[prop.id];
 
-		// Handle ContentReference to Block types (local blocks)
-		if (prop.type === "ContentReference" && prop.allowedTypes && prop.allowedTypes.length > 0) {
-			// Check if this references a Block type
-			const referencedTypeId = prop.allowedTypes[0];
-			const referencedType = initialContentTypes.find(ct => ct.id === referencedTypeId);
-
-			// Always render Block types as inline Cards, even if data doesn't exist yet
-			if (referencedType && referencedType.baseType === "Block") {
-				// Ensure propValue is an object (initialize if undefined)
-				const blockData = (typeof propValue === "object" && propValue !== null) ? propValue : {};
-				// This is a local block - render its properties inline
-				const blockProperties = referencedType.properties || [];
-
-				// Group block properties by their groupName
-				const blockGroups: Record<string, Property[]> = {};
-				blockProperties.forEach((blockProp) => {
-					const groupName = blockProp.groupName || "Properties";
-					if (!blockGroups[groupName]) {
-						blockGroups[groupName] = [];
-					}
-					blockGroups[groupName].push(blockProp);
-				});
-
-				// Sort properties within each group
-				Object.keys(blockGroups).forEach((groupName) => {
-					blockGroups[groupName].sort((a, b) => (a.order || 0) - (b.order || 0));
-				});
-
+		// Handle categories and tags specially with PillMenu (PropertiesPanel specific)
+		if (prop.type === "SelectMany") {
+			if (prop.id === "categories") {
 				return (
-					<Box key={prop.id} display="flex" flexDirection="column" gap="12" w="full">
-						<Text fontSize="sm" fontWeight="600" color="fg.default">
-							{prop.displayName || prop.name}
-						</Text>
-						<Card w="full">
-							<Box display="flex" flexDirection="column" gap="16" w="full">
-									{Object.keys(blockGroups).map((groupName, groupIndex) => (
-										<Box key={groupName} display="flex" flexDirection="column" gap="12" w="full">
-											{Object.keys(blockGroups).length > 1 && (
-												<>
-													<Text fontSize="xs" fontWeight="600" color="fg.tertiary" textTransform="uppercase">
-														{groupName}
-													</Text>
-													{groupIndex < Object.keys(blockGroups).length - 1 && <Separator />}
-												</>
-											)}
-											{blockGroups[groupName].map((blockProp) => {
-												const blockPropValue = blockData[blockProp.id];
-
-												// Render different field types for block properties
-												if (blockProp.type === "String" || blockProp.type === "text") {
-													return (
-														<Field
-															key={blockProp.id}
-															label={blockProp.displayName || blockProp.name}
-														>
-															<Input2
-																placeholder={`Enter ${blockProp.displayName || blockProp.name}`}
-																value={blockPropValue ?? ""}
-																onChange={(e: any) => {
-																	onChange({
-																		[prop.id]: {
-																			...blockData,
-																			[blockProp.id]: e.target.value
-																		}
-																	});
-																}}
-															/>
-														</Field>
-													);
-												} else if (blockProp.type === "LongString" || blockProp.type === "textarea") {
-													return (
-														<Field
-															key={blockProp.id}
-															label={blockProp.displayName || blockProp.name}
-														>
-															<Textarea
-																placeholder={`Enter ${blockProp.displayName || blockProp.name}`}
-																rows={3}
-																value={blockPropValue ?? ""}
-																onChange={(e: any) => {
-																	onChange({
-																		[prop.id]: {
-																			...blockData,
-																			[blockProp.id]: e.target.value
-																		}
-																	});
-																}}
-															/>
-														</Field>
-													);
-												} else if (blockProp.type === "Url") {
-													return (
-														<Field
-															key={blockProp.id}
-															label={blockProp.displayName || blockProp.name}
-														>
-															<Input2
-																type="url"
-																placeholder={`Enter ${blockProp.displayName || blockProp.name}`}
-																value={blockPropValue ?? ""}
-																onChange={(e: any) => {
-																	onChange({
-																		[prop.id]: {
-																			...blockData,
-																			[blockProp.id]: e.target.value
-																		}
-																	});
-																}}
-															/>
-														</Field>
-													);
-												}
-
-												// Default fallback for other types
-												return (
-													<Field
-														key={blockProp.id}
-														label={blockProp.displayName || blockProp.name}
-														description={blockProp.description}
-													>
-														<Input2
-															placeholder={`Enter ${blockProp.displayName || blockProp.name}`}
-															value={blockPropValue ?? ""}
-															onChange={(e: any) => {
-																onChange({
-																	[prop.id]: {
-																		...blockData,
-																		[blockProp.id]: e.target.value
-																	}
-																});
-															}}
-														/>
-													</Field>
-												);
-											})}
-										</Box>
-									))}
-								</Box>
-						</Card>
-					</Box>
+					<PillMenuSelect
+						key={prop.id}
+						label={prop.displayName || prop.name}
+						placeholder={`Search ${prop.displayName || prop.name}...`}
+						selectedItems={selectedCategories}
+						availableItems={categoriesWithSlugs}
+						onToggle={handleToggleCategory}
+						onCreateNew={handleCreateCategory}
+					/>
+				);
+			} else if (prop.id === "tags") {
+				return (
+					<PillMenuSelect
+						key={prop.id}
+						label={prop.displayName || prop.name}
+						placeholder={`Search ${prop.displayName || prop.name}...`}
+						selectedItems={selectedTags}
+						availableItems={tagsWithSlugs}
+						onToggle={handleToggleTag}
+						onCreateNew={handleCreateTag}
+					/>
 				);
 			}
+			return null;
 		}
 
-		switch (prop.type) {
-			case "String":
-			case "text":
-				return (
-					<Field key={prop.id} label={prop.displayName || prop.name}>
-						<Input2
-							placeholder={`Enter ${prop.displayName || prop.name}`}
-							value={propValue ?? prop.defaultValue ?? ""}
-							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
-						/>
-					</Field>
-				);
-
-			case "LongString":
-			case "textarea":
-				return (
-					<Field key={prop.id} label={prop.displayName || prop.name}>
-						<Textarea
-							placeholder={`Enter ${prop.displayName || prop.name}`}
-							rows={3}
-							value={propValue ?? prop.defaultValue ?? ""}
-							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
-						/>
-					</Field>
-				);
-
-			case "SelectOne":
-				return (
-					<Field key={prop.id} label={prop.displayName || prop.name}>
-						<Select
-							value={propValue ?? prop.defaultValue}
-							onValueChange={(newValue) => onChange({ [prop.id]: newValue })}
-							options={prop.options || []}
-						>
-							<SelectTrigger />
-							<SelectContent />
-						</Select>
-					</Field>
-				);
-
-			case "SelectMany":
-				// Handle categories and tags specially with PillMenu
-				if (prop.id === "categories") {
-					return (
-						<PillMenuSelect
-							key={prop.id}
-							label={prop.displayName || prop.name}
-							placeholder={`Search ${prop.displayName || prop.name}...`}
-							selectedItems={selectedCategories}
-							availableItems={categoriesWithSlugs}
-							onToggle={handleToggleCategory}
-							onCreateNew={handleCreateCategory}
-						/>
-					);
-				} else if (prop.id === "tags") {
-					return (
-						<PillMenuSelect
-							key={prop.id}
-							label={prop.displayName || prop.name}
-							placeholder={`Search ${prop.displayName || prop.name}...`}
-							selectedItems={selectedTags}
-							availableItems={tagsWithSlugs}
-							onToggle={handleToggleTag}
-							onCreateNew={handleCreateTag}
-						/>
-					);
-				}
-				return null;
-
-			case "seo":
-				// SEO block is handled separately - skip for now
-				return null;
-
-			default:
-				return (
-					<Field key={prop.id} label={prop.displayName || prop.name}>
-						<Input2
-							placeholder={`Enter ${prop.displayName || prop.name}`}
-							value={propValue ?? ""}
-							onChange={(e: any) => onChange({ [prop.id]: e.target.value })}
-						/>
-					</Field>
-				);
+		// SEO block is handled separately - skip for now
+		if (prop.type === "seo") {
+			return null;
 		}
+
+		// Use shared PropertyRenderer for all other property types
+		return (
+			<PropertyRenderer
+				key={prop.id}
+				property={prop}
+				value={propValue}
+				onChange={(newVal: any) => onChange({ [prop.id]: newVal })}
+				enableAI={false}
+				context={{ runtimeContentTypes }}
+			/>
+		);
 	};
 
 	// Render section-specific content
@@ -663,12 +495,10 @@ export default function PropertiesPanel({
 		const groupNames = Object.keys(contentTypePropertyGroups);
 
 		// Determine which groups to show based on filter
-		const groupsToShow = activeFilter === "all"
-			? groupNames
-			: groupNames.filter(name => {
-					const groupId = name.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, "");
-					return groupId === activeFilter;
-				});
+		const groupsToShow = groupNames.filter(name => {
+			const groupId = name.toLowerCase().replace(/\s+/g, "-").replace(/[&]/g, "");
+			return groupId === activeFilter;
+		});
 
 		if (groupsToShow.length === 0) {
 			return (
@@ -679,7 +509,7 @@ export default function PropertiesPanel({
 		}
 
 		const totalGroups = Object.keys(contentTypePropertyGroups).length;
-		const showHeaders = shouldShowGroupHeaders(totalGroups, activeFilter === "all");
+		const showHeaders = shouldShowGroupHeaders(totalGroups, false);
 
 		return (
 			<Box display="flex" flexDirection="column" gap="32">
@@ -728,38 +558,33 @@ export default function PropertiesPanel({
 
 	return (
 		<Box display="flex" flexDirection="column" h="full" overflow="hidden">
-			{/* Filter Bar - Sticky */}
-			<Box
-				bg="bg.default"
-				px="24"
-				pt="16"
-				pb="16"
-				borderB="1"
-				borderColor="border.tertiary"
-				style={{ position: "sticky", top: 0, zIndex: 10 }}
-			>
-				<SegmentedControl
-					value={activeFilter}
-					onValueChange={setActiveFilter}
-					size="md"
+			<Tabs value={activeFilter} onValueChange={setActiveFilter}>
+				{/* Filter Bar - Sticky */}
+				<Box
+					px="24"
+					pt="16"
+					pb="16"
+					style={{ position: "sticky", top: 0, zIndex: 10 }}
 				>
-					{filterItems.map((item) => (
-						<SegmentedControlItem key={item.id} value={item.id}>
-							{item.label}
-						</SegmentedControlItem>
-					))}
-				</SegmentedControl>
-			</Box>
+					<TabsList>
+						{filterItems.map((item) => (
+							<TabsTrigger key={item.id} value={item.id}>
+								{item.label}
+							</TabsTrigger>
+						))}
+					</TabsList>
+				</Box>
 
-			{/* Content Area - Scrollable */}
-			<Box
-				overflow="auto"
-				px="24"
-				py="16"
-				style={{ flex: 1 }}
-			>
-				{renderFilteredContent()}
-			</Box>
+				{/* Content Area - Scrollable */}
+				<Box
+					overflow="auto"
+					px="24"
+					py="16"
+					style={{ flex: 1 }}
+				>
+					{renderFilteredContent()}
+				</Box>
+			</Tabs>
 		</Box>
 	);
 }

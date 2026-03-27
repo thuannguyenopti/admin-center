@@ -64,6 +64,7 @@ const Ele: React.FC<{
                                 case "ct-button":
                                     return <IconRectangle size={16} />;
                                 case "ct-image":
+                                case "ct-image-block":
                                     return <IconPhoto size={16} />;
                                 default:
                                     return <IconBrackets size={16} />;

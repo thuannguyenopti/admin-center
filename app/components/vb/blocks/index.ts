@@ -14,4 +14,5 @@ export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-button": ButtonBlock,
     "ct-input": InputBlock,
     "ct-image": ImageBlock,
+    "ct-image-block": ImageBlock,
 };
