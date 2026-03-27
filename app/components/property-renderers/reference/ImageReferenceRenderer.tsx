@@ -1,10 +1,11 @@
 "use client";
 
-import { Box, Field, Card, CardPreview, CardImage, CardHeader, Button, Menu, MenuTrigger, MenuContent, EllipsisMenuButton } from "@optiaxiom/react";
+import { Box, Field, Card, CardPreview, CardImage, CardHeader, Button, Menu, MenuTrigger, MenuContent, EllipsisMenuButton, Input } from "@optiaxiom/react";
 import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { PropertyRendererProps } from "../types";
 import { useState } from "react";
 import Image from "next/image";
+import AbstractDialog from "@/app/components/AbstractDialog";
 
 /**
  * Renderer for ImageReference property type (legacy)
@@ -17,20 +18,17 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	mode = "edit",
 }) => {
 	const imageUrl = value ?? property.defaultValue ?? "";
-	const [showUrlInput, setShowUrlInput] = useState(false);
-	const [urlInput, setUrlInput] = useState(imageUrl);
+	const [showUrlDialog, setShowUrlDialog] = useState(false);
+	const [urlInput, setUrlInput] = useState("");
 
 	const handleSelectImage = () => {
-		// For now, show a simple prompt to enter URL
-		// TODO: In the future, this could open an asset library modal
-		const url = window.prompt("Enter image URL:");
-		if (url) {
-			onChange(url);
-		}
+		setUrlInput("");
+		setShowUrlDialog(true);
 	};
 
 	const handleEditImage = () => {
-		setShowUrlInput(true);
+		setUrlInput(imageUrl);
+		setShowUrlDialog(true);
 	};
 
 	const handleRemoveImage = () => {
@@ -38,13 +36,16 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	};
 
 	const handleSaveUrl = () => {
-		onChange(urlInput);
-		setShowUrlInput(false);
+		if (urlInput.trim()) {
+			onChange(urlInput.trim());
+		}
+		setShowUrlDialog(false);
+		setUrlInput("");
 	};
 
 	const handleCancelUrl = () => {
-		setUrlInput(imageUrl);
-		setShowUrlInput(false);
+		setShowUrlDialog(false);
+		setUrlInput("");
 	};
 
 	// Extract filename from URL
@@ -92,86 +93,86 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	}
 
 	return (
-		<Field label={property.displayName || property.name} info={property.description}>
-			<Box style={{ maxWidth: "400px" }}>
-				<Card>
-				{showUrlInput ? (
-					<Box display="flex" flexDirection="column" gap="8" alignItems="center" p="16">
-						<input
-							type="text"
-							value={urlInput}
-							onChange={(e) => setUrlInput(e.target.value)}
-							placeholder="Enter image URL..."
-							style={{
-								width: "100%",
-								padding: "8px",
-								borderRadius: "4px",
-								border: "1px solid var(--border-default)",
-							}}
-						/>
-						<Box display="flex" gap="8">
-							<Button size="md" onClick={handleSaveUrl}>
-								Save
-							</Button>
-							<Button size="md" appearance="subtle" onClick={handleCancelUrl}>
-								Cancel
-							</Button>
-						</Box>
-					</Box>
-				) : imageUrl ? (
-					<>
-						<CardPreview h="224">
-							<CardImage asChild>
-								<Image
-									src={imageUrl}
-									alt={property.displayName || property.name}
-									fill
-									unoptimized
-									style={{
-										objectFit: "cover",
-									}}
-								/>
-							</CardImage>
-						</CardPreview>
-						<CardHeader
-							addonAfter={
-								<Menu
-									options={[
-										{ addon: <IconPencil />, label: "Edit", execute: handleEditImage },
-										{ addon: <IconTrash />, intent: "danger", label: "Remove", execute: handleRemoveImage },
-									]}
-								>
-									<MenuTrigger asChild>
-										<EllipsisMenuButton
-											appearance="subtle"
-											aria-label="actions"
-											size="sm"
+		<>
+			<Field label={property.displayName || property.name} info={property.description}>
+				<Box style={{ maxWidth: "400px" }}>
+					<Card>
+						{imageUrl ? (
+							<>
+								<CardPreview h="224">
+									<CardImage asChild>
+										<Image
+											src={imageUrl}
+											alt={property.displayName || property.name}
+											fill
+											unoptimized
+											style={{
+												objectFit: "cover",
+											}}
 										/>
-									</MenuTrigger>
-									<MenuContent align="end" />
-								</Menu>
-							}
-						>
-							{getImageName(imageUrl)}
-						</CardHeader>
-					</>
-				) : (
-					<CardPreview
-						h="224"
-						display="flex"
-						alignItems="center"
-						justifyContent="center"
-						style={{
-							border: "1px dashed var(--border-tertiary)",
-						}}
-					>
-						<Button size="md" onClick={handleSelectImage}>
-							Select Image
-						</Button>
-					</CardPreview>
-				)}
-			</Card>
-			</Box>
-		</Field>
+									</CardImage>
+								</CardPreview>
+								<CardHeader
+									addonAfter={
+										<Menu
+											options={[
+												{ addon: <IconPencil />, label: "Edit", execute: handleEditImage },
+												{ addon: <IconTrash />, intent: "danger", label: "Remove", execute: handleRemoveImage },
+											]}
+										>
+											<MenuTrigger asChild>
+												<EllipsisMenuButton
+													appearance="subtle"
+													aria-label="actions"
+													size="sm"
+												/>
+											</MenuTrigger>
+											<MenuContent align="end" />
+										</Menu>
+									}
+								>
+									{getImageName(imageUrl)}
+								</CardHeader>
+							</>
+						) : (
+							<CardPreview
+								h="224"
+								display="flex"
+								alignItems="center"
+								justifyContent="center"
+								style={{
+									border: "1px dashed var(--border-tertiary)",
+								}}
+							>
+								<Button size="md" onClick={handleSelectImage}>
+									Select Image
+								</Button>
+							</CardPreview>
+						)}
+					</Card>
+				</Box>
+			</Field>
+
+			{/* Image URL Dialog */}
+			<AbstractDialog
+				title={imageUrl ? "Edit Image URL" : "Add Image URL"}
+				description="Enter the URL of the image you want to use."
+				open={showUrlDialog}
+				setOpen={handleCancelUrl}
+				footerPrimaryText="Save"
+				footerPrimaryAction={handleSaveUrl}
+				footerAppearance="primary"
+				blockPrimaryAction={!urlInput.trim()}
+			>
+				<Box pt="16">
+					<Input
+						placeholder="https://example.com/image.jpg"
+						value={urlInput}
+						onChange={(e: any) => setUrlInput(e.target.value)}
+						autoFocus
+					/>
+				</Box>
+			</AbstractDialog>
+		</>
 	);
 };
