@@ -95,7 +95,7 @@ export default function ElementEditor({
       </Text>
 
       <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" pr="0" py="4">
-        <Heading level="4">{elementType}</Heading>
+        <Heading level="4">{contentType?.displayName || contentType?.name || elementType}</Heading>
 
         <Box display="flex" alignItems="center" gap="8">
           {onOpenStyleEditor && (
@@ -135,20 +135,21 @@ export default function ElementEditor({
       </Box>
 
       {/* Render properties grouped by groupName */}
-      {(() => {
-        // Calculate groups with visible properties
-        const groupsWithVisibleProps = Object.entries(propertyGroups).filter(([_, groupProps]) => {
-          const visibleProps = groupProps.filter((prop) => {
-            return !(prop.id === "template" || prop.type === "SelectOne");
+      <Box mt="16">
+        {(() => {
+          // Calculate groups with visible properties
+          const groupsWithVisibleProps = Object.entries(propertyGroups).filter(([_, groupProps]) => {
+            const visibleProps = groupProps.filter((prop) => {
+              return !(prop.id === "template" || prop.type === "SelectOne");
+            });
+            return visibleProps.length > 0;
           });
-          return visibleProps.length > 0;
-        });
 
-        // Only show headers if there are 2 or more groups with visible properties
-        const shouldShowHeaders = groupsWithVisibleProps.length > 1;
+          // Only show headers if there are 2 or more groups with visible properties
+          const shouldShowHeaders = groupsWithVisibleProps.length > 1;
 
-        // Render properties grouped by groupName
-        return Object.entries(propertyGroups).map(([groupName, groupProps]) => {
+          // Render properties grouped by groupName
+          return Object.entries(propertyGroups).map(([groupName, groupProps]) => {
           // Filter out properties that should be hidden
           const visibleProps = groupProps.filter((prop) => {
             // Skip template property - it's accessed via context menu "Style" option
@@ -188,6 +189,7 @@ export default function ElementEditor({
           );
         });
       })()}
+      </Box>
     </div>
   );
 }
