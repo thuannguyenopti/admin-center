@@ -1,11 +1,15 @@
 "use client";
 
 import { Box, Field, Card, CardPreview, CardImage, CardHeader, Button, Menu, MenuTrigger, MenuContent, EllipsisMenuButton, Input } from "@optiaxiom/react";
-import { IconPencil, IconTrash } from "@tabler/icons-react";
+import { IconPencil, IconTrash, IconPhoto } from "@tabler/icons-react";
 import { PropertyRendererProps } from "../types";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import ContentInstancePicker from "@/app/components/ContentInstancePicker";
+import { initialContentInstances, ContentInstance } from "@/app/db/cmpInitialData";
+import { allImageLibraryInstances } from "@/app/db/imageLibraryData";
+import usePersistentState from "@/app/usePersistentState";
 
 /**
  * Renderer for ImageReference property type (legacy)
@@ -18,15 +22,67 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	mode = "edit",
 }) => {
 	const imageUrl = value ?? property.defaultValue ?? "";
+	const [showPicker, setShowPicker] = useState(false);
 	const [showUrlDialog, setShowUrlDialog] = useState(false);
 	const [urlInput, setUrlInput] = useState("");
 
+	// Load content instances from localStorage
+	const [contentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+
+	// Filter instances that have image fields
+	const getImageUrl = (instance: ContentInstance): string | null => {
+		const imageFields = ["featured_image", "hero_image", "background_image", "thumbnail", "image"];
+		for (const field of imageFields) {
+			const value = instance.fields[field];
+			if (value && typeof value === "string" && (value.startsWith("http") || value.startsWith("/"))) {
+				return value;
+			}
+		}
+		return null;
+	};
+
+	// Combine all image sources and filter for images only
+	const instancesWithImages = useMemo(() => {
+		// Combine:
+		// 1. Content instances from localStorage (only ct-image types)
+		// 2. ImageSelector images (side panel images)
+		// 3. Stock images (CMP stock library)
+		const allInstances = [
+			...contentInstances,
+			...allImageLibraryInstances,
+		];
+
+		// Filter to only dedicated image content types
+		// Exclude blog posts, articles, components, etc. that happen to have image fields
+		return allInstances.filter(i => {
+			// Only include if it's a dedicated image content type
+			const isImageContentType = i.modelId === "ct-image" || i.modelId === "ct-image-block";
+			// And has an actual image URL
+			const hasImageUrl = getImageUrl(i) !== null;
+			return isImageContentType && hasImageUrl;
+		});
+	}, [contentInstances]);
+
 	const handleSelectImage = () => {
-		setUrlInput("");
-		setShowUrlDialog(true);
+		setShowPicker(true);
+	};
+
+	const handleImageSelected = (instance: ContentInstance | ContentInstance[]) => {
+		// Single select mode - extract image URL from selected instance
+		if (!Array.isArray(instance)) {
+			const imgUrl = getImageUrl(instance);
+			if (imgUrl) {
+				onChange(imgUrl);
+			}
+		}
+		setShowPicker(false);
 	};
 
 	const handleEditImage = () => {
+		setShowPicker(true);
+	};
+
+	const handleEnterUrl = () => {
 		setUrlInput(imageUrl);
 		setShowUrlDialog(true);
 	};
@@ -99,7 +155,11 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 					<Card>
 						{imageUrl ? (
 							<>
-								<CardPreview h="224">
+								<CardPreview
+									h="224"
+									style={{ cursor: "pointer" }}
+									onClick={handleEditImage}
+								>
 									<CardImage asChild>
 										<Image
 											src={imageUrl}
@@ -116,7 +176,8 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 									addonAfter={
 										<Menu
 											options={[
-												{ addon: <IconPencil />, label: "Edit", execute: handleEditImage },
+												{ addon: <IconPhoto />, label: "Select from Library", execute: handleEditImage },
+												{ addon: <IconPencil />, label: "Enter URL", execute: handleEnterUrl },
 												{ addon: <IconTrash />, intent: "danger", label: "Remove", execute: handleRemoveImage },
 											]}
 										>
@@ -153,7 +214,19 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 				</Box>
 			</Field>
 
-			{/* Image URL Dialog */}
+			{/* Image Picker Dialog */}
+			<ContentInstancePicker
+				open={showPicker}
+				onClose={() => setShowPicker(false)}
+				instances={instancesWithImages}
+				onSelect={handleImageSelected}
+				multiSelect={false}
+				title="Select Image"
+				description="Choose an image from the content library."
+				primaryActionText="Select"
+			/>
+
+			{/* Manual URL Input Dialog */}
 			<AbstractDialog
 				title={imageUrl ? "Edit Image URL" : "Add Image URL"}
 				description="Enter the URL of the image you want to use."

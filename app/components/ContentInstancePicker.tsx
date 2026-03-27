@@ -311,7 +311,7 @@ export default function ContentInstancePicker({
 											backgroundColor: isSelected ? "var(--colors-bg-accent-subtle)" : undefined,
 										}}
 									>
-										<CardPreview h="160" style={{ position: "relative" }}>
+										<CardPreview style={{ position: "relative", height: "160px" }}>
 											{thumbnailUrl ? (
 												<CardImage asChild>
 													<Image
