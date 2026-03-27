@@ -489,7 +489,7 @@ export const initialContentInstances: ContentInstance[] = [
 			publish_date: "2024-03-20",
 			excerpt: "Everything you need to know to start your running journey",
 			content: "<p>Welcome to our comprehensive guide for beginner runners...</p>",
-			featured_image: "asset-runner-1",
+			featured_image: "https://picsum.photos/seed/running-beginner/800/600",
 			tags: ["running", "beginner", "fitness"],
 			seo_keywords: ["running tips", "beginner running", "fitness guide"]
 		}
@@ -505,7 +505,7 @@ export const initialContentInstances: ContentInstance[] = [
 			publish_date: "2024-03-21",
 			excerpt: "Expert advice for marathon preparation",
 			content: "<p>Training for a marathon requires dedication and proper planning...</p>",
-			featured_image: "asset-marathon-1",
+			featured_image: "https://picsum.photos/seed/marathon-training/800/600",
 			tags: ["marathon", "training", "advanced"],
 			seo_keywords: ["marathon training", "running tips", "endurance"]
 		}
@@ -520,7 +520,7 @@ export const initialContentInstances: ContentInstance[] = [
 			subheadline: "How biomechanics can improve your performance",
 			byline: "Dr. Carol Williams, Sports Scientist",
 			body: "<p>Understanding proper running form is crucial for injury prevention...</p>",
-			hero_image: "asset-running-form-1",
+			hero_image: "https://picsum.photos/seed/running-form-science/800/600",
 			related_articles: ["ci-blog-1", "ci-blog-2"]
 		}
 	},
@@ -533,7 +533,7 @@ export const initialContentInstances: ContentInstance[] = [
 			message: "Spring Sale! Up to 40% off running gear",
 			cta_text: "Shop Now",
 			cta_link: "https://stride.com/sale",
-			background_image: "asset-spring-sale-bg",
+			background_image: "https://picsum.photos/seed/spring-sale-gear/1200/400",
 			dismissible: true,
 			display_duration: 7
 		}
@@ -547,7 +547,7 @@ export const initialContentInstances: ContentInstance[] = [
 			headline: "Run Faster, Go Further",
 			subheadline: "Introducing the new Stride Elite Runner",
 			description: "Our most advanced running shoe featuring cutting-edge cushioning and energy return technology",
-			background_image: "asset-elite-runner-hero",
+			background_image: "https://picsum.photos/seed/elite-runner-shoe/1200/600",
 			primary_cta_text: "Shop Elite Runner",
 			primary_cta_link: "https://stride.com/products/elite-runner",
 			secondary_cta_text: "Learn More",

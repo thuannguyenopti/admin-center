@@ -3480,17 +3480,6 @@ function ContentFilledPage({
 									// Convert CMP property to CMS Property format
 									const cmsProperty = convertCmpPropertyToCms(cmpProperty);
 
-									// Debug: Check property type conversion
-									if (cmpProperty.name === "content") {
-										console.log('[DEBUG] Content property conversion:', {
-											cmpName: cmpProperty.name,
-											cmpType: cmpProperty.type,
-											cmsType: cmsProperty.type,
-											cmsProperty,
-											fieldValue
-										});
-									}
-
 									const handleChange = (newValue: any) => {
 										// Update the content instance in localStorage
 										const updatedInstance = {
