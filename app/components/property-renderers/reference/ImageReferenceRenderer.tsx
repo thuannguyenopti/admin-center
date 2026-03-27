@@ -1,8 +1,10 @@
 "use client";
 
-import { Box, Field, Card, Button } from "@optiaxiom/react";
+import { Box, Field, Card, CardPreview, CardImage, CardHeader, Button, Menu, MenuTrigger, MenuContent, EllipsisMenuButton } from "@optiaxiom/react";
+import { IconPencil, IconTrash } from "@tabler/icons-react";
 import { PropertyRendererProps } from "../types";
 import { useState } from "react";
+import Image from "next/image";
 
 /**
  * Renderer for ImageReference property type (legacy)
@@ -17,7 +19,6 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	const imageUrl = value ?? property.defaultValue ?? "";
 	const [showUrlInput, setShowUrlInput] = useState(false);
 	const [urlInput, setUrlInput] = useState(imageUrl);
-	const [isHovering, setIsHovering] = useState(false);
 
 	const handleSelectImage = () => {
 		// For now, show a simple prompt to enter URL
@@ -28,8 +29,12 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 		}
 	};
 
-	const handleChangeImage = () => {
+	const handleEditImage = () => {
 		setShowUrlInput(true);
+	};
+
+	const handleRemoveImage = () => {
+		onChange("");
 	};
 
 	const handleSaveUrl = () => {
@@ -42,22 +47,41 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 		setShowUrlInput(false);
 	};
 
+	// Extract filename from URL
+	const getImageName = (url: string) => {
+		if (!url) return "";
+		try {
+			const urlObj = new URL(url);
+			const pathname = urlObj.pathname;
+			const parts = pathname.split('/');
+			return parts[parts.length - 1] || "Image";
+		} catch {
+			return "Image";
+		}
+	};
+
 	if (mode === "readonly") {
 		return (
 			<Field label={property.displayName || property.name} info={property.description}>
 				{imageUrl ? (
 					<Box style={{ maxWidth: "400px" }}>
-						<Card p="0">
-							<Box
-								style={{
-									width: "100%",
-									height: "200px",
-									backgroundImage: `url(${imageUrl})`,
-									backgroundSize: "cover",
-									backgroundPosition: "center",
-									borderRadius: "4px",
-								}}
-							/>
+						<Card>
+							<CardPreview h="224">
+								<CardImage asChild>
+									<Image
+										src={imageUrl}
+										alt={property.displayName || property.name}
+										fill
+										unoptimized
+										style={{
+											objectFit: "cover",
+										}}
+									/>
+								</CardImage>
+							</CardPreview>
+							<CardHeader>
+								{getImageName(imageUrl)}
+							</CardHeader>
 						</Card>
 					</Box>
 				) : (
@@ -70,9 +94,9 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	return (
 		<Field label={property.displayName || property.name} info={property.description}>
 			<Box style={{ maxWidth: "400px" }}>
-				<Card p="0">
+				<Card>
 				{showUrlInput ? (
-					<Box display="flex" flexDirection="column" gap="8" alignItems="center">
+					<Box display="flex" flexDirection="column" gap="8" alignItems="center" p="16">
 						<input
 							type="text"
 							value={urlInput}
@@ -95,62 +119,56 @@ export const ImageReferenceRenderer: React.FC<PropertyRendererProps> = ({
 						</Box>
 					</Box>
 				) : imageUrl ? (
-					<Box
-						onMouseEnter={() => setIsHovering(true)}
-						onMouseLeave={() => setIsHovering(false)}
-						style={{
-							position: "relative",
-							width: "100%",
-							height: "200px",
-							borderRadius: "4px",
-							overflow: "hidden",
-						}}
-					>
-						<Box
-							style={{
-								width: "100%",
-								height: "100%",
-								backgroundImage: `url(${imageUrl})`,
-								backgroundSize: "cover",
-								backgroundPosition: "center",
-							}}
-						/>
-						{isHovering && (
-							<Box
-								display="flex"
-								alignItems="center"
-								justifyContent="center"
-								style={{
-									position: "absolute",
-									top: 0,
-									left: 0,
-									right: 0,
-									bottom: 0,
-									background: "rgba(0, 0, 0, 0.5)",
-								}}
-							>
-								<Button size="md" onClick={handleChangeImage}>
-									Change Image
-								</Button>
-							</Box>
-						)}
-					</Box>
+					<>
+						<CardPreview h="224">
+							<CardImage asChild>
+								<Image
+									src={imageUrl}
+									alt={property.displayName || property.name}
+									fill
+									unoptimized
+									style={{
+										objectFit: "cover",
+									}}
+								/>
+							</CardImage>
+						</CardPreview>
+						<CardHeader
+							addonAfter={
+								<Menu
+									options={[
+										{ addon: <IconPencil />, label: "Edit", execute: handleEditImage },
+										{ addon: <IconTrash />, intent: "danger", label: "Remove", execute: handleRemoveImage },
+									]}
+								>
+									<MenuTrigger asChild>
+										<EllipsisMenuButton
+											appearance="subtle"
+											aria-label="actions"
+											size="sm"
+										/>
+									</MenuTrigger>
+									<MenuContent align="end" />
+								</Menu>
+							}
+						>
+							{getImageName(imageUrl)}
+						</CardHeader>
+					</>
 				) : (
-					<Box
+					<CardPreview
+						h="224"
 						display="flex"
 						alignItems="center"
 						justifyContent="center"
 						style={{
-							width: "100%",
-							height: "200px",
 							border: "1px dashed var(--border-tertiary)",
-							borderRadius: "4px",
 						}}
 					>
 						<Button size="md" onClick={handleSelectImage}>
 							Select Image
 						</Button>
-					</Box>
+					</CardPreview>
 				)}
 			</Card>
 			</Box>
