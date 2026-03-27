@@ -43,6 +43,22 @@ const getDraggedAlt = (dt: DataTransfer) => {
 	return typeof alt === "string" ? alt : "";
 };
 
+// Map content type IDs to display names for Visual Builder
+const getElementDisplayName = (type: string): string => {
+	const typeMap: Record<string, string> = {
+		"ct-heading": "Heading",
+		"ct-text": "Text",
+		"ct-rich-text": "Rich Text",
+		"ct-input": "Input",
+		"ct-button": "Button",
+		"ct-image": "Image",
+		"ct-image-block": "Image",
+		"ct-product": "Product",
+		// Add more mappings as needed
+	};
+	return typeMap[type] || type;
+};
+
 export default function PreviewCanvas({
 	outlines,
 	theEles, // unused but kept for prop compatibility
@@ -456,7 +472,7 @@ export default function PreviewCanvas({
 																				);
 																		}
 																	})()}
-																	{type || "Unknown"}
+																	{getElementDisplayName(type) || "Unknown"}
 																</div>
 															</div>
 
