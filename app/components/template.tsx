@@ -34,6 +34,11 @@ import {OpalPanel} from "./OpalPanel";
 import {useOpalState} from "@/app/hooks/useOpalState";
 import {useOpalHistory} from "@/app/hooks/useOpalHistory";
 
+type PendingOpalPrompt = {
+	chatId: string;
+	prompt: string;
+};
+
 function TemplateContent({
 	children,
 	structure,
@@ -47,6 +52,7 @@ function TemplateContent({
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
+	const [pendingOpalPrompt, setPendingOpalPrompt] = useState<PendingOpalPrompt | null>(null);
 
 	useEffect(() => {
 		setMounted(true);
@@ -85,19 +91,40 @@ function TemplateContent({
 		removeMessage,
 	} = useOpalState({activeChatId: activeChat, opalContext});
 
+	useEffect(() => {
+		if (!pendingOpalPrompt || isLoading) return;
+		if (activeChat !== pendingOpalPrompt.chatId) return;
+		if (messages.length > 0) return;
+
+		setInputValue(pendingOpalPrompt.prompt);
+		void sendMessage(pendingOpalPrompt.prompt);
+		setPendingOpalPrompt(null);
+	}, [activeChat, isLoading, messages.length, pendingOpalPrompt, sendMessage, setInputValue]);
+
 	// Provide Opal panel controls through LayoutContext
 	useEffect(() => {
 		setOpalPanelControls({
 			openPanel: openOpal,
 			togglePanel: toggleOpal,
 			closePanel: closeOpal,
+			createNewChat,
 			addMessage,
 			updateMessage,
 			removeMessage,
+			setInputValue,
+			sendMessage,
 			setInputDisabled,
+			launchPrompt: (prompt: string) => {
+				const trimmed = prompt.trim();
+				if (!trimmed) return;
+
+				const chatId = createNewChat();
+				openOpal();
+				setPendingOpalPrompt({chatId, prompt: trimmed});
+			},
 		});
 		return () => setOpalPanelControls(null);
-	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, addMessage, updateMessage, removeMessage, setInputDisabled]);
+	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, createNewChat, addMessage, updateMessage, removeMessage, setInputValue, sendMessage, setInputDisabled]);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
