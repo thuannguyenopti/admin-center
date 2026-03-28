@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Box, Text, Button } from "@optiaxiom/react";
+import Image from "next/image";
+import { Box, Text, Button, Textarea } from "@optiaxiom/react";
 import {
     HoverCard,
     HoverCardContent,
     HoverCardTrigger,
 } from "@optiaxiom/react/unstable";
-import { IconBook, IconChevronLeft, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb } from "@optimizely/axiom-icons";
+import { IconBook, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb } from "@optimizely/axiom-icons";
 import {
     IconX,
     IconGripVertical,
@@ -108,18 +109,21 @@ const SUGGESTED_TEMPLATES = [
     {
         id: "competitive-researcher",
         name: "Competitive Researcher",
+        emoji: "🔎",
         description: "Analyzes competitors and delivers structured insights on positioning, pricing, and strategy.",
         prompt: `You are a competitive intelligence researcher.\n\nAnalyze the following competitor: [[competitor]]\n\nProvide:\n1. Company overview and positioning\n2. Key products/services and pricing\n3. Strengths and weaknesses\n4. Strategic recommendations\n\nNever fabricate information. Cite sources where available.`,
     },
     {
         id: "seo-optimizer",
         name: "SEO Optimizer",
+        emoji: "📈",
         description: "Reviews content and suggests improvements for better search engine visibility.",
         prompt: `You are an SEO expert.\n\nContent: [[content]]\nTarget keyword: [[keyword]]\n\nProvide:\n1. Keyword placement suggestions\n2. Meta description\n3. Header structure improvements\n4. Internal linking opportunities\n\nPrioritize by impact.`,
     },
     {
         id: "website-optimizer",
         name: "Website Optimizer",
+        emoji: "🛠️",
         description: "Audits websites for performance, UX, and conversion rate opportunities.",
         prompt: `You are a website optimization specialist.\n\nWebsite URL: [[website_url]]\n\nAnalyze and recommend improvements for:\n1. Page load performance\n2. User experience and navigation\n3. Conversion rate optimization\n4. Content clarity\n\nPrioritize by impact and ease of implementation.`,
     },
@@ -234,6 +238,40 @@ function suggestTools(prompt: string): { name: string; description: string; snip
         );
     }
     return tools;
+}
+
+function getContextualTips(query: string, prompt: string, variables: any[], tools: string): string[] {
+    const lower = query.toLowerCase();
+    const tips: string[] = [];
+
+    if (!prompt.trim()) {
+        tips.push("Start with a clear role, task, and guardrails in the Prompt field so the agent has a strong foundation.");
+    }
+    if (!variables.length) {
+        tips.push("If the agent should work with different inputs, add a variable in the Variables section and reference it with [[double brackets]] in the prompt.");
+    }
+    if (!tools.trim()) {
+        tips.push("Only add tools when the agent needs to take actions beyond generating text, like sending email or exporting a file.");
+    }
+    if (/email|campaign|marketing/.test(lower)) {
+        tips.push("For marketing agents, spell out audience, tone, CTA, and any brand constraints so outputs stay useful and on-brand.");
+    }
+    if (/variable|dynamic|input/.test(lower)) {
+        tips.push("Variables become real only when both sides match: define them in Variables and use the exact same name in the prompt.");
+    }
+    if (/tool|pdf|csv|email|export|search/.test(lower)) {
+        tips.push("Use the Tools step to add capabilities intentionally, then mention when the agent should use those tools inside the prompt.");
+    }
+    if (/multi-turn|conversation|memory|system prompt/.test(lower)) {
+        tips.push("Use conversational settings when the agent needs a persistent persona, memory across turns, or a greeting before the user types.");
+    }
+
+    if (tips.length === 0) {
+        tips.push("A strong agent usually needs three things: clear instructions, the right inputs, and only the tools required to finish the task.");
+        tips.push("If you already know the workflow, use the guided setup to stitch the steps together. If you’re still shaping the idea, ask contextual questions first.");
+    }
+
+    return tips.slice(0, 4);
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -484,6 +522,7 @@ interface AgentAssistantPanelProps {
     onWizardStepChange: (step: number) => void;
     onAssistantFieldHover?: (field: "system-prompt" | "memory-limit" | "first-message" | null) => void;
     onRunPreview?: () => void;
+    onAskOpal?: (prompt: string) => void;
     multiTurnMode?: boolean;
 }
 
@@ -518,6 +557,7 @@ export function AgentAssistantPanel({
     onWizardStepChange,
     onAssistantFieldHover,
     onRunPreview,
+    onAskOpal,
     multiTurnMode = false,
 }: AgentAssistantPanelProps) {
     const DEFAULT_PANEL_WIDTH = 348;
@@ -531,10 +571,14 @@ export function AgentAssistantPanel({
     const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
     const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
     const [isResizing, setIsResizing] = useState(false);
+    const [assistantFlow, setAssistantFlow] = useState<"landing" | "contextual" | "guided">("landing");
+    const [assistantQuery, setAssistantQuery] = useState("");
+    const [submittedAssistantQuery, setSubmittedAssistantQuery] = useState("");
 
     // Field focus → wizard step sync (exits overview)
     useEffect(() => {
         if (activeFieldStep !== null && activeFieldStep !== undefined) {
+            setAssistantFlow("guided");
             setIsOverview(false);
             setWizardStep(activeFieldStep);
             setVisitedSteps((prev) => prev.includes(activeFieldStep) ? prev : [...prev, activeFieldStep]);
@@ -544,6 +588,7 @@ export function AgentAssistantPanel({
     }, [activeFieldStep]);
 
     const goToStep = (step: number) => {
+        setAssistantFlow("guided");
         setIsOverview(false);
         setWizardStep(step);
         setVisitedSteps((prev) => prev.includes(step) ? prev : [...prev, step]);
@@ -557,9 +602,25 @@ export function AgentAssistantPanel({
     };
 
     const goToOverview = () => {
+        setAssistantFlow("landing");
         setIsOverview(true);
         setCheckerResult(null);
         setHasChecked(false);
+    };
+
+    const goToGuidedHome = () => {
+        setAssistantFlow("guided");
+        setIsOverview(true);
+        setCheckerResult(null);
+        setHasChecked(false);
+    };
+
+    const openContextualAssistance = () => {
+        setAssistantFlow("contextual");
+        setIsOverview(true);
+        if (!submittedAssistantQuery) {
+            setSubmittedAssistantQuery(assistantQuery.trim());
+        }
     };
 
     const handleCheck = () => {
@@ -685,77 +746,9 @@ export function AgentAssistantPanel({
             }}
         >
             {isOpen && (
-                view === "guide" ? (
-                    /* ── Guide view ─────────────────────────────────────── */
-                    <Box
-                        id="figma-agent-assistant-panel"
-                        display="flex"
-                        flexDirection="column"
-                        style={{
-                            flex: 1,
-                            border: "1px solid var(--ax-colors-border-secondary)",
-                            borderRadius: "12px",
-                            boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
-                            backgroundColor: "var(--ax-colors-bg-default)",
-                            overflow: "hidden",
-                            height: "calc(100vh - 80px)",
-                        }}
-                    >
-                        <Box
-                            role="separator"
-                            aria-orientation="vertical"
-                            aria-label="Resize assistant panel"
-                            onPointerDown={handleResizeStart}
-                            style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                width: "18px",
-                                height: "100%",
-                                cursor: "col-resize",
-                                zIndex: 3,
-                            }}
-                        />
-                        <Box
-                            px="16"
-                            py="12"
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", flexShrink: 0 }}
-                        >
-                            <Box display="flex" alignItems="center" gap="4">
-                                <Button
-                                    appearance="subtle"
-                                    size="md"
-                                    icon={<IconChevronLeft size={16} />}
-                                    aria-label="Back to assistant"
-                                    onClick={() => onViewChange("assistant")}
-                                />
-                                <Text fontWeight="500" fontSize="lg" color="fg.default">
-                                    Quick-start guide
-                                </Text>
-                            </Box>
-                            <Button
-                                appearance="subtle"
-                                size="md"
-                                icon={<IconX size={16} />}
-                                aria-label="Close panel"
-                                onClick={onClose}
-                            />
-                        </Box>
-                        <Box style={{ flex: 1, overflow: "hidden" }}>
-                            <iframe
-                                src="/agent-cheat-sheet.html"
-                                style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-                                title="Multi-turn agent quick-start guide"
-                            />
-                        </Box>
-                    </Box>
-                ) : (
-                    /* ── Wizard / Assistant view ─────────────────────────── */
                     <LayoutGroup id="agent-assistant-steps">
                     <Box
+                        id="figma-agent-assistant-panel"
                         display="flex"
                         flexDirection="column"
                         style={{
@@ -835,11 +828,11 @@ export function AgentAssistantPanel({
                                     onClick={onClose}
                                 />
                             </Box>
-                            {isOverview ? (
+                            {assistantFlow === "guided" && isOverview ? (
                                 <Text fontSize="md" color="fg.tertiary" mt="4">
                                     {`Build your agent in ${totalSteps} steps`}
                                 </Text>
-                            ) : (
+                            ) : assistantFlow === "guided" ? (
                                 <Box display="flex" flexDirection="column" gap="12" mt="12">
                                     <Box display="flex" alignItems="center" justifyContent="space-between" gap="12">
                                         <Box display="flex" alignItems="center" gap="12">
@@ -883,12 +876,12 @@ export function AgentAssistantPanel({
                                             appearance="subtle"
                                             size="md"
                                             icon={<IconBook size={16} />}
-                                            aria-label="Open setup documentation"
-                                            onClick={() => onViewChange("guide")}
+                                            aria-label="Switch to contextual assistance"
+                                            onClick={openContextualAssistance}
                                         />
                                     </Box>
                                 </Box>
-                            )}
+                            ) : null}
                         </Box>
 
                         {/* Scrollable body */}
@@ -915,8 +908,207 @@ export function AgentAssistantPanel({
                                 overflowY: "auto",
                             }}
                         >
-                            {/* ── Overview screen ─────────────────────────── */}
-                            {isOverview && (
+                            {/* ── Landing screen ─────────────────────────── */}
+                            {assistantFlow === "landing" && (
+                                <Box display="flex" flexDirection="column" gap="32">
+                                    <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                        Need help setting up your agent? Choose a guide, template, or ask Opal.
+                                    </Text>
+
+                                    <Box
+                                        display="flex"
+                                        flexDirection="column"
+                                        gap="16"
+                                    >
+                                        <Text fontWeight="600" fontSize="md" color="fg.default">
+                                            Step-by-step guides
+                                        </Text>
+                                        <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+                                            Follow the stitched setup flow to move from instructions to variables, tools, and preview without losing context.
+                                        </Text>
+                                        <Button appearance="inverse" size="sm" style={{ alignSelf: "flex-start" }} onClick={goToGuidedHome}>
+                                            Explore guided setup
+                                        </Button>
+                                    </Box>
+
+                                    <Box display="flex" flexDirection="column" gap="8">
+                                        <Text fontWeight="500" fontSize="md" color="fg.default">
+                                            Start with a template
+                                        </Text>
+                                        <Box display="flex" flexDirection="column" gap="6">
+                                            {SUGGESTED_TEMPLATES.map((tmpl) => (
+                                                <Box
+                                                    key={tmpl.id}
+                                                    style={{
+                                                        background: "#fff",
+                                                        border: "1px solid #dadfeb",
+                                                        borderRadius: "12px",
+                                                    }}
+                                                >
+                                                    <Box
+                                                        display="flex"
+                                                        alignItems="center"
+                                                        gap="8"
+                                                        onClick={() => setExpandedTemplate(expandedTemplate === tmpl.id ? null : tmpl.id)}
+                                                        style={{ padding: "12px 14px", cursor: "pointer" }}
+                                                    >
+                                                        <Box
+                                                            display="inline-flex"
+                                                            alignItems="center"
+                                                            justifyContent="center"
+                                                            style={{
+                                                                width: "28px",
+                                                                height: "28px",
+                                                                borderRadius: "999px",
+                                                                background: "rgba(91,92,235,0.10)",
+                                                                flexShrink: 0,
+                                                                fontSize: "15px",
+                                                            }}
+                                                        >
+                                                            {tmpl.emoji}
+                                                        </Box>
+                                                        <Text fontWeight="500" fontSize="md" color="fg.default" style={{ flex: 1 }}>
+                                                            {tmpl.name}
+                                                        </Text>
+                                                        <Box
+                                                            style={{
+                                                                flexShrink: 0,
+                                                                transition: "transform 0.15s ease",
+                                                                transform: expandedTemplate === tmpl.id ? "rotate(90deg)" : "rotate(0deg)",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                            }}
+                                                        >
+                                                            <IconChevronRight size={14} color="var(--ax-colors-fg-tertiary)" />
+                                                        </Box>
+                                                    </Box>
+                                                    {expandedTemplate === tmpl.id && (
+                                                        <Box display="flex" flexDirection="column" gap="10" style={{ padding: "0 14px 14px" }}>
+                                                            <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
+                                                                {tmpl.description}
+                                                            </Text>
+                                                            <Button
+                                                                appearance="inverse"
+                                                                size="md"
+                                                                icon={<IconCircleCheckAxiom size={14} />}
+                                                                style={{ alignSelf: "flex-start" }}
+                                                                onClick={() => {
+                                                                    onApplyTemplate(tmpl.prompt);
+                                                                    setAssistantFlow("guided");
+                                                                    setIsOverview(false);
+                                                                    setWizardStep(1);
+                                                                    setCheckerResult(null);
+                                                                    setHasChecked(false);
+                                                                }}
+                                                            >
+                                                                Apply Template
+                                                            </Button>
+                                                        </Box>
+                                                    )}
+                                                </Box>
+                                            ))}
+                                        </Box>
+                                    </Box>
+
+                                    <Box
+                                        display="flex"
+                                        flexDirection="column"
+                                        gap="12"
+                                        style={{
+                                            background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
+                                            borderRadius: "8px",
+                                            padding: "8px 16px 12px",
+                                        }}
+                                    >
+                                        <Box display="flex" alignItems="center" gap="12">
+                                            <Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+                                            <Text fontWeight="600" fontSize="md" color="fg.default">
+                                                Ask Opal to help you build
+                                            </Text>
+                                        </Box>
+                                        <Box display="flex" flexDirection="column" gap="8">
+                                            <Textarea
+                                                resize="none"
+                                                value={assistantQuery}
+                                                onChange={(event) => setAssistantQuery(event.target.value)}
+                                                placeholder="Describe the agent you want to build, what it should do, or where you're stuck..."
+                                                style={{ minHeight: "82px" }}
+                                            />
+                                            <Box display="flex" justifyContent="flex-start">
+                                                <Button
+                                                    appearance="primary-opal"
+                                                    size="sm"
+                                                    disabled={!assistantQuery.trim()}
+                                                    onClick={() => onAskOpal?.(assistantQuery.trim())}
+                                                >
+                                                    Ask Opal
+                                                </Button>
+                                            </Box>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {/* ── Contextual assistance ───────────────────── */}
+                            {assistantFlow === "contextual" && (
+                                <Box display="flex" flexDirection="column" gap="16">
+                                    <Box display="flex" flexDirection="column" gap="8">
+                                        <Text fontWeight="600" fontSize="md" color="fg.default">
+                                            Contextual assistance
+                                        </Text>
+                                        <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                            Ask for general guidance at any point, and use the guided flow when you want Opal to stitch the setup experience together step by step.
+                                        </Text>
+                                    </Box>
+
+                                    <Textarea
+                                        resize="none"
+                                        value={assistantQuery}
+                                        onChange={(event) => setAssistantQuery(event.target.value)}
+                                        placeholder="Ask about prompts, variables, tools, multi-turn setup, or how to structure this agent..."
+                                        style={{ minHeight: "112px" }}
+                                    />
+
+                                    <Box display="flex" justifyContent="space-between" alignItems="center" gap="8">
+                                        <Button
+                                            size="md"
+                                            onClick={() => setSubmittedAssistantQuery(assistantQuery.trim())}
+                                        >
+                                            Refresh tips
+                                        </Button>
+                                        <Button appearance="subtle" size="md" onClick={goToGuidedHome}>
+                                            Switch to step-by-step guide
+                                        </Button>
+                                    </Box>
+
+                                    <Box
+                                        display="flex"
+                                        flexDirection="column"
+                                        gap="8"
+                                        style={{
+                                            background: "#f7f8fc",
+                                            border: "1px solid #dadfeb",
+                                            borderRadius: "12px",
+                                            padding: "12px",
+                                        }}
+                                    >
+                                        <Text fontWeight="600" fontSize="md" color="fg.default">
+                                            Suggested next moves
+                                        </Text>
+                                        {getContextualTips(submittedAssistantQuery || assistantQuery, promptTemplate, variables, tools).map((tip) => (
+                                            <Box key={tip} display="flex" gap="8" style={{ alignItems: "flex-start" }}>
+                                                <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0, lineHeight: "1.55" }}>•</Text>
+                                                <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                                    {tip}
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {/* ── Guided overview ─────────────────────────── */}
+                            {assistantFlow === "guided" && isOverview && (
                                 <Box display="flex" flexDirection="column" gap="4">
                                     {/* Mode badge */}
                                     {multiTurnMode && (
@@ -1071,7 +1263,7 @@ export function AgentAssistantPanel({
                             )}
 
                             {/* ── Wizard step content ──────────────────────── */}
-                            {!isOverview && (
+                            {assistantFlow === "guided" && !isOverview && (
                             <Box display="flex" flexDirection="column" gap="16">
 
                             {/* Step title */}
@@ -1342,7 +1534,7 @@ export function AgentAssistantPanel({
                             )} {/* end !isOverview */}
 
                             {/* Common Actions — only when working on prompt (step 1) */}
-                            {!isOverview && wizardStep === 1 && (
+                            {assistantFlow === "guided" && !isOverview && wizardStep === 1 && (
                             <Box display="flex" flexDirection="column" gap="8" style={{ marginTop: "8px" }}>
                                 <Box
                                     display="flex"
@@ -1368,7 +1560,7 @@ export function AgentAssistantPanel({
 
                         </Box>
 
-                            {!isOverview && (
+                            {assistantFlow === "guided" && !isOverview && (
                                 <Box
                                     px="16"
                                     py="12"
@@ -1435,7 +1627,6 @@ export function AgentAssistantPanel({
                         </Box>
                     </Box>
                     </LayoutGroup>
-                )
             )}
         </Box>
     );

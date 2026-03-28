@@ -3,12 +3,18 @@
 import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { IconAgent } from "@optimizely/axiom-icons";
+import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
-import { OpalChatView } from "@/app/components/Opal/OpalChatView";
-import { OpalLanding } from "@/app/components/Opal/OpalLanding";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
+
+const OpalChatView = dynamic(
+  () => import("@/app/components/Opal/OpalChatView").then((mod) => mod.OpalChatView)
+);
+const OpalLanding = dynamic(
+  () => import("@/app/components/Opal/OpalLanding").then((mod) => mod.OpalLanding)
+);
 
 export default function OpalPage() {
   const opalContext = useOpalContext();

@@ -7,10 +7,14 @@ type OpalPanelControls = {
 	openPanel: () => void;
 	togglePanel: () => void;
 	closePanel: () => void;
+	createNewChat: () => string;
 	addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => ChatMessage;
 	updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
 	removeMessage: (id: string) => void;
+	setInputValue: (value: string) => void;
+	sendMessage: (content: string) => void | Promise<void>;
 	setInputDisabled: (disabled: boolean) => void;
+	launchPrompt: (prompt: string) => void;
 };
 
 type LayoutContextType = {

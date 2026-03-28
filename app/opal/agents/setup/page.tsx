@@ -77,6 +77,7 @@ import {
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useLayout } from "@/app/context/LayoutContext";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import type { Version } from "./components/VersionHistory";
@@ -308,6 +309,7 @@ export default function SpecializedAgentSetup() {
 
 function SpecializedAgentSetupContent() {
     const router = useRouter();
+    const { opalPanelControls } = useLayout();
     const searchParams = useSearchParams();
     const shouldAutoOpenAssistant = searchParams.get("capturePanel") === "assistant";
     const promptTemplateRef = useRef<HTMLTextAreaElement | null>(null);
@@ -321,6 +323,8 @@ function SpecializedAgentSetupContent() {
     }, []);
 
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
+    const shouldDefaultGuideOpen = shouldAutoOpenAssistant || mode === "create";
+    const defaultGuidePanelView: "assistant" | "guide" = "assistant";
     const activeTab = isMounted ? (searchParams.get("tab") || "setup") : "setup";
     const qualitySubTab = isMounted ? (searchParams.get("subtab") || "evaluation") : "evaluation";
 
@@ -401,21 +405,54 @@ function SpecializedAgentSetupContent() {
 
     // Test Run State
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
+    const [shouldCollapseHeaderActions, setShouldCollapseHeaderActions] = useState(false);
 
     // Assistant panel
-    const [showGuidePanel, setShowGuidePanel] = useState(shouldAutoOpenAssistant);
-    const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">(shouldAutoOpenAssistant ? "assistant" : "assistant");
+    const [showGuidePanel, setShowGuidePanel] = useState(shouldDefaultGuideOpen);
+    const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">(defaultGuidePanelView);
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const [highlightedField, setHighlightedField] = useState<number | null>(null);
     const [assistantHoveredField, setAssistantHoveredField] = useState<"system-prompt" | "memory-limit" | "first-message" | null>(null);
     const [showCoachMark, setShowCoachMark] = useState(false);
 
     useEffect(() => {
-        if (!shouldAutoOpenAssistant) return;
+        if (!shouldDefaultGuideOpen) return;
         setShowGuidePanel(true);
-        setGuidePanelView("assistant");
+        setGuidePanelView(defaultGuidePanelView);
         setShowCoachMark(false);
-    }, [shouldAutoOpenAssistant]);
+    }, [defaultGuidePanelView, shouldDefaultGuideOpen]);
+
+    useEffect(() => {
+        const updateHeaderActions = () => {
+            setShouldCollapseHeaderActions(window.innerWidth < 1240);
+        };
+
+        updateHeaderActions();
+        window.addEventListener("resize", updateHeaderActions);
+        return () => window.removeEventListener("resize", updateHeaderActions);
+    }, []);
+
+    const toggleVersionHistory = () => {
+        setIsVersionHistoryOpen(!isVersionHistoryOpen);
+        if (!isVersionHistoryOpen) {
+            setIsTestRunOpen(false);
+        }
+    };
+
+    const toggleGuidePanel = () => {
+        setShowGuidePanel(!showGuidePanel);
+        if (!showGuidePanel) {
+            setIsTestRunOpen(false);
+            setIsVersionHistoryOpen(false);
+        }
+    };
+
+    const handleAskOpal = useCallback((prompt: string) => {
+        const trimmed = prompt.trim();
+        if (!trimmed) return;
+
+        opalPanelControls?.launchPrompt(trimmed);
+    }, [opalPanelControls]);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -480,14 +517,7 @@ function SpecializedAgentSetupContent() {
     }, []);
 
     const openInputDisclosure = useCallback(() => {
-        const inputTrigger = [...document.querySelectorAll<HTMLElement>("button")]
-            .find((b) => b.textContent?.trim().startsWith("Input"));
-        if (inputTrigger) {
-            const disclosure = inputTrigger.closest("[data-state]");
-            if (disclosure?.getAttribute("data-state") === "closed") {
-                inputTrigger.click();
-            }
-        }
+        setInputOpen(true);
     }, []);
 
     const openMultiTurnDisclosure = useCallback(() => {
@@ -1115,28 +1145,69 @@ function SpecializedAgentSetupContent() {
                                                 Test Run
                                             </Button>
                                         </div>
+                                        {!shouldCollapseHeaderActions && (
+                                            <>
+                                                <Tooltip delayDuration={300} content="Version History">
+                                                    <Box display="inline-flex">
+                                                        <Button
+                                                            appearance="default"
+                                                            size="lg"
+                                                            icon={<IconClockRotateLeft />}
+                                                            aria-label="Version History"
+                                                            onClick={toggleVersionHistory}
+                                                        />
+                                                    </Box>
+                                                </Tooltip>
+                                                <Tooltip delayDuration={300} content={showGuidePanel ? "Hide Setup Guide" : "Setup Guide"}>
+                                                    <Box display="inline-flex">
+                                                        <Button
+                                                            appearance="default"
+                                                            size="lg"
+                                                            icon={<IconLightbulb />}
+                                                            aria-label={showGuidePanel ? "Hide Setup Guide" : "Setup Guide"}
+                                                            onClick={toggleGuidePanel}
+                                                        />
+                                                    </Box>
+                                                </Tooltip>
+                                            </>
+                                        )}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild suppressHydrationWarning>
                                                 <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" suppressHydrationWarning />
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
-                                                <DropdownMenuItem
-                                                    icon={<IconClockRotateLeft size={16} />}
-                                                    onClick={() => {
-                                                        setIsVersionHistoryOpen(!isVersionHistoryOpen);
-                                                        if (!isVersionHistoryOpen) { setIsTestRunOpen(false); }
-                                                    }}
-                                                >
-                                                    Version History
+                                                <DropdownMenuItem icon={<IconFileImport size={16} />}>
+                                                    Duplicate Agent
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem icon={<IconFileImport size={16} />}>
+                                                    Copy as JSON
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem icon={<IconFile size={16} />}>
+                                                    Export logs
+                                                </DropdownMenuItem>
+                                                {shouldCollapseHeaderActions && (
+                                                    <>
+                                                        <div style={{ margin: "8px 12px", height: "1px", background: "var(--ax-colors-border-secondary)" }} />
+                                                        <DropdownMenuItem
+                                                            icon={<IconClockRotateLeft size={16} />}
+                                                            onClick={toggleVersionHistory}
+                                                        >
+                                                            Version History
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            icon={<IconLightbulb size={16} />}
+                                                            onClick={toggleGuidePanel}
+                                                        >
+                                                            {showGuidePanel ? "Hide Setup Guide" : "Setup Guide"}
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+                                                <div style={{ margin: "8px 12px", height: "1px", background: "var(--ax-colors-border-secondary)" }} />
                                                 <DropdownMenuItem
-                                                    icon={<IconLightbulb size={16} />}
-                                                    onClick={() => {
-                                                        setShowGuidePanel(!showGuidePanel);
-                                                        if (!showGuidePanel) { setIsTestRunOpen(false); setIsVersionHistoryOpen(false); }
-                                                    }}
+                                                    icon={<IconTrashCan size={16} />}
+                                                    style={{ color: "var(--ax-colors-fg-danger)" }}
                                                 >
-                                                    {showGuidePanel ? "Hide Setup Guide" : "Setup Guide"}
+                                                    Delete Agent
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -1204,7 +1275,7 @@ function SpecializedAgentSetupContent() {
                                     }}
                                 >
                                     {/* Details Section */}
-                                    <Disclosure defaultOpen={detailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                    <Disclosure open={detailsOpen} onOpenChange={setDetailsOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Details
                                         </DisclosureTrigger>
@@ -1328,7 +1399,7 @@ function SpecializedAgentSetupContent() {
                                     </Disclosure>
 
                                     {/* Input Section */}
-                                    <Disclosure defaultOpen={inputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                    <Disclosure open={inputOpen} onOpenChange={setInputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             <Box display="flex" alignItems="center" gap="4">
                                                 Input
@@ -1354,10 +1425,10 @@ function SpecializedAgentSetupContent() {
                                                 <Field
                                                     label={
                                                         <HoverCardTrigger asChild>
-                                                            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", cursor: "default" }}>
-                                                                Prompt Template
+                                                            <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
+                                                                <Text fontSize="md" fontWeight="400">Prompt</Text>
                                                                 <span style={{ display: "inline-flex" }}><IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" /></span>
-                                                            </span>
+                                                            </Box>
                                                         </HoverCardTrigger>
                                                     }
                                                 >
@@ -1451,7 +1522,7 @@ function SpecializedAgentSetupContent() {
                                                         <Text fontSize="sm" color="fg.secondary">Your main instruction to the agent. Describe the role, task, and output format.</Text>
                                                         <Text fontSize="sm" color="fg.secondary">Use <code style={{ background: "var(--ax-colors-bg-tertiary)", padding: "1px 4px", borderRadius: "3px" }}>{"[[variable]]"}</code> for dynamic inputs, <code style={{ background: "var(--ax-colors-bg-tertiary)", padding: "1px 4px", borderRadius: "3px" }}>{"{ Instruction }"}</code> for directives.</Text>
                                                         <button
-                                                            onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); }}
+                                                            onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); }}
                                                             style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
                                                         >
                                                             View full guide →
@@ -1685,7 +1756,7 @@ function SpecializedAgentSetupContent() {
                                                                             <HoverCard openDelay={300}>
                                                                                 <HoverCardTrigger asChild>
                                                                                     <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                                        <Text fontSize="md" fontWeight="500">System Prompt</Text>
+                                                                                        <Text fontSize="md" fontWeight="400">System Prompt</Text>
                                                                                         <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                                     </Box>
                                                                                 </HoverCardTrigger>
@@ -1695,7 +1766,7 @@ function SpecializedAgentSetupContent() {
                                                                                         <Text fontSize="sm" color="fg.secondary">Sets the agent's permanent persona and guardrails — hidden from users, always active.</Text>
                                                                                         <Text fontSize="sm" color="fg.secondary">Keep it short and authoritative. e.g. <em>"You are a concise marketing assistant. Never fabricate data."</em></Text>
                                                                                         <button
-                                                                                            onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); }}
+                                                                                            onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); }}
                                                                                             style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
                                                                                         >
                                                                                             View full guide →
@@ -1736,7 +1807,7 @@ function SpecializedAgentSetupContent() {
                                                                         <HoverCard openDelay={300}>
                                                                             <HoverCardTrigger asChild>
                                                                                 <Box display="inline-flex" alignItems="center" gap="4" style={{ cursor: "default" }}>
-                                                                                    <Text fontSize="md" fontWeight="500">Memory Limit</Text>
+                                                                                    <Text fontSize="md" fontWeight="400">Memory Limit</Text>
                                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
                                                                                 </Box>
                                                                             </HoverCardTrigger>
@@ -1746,7 +1817,7 @@ function SpecializedAgentSetupContent() {
                                                                                     <Text fontSize="sm" color="fg.secondary">Max conversation turns kept in context. Higher values give the agent more memory but increase cost and latency.</Text>
                                                                                     <Text fontSize="sm" color="fg.secondary">Recommended: <strong>10</strong> turns for most agents. Use 20+ only for long research tasks.</Text>
                                                                                     <button
-                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("guide"); }}
+                                                                                        onClick={() => { setShowGuidePanel(true); setGuidePanelView("assistant"); }}
                                                                                         style={{ color: "var(--ax-colors-fg-accent-strong)", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", fontSize: "12px", textAlign: "left", textDecoration: "underline" }}
                                                                                     >
                                                                                         View full guide →
@@ -1773,7 +1844,7 @@ function SpecializedAgentSetupContent() {
                                                                         }}
                                                                     >
                                                                         <Box display="flex" gap="4" alignItems="center">
-                                                                            <Text fontSize="md" fontWeight="500">First Message</Text>
+                                                                            <Text fontSize="md" fontWeight="400">First Message</Text>
                                                                             <Tooltip delayDuration={300} content="A static greeting shown to the user before they begin typing. Not sent to the model.">
                                                                                 <Box display="inline-flex" suppressHydrationWarning>
                                                                                     <IconHelp size={16} color="var(--ax-colors-fg-tertiary)" />
@@ -1865,7 +1936,7 @@ function SpecializedAgentSetupContent() {
                                     </Disclosure>
 
                                     {/* Output Section */}
-                                    <Disclosure defaultOpen={outputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
+                                    <Disclosure open={outputOpen} onOpenChange={setOutputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" style={{ flexShrink: 0 }} suppressHydrationWarning>
                                         <DisclosureTrigger fontSize="md" fontWeight="500" suppressHydrationWarning>
                                             Output
                                         </DisclosureTrigger>
@@ -2436,6 +2507,7 @@ function SpecializedAgentSetupContent() {
                     onWizardStepChange={handleWizardStepChange}
                     onAssistantFieldHover={handleAssistantFieldHover}
                     onRunPreview={() => setIsTestRunOpen(true)}
+                    onAskOpal={handleAskOpal}
                     multiTurnMode={multiTurnMode}
                 />
             </div>

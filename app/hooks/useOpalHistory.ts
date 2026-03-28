@@ -210,6 +210,7 @@ export function useOpalHistory() {
     };
     setChatHistory(prev => [newChat, ...prev]);
     setActiveChat(newChat.id);
+    return newChat.id;
   }, []);
 
   const deleteChat = useCallback((id: string) => {
