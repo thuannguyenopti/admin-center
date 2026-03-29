@@ -46,6 +46,7 @@ import {
     IconSparkles,
     IconDots,
     IconX,
+    IconCopy,
 } from "@tabler/icons-react";
 import {
     IconFileImport,
@@ -82,6 +83,7 @@ import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import type { Version } from "./components/VersionHistory";
 import { AgentAssistantPanel } from "./components/AgentAssistantPanel";
+import { ResizableDetailsTray } from "./components/ResizableDetailsTray";
 
 const VersionHistory = dynamic(
     () => import("./components/VersionHistory").then((mod) => mod.VersionHistory),
@@ -235,6 +237,41 @@ const PROMPT_ACTION_DETAILS: Record<string, string> = {
     "Send Email": "Send the agent's output via email to a specified recipient.",
 };
 
+const GUIDE_EXAMPLES = {
+    1: {
+        title: "Prompt example (Agent Instruction)",
+        body: `You are a friendly customer support agent for Acme Software.
+
+Task: Answer customer questions about our product.
+
+{Response Rules}
+- Be friendly and professional
+- Keep answers under 200 words
+- Use bullet points for lists
+- If unsure, say "I'll need to check on that"
+- Never make up information
+
+Use \`help_center_search\` when you need to confirm a product detail before answering.`,
+        footer: "Write clear instructions telling your agent how to behave",
+    },
+    2: {
+        title: "Updated Instructions (with [[variable]])",
+        body: `You are a friendly customer support agent for Acme Software.
+
+Task: Answer the customer's question about [[product_name]].
+
+{Response Rules}
+- Be friendly and professional
+- Keep answers under 200 words
+- Use bullet points for lists
+- If unsure, say "I'll need to check on that"
+- Never make up information
+
+Use \`help_center_search\` to look up the latest product information about [[product_name]] before responding.`,
+        footer: "Your instructions must now include [[variable_name]] at least once",
+    },
+} as const;
+
 const AUTO_GROW_TEXTAREA_MAX_VIEWPORT_OFFSET = 120;
 const FIELD_HIGHLIGHT_DURATION_MS = 2200;
 
@@ -283,6 +320,74 @@ function AutoGrowTextarea({ minHeight = "256px", textareaRef, style, ...props }:
                 ...style,
             }}
         />
+    );
+}
+
+function GuideExampleTray({
+    step,
+    isOpen,
+    onClose,
+}: {
+    step: 1 | 2 | null;
+    isOpen: boolean;
+    onClose: () => void;
+}) {
+    const example = step ? GUIDE_EXAMPLES[step] : null;
+    const handleCopy = useCallback(async () => {
+        if (!example) return;
+        try {
+            await navigator.clipboard.writeText(example.body);
+        } catch (error) {
+            console.error("Failed to copy example:", error);
+        }
+    }, [example]);
+
+    return (
+        <ResizableDetailsTray
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Example"
+            defaultWidth={400}
+            minWidth={360}
+            maxWidth={720}
+            insetPadding="0 0 12px 0"
+            bodyPadding="16"
+        >
+            {example ? (
+                    <Box display="flex" flexDirection="column" gap="8">
+                        <Text fontSize="md" fontWeight="400" color="fg.default">
+                            {example.title}
+                        </Text>
+
+                        <Box display="flex" justifyContent="flex-end">
+                            <Button
+                                appearance="subtle"
+                                size="sm"
+                                icon={<IconCopy size={16} />}
+                                aria-label="Copy example"
+                                onClick={handleCopy}
+                            />
+                        </Box>
+
+                        <Textarea
+                            readOnly
+                            value={example.body}
+                            resize="none"
+                            style={{
+                                minHeight: step === 1 ? "320px" : "420px",
+                                fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                                fontSize: "17px",
+                                lineHeight: "1.55",
+                                color: "var(--ax-colors-fg-tertiary)",
+                            }}
+                        />
+
+                        <Text fontSize="md" color="fg.tertiary">
+                            {example.footer}
+                        </Text>
+                    </Box>
+            ) : null}
+        </ResizableDetailsTray>
     );
 }
 
@@ -405,6 +510,7 @@ function SpecializedAgentSetupContent() {
 
     // Test Run State
     const [isTestRunOpen, setIsTestRunOpen] = useState(false);
+    const [activeGuideExampleStep, setActiveGuideExampleStep] = useState<1 | 2 | null>(null);
     const [shouldCollapseHeaderActions, setShouldCollapseHeaderActions] = useState(false);
 
     // Assistant panel
@@ -436,6 +542,7 @@ function SpecializedAgentSetupContent() {
         setIsVersionHistoryOpen(!isVersionHistoryOpen);
         if (!isVersionHistoryOpen) {
             setIsTestRunOpen(false);
+            setActiveGuideExampleStep(null);
         }
     };
 
@@ -444,6 +551,7 @@ function SpecializedAgentSetupContent() {
         if (!showGuidePanel) {
             setIsTestRunOpen(false);
             setIsVersionHistoryOpen(false);
+            setActiveGuideExampleStep(null);
         }
     };
 
@@ -451,8 +559,31 @@ function SpecializedAgentSetupContent() {
         const trimmed = prompt.trim();
         if (!trimmed) return;
 
-        opalPanelControls?.launchPrompt(trimmed);
+        const opalPrompt = [
+            "Help me set up an Opal agent.",
+            "",
+            "The agent prompt should be written clearly and practically.",
+            "When you respond, help structure the agent around:",
+            "- Role: who the agent is",
+            "- Task: what it should do",
+            "- Variables: any dynamic inputs it should use with [[double brackets]]",
+            "- Tools: only the tools it actually needs",
+            "- Guardrails: what it should avoid or how it should behave",
+            "- Output: what the response should look like",
+            "",
+            "If helpful, suggest the exact prompt, recommended variables, and any tools to add in Opal.",
+            "",
+            `User request: ${trimmed}`,
+        ].join("\n");
+
+        opalPanelControls?.launchPrompt(opalPrompt);
     }, [opalPanelControls]);
+
+    const handleOpenGuideExample = useCallback((step: 1 | 2) => {
+        setActiveGuideExampleStep(step);
+        setIsTestRunOpen(false);
+        setIsVersionHistoryOpen(false);
+    }, []);
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -768,6 +899,13 @@ function SpecializedAgentSetupContent() {
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean);
+    const hasAgentDetails = Boolean(
+        agentName.trim() ||
+        description.trim() ||
+        promptTemplate.trim() ||
+        variables.length > 0 ||
+        configuredTools.length > 0
+    );
 
     // Helper for syntax highlighting in prompt template
     const HighlightedPrompt = ({ text }: { text: string }) => {
@@ -1139,7 +1277,10 @@ function SpecializedAgentSetupContent() {
                                                 disabled={isReadOnly}
                                                 onClick={() => {
                                                     setIsTestRunOpen(!isTestRunOpen);
-                                                    if (!isTestRunOpen) { setIsVersionHistoryOpen(false); }
+                                                    if (!isTestRunOpen) {
+                                                        setIsVersionHistoryOpen(false);
+                                                        setActiveGuideExampleStep(null);
+                                                    }
                                                 }}
                                             >
                                                 Test Run
@@ -2490,6 +2631,12 @@ function SpecializedAgentSetupContent() {
                 variables={variables}
             />
 
+            <GuideExampleTray
+                step={activeGuideExampleStep}
+                isOpen={activeGuideExampleStep !== null}
+                onClose={() => setActiveGuideExampleStep(null)}
+            />
+
             {/* Agent builder assistant panel */}
             <div id="figma-agent-assistant-panel">
                 <AgentAssistantPanel
@@ -2497,6 +2644,7 @@ function SpecializedAgentSetupContent() {
                     onClose={() => setShowGuidePanel(false)}
                     view={guidePanelView}
                     onViewChange={setGuidePanelView}
+                    hasAgentDetails={hasAgentDetails}
                     promptTemplate={promptTemplate}
                     tools={tools}
                     variables={variables}
@@ -2508,6 +2656,7 @@ function SpecializedAgentSetupContent() {
                     onAssistantFieldHover={handleAssistantFieldHover}
                     onRunPreview={() => setIsTestRunOpen(true)}
                     onAskOpal={handleAskOpal}
+                    onOpenExample={handleOpenGuideExample}
                     multiTurnMode={multiTurnMode}
                 />
             </div>
