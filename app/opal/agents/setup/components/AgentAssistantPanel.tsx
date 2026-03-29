@@ -8,7 +8,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@optiaxiom/react/unstable";
-import { IconBook, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb } from "@optimizely/axiom-icons";
+import { IconBook, IconBookOpen, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb, IconArrowUpRightFromSquare } from "@optimizely/axiom-icons";
 import {
     IconX,
     IconGripVertical,
@@ -41,14 +41,14 @@ const WIZARD_STEPS = [
         step: 1,
         label: "Write Instructions",
         title: "Tell your agent what to do",
-        intro: "The instructions (also called the prompt template) are the most important part of any agent. They tell the AI exactly how to behave.\n\nGreat instructions include:",
+        intro: "The prompt is the instruction that tells the agent exactly how to behave.\n\nA strong prompt includes:",
         bullets: [
             { bold: "Role", text: `Who is the agent? ("You are a helpful customer support specialist...")` },
             { bold: "Task", text: `What should it do? ("Answer customer questions about our product...")` },
             { bold: "Guidelines", text: `How should it behave? ("Be friendly, concise, and accurate...")` },
             { bold: "Constraints", text: `What should it avoid? ("Don't make up information, don't discuss competitors...")` },
         ],
-        keyConcept: `Think of it like writing a job description — the more specific you are, the better the results. You'll name your agent later. For now, focus on what it does.\n\nClick "Use Example" to see a well-structured template you can customize.`,
+        keyConcept: `Think of it like writing a job description — the more specific you are, the better the results. You'll name your agent later. For now, focus on what it does.`,
         checkLabel: "Check my instructions",
     },
     {
@@ -57,7 +57,7 @@ const WIZARD_STEPS = [
         title: "Make your agent dynamic with variables",
         intro: "Use variables to make the same instructions work with different inputs each time the agent runs.\n\nTo make one work, set it up in the Variables section below and reference it in the Prompt Template using double bracket syntax:",
         codeSnippet: "[[variable_name]]",
-        keyConcept: `Variables only work when both pieces match: create the variable in the Variables section and use the same name in the Prompt Template with [[double_brackets]].\n\nFor example, if your agent answers customer questions, create a variable called customer_question below and use it like:\n\n"Answer the following customer question: [[customer_question]]"\n\nYour task: Add a variable below, then update your instructions to include [[variable_name]] at least once.`,
+        keyConcept: `Variables only work when both pieces match: create the variable in the Variables section and use the same name in the Prompt Template with [[double_brackets]].`,
         checkLabel: "Check my variable",
     },
     {
@@ -100,6 +100,25 @@ const COMMON_ACTIONS = [
         description: "Send the agent's output via email to a specified recipient.",
         prompt: "`Send Email`",
         details: `Send the output via email using the send_email tool. Include a clear subject line and format the body content for readability.`,
+    },
+];
+
+const SHORTCUT_ITEMS = [
+    {
+        trigger: "/",
+        label: "for all options",
+    },
+    {
+        trigger: "[",
+        label: "for variables",
+    },
+    {
+        trigger: "{",
+        label: "for instructions or RAG",
+    },
+    {
+        trigger: "`",
+        label: "for tools",
     },
 ];
 
@@ -240,62 +259,99 @@ function suggestTools(prompt: string): { name: string; description: string; snip
     return tools;
 }
 
-function getContextualTips(query: string, prompt: string, variables: any[], tools: string): string[] {
-    const lower = query.toLowerCase();
-    const tips: string[] = [];
-
-    if (!prompt.trim()) {
-        tips.push("Start with a clear role, task, and guardrails in the Prompt field so the agent has a strong foundation.");
-    }
-    if (!variables.length) {
-        tips.push("If the agent should work with different inputs, add a variable in the Variables section and reference it with [[double brackets]] in the prompt.");
-    }
-    if (!tools.trim()) {
-        tips.push("Only add tools when the agent needs to take actions beyond generating text, like sending email or exporting a file.");
-    }
-    if (/email|campaign|marketing/.test(lower)) {
-        tips.push("For marketing agents, spell out audience, tone, CTA, and any brand constraints so outputs stay useful and on-brand.");
-    }
-    if (/variable|dynamic|input/.test(lower)) {
-        tips.push("Variables become real only when both sides match: define them in Variables and use the exact same name in the prompt.");
-    }
-    if (/tool|pdf|csv|email|export|search/.test(lower)) {
-        tips.push("Use the Tools step to add capabilities intentionally, then mention when the agent should use those tools inside the prompt.");
-    }
-    if (/multi-turn|conversation|memory|system prompt/.test(lower)) {
-        tips.push("Use conversational settings when the agent needs a persistent persona, memory across turns, or a greeting before the user types.");
-    }
-
-    if (tips.length === 0) {
-        tips.push("A strong agent usually needs three things: clear instructions, the right inputs, and only the tools required to finish the task.");
-        tips.push("If you already know the workflow, use the guided setup to stitch the steps together. If you’re still shaping the idea, ask contextual questions first.");
-    }
-
-    return tips.slice(0, 4);
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function KeyConceptCallout({ text }: { text: string }) {
+function KeyConceptCallout({
+    text,
+    onViewExample,
+}: {
+    text: string;
+    onViewExample?: () => void;
+}) {
     return (
         <Box
             display="flex"
-            gap="8"
+            gap="10"
             style={{
                 background: "rgba(99,102,241,0.06)",
                 border: "1px solid rgba(99,102,241,0.18)",
-                borderRadius: "8px",
-                padding: "10px 12px",
+                borderRadius: "12px",
+                padding: "12px 14px",
             }}
         >
-            <IconBook size={15} style={{ flexShrink: 0, marginTop: "2px", color: "#6366f1" }} />
-            <Box display="flex" flexDirection="column" gap="4">
+            <IconBook size={16} style={{ flexShrink: 0, marginTop: "3px", color: "#5B5CEB" }} />
+            <Box display="flex" flexDirection="column" gap="8">
                 <Text fontSize="md" fontWeight="500" style={{ color: "#4338ca" }}>Key Concept:</Text>
                 {text.split("\n").filter(Boolean).map((line, i) => (
                     <Text key={i} fontSize="md" style={{ color: "#4f576e", lineHeight: "1.55" }}>
                         {line}
                     </Text>
                 ))}
+                {onViewExample && (
+                    <button
+                        onClick={onViewExample}
+                        style={{
+                            alignSelf: "flex-start",
+                            marginTop: "2px",
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            color: "#4f576e",
+                            fontSize: "12px",
+                            lineHeight: "1.4",
+                            textDecoration: "underline",
+                            cursor: "pointer",
+                            fontWeight: 400,
+                        }}
+                    >
+                        View Example
+                    </button>
+                )}
+            </Box>
+        </Box>
+    );
+}
+
+function SuggestedNextMovesCallout({ onOpenGuidedSetup }: { onOpenGuidedSetup: () => void }) {
+    return (
+        <Box
+            display="flex"
+            gap="10"
+            style={{
+                background: "rgba(99,102,241,0.06)",
+                border: "1px solid rgba(99,102,241,0.18)",
+                borderRadius: "12px",
+                padding: "12px 14px",
+            }}
+        >
+            <IconBook size={16} style={{ flexShrink: 0, marginTop: "3px", color: "#5B5CEB" }} />
+            <Box display="flex" flexDirection="column" gap="8">
+                <Text fontSize="md" fontWeight="500" style={{ color: "#4338ca" }}>
+                    Suggested next moves
+                </Text>
+                <Text fontSize="md" style={{ color: "#4f576e", lineHeight: "1.55" }}>
+                    A strong agent usually needs three things: clear instructions, the right inputs, and only the tools required to finish the task.
+                </Text>
+                <Text fontSize="md" style={{ color: "#4f576e", lineHeight: "1.55" }}>
+                    If you already know the workflow, use{" "}
+                    <button
+                        type="button"
+                        onClick={onOpenGuidedSetup}
+                        style={{
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            margin: 0,
+                            color: "#4f576e",
+                            textDecoration: "underline",
+                            cursor: "pointer",
+                            font: "inherit",
+                        }}
+                    >
+                        the guided setup
+                    </button>{" "}
+                    to stitch the steps together. If you&apos;re still shaping the idea, ask Opal to help.
+                </Text>
             </Box>
         </Box>
     );
@@ -512,6 +568,7 @@ interface AgentAssistantPanelProps {
     onClose: () => void;
     view: "assistant" | "guide";
     onViewChange: (v: "assistant" | "guide") => void;
+    hasAgentDetails: boolean;
     promptTemplate: string;
     tools: string;
     variables: any[];
@@ -523,6 +580,7 @@ interface AgentAssistantPanelProps {
     onAssistantFieldHover?: (field: "system-prompt" | "memory-limit" | "first-message" | null) => void;
     onRunPreview?: () => void;
     onAskOpal?: (prompt: string) => void;
+    onOpenExample?: (step: 1 | 2) => void;
     multiTurnMode?: boolean;
 }
 
@@ -547,6 +605,7 @@ export function AgentAssistantPanel({
     onClose,
     view,
     onViewChange,
+    hasAgentDetails,
     promptTemplate,
     tools,
     variables,
@@ -558,6 +617,7 @@ export function AgentAssistantPanel({
     onAssistantFieldHover,
     onRunPreview,
     onAskOpal,
+    onOpenExample,
     multiTurnMode = false,
 }: AgentAssistantPanelProps) {
     const DEFAULT_PANEL_WIDTH = 348;
@@ -574,20 +634,37 @@ export function AgentAssistantPanel({
     const [assistantFlow, setAssistantFlow] = useState<"landing" | "contextual" | "guided">("landing");
     const [assistantQuery, setAssistantQuery] = useState("");
     const [submittedAssistantQuery, setSubmittedAssistantQuery] = useState("");
+    const [hasStartedGuidedFlow, setHasStartedGuidedFlow] = useState(false);
 
-    // Field focus → wizard step sync (exits overview)
+    // Keep the assistant in the right scenario:
+    // - empty agent => landing
+    // - in-progress guided setup => guided flow
+    // - otherwise => contextual help
     useEffect(() => {
-        if (activeFieldStep !== null && activeFieldStep !== undefined) {
+        if (hasStartedGuidedFlow) {
             setAssistantFlow("guided");
-            setIsOverview(false);
-            setWizardStep(activeFieldStep);
-            setVisitedSteps((prev) => prev.includes(activeFieldStep) ? prev : [...prev, activeFieldStep]);
+            setIsOverview(activeFieldStep === null || activeFieldStep === undefined);
+            if (activeFieldStep !== null && activeFieldStep !== undefined) {
+                setWizardStep(activeFieldStep);
+                setVisitedSteps((prev) => prev.includes(activeFieldStep) ? prev : [...prev, activeFieldStep]);
+            }
             setCheckerResult(null);
             setHasChecked(false);
+            return;
         }
-    }, [activeFieldStep]);
+
+        if (!hasAgentDetails) {
+            setAssistantFlow("landing");
+            setIsOverview(true);
+            return;
+        }
+
+        setAssistantFlow("contextual");
+        setIsOverview(true);
+    }, [activeFieldStep, hasAgentDetails, hasStartedGuidedFlow]);
 
     const goToStep = (step: number) => {
+        setHasStartedGuidedFlow(true);
         setAssistantFlow("guided");
         setIsOverview(false);
         setWizardStep(step);
@@ -602,6 +679,21 @@ export function AgentAssistantPanel({
     };
 
     const goToOverview = () => {
+        if (hasStartedGuidedFlow) {
+            setAssistantFlow("guided");
+            setIsOverview(true);
+        } else if (hasAgentDetails) {
+            setAssistantFlow("contextual");
+            setIsOverview(true);
+        } else {
+            setAssistantFlow("landing");
+            setIsOverview(true);
+        }
+        setCheckerResult(null);
+        setHasChecked(false);
+    };
+
+    const goToLanding = () => {
         setAssistantFlow("landing");
         setIsOverview(true);
         setCheckerResult(null);
@@ -609,18 +701,18 @@ export function AgentAssistantPanel({
     };
 
     const goToGuidedHome = () => {
+        setHasStartedGuidedFlow(true);
         setAssistantFlow("guided");
         setIsOverview(true);
         setCheckerResult(null);
         setHasChecked(false);
     };
 
-    const openContextualAssistance = () => {
+    const exitGuide = () => {
         setAssistantFlow("contextual");
         setIsOverview(true);
-        if (!submittedAssistantQuery) {
-            setSubmittedAssistantQuery(assistantQuery.trim());
-        }
+        setCheckerResult(null);
+        setHasChecked(false);
     };
 
     const handleCheck = () => {
@@ -732,17 +824,42 @@ export function AgentAssistantPanel({
             chipBackground: "#fde9e7",
         },
     ];
+    const documentationButton = (
+        <button
+            type="button"
+            onClick={() => onViewChange("guide")}
+            style={{
+                alignSelf: "flex-start",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: 0,
+                background: "transparent",
+                border: "none",
+                color: "var(--ax-colors-fg-default)",
+                cursor: "pointer",
+            }}
+        >
+            <IconBookOpen size={16} />
+            <Text fontSize="md" fontWeight="400" color="fg.default" style={{ lineHeight: "1.2" }}>
+                Agent setup documentation
+            </Text>
+            <IconArrowUpRightFromSquare size={16} />
+        </button>
+    );
 
     return (
         <Box
             style={{
-                width: isOpen ? `${panelWidth}px` : "0px",
+                width: isOpen ? `${panelWidth + 24}px` : "0px",
+                height: isOpen ? "calc(100vh - 57px)" : "0px",
                 transition: isResizing ? "none" : "width 0.3s ease-in-out",
                 overflow: "hidden",
                 display: "flex",
                 flexShrink: 0,
-                padding: isOpen ? "16px 16px 16px 0" : "0",
-                alignItems: "flex-start",
+                padding: isOpen ? "12px" : "0",
+                alignItems: "stretch",
+                minHeight: 0,
             }}
         >
             {isOpen && (
@@ -759,7 +876,7 @@ export function AgentAssistantPanel({
                             borderRadius: "12px",
                             boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
                             backgroundColor: "var(--ax-colors-bg-default)",
-                            height: "calc(100vh - 80px)",
+                            height: "100%",
                         }}
                     >
                         <Box
@@ -813,8 +930,8 @@ export function AgentAssistantPanel({
                                     appearance="subtle"
                                     size="md"
                                     icon={<IconLightbulb size={18} />}
-                                    aria-label="Back to assistant overview"
-                                    onClick={goToOverview}
+                                    aria-label="Back to assistant landing page"
+                                    onClick={goToLanding}
                                     style={{ flexShrink: 0, marginRight: "2px" }}
                                 />
                                 <Text fontWeight="500" fontSize="lg" color="fg.default" style={{ flex: 1 }}>
@@ -872,13 +989,25 @@ export function AgentAssistantPanel({
                                             );
                                         })}
                                         </Box>
-                                        <Button
-                                            appearance="subtle"
-                                            size="md"
-                                            icon={<IconBook size={16} />}
-                                            aria-label="Switch to contextual assistance"
-                                            onClick={openContextualAssistance}
-                                        />
+                                        <button
+                                            type="button"
+                                            onClick={exitGuide}
+                                            style={{
+                                                background: "none",
+                                                border: "none",
+                                                padding: 0,
+                                                margin: 0,
+                                                color: "var(--ax-colors-fg-secondary)",
+                                                cursor: "pointer",
+                                                fontSize: "14px",
+                                                fontWeight: 400,
+                                                lineHeight: "20px",
+                                                textDecoration: "underline",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            Exit guide
+                                        </button>
                                     </Box>
                                 </Box>
                             ) : null}
@@ -920,7 +1049,7 @@ export function AgentAssistantPanel({
                                         flexDirection="column"
                                         gap="16"
                                     >
-                                        <Text fontWeight="600" fontSize="md" color="fg.default">
+                                        <Text fontWeight="500" fontSize="md" color="fg.default">
                                             Step-by-step guides
                                         </Text>
                                         <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
@@ -994,6 +1123,7 @@ export function AgentAssistantPanel({
                                                                 style={{ alignSelf: "flex-start" }}
                                                                 onClick={() => {
                                                                     onApplyTemplate(tmpl.prompt);
+                                                                    setHasStartedGuidedFlow(true);
                                                                     setAssistantFlow("guided");
                                                                     setIsOverview(false);
                                                                     setWizardStep(1);
@@ -1017,12 +1147,12 @@ export function AgentAssistantPanel({
                                         style={{
                                             background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
                                             borderRadius: "8px",
-                                            padding: "8px 16px 12px",
+                                            padding: "10px 16px 12px",
                                         }}
                                     >
                                         <Box display="flex" alignItems="center" gap="12">
                                             <Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
-                                            <Text fontWeight="600" fontSize="md" color="fg.default">
+                                            <Text fontWeight="500" fontSize="md" color="fg.default">
                                                 Ask Opal to help you build
                                             </Text>
                                         </Box>
@@ -1046,65 +1176,134 @@ export function AgentAssistantPanel({
                                             </Box>
                                         </Box>
                                     </Box>
+                                    {documentationButton}
                                 </Box>
                             )}
 
                             {/* ── Contextual assistance ───────────────────── */}
                             {assistantFlow === "contextual" && (
-                                <Box display="flex" flexDirection="column" gap="16">
+                                <Box display="flex" flexDirection="column" gap="32">
+                                    <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
+                                        The prompt is the instruction that tells the agent exactly how to behave.
+                                    </Text>
+
+                                        <Box display="flex" flexDirection="column" gap="32">
+                                            <SuggestedNextMovesCallout onOpenGuidedSetup={goToGuidedHome} />
+
+                                            <Box display="flex" flexDirection="column" gap="10">
+                                                <Text fontSize="md" fontWeight="500" color="fg.default" style={{ lineHeight: "1.4" }}>
+                                                    Shortcuts
+                                                </Text>
+                                                <Box display="flex" flexDirection="column" gap="6">
+                                                    {SHORTCUT_ITEMS.map((shortcut) => (
+                                                        <Box key={shortcut.trigger} display="flex" gap="6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                                                            <Text
+                                                                fontSize="md"
+                                                                color="fg.tertiary"
+                                                                style={{ flexShrink: 0, lineHeight: "1", width: "8px" }}
+                                                            >
+                                                                •
+                                                            </Text>
+                                                            <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.3" }}>
+                                                                Type
+                                                            </Text>
+                                                            <Box
+                                                                display="inline-flex"
+                                                                alignItems="center"
+                                                                justifyContent="center"
+                                                                style={{
+                                                                    width: "32px",
+                                                                    height: "32px",
+                                                                    padding: 0,
+                                                                    borderRadius: "10px",
+                                                                    border: "1px solid #c8d0e0",
+                                                                    background: "#ffffff",
+                                                                    boxShadow: "0 1px 0 rgba(46,52,66,0.04)",
+                                                                    userSelect: "text",
+                                                                }}
+                                                            >
+                                                                <Text
+                                                                    fontSize="md"
+                                                                    color="fg.secondary"
+                                                                    style={{
+                                                                        lineHeight: "1",
+                                                                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                                                                    }}
+                                                                >
+                                                                    {shortcut.trigger}
+                                                                </Text>
+                                                            </Box>
+                                                            <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.3" }}>
+                                                                {shortcut.label}
+                                                            </Text>
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                            </Box>
+                                        </Box>
+
                                     <Box display="flex" flexDirection="column" gap="8">
-                                        <Text fontWeight="600" fontSize="md" color="fg.default">
-                                            Contextual assistance
+                                        <Text fontWeight="500" fontSize="md" color="fg.default">
+                                            Common Actions
                                         </Text>
-                                        <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
-                                            Ask for general guidance at any point, and use the guided flow when you want Opal to stitch the setup experience together step by step.
-                                        </Text>
-                                    </Box>
-
-                                    <Textarea
-                                        resize="none"
-                                        value={assistantQuery}
-                                        onChange={(event) => setAssistantQuery(event.target.value)}
-                                        placeholder="Ask about prompts, variables, tools, multi-turn setup, or how to structure this agent..."
-                                        style={{ minHeight: "112px" }}
-                                    />
-
-                                    <Box display="flex" justifyContent="space-between" alignItems="center" gap="8">
-                                        <Button
-                                            size="md"
-                                            onClick={() => setSubmittedAssistantQuery(assistantQuery.trim())}
-                                        >
-                                            Refresh tips
-                                        </Button>
-                                        <Button appearance="subtle" size="md" onClick={goToGuidedHome}>
-                                            Switch to step-by-step guide
-                                        </Button>
+                                        <Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
+                                            {COMMON_ACTIONS.map((action) => (
+                                                <CommonActionCard
+                                                    key={action.id}
+                                                    action={action}
+                                                    onInsert={() => onInsertToPrompt(`${action.prompt} | ${action.details}`)}
+                                                />
+                                            ))}
+                                        </Box>
                                     </Box>
 
                                     <Box
                                         display="flex"
                                         flexDirection="column"
-                                        gap="8"
-                                        style={{
-                                            background: "#f7f8fc",
-                                            border: "1px solid #dadfeb",
-                                            borderRadius: "12px",
-                                            padding: "12px",
-                                        }}
-                                    >
-                                        <Text fontWeight="600" fontSize="md" color="fg.default">
-                                            Suggested next moves
-                                        </Text>
-                                        {getContextualTips(submittedAssistantQuery || assistantQuery, promptTemplate, variables, tools).map((tip) => (
-                                            <Box key={tip} display="flex" gap="8" style={{ alignItems: "flex-start" }}>
-                                                <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0, lineHeight: "1.55" }}>•</Text>
-                                                <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
-                                                    {tip}
-                                                </Text>
+                                        gap="12"
+                                            style={{
+                                                background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
+                                                borderRadius: "8px",
+                                                padding: "10px 16px 12px",
+                                            }}
+                                        >
+                                        <Box display="flex" alignItems="center" gap="12">
+                                            <Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+                                            <Text fontWeight="500" fontSize="md" color="fg.default">
+                                                Ask Opal to help you build
+                                            </Text>
+                                        </Box>
+                                        <Box display="flex" flexDirection="column" gap="8">
+                                            <Textarea
+                                                resize="none"
+                                                value={assistantQuery}
+                                                onChange={(event) => setAssistantQuery(event.target.value)}
+                                                placeholder="Describe the agent you want to build, what it should do, or where you're stuck..."
+                                                style={{ minHeight: "82px" }}
+                                            />
+                                            <Box display="flex" justifyContent="flex-start">
+                                                <Button
+                                                    appearance="primary-opal"
+                                                    size="sm"
+                                                    disabled={!assistantQuery.trim()}
+                                                    onClick={() => onAskOpal?.(assistantQuery.trim())}
+                                                >
+                                                    Ask Opal
+                                                </Button>
                                             </Box>
-                                        ))}
+                                        </Box>
                                     </Box>
-                                </Box>
+
+                                    {hasStartedGuidedFlow && (
+                                        <Box display="flex" justifyContent="flex-start">
+                                            <Button appearance="subtle" size="sm" onClick={() => goToStepAndHighlight(wizardStep)}>
+                                                Resume guided setup
+                                            </Button>
+                                        </Box>
+                                    )}
+
+                                        {documentationButton}
+                                    </Box>
                             )}
 
                             {/* ── Guided overview ─────────────────────────── */}
@@ -1240,6 +1439,7 @@ export function AgentAssistantPanel({
                                                                 style={{ alignSelf: "flex-start" }}
                                                                 onClick={() => {
                                                                     onApplyTemplate(tmpl.prompt);
+                                                                    setHasStartedGuidedFlow(true);
                                                                     setIsOverview(false);
                                                                     setWizardStep(1);
                                                                     setCheckerResult(null);
@@ -1258,6 +1458,7 @@ export function AgentAssistantPanel({
                                                 Load more
                                             </Button>
                                         </Box>
+                                        {documentationButton}
                                     </Box>
                                 </Box>
                             )}
@@ -1267,7 +1468,7 @@ export function AgentAssistantPanel({
                             <Box display="flex" flexDirection="column" gap="16">
 
                             {/* Step title */}
-                            <Text fontWeight="600" fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>
+                            <Text fontWeight="500" fontSize="md" color="fg.default" style={{ lineHeight: "1.4" }}>
                                 {currentStep.title}
                             </Text>
 
@@ -1289,7 +1490,10 @@ export function AgentAssistantPanel({
                                             </Box>
                                         ))}
                                     </Box>
-                                    <KeyConceptCallout text={WIZARD_STEPS[0].keyConcept!} />
+                                    <KeyConceptCallout
+                                        text={WIZARD_STEPS[0].keyConcept!}
+                                        onViewExample={() => onOpenExample?.(1)}
+                                    />
                                 </Box>
                             )}
 
@@ -1317,7 +1521,10 @@ export function AgentAssistantPanel({
                                     >
                                         {WIZARD_STEPS[1].codeSnippet}
                                     </Box>
-                                    <KeyConceptCallout text={WIZARD_STEPS[1].keyConcept!} />
+                                    <KeyConceptCallout
+                                        text={WIZARD_STEPS[1].keyConcept!}
+                                        onViewExample={() => onOpenExample?.(2)}
+                                    />
                                 </Box>
                             )}
 
@@ -1440,7 +1647,7 @@ export function AgentAssistantPanel({
                                                     transition: "border-color 0.2s ease, background-color 0.2s ease",
                                                 }}
                                             >
-                                                <Text fontSize="md" fontWeight="600" color="fg.default">
+                                                <Text fontSize="md" fontWeight="500" color="fg.default">
                                                     {item.title}
                                                 </Text>
                                                 <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.5" }}>
@@ -1450,7 +1657,7 @@ export function AgentAssistantPanel({
                                         ))}
                                     </Box>
                                     <Box display="flex" flexDirection="column" gap="8">
-                                        <Text fontSize="md" fontWeight="600" color="fg.default" style={{ paddingTop: "4px" }}>
+                                        <Text fontSize="md" fontWeight="500" color="fg.default" style={{ paddingTop: "4px" }}>
                                             Dial In Memory Limit
                                         </Text>
                                         <Text
@@ -1525,11 +1732,6 @@ export function AgentAssistantPanel({
                                 </Box>
                             )}
 
-                            {/* Checker result (steps 1–2) */}
-                            {hasChecked && checkerResult && wizardStep <= 2 && (
-                                <CheckerCard result={checkerResult} />
-                            )}
-
                             </Box>
                             )} {/* end !isOverview */}
 
@@ -1557,6 +1759,19 @@ export function AgentAssistantPanel({
                                 </Box>
                             </Box>
                             )} {/* end common actions */}
+
+                            {/* Checker result (steps 1–2) */}
+                            {assistantFlow === "guided" && !isOverview && hasChecked && checkerResult && wizardStep <= 2 && (
+                                <Box style={{ marginTop: wizardStep === 1 ? "8px" : "0" }}>
+                                    <CheckerCard result={checkerResult} />
+                                </Box>
+                            )}
+
+                            {assistantFlow === "guided" && !isOverview && (
+                                <Box style={{ marginTop: "16px" }}>
+                                    {documentationButton}
+                                </Box>
+                            )}
 
                         </Box>
 
