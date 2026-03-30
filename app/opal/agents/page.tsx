@@ -7,7 +7,6 @@ import {
     Button,
     Badge,
     Avatar,
-    SearchInput,
     Menu,
     MenuTrigger,
     MenuContent,
@@ -16,14 +15,20 @@ import {
     DropdownMenuTrigger,
     DropdownMenuContent,
     Link,
+    Tooltip,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
+    IconSearch,
+    IconPlus,
     IconChevronDown,
 } from "@tabler/icons-react";
 import { IconAgent, IconCodeBranch, IconFileImport } from "@optimizely/axiom-icons";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { IconEye, IconEyeSlash } from "@/app/lib/axiom-icons";
+import { Input } from "@/app/components/Input";
+import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 const agents = [
     {
@@ -247,8 +252,88 @@ const agents = [
 
 export default function AgentsPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState("Your Agents");
-    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+    const categories = Array.from(new Set(agents.flatMap((agent) => agent.tags?.map((tag) => tag.label) ?? []))).sort();
+    const showCategoryColors = searchParams.get("categoryPills") !== "plain";
+    const filteredAgents = agents.filter((agent) =>
+        selectedCategories.length === 0 ? true : agent.tags?.some((tag) => selectedCategories.includes(tag.label))
+    );
+    const categoryLabel = selectedCategories.length === 0
+        ? "All"
+        : selectedCategories.length === 1
+            ? selectedCategories[0]
+            : `${selectedCategories.length} selected`;
+    const categoryOptions = useMemo(
+        () => [
+            {
+                label: "All",
+                execute: () => setSelectedCategories([]),
+                multi: false,
+                selected: () => selectedCategories.length === 0,
+            },
+            ...categories.map((category) => {
+                const categoryTag = agents.flatMap((agent) => agent.tags ?? []).find((tag) => tag.label === category);
+
+                return showCategoryColors
+                    ? {
+                        key: category,
+                        label: "",
+                        keywords: category,
+                        addon: (
+                            <span
+                                style={{
+                                    background: categoryTag?.bg,
+                                    color: categoryTag?.color,
+                                    borderRadius: 6,
+                                    padding: "2px 6px",
+                                    fontSize: 12,
+                                    lineHeight: "16px",
+                                    fontFamily: "Inter, sans-serif",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {category}
+                            </span>
+                        ),
+                        execute: () =>
+                            setSelectedCategories((current) =>
+                                current.includes(category)
+                                    ? current.filter((item) => item !== category)
+                                    : [...current, category]
+                            ),
+                        multi: true,
+                        selected: () => selectedCategories.includes(category),
+                    }
+                    : {
+                        label: category,
+                        execute: () =>
+                            setSelectedCategories((current) =>
+                                current.includes(category)
+                                    ? current.filter((item) => item !== category)
+                                    : [...current, category]
+                            ),
+                        multi: true,
+                        selected: () => selectedCategories.includes(category),
+                    };
+            }),
+        ],
+        [categories, selectedCategories, showCategoryColors]
+    );
+    const toggleCategoryPills = () => {
+        const nextParams = new URLSearchParams(searchParams.toString());
+
+        if (showCategoryColors) {
+            nextParams.set("categoryPills", "plain");
+        } else {
+            nextParams.delete("categoryPills");
+        }
+
+        const nextQuery = nextParams.toString();
+        router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname);
+    };
 
     return (
         <Box p="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
@@ -283,29 +368,49 @@ export default function AgentsPage() {
             {/* Toolbar */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Box display="flex" gap="12" alignItems="center">
-                    <Box w="full" style={{ maxWidth: "384px" }}>
-                        <SearchInput
-                            placeholder="Enter name or description"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            size="md"
-                        />
+                    <Box className="w-[300px]">
+                        <Input placeholder="Enter name or description" />
                     </Box>
 
-                    {["Type", "Category", "Created by", "Modified by"].map((filter) => (
-                        <Menu
-                            key={filter}
-                            placeholder={`Search ${filter.toLowerCase()}...`}
-                            options={[{ label: "All" }]}
-                        >
-                            <MenuTrigger asChild>
-                                <LabelMenuButton label={filter} h="40">
-                                    All
-                                </LabelMenuButton>
-                            </MenuTrigger>
-                            <MenuContent />
-                        </Menu>
-                    ))}
+                    <Menu placeholder="Search type..." options={[{ label: "All" }]}>
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Type" h="40">
+                                All
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent />
+                    </Menu>
+
+                    <Menu
+                        placeholder="Search category..."
+                        inputVisible="always"
+                        options={categoryOptions}
+                    >
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Category" h="40">
+                                {categoryLabel}
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent style={{ maxHeight: "320px", overflowY: "auto" }} />
+                    </Menu>
+
+                    <Menu placeholder="Search created by..." options={[{ label: "All" }]}>
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Created by" h="40">
+                                All
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent />
+                    </Menu>
+
+                    <Menu placeholder="Search modified by..." options={[{ label: "All" }]}>
+                        <MenuTrigger asChild>
+                            <LabelMenuButton label="Modified by" h="40">
+                                All
+                            </LabelMenuButton>
+                        </MenuTrigger>
+                        <MenuContent />
+                    </Menu>
                 </Box>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -351,7 +456,25 @@ export default function AgentsPage() {
                         <Th>Type</Th>
                         <Th>Name</Th>
                         <Th>Created by</Th>
-                        <Th>Category</Th>
+                        <Th className="group">
+                            <Box display="inline-flex" alignItems="center" gap="8">
+                                <span>Category</span>
+                                <Box
+                                    className="opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto"
+                                    onClick={(event) => event.stopPropagation()}
+                                >
+                                    <Tooltip content={showCategoryColors ? "Use neutral category pills" : "Use colored category pills"}>
+                                        <Button
+                                            size="sm"
+                                            appearance="subtle"
+                                            aria-label={showCategoryColors ? "Turn off category colors" : "Turn on category colors"}
+                                            icon={showCategoryColors ? <IconEyeSlash size={14} /> : <IconEye size={14} />}
+                                            onClick={toggleCategoryPills}
+                                        />
+                                    </Tooltip>
+                                </Box>
+                            </Box>
+                        </Th>
                         <Th>Description</Th>
                         <Th>Activity</Th>
                         <Th>Last Modified</Th>
@@ -360,7 +483,7 @@ export default function AgentsPage() {
                     </Tr>
                 </thead>
                 <tbody>
-                    {agents.map((agent, index) => (
+                    {filteredAgents.map((agent, index) => (
                         <Tr key={index} url={agent.id === 'cmp-workflow' ? '/opal/agents/workflow?preset=cmp-workflow' : `/opal/agents/setup?id=${agent.id}&mode=edit`}>
                             <Td>
                                 <Box color="fg.secondary">{agent.icon}</Box>
@@ -392,7 +515,24 @@ export default function AgentsPage() {
                                         </Text>
                                         {agent.tag && (
                                             <Box mt="4">
-                                                <Badge intent={agent.tag === "New" ? "information" : "success"} variant="subtle">{agent.tag}</Badge>
+                                                {agent.tag === "New" ? (
+                                                    <Box
+                                                        display="inline-flex"
+                                                        alignItems="center"
+                                                        px="6"
+                                                        py="2"
+                                                        rounded="full"
+                                                        style={{ background: "linear-gradient(90deg, #2647ff 0%, #7a3cff 100%)" }}
+                                                    >
+                                                        <Text fontSize="xs" color="fg.default.inverse">
+                                                            {agent.tag}
+                                                        </Text>
+                                                    </Box>
+                                                ) : (
+                                                    <Badge intent="success" variant="subtle">
+                                                        {agent.tag}
+                                                    </Badge>
+                                                )}
                                             </Box>
                                         )}
                                     </Box>
@@ -400,25 +540,42 @@ export default function AgentsPage() {
                             </Td>
                             <Td>
                                 <Box display="flex" flexDirection="row" gap="8" alignItems="center">
-                                    <Avatar name={agent.creator.name} src={agent.creator.avatar} size="sm" />
+                                    {agent.creator.type === "system" ? (
+                                        <Box
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            rounded="full"
+                                            bg="bg.default"
+                                            style={{ width: "24px", height: "24px" }}
+                                        >
+                                            <Image src="/logo.svg" alt="Optimizely" width={16} height={16} />
+                                        </Box>
+                                    ) : (
+                                        <Avatar name={agent.creator.name} src={agent.creator.avatar} size="sm" />
+                                    )}
                                     <Text>{agent.creator.name}</Text>
                                 </Box>
                             </Td>
                             <Td>
                                 <Box display="flex" flexDirection="row" gap="4" style={{ flexWrap: "wrap" }}>
                                     {agent.tags?.map((tag) => (
-                                        <span key={tag.label} style={{
-                                            background: tag.bg,
-                                            color: tag.color,
-                                            borderRadius: 6,
-                                            padding: "2px 6px",
-                                            fontSize: 12,
-                                            lineHeight: "16px",
-                                            fontFamily: "Inter, sans-serif",
-                                            whiteSpace: "nowrap",
-                                        }}>
-                                            {tag.label}
-                                        </span>
+                                        showCategoryColors ? (
+                                            <span key={tag.label} style={{
+                                                background: tag.bg,
+                                                color: tag.color,
+                                                borderRadius: 6,
+                                                padding: "2px 6px",
+                                                fontSize: 12,
+                                                lineHeight: "16px",
+                                                fontFamily: "Inter, sans-serif",
+                                                whiteSpace: "nowrap",
+                                            }}>
+                                                {tag.label}
+                                            </span>
+                                        ) : (
+                                            <Badge key={tag.label}>{tag.label}</Badge>
+                                        )
                                     ))}
                                 </Box>
                             </Td>
