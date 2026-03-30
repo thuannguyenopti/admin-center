@@ -54,6 +54,8 @@ import {
 	IconHistory,
 	IconRestore,
 	IconSparkles,
+	IconLink,
+	IconRefresh,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -101,6 +103,13 @@ interface CMSToolbarProps {
 	// Page elements for Brand Tone analysis
 	pageElements?: Record<string, {type: string; properties: any}>;
 	onUpdateElement?: (elementId: string, propertyKey: string, newValue: string) => void;
+
+	// Content Connection (CMP Integration)
+	onConnectContent?: () => void;
+	onSyncContent?: () => void;
+	onDisconnectContent?: () => void;
+	hasConnection?: boolean;
+	compatibleInstancesCount?: number;
 }
 
 const getStatusIntent = (
@@ -165,6 +174,12 @@ export default function CMSToolbar({
 	contentTypeIcon,
 	pageElements,
 	onUpdateElement,
+
+	onConnectContent,
+	onSyncContent,
+	onDisconnectContent,
+	hasConnection = false,
+	compatibleInstancesCount = 0,
 }: CMSToolbarProps) {
 	const currentLanguage = languageOptions.find((opt) => opt.value === selectedLanguage);
 	const currentVariation = variationOptions.find((opt) => opt.value === selectedVariation);
@@ -787,6 +802,51 @@ export default function CMSToolbar({
 										})}
 									</DropdownMenuSubContent>
 								</DropdownMenuSub>
+								<DropdownMenuSeparator />
+							</>
+						)}
+
+						{/* Content Connection (CMP Integration) */}
+						{(onConnectContent || hasConnection) && (
+							<>
+								<DropdownMenuLabel>Content</DropdownMenuLabel>
+
+								{/* Connect / Change connected content */}
+								{onConnectContent && (
+									<DropdownMenuItem
+										onSelect={onConnectContent}
+										disabled={!hasConnection && compatibleInstancesCount === 0}
+									>
+										<Box display="flex" alignItems="center" gap="8">
+											<IconLink size={16} />
+											{hasConnection ? "Change connected content..." : "Connect content..."}
+										</Box>
+									</DropdownMenuItem>
+								)}
+
+								{/* Sync content - only show if connected */}
+								{hasConnection && onSyncContent && (
+									<DropdownMenuItem onSelect={onSyncContent}>
+										<Box display="flex" alignItems="center" gap="8">
+											<IconRefresh size={16} />
+											Sync content
+										</Box>
+									</DropdownMenuItem>
+								)}
+
+								{/* Disconnect - only show if connected */}
+								{hasConnection && onDisconnectContent && (
+									<DropdownMenuItem
+										onSelect={onDisconnectContent}
+										intent="danger"
+									>
+										<Box display="flex" alignItems="center" gap="8">
+											<IconUnlink size={16} />
+											Disconnect content
+										</Box>
+									</DropdownMenuItem>
+								)}
+
 								<DropdownMenuSeparator />
 							</>
 						)}

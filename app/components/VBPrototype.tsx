@@ -44,6 +44,8 @@ import AbstractDialog from "@/app/components/AbstractDialog";
 import {Input} from "@/app/components/Input";
 import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
+import {getCompatibleInstances} from "@/app/lib/contentConnection";
+import {initialContentTypes} from "@/app/db/initialData";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -404,6 +406,20 @@ export default function VBPrototype({
 		if (hasOriginal) return mapped;
 		return [{label: "Original", value: "original"}, ...mapped];
 	}, [variations]);
+
+	// Get compatible instances count for toolbar
+	const compatibleInstancesCount = React.useMemo(() => {
+		if (!initialData?.contentTypeId || !onConnectContent) return 0;
+
+		const [contentInstances] = usePersistentState("cmpContentInstances", []);
+		const [contentTypes] = usePersistentState("contentTypes", initialContentTypes);
+
+		return getCompatibleInstances(
+			{contentTypeId: initialData.contentTypeId} as any,
+			contentInstances,
+			contentTypes
+		).length;
+	}, [initialData?.contentTypeId, onConnectContent]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
 		mode: "responsive",
@@ -1350,6 +1366,11 @@ export default function VBPrototype({
 						}}
 						pageElements={{}}
 						onUpdateElement={onUpdateElementById}
+						onConnectContent={onConnectContent}
+						onSyncContent={onSyncContent}
+						onDisconnectContent={onDisconnectContent}
+						hasConnection={hasConnection}
+						compatibleInstancesCount={compatibleInstancesCount}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1467,6 +1488,11 @@ export default function VBPrototype({
 					}}
 					pageElements={theEles}
 					onUpdateElement={onUpdateElementById}
+					onConnectContent={onConnectContent}
+					onSyncContent={onSyncContent}
+					onDisconnectContent={onDisconnectContent}
+					hasConnection={hasConnection}
+					compatibleInstancesCount={compatibleInstancesCount}
 				/>
 
 				{/* LEFT SIDEBAR */}

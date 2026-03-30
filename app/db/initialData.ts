@@ -454,7 +454,7 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
 			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
 			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
-			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", required: true, groupName: "Content", order: 5 },
+			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -679,6 +679,62 @@ export const initialContentTypes: ContentType[] = [
 					{ label: "Subtle", value: "subtle" }
 				],
 				defaultValue: "primary"
+			}
+		],
+	},
+	{
+		id: "ct-author",
+		name: "Author",
+		displayName: "Author",
+		baseType: "Block",
+		description: "An author block for blog posts and articles",
+		properties: [
+			{
+				id: "name",
+				name: "Name",
+				displayName: "Name",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 1,
+				description: "Author's full name"
+			},
+			{
+				id: "bio",
+				name: "Bio",
+				displayName: "Bio",
+				type: "LongString",
+				groupName: "Content",
+				order: 2,
+				description: "Author biography or description",
+				displayAs: "textarea"
+			},
+			{
+				id: "image",
+				name: "Image",
+				displayName: "Profile Image",
+				type: "ImageReference",
+				groupName: "Content",
+				order: 3,
+				description: "Author profile photo"
+			},
+			{
+				id: "email",
+				name: "Email",
+				displayName: "Email",
+				type: "String",
+				groupName: "Content",
+				order: 4,
+				description: "Author's email address"
+			},
+			{
+				id: "website",
+				name: "Website",
+				displayName: "Website",
+				type: "Url",
+				groupName: "Content",
+				order: 5,
+				description: "Author's website or portfolio URL"
 			}
 		],
 	},
