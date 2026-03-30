@@ -1,10 +1,10 @@
 "use client";
 
-import { Box, Field, Input, Card, Button } from "@optiaxiom/react";
+import { Box, Card } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
-import { AIInputField } from "@/app/components/ai/AIInputField";
 import { PropertyRenderer } from "../PropertyRenderer";
 import { Property } from "@/app/db/initialData";
+import { MediaImageRenderer } from "./MediaImageRenderer";
 
 export const ContentReferenceRenderer: React.FC<PropertyRendererProps> = ({
 	property,
@@ -27,66 +27,15 @@ export const ContentReferenceRenderer: React.FC<PropertyRendererProps> = ({
 		return null;
 	}
 
-	// Handle Media types (like ct-image) - render as image preview
+	// Handle Media types (like ct-image) - delegate to shared Media renderer
 	if (referencedType.baseType === "Media") {
-		const imageUrl = value ?? property.defaultValue ?? "";
-
-		if (mode === "readonly") {
-			return (
-				<Field label={property.displayName || property.name} info={property.description}>
-					{imageUrl ? (
-						<Card w="full" p="8">
-							<Box
-								style={{
-									width: "100%",
-									height: "200px",
-									backgroundImage: `url(${imageUrl})`,
-									backgroundSize: "cover",
-									backgroundPosition: "center",
-									borderRadius: "4px",
-								}}
-							/>
-						</Card>
-					) : (
-						<Box color="fg.tertiary">No image</Box>
-					)}
-				</Field>
-			);
-		}
-
 		return (
-			<Field label={property.displayName || property.name} info={property.description}>
-				<Card w="full" p="8">
-					{imageUrl ? (
-						<Box
-							style={{
-								width: "100%",
-								height: "200px",
-								backgroundImage: `url(${imageUrl})`,
-								backgroundSize: "cover",
-								backgroundPosition: "center",
-								borderRadius: "4px",
-							}}
-						/>
-					) : (
-						<Box
-							display="flex"
-							alignItems="center"
-							justifyContent="center"
-							style={{
-								width: "100%",
-								height: "200px",
-								border: "1px dashed var(--border-tertiary)",
-								borderRadius: "4px",
-							}}
-						>
-							<Button size="md">
-								Select Image
-							</Button>
-						</Box>
-					)}
-				</Card>
-			</Field>
+			<MediaImageRenderer
+				property={property}
+				value={value}
+				onChange={onChange}
+				mode={mode}
+			/>
 		);
 	}
 
