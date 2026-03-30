@@ -7,6 +7,7 @@ import {
     Button,
     Badge,
     Avatar,
+    SearchInput,
     Menu,
     MenuTrigger,
     MenuContent,
@@ -18,12 +19,9 @@ import {
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import {
-    IconSearch,
-    IconPlus,
     IconChevronDown,
 } from "@tabler/icons-react";
 import { IconAgent, IconCodeBranch, IconFileImport } from "@optimizely/axiom-icons";
-import { Input } from "@/app/components/Input";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -250,6 +248,7 @@ const agents = [
 export default function AgentsPage() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState("Your Agents");
+    const [searchQuery, setSearchQuery] = useState("");
 
     return (
         <Box p="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
@@ -284,8 +283,13 @@ export default function AgentsPage() {
             {/* Toolbar */}
             <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Box display="flex" gap="12" alignItems="center">
-                    <Box className="w-[300px]">
-                        <Input placeholder="Enter name or description" />
+                    <Box w="full" style={{ maxWidth: "384px" }}>
+                        <SearchInput
+                            placeholder="Enter name or description"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            size="md"
+                        />
                     </Box>
 
                     {["Type", "Category", "Created by", "Modified by"].map((filter) => (
