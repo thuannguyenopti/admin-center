@@ -13,25 +13,30 @@ export function slugify(name: string): string {
 
 /**
  * Build a full slug path for a page by walking the parent chain.
- * If the page has an explicit `slug`, use it directly.
- * Otherwise, derive from the page hierarchy.
+ * If the page has an explicit `slug`, use it as the last segment.
+ * Parent paths are always included from the hierarchy.
  */
 export function buildPageSlug(page: Page, allPages: Page[]): string {
-	// Explicit slug takes priority
-	if (page.slug) return page.slug;
-
 	// Homepage special case
 	if (!page.parentId && page.name === "Homepage") return "";
 
 	// Walk parent chain to build path segments
 	const segments: string[] = [];
 	let current: Page | undefined = page;
+	let isFirstPage = true;
 
 	while (current) {
 		// Don't include "Homepage" in the path
 		if (!current.parentId && current.name === "Homepage") break;
 
-		segments.unshift(slugify(current.name));
+		// Use explicit slug for the current page, otherwise slugify the name
+		if (isFirstPage && current.slug) {
+			segments.unshift(current.slug);
+		} else {
+			segments.unshift(slugify(current.name));
+		}
+
+		isFirstPage = false;
 
 		if (current.parentId) {
 			current = allPages.find((p) => p.id === current!.parentId);

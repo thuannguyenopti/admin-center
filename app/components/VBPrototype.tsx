@@ -21,6 +21,7 @@ import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
 import StyleEditor from "./vb/StyleEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
+import PropertyBasedPreview from "./vb/PropertyBasedPreview";
 import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
@@ -1410,16 +1411,25 @@ export default function VBPrototype({
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
 						style={{height: "100%", overflow: "hidden"}}
 					>
-						<PreviewCanvas
-							outlines={outlines as any} // will be []
-							theEles={{}} // no active outline
-							currentEle={currentEle}
-							currentHoverEle={currentHoverEle}
-							setCurrentEle={setCurrentEleSmart}
-							setCurrentHoverEle={setCurrentHoverEle}
-							setOutlines={setOutlines as any}
-							preview={preview}
-						/>
+						{/* Check if this is a property-based page (has data but no outlines) */}
+						{contentType?.id && Object.keys(properties).length > 0 ? (
+							<PropertyBasedPreview
+								contentTypeId={contentType.id}
+								properties={properties}
+								preview={preview}
+							/>
+						) : (
+							<PreviewCanvas
+								outlines={outlines as any} // will be []
+								theEles={{}} // no active outline
+								currentEle={currentEle}
+								currentHoverEle={currentHoverEle}
+								setCurrentEle={setCurrentEleSmart}
+								setCurrentHoverEle={setCurrentHoverEle}
+								setOutlines={setOutlines as any}
+								preview={preview}
+							/>
+						)}
 						<Box borderL="1" borderColor="border.tertiary">
 							<RightToolbar
 								activeTool={activeRightTool}
