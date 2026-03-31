@@ -23,6 +23,49 @@ const getDisplayName = (item: { displayName?: string; name: string }): string =>
 	return item.displayName || item.name;
 };
 
+// Helper to expand target properties - shows nested properties for Block-type ContentReferences
+const expandTargetProperties = (properties: any[], contentTypes: ContentType[]) => {
+	const expanded: any[] = [];
+
+	properties.forEach(prop => {
+		// Check if this is a ContentReference with allowedTypes pointing to Block types
+		if (prop.type === "ContentReference" && prop.allowedTypes && prop.allowedTypes.length > 0) {
+			// Check if ALL allowed types are Block types
+			const allBlockTypes = prop.allowedTypes.every((allowedTypeId: string) => {
+				const referencedType = contentTypes.find(ct => ct.id === allowedTypeId);
+				return referencedType?.baseType === "Block";
+			});
+
+			if (allBlockTypes) {
+				// Expand to show nested properties from the first allowed block type
+				const blockTypeId = prop.allowedTypes[0];
+				const blockType = contentTypes.find(ct => ct.id === blockTypeId);
+
+				if (blockType?.properties) {
+					blockType.properties.forEach(nestedProp => {
+						expanded.push({
+							...nestedProp,
+							id: `${prop.id}.${nestedProp.id}`,  // Nested ID like "author.name"
+							displayName: `${getDisplayName(prop)} / ${getDisplayName(nestedProp)}`,
+							name: `${prop.name} / ${nestedProp.name}`,
+							_parentProperty: prop.id,  // Track parent for reference
+							_isNested: true
+						});
+					});
+				}
+			} else {
+				// Not a block type, show as-is
+				expanded.push(prop);
+			}
+		} else {
+			// Not a ContentReference or no allowedTypes, show as-is
+			expanded.push(prop);
+		}
+	});
+
+	return expanded;
+};
+
 // Memoized component for each property mapping row
 const PropertyMappingRow = React.memo(({
 	targetProp,
@@ -504,7 +547,7 @@ export default function MappingsPage() {
 									</Box>
 
 									{/* Property Rows */}
-									{targetType.properties.map((targetProp) => {
+									{expandTargetProperties(targetType.properties, contentTypes).map((targetProp) => {
 										const existingMapping = formPropertyMappings.find(m => m.targetPropertyId === targetProp.id);
 										return (
 											<PropertyMappingRow
