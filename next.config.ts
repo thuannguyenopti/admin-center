@@ -4,8 +4,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   compress: true,
   output: "standalone",
+  transpilePackages: ["@optiaxiom/react"],
   experimental: {
-    optimizePackageImports: ["@tabler/icons-react"],
+    optimizePackageImports: ["@optiaxiom/react", "@tabler/icons-react"],
   },
   images: {
     remotePatterns: [
@@ -15,7 +16,6 @@ const nextConfig: NextConfig = {
     ],
   },
   turbopack: {
-    root: __dirname,
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
