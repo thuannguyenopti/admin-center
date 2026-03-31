@@ -5,6 +5,7 @@ import { InputBlock } from "./InputBlock";
 import { ImageBlock } from "./ImageBlock";
 import { RichTextBlock } from "./RichTextBlock";
 import { ProductBlock } from "./ProductBlock";
+import { BlogPostBlock } from "./BlogPostBlock";
 
 export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-heading": HeadingBlock,
@@ -15,4 +16,5 @@ export const BlockRegistry: Record<string, React.FC<any>> = {
     "ct-input": InputBlock,
     "ct-image": ImageBlock,
     "ct-image-block": ImageBlock,
+    "ct-blog-post": BlogPostBlock,
 };
