@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { getProperty } from "./utils";
 import { BlogPostHeader } from "./BlogPostHeader";
 import { BlogPostBody } from "./BlogPostBody";
 import { BlogPostAuthor } from "./BlogPostAuthor";

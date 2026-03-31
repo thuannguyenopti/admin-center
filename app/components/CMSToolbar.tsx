@@ -34,7 +34,6 @@ import {
 	IconGlobeFilled,
 	IconCalendarBolt,
 	IconSettings,
-	IconUnlink,
 	IconSend,
 	IconSend2,
 	IconSendOff,
@@ -54,8 +53,6 @@ import {
 	IconHistory,
 	IconRestore,
 	IconSparkles,
-	IconLink,
-	IconRefresh,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -68,6 +65,7 @@ import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
+import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -807,49 +805,13 @@ export default function CMSToolbar({
 						)}
 
 						{/* Content Connection (CMP Integration) */}
-						{(onConnectContent || hasConnection) && (
-							<>
-								<DropdownMenuLabel>Content</DropdownMenuLabel>
-
-								{/* Connect / Change connected content */}
-								{onConnectContent && (
-									<DropdownMenuItem
-										onSelect={onConnectContent}
-										disabled={!hasConnection && compatibleInstancesCount === 0}
-									>
-										<Box display="flex" alignItems="center" gap="8">
-											<IconLink size={16} />
-											{hasConnection ? "Change connected content..." : "Connect content..."}
-										</Box>
-									</DropdownMenuItem>
-								)}
-
-								{/* Sync content - only show if connected */}
-								{hasConnection && onSyncContent && (
-									<DropdownMenuItem onSelect={onSyncContent}>
-										<Box display="flex" alignItems="center" gap="8">
-											<IconRefresh size={16} />
-											Sync content
-										</Box>
-									</DropdownMenuItem>
-								)}
-
-								{/* Disconnect - only show if connected */}
-								{hasConnection && onDisconnectContent && (
-									<DropdownMenuItem
-										onSelect={onDisconnectContent}
-										intent="danger"
-									>
-										<Box display="flex" alignItems="center" gap="8">
-											<IconUnlink size={16} />
-											Disconnect content
-										</Box>
-									</DropdownMenuItem>
-								)}
-
-								<DropdownMenuSeparator />
-							</>
-						)}
+						<ContentConnectionMenuItems
+							onConnectContent={onConnectContent}
+							onSyncContent={onSyncContent}
+							onDisconnectContent={onDisconnectContent}
+							hasConnection={hasConnection}
+							compatibleInstancesCount={compatibleInstancesCount}
+						/>
 
 						{/* Page Actions */}
 						<DropdownMenuLabel>Page</DropdownMenuLabel>
