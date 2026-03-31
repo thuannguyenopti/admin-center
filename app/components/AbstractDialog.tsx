@@ -31,9 +31,10 @@ export default function AbstractDialog({
 	footerAppearance,
 	footerSecondaryText = "Cancel",
 	blockPrimaryAction = false,
+	style,
 }: {
 	isAlert?: boolean;
-	size?: "sm" | "md" | "lg" | undefined;
+	size?: "sm" | "md" | "lg" | "xl" | undefined;
 	title: string;
 	description: string;
 	open: boolean;
@@ -51,12 +52,24 @@ export default function AbstractDialog({
 		| undefined;
 	footerSecondaryText?: string;
 	blockPrimaryAction?: boolean;
+	style?: React.CSSProperties;
 }) {
+	// Map xl to lg for Axiom, but apply custom styles
+	const dialogSize = size === "xl" ? "lg" : size;
+	const customStyle = size === "xl" ? {
+		minWidth: "800px",
+		maxWidth: "1200px",
+		width: "90vw",
+		minHeight: "600px",
+		maxHeight: "90vh",
+		...style
+	} : style;
+
 	return (
 		<>
 			{isAlert ? (
 				<AlertDialog open={open} onOpenChange={setOpen}>
-					<AlertDialogContent size={size}>
+					<AlertDialogContent size={dialogSize} style={customStyle}>
 						<AlertDialogHeader>{title}</AlertDialogHeader>
 						<AlertDialogBody>{description}</AlertDialogBody>
 						<AlertDialogFooter>
@@ -69,7 +82,7 @@ export default function AbstractDialog({
 				</AlertDialog>
 			) : (
 				<Dialog open={open} onOpenChange={setOpen}>
-					<DialogContent size={size}>
+					<DialogContent size={dialogSize} style={customStyle}>
 						<DialogHeader description={description}>{title}</DialogHeader>
 						<DialogBody>{children}</DialogBody>
 						<DialogFooter>

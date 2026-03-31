@@ -14,17 +14,55 @@ export function applyMapping(
 	sourceType: ContentType,
 	targetType: ContentType
 ): Record<string, any> {
+	console.log('🔍 applyMapping - START');
+	console.log('  Source data keys:', Object.keys(sourceData));
+	console.log('  Source data:', sourceData);
+	console.log('  Mapping:', mapping.name);
+	console.log('  Property mappings count:', mapping.propertyMappings.length);
+
 	const result: Record<string, any> = {};
 
 	for (const propMapping of mapping.propertyMappings) {
-		const sourceValue = sourceData[propMapping.sourcePropertyId];
+		// Find the source property to get its name (used as key in instance data)
+		const sourceProp = sourceType.properties.find(p => p.id === propMapping.sourcePropertyId);
+		const sourceKey = sourceProp?.name || propMapping.sourcePropertyId;
+
+		const sourceValue = sourceData[sourceKey];
+		console.log(`  📋 Mapping: ${propMapping.sourcePropertyId} → ${propMapping.targetPropertyId}`);
+		console.log(`     Source prop:`, sourceProp);
+		console.log(`     Source key: "${sourceKey}"`);
+		console.log(`     Source value:`, sourceValue);
+
 		const transformedValue = applyTransformation(
 			sourceValue,
 			propMapping,
-			sourceData
+			sourceData,
+			sourceType
 		);
-		result[propMapping.targetPropertyId] = transformedValue;
+		console.log(`     Transformed value:`, transformedValue);
+
+		// Handle nested properties (dot notation like "author.name")
+		const targetPath = propMapping.targetPropertyId.split('.');
+		if (targetPath.length > 1) {
+			// Nested property - create object structure
+			let current = result;
+			for (let i = 0; i < targetPath.length - 1; i++) {
+				const key = targetPath[i];
+				if (!current[key] || typeof current[key] !== 'object') {
+					current[key] = {};
+				}
+				current = current[key];
+			}
+			current[targetPath[targetPath.length - 1]] = transformedValue;
+		} else {
+			// Top-level property
+			result[propMapping.targetPropertyId] = transformedValue;
+		}
 	}
+
+	console.log('✅ applyMapping - RESULT:');
+	console.log('  Result:', result);
+	console.log('  Result keys:', Object.keys(result));
 
 	return result;
 }
@@ -35,7 +73,8 @@ export function applyMapping(
 function applyTransformation(
 	sourceValue: any,
 	mapping: PropertyMapping,
-	allSourceData: Record<string, any>
+	allSourceData: Record<string, any>,
+	sourceType?: ContentType
 ): any {
 	switch (mapping.transformation) {
 		case "direct":
@@ -44,7 +83,12 @@ function applyTransformation(
 		case "concat":
 			const fields = mapping.transformationConfig?.sourcePropertyIds || [];
 			const separator = mapping.transformationConfig?.separator || " ";
-			return fields.map(id => allSourceData[id] || "").filter(Boolean).join(separator);
+			// Convert property IDs to names for data lookup
+			return fields.map(id => {
+				const prop = sourceType?.properties.find(p => p.id === id);
+				const key = prop?.name || id;
+				return allSourceData[key] || "";
+			}).filter(Boolean).join(separator);
 
 		case "default":
 			return sourceValue || mapping.transformationConfig?.defaultValue;

@@ -294,6 +294,8 @@ export type Property = {
 	order?: number;
 	description?: string;
 	defaultValue?: any;
+	/** Controls how String type properties are rendered - input (default) or textarea */
+	displayAs?: "input" | "textarea";
 	/** when type is reference this points to a collection like 'users' */
 	of?: string;
 	/** For reference types - allowed content types */
@@ -450,8 +452,9 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
 			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
-			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 3 },
-			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", required: true, groupName: "Content", order: 4 },
+			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
+			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
+			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
 			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
@@ -546,6 +549,44 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
+		id: "ct-image-block",
+		name: "Image",
+		displayName: "Image",
+		baseType: "Block",
+		description: "An image block for page layouts",
+		properties: [
+			{
+				id: "image",
+				name: "Image",
+				displayName: "Image",
+				type: "ImageReference",
+				required: true,
+				groupName: "Content",
+				order: 1
+			},
+			{
+				id: "width",
+				name: "Width Override",
+				displayName: "Width Override",
+				type: "String",
+				groupName: "Design",
+				order: 2,
+				description: "Override width (e.g., '100%', '400px', 'auto')",
+				defaultValue: "auto"
+			},
+			{
+				id: "height",
+				name: "Height Override",
+				displayName: "Height Override",
+				type: "String",
+				groupName: "Design",
+				order: 3,
+				description: "Override height (e.g., '300px', 'auto')",
+				defaultValue: "auto"
+			}
+		]
+	},
+	{
 		id: "ct-heading",
 		name: "Heading",
 		displayName: "Heading",
@@ -638,6 +679,62 @@ export const initialContentTypes: ContentType[] = [
 					{ label: "Subtle", value: "subtle" }
 				],
 				defaultValue: "primary"
+			}
+		],
+	},
+	{
+		id: "ct-author",
+		name: "Author",
+		displayName: "Author",
+		baseType: "Block",
+		description: "An author block for blog posts and articles",
+		properties: [
+			{
+				id: "name",
+				name: "Name",
+				displayName: "Name",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 1,
+				description: "Author's full name"
+			},
+			{
+				id: "bio",
+				name: "Bio",
+				displayName: "Bio",
+				type: "LongString",
+				groupName: "Content",
+				order: 2,
+				description: "Author biography or description",
+				displayAs: "textarea"
+			},
+			{
+				id: "image",
+				name: "Image",
+				displayName: "Profile Image",
+				type: "ImageReference",
+				groupName: "Content",
+				order: 3,
+				description: "Author profile photo"
+			},
+			{
+				id: "email",
+				name: "Email",
+				displayName: "Email",
+				type: "String",
+				groupName: "Content",
+				order: 4,
+				description: "Author's email address"
+			},
+			{
+				id: "website",
+				name: "Website",
+				displayName: "Website",
+				type: "Url",
+				groupName: "Content",
+				order: 5,
+				description: "Author's website or portfolio URL"
 			}
 		],
 	},
@@ -2123,10 +2220,9 @@ export const initialPages: Page[] = [
 								},
 							},
 							"ele-landing-hero-broken-image": {
-								type: "ct-image",
+								type: "ct-image-block",
 								properties: {
-									src: { value: "https://example.com/missing-image-404.jpg" },
-									alt: { value: "" },
+									image: { value: "https://example.com/missing-image-404.jpg" },
 								},
 							},
 							"ele-landing-hero-cta-primary": {
@@ -4534,10 +4630,9 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-31-img": {
-						type: "ct-image",
+						type: "ct-image-block",
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling1/400/300" },
-							alt: { value: "Cycle Computer Pro" },
+							image: { value: "https://picsum.photos/seed/cycling1/400/300" },
 						},
 					},
 					"ele-prod-31-heading": {
@@ -4612,11 +4707,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-32-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling3/400/300" },
-							alt: { value: "HR Monitor Band" },
+
+							image: { value: "https://picsum.photos/seed/cycling3/400/300" },
+
 						},
+
 					},
 					"ele-prod-32-heading": {
 						type: "ct-heading",
@@ -4690,11 +4789,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-33-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling2/400/300" },
-							alt: { value: "Smart Bike Trainer" },
+
+							image: { value: "https://picsum.photos/seed/cycling2/400/300" },
+
 						},
+
 					},
 					"ele-prod-33-heading": {
 						type: "ct-heading",
@@ -4768,11 +4871,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-34-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling4/400/300" },
-							alt: { value: "Cadence Sensor" },
+
+							image: { value: "https://picsum.photos/seed/cycling4/400/300" },
+
 						},
+
 					},
 					"ele-prod-34-heading": {
 						type: "ct-heading",
@@ -4844,11 +4951,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-35-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling8/400/300" },
-							alt: { value: "Power Meter" },
+
+							image: { value: "https://picsum.photos/seed/cycling8/400/300" },
+
 						},
+
 					},
 					"ele-prod-35-heading": {
 						type: "ct-heading",
@@ -4922,11 +5033,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-36-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling9/400/300" },
-							alt: { value: "Speed Sensor" },
+
+							image: { value: "https://picsum.photos/seed/cycling9/400/300" },
+
 						},
+
 					},
 					"ele-prod-36-heading": {
 						type: "ct-heading",

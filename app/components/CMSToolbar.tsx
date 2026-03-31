@@ -34,7 +34,6 @@ import {
 	IconGlobeFilled,
 	IconCalendarBolt,
 	IconSettings,
-	IconUnlink,
 	IconSend,
 	IconSend2,
 	IconSendOff,
@@ -66,6 +65,7 @@ import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
+import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
 
 interface CMSToolbarProps {
 	pageName?: string;
@@ -101,6 +101,13 @@ interface CMSToolbarProps {
 	// Page elements for Brand Tone analysis
 	pageElements?: Record<string, {type: string; properties: any}>;
 	onUpdateElement?: (elementId: string, propertyKey: string, newValue: string) => void;
+
+	// Content Connection (CMP Integration)
+	onConnectContent?: () => void;
+	onSyncContent?: () => void;
+	onDisconnectContent?: () => void;
+	hasConnection?: boolean;
+	compatibleInstancesCount?: number;
 }
 
 const getStatusIntent = (
@@ -165,6 +172,12 @@ export default function CMSToolbar({
 	contentTypeIcon,
 	pageElements,
 	onUpdateElement,
+
+	onConnectContent,
+	onSyncContent,
+	onDisconnectContent,
+	hasConnection = false,
+	compatibleInstancesCount = 0,
 }: CMSToolbarProps) {
 	const currentLanguage = languageOptions.find((opt) => opt.value === selectedLanguage);
 	const currentVariation = variationOptions.find((opt) => opt.value === selectedVariation);
@@ -790,6 +803,15 @@ export default function CMSToolbar({
 								<DropdownMenuSeparator />
 							</>
 						)}
+
+						{/* Content Connection (CMP Integration) */}
+						<ContentConnectionMenuItems
+							onConnectContent={onConnectContent}
+							onSyncContent={onSyncContent}
+							onDisconnectContent={onDisconnectContent}
+							hasConnection={hasConnection}
+							compatibleInstancesCount={compatibleInstancesCount}
+						/>
 
 						{/* Page Actions */}
 						<DropdownMenuLabel>Page</DropdownMenuLabel>
