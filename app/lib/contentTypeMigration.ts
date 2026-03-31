@@ -6,6 +6,7 @@ import type { CmpContentModel } from "@/app/db/cmpInitialData";
  */
 export function convertCmpPropertyTypeToCms(cmpType: string): PropertyType {
 	const typeMap: Record<string, PropertyType> = {
+		// CMP types → CMS types
 		text: "String",
 		longText: "LongString",
 		richText: "XhtmlString",
@@ -18,6 +19,20 @@ export function convertCmpPropertyTypeToCms(cmpType: string): PropertyType {
 		choice: "SelectOne",
 		location: "address",
 		json: "text", // Fallback to text for json
+
+		// Pass-through for already-converted CMS types (backward compatibility)
+		String: "String",
+		LongString: "LongString",
+		XhtmlString: "XhtmlString",
+		DateTime: "DateTime",
+		Int: "Int",
+		Boolean: "Boolean",
+		ImageReference: "ImageReference",
+		VideoReference: "VideoReference",
+		PageReference: "PageReference",
+		ContentReference: "ContentReference",
+		Url: "Url",
+		SelectOne: "SelectOne",
 	};
 
 	return typeMap[cmpType] || "String"; // Default to String if unknown

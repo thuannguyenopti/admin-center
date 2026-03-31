@@ -32,6 +32,7 @@ export default function EditPageDetail() {
 
 	// CMP Content Connection
 	const [contentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
 	const [isContentPickerOpen, setIsContentPickerOpen] = useState(false);
 
 	// Check for pending generation immediately on mount
@@ -47,11 +48,11 @@ export default function EditPageDetail() {
 
 			// Load content type definition
 			if (found?.contentTypeId) {
-				const ct = initialContentTypes.find((ct) => ct.id === found.contentTypeId);
+				const ct = contentTypes.find((ct) => ct.id === found.contentTypeId);
 				setContentType(ct || null);
 			}
 		}
-	}, [id, pages, isHydrated]);
+	}, [id, pages, isHydrated, contentTypes]);
 
 	type PagePatch = {outlines?: any; properties?: any; variationId?: string};
 
@@ -109,13 +110,17 @@ export default function EditPageDetail() {
 	}, [page, id, setPages]);
 
 	// CMP Content Connection Handlers
-	const handleConnectInstance = useCallback((instance: ContentInstance) => {
+	const handleConnectInstance = useCallback((instance: ContentInstance | ContentInstance[]) => {
 		if (!page) return;
 
+		// Only handle single instance selection (not multi-select)
+		const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
+		if (!selectedInstance) return;
+
 		const connectedPage = connectInstanceToPage(
-			instance,
+			selectedInstance,
 			page,
-			initialContentTypes
+			contentTypes
 		);
 
 		setPages((prev: Page[]) =>
@@ -123,9 +128,10 @@ export default function EditPageDetail() {
 		);
 
 		setPage(connectedPage);
+		setRenderKey(prev => prev + 1); // Force re-render to show updated data
 		setIsContentPickerOpen(false);
 		toaster.create("Content connected successfully", { intent: "success" });
-	}, [page, setPages]);
+	}, [page, setPages, contentTypes]);
 
 	const handleSyncContent = useCallback(() => {
 		if (!page) return;
@@ -133,7 +139,7 @@ export default function EditPageDetail() {
 		const syncedPage = syncPageWithInstance(
 			page,
 			contentInstances,
-			initialContentTypes
+			contentTypes
 		);
 
 		if (syncedPage) {
@@ -141,11 +147,12 @@ export default function EditPageDetail() {
 				prev.map(p => p.id === page.id ? syncedPage : p)
 			);
 			setPage(syncedPage);
+			setRenderKey(prev => prev + 1); // Force re-render to show updated data
 			toaster.create("Content synced successfully", { intent: "success" });
 		} else {
 			toaster.create("Could not sync content - instance not found", { intent: "danger" });
 		}
-	}, [page, contentInstances, setPages]);
+	}, [page, contentInstances, setPages, contentTypes]);
 
 	const handleDisconnect = useCallback(() => {
 		if (!page) return;
@@ -160,7 +167,7 @@ export default function EditPageDetail() {
 		toaster.create("Content disconnected", { intent: "information" });
 	}, [page, setPages]);
 
-	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, initialContentTypes) : [];
+	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, contentTypes) : [];
 
 	// Opal page generation hook (must be after handleSave is defined)
 	const {isGenerating} = useOpalPageGeneration(

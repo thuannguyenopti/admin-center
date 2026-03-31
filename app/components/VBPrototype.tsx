@@ -21,6 +21,7 @@ import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
 import StyleEditor from "./vb/StyleEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
+import PropertyBasedPreview from "./vb/PropertyBasedPreview";
 import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
@@ -44,6 +45,8 @@ import AbstractDialog from "@/app/components/AbstractDialog";
 import {Input} from "@/app/components/Input";
 import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
+import {getCompatibleInstances} from "@/app/lib/contentConnection";
+import {initialContentTypes} from "@/app/db/initialData";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -310,6 +313,10 @@ export default function VBPrototype({
 	const [isRenamePageDialogOpen, setIsRenamePageDialogOpen] = useState(false);
 	const [newPageName, setNewPageName] = useState("");
 
+	// Load persistent state for CMP connection
+	const [cmpContentInstances] = usePersistentState("cmpContentInstances", []);
+	const [persistentContentTypes] = usePersistentState("contentTypes", initialContentTypes);
+
 	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
 	const brandTone = useBrandTone();
 
@@ -404,6 +411,17 @@ export default function VBPrototype({
 		if (hasOriginal) return mapped;
 		return [{label: "Original", value: "original"}, ...mapped];
 	}, [variations]);
+
+	// Get compatible instances count for toolbar
+	const compatibleInstancesCount = React.useMemo(() => {
+		if (!initialData?.contentTypeId || !onConnectContent) return 0;
+
+		return getCompatibleInstances(
+			{contentTypeId: initialData.contentTypeId} as any,
+			cmpContentInstances,
+			persistentContentTypes
+		).length;
+	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
 		mode: "responsive",
@@ -1350,6 +1368,11 @@ export default function VBPrototype({
 						}}
 						pageElements={{}}
 						onUpdateElement={onUpdateElementById}
+						onConnectContent={onConnectContent}
+						onSyncContent={onSyncContent}
+						onDisconnectContent={onDisconnectContent}
+						hasConnection={hasConnection}
+						compatibleInstancesCount={compatibleInstancesCount}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1358,7 +1381,7 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative", height: "100%"}}
 					>
 						<DragHandle position="right" minWidth={180} maxWidth={600} />
 
@@ -1388,16 +1411,25 @@ export default function VBPrototype({
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
 						style={{height: "100%", overflow: "hidden"}}
 					>
-						<PreviewCanvas
-							outlines={outlines as any} // will be []
-							theEles={{}} // no active outline
-							currentEle={currentEle}
-							currentHoverEle={currentHoverEle}
-							setCurrentEle={setCurrentEleSmart}
-							setCurrentHoverEle={setCurrentHoverEle}
-							setOutlines={setOutlines as any}
-							preview={preview}
-						/>
+						{/* Check if this is a property-based page (has data but no outlines) */}
+						{outlines.length === 0 && contentType?.id && Object.keys(properties).length > 0 ? (
+							<PropertyBasedPreview
+								contentTypeId={contentType.id}
+								properties={properties}
+								preview={preview}
+							/>
+						) : (
+							<PreviewCanvas
+								outlines={outlines as any}
+								theEles={{}} // no active outline
+								currentEle={currentEle}
+								currentHoverEle={currentHoverEle}
+								setCurrentEle={setCurrentEleSmart}
+								setCurrentHoverEle={setCurrentHoverEle}
+								setOutlines={setOutlines as any}
+								preview={preview}
+							/>
+						)}
 						<Box borderL="1" borderColor="border.tertiary">
 							<RightToolbar
 								activeTool={activeRightTool}
@@ -1467,6 +1499,11 @@ export default function VBPrototype({
 					}}
 					pageElements={theEles}
 					onUpdateElement={onUpdateElementById}
+					onConnectContent={onConnectContent}
+					onSyncContent={onSyncContent}
+					onDisconnectContent={onDisconnectContent}
+					hasConnection={hasConnection}
+					compatibleInstancesCount={compatibleInstancesCount}
 				/>
 
 				{/* LEFT SIDEBAR */}
