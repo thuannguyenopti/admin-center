@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   compress: true,
   output: "standalone",
-  transpilePackages: ["@optiaxiom/react"],
   experimental: {
     optimizePackageImports: ["@tabler/icons-react"],
   },
