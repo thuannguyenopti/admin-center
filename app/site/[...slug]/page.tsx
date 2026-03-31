@@ -58,7 +58,11 @@ export default function SiteSlugPage() {
 
 	// Check if this is a property-based page (has data but no outlines)
 	const pageData = originalVariation?.data ?? page.data;
-	const isPropertyBasedPage = !hasOutlines && pageData && page.contentTypeId;
+	const isPropertyBasedPage =
+		!hasOutlines &&
+		pageData &&
+		Object.keys(pageData).length > 0 &&
+		page.contentTypeId;
 
 	return (
 		<div className="min-h-screen bg-[#F3F4F6] flex flex-col">

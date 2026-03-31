@@ -13,12 +13,18 @@ export function slugify(name: string): string {
 
 /**
  * Build a full slug path for a page by walking the parent chain.
- * If the page has an explicit `slug`, use it as the last segment.
- * Parent paths are always included from the hierarchy.
+ * If the page has an explicit `slug`:
+ *   - If it contains "/" (multi-segment), treat it as a full path
+ *   - Otherwise, prepend parent paths normally
  */
 export function buildPageSlug(page: Page, allPages: Page[]): string {
 	// Homepage special case
 	if (!page.parentId && page.name === "Homepage") return "";
+
+	// If page has a multi-segment slug (contains "/"), use it as-is (full path)
+	if (page.slug && page.slug.includes("/")) {
+		return page.slug;
+	}
 
 	// Walk parent chain to build path segments
 	const segments: string[] = [];

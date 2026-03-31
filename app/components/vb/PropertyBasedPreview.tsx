@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import PreviewWrapper from "./PreviewWrapper";
 import type {PreviewSettings} from "./PreviewSettings";
 import {BlockRegistry} from "./blocks";
@@ -18,6 +18,7 @@ export default function PropertyBasedPreview({
 	properties: Record<string, any>;
 	preview: PreviewSettings;
 }) {
+	const scrollRef = useRef<HTMLDivElement | null>(null);
 	const [viewportW, setViewportW] = useState<number>(() => {
 		return preview.mode === "responsive" ? 0 : preview.width;
 	});
@@ -25,7 +26,18 @@ export default function PropertyBasedPreview({
 	useEffect(() => {
 		if (preview.mode !== "responsive") {
 			setViewportW(preview.width);
+			return;
 		}
+
+		const el = scrollRef.current;
+		if (!el) return;
+
+		const update = () => setViewportW(el.clientWidth);
+		update();
+
+		const ro = new ResizeObserver(update);
+		ro.observe(el);
+		return () => ro.disconnect();
 	}, [preview.mode, preview.width]);
 
 	const isMobileViewport = viewportW > 0 && viewportW <= MOBILE_BP;
@@ -39,6 +51,7 @@ export default function PropertyBasedPreview({
 				maxWidth={preview.maxWidth}
 				height="fill"
 				className="h-full min-h-0"
+				contentRef={scrollRef}
 			>
 				{/* Header */}
 				<div className="w-full bg-white px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-gray-100 shrink-0 sticky top-0 z-50 shadow-sm">
@@ -66,6 +79,7 @@ export default function PropertyBasedPreview({
 			maxWidth={preview.maxWidth}
 			height="fill"
 			className="h-full min-h-0"
+			contentRef={scrollRef}
 		>
 			{/* Header */}
 			<div className="w-full bg-white px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-gray-100 shrink-0 sticky top-0 z-50 shadow-sm">

@@ -1412,7 +1412,7 @@ export default function VBPrototype({
 						style={{height: "100%", overflow: "hidden"}}
 					>
 						{/* Check if this is a property-based page (has data but no outlines) */}
-						{contentType?.id && Object.keys(properties).length > 0 ? (
+						{outlines.length === 0 && contentType?.id && Object.keys(properties).length > 0 ? (
 							<PropertyBasedPreview
 								contentTypeId={contentType.id}
 								properties={properties}
@@ -1420,7 +1420,7 @@ export default function VBPrototype({
 							/>
 						) : (
 							<PreviewCanvas
-								outlines={outlines as any} // will be []
+								outlines={outlines as any}
 								theEles={{}} // no active outline
 								currentEle={currentEle}
 								currentHoverEle={currentHoverEle}
