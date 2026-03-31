@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Card } from "@optiaxiom/react";
+import { Box, Card, Text } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 import { PropertyRenderer } from "../PropertyRenderer";
 import { Property } from "@/app/db/initialData";
@@ -60,23 +60,30 @@ export const ContentReferenceRenderer: React.FC<PropertyRendererProps> = ({
 		});
 
 		return (
-			<Box display="flex" flexDirection="column" gap="12" w="full">
+			<Box display="flex" flexDirection="column" gap="4" w="full">
+				{/* Block type label */}
+				<Text fontSize="md" 	 color="fg.secondary">
+					{referencedType.displayName || referencedType.name}
+				</Text>
+
+				{/* Block properties card */}
 				<Card w="full">
-					<Box display="flex" flexDirection="column" gap="16">
+					<Box display="flex" flexDirection="column" gap="16" w="full">
 						{Object.entries(blockGroups).map(([groupName, groupProps]) => (
-							<Box key={groupName} display="flex" flexDirection="column" gap="12">
+							<Box key={groupName} display="flex" flexDirection="column" gap="12" w="full">
 								{groupProps.map((blockProp) => {
 									const blockPropValue = blockData[blockProp.id];
 									return (
-										<PropertyRenderer
-											key={blockProp.id}
-											property={blockProp}
-											value={blockPropValue}
-											onChange={(newVal) => onChange({ ...blockData, [blockProp.id]: newVal })}
-											context={context}
-											enableAI={enableAI}
-											mode={mode}
-										/>
+										<Box key={blockProp.id} w="full">
+											<PropertyRenderer
+												property={blockProp}
+												value={blockPropValue}
+												onChange={(newVal) => onChange({ ...blockData, [blockProp.id]: newVal })}
+												context={context}
+												enableAI={enableAI}
+												mode={mode}
+											/>
+										</Box>
 									);
 								})}
 							</Box>
