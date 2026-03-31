@@ -312,6 +312,10 @@ export default function VBPrototype({
 	const [isRenamePageDialogOpen, setIsRenamePageDialogOpen] = useState(false);
 	const [newPageName, setNewPageName] = useState("");
 
+	// Load persistent state for CMP connection
+	const [cmpContentInstances] = usePersistentState("cmpContentInstances", []);
+	const [persistentContentTypes] = usePersistentState("contentTypes", initialContentTypes);
+
 	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
 	const brandTone = useBrandTone();
 
@@ -411,15 +415,12 @@ export default function VBPrototype({
 	const compatibleInstancesCount = React.useMemo(() => {
 		if (!initialData?.contentTypeId || !onConnectContent) return 0;
 
-		const [contentInstances] = usePersistentState("cmpContentInstances", []);
-		const [contentTypes] = usePersistentState("contentTypes", initialContentTypes);
-
 		return getCompatibleInstances(
 			{contentTypeId: initialData.contentTypeId} as any,
-			contentInstances,
-			contentTypes
+			cmpContentInstances,
+			persistentContentTypes
 		).length;
-	}, [initialData?.contentTypeId, onConnectContent]);
+	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
 
 	const [preview, setPreview] = useState<PreviewSettings>({
 		mode: "responsive",
@@ -1379,7 +1380,7 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative", height: "100%"}}
 					>
 						<DragHandle position="right" minWidth={180} maxWidth={600} />
 

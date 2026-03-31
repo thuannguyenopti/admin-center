@@ -557,14 +557,18 @@ export default function PropertiesPanel({
 	};
 
 	return (
-		<Box display="flex" flexDirection="column" h="full" overflow="hidden">
-			<Tabs value={activeFilter} onValueChange={setActiveFilter}>
-				{/* Filter Bar - Sticky */}
+		<Box display="flex" flexDirection="column" style={{ flex: 1, minHeight: 0 }}>
+			<Tabs
+				value={activeFilter}
+				onValueChange={setActiveFilter}
+				style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+			>
+				{/* Filter Bar - Fixed at top */}
 				<Box
 					px="24"
 					pt="16"
 					pb="16"
-					style={{ position: "sticky", top: 0, zIndex: 10 }}
+					bg="bg.page"
 				>
 					<TabsList>
 						{filterItems.map((item) => (
@@ -580,7 +584,7 @@ export default function PropertiesPanel({
 					overflow="auto"
 					px="24"
 					py="16"
-					style={{ flex: 1 }}
+					style={{ flex: 1, minHeight: 0 }}
 				>
 					{renderFilteredContent()}
 				</Box>
