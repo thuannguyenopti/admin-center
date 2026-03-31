@@ -544,9 +544,9 @@ export default function RootLayout({
 					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
 					rel="stylesheet"
 				/>
-				<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />
 			</head>
 			<body suppressHydrationWarning>
+				<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>
