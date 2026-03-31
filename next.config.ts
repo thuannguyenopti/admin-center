@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@optiaxiom/react"],
   experimental: {
-    optimizePackageImports: ["@optiaxiom/react", "@tabler/icons-react"],
+    optimizePackageImports: ["@tabler/icons-react"],
   },
   images: {
     remotePatterns: [
