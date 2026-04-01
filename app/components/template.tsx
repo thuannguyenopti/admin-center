@@ -33,6 +33,7 @@ import ContentManagerSidebar from "../cms/content/components/ContentManagerSideb
 import {OpalPanel} from "./OpalPanel";
 import {useOpalState} from "@/app/hooks/useOpalState";
 import {useOpalHistory} from "@/app/hooks/useOpalHistory";
+import {CodePanel} from "./CodePanel";
 
 function TemplateContent({
 	children,
@@ -41,13 +42,17 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth} = useLayout();
+	const {asideContent, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth, setCodePanelControls} = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
 	const isOpalStudio = path.startsWith("/cmp/opal-studio");
+
+	// Code panel state
+	const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
+	const [codePanelFilePath, setCodePanelFilePath] = useState<string | null>(null);
 
 	useEffect(() => {
 		setMounted(true);
@@ -116,6 +121,21 @@ function TemplateContent({
 		});
 		return () => setOpalPanelControls(null);
 	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, clearHistory, setInputValue, addMessage, updateMessage, removeMessage, setInputDisabled]);
+
+	// Provide Code panel controls through LayoutContext
+	useEffect(() => {
+		setCodePanelControls({
+			openPanel: (filePath: string) => {
+				setCodePanelFilePath(filePath);
+				setIsCodePanelOpen(true);
+			},
+			closePanel: () => {
+				setIsCodePanelOpen(false);
+			},
+			isOpen: isCodePanelOpen,
+		});
+		return () => setCodePanelControls(null);
+	}, [setCodePanelControls, isCodePanelOpen]);
 
 	const menuClick = (url: string) => {
 		router.push(`${url}`);
@@ -459,6 +479,11 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 				createNewChat={createNewChat}
 				deleteChat={deleteChat}
 				selectChat={selectChat}
+			/>
+			<CodePanel
+				isOpen={isCodePanelOpen}
+				onClose={() => setIsCodePanelOpen(false)}
+				filePath={codePanelFilePath}
 			/>
 		</Box>
 	);
