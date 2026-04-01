@@ -44,3 +44,6 @@ yarn-error.log*
 next-env.d.ts
 yarn.lock
 .env*.local
+
+# code viewer source bundle (auto-generated during build)
+/public/source-bundle.json
