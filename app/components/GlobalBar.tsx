@@ -29,10 +29,12 @@ import {
 	IconMail,
 	IconCloud,
 	IconWebhook,
+	IconCode,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
+import {useLayout} from "@/app/context/LayoutContext";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -44,6 +46,16 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
 	const isCmpRoute = pathname.startsWith("/cmp");
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
+	const {codePanelControls} = useLayout();
+
+	const handleCodeClick = () => {
+		// Start with the simple path
+		const simplePath = `app${pathname}/page.tsx`;
+
+		// For paths with numeric segments, also try the [id] version
+		// We'll let the CodePanel component handle trying both
+		codePanelControls?.openPanel(simplePath);
+	};
 
 	const settingsGroups = {
 		userOrg: { label: "User", separator: false, hidden: true },
@@ -245,6 +257,13 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					/>
 				</Box>
 				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconCode size={20} />}
+					aria-label="View source code"
+					onClick={handleCodeClick}
+				/>
 				{isCmpRoute ? (
 					<Menu
 						options={[
