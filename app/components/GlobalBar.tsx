@@ -57,9 +57,6 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		codePanelControls?.openPanel(simplePath);
 	};
 
-	// Only show code viewer in development mode
-	const isDevelopment = process.env.NODE_ENV === 'development';
-
 	const settingsGroups = {
 		userOrg: { label: "User", separator: false, hidden: true },
 		ai: { label: "AI", separator: true, hidden: true },
@@ -260,15 +257,13 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					/>
 				</Box>
 				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
-				{isDevelopment && (
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={<IconCode size={20} />}
-						aria-label="View source code"
-						onClick={handleCodeClick}
-					/>
-				)}
+				<Button
+					appearance="subtle"
+					size="md"
+					icon={<IconCode size={20} />}
+					aria-label="View source code"
+					onClick={handleCodeClick}
+				/>
 				{isCmpRoute ? (
 					<Menu
 						options={[

@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readFile, access } from 'fs/promises';
+import { readFile } from 'fs/promises';
 import { join } from 'path';
+
+// Cache for the source bundle in production
+let sourceBundle: Record<string, { content: string; language: string }> | null = null;
+
+async function loadSourceBundle() {
+  if (sourceBundle) return sourceBundle;
+
+  try {
+    const bundlePath = join(process.cwd(), 'public', 'source-bundle.json');
+    const bundleContent = await readFile(bundlePath, 'utf-8');
+    sourceBundle = JSON.parse(bundleContent);
+    return sourceBundle;
+  } catch (err) {
+    console.warn('Source bundle not found - falling back to filesystem reads');
+    return null;
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,9 +47,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Try source bundle first (production)
+    const bundle = await loadSourceBundle();
+    if (bundle && bundle[filePath]) {
+      return NextResponse.json({
+        content: bundle[filePath].content,
+        filePath,
+        language: bundle[filePath].language,
+      });
+    }
+
+    // Fall back to filesystem (development)
     const absolutePath = join(process.cwd(), filePath);
 
-    // Try to read the file
     try {
       const content = await readFile(absolutePath, 'utf-8');
       return NextResponse.json({
