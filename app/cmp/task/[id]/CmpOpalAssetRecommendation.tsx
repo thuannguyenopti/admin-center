@@ -9,6 +9,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useCallback,
 } from "react";
 import {
 	AlertDialog,
@@ -29,17 +30,24 @@ import {
 	TabsTrigger,
 	Textarea,
 	Tooltip,
+	toaster,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
-import { initialContentTypes, type ContentType } from "@/app/db/initialData";
+import { initialContentTypes, type ContentType, initialPages, type Page, initialApplications, type Application } from "@/app/db/initialData";
 import { initialContentInstances, type ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
 import { isCmpType, convertCmpModelToContentType, convertCmpPropertyToCms } from "@/app/lib/contentTypeMigration";
+import { createPageFromInstance } from "@/app/lib/contentConnection";
 import usePersistentState from "@/app/usePersistentState";
+import { useRouter } from "next/navigation";
+import TargetContentTypeDialog from "@/app/components/TargetContentTypeDialog";
 import { PropertyRenderer } from "@/app/components/property-renderers";
 // Import to register all property renderers
 import "@/app/components/property-renderers";
+import PreviewCanvas, { type Outline, type EleMap } from "@/app/components/vb/PreviewCanvas";
+import type { PreviewSettings } from "@/app/components/vb/PreviewSettings";
+import PropertyBasedPageRenderer from "@/app/site/PropertyBasedPageRenderer";
 import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import Grid3Icon from "@/app/cmp/assets/grid3.svg";
@@ -784,6 +792,7 @@ const workflowTemplates: WorkflowTemplate[] = [
 ];
 
 export function CmpOpalAssetRecommendation() {
+	const router = useRouter();
 	const [scene, setScene] = useState<Scene>("brief");
 	const [hasTaskContent, setHasTaskContent] = useState(false);
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
@@ -799,18 +808,116 @@ export function CmpOpalAssetRecommendation() {
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
 
+	// Add to Application state
+	const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [Page[], any];
+	const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+	const [isTargetSelectionOpen, setIsTargetSelectionOpen] = useState(false);
+	const [instanceToAdd, setInstanceToAdd] = useState<ContentInstance | null>(null);
+
+	// Preview state for PreviewCanvas
+	const [previewCurrentEle, setPreviewCurrentEle] = useState<string>("");
+	const [previewHoverEle, setPreviewHoverEle] = useState<string>("");
+	const [previewOutlines, setPreviewOutlines] = useState<Outline[]>([]);
+
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
+	const [applications] = usePersistentState("applications", initialApplications) as [Application[], any];
+
+	// Computed values
+	const CURRENT_TASK_ID = "1"; // TODO: Get from router params or context
+	const CURRENT_TASK_NAME = "Ironman Miami triathlon 2026 Sponsor Package task"; // TODO: Get from task data
+
+	const taskPages = useMemo(() => {
+		return pages.filter(page =>
+			page.cmpTaskMetadata?.taskId === CURRENT_TASK_ID
+		);
+	}, [pages]);
+
+	// Add to Application handlers
+	const handleAddToApplication = useCallback((instance: ContentInstance) => {
+		// Find all content types that this instance can map to
+		const sourceType = contentTypes.find(ct => ct.id === instance.modelId);
+		if (!sourceType || !sourceType.mappings) {
+			toaster.create(
+				"No mappings configured for this content type",
+				{ intent: "danger" },
+			);
+			return;
+		}
+
+		const availableTargets = sourceType.mappings.map(mapping => {
+			const targetType = contentTypes.find(ct => ct.id === mapping.targetContentTypeId);
+			return { mapping, targetType };
+		}).filter(t => t.targetType) as Array<{ mapping: any; targetType: ContentType }>;
+
+		if (availableTargets.length === 0) {
+			toaster.create(
+				"No CMS content types available for this content",
+				{ intent: "danger" },
+			);
+			return;
+		}
+
+		if (availableTargets.length === 1) {
+			// Single target - create page immediately
+			createAndAddPage(instance, availableTargets[0].targetType.id);
+		} else {
+			// Multiple targets - show selection dialog
+			setInstanceToAdd(instance);
+			setIsTargetSelectionOpen(true);
+		}
+	}, [contentTypes]);
+
+	const createAndAddPage = useCallback((instance: ContentInstance, targetContentTypeId: string) => {
+		const result = createPageFromInstance(
+			instance,
+			targetContentTypeId,
+			contentTypes,
+			pages,
+			{ taskId: CURRENT_TASK_ID, taskName: CURRENT_TASK_NAME }
+		);
+
+		if (result.error) {
+			toaster.create(
+				result.error,
+				{ intent: "danger" },
+			);
+			return;
+		}
+
+		// Add page to global pages state
+		setPages((prev: Page[]) => [...prev, result.page!]);
+
+		// Auto-select the newly created page
+		setSelectedPageId(result.page!.id);
+		setSelectedContentInstanceId(null);
+		setSelectedTaskAssetId(null);
+		setSelectedArticleId(null);
+
+		// Show success message
+		toaster.create(
+			`Page "${result.page!.name}" created successfully`,
+			{ intent: "success" },
+		);
+
+		// Close dialog if open
+		setIsTargetSelectionOpen(false);
+		setInstanceToAdd(null);
+	}, [contentTypes, pages, setPages, CURRENT_TASK_ID, CURRENT_TASK_NAME]);
+
 	// Auto-select first item on load if nothing is selected
 	useEffect(() => {
-		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedArticleId) {
+		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedArticleId && !selectedPageId) {
 			if (contentInstances.length > 0) {
 				setSelectedContentInstanceId(contentInstances[0].id);
+			} else if (taskPages.length > 0) {
+				setSelectedPageId(taskPages[0].id);
 			} else if (taskArticles.length > 0) {
 				setSelectedArticleId(taskArticles[0].id);
 			} else if (taskAssets.length > 0) {
 				setSelectedTaskAssetId(taskAssets[0].id);
 			}
 		}
-	}, [contentInstances, taskArticles, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedArticleId]);
+	}, [contentInstances, taskPages, taskArticles, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedArticleId, selectedPageId]);
 
 	// Switch to empty state when all items are removed
 	useEffect(() => {
@@ -821,6 +928,29 @@ export function CmpOpalAssetRecommendation() {
 			setSuggestedPanelOpen(false);
 		}
 	}, [contentInstances.length, taskArticles.length, taskAssets.length, scene]);
+
+	// Stable callback handlers for selections
+	const handleSelectPage = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectPage called with:', id);
+		setSelectedPageId(id);
+		// Log immediately after to verify it's being called
+		setTimeout(() => console.log('[Main] selectedPageId after setState:', id), 0);
+	}, []);
+
+	const handleSelectContentInstance = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectContentInstance called with:', id);
+		setSelectedContentInstanceId(id);
+	}, []);
+
+	const handleSelectArticle = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectArticle called with:', id);
+		setSelectedArticleId(id);
+	}, []);
+
+	const handleSelectTaskAsset = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectTaskAsset called with:', id);
+		setSelectedTaskAssetId(id);
+	}, []);
 
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
@@ -833,12 +963,37 @@ export function CmpOpalAssetRecommendation() {
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
 
+	// Debug: Log main component state
+	console.log('[CmpOpalAssetRecommendation] Main state:', {
+		scene,
+		selectedPageId,
+		selectedContentInstanceId,
+		selectedArticleId,
+		selectedTaskAssetId,
+	});
+
 	// Initialize hasTaskContent based on existing content instances, task assets, or articles
 	useEffect(() => {
 		if (contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0) {
 			setHasTaskContent(true);
 		}
 	}, [contentInstances.length, taskAssets.length, taskArticles.length]); // Re-check when content loads from localStorage
+
+	// Update preview outlines when selected page changes
+	useEffect(() => {
+		if (selectedPageId) {
+			const page = pages.find((p) => p.id === selectedPageId);
+			if (page) {
+				// Try to get outlines from variations first, then fall back to page.outlines
+				const outlines = page.variations?.[0]?.outlines || page.outlines || [];
+				setPreviewOutlines(outlines);
+			} else {
+				setPreviewOutlines([]);
+			}
+		} else {
+			setPreviewOutlines([]);
+		}
+	}, [selectedPageId, pages]);
 
 	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
 	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
@@ -1197,27 +1352,30 @@ export function CmpOpalAssetRecommendation() {
 								onAddContentFromModel={addContentInstanceFromModel}
 								onAddArticle={addArticle}
 								onOpenSuggested={() => setSuggestedPanelOpen(true)}
-								onSelectTaskAsset={(id) => {
-									console.log('[Main] setSelectedTaskAssetId called with:', id);
-									setSelectedTaskAssetId(id);
-								}}
+								onSelectTaskAsset={handleSelectTaskAsset}
 								suggestedOpen={suggestedPanelOpen}
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
 								taskArticles={taskArticles}
 								selectedArticleId={selectedArticleId}
-								onSelectArticle={(id) => {
-									console.log('[Main] setSelectedArticleId called with:', id);
-									setSelectedArticleId(id);
-								}}
+								onSelectArticle={handleSelectArticle}
 								contentInstances={contentInstances}
 								setContentInstances={setContentInstances}
 								selectedContentInstanceId={selectedContentInstanceId}
-								onSelectContentInstance={(id) => {
-									console.log('[Main] setSelectedContentInstanceId called with:', id);
-									setSelectedContentInstanceId(id);
-								}}
+								onSelectContentInstance={handleSelectContentInstance}
 								onTabChange={handleTabChange}
+								selectedPageId={selectedPageId}
+								pages={pages}
+								setPages={setPages}
+								onSelectPage={handleSelectPage}
+								onAddToApplication={handleAddToApplication}
+								previewOutlines={previewOutlines}
+								previewCurrentEle={previewCurrentEle}
+								previewHoverEle={previewHoverEle}
+								setPreviewCurrentEle={setPreviewCurrentEle}
+								setPreviewHoverEle={setPreviewHoverEle}
+								setPreviewOutlines={setPreviewOutlines}
+								applications={applications}
 							/>
 						}
 						right={
@@ -1255,7 +1413,62 @@ export function CmpOpalAssetRecommendation() {
 			default:
 				return null;
 		}
-	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, panelAssetsWithSelection, perspectives, rankedSearchAssets, scene, searchReturnScene, selectedAsset, selectedTaskAssetId, selectedContentInstanceId, selectedArticleId, taskAssets, taskArticles, contentInstances, suggestedPanelOpen, workflowMenuOpen, workflowSearch]);
+	}, [
+		activeTab,
+		activeWorkflow,
+		briefContent,
+		draftBriefContent,
+		exclude,
+		filteredWorkflowTemplates,
+		hasTaskContent,
+		panelAssetsWithSelection,
+		perspectives,
+		rankedSearchAssets,
+		scene,
+		searchReturnScene,
+		selectedAsset,
+		selectedTaskAssetId,
+		selectedContentInstanceId,
+		selectedArticleId,
+		selectedPageId,
+		taskAssets,
+		taskArticles,
+		contentInstances,
+		pages,
+		suggestedPanelOpen,
+		workflowMenuOpen,
+		workflowSearch,
+		previewOutlines,
+		previewCurrentEle,
+		previewHoverEle,
+		applications,
+		addArticle,
+		addContentInstanceFromModel,
+		addAssetsToTask,
+		applyWorkflowChange,
+		cancelBriefEdit,
+		handleAddToApplication,
+		handleSelectArticle,
+		handleSelectContentInstance,
+		handleSelectPage,
+		handleSelectTaskAsset,
+		handleTabChange,
+		handleWorkflowSelect,
+		openBriefEdit,
+		openSearch,
+		saveBriefEdit,
+		setContentInstances,
+		setPages,
+		setPreviewCurrentEle,
+		setPreviewHoverEle,
+		setPreviewOutlines,
+		setPerspectives,
+		setScene,
+		setSelectedPanelAssetIds,
+		setSuggestedPanelOpen,
+		setWorkflowMenuOpen,
+		setWorkflowSearch,
+	]);
 
 	return (
 		<Box
@@ -1271,6 +1484,26 @@ export function CmpOpalAssetRecommendation() {
 					workflowName={
 						workflowTemplates.find((template) => template.id === pendingWorkflowId)?.name ?? "workflow"
 					}
+				/>
+			)}
+			{/* Target Content Type Selection Dialog */}
+			{instanceToAdd && (
+				<TargetContentTypeDialog
+					open={isTargetSelectionOpen}
+					onClose={() => {
+						setIsTargetSelectionOpen(false);
+						setInstanceToAdd(null);
+					}}
+					availableTargets={
+						contentTypes
+							.find(ct => ct.id === instanceToAdd.modelId)
+							?.mappings?.map(mapping => ({
+								mapping,
+								targetType: contentTypes.find(ct => ct.id === mapping.targetContentTypeId)!,
+							}))
+							.filter(t => t.targetType) || []
+					}
+					onSelect={(targetContentTypeId) => createAndAddPage(instanceToAdd, targetContentTypeId)}
 				/>
 			)}
 		</Box>
@@ -2930,10 +3163,10 @@ function ContentEmptyPage({
 								execute: () => onAddArticle(),
 							},
 							{
-								label: "Channel",
+								label: "From CMS",
 								addon: <IconBroadcast size={20} />,
-								description: "Add content from a channel",
-								execute: () => { /* TODO: Implement channel selection */ },
+								description: "Add content from CMS",
+								execute: () => { /* TODO: Implement CMS content selection */ },
 							},
 							{
 								label: "Component",
@@ -3006,6 +3239,18 @@ function ContentFilledPage({
 	selectedContentInstanceId,
 	onSelectContentInstance,
 	onTabChange,
+	selectedPageId,
+	pages,
+	onSelectPage,
+	setPages,
+	onAddToApplication,
+	previewOutlines,
+	previewCurrentEle,
+	previewHoverEle,
+	setPreviewCurrentEle,
+	setPreviewHoverEle,
+	setPreviewOutlines,
+	applications,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
@@ -3024,12 +3269,31 @@ function ContentFilledPage({
 	selectedContentInstanceId: string | null;
 	onSelectContentInstance: (id: string | null) => void;
 	onTabChange: (tab: string) => void;
+	selectedPageId: string | null;
+	pages: Page[];
+	onSelectPage: (id: string | null) => void;
+	setPages: (pages: Page[] | ((prev: Page[]) => Page[])) => void;
+	onAddToApplication: (instance: ContentInstance) => void;
+	previewOutlines: Outline[];
+	previewCurrentEle: string;
+	previewHoverEle: string;
+	setPreviewCurrentEle: (value: React.SetStateAction<string>) => void;
+	setPreviewHoverEle: (value: React.SetStateAction<string>) => void;
+	setPreviewOutlines: React.Dispatch<React.SetStateAction<Outline[]>>;
+	applications: Application[];
 }) {
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
 		ContentType[],
 		(value: ContentType[]) => void,
 	];
 	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
+	const router = useRouter();
+
+	// Filter pages that belong to this task
+	const CURRENT_TASK_ID = "1";
+	const taskPages = useMemo(() => {
+		return pages.filter(page => page.cmpTaskMetadata?.taskId === CURRENT_TASK_ID);
+	}, [pages]);
 
 	// Component mount/unmount logging
 	useEffect(() => {
@@ -3042,6 +3306,8 @@ function ContentFilledPage({
 	// Render logging
 	console.log('[ContentFilledPage] RENDER:', {
 		selectedContentInstanceId,
+		selectedPageId,
+		selectedArticleId,
 		selectedTaskAssetId,
 		suggestedOpen,
 	});
@@ -3058,11 +3324,15 @@ function ContentFilledPage({
 		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
 	const selectedArticle =
 		taskArticles.find((article) => article.id === selectedArticleId) ?? null;
+	const selectedPage =
+		pages.find((page) => page.id === selectedPageId) ?? null;
 
 	// Debug: Log what we found
 	console.log('[ContentFilledPage] Selected items:', {
 		selectedContentInstanceId,
 		foundInstance: selectedContentInstance ? { id: selectedContentInstance.id, name: selectedContentInstance.modelDisplayName } : null,
+		selectedPageId,
+		foundPage: selectedPage ? { id: selectedPage.id, name: selectedPage.name } : null,
 		selectedArticleId,
 		foundArticle: selectedArticle,
 		selectedTaskAssetId,
@@ -3134,10 +3404,10 @@ function ContentFilledPage({
 								execute: () => onAddArticle(),
 							},
 							{
-								label: "Channel",
+								label: "From CMS",
 								addon: <IconBroadcast size={20} />,
-								description: "Add content from a channel",
-								execute: () => { /* TODO: Implement channel selection */ },
+								description: "Add content from CMS",
+								execute: () => { /* TODO: Implement CMS content selection */ },
 							},
 							{
 								label: "Component",
@@ -3202,13 +3472,14 @@ function ContentFilledPage({
 
 				<Box alignItems="center" display="flex" gap="8">
 					{(() => {
-						const buttonList = [null, ...contentInstances, ...taskArticles, ...taskAssets];
+						const buttonList = [null, ...contentInstances, ...taskPages, ...taskArticles, ...taskAssets];
 						console.log('[ContentTab] Rendering button list:', {
 							totalButtons: buttonList.length,
 							items: buttonList.map((item, i) => ({
 								index: i,
 								type: i === 0 ? 'suggested' :
 									item && 'modelId' in item ? 'content-instance' :
+									item && 'contentTypeId' in item && !('modelId' in item) ? 'page' :
 									item && 'title' in item && !('src' in item) ? 'article' :
 									'asset',
 								id: item?.id,
@@ -3220,14 +3491,16 @@ function ContentFilledPage({
 						// Determine button type
 						const isSuggestedTrigger = index === 0;
 						const isContentInstance = item && 'modelId' in item;
-						const isArticle = item && 'title' in item && !('src' in item) && !('modelId' in item);
-						const isAsset = item && !isContentInstance && !isArticle;
+						const isPage = item && 'contentTypeId' in item && !('modelId' in item);
+						const isArticle = item && 'title' in item && !('src' in item) && !('modelId' in item) && !('contentTypeId' in item);
+						const isAsset = item && !isContentInstance && !isPage && !isArticle;
 
 						// Determine if this button is selected
 						const isSelected = isSuggestedTrigger
 							? false // Sparkles button is never "selected", it just toggles the panel
 							: (
 								(isContentInstance && item.id === selectedContentInstanceId) ||
+								(isPage && item.id === selectedPageId) ||
 								(isArticle && item.id === selectedArticleId) ||
 								(isAsset && item.id === selectedTaskAssetId)
 							);
@@ -3238,10 +3511,11 @@ function ContentFilledPage({
 								index,
 								isSuggestedTrigger,
 								isContentInstance,
+								isPage,
 								isArticle,
 								isAsset,
 								itemId: item?.id,
-								itemType: isContentInstance ? 'content-instance' : isArticle ? 'article' : isAsset ? 'asset' : 'suggested',
+								itemType: isContentInstance ? 'content-instance' : isPage ? 'page' : isArticle ? 'article' : isAsset ? 'asset' : 'suggested',
 							});
 
 							if (isSuggestedTrigger) {
@@ -3254,24 +3528,47 @@ function ContentFilledPage({
 								// Select this content instance, deselect others
 								console.log('[ContentTab] Selecting content instance:', item.id);
 								onSelectContentInstance(item.id);
+								onSelectPage(null);
+								onSelectArticle(null);
+								onSelectTaskAsset(null);
+								return;
+							}
+
+							if (isPage && item) {
+								// Select this page, deselect others
+								console.log('[ContentTab] Selecting page:', item.id, 'currently selected:', selectedPageId);
+								onSelectPage(item.id);
+								onSelectContentInstance(null);
 								onSelectArticle(null);
 								onSelectTaskAsset(null);
 								return;
 							}
 
 							if (isArticle && item) {
+								// Check if already selected
+								if (selectedArticleId === item.id) {
+									console.log('[ContentTab] Article already selected, ignoring click');
+									return;
+								}
 								// Select this article, deselect others
 								console.log('[ContentTab] Selecting article:', item.id);
 								onSelectArticle(item.id);
+								onSelectPage(null);
 								onSelectContentInstance(null);
 								onSelectTaskAsset(null);
 								return;
 							}
 
 							if (isAsset && item) {
+								// Check if already selected
+								if (selectedTaskAssetId === item.id) {
+									console.log('[ContentTab] Asset already selected, ignoring click');
+									return;
+								}
 								// Select this asset, deselect others
 								console.log('[ContentTab] Selecting task asset:', item.id);
 								onSelectTaskAsset(item.id);
+								onSelectPage(null);
 								onSelectContentInstance(null);
 								onSelectArticle(null);
 								return;
@@ -3307,8 +3604,10 @@ function ContentFilledPage({
 									aria-label={
 										isSuggestedTrigger ? "Open suggested assets" :
 										isContentInstance ? `View ${item.modelDisplayName}` :
-										isArticle ? `View ${item.title}` :
-										`View ${item?.title ?? "task asset"}`
+										isPage ? `View ${(item as Page).name}` :
+										isArticle ? `View ${(item as { title: string }).title}` :
+										isAsset && item && 'title' in item ? `View ${(item as { title: string }).title}` :
+										"View task item"
 									}
 									onClick={handleClick}
 									style={{
@@ -3328,7 +3627,22 @@ function ContentFilledPage({
 									{isSuggestedTrigger ? (
 										<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
 									) : isContentInstance ? (
-										<IconFileText size={16} color="var(--ax-colors-fg-accent)" />
+										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
+									) : isPage ? (
+										<iframe
+											src={`/cms/edit/${(item as Page).id}?preview=true`}
+											style={{
+												border: "none",
+												display: "block",
+												height: 32,
+												objectFit: "cover",
+												pointerEvents: "none",
+												transform: "scale(0.15)",
+												transformOrigin: "top left",
+												width: 213,
+											}}
+											title={`Preview of ${(item as Page).name}`}
+										/>
 									) : isArticle ? (
 										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
 									) : isAsset && item && 'src' in item ? (
@@ -3344,7 +3658,11 @@ function ContentFilledPage({
 											}}
 										/>
 									) : (
-										<Text fontSize="lg">{item?.title?.charAt(0) ?? "?"}</Text>
+										<Text fontSize="lg">{
+											isPage
+												? ((item as Page)?.name?.charAt(0) ?? "?")
+												: ('title' in (item ?? {}) ? (item as { title: string }).title.charAt(0) : "?")
+										}</Text>
 									)}
 								</button>
 							</Box>
@@ -3363,10 +3681,12 @@ function ContentFilledPage({
 						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
 							{selectedContentInstance
 								? selectedContentInstance.modelDisplayName
+								: selectedPage
+								? selectedPage.name
 								: selectedArticle
 								? selectedArticle.title
 								: selectedTaskAsset?.title
-								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedArticleId ?? selectedTaskAssetId ?? 'unknown'}`}
+								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedArticleId ?? selectedTaskAssetId ?? 'unknown'}`}
 						</Text>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
@@ -3396,44 +3716,119 @@ function ContentFilledPage({
 								/>
 							)}
 							<Menu
-								options={[
-									{
-										label: "Remove from task",
-										addon: <IconTrash size={16} />,
-										description: "Remove this item from the task",
-										execute: () => {
-											if (selectedContentInstance) {
-												const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
-												setContentInstances(updatedInstances);
+								options={
+									selectedPage
+										? [
+												// Menu options for CMS pages
+												{
+													label: "Edit in CMS",
+													addon: <IconPencil size={16} />,
+													description: "Open page in Visual Builder",
+													execute: () => {
+														router.push(`/cms/edit/${selectedPage.id}`);
+													},
+												},
+												{
+													label: "Review",
+													addon: <IconEye size={16} />,
+													description: "View page on website",
+													execute: () => {
+														// TODO: Build page slug and open in new tab
+														const slug = selectedPage.slug || selectedPage.name.toLowerCase().replace(/\s+/g, '-');
+														window.open(`/site/${slug}`, '_blank');
+													},
+												},
+												{
+													label: "Remove",
+													addon: <IconTrash size={16} />,
+													description: "Remove page from task",
+													execute: () => {
+														// Clear cmpTaskMetadata from page
+														setPages((prev: Page[]) =>
+															prev.map(p =>
+																p.id === selectedPage.id
+																	? { ...p, cmpTaskMetadata: undefined }
+																	: p
+															)
+														);
+														toaster.create(
+															"Page removed from task",
+															{ intent: "success" },
+														);
+														onSelectPage(null);
+													},
+												},
+											]
+										: selectedContentInstance
+										? [
+												// Menu options for CMP content instances
+												applications.length === 1
+													? {
+															label: "Add to CMS",
+															addon: <IconPlus size={16} />,
+															description: "Create CMS page from this content",
+															execute: () => onAddToApplication(selectedContentInstance),
+													  }
+													: {
+															label: "Add to CMS",
+															addon: <IconPlus size={16} />,
+															description: "Create CMS page from this content",
+															subOptions: applications.map((app: Application) => ({
+																label: app.name,
+																description: `Add to ${app.name}`,
+																execute: () => onAddToApplication(selectedContentInstance),
+															})),
+													  },
+												{
+													label: "Remove from task",
+													addon: <IconTrash size={16} />,
+													description: "Remove this item from the task",
+													execute: () => {
+														const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
+														setContentInstances(updatedInstances);
 
-												// Check if any items remain (content instances, articles, or assets)
-												const hasRemainingItems = updatedInstances.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+														// Check if any items remain (content instances, pages, articles, or assets)
+														const hasRemainingItems = updatedInstances.length > 0 || taskPages.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
 
-												if (hasRemainingItems) {
-													// Select first remaining item
-													if (updatedInstances.length > 0) {
-														onSelectContentInstance(updatedInstances[0].id);
-													} else if (taskArticles.length > 0) {
-														onSelectArticle(taskArticles[0].id);
-													} else if (taskAssets.length > 0) {
-														onSelectTaskAsset(taskAssets[0].id);
-													}
-												} else {
-													// No items left - navigate to empty state
-													onSelectContentInstance(null);
-													onTabChange('content'); // Trigger re-evaluation of hasTaskContent
-												}
-											} else if (selectedArticle) {
-												const updatedArticles = taskArticles.filter(article => article.id !== selectedArticle.id);
-												// TODO: Need setTaskArticles setter to properly update
-												console.log('Remove article:', selectedArticle.id);
-											} else if (selectedTaskAsset) {
-												// TODO: Need setTaskAssets setter to properly update
-												console.log('Remove asset:', selectedTaskAsset.id);
-											}
-										},
-									},
-								]}
+														if (hasRemainingItems) {
+															// Select first remaining item
+															if (updatedInstances.length > 0) {
+																onSelectContentInstance(updatedInstances[0].id);
+															} else if (taskPages.length > 0) {
+																onSelectPage(taskPages[0].id);
+															} else if (taskArticles.length > 0) {
+																onSelectArticle(taskArticles[0].id);
+															} else if (taskAssets.length > 0) {
+																onSelectTaskAsset(taskAssets[0].id);
+															}
+														} else {
+															// No items left - navigate to empty state
+															onSelectContentInstance(null);
+															onTabChange('content'); // Trigger re-evaluation of hasTaskContent
+														}
+													},
+												},
+											]
+										: selectedArticle || selectedTaskAsset
+										? [
+												{
+													label: "Remove from task",
+													addon: <IconTrash size={16} />,
+													description: "Remove this item from the task",
+													execute: () => {
+														if (selectedArticle) {
+															const updatedArticles = taskArticles.filter(article => article.id !== selectedArticle.id);
+															// TODO: Need setTaskArticles setter to properly update
+															console.log('Remove article:', selectedArticle.id);
+														} else if (selectedTaskAsset) {
+															// TODO: Need setTaskAssets setter to properly update
+															console.log('Remove asset:', selectedTaskAsset.id);
+														}
+													},
+												},
+											]
+										: []
+								}
 							>
 								<MenuTrigger asChild>
 									<button
@@ -3509,6 +3904,29 @@ function ContentFilledPage({
 								});
 							})()}
 						</Box>
+					) : selectedPage ? (
+						previewOutlines.length > 0 ? (
+							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "hidden" }}>
+								<PreviewCanvas
+									outlines={previewOutlines}
+									theEles={{}}
+									currentEle={previewCurrentEle}
+									currentHoverEle={previewHoverEle}
+									setCurrentEle={setPreviewCurrentEle}
+									setCurrentHoverEle={setPreviewHoverEle}
+									setOutlines={setPreviewOutlines}
+									preview={{ mode: "responsive", width: 1440, maxWidth: 1440 }}
+								/>
+							</Box>
+						) : (
+							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "auto" }}>
+								<PropertyBasedPageRenderer
+									contentTypeId={selectedPage.contentTypeId}
+									properties={selectedPage.data || {}}
+									pageId={selectedPage.id}
+								/>
+							</Box>
+						)
 					) : selectedArticle ? (
 						<>
 							<img
@@ -3592,7 +4010,6 @@ function ContentFilledPage({
 					)}
 				</Box>
 			</Box>
-
 		</Box>
 	);
 }

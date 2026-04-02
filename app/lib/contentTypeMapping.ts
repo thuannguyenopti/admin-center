@@ -240,3 +240,42 @@ function areSimilarNames(name1: string, name2: string): boolean {
 	const n2 = name2.toLowerCase().replace(/[_-]/g, "");
 	return n1.includes(n2) || n2.includes(n1);
 }
+
+/**
+ * Find all content types that have mappings targeting the specified content type.
+ * This enables "incoming mapping" visibility - seeing which types can map TO this type.
+ *
+ * @param targetTypeId - The content type ID to find incoming mappings for
+ * @param contentTypes - Array of all content types to search through
+ * @returns Array of objects containing the mapping and its source content type
+ *
+ * @example
+ * const incoming = findIncomingMappings("cms-blog-post", allContentTypes);
+ * // Returns: [{ mapping: {...}, sourceType: CMPBlogPost }]
+ */
+export function findIncomingMappings(
+	targetTypeId: string,
+	contentTypes: ContentType[]
+): Array<{
+	mapping: ContentTypeMapping;
+	sourceType: ContentType;
+}> {
+	const incoming: Array<{ mapping: ContentTypeMapping; sourceType: ContentType }> = [];
+
+	for (const sourceType of contentTypes) {
+		if (!sourceType.mappings) continue;
+
+		for (const mapping of sourceType.mappings) {
+			if (mapping.targetContentTypeId === targetTypeId) {
+				incoming.push({ mapping, sourceType });
+			}
+		}
+	}
+
+	// Sort by source type display name for consistent ordering
+	return incoming.sort((a, b) => {
+		const nameA = a.sourceType.displayName || a.sourceType.name;
+		const nameB = b.sourceType.displayName || b.sourceType.name;
+		return nameA.localeCompare(nameB);
+	});
+}

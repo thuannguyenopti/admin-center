@@ -6,7 +6,8 @@ import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
 import {useEffect, useState, useCallback} from "react";
-import {Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import {Alert, Badge, Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import Link from "next/link";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
@@ -329,6 +330,30 @@ export default function EditPageDetail() {
 		setPage(updatedPage);
 	};
 
+	const handleAddToTask = (taskId: string, taskName: string) => {
+		if (!page) return;
+		const updatedPage = {
+			...page,
+			cmpTaskMetadata: {
+				taskId,
+				taskName,
+				addedAt: new Date().toISOString(),
+				addedVia: "manual" as const,
+			},
+		};
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
+		setPage(updatedPage);
+		toaster.create(`Added to task: ${taskName}`, { intent: "success" });
+	};
+
+	const handleRemoveFromTask = () => {
+		if (!page) return;
+		const updatedPage = { ...page, cmpTaskMetadata: undefined };
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
+		setPage(updatedPage);
+		toaster.create("Removed from task", { intent: "information" });
+	};
+
 	const handleRestoreVersion = (version: any) => {
 		if (!page) return;
 
@@ -416,6 +441,32 @@ export default function EditPageDetail() {
 
 	return (
 		<>
+			{/* Task Alert - show if page is part of a task */}
+			{page?.cmpTaskMetadata && (
+				<Box pl="24" pt="16" pr="12" pb="8" bg="bg.default">
+					<Alert intent="information">
+						<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+							<Text>
+								Part of task:{" "}
+								<Link
+									href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}
+									style={{
+										color: "var(--ax-colors-fg-accent)",
+										textDecoration: "underline",
+										fontWeight: 600,
+									}}
+								>
+									{page.cmpTaskMetadata.taskName}
+								</Link>
+							</Text>
+							{page.cmpConnection && (
+								<Badge intent="success">Connected to CMP</Badge>
+							)}
+						</Box>
+					</Alert>
+				</Box>
+			)}
+
 			<VBPrototype
 				key={`${id}-${renderKey}`}
 				initialData={page}
@@ -440,6 +491,9 @@ export default function EditPageDetail() {
 				onSyncContent={page?.cmpConnection ? handleSyncContent : undefined}
 				onDisconnectContent={page?.cmpConnection ? handleDisconnect : undefined}
 				hasConnection={!!page?.cmpConnection}
+				onAddToTask={handleAddToTask}
+				onRemoveFromTask={page?.cmpTaskMetadata ? handleRemoveFromTask : undefined}
+				currentTaskId={page?.cmpTaskMetadata?.taskId ?? null}
 			/>
 
 			<ContentInstancePicker

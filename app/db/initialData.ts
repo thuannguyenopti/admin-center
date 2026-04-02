@@ -969,7 +969,48 @@ export type Page = {
 		lastSyncedAt?: string;
 		syncMode: "auto" | "manual"; // Auto-sync on CMP changes or manual only
 	};
+	/** CMP Task association - tracks which task this page belongs to */
+	cmpTaskMetadata?: {
+		taskId: string; // ID of the CMP task (from URL /cmp/task/[id])
+		taskName: string; // Display name of the task
+		addedAt: string; // ISO timestamp when page was added to task
+		addedVia: "created" | "manual"; // How it was added: created via "Add to Application" or manually added
+	};
 };
+
+export type CmpTask = {
+	id: string;
+	title: string;
+	reference: string;
+	status: string;
+};
+
+export const initialCmpTasks: CmpTask[] = [
+	{
+		id: "1",
+		title: "Ironman Miami triathlon 2026 Sponsor Package task",
+		reference: "TSK-2702",
+		status: "Not Started",
+	},
+	{
+		id: "2",
+		title: "Content Rec",
+		reference: "TSK-2695",
+		status: "In Progress",
+	},
+	{
+		id: "3",
+		title: "Hotel Brochure",
+		reference: "TSK-2691",
+		status: "At Risk",
+	},
+	{
+		id: "4",
+		title: "SC content testing",
+		reference: "TSK-2689",
+		status: "Overdue",
+	},
+];
 
 export type Application = {
 	id: string;
@@ -5798,6 +5839,15 @@ export const initialApplications: Application[] = [
 		name: "Stride",
 		appId: "1234",
 		url: "www",
+		startPageId: "page-site-home",
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+	},
+	{
+		id: "app-stride-mobile",
+		name: "Stride Mobile",
+		appId: "5678",
+		url: "mobile.stride.com",
 		startPageId: "page-site-home",
 		modifiedAt: new Date().toISOString(),
 		modifiedBy: "System",
