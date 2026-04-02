@@ -17,13 +17,11 @@ export function ContentEmptyPage({
 	activeTab,
 	onAddContent,
 	onAddContentFromModel,
-	onAddArticle,
 	onTabChange,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
 	onAddContentFromModel: (model: ContentType) => void;
-	onAddArticle: () => void;
 	onTabChange: (tab: string) => void;
 }) {
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
@@ -69,12 +67,6 @@ export function ContentEmptyPage({
 								addon: <IconPhoto size={20} />,
 								description: "Add assets from recommendations",
 								execute: () => onAddContent(),
-							},
-							{
-								label: "Article",
-								addon: <IconFileText size={20} />,
-								description: "Add a hardcoded article example",
-								execute: () => onAddArticle(),
 							},
 							{
 								label: "From CMS",
