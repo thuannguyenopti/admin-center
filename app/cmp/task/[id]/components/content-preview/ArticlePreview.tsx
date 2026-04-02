@@ -5,7 +5,6 @@ import { Text } from "@/app/components/Text";
 import { IconCalendar, IconCopy, IconLink } from "@tabler/icons-react";
 import type { ContentPreviewProps } from "./ContentPreviewRenderer";
 import { MetadataRow } from "./MetadataRow";
-import { PreviewLabel } from "./PreviewLabel";
 
 const MAX_VISIBLE_TAGS = 3;
 
@@ -18,8 +17,7 @@ export function ArticlePreview({ instance }: ContentPreviewProps) {
 	return (
 		<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "0 20px 20px" }}>
 			{fields.hero_image && (
-				<Box display="flex" flexDirection="column" gap="4" mt="16">
-					<PreviewLabel>Hero Image</PreviewLabel>
+				<Box mt="16">
 					<Box rounded="lg" style={{ overflow: "hidden" }}>
 						<img
 							alt={fields.headline || "Article hero"}
@@ -31,40 +29,28 @@ export function ArticlePreview({ instance }: ContentPreviewProps) {
 			)}
 
 			{fields.subheadline && (
-				<Box display="flex" flexDirection="column" gap="4">
-					<PreviewLabel>Subheadline</PreviewLabel>
-					<Text color="fg.secondary" fontSize="md">{fields.subheadline}</Text>
-				</Box>
+				<Text color="fg.secondary" fontSize="md">{fields.subheadline}</Text>
 			)}
 
 			{fields.byline && (
-				<Box display="flex" flexDirection="column" gap="4">
-					<PreviewLabel>Byline</PreviewLabel>
-					<Text color="fg.tertiary" fontSize="sm">{fields.byline}</Text>
-				</Box>
+				<Text color="fg.tertiary" fontSize="sm">{fields.byline}</Text>
 			)}
 
 			{fields.body && (
-				<Box display="flex" flexDirection="column" gap="4">
-					<PreviewLabel>Body</PreviewLabel>
-					<div
-						className="preview-rich-text"
-						dangerouslySetInnerHTML={{ __html: fields.body }}
-					/>
-				</Box>
+				<div
+					className="preview-rich-text"
+					dangerouslySetInnerHTML={{ __html: fields.body }}
+				/>
 			)}
 
 			{tags.length > 0 && (
-				<Box display="flex" flexDirection="column" gap="4">
-					<PreviewLabel>Tags</PreviewLabel>
-					<Box alignItems="center" display="flex" gap="8">
-						{visibleTags.map((tag) => (
-							<Badge key={tag} intent="neutral">{tag}</Badge>
-						))}
-						{overflowCount > 0 && (
-							<Text color="fg.accent" fontSize="sm">+ {overflowCount}</Text>
-						)}
-					</Box>
+				<Box alignItems="center" display="flex" gap="8">
+					{visibleTags.map((tag) => (
+						<Badge key={tag} intent="neutral">{tag}</Badge>
+					))}
+					{overflowCount > 0 && (
+						<Text color="fg.accent" fontSize="sm">+ {overflowCount}</Text>
+					)}
 				</Box>
 			)}
 

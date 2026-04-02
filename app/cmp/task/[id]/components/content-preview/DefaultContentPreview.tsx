@@ -1,11 +1,32 @@
 "use client";
 
-import { Badge, Box } from "@optiaxiom/react";
+import { Badge, Box, Card, CardHeader, CardImage, CardPreview } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { IconCalendar } from "@tabler/icons-react";
+import Image from "next/image";
 import type { ContentPreviewProps } from "./ContentPreviewRenderer";
 import { MetadataRow } from "./MetadataRow";
 import { PreviewLabel } from "./PreviewLabel";
+
+const getImageName = (url: string) => {
+	if (!url) return "";
+	try {
+		const base =
+			typeof window !== "undefined" && window.location?.origin
+				? window.location.origin
+				: "http://localhost";
+		const urlObj = new URL(url, base);
+		const pathname = urlObj.pathname;
+		const parts = pathname.split("/");
+		const filename = parts[parts.length - 1];
+		return filename || "Image";
+	} catch {
+		const parts = url.split("/");
+		const lastPart = parts[parts.length - 1] || "";
+		const clean = lastPart.split("#")[0].split("?")[0];
+		return clean || "Image";
+	}
+};
 
 export function DefaultContentPreview({ instance, contentModel }: ContentPreviewProps) {
 	const { fields, createdAt } = instance;
@@ -24,12 +45,21 @@ export function DefaultContentPreview({ instance, contentModel }: ContentPreview
 					return (
 						<Box key={property.id} display="flex" flexDirection="column" gap="4">
 							<PreviewLabel>{label}</PreviewLabel>
-							<Box rounded="lg" style={{ overflow: "hidden" }}>
-								<img
-									alt={label}
-									src={value}
-									style={{ display: "block", maxWidth: "100%" }}
-								/>
+							<Box style={{ maxWidth: "400px" }}>
+								<Card>
+									<CardPreview h="224">
+										<CardImage asChild>
+											<Image
+												src={value}
+												alt={label}
+												fill
+												unoptimized
+												style={{ objectFit: "cover" }}
+											/>
+										</CardImage>
+									</CardPreview>
+									<CardHeader>{getImageName(value)}</CardHeader>
+								</Card>
 							</Box>
 						</Box>
 					);

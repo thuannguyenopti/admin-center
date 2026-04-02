@@ -3,7 +3,6 @@
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { ArticlePreview } from "./ArticlePreview";
-import { BlogPostPreview } from "./BlogPostPreview";
 import { DefaultContentPreview } from "./DefaultContentPreview";
 
 export interface ContentPreviewProps {
@@ -13,7 +12,6 @@ export interface ContentPreviewProps {
 
 const templateRegistry: Record<string, React.FC<ContentPreviewProps>> = {
 	"cm-article": ArticlePreview,
-	"cm-blog-post": BlogPostPreview,
 };
 
 const richTextStyles = `
