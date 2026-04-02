@@ -1,7 +1,7 @@
 "use client";
 
 import React, { use, useState, useCallback, useMemo } from "react";
-import { Box, toaster, Select, SelectTrigger, SelectContent, Field, Input, Textarea } from "@optiaxiom/react";
+import { Box, toaster, Select, SelectTrigger, SelectContent, Field, Input, Textarea, Heading, Separator } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
@@ -11,11 +11,11 @@ import {
 	ContentTypeMapping,
 	PropertyMapping,
 } from "@/app/db/initialData";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import { Footer } from "@/app/context/LayoutContext";
 import AbstractDialog from "@/app/components/AbstractDialog";
-import { generateSuggestedMapping, areTypesCompatible } from "@/app/lib/contentTypeMapping";
+import { generateSuggestedMapping, areTypesCompatible, findIncomingMappings } from "@/app/lib/contentTypeMapping";
 import { IconPlus } from "@tabler/icons-react";
 
 // Helper to get display name with fallback to name
@@ -148,6 +148,71 @@ const PropertyMappingRow = React.memo(({
 });
 
 PropertyMappingRow.displayName = 'PropertyMappingRow';
+
+// Incoming Mappings Section - shows which content types map TO this type
+const IncomingMappingsSection = React.memo(({
+	contentTypeId,
+	contentTypes,
+}: {
+	contentTypeId: string;
+	contentTypes: ContentType[];
+}) => {
+	const router = useRouter();
+
+	const incomingMappings = useMemo(
+		() => findIncomingMappings(contentTypeId, contentTypes),
+		[contentTypeId, contentTypes]
+	);
+
+	if (incomingMappings.length === 0) {
+		return (
+			<Box p="32" textAlign="center" bg="bg.secondary" rounded="md">
+				<Text color="fg.secondary">
+					No content types currently map to this type.
+				</Text>
+			</Box>
+		);
+	}
+
+	return (
+		<Table>
+			<thead>
+				<Tr>
+					<Th>Source Content Type</Th>
+					<Th>Properties Mapped</Th>
+					<Th style={{ width: "120px" }}>Actions</Th>
+				</Tr>
+			</thead>
+			<tbody>
+				{incomingMappings.map(({ mapping, sourceType }) => (
+					<Tr key={`${sourceType.id}-${mapping.id}`}>
+						<Td type="header">
+							{sourceType.displayName || sourceType.name}
+						</Td>
+						<Td>
+							{mapping.propertyMappings.length} mapped
+						</Td>
+						<Td>
+							<Button
+								appearance="subtle"
+								size="sm"
+								onClick={() => {
+									router.push(
+										`/cms/settings/content-types/${sourceType.id}/mappings`
+									);
+								}}
+							>
+								View Source
+							</Button>
+						</Td>
+					</Tr>
+				))}
+			</tbody>
+		</Table>
+	);
+});
+
+IncomingMappingsSection.displayName = 'IncomingMappingsSection';
 
 export default function MappingsPage() {
 	const params = useParams();
@@ -383,66 +448,94 @@ export default function MappingsPage() {
 	return (
 		<>
 			<Box style={{ maxWidth: "900px" }}>
+				{/* Page Description */}
 				<Text color="fg.secondary" mb="24">
 					Define how this content type's properties map to other content types for transformations, imports, and migrations.
 				</Text>
 
-				<Box display="flex" justifyContent="flex-end" mb="16">
-					<Button
-						appearance="primary"
-						icon={<IconPlus size={16} />}
-						onClick={openCreateDialog}
-					>
-						Create Mapping
-					</Button>
+				{/* OUTGOING MAPPINGS SECTION */}
+				<Box mb="48">
+					<Box display="flex" justifyContent="space-between" alignItems="center" mb="16">
+						<Heading level="4">Outgoing Mappings</Heading>
+						<Button
+							appearance="primary"
+							icon={<IconPlus size={16} />}
+							onClick={openCreateDialog}
+						>
+							Create Mapping
+						</Button>
+					</Box>
+
+					<Text color="fg.secondary" fontSize="sm" mb="16">
+						Mappings that transform this content type's data to other types.
+					</Text>
+
+					{mappings.length === 0 ? (
+						<Box p="32" textAlign="center" bg="bg.secondary" rounded="md">
+							<Text color="fg.secondary">
+								No outgoing mappings defined yet. Create your first mapping to get started.
+							</Text>
+						</Box>
+					) : (
+						<Table>
+							<thead>
+								<Tr>
+									<Th>Name</Th>
+									<Th>Target Type</Th>
+									<Th>Properties Mapped</Th>
+									<Th style={{ width: "120px" }}>Actions</Th>
+								</Tr>
+							</thead>
+							<tbody>
+								{mappings.map((mapping) => {
+									const targetType = contentTypes.find(ct => ct.id === mapping.targetContentTypeId);
+									return (
+										<Tr key={mapping.id}>
+											<Td type="header">{mapping.displayName || mapping.name}</Td>
+											<Td>{targetType ? getDisplayName(targetType) : "Unknown"}</Td>
+											<Td>{mapping.propertyMappings.length} mapped</Td>
+											<Td>
+												<Box display="flex" gap="8">
+													<Button
+														appearance="subtle"
+														size="sm"
+														onClick={() => openEditDialog(mapping)}
+													>
+														Edit
+													</Button>
+													<Button
+														appearance="subtle"
+														size="sm"
+														onClick={() => openDeleteDialog(mapping)}
+													>
+														Delete
+													</Button>
+												</Box>
+											</Td>
+										</Tr>
+									);
+								})}
+							</tbody>
+						</Table>
+					)}
 				</Box>
 
-				{mappings.length === 0 ? (
-					<Box p="32" textAlign="center" bg="bg.secondary" rounded="md">
-						<Text color="fg.secondary">No mappings defined yet. Create your first mapping to get started.</Text>
-					</Box>
-				) : (
-					<Table>
-						<thead>
-							<Tr>
-								<Th>Name</Th>
-								<Th>Target Type</Th>
-								<Th>Properties Mapped</Th>
-								<Th style={{ width: "120px" }}>Actions</Th>
-							</Tr>
-						</thead>
-						<tbody>
-							{mappings.map((mapping) => {
-								const targetType = contentTypes.find(ct => ct.id === mapping.targetContentTypeId);
-								return (
-									<Tr key={mapping.id}>
-										<Td type="header">{mapping.displayName || mapping.name}</Td>
-										<Td>{targetType ? getDisplayName(targetType) : "Unknown"}</Td>
-										<Td>{mapping.propertyMappings.length} mapped</Td>
-										<Td>
-											<Box display="flex" gap="8">
-												<Button
-													appearance="subtle"
-													size="sm"
-													onClick={() => openEditDialog(mapping)}
-												>
-													Edit
-												</Button>
-												<Button
-													appearance="subtle"
-													size="sm"
-													onClick={() => openDeleteDialog(mapping)}
-												>
-													Delete
-												</Button>
-											</Box>
-										</Td>
-									</Tr>
-								);
-							})}
-						</tbody>
-					</Table>
-				)}
+				{/* SEPARATOR */}
+				<Separator mb="48" />
+
+				{/* INCOMING MAPPINGS SECTION */}
+				<Box>
+					<Heading level="4" mb="16">Incoming Mappings</Heading>
+
+					<Text color="fg.secondary" fontSize="sm" mb="16">
+						Content types that can be transformed into this type.
+					</Text>
+
+					<IncomingMappingsSection
+						contentTypeId={id}
+						contentTypes={contentTypes}
+					/>
+				</Box>
 			</Box>
 
 			{/* Create/Edit Dialog */}
