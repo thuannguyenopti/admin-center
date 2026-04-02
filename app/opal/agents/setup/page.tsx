@@ -42,13 +42,6 @@ import {
     HoverCardContent,
 } from "@optiaxiom/react/unstable";
 import {
-    IconHelp,
-    IconSparkles,
-    IconDots,
-    IconX,
-    IconCopy,
-} from "@tabler/icons-react";
-import {
     IconFileImport,
     IconPlay,
     IconClockRotateLeft,
@@ -74,6 +67,8 @@ import {
     IconPen,
     IconPlus,
     IconTrashCan,
+    IconCircleQuestion as IconHelp,
+    IconCopy,
 } from "@optimizely/axiom-icons";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -1314,7 +1309,7 @@ function SpecializedAgentSetupContent() {
                                         )}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild suppressHydrationWarning>
-                                                <Button appearance="default" size="lg" icon={<IconDots />} aria-label="More options" suppressHydrationWarning />
+                                                <Button appearance="default" size="lg" icon={<IconEllipsisSolid />} aria-label="More options" suppressHydrationWarning />
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent>
                                                 <DropdownMenuItem icon={<IconFileImport size={16} />}>

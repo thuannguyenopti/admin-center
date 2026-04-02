@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   compress: true,
   output: "standalone",
-  transpilePackages: ["@optiaxiom/react"],
+  transpilePackages: ["@optiaxiom/react", "@optimizely/axiom-icons"],
   experimental: {
     optimizePackageImports: ["@optiaxiom/react", "@tabler/icons-react"],
   },
@@ -32,10 +32,7 @@ const nextConfig: NextConfig = {
         path: false,
       };
     }
-    config.resolve.alias = {
-      ...(config.resolve.alias ?? {}),
-      "@optimizely/axiom-icons": require("path").resolve(__dirname, "app/lib/axiom-icons.tsx"),
-    };
+    // No alias needed — @optimizely/axiom-icons is installed as a real package
 
     return config;
   },

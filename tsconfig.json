@@ -27,7 +27,7 @@
         "./*"
       ],
       "@optimizely/axiom-icons": [
-        "./app/lib/axiom-icons"
+        "./node_modules/@optimizely/axiom-icons"
       ]
     }
   },

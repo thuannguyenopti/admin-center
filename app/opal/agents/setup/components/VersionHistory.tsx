@@ -11,7 +11,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@optiaxiom/react";
-import { IconDots } from "@tabler/icons-react";
 import {
     IconPen,
     IconEye,
@@ -19,6 +18,7 @@ import {
     IconCopy,
     IconEyeSlash,
     IconArrowsLeftRight,
+    IconEllipsisSolid,
 } from "@optimizely/axiom-icons";
 import { ResizableDetailsTray } from "./ResizableDetailsTray";
 
@@ -212,7 +212,7 @@ function VersionCard({
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconDots size={16} />}
+                        icon={<IconEllipsisSolid size={16} />}
                         aria-label="More options"
                         onClick={(e) => e.stopPropagation()}
                     />

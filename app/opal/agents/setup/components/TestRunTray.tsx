@@ -11,11 +11,11 @@ import {
     Textarea,
 } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input"; // Using local Input wrapper as seen in page.tsx
-import { IconChevronRight } from "@tabler/icons-react";
 import {
     IconPlay,
     IconArrowsRotate,
-} from "@/app/lib/axiom-icons";
+    IconChevronRight,
+} from "@optimizely/axiom-icons";
 import { useState } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 import { ResizableDetailsTray } from "./ResizableDetailsTray";
