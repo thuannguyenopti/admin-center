@@ -419,7 +419,7 @@ export default function EditPageDetail() {
 		<>
 			{/* Task Alert - show if page is part of a task */}
 			{page?.cmpTaskMetadata && (
-				<Box mb="16" mx="24">
+				<Box pl="24" pt="16" pr="12" pb="8" bg="bg.default">
 					<Alert intent="information">
 						<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
 							<Text>
