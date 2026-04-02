@@ -825,7 +825,7 @@ export function CmpOpalAssetRecommendation() {
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
 
 	// Add to Application state
-	const [pages, setPages] = usePersistentState("pages", initialPages) as [Page[], any];
+	const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [Page[], any];
 	const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
 	const [isTargetSelectionOpen, setIsTargetSelectionOpen] = useState(false);
 	const [instanceToAdd, setInstanceToAdd] = useState<ContentInstance | null>(null);
@@ -945,6 +945,29 @@ export function CmpOpalAssetRecommendation() {
 		}
 	}, [contentInstances.length, taskArticles.length, taskAssets.length, scene]);
 
+	// Stable callback handlers for selections
+	const handleSelectPage = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectPage called with:', id);
+		setSelectedPageId(id);
+		// Log immediately after to verify it's being called
+		setTimeout(() => console.log('[Main] selectedPageId after setState:', id), 0);
+	}, []);
+
+	const handleSelectContentInstance = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectContentInstance called with:', id);
+		setSelectedContentInstanceId(id);
+	}, []);
+
+	const handleSelectArticle = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectArticle called with:', id);
+		setSelectedArticleId(id);
+	}, []);
+
+	const handleSelectTaskAsset = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectTaskAsset called with:', id);
+		setSelectedTaskAssetId(id);
+	}, []);
+
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
 	const [briefContent, setBriefContent] = useState(initialBriefHtml);
@@ -955,6 +978,15 @@ export function CmpOpalAssetRecommendation() {
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+
+	// Debug: Log main component state
+	console.log('[CmpOpalAssetRecommendation] Main state:', {
+		scene,
+		selectedPageId,
+		selectedContentInstanceId,
+		selectedArticleId,
+		selectedTaskAssetId,
+	});
 
 	// Initialize hasTaskContent based on existing content instances, task assets, or articles
 	useEffect(() => {
@@ -1336,34 +1368,22 @@ export function CmpOpalAssetRecommendation() {
 								onAddContentFromModel={addContentInstanceFromModel}
 								onAddArticle={addArticle}
 								onOpenSuggested={() => setSuggestedPanelOpen(true)}
-								onSelectTaskAsset={(id) => {
-									console.log('[Main] setSelectedTaskAssetId called with:', id);
-									setSelectedTaskAssetId(id);
-								}}
+								onSelectTaskAsset={handleSelectTaskAsset}
 								suggestedOpen={suggestedPanelOpen}
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
 								taskArticles={taskArticles}
 								selectedArticleId={selectedArticleId}
-								onSelectArticle={(id) => {
-									console.log('[Main] setSelectedArticleId called with:', id);
-									setSelectedArticleId(id);
-								}}
+								onSelectArticle={handleSelectArticle}
 								contentInstances={contentInstances}
 								setContentInstances={setContentInstances}
 								selectedContentInstanceId={selectedContentInstanceId}
-								onSelectContentInstance={(id) => {
-									console.log('[Main] setSelectedContentInstanceId called with:', id);
-									setSelectedContentInstanceId(id);
-								}}
+								onSelectContentInstance={handleSelectContentInstance}
 								onTabChange={handleTabChange}
 								selectedPageId={selectedPageId}
 								pages={pages}
 								setPages={setPages}
-								onSelectPage={(id) => {
-									console.log('[Main] setSelectedPageId called with:', id);
-									setSelectedPageId(id);
-								}}
+								onSelectPage={handleSelectPage}
 								onAddToApplication={handleAddToApplication}
 								previewOutlines={previewOutlines}
 								previewCurrentEle={previewCurrentEle}
@@ -1409,7 +1429,62 @@ export function CmpOpalAssetRecommendation() {
 			default:
 				return null;
 		}
-	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, panelAssetsWithSelection, perspectives, rankedSearchAssets, scene, searchReturnScene, selectedAsset, selectedTaskAssetId, selectedContentInstanceId, selectedArticleId, taskAssets, taskArticles, contentInstances, suggestedPanelOpen, workflowMenuOpen, workflowSearch]);
+	}, [
+		activeTab,
+		activeWorkflow,
+		briefContent,
+		draftBriefContent,
+		exclude,
+		filteredWorkflowTemplates,
+		hasTaskContent,
+		panelAssetsWithSelection,
+		perspectives,
+		rankedSearchAssets,
+		scene,
+		searchReturnScene,
+		selectedAsset,
+		selectedTaskAssetId,
+		selectedContentInstanceId,
+		selectedArticleId,
+		selectedPageId,
+		taskAssets,
+		taskArticles,
+		contentInstances,
+		pages,
+		suggestedPanelOpen,
+		workflowMenuOpen,
+		workflowSearch,
+		previewOutlines,
+		previewCurrentEle,
+		previewHoverEle,
+		applications,
+		addArticle,
+		addContentInstanceFromModel,
+		addAssetsToTask,
+		applyWorkflowChange,
+		cancelBriefEdit,
+		handleAddToApplication,
+		handleSelectArticle,
+		handleSelectContentInstance,
+		handleSelectPage,
+		handleSelectTaskAsset,
+		handleTabChange,
+		handleWorkflowSelect,
+		openBriefEdit,
+		openSearch,
+		saveBriefEdit,
+		setContentInstances,
+		setPages,
+		setPreviewCurrentEle,
+		setPreviewHoverEle,
+		setPreviewOutlines,
+		setPerspectives,
+		setScene,
+		setSelectedPanelAssetIds,
+		setSuggestedPanelOpen,
+		setWorkflowMenuOpen,
+		setWorkflowSearch,
+	]);
 
 	return (
 		<Box
@@ -3247,6 +3322,8 @@ function ContentFilledPage({
 	// Render logging
 	console.log('[ContentFilledPage] RENDER:', {
 		selectedContentInstanceId,
+		selectedPageId,
+		selectedArticleId,
 		selectedTaskAssetId,
 		suggestedOpen,
 	});
@@ -3270,6 +3347,8 @@ function ContentFilledPage({
 	console.log('[ContentFilledPage] Selected items:', {
 		selectedContentInstanceId,
 		foundInstance: selectedContentInstance ? { id: selectedContentInstance.id, name: selectedContentInstance.modelDisplayName } : null,
+		selectedPageId,
+		foundPage: selectedPage ? { id: selectedPage.id, name: selectedPage.name } : null,
 		selectedArticleId,
 		foundArticle: selectedArticle,
 		selectedTaskAssetId,
@@ -3459,7 +3538,7 @@ function ContentFilledPage({
 
 							if (isPage && item) {
 								// Select this page, deselect others
-								console.log('[ContentTab] Selecting page:', item.id);
+								console.log('[ContentTab] Selecting page:', item.id, 'currently selected:', selectedPageId);
 								onSelectPage(item.id);
 								onSelectContentInstance(null);
 								onSelectArticle(null);
@@ -3468,6 +3547,11 @@ function ContentFilledPage({
 							}
 
 							if (isArticle && item) {
+								// Check if already selected
+								if (selectedArticleId === item.id) {
+									console.log('[ContentTab] Article already selected, ignoring click');
+									return;
+								}
 								// Select this article, deselect others
 								console.log('[ContentTab] Selecting article:', item.id);
 								onSelectArticle(item.id);
@@ -3478,6 +3562,11 @@ function ContentFilledPage({
 							}
 
 							if (isAsset && item) {
+								// Check if already selected
+								if (selectedTaskAssetId === item.id) {
+									console.log('[ContentTab] Asset already selected, ignoring click');
+									return;
+								}
 								// Select this asset, deselect others
 								console.log('[ContentTab] Selecting task asset:', item.id);
 								onSelectTaskAsset(item.id);
