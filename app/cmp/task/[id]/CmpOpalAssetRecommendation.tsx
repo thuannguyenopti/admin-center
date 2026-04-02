@@ -9,6 +9,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	useCallback,
 } from "react";
 import {
 	AlertDialog,
@@ -21,21 +22,39 @@ import {
 	Avatar,
 	Badge,
 	Box,
+	Menu,
+	MenuTrigger,
+	MenuContent,
 	Tabs,
 	TabsList,
 	TabsTrigger,
 	Textarea,
 	Tooltip,
+	toaster,
 } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
+import { initialContentTypes, type ContentType, initialPages, type Page, initialApplications, type Application } from "@/app/db/initialData";
+import { initialContentInstances, type ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
+import { isCmpType, convertCmpModelToContentType, convertCmpPropertyToCms } from "@/app/lib/contentTypeMigration";
+import { createPageFromInstance } from "@/app/lib/contentConnection";
+import usePersistentState from "@/app/usePersistentState";
+import { useRouter } from "next/navigation";
+import TargetContentTypeDialog from "@/app/components/TargetContentTypeDialog";
+import { PropertyRenderer } from "@/app/components/property-renderers";
+// Import to register all property renderers
+import "@/app/components/property-renderers";
+import PreviewCanvas, { type Outline, type EleMap } from "@/app/components/vb/PreviewCanvas";
+import type { PreviewSettings } from "@/app/components/vb/PreviewSettings";
+import PropertyBasedPageRenderer from "@/app/site/PropertyBasedPageRenderer";
 import Grid1Icon from "@/app/cmp/assets/Grid1.svg";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import Grid3Icon from "@/app/cmp/assets/grid3.svg";
 import Grid4Icon from "@/app/cmp/assets/grid4.svg";
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
 import {
+	IconBroadcast,
 	IconCalendar,
 	IconCheck,
 	IconChevronDown,
@@ -44,11 +63,15 @@ import {
 	IconCopy,
 	IconDots,
 	IconEye,
+	IconFileText,
 	IconLink,
 	IconMaximize,
 	IconMinus,
 	IconPencil,
+	IconPhoto,
 	IconPlus,
+	IconTrash,
+	IconPuzzle,
 	IconSearch,
 	IconTag,
 	IconUpload,
@@ -378,88 +401,70 @@ const richTextContentStyles = `
 }
 `;
 
-const figmaAssets = {
-	card1: "https://www.figma.com/api/mcp/asset/52391482-2cbe-4357-9192-a0149afc8ef4",
-	card2: "https://www.figma.com/api/mcp/asset/6ec8c7db-e6b0-4d5a-b581-0409aaf9d71d",
-	card3: "https://www.figma.com/api/mcp/asset/31ed5377-43b9-4ad4-a8f4-63b8436415ae",
-	card4: "https://www.figma.com/api/mcp/asset/d7809dfd-52ff-4998-8af0-f6923d662cc5",
-	card5: "https://www.figma.com/api/mcp/asset/01b7a317-0cff-4b3b-9bd2-f31b6b7ff05b",
-	card6: "https://www.figma.com/api/mcp/asset/94f3812b-8e85-4220-8d35-cea8a01764dc",
-	card7: "https://www.figma.com/api/mcp/asset/a9e4cb62-48b0-4775-a9b6-5186696809b5",
-	card8: "https://www.figma.com/api/mcp/asset/ca8825ae-7d87-4715-842c-1eded8650144",
-	card9: "https://www.figma.com/api/mcp/asset/044af426-49f4-4d27-9b74-55f4f9ac431f",
-	card10: "https://www.figma.com/api/mcp/asset/dadfe6ee-7758-46bb-a591-a938fee49c03",
-	card11: "https://www.figma.com/api/mcp/asset/1075b84c-1e72-43dc-a0dc-1003fdf1fc30",
-	card12: "https://www.figma.com/api/mcp/asset/2abbfe96-bc0e-4d46-94b1-34f2bd1a18b9",
-	card13: "https://www.figma.com/api/mcp/asset/2fda6b73-9994-47b6-a171-96e8eb046eca",
-	card14: "https://www.figma.com/api/mcp/asset/d713a7e9-e9f3-455e-a493-da88efd18840",
-	card15: "https://www.figma.com/api/mcp/asset/63eca535-2149-4e87-844d-00804e82b854",
-	card16: "https://www.figma.com/api/mcp/asset/8e10271a-e404-40d4-81f5-cbdc8156f46e",
-	card17: "https://www.figma.com/api/mcp/asset/a3e21247-397b-46b1-a02d-bd4b8022a21d",
-	card18: "https://www.figma.com/api/mcp/asset/1d002a23-9d13-41fa-ae92-278c6d02b8e3",
-	card19: "https://www.figma.com/api/mcp/asset/d49a1ec9-69d7-4cff-97a8-f401670fdb8a",
-	vespaPreview: "https://www.figma.com/api/mcp/asset/00678207-1a20-439d-aa6c-8a246c924bb8",
-	vespaThumb: "https://www.figma.com/api/mcp/asset/7a89632b-cf46-4402-b1ec-64005fdd6862",
-	contentHero: "https://www.figma.com/api/mcp/asset/20c53de0-7914-41c6-b418-44c1d5cc5d16",
-	contentThumbDoc: "https://www.figma.com/api/mcp/asset/91d23d70-6d96-4679-a458-e2ee391f19fb",
-	contentThumbOne: "https://www.figma.com/api/mcp/asset/c622308d-589a-47b4-80a1-da6847fcb3fe",
-	contentThumbTwo: "https://www.figma.com/api/mcp/asset/2ce82fcf-82aa-4e6f-aec8-362e3dc3760d",
-	contentThumbThree: "https://www.figma.com/api/mcp/asset/a09e97eb-63b7-4d5d-8039-372b0f28bdf6",
-	contentThumbFour: "https://www.figma.com/api/mcp/asset/e3bfebc5-bf23-4963-b481-6a5a1a2ff3a2",
-	searchFortniteWide: "https://www.figma.com/api/mcp/asset/fc767124-df19-4ec9-bb81-7567a6beba1f",
-	searchOpenWaterWide: "https://www.figma.com/api/mcp/asset/a51a9caa-a050-4aed-bd25-573af397ae7b",
-	searchCyclistDesert: "https://www.figma.com/api/mcp/asset/2ebd2f9a-69a5-4605-8fa5-4df3b366d8da",
-	searchSwimPack: "https://www.figma.com/api/mcp/asset/d203e90f-5bde-4d3b-8e70-b2928fa3d0db",
-	searchRoadCyclists: "https://www.figma.com/api/mcp/asset/76e2249e-36c9-48f3-8f61-1e8161a6b042",
-	searchFortnitePdf: "https://www.figma.com/api/mcp/asset/ba1bb099-3976-47aa-b31f-95b7c9f5133d",
-	searchStockChart: "https://www.figma.com/api/mcp/asset/c325aa68-a0b0-4b49-9f32-d45a638a13d2",
-	searchTimeTrial: "https://www.figma.com/api/mcp/asset/351c8034-ec8b-4aed-ac3c-0ec78c13af0f",
-	searchBook: "https://www.figma.com/api/mcp/asset/4485ea66-2e97-4106-88d1-098fa26ff250",
-	searchRedCyclist: "https://www.figma.com/api/mcp/asset/9caf352b-db79-4f87-bc1e-49bbab873f6f",
-	searchTriathlonFinish: "https://www.figma.com/api/mcp/asset/9697e1a4-cbe2-46cb-b532-ed3968acd55e",
-	searchOrangeCyclist: "https://www.figma.com/api/mcp/asset/f031da9a-2b97-49cb-b434-83f4790e4ed0",
-	searchDarkCyclist: "https://www.figma.com/api/mcp/asset/7591bdff-86ed-4029-a44c-0467aaea917e",
-	searchSunsetCyclist: "https://www.figma.com/api/mcp/asset/e18dcc1d-b2d9-43d6-97eb-4e1954669232",
-	panel1: "https://www.figma.com/api/mcp/asset/5de633a8-d993-4011-81a4-148b8cd7a5a0",
-	panel2: "https://www.figma.com/api/mcp/asset/7b9e2adb-ca19-4058-8f98-e7375dd21af0",
-	panel3: "https://www.figma.com/api/mcp/asset/27ebaf30-6ff9-4c7a-bc94-282a51903db9",
-	panel4: "https://www.figma.com/api/mcp/asset/7eacc459-f07b-49f2-b460-b54195bb3e58",
-	panel5: "https://www.figma.com/api/mcp/asset/25e15803-08a9-4c53-9e31-ed0c61bff86b",
-	panel6: "https://www.figma.com/api/mcp/asset/c3ea432b-3776-471a-907a-ea5a5d016ace",
-	panel7: "https://www.figma.com/api/mcp/asset/178cfde5-335e-46f3-93e6-234841311403",
-	panel8: "https://www.figma.com/api/mcp/asset/d0442430-159b-4af8-9880-ac65488aa1a6",
-	emptyContentBg: "https://www.figma.com/api/mcp/asset/5ce2fc90-812c-42a7-910d-f797b34089f1",
-};
+const recommendationAssets = {
+	hero: "/cmp/assets/recommendation/search-01-image.jpg",
+	emptyState: "/cmp/assets/recommendation/search-12-image.jpg",
+	document: "/cmp/assets/recommendation/search-07-image.jpg",
+	panel01: "/cmp/assets/recommendation/panel-01-image.jpg",
+	panel02: "/cmp/assets/recommendation/panel-02-image.jpg",
+	panel03: "/cmp/assets/recommendation/panel-03-image.jpg",
+	panel04: "/cmp/assets/recommendation/panel-04-image.jpg",
+	panel05: "/cmp/assets/recommendation/panel-05-image.jpg",
+	panel06: "/cmp/assets/recommendation/panel-06-image.jpg",
+	panel07: "/cmp/assets/recommendation/panel-07-image.jpg",
+	panel08: "/cmp/assets/recommendation/panel-08-image.jpg",
+	search01Thumb: "/cmp/assets/recommendation/search-01-thumb.jpg",
+	search01Image: "/cmp/assets/recommendation/search-01-image.jpg",
+	search02Image: "/cmp/assets/recommendation/search-02-image.jpg",
+	search03Thumb: "/cmp/assets/recommendation/search-03-thumb.jpg",
+	search03Image: "/cmp/assets/recommendation/search-03-image.jpg",
+	search04Image: "/cmp/assets/recommendation/search-04-image.jpg",
+	search05Image: "/cmp/assets/recommendation/search-05-image.jpg",
+	search06Image: "/cmp/assets/recommendation/search-06-image.jpg",
+	search07Thumb: "/cmp/assets/recommendation/search-07-thumb.jpg",
+	search07Image: "/cmp/assets/recommendation/search-07-image.jpg",
+	search08Image: "/cmp/assets/recommendation/search-08-image.jpg",
+	search09Image: "/cmp/assets/recommendation/search-09-image.jpg",
+	search10Image: "/cmp/assets/recommendation/search-10-image.jpg",
+	search11Thumb: "/cmp/assets/recommendation/search-11-thumb.jpg",
+	search11Image: "/cmp/assets/recommendation/search-11-image.jpg",
+	search12Image: "/cmp/assets/recommendation/search-12-image.jpg",
+	search13Image: "/cmp/assets/recommendation/search-13-image.jpg",
+	search14Thumb: "/cmp/assets/recommendation/search-14-thumb.jpg",
+	search14Image: "/cmp/assets/recommendation/search-14-image.jpg",
+	search15Image: "/cmp/assets/recommendation/search-15-image.jpg",
+} as const;
 
-const suggestedAssets: AssetItem[] = [
-	{ id: "a1", label: "JPG", match: getAssetMatch({ id: "a1", label: "JPG", selected: true }), src: figmaAssets.card1, title: "Open water runners", preview: "image", selected: true },
-	{ id: "a2", label: "JPG", match: getAssetMatch({ id: "a2", label: "JPG" }), src: figmaAssets.card2, title: "Swimmer in surf", preview: "image" },
-	{ id: "a3", label: "JPG", match: getAssetMatch({ id: "a3", label: "JPG" }), src: figmaAssets.card5, title: "Cyclist in desert", preview: "image" },
-	{ id: "a4", label: "JPG", match: getAssetMatch({ id: "a4", label: "JPG" }), src: figmaAssets.card3, title: "Swimming pack", preview: "image" },
-	{ id: "a5", label: "JPG", match: getAssetMatch({ id: "a5", label: "JPG", tooltip: true }), src: figmaAssets.card8, title: "Sports cover art", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
-	{ id: "a6", label: "JPG", match: getAssetMatch({ id: "a6", label: "JPG", selected: true }), src: figmaAssets.card6, title: "Cyclists on road", preview: "image", selected: true },
-	{ id: "a7", label: "PDF", match: getAssetMatch({ id: "a7", label: "PDF" }), src: figmaAssets.vespaThumb, title: "Vespa brochure", preview: "pdf", previewSrc: figmaAssets.vespaPreview },
-	{ id: "a8", label: "MP4", match: getAssetMatch({ id: "a8", label: "MP4" }), src: figmaAssets.card9, title: "Time trial cyclist", preview: "image" },
-	{ id: "a9", label: "MP4", match: getAssetMatch({ id: "a9", label: "MP4" }), src: figmaAssets.card10, title: "Runner in red", preview: "image" },
-	{ id: "a10", label: "MP4", match: getAssetMatch({ id: "a10", label: "MP4" }), src: figmaAssets.card11, title: "Runner on course", preview: "image" },
-	{ id: "a11", label: "MP4", match: getAssetMatch({ id: "a11", label: "MP4", selected: true }), src: figmaAssets.card12, title: "Triathlon finish", preview: "image", selected: true },
-	{ id: "a12", label: "MP4", match: getAssetMatch({ id: "a12", label: "MP4" }), src: figmaAssets.card18, title: "Cyclist in tunnel", preview: "image" },
+const suggestedAssetSeed: AssetItem[] = [
+	{ id: "a1", label: "JPG", match: getAssetMatch({ id: "a1", label: "JPG", selected: true }), src: recommendationAssets.panel01, title: "Open water runners", preview: "image", selected: true },
+	{ id: "a2", label: "JPG", match: getAssetMatch({ id: "a2", label: "JPG" }), src: recommendationAssets.panel02, title: "Swimmer in surf", preview: "image" },
+	{ id: "a3", label: "JPG", match: getAssetMatch({ id: "a3", label: "JPG" }), src: recommendationAssets.panel03, title: "Cyclist in desert", preview: "image" },
+	{ id: "a4", label: "JPG", match: getAssetMatch({ id: "a4", label: "JPG" }), src: recommendationAssets.panel04, title: "Swimming pack", preview: "image" },
+	{ id: "a5", label: "JPG", match: getAssetMatch({ id: "a5", label: "JPG", tooltip: true }), src: recommendationAssets.panel05, title: "Sports cover art", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
+	{ id: "a6", label: "JPG", match: getAssetMatch({ id: "a6", label: "JPG", selected: true }), src: recommendationAssets.panel06, title: "Cyclists on road", preview: "image", selected: true },
+	{ id: "a7", label: "PDF", match: getAssetMatch({ id: "a7", label: "PDF" }), src: recommendationAssets.search07Thumb, title: "Vespa brochure", preview: "pdf", previewSrc: recommendationAssets.search07Image },
+	{ id: "a8", label: "MP4", match: getAssetMatch({ id: "a8", label: "MP4" }), src: recommendationAssets.panel07, title: "Time trial cyclist", preview: "image" },
+	{ id: "a9", label: "MP4", match: getAssetMatch({ id: "a9", label: "MP4" }), src: recommendationAssets.panel08, title: "Runner in red", preview: "image" },
+	{ id: "a10", label: "MP4", match: getAssetMatch({ id: "a10", label: "MP4" }), src: recommendationAssets.search08Image, title: "Runner on course", preview: "image" },
+	{ id: "a11", label: "MP4", match: getAssetMatch({ id: "a11", label: "MP4", selected: true }), src: recommendationAssets.search12Image, title: "Triathlon finish", preview: "image", selected: true },
+	{ id: "a12", label: "MP4", match: getAssetMatch({ id: "a12", label: "MP4" }), src: recommendationAssets.search15Image, title: "Cyclist in tunnel", preview: "image" },
 ];
+const suggestedAssets: AssetItem[] = suggestedAssetSeed;
 
 const initialTaskAssets: AssetItem[] = [];
 
-const searchAssets: SearchAssetItem[] = [
+const searchAssetSeed: SearchAssetItem[] = [
 	{
 		id: "s1",
 		label: "JPG",
 		match: getAssetMatch({ id: "s1", label: "JPG", selected: true }),
 		metaDescription: "Energetic open-water triathlon scene that works well as a sponsor-package hero or campaign thumbnail.",
-		src: "https://www.figma.com/api/mcp/asset/4a6043d8-95cb-44da-a9d2-edbf7b2394b8",
+		src: recommendationAssets.search01Image,
 		selected: true,
 		height: 180,
 		preview: "image",
 		keywords: ["swim", "swimmer", "openwater", "ocean", "fitness", "athlete", "triathlon", "event", "outdoor", "runners"],
-		thumbnailSrc: "https://www.figma.com/api/mcp/asset/22588afa-c07d-4a18-8d10-62383a3569dd",
+		thumbnailSrc: recommendationAssets.search01Thumb,
 		title: "Open-water runners",
 		width: 291,
 	},
@@ -468,7 +473,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "PNG",
 		match: getAssetMatch({ id: "s2", label: "PNG" }),
 		metaDescription: "Strong motion-led water shot for endurance storytelling, event promotion, and athlete-focused content.",
-		src: "https://www.figma.com/api/mcp/asset/15d6a52f-25f6-44c0-9385-b98b3948946a",
+		src: recommendationAssets.search02Image,
 		height: 180,
 		keywords: ["swim", "swimmer", "ocean", "fitness", "athlete", "triathlon", "sprint", "water"],
 		preview: "image",
@@ -480,11 +485,11 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s3", label: "MP4" }),
 		metaDescription: "A clean cycling visual with wide landscape context, useful for sport-performance and outdoor event messaging.",
-		src: "https://www.figma.com/api/mcp/asset/695da0de-de11-413c-b480-7c47fa6aa827",
+		src: recommendationAssets.search03Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "road", "desert", "outdoor", "athlete", "triathlon"],
 		preview: "image",
-		thumbnailSrc: "https://www.figma.com/api/mcp/asset/a395fdf0-d2d4-48f3-ba6c-9cfd5befab68",
+		thumbnailSrc: recommendationAssets.search03Thumb,
 		title: "Cyclist in desert",
 		width: 219.2,
 	},
@@ -493,7 +498,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s4", label: "MP4" }),
 		metaDescription: "Graphic overhead swim image that adds variety to triathlon coverage and works well in editorial layouts.",
-		src: "https://www.figma.com/api/mcp/asset/cf7a16a6-4f37-4110-a35b-5a2cdba859da",
+		src: recommendationAssets.search04Image,
 		height: 180,
 		keywords: ["swim", "swimmer", "water", "fitness", "athlete", "triathlon", "outdoor"],
 		preview: "image",
@@ -505,7 +510,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "JPG",
 		match: getAssetMatch({ id: "s5", label: "JPG" }),
 		metaDescription: "Poster-style creative asset suited for campaign moodboards, sponsor collateral, or concept exploration.",
-		src: "https://www.figma.com/api/mcp/asset/ac293cba-d3a8-4dc7-b10e-8ac84509d3a6",
+		src: recommendationAssets.search05Image,
 		height: 180,
 		keywords: ["music", "poster", "editorial", "print", "magazine", "cover", "collateral", "design"],
 		preview: "image",
@@ -517,7 +522,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s6", label: "MP4", selected: true }),
 		metaDescription: "Road-cycling image with strong event energy, useful for hero banners, recaps, and sponsor storytelling.",
-		src: "https://www.figma.com/api/mcp/asset/9d728d71-337d-4acc-af17-9f73f0df342c",
+		src: recommendationAssets.search06Image,
 		selected: true,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "road", "event", "outdoor", "athlete", "triathlon", "sales"],
@@ -530,11 +535,11 @@ const searchAssets: SearchAssetItem[] = [
 		label: "PDF",
 		match: getAssetMatch({ id: "s7", label: "PDF", tooltip: true }),
 		metaDescription: "Reference brochure asset for sales and sponsorship collateral when you need document-style supporting content.",
-		src: "https://www.figma.com/api/mcp/asset/45ad4624-294e-41d4-871e-b40c09e2466e",
+		src: recommendationAssets.search07Image,
 		height: 180,
 		keywords: ["pdf", "brochure", "collateral", "sales", "vespa", "brand", "print", "document", "webinar"],
 		preview: "pdf",
-		thumbnailSrc: "https://www.figma.com/api/mcp/asset/a6d8d1c5-5278-4d90-bcf3-68097aa99ba9",
+		thumbnailSrc: recommendationAssets.search07Thumb,
 		title: "Vespa brochure",
 		tooltip: "highly relevant to fitness, cycling and health in general",
 		width: 219.2,
@@ -544,7 +549,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s8", label: "MP4" }),
 		metaDescription: "Tight action image that emphasizes performance, speed, and race-day intensity for premium sports content.",
-		src: "https://www.figma.com/api/mcp/asset/30b06ce8-347c-4779-990e-fdc42fc3e551",
+		src: recommendationAssets.search08Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "timetrial", "athlete", "triathlon", "outdoor", "fitness"],
 		preview: "image",
@@ -556,7 +561,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "JPG",
 		match: getAssetMatch({ id: "s9", label: "JPG" }),
 		metaDescription: "Editorial print spread useful for mixing brand collateral and document-like references into the recommendation set.",
-		src: "https://www.figma.com/api/mcp/asset/7e502c56-9fa8-4b89-851d-513822fd33ca",
+		src: recommendationAssets.search09Image,
 		height: 180,
 		keywords: ["magazine", "book", "editorial", "print", "collateral", "document", "brochure"],
 		preview: "image",
@@ -568,7 +573,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s10", label: "MP4" }),
 		metaDescription: "Distinct cycling portrait that works well for athlete spotlights, training stories, and product-led race narratives.",
-		src: "https://www.figma.com/api/mcp/asset/229731dd-cb80-4092-b5cc-bd8b0ad1be10",
+		src: recommendationAssets.search10Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "orange", "athlete", "triathlon", "outdoor"],
 		preview: "image",
@@ -580,11 +585,11 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s11", label: "MP4" }),
 		metaDescription: "Minimal profile shot that gives the panel a calmer visual option for editorial or supporting placements.",
-		src: "https://www.figma.com/api/mcp/asset/f74d40ed-ef4f-4d03-a260-e9e28eba7642",
+		src: recommendationAssets.search11Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "profile", "athlete", "triathlon", "fitness"],
 		preview: "image",
-		thumbnailSrc: "https://www.figma.com/api/mcp/asset/6ae6d557-81a4-4f2b-86c2-1e7145cd2088",
+		thumbnailSrc: recommendationAssets.search11Thumb,
 		title: "Cyclist profile",
 		width: 219.2,
 	},
@@ -593,7 +598,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "JPG",
 		match: getAssetMatch({ id: "s12", label: "JPG", selected: true }),
 		metaDescription: "Clear race-action image with visible event context, ideal for sponsor package pages and campaign recaps.",
-		src: "https://www.figma.com/api/mcp/asset/9b218406-8645-48ed-9187-4ef28953a8df",
+		src: recommendationAssets.search12Image,
 		selected: true,
 		height: 180,
 		keywords: ["running", "runners", "race", "event", "fitness", "athlete", "triathlon", "outdoor", "sports"],
@@ -606,7 +611,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s13", label: "MP4" }),
 		metaDescription: "Simple urban cycling frame that supports lifestyle-oriented messaging without overpowering the surrounding content.",
-		src: "https://www.figma.com/api/mcp/asset/6678964d-2dae-43e0-aab0-373519af65a2",
+		src: recommendationAssets.search13Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "road", "athlete", "triathlon", "outdoor"],
 		preview: "image",
@@ -618,11 +623,11 @@ const searchAssets: SearchAssetItem[] = [
 		label: "JPG",
 		match: getAssetMatch({ id: "s14", label: "JPG" }),
 		metaDescription: "Fast, dynamic blur treatment for moments where you want more motion and less literal event coverage.",
-		src: "https://www.figma.com/api/mcp/asset/f388b2f9-b082-4a5b-ae07-e8436878d1ca",
+		src: recommendationAssets.search14Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "motion", "athlete", "triathlon", "outdoor", "speed"],
 		preview: "image",
-		thumbnailSrc: "https://www.figma.com/api/mcp/asset/e695f977-ef1f-485a-bd69-070dfdc9b2ca",
+		thumbnailSrc: recommendationAssets.search14Thumb,
 		title: "Cyclist motion blur",
 		width: 287,
 	},
@@ -631,7 +636,7 @@ const searchAssets: SearchAssetItem[] = [
 		label: "MP4",
 		match: getAssetMatch({ id: "s15", label: "MP4" }),
 		metaDescription: "Event-focused cycling image with approachable framing, good for secondary cards and supporting recommendations.",
-		src: "https://www.figma.com/api/mcp/asset/2792d536-0151-47c0-92b7-fbbf8662da69",
+		src: recommendationAssets.search15Image,
 		height: 180,
 		keywords: ["cycling", "cyclist", "bike", "bicycle", "athlete", "triathlon", "outdoor", "webinar", "event"],
 		preview: "image",
@@ -639,6 +644,8 @@ const searchAssets: SearchAssetItem[] = [
 		width: 163,
 	},
 ];
+
+const searchAssets: SearchAssetItem[] = searchAssetSeed;
 
 const perspectiveSeeds = [
 	"Images related to fitness, healthy people, runners, outdoor activities, professional events",
@@ -785,6 +792,7 @@ const workflowTemplates: WorkflowTemplate[] = [
 ];
 
 export function CmpOpalAssetRecommendation() {
+	const router = useRouter();
 	const [scene, setScene] = useState<Scene>("brief");
 	const [hasTaskContent, setHasTaskContent] = useState(false);
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
@@ -794,6 +802,156 @@ export function CmpOpalAssetRecommendation() {
 		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
+	const [taskArticles, setTaskArticles] = useState<Array<{ id: string; title: string }>>([]);
+	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
+	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
+	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
+
+	// Add to Application state
+	const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [Page[], any];
+	const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+	const [isTargetSelectionOpen, setIsTargetSelectionOpen] = useState(false);
+	const [instanceToAdd, setInstanceToAdd] = useState<ContentInstance | null>(null);
+
+	// Preview state for PreviewCanvas
+	const [previewCurrentEle, setPreviewCurrentEle] = useState<string>("");
+	const [previewHoverEle, setPreviewHoverEle] = useState<string>("");
+	const [previewOutlines, setPreviewOutlines] = useState<Outline[]>([]);
+
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
+	const [applications] = usePersistentState("applications", initialApplications) as [Application[], any];
+
+	// Computed values
+	const CURRENT_TASK_ID = "1"; // TODO: Get from router params or context
+	const CURRENT_TASK_NAME = "Ironman Miami triathlon 2026 Sponsor Package task"; // TODO: Get from task data
+
+	const taskPages = useMemo(() => {
+		return pages.filter(page =>
+			page.cmpTaskMetadata?.taskId === CURRENT_TASK_ID
+		);
+	}, [pages]);
+
+	// Add to Application handlers
+	const handleAddToApplication = useCallback((instance: ContentInstance) => {
+		// Find all content types that this instance can map to
+		const sourceType = contentTypes.find(ct => ct.id === instance.modelId);
+		if (!sourceType || !sourceType.mappings) {
+			toaster.create(
+				"No mappings configured for this content type",
+				{ intent: "danger" },
+			);
+			return;
+		}
+
+		const availableTargets = sourceType.mappings.map(mapping => {
+			const targetType = contentTypes.find(ct => ct.id === mapping.targetContentTypeId);
+			return { mapping, targetType };
+		}).filter(t => t.targetType) as Array<{ mapping: any; targetType: ContentType }>;
+
+		if (availableTargets.length === 0) {
+			toaster.create(
+				"No CMS content types available for this content",
+				{ intent: "danger" },
+			);
+			return;
+		}
+
+		if (availableTargets.length === 1) {
+			// Single target - create page immediately
+			createAndAddPage(instance, availableTargets[0].targetType.id);
+		} else {
+			// Multiple targets - show selection dialog
+			setInstanceToAdd(instance);
+			setIsTargetSelectionOpen(true);
+		}
+	}, [contentTypes]);
+
+	const createAndAddPage = useCallback((instance: ContentInstance, targetContentTypeId: string) => {
+		const result = createPageFromInstance(
+			instance,
+			targetContentTypeId,
+			contentTypes,
+			pages,
+			{ taskId: CURRENT_TASK_ID, taskName: CURRENT_TASK_NAME }
+		);
+
+		if (result.error) {
+			toaster.create(
+				result.error,
+				{ intent: "danger" },
+			);
+			return;
+		}
+
+		// Add page to global pages state
+		setPages((prev: Page[]) => [...prev, result.page!]);
+
+		// Auto-select the newly created page
+		setSelectedPageId(result.page!.id);
+		setSelectedContentInstanceId(null);
+		setSelectedTaskAssetId(null);
+		setSelectedArticleId(null);
+
+		// Show success message
+		toaster.create(
+			`Page "${result.page!.name}" created successfully`,
+			{ intent: "success" },
+		);
+
+		// Close dialog if open
+		setIsTargetSelectionOpen(false);
+		setInstanceToAdd(null);
+	}, [contentTypes, pages, setPages, CURRENT_TASK_ID, CURRENT_TASK_NAME]);
+
+	// Auto-select first item on load if nothing is selected
+	useEffect(() => {
+		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedArticleId && !selectedPageId) {
+			if (contentInstances.length > 0) {
+				setSelectedContentInstanceId(contentInstances[0].id);
+			} else if (taskPages.length > 0) {
+				setSelectedPageId(taskPages[0].id);
+			} else if (taskArticles.length > 0) {
+				setSelectedArticleId(taskArticles[0].id);
+			} else if (taskAssets.length > 0) {
+				setSelectedTaskAssetId(taskAssets[0].id);
+			}
+		}
+	}, [contentInstances, taskPages, taskArticles, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedArticleId, selectedPageId]);
+
+	// Switch to empty state when all items are removed
+	useEffect(() => {
+		const hasContent = contentInstances.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+		if (!hasContent && (scene === "content" || scene === "content-panel")) {
+			setScene("content-empty");
+			setHasTaskContent(false);
+			setSuggestedPanelOpen(false);
+		}
+	}, [contentInstances.length, taskArticles.length, taskAssets.length, scene]);
+
+	// Stable callback handlers for selections
+	const handleSelectPage = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectPage called with:', id);
+		setSelectedPageId(id);
+		// Log immediately after to verify it's being called
+		setTimeout(() => console.log('[Main] selectedPageId after setState:', id), 0);
+	}, []);
+
+	const handleSelectContentInstance = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectContentInstance called with:', id);
+		setSelectedContentInstanceId(id);
+	}, []);
+
+	const handleSelectArticle = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectArticle called with:', id);
+		setSelectedArticleId(id);
+	}, []);
+
+	const handleSelectTaskAsset = useCallback((id: string | null) => {
+		console.log('[Main] handleSelectTaskAsset called with:', id);
+		setSelectedTaskAssetId(id);
+	}, []);
+
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
 	const [briefContent, setBriefContent] = useState(initialBriefHtml);
@@ -804,6 +962,38 @@ export function CmpOpalAssetRecommendation() {
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+
+	// Debug: Log main component state
+	console.log('[CmpOpalAssetRecommendation] Main state:', {
+		scene,
+		selectedPageId,
+		selectedContentInstanceId,
+		selectedArticleId,
+		selectedTaskAssetId,
+	});
+
+	// Initialize hasTaskContent based on existing content instances, task assets, or articles
+	useEffect(() => {
+		if (contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0) {
+			setHasTaskContent(true);
+		}
+	}, [contentInstances.length, taskAssets.length, taskArticles.length]); // Re-check when content loads from localStorage
+
+	// Update preview outlines when selected page changes
+	useEffect(() => {
+		if (selectedPageId) {
+			const page = pages.find((p) => p.id === selectedPageId);
+			if (page) {
+				// Try to get outlines from variations first, then fall back to page.outlines
+				const outlines = page.variations?.[0]?.outlines || page.outlines || [];
+				setPreviewOutlines(outlines);
+			} else {
+				setPreviewOutlines([]);
+			}
+		} else {
+			setPreviewOutlines([]);
+		}
+	}, [selectedPageId, pages]);
 
 	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
 	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
@@ -882,7 +1072,12 @@ export function CmpOpalAssetRecommendation() {
 	}, [deferredWorkflowSearch]);
 
 	const openContentTab = () => {
-		setScene(hasTaskContent ? "content" : "content-empty");
+		// Check if there's actually content (instances, assets, or articles)
+		const hasContent = contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0;
+		setScene(hasContent ? "content" : "content-empty");
+		if (hasContent) {
+			setHasTaskContent(true);
+		}
 	};
 
 	const openBriefEdit = () => {
@@ -963,6 +1158,55 @@ export function CmpOpalAssetRecommendation() {
 		}
 
 		setSelectedPanelAssetIds([]);
+		setHasTaskContent(true);
+		setScene("content");
+	};
+
+	const addContentInstanceFromModel = (model: ContentType) => {
+		const instanceId = `ci-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+		// Initialize field values based on model properties
+		const fields: Record<string, any> = {};
+		model.properties.forEach((prop: any) => {
+			if (prop.type === "text") {
+				fields[prop.name] = "";
+			} else if (prop.type === "longText" || prop.type === "richText") {
+				fields[prop.name] = "";
+			} else if (prop.type === "datetime") {
+				fields[prop.name] = new Date().toISOString();
+			} else if (prop.list) {
+				fields[prop.name] = [];
+			} else {
+				fields[prop.name] = null;
+			}
+		});
+
+		const newInstance: ContentInstance = {
+			id: instanceId,
+			modelId: model.id,
+			modelDisplayName: model.displayName || model.name,
+			createdAt: new Date().toISOString(),
+			fields,
+		};
+
+		setContentInstances((current: ContentInstance[]) => [newInstance, ...current]);
+		setSelectedContentInstanceId(instanceId);
+		setSelectedTaskAssetId(null);
+		setSelectedArticleId(null);
+		setHasTaskContent(true);
+		setScene("content");
+	};
+
+	const addArticle = () => {
+		const articleId = `article-${Date.now()}`;
+		const newArticle = {
+			id: articleId,
+			title: "The runner sponsoring package",
+		};
+		setTaskArticles((current) => [...current, newArticle]);
+		setSelectedArticleId(articleId);
+		setSelectedContentInstanceId(null);
+		setSelectedTaskAssetId(null);
 		setHasTaskContent(true);
 		setScene("content");
 	};
@@ -1083,7 +1327,7 @@ export function CmpOpalAssetRecommendation() {
 			case "content-empty":
 				return (
 					<TaskCanvas
-						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onTabChange={handleTabChange} />}
+						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onAddArticle={addArticle} onTabChange={handleTabChange} />}
 						right={
 							<WorkflowSidebar
 								filteredTemplates={filteredWorkflowTemplates}
@@ -1098,57 +1342,52 @@ export function CmpOpalAssetRecommendation() {
 					/>
 				);
 			case "content":
-				return (
-					<TaskCanvas
-						left={
-							<ContentFilledPage
-								activeTab={activeTab}
-								onAddContent={() => openSearch("content")}
-								onOpenSuggested={() => setScene("content-panel")}
-								onSelectTaskAsset={setSelectedTaskAssetId}
-								suggestedOpen={false}
-								selectedTaskAssetId={selectedTaskAssetId}
-								taskAssets={taskAssets}
-								onTabChange={handleTabChange}
-							/>
-						}
-						right={
-							<WorkflowSidebar
-								filteredTemplates={filteredWorkflowTemplates}
-								isMenuOpen={workflowMenuOpen}
-								onRequestWorkflowChange={handleWorkflowSelect}
-								onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
-								onWorkflowSearchChange={setWorkflowSearch}
-								searchValue={workflowSearch}
-								workflow={activeWorkflow}
-							/>
-						}
-					/>
-				);
 			case "content-panel":
 				return (
 					<TaskCanvas
 						left={
 							<ContentFilledPage
 								activeTab={activeTab}
-								onAddContent={() => openSearch("content")}
-								onOpenSuggested={() => setScene("content-panel")}
-								onSelectTaskAsset={setSelectedTaskAssetId}
-								suggestedOpen={true}
+								onAddContent={() => openSearch(scene)}
+								onAddContentFromModel={addContentInstanceFromModel}
+								onAddArticle={addArticle}
+								onOpenSuggested={() => setSuggestedPanelOpen(true)}
+								onSelectTaskAsset={handleSelectTaskAsset}
+								suggestedOpen={suggestedPanelOpen}
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
+								taskArticles={taskArticles}
+								selectedArticleId={selectedArticleId}
+								onSelectArticle={handleSelectArticle}
+								contentInstances={contentInstances}
+								setContentInstances={setContentInstances}
+								selectedContentInstanceId={selectedContentInstanceId}
+								onSelectContentInstance={handleSelectContentInstance}
 								onTabChange={handleTabChange}
+								selectedPageId={selectedPageId}
+								pages={pages}
+								setPages={setPages}
+								onSelectPage={handleSelectPage}
+								onAddToApplication={handleAddToApplication}
+								previewOutlines={previewOutlines}
+								previewCurrentEle={previewCurrentEle}
+								previewHoverEle={previewHoverEle}
+								setPreviewCurrentEle={setPreviewCurrentEle}
+								setPreviewHoverEle={setPreviewHoverEle}
+								setPreviewOutlines={setPreviewOutlines}
+								applications={applications}
 							/>
 						}
-							right={
+						right={
+							suggestedPanelOpen ? (
 								<SuggestedAssetsPanel
 									assets={panelAssetsWithSelection}
 									onAddToTask={() =>
 										addAssetsToTask(panelAssetsWithSelection.filter((asset) => asset.selected))
 									}
 									onClearSelection={() => setSelectedPanelAssetIds([])}
-									onClose={() => setScene("content")}
-									onEditSearch={() => openSearch("content-panel")}
+									onClose={() => setSuggestedPanelOpen(false)}
+									onEditSearch={() => openSearch(scene)}
 									onToggleSelect={(assetId) =>
 										setSelectedPanelAssetIds((current) =>
 											current.includes(assetId)
@@ -1157,13 +1396,79 @@ export function CmpOpalAssetRecommendation() {
 										)
 									}
 								/>
-							}
-						/>
+							) : (
+								<WorkflowSidebar
+									filteredTemplates={filteredWorkflowTemplates}
+									isMenuOpen={workflowMenuOpen}
+									onRequestWorkflowChange={handleWorkflowSelect}
+									onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
+									onWorkflowSearchChange={setWorkflowSearch}
+									searchValue={workflowSearch}
+									workflow={activeWorkflow}
+								/>
+							)
+						}
+					/>
 				);
 			default:
 				return null;
 		}
-	}, [activeTab, activeWorkflow, exclude, filteredWorkflowTemplates, hasTaskContent, panelAssetsWithSelection, perspectives, rankedSearchAssets, scene, searchReturnScene, selectedAsset, selectedTaskAssetId, taskAssets, workflowMenuOpen, workflowSearch]);
+	}, [
+		activeTab,
+		activeWorkflow,
+		briefContent,
+		draftBriefContent,
+		exclude,
+		filteredWorkflowTemplates,
+		hasTaskContent,
+		panelAssetsWithSelection,
+		perspectives,
+		rankedSearchAssets,
+		scene,
+		searchReturnScene,
+		selectedAsset,
+		selectedTaskAssetId,
+		selectedContentInstanceId,
+		selectedArticleId,
+		selectedPageId,
+		taskAssets,
+		taskArticles,
+		contentInstances,
+		pages,
+		suggestedPanelOpen,
+		workflowMenuOpen,
+		workflowSearch,
+		previewOutlines,
+		previewCurrentEle,
+		previewHoverEle,
+		applications,
+		addArticle,
+		addContentInstanceFromModel,
+		addAssetsToTask,
+		applyWorkflowChange,
+		cancelBriefEdit,
+		handleAddToApplication,
+		handleSelectArticle,
+		handleSelectContentInstance,
+		handleSelectPage,
+		handleSelectTaskAsset,
+		handleTabChange,
+		handleWorkflowSelect,
+		openBriefEdit,
+		openSearch,
+		saveBriefEdit,
+		setContentInstances,
+		setPages,
+		setPreviewCurrentEle,
+		setPreviewHoverEle,
+		setPreviewOutlines,
+		setPerspectives,
+		setScene,
+		setSelectedPanelAssetIds,
+		setSuggestedPanelOpen,
+		setWorkflowMenuOpen,
+		setWorkflowSearch,
+	]);
 
 	return (
 		<Box
@@ -1179,6 +1484,26 @@ export function CmpOpalAssetRecommendation() {
 					workflowName={
 						workflowTemplates.find((template) => template.id === pendingWorkflowId)?.name ?? "workflow"
 					}
+				/>
+			)}
+			{/* Target Content Type Selection Dialog */}
+			{instanceToAdd && (
+				<TargetContentTypeDialog
+					open={isTargetSelectionOpen}
+					onClose={() => {
+						setIsTargetSelectionOpen(false);
+						setInstanceToAdd(null);
+					}}
+					availableTargets={
+						contentTypes
+							.find(ct => ct.id === instanceToAdd.modelId)
+							?.mappings?.map(mapping => ({
+								mapping,
+								targetType: contentTypes.find(ct => ct.id === mapping.targetContentTypeId)!,
+							}))
+							.filter(t => t.targetType) || []
+					}
+					onSelect={(targetContentTypeId) => createAndAddPage(instanceToAdd, targetContentTypeId)}
 				/>
 			)}
 		</Box>
@@ -2777,12 +3102,27 @@ function PreviewPage({
 function ContentEmptyPage({
 	activeTab,
 	onAddContent,
+	onAddContentFromModel,
+	onAddArticle,
 	onTabChange,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
+	onAddContentFromModel: (model: ContentType) => void;
+	onAddArticle: () => void;
 	onTabChange: (tab: string) => void;
 }) {
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
+	];
+
+	// Use CMP content models directly, converted to ContentType format
+	const cmpContentModels = useMemo(
+		() => initialCmpContentModels.map(convertCmpModelToContentType),
+		[]
+	);
+
 	return (
 		<Box pb="40" style={{ minHeight: "calc(100vh - 48px)", position: "relative" }}>
 			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
@@ -2808,18 +3148,63 @@ function ContentEmptyPage({
 							"Add Content" button.
 						</Text>
 					</Box>
-					<Button appearance="primary" onClick={onAddContent} size="lg">
-						<Box alignItems="center" display="flex" gap="8">
-							<IconPlus size={16} />
-							<span>Add Content</span>
-						</Box>
-					</Button>
+					<Menu
+						options={[
+							{
+								label: "Asset",
+								addon: <IconPhoto size={20} />,
+								description: "Add assets from recommendations",
+								execute: () => onAddContent(),
+							},
+							{
+								label: "Article",
+								addon: <IconFileText size={20} />,
+								description: "Add a hardcoded article example",
+								execute: () => onAddArticle(),
+							},
+							{
+								label: "From CMS",
+								addon: <IconBroadcast size={20} />,
+								description: "Add content from CMS",
+								execute: () => { /* TODO: Implement CMS content selection */ },
+							},
+							{
+								label: "Component",
+								addon: <IconPuzzle size={20} />,
+								description: "Add a reusable component",
+								execute: () => { /* TODO: Implement component selection */ },
+							},
+							{
+								label: "Content Type",
+								addon: <IconFileText size={20} />,
+								description: "Add content from a content model",
+								subOptions: cmpContentModels
+									.filter((model) => model.isActive !== false)
+									.map((model) => ({
+										label: model.displayName || model.name,
+										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
+										execute: () => onAddContentFromModel(model),
+									})),
+							},
+						]}
+					>
+						<MenuTrigger asChild>
+							<Button appearance="primary" size="lg">
+								<Box alignItems="center" display="flex" gap="8">
+									<IconPlus size={16} />
+									<span>Add Content</span>
+									<IconChevronDown size={16} />
+								</Box>
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 				</Box>
 
 				<img
 					alt=""
 					aria-hidden="true"
-					src={figmaAssets.emptyContentBg}
+					src={recommendationAssets.emptyState}
 					style={{
 						left: "50%",
 						maxWidth: 452,
@@ -2839,28 +3224,125 @@ function ContentEmptyPage({
 function ContentFilledPage({
 	activeTab,
 	onAddContent,
+	onAddContentFromModel,
+	onAddArticle,
 	onOpenSuggested,
 	onSelectTaskAsset,
 	selectedTaskAssetId,
 	suggestedOpen = false,
 	taskAssets,
+	taskArticles,
+	selectedArticleId,
+	onSelectArticle,
+	contentInstances,
+	setContentInstances,
+	selectedContentInstanceId,
+	onSelectContentInstance,
 	onTabChange,
+	selectedPageId,
+	pages,
+	onSelectPage,
+	setPages,
+	onAddToApplication,
+	previewOutlines,
+	previewCurrentEle,
+	previewHoverEle,
+	setPreviewCurrentEle,
+	setPreviewHoverEle,
+	setPreviewOutlines,
+	applications,
 }: {
 	activeTab: TaskTab;
 	onAddContent: () => void;
+	onAddContentFromModel: (model: ContentType) => void;
+	onAddArticle: () => void;
 	onOpenSuggested: () => void;
-	onSelectTaskAsset: (assetId: string) => void;
+	onSelectTaskAsset: (assetId: string | null) => void;
 	selectedTaskAssetId: string | null;
 	suggestedOpen?: boolean;
 	taskAssets: AssetItem[];
+	taskArticles: Array<{ id: string; title: string }>;
+	selectedArticleId: string | null;
+	onSelectArticle: (id: string | null) => void;
+	contentInstances: ContentInstance[];
+	setContentInstances: (instances: ContentInstance[]) => void;
+	selectedContentInstanceId: string | null;
+	onSelectContentInstance: (id: string | null) => void;
 	onTabChange: (tab: string) => void;
+	selectedPageId: string | null;
+	pages: Page[];
+	onSelectPage: (id: string | null) => void;
+	setPages: (pages: Page[] | ((prev: Page[]) => Page[])) => void;
+	onAddToApplication: (instance: ContentInstance) => void;
+	previewOutlines: Outline[];
+	previewCurrentEle: string;
+	previewHoverEle: string;
+	setPreviewCurrentEle: (value: React.SetStateAction<string>) => void;
+	setPreviewHoverEle: (value: React.SetStateAction<string>) => void;
+	setPreviewOutlines: React.Dispatch<React.SetStateAction<Outline[]>>;
+	applications: Application[];
 }) {
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		(value: ContentType[]) => void,
+	];
+	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
+	const router = useRouter();
+
+	// Filter pages that belong to this task
+	const CURRENT_TASK_ID = "1";
+	const taskPages = useMemo(() => {
+		return pages.filter(page => page.cmpTaskMetadata?.taskId === CURRENT_TASK_ID);
+	}, [pages]);
+
+	// Component mount/unmount logging
+	useEffect(() => {
+		console.log('[ContentFilledPage] MOUNTED');
+		return () => {
+			console.log('[ContentFilledPage] UNMOUNTED');
+		};
+	}, []);
+
+	// Render logging
+	console.log('[ContentFilledPage] RENDER:', {
+		selectedContentInstanceId,
+		selectedPageId,
+		selectedArticleId,
+		selectedTaskAssetId,
+		suggestedOpen,
+	});
+
+	// Use CMP content models directly, converted to ContentType format
+	const cmpContentModels = useMemo(
+		() => initialCmpContentModels.map(convertCmpModelToContentType),
+		[]
+	);
+
 	const selectedTaskAsset =
-		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? taskAssets[0] ?? null;
+		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
+	const selectedContentInstance =
+		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
+	const selectedArticle =
+		taskArticles.find((article) => article.id === selectedArticleId) ?? null;
+	const selectedPage =
+		pages.find((page) => page.id === selectedPageId) ?? null;
+
+	// Debug: Log what we found
+	console.log('[ContentFilledPage] Selected items:', {
+		selectedContentInstanceId,
+		foundInstance: selectedContentInstance ? { id: selectedContentInstance.id, name: selectedContentInstance.modelDisplayName } : null,
+		selectedPageId,
+		foundPage: selectedPage ? { id: selectedPage.id, name: selectedPage.name } : null,
+		selectedArticleId,
+		foundArticle: selectedArticle,
+		selectedTaskAssetId,
+		foundAsset: selectedTaskAsset,
+	});
+
 	const heroImageSrc =
 		selectedTaskAsset?.preview === "image"
 			? selectedTaskAsset.heroSrc ?? selectedTaskAsset.src
-			: figmaAssets.contentHero;
+			: recommendationAssets.hero;
 	const articleBodyStyle = {
 		color: "var(--ax-colors-fg-default)",
 		fontFamily: "Inter, sans-serif",
@@ -2871,27 +3353,102 @@ function ContentFilledPage({
 		lineHeight: "20px",
 	};
 
+	// Reset edit mode when switching content instances
+	useEffect(() => {
+		setIsEditingContentInstance(false);
+	}, [selectedContentInstanceId]);
+
+	// Debug logging for content instances and assets
+	useEffect(() => {
+		console.log('[ContentTab] Content instances updated:', {
+			count: contentInstances.length,
+			instances: contentInstances.map(ci => ({ id: ci.id, modelDisplayName: ci.modelDisplayName })),
+		});
+	}, [contentInstances]);
+
+	useEffect(() => {
+		console.log('[ContentTab] Task assets updated:', {
+			count: taskAssets.length,
+			assets: taskAssets.map(a => ({ id: a.id, title: a.title })),
+		});
+	}, [taskAssets]);
+
+	// Debug logging for selection state
+	useEffect(() => {
+		console.log('[ContentTab] Selection state:', {
+			selectedContentInstanceId,
+			selectedTaskAssetId,
+			suggestedOpen,
+			contentInstancesCount: contentInstances.length,
+			taskAssetsCount: taskAssets.length,
+		});
+	}, [selectedContentInstanceId, selectedTaskAssetId, suggestedOpen, contentInstances.length, taskAssets.length]);
+
 	return (
 		<Box pb="32" style={{ position: "relative" }}>
 			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
 			<Box display="flex" flexDirection="column" style={{ gap: 18, maxWidth: 812, padding: "20px 32px 0" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Button
-						appearance="primary"
-						onClick={onAddContent}
-						size="sm"
-						style={{
-							background: "#0037FF",
-							borderRadius: 6,
-							height: 40,
-							padding: "0 12px",
-						}}
+					<Menu
+						options={[
+							{
+								label: "Asset",
+								addon: <IconPhoto size={20} />,
+								description: "Add assets from recommendations",
+								execute: () => onAddContent(),
+							},
+							{
+								label: "Article",
+								addon: <IconFileText size={20} />,
+								description: "Add a hardcoded article example",
+								execute: () => onAddArticle(),
+							},
+							{
+								label: "From CMS",
+								addon: <IconBroadcast size={20} />,
+								description: "Add content from CMS",
+								execute: () => { /* TODO: Implement CMS content selection */ },
+							},
+							{
+								label: "Component",
+								addon: <IconPuzzle size={20} />,
+								description: "Add a reusable component",
+								execute: () => { /* TODO: Implement component selection */ },
+							},
+							{
+								label: "Content Type",
+								addon: <IconFileText size={20} />,
+								description: "Add content from a content model",
+								subOptions: cmpContentModels
+									.filter((model) => model.isActive !== false)
+									.map((model) => ({
+										label: model.displayName || model.name,
+										description: model.description || `Create a new ${(model.displayName || model.name).toLowerCase()}`,
+										execute: () => onAddContentFromModel(model),
+									})),
+							},
+						]}
 					>
-						<Box alignItems="center" display="flex" gap="4">
-							<IconPlus size={16} />
-							<span>Add Content</span>
-						</Box>
-					</Button>
+						<MenuTrigger asChild>
+							<Button
+								appearance="primary"
+								size="sm"
+								style={{
+									background: "#0037FF",
+									borderRadius: 6,
+									height: 40,
+									padding: "0 12px",
+								}}
+							>
+								<Box alignItems="center" display="flex" gap="4">
+									<IconPlus size={16} />
+									<span>Add Content</span>
+									<IconChevronDown size={16} />
+								</Box>
+							</Button>
+						</MenuTrigger>
+						<MenuContent />
+					</Menu>
 					<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 						<Box alignItems="center" display="flex" justifyContent="center" rounded="md" style={{ flexShrink: 0, height: 32, width: 32 }}>
 							<IconCopy size={16} color="var(--ax-colors-fg-secondary)" />
@@ -2914,73 +3471,203 @@ function ContentFilledPage({
 				</Box>
 
 				<Box alignItems="center" display="flex" gap="8">
-					{[null, ...taskAssets].map((asset, index) => {
+					{(() => {
+						const buttonList = [null, ...contentInstances, ...taskPages, ...taskArticles, ...taskAssets];
+						console.log('[ContentTab] Rendering button list:', {
+							totalButtons: buttonList.length,
+							items: buttonList.map((item, i) => ({
+								index: i,
+								type: i === 0 ? 'suggested' :
+									item && 'modelId' in item ? 'content-instance' :
+									item && 'contentTypeId' in item && !('modelId' in item) ? 'page' :
+									item && 'title' in item && !('src' in item) ? 'article' :
+									'asset',
+								id: item?.id,
+								key: i === 0 ? 'suggested' : item?.id ?? i,
+							})),
+						});
+						return buttonList;
+					})().map((item, index) => {
+						// Determine button type
 						const isSuggestedTrigger = index === 0;
-						const isSelected = isSuggestedTrigger
-							? suggestedOpen
-							: !suggestedOpen && asset?.id === selectedTaskAssetId;
+						const isContentInstance = item && 'modelId' in item;
+						const isPage = item && 'contentTypeId' in item && !('modelId' in item);
+						const isArticle = item && 'title' in item && !('src' in item) && !('modelId' in item) && !('contentTypeId' in item);
+						const isAsset = item && !isContentInstance && !isPage && !isArticle;
 
-							return (
-								<Box
-									key={index}
-									alignItems="center"
-									bg={isSelected ? "bg.default" : "bg.secondary"}
-									border="1"
-									borderColor={isSelected ? "border.accent" : "border.tertiary"}
-									display="flex"
-									justifyContent="center"
-									rounded="md"
+						// Determine if this button is selected
+						const isSelected = isSuggestedTrigger
+							? false // Sparkles button is never "selected", it just toggles the panel
+							: (
+								(isContentInstance && item.id === selectedContentInstanceId) ||
+								(isPage && item.id === selectedPageId) ||
+								(isArticle && item.id === selectedArticleId) ||
+								(isAsset && item.id === selectedTaskAssetId)
+							);
+
+						// Handle click events
+						const handleClick = () => {
+							console.log('[ContentTab] Button clicked:', {
+								index,
+								isSuggestedTrigger,
+								isContentInstance,
+								isPage,
+								isArticle,
+								isAsset,
+								itemId: item?.id,
+								itemType: isContentInstance ? 'content-instance' : isPage ? 'page' : isArticle ? 'article' : isAsset ? 'asset' : 'suggested',
+							});
+
+							if (isSuggestedTrigger) {
+								console.log('[ContentTab] Opening suggested assets');
+								onOpenSuggested();
+								return;
+							}
+
+							if (isContentInstance) {
+								// Select this content instance, deselect others
+								console.log('[ContentTab] Selecting content instance:', item.id);
+								onSelectContentInstance(item.id);
+								onSelectPage(null);
+								onSelectArticle(null);
+								onSelectTaskAsset(null);
+								return;
+							}
+
+							if (isPage && item) {
+								// Select this page, deselect others
+								console.log('[ContentTab] Selecting page:', item.id, 'currently selected:', selectedPageId);
+								onSelectPage(item.id);
+								onSelectContentInstance(null);
+								onSelectArticle(null);
+								onSelectTaskAsset(null);
+								return;
+							}
+
+							if (isArticle && item) {
+								// Check if already selected
+								if (selectedArticleId === item.id) {
+									console.log('[ContentTab] Article already selected, ignoring click');
+									return;
+								}
+								// Select this article, deselect others
+								console.log('[ContentTab] Selecting article:', item.id);
+								onSelectArticle(item.id);
+								onSelectPage(null);
+								onSelectContentInstance(null);
+								onSelectTaskAsset(null);
+								return;
+							}
+
+							if (isAsset && item) {
+								// Check if already selected
+								if (selectedTaskAssetId === item.id) {
+									console.log('[ContentTab] Asset already selected, ignoring click');
+									return;
+								}
+								// Select this asset, deselect others
+								console.log('[ContentTab] Selecting task asset:', item.id);
+								onSelectTaskAsset(item.id);
+								onSelectPage(null);
+								onSelectContentInstance(null);
+								onSelectArticle(null);
+								return;
+							}
+
+							console.warn('[ContentTab] Click handler did not match any condition');
+						};
+
+						return (
+							<Box
+								key={isSuggestedTrigger ? 'suggested' : item?.id ?? index}
+								alignItems="center"
+								bg={isSelected ? "bg.default" : "bg.secondary"}
+								border="1"
+								borderColor={isSelected ? "border.accent" : "border.tertiary"}
+								display="flex"
+								justifyContent="center"
+								rounded="md"
+								style={{
+									background: "#FFF",
+									boxShadow: isSelected
+										? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7"
+										: "none",
+									flexShrink: 0,
+									height: 32,
+									minHeight: 32,
+									minWidth: 32,
+									overflow: "hidden",
+									width: 32,
+								}}
+							>
+								<button
+									aria-label={
+										isSuggestedTrigger ? "Open suggested assets" :
+										isContentInstance ? `View ${item.modelDisplayName}` :
+										isPage ? `View ${(item as Page).name}` :
+										isArticle ? `View ${(item as { title: string }).title}` :
+										isAsset && item && 'title' in item ? `View ${(item as { title: string }).title}` :
+										"View task item"
+									}
+									onClick={handleClick}
 									style={{
-										background: "#FFF",
-										boxShadow: isSelected
-											? "0 0 0 1px #FFF, 0 0 0 3px #2E66F7"
-											: "none",
+										alignItems: "center",
+										background: "transparent",
+										border: "none",
+										cursor: "pointer",
+										display: "flex",
 										flexShrink: 0,
 										height: 32,
-										minHeight: 32,
-										minWidth: 32,
-										overflow: "hidden",
+										justifyContent: "center",
+										padding: 0,
 										width: 32,
 									}}
+									type="button"
 								>
-									<button
-										aria-label={isSuggestedTrigger ? "Open suggested assets" : `View ${asset?.title ?? "task asset"}`}
-										onClick={isSuggestedTrigger ? onOpenSuggested : asset ? () => onSelectTaskAsset(asset.id) : undefined}
-										style={{
-											alignItems: "center",
-											background: "transparent",
-											border: "none",
-											cursor: "pointer",
-											display: "flex",
-											flexShrink: 0,
-											height: 32,
-											justifyContent: "center",
-											padding: 0,
-											width: 32,
-										}}
-										type="button"
-									>
-										{isSuggestedTrigger ? (
-											<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
-										) : asset?.thumbnailSrc || asset?.src ? (
-											<img
-												alt=""
-												src={asset?.thumbnailSrc ?? asset?.src}
-												style={{
-													display: "block",
-													flexShrink: 0,
-													height: 32,
-													objectFit: "cover",
-													width: 32,
-												}}
-											/>
-										) : (
-											<Text fontSize="lg">{asset?.title?.charAt(0) ?? "?"}</Text>
-										)}
-									</button>
-								</Box>
-							);
-						})}
+									{isSuggestedTrigger ? (
+										<SparklesIcon height={14} style={{ color: "var(--ax-colors-fg-secondary)" }} width={14} />
+									) : isContentInstance ? (
+										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
+									) : isPage ? (
+										<iframe
+											src={`/cms/edit/${(item as Page).id}?preview=true`}
+											style={{
+												border: "none",
+												display: "block",
+												height: 32,
+												objectFit: "cover",
+												pointerEvents: "none",
+												transform: "scale(0.15)",
+												transformOrigin: "top left",
+												width: 213,
+											}}
+											title={`Preview of ${(item as Page).name}`}
+										/>
+									) : isArticle ? (
+										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
+									) : isAsset && item && 'src' in item ? (
+										<img
+											alt=""
+											src={('thumbnailSrc' in item ? item.thumbnailSrc : item.src) as string}
+											style={{
+												display: "block",
+												flexShrink: 0,
+												height: 32,
+												objectFit: "cover",
+												width: 32,
+											}}
+										/>
+									) : (
+										<Text fontSize="lg">{
+											isPage
+												? ((item as Page)?.name?.charAt(0) ?? "?")
+												: ('title' in (item ?? {}) ? (item as { title: string }).title.charAt(0) : "?")
+										}</Text>
+									)}
+								</button>
+							</Box>
+						);
+					})}
 				</Box>
 
 				<Box
@@ -2991,7 +3678,16 @@ function ContentFilledPage({
 					style={{ overflow: "hidden" }}
 				>
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
-						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>The runner sponsoring package</Text>
+						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
+							{selectedContentInstance
+								? selectedContentInstance.modelDisplayName
+								: selectedPage
+								? selectedPage.name
+								: selectedArticle
+								? selectedArticle.title
+								: selectedTaskAsset?.title
+								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedArticleId ?? selectedTaskAssetId ?? 'unknown'}`}
+						</Text>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
 							<button
@@ -3011,90 +3707,309 @@ function ContentFilledPage({
 								<SparklesIcon height={16} style={{ color: "var(--ax-colors-fg-secondary)" }} width={16} />
 							</button>
 							<IconLink size={16} color="var(--ax-colors-fg-secondary)" />
-							<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
+							{selectedContentInstance && (
+								<IconPencil
+									size={16}
+									color={isEditingContentInstance ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)"}
+									style={{ cursor: "pointer" }}
+									onClick={() => setIsEditingContentInstance(!isEditingContentInstance)}
+								/>
+							)}
+							<Menu
+								options={
+									selectedPage
+										? [
+												// Menu options for CMS pages
+												{
+													label: "Edit in CMS",
+													addon: <IconPencil size={16} />,
+													description: "Open page in Visual Builder",
+													execute: () => {
+														router.push(`/cms/edit/${selectedPage.id}`);
+													},
+												},
+												{
+													label: "Review",
+													addon: <IconEye size={16} />,
+													description: "View page on website",
+													execute: () => {
+														// TODO: Build page slug and open in new tab
+														const slug = selectedPage.slug || selectedPage.name.toLowerCase().replace(/\s+/g, '-');
+														window.open(`/site/${slug}`, '_blank');
+													},
+												},
+												{
+													label: "Remove",
+													addon: <IconTrash size={16} />,
+													description: "Remove page from task",
+													execute: () => {
+														// Clear cmpTaskMetadata from page
+														setPages((prev: Page[]) =>
+															prev.map(p =>
+																p.id === selectedPage.id
+																	? { ...p, cmpTaskMetadata: undefined }
+																	: p
+															)
+														);
+														toaster.create(
+															"Page removed from task",
+															{ intent: "success" },
+														);
+														onSelectPage(null);
+													},
+												},
+											]
+										: selectedContentInstance
+										? [
+												// Menu options for CMP content instances
+												applications.length === 1
+													? {
+															label: "Add to CMS",
+															addon: <IconPlus size={16} />,
+															description: "Create CMS page from this content",
+															execute: () => onAddToApplication(selectedContentInstance),
+													  }
+													: {
+															label: "Add to CMS",
+															addon: <IconPlus size={16} />,
+															description: "Create CMS page from this content",
+															subOptions: applications.map((app: Application) => ({
+																label: app.name,
+																description: `Add to ${app.name}`,
+																execute: () => onAddToApplication(selectedContentInstance),
+															})),
+													  },
+												{
+													label: "Remove from task",
+													addon: <IconTrash size={16} />,
+													description: "Remove this item from the task",
+													execute: () => {
+														const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
+														setContentInstances(updatedInstances);
+
+														// Check if any items remain (content instances, pages, articles, or assets)
+														const hasRemainingItems = updatedInstances.length > 0 || taskPages.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+
+														if (hasRemainingItems) {
+															// Select first remaining item
+															if (updatedInstances.length > 0) {
+																onSelectContentInstance(updatedInstances[0].id);
+															} else if (taskPages.length > 0) {
+																onSelectPage(taskPages[0].id);
+															} else if (taskArticles.length > 0) {
+																onSelectArticle(taskArticles[0].id);
+															} else if (taskAssets.length > 0) {
+																onSelectTaskAsset(taskAssets[0].id);
+															}
+														} else {
+															// No items left - navigate to empty state
+															onSelectContentInstance(null);
+															onTabChange('content'); // Trigger re-evaluation of hasTaskContent
+														}
+													},
+												},
+											]
+										: selectedArticle || selectedTaskAsset
+										? [
+												{
+													label: "Remove from task",
+													addon: <IconTrash size={16} />,
+													description: "Remove this item from the task",
+													execute: () => {
+														if (selectedArticle) {
+															const updatedArticles = taskArticles.filter(article => article.id !== selectedArticle.id);
+															// TODO: Need setTaskArticles setter to properly update
+															console.log('Remove article:', selectedArticle.id);
+														} else if (selectedTaskAsset) {
+															// TODO: Need setTaskAssets setter to properly update
+															console.log('Remove asset:', selectedTaskAsset.id);
+														}
+													},
+												},
+											]
+										: []
+								}
+							>
+								<MenuTrigger asChild>
+									<button
+										aria-label="More options"
+										style={{
+											alignItems: "center",
+											background: "transparent",
+											border: "none",
+											cursor: "pointer",
+											display: "flex",
+											padding: 0,
+										}}
+										type="button"
+									>
+										<IconDots size={16} color="var(--ax-colors-fg-secondary)" />
+									</button>
+								</MenuTrigger>
+								<MenuContent />
+							</Menu>
 						</Box>
 					</Box>
 
-					<img
-						alt="Runner sponsorship package"
-						src={heroImageSrc}
-						style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
-					/>
+					{selectedContentInstance ? (
+						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+							<Text color="fg.secondary" fontSize="sm">
+								Content instance created on {new Date(selectedContentInstance.createdAt).toLocaleDateString()}
+							</Text>
+							{(() => {
+								// Find the content model for this instance
+								const contentModel = cmpContentModels.find(model => model.id === selectedContentInstance.modelId);
+								if (!contentModel) {
+									return (
+										<Text color="fg.tertiary" fontSize="sm">
+											Content model not found
+										</Text>
+									);
+								}
 
-					<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
-						<Box asChild>
-							<div style={articleBodyStyle}>
-								<>
-									<p style={{ margin: 0 }}>
-										When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
-									</p>
-									<div style={{ marginTop: 10 }}>
-										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
-										<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
-											<li>Headline billing on all event promotions.</li>
-											<li>Logo placement on runner jerseys.</li>
-											<li>Exclusive naming rights for the finish line.</li>
-											<li>VIP access for 50 guests.</li>
-											<li>Full-page ad in the event program.</li>
-										</ul>
-										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
-										<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
-											<li>Prominent logo placement on event banners.</li>
-											<li>Opportunity to set up an interactive booth at the event.</li>
-											<li>VIP access for 30 guests.</li>
-											<li>Half-page ad in the event program.</li>
-										</ul>
-										<p style={{ ...articleBodyStyle, fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
-										<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
-											<li>Logo placement on event signage.</li>
-											<li>Opportunity to distribute promotional materials.</li>
-										</ul>
+								// Render each property using PropertyRenderer
+								return contentModel.properties?.map((cmpProperty) => {
+									const fieldValue = selectedContentInstance.fields[cmpProperty.name];
+									// Convert CMP property to CMS Property format
+									const cmsProperty = convertCmpPropertyToCms(cmpProperty);
+
+									const handleChange = (newValue: any) => {
+										// Update the content instance in localStorage
+										const updatedInstance = {
+											...selectedContentInstance,
+											fields: {
+												...selectedContentInstance.fields,
+												[cmpProperty.name]: newValue
+											}
+										};
+
+										// Update the instances array
+										const updatedInstances = contentInstances.map(inst =>
+											inst.id === selectedContentInstance.id ? updatedInstance : inst
+										);
+										setContentInstances(updatedInstances);
+									};
+
+									return (
+										<PropertyRenderer
+											key={cmpProperty.id}
+											property={cmsProperty}
+											value={fieldValue}
+											onChange={handleChange}
+											enableAI={isEditingContentInstance}
+											context={{ runtimeContentTypes: contentTypes }}
+											mode={isEditingContentInstance ? "edit" : "readonly"}
+										/>
+									);
+								});
+							})()}
+						</Box>
+					) : selectedPage ? (
+						previewOutlines.length > 0 ? (
+							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "hidden" }}>
+								<PreviewCanvas
+									outlines={previewOutlines}
+									theEles={{}}
+									currentEle={previewCurrentEle}
+									currentHoverEle={previewHoverEle}
+									setCurrentEle={setPreviewCurrentEle}
+									setCurrentHoverEle={setPreviewHoverEle}
+									setOutlines={setPreviewOutlines}
+									preview={{ mode: "responsive", width: 1440, maxWidth: 1440 }}
+								/>
+							</Box>
+						) : (
+							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "auto" }}>
+								<PropertyBasedPageRenderer
+									contentTypeId={selectedPage.contentTypeId}
+									properties={selectedPage.data || {}}
+									pageId={selectedPage.id}
+								/>
+							</Box>
+						)
+					) : selectedArticle ? (
+						<>
+							<img
+								alt="Runner sponsorship package"
+								src={recommendationAssets.hero}
+								style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
+							/>
+
+							<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
+								<Box asChild>
+									<div style={{
+										color: "var(--ax-colors-fg-default)",
+										fontFamily: "Inter, sans-serif",
+										fontSize: 14,
+										fontStyle: "normal" as const,
+										fontWeight: 400,
+										letterSpacing: "-0.1px",
+										lineHeight: "20px",
+									}}>
+										<>
+											<p style={{ margin: 0 }}>
+												When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
+											</p>
+											<div style={{ marginTop: 10 }}>
+												<p style={{ fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
+												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
+													<li>Headline billing on all event promotions.</li>
+													<li>Logo placement on runner jerseys.</li>
+													<li>Exclusive naming rights for the finish line.</li>
+													<li>VIP access for 50 guests.</li>
+													<li>Full-page ad in the event program.</li>
+												</ul>
+												<p style={{ fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
+												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
+													<li>Prominent logo placement on event banners.</li>
+													<li>Opportunity to set up an interactive booth at the event.</li>
+													<li>VIP access for 30 guests.</li>
+													<li>Half-page ad in the event program.</li>
+												</ul>
+												<p style={{ fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
+												<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
+													<li>Logo placement on event signage.</li>
+													<li>Opportunity to distribute promotional materials.</li>
+												</ul>
+											</div>
+										</>
 									</div>
-								</>
-							</div>
-						</Box>
-					</Box>
+								</Box>
+							</Box>
 
-					<Box display="flex" flexDirection="column" gap="10" style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", marginTop: 12, padding: "12px 18px 18px" }}>
-						<Box alignItems="center" display="flex" gap="6">
-							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Image</Text>
+							<Box display="flex" flexDirection="column" gap="10" style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", marginTop: 12, padding: "12px 18px 18px" }}>
+								<Box alignItems="center" display="flex" gap="6">
+									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Image</Text>
+									</Box>
+									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Marathoner</Text>
+									</Box>
+									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
+										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Millenials</Text>
+									</Box>
+									<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
+								</Box>
 							</Box>
-							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Marathoner</Text>
-							</Box>
-							<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-								<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Millenials</Text>
-							</Box>
-							<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
+						</>
+					) : selectedTaskAsset ? (
+						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+							<Text color="fg.secondary" fontSize="sm">
+								Task asset selected
+							</Text>
+							<Text color="fg.tertiary" fontSize="sm">
+								Task asset rendering not yet implemented
+							</Text>
 						</Box>
-						<MetadataRow icon={<IconCalendar size={12} />} label="Instance Name here • By Author name" />
-						<MetadataRow icon={<IconCopy size={12} />} label="Will be saved in Library > Images" />
-						<MetadataRow icon={<IconCalendar size={12} />} label="Expiry Date" />
-						<MetadataRow icon={<IconLink size={12} />} label="Preview URL: https://www.stride.com/ironmanmiami" link />
-					</Box>
+					) : (
+						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+							<Text color="fg.error" fontSize="sm">
+								No content selected
+							</Text>
+						</Box>
+					)}
 				</Box>
 			</Box>
-
-		</Box>
-	);
-}
-
-function MetadataRow({
-	icon,
-	label,
-	link = false,
-}: {
-	icon: ReactNode;
-	label: string;
-	link?: boolean;
-}) {
-	return (
-		<Box alignItems="center" display="flex" gap="10">
-			<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 18, width: 18 }}>
-				{icon}
-			</Box>
-			<Text color={link ? "fg.accent" : "fg.secondary"} style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>{label}</Text>
 		</Box>
 	);
 }

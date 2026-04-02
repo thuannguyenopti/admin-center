@@ -1,4 +1,5 @@
 import * as TablerIcons from "@tabler/icons-react";
+import Head from "next/head";
 import type { ComponentType, SVGProps } from "react";
 
 type CompatIconProps = SVGProps<SVGSVGElement> & {
@@ -67,24 +68,6 @@ function AxiomIconArrowUpRightFromSquare({ size = 16, width, height, style, clas
 	);
 }
 
-function AxiomIconClockRotateLeft({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
-	const w = width ?? size;
-	const h = height ?? size;
-	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			viewBox="0 0 512 512"
-			width={w}
-			height={h}
-			fill="currentColor"
-			style={style}
-			className={className}
-			{...rest}
-		>
-			<path d="M256 0C397.4 0 512 114.6 512 256C512 397.4 397.4 512 256 512C172.2 512 97.87 471.8 51.19 409.6C45.88 402.5 47.31 392.5 54.37 387.2C61.44 381.9 71.47 383.3 76.78 390.4C117.7 444.8 182.7 480 256 480C379.7 480 480 379.7 480 256C480 132.3 379.7 32 256 32C166.7 32 89.51 84.3 53.55 160H144C152.8 160 160 167.2 160 176C160 184.8 152.8 192 144 192H16C7.164 192 0 184.8 0 176V48C0 39.16 7.164 32 16 32C24.84 32 32 39.16 32 48V131.1C75.66 53.29 159.6 0 256 0zM256 128C264.8 128 272 135.2 272 144V249.4L347.3 324.7C353.6 330.9 353.6 341.1 347.3 347.3C341.1 353.6 330.9 353.6 324.7 347.3L244.7 267.3C241.7 264.3 239.1 260.2 239.1 256V144C239.1 135.2 247.2 128 255.1 128H256z" />
-		</svg>
-	);
-}
 
 function AxiomIconInputText({ size = 16, width, height, style, className, ...rest }: CompatIconProps) {
 	const w = width ?? size;
@@ -145,6 +128,7 @@ function AxiomIconAgent({ size = 16, width, height, style, className, ...rest }:
 
 const iconMap: Record<string, string[]> = {
 	IconAgent: ["IconSparkles"], // fallback only; IconAgent is overridden below
+	IconAlignLeft: ["IconAlignLeft"],
 	IconArrowLeft: ["IconArrowLeft"],
 	IconArrowRotateLeft: ["IconRotate", "IconHistory"],
 	IconArrowsLeftRight: ["IconArrowsLeftRight"],
@@ -158,10 +142,13 @@ const iconMap: Record<string, string[]> = {
 	IconBrowser: ["IconBrowser"],
 	IconCalendar: ["IconCalendar"],
 	IconChartLine: ["IconChartLine"],
+	IconCheck: ["IconCheck"],
 	IconCheckCircleSolid: ["IconCircleCheckFilled", "IconCircleCheck"],
+	IconChevronDown: ["IconChevronDown"],
 	IconChevronLeft: ["IconChevronLeft"],
 	IconChevronRight: ["IconChevronRight"],
 	IconCircleCheck: ["IconCircleCheck"],
+	IconCircleDot: ["IconCircleDot"],
 	IconCircleExclamation: ["IconAlertCircle"],
 	IconCircleInfo: ["IconInfoCircle", "IconAlertCircle"],
 	IconCirclePause: ["IconPlayerPause"],
@@ -169,7 +156,8 @@ const iconMap: Record<string, string[]> = {
 	IconCircleQuestion: ["IconHelpCircle"],
 	IconCircleStop: ["IconPlayerStop", "IconCircleX"],
 	IconClock: ["IconClock"],
-	// IconClockRotateLeft uses AxiomIconClockRotateLeft (custom SVG)
+	IconClockRotateLeft: ["IconHistory"],
+	IconCode: ["IconCode"],
 	IconCodeBranch: ["IconGitBranch", "IconCodeDots"],
 	IconColumns3: ["IconColumns3"],
 	IconComments: ["IconMessages"],
@@ -184,6 +172,7 @@ const iconMap: Record<string, string[]> = {
 	IconFileImport: ["IconFileImport", "IconFileArrowLeft"],
 	IconGripVertical: ["IconGripVertical"],
 	IconHandPointer: ["IconHandFinger", "IconPointer"],
+	IconHashtag: ["IconHash"],
 	IconImage: ["IconPhoto", "IconImageInPicture"],
 	IconInputNumeric: ["Icon123", "IconNumbers"],
 	// IconInputText uses AxiomIconInputText (custom SVG)
@@ -191,6 +180,7 @@ const iconMap: Record<string, string[]> = {
 	// IconLightbulb uses AxiomIconLightbulb (custom SVG)
 	IconLink: ["IconLink"],
 	IconList: ["IconList"],
+	IconLocationDot: ["IconMapPin"],
 	IconPaperPlaneTop: ["IconSend"],
 	IconPen: ["IconPencil"],
 	IconPlay: ["IconPlayerPlay"],
@@ -202,6 +192,7 @@ const iconMap: Record<string, string[]> = {
 	IconTableCells: ["IconTable"],
 	IconTag: ["IconTag"],
 	IconTerminal: ["IconTerminal2", "IconTerminal"],
+	IconText: ["IconLetterT", "IconTypography"],
 	IconThumbsDown: ["IconThumbDown"],
 	IconThumbsUp: ["IconThumbUp"],
 	IconToggleOff: ["IconToggleLeft"],
@@ -237,6 +228,7 @@ function createIcon(name: string) {
 	return CompatIcon;
 }
 
+export const IconAlignLeft = createIcon("IconAlignLeft");
 export const IconAgent = AxiomIconAgent;
 
 export const IconArrowLeft = createIcon("IconArrowLeft");
@@ -254,10 +246,13 @@ export const IconBracketsSquare = createIcon("IconBracketsSquare");
 export const IconBrowser = createIcon("IconBrowser");
 export const IconCalendar = createIcon("IconCalendar");
 export const IconChartLine = createIcon("IconChartLine");
+export const IconCheck = createIcon("IconCheck");
 export const IconCheckCircleSolid = createIcon("IconCheckCircleSolid");
+export const IconChevronDown = createIcon("IconChevronDown");
 export const IconChevronLeft = createIcon("IconChevronLeft");
 export const IconChevronRight = createIcon("IconChevronRight");
 export const IconCircleCheck = createIcon("IconCircleCheck");
+export const IconCircleDot = createIcon("IconCircleDot");
 export const IconCircleExclamation = createIcon("IconCircleExclamation");
 export const IconCircleInfo = createIcon("IconCircleInfo");
 export const IconCirclePause = createIcon("IconCirclePause");
@@ -265,7 +260,8 @@ export const IconCirclePlus = createIcon("IconCirclePlus");
 export const IconCircleQuestion = createIcon("IconCircleQuestion");
 export const IconCircleStop = createIcon("IconCircleStop");
 export const IconClock = createIcon("IconClock");
-export const IconClockRotateLeft = AxiomIconClockRotateLeft;
+export const IconClockRotateLeft = createIcon("IconClockRotateLeft");
+export const IconCode = createIcon("IconCode");
 export const IconCodeBranch = createIcon("IconCodeBranch");
 export const IconColumns3 = createIcon("IconColumns3");
 export const IconComments = createIcon("IconComments");
@@ -280,6 +276,7 @@ export const IconFileArrowUp = createIcon("IconFileArrowUp");
 export const IconFileImport = createIcon("IconFileImport");
 export const IconGripVertical = createIcon("IconGripVertical");
 export const IconHandPointer = createIcon("IconHandPointer");
+export const IconHashtag = createIcon("IconHashtag");
 export const IconImage = createIcon("IconImage");
 export const IconInputNumeric = createIcon("IconInputNumeric");
 export const IconInputText = AxiomIconInputText;
@@ -287,6 +284,7 @@ export const IconLaptopMobile = createIcon("IconLaptopMobile");
 export const IconLightbulb = AxiomIconLightbulb;
 export const IconLink = createIcon("IconLink");
 export const IconList = createIcon("IconList");
+export const IconLocationDot = createIcon("IconLocationDot");
 export const IconPaperPlaneTop = createIcon("IconPaperPlaneTop");
 export const IconPen = createIcon("IconPen");
 export const IconPlay = createIcon("IconPlay");
@@ -298,6 +296,7 @@ export const IconSplit = createIcon("IconSplit");
 export const IconTableCells = createIcon("IconTableCells");
 export const IconTag = createIcon("IconTag");
 export const IconTerminal = createIcon("IconTerminal");
+export const IconText = createIcon("IconText");
 export const IconThumbsDown = createIcon("IconThumbsDown");
 export const IconThumbsUp = createIcon("IconThumbsUp");
 export const IconToggleOff = createIcon("IconToggleOff");

@@ -4,7 +4,7 @@
  * Uses Pexels and Pixabay (free to use with attribution).
  */
 
-export type ContentBaseType = "Page" | "Experience" | "Media" | "Product" | "Block";
+export type ContentBaseType = "Page" | "Experience" | "Media" | "Product" | "Block" | "Section";
 
 export interface ContentThumbnailInput {
   id: string;
@@ -81,6 +81,7 @@ const THUMBNAILS_BY_TYPE: Record<ContentBaseType, string> = {
   Media: "https://images.pexels.com/photos/1496192/pexels-photo-1496192.jpeg?auto=compress&cs=tinysrgb&w=400",
   Product: "https://images.pexels.com/photos/276517/pexels-photo-276517.jpeg?auto=compress&cs=tinysrgb&w=400",
   Block: "https://images.pexels.com/photos/270348/pexels-photo-270348.jpeg?auto=compress&cs=tinysrgb&w=400",
+  Section: "https://images.pexels.com/photos/1647962/pexels-photo-1647962.jpeg?auto=compress&cs=tinysrgb&w=400",
 };
 
 /** Legacy id-based map (for backward compatibility with existing content ids) */

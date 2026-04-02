@@ -1,4 +1,19 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npx tsx:*)",
+      "Bash(echo:*)",
+      "Bash(wc:*)",
+      "Bash(/tmp/page_handler.txt:*)",
+      "Bash(perl -i -pe 'BEGIN{undef $/;} s/\\(if \\\\\\(isContentInstance\\\\\\) \\\\{.*?return;\\\\n\\\\t\\\\t\\\\t\\\\t\\\\t\\\\t\\\\}\\)\\(\\\\n\\\\n\\\\t\\\\t\\\\t\\\\t\\\\t\\\\tif \\\\\\(isArticle\\)/:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/stefan.svebeck/dev/axiom-play/app/components/property-renderers",
+      "/Users/stefan.svebeck/.claude/plans",
+      "/Users/stefan.svebeck/dev/axiom-play",
+      "/Users/stefan.svebeck/dev/axiom-play/app/cmp/task/[id]"
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {

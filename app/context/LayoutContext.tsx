@@ -8,6 +8,7 @@ type OpalPanelControls = {
 	togglePanel: () => void;
 	closePanel: () => void;
 	createNewChat: () => string;
+	clearHistory: () => void;
 	addMessage: (message: Omit<ChatMessage, 'id' | 'timestamp'>) => ChatMessage;
 	updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
 	removeMessage: (id: string) => void;
@@ -15,6 +16,12 @@ type OpalPanelControls = {
 	sendMessage: (content: string) => void | Promise<void>;
 	setInputDisabled: (disabled: boolean) => void;
 	launchPrompt: (prompt: string) => void;
+};
+
+type CodePanelControls = {
+	openPanel: (filePath: string) => void;
+	closePanel: () => void;
+	isOpen: boolean;
 };
 
 type LayoutContextType = {
@@ -28,6 +35,8 @@ type LayoutContextType = {
 	setOpalPanelControls: (controls: OpalPanelControls | null) => void;
 	opalPanelWidth: number;
 	setOpalPanelWidth: (width: number) => void;
+	codePanelControls: CodePanelControls | null;
+	setCodePanelControls: (controls: CodePanelControls | null) => void;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -38,9 +47,10 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
+	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth}}>
+		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth, codePanelControls, setCodePanelControls}}>
 			{children}
 		</LayoutContext.Provider>
 	);
