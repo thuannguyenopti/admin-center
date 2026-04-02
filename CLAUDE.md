@@ -53,9 +53,14 @@ All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements i
 
 ### Icons
 
-- **`@tabler/icons-react`** — standard icons (e.g., `IconDashboard`, `IconSettings`)
-- **`@optimizely/axiom-icons`** — aliased in `next.config.ts` to `app/lib/axiom-icons.tsx`, a compat shim mapping Axiom icon names to Tabler equivalents. Import from `@optimizely/axiom-icons` as normal.
+**ALWAYS use `@optimizely/axiom-icons` — NEVER `@tabler/icons-react` in product UI code.**
+
+- **`@optimizely/axiom-icons`** — the real Axiom icons package (FontAwesome Pro Light). This is the ONLY icon source for all product UI. Import from it normally: `import { IconAgent, IconSparkles } from "@optimizely/axiom-icons"`.
+- **`app/lib/axiom-icons.tsx`** — a bridge shim that re-exports the real Axiom icons and provides Tabler fallbacks only for icons not yet in the Axiom package. The shim is aliased via `next.config.ts` so `@optimizely/axiom-icons` always works.
+- **`@tabler/icons-react`** — only allowed in `app/lib/axiom-icons.tsx` for fallback mappings. Never import Tabler directly in any other file.
 - **CMP custom SVG icons** — in `app/cmp/assets/`, imported as React components (SVGR), use `fill="currentColor"`
+
+**When adding a new icon**: first check if it exists in `@optimizely/axiom-icons`. If not, add a Tabler fallback entry to `app/lib/axiom-icons.tsx`.
 
 ### Key Patterns
 

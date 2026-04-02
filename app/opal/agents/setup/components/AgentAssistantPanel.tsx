@@ -8,12 +8,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@optiaxiom/react/unstable";
-import { IconBook, IconBookOpen, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb, IconArrowUpRightFromSquare } from "@optimizely/axiom-icons";
-import {
-    IconX,
-    IconGripVertical,
-    IconAlertCircle,
-} from "@tabler/icons-react";
+import { IconBook, IconBookOpen, IconPlus, IconChevronRight, IconXmark, IconCircleCheck as IconCircleCheckAxiom, IconLightbulb, IconArrowUpRightFromSquare, IconGripVertical, IconCircleExclamation } from "@optimizely/axiom-icons";
 import { LayoutGroup, motion } from "framer-motion";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -379,7 +374,7 @@ function CheckerCard({ result }: { result: CheckerResult }) {
                 >
                     {result.passed
                         ? <IconCircleCheckAxiom size={13} color={passedColor} />
-                        : <IconAlertCircle size={13} color={passedColor} />
+                        : <IconCircleExclamation size={13} color={passedColor} />
                     }
                     <Text fontSize="md" fontWeight="500" style={{ color: passedColor }}>
                         {result.passed ? "Passed" : "Needs work"}
@@ -404,7 +399,7 @@ function CheckerCard({ result }: { result: CheckerResult }) {
                     <Box display="flex" alignItems="center" gap="6">
                         {result.passed
                             ? <IconCircleCheckAxiom size={16} color={passedColor} />
-                            : <IconAlertCircle size={16} color={passedColor} />
+                            : <IconCircleExclamation size={16} color={passedColor} />
                         }
                         <Text fontWeight="600" fontSize="lg" style={{ color: passedColor }}>
                             {result.passed ? "Passed!" : "Needs work"}

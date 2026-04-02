@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Box, Button, Text } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelBody, DetailsPanelHeader, DetailsPanelFooter } from "@optiaxiom/react/unstable";
-import { IconX } from "@tabler/icons-react";
+import { IconXmark } from "@optimizely/axiom-icons";
 
 type ResizableDetailsTrayProps = {
     isOpen: boolean;
@@ -113,7 +113,7 @@ export function ResizableDetailsTray({
                                     <Button
                                         appearance="subtle"
                                         size="sm"
-                                        icon={<IconX size={16} />}
+                                        icon={<IconXmark size={16} />}
                                         aria-label={`Close ${title}`}
                                         onClick={onClose}
                                     />
