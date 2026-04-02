@@ -1,47 +1,47 @@
-# Axiom Play: AI Coding Assistant Instructions
+# Axiom Play — GitHub Copilot Instructions
 
-You are **Antigravity**, an expert specialized in this Next.js prototype environment. Follow these guidelines for all tasks.
+## Design System (MANDATORY)
 
-## 🏗 Core Architecture
+Read **DESIGN_SYSTEM.md** at the repo root before writing any UI code. It is the single source of truth for all tokens, components, colors, spacing, and patterns.
 
-- **Framework**: Next.js 16 (App Router) with TypeScript and React 19.
-- **UI Design**: Built using **Optimizely Axiom** (`@optiaxiom/react`).
-    - **Constraint**: ALWAYS use Axiom components for the **CMS Interface** (Sidebar, Toolbars, Settings Panels). Do not use raw HTML (`div`, `button`, `span`) for those UI elements.
-    - **Exception**: The "Stride" website blocks ([app/components/vb/blocks/](app/components/vb/blocks/)) should use **raw HTML and standard CSS/Tailwind**, NOT Axiom, because they represent the customer's website, not the CMS product UI.
-    - **Spacing**: 1. Use the local [Flow.tsx](app/components/Flow.tsx) component as a wrapper to automatically apply correct spacing. 2. Use Axiom's standard tokens (`p="16"`, `gap="8"`) instead of arbitrary CSS for the CMS UI.
-- **Icons**:
-    - 1st Choice: `@optimizely/axiom-icons`
-    - 2nd Choice: `@tabler/icons-react`
-- **Persistence**: This is a high-fidelity prototype. Use [app/usePersistentState.js](app/usePersistentState.js) to sync all prototype state (selections, forms, layouts) to `localStorage`.
+**Non-negotiable rules:**
+- Always use `@optiaxiom/react` components — never raw HTML for product UI
+- Always use spacing tokens (`p="16"`, `gap="12"`) — never arbitrary px
+- Always use semantic color tokens (`bg.default`, `fg.secondary`) — never hex
+- Exception: `app/components/vb/blocks/` uses raw HTML + Tailwind (customer website, not CMS UI)
+- Use `[data-theme="dark"]` for dark mode — never `@media (prefers-color-scheme: dark)`
 
-## 🛠 Visual Builder (VB) Specifics
+## Tech Stack
 
-The Visual Builder ([app/components/vb/](app/components/vb/)) uses a decoupled state architecture:
+- **Framework**: Next.js (App Router), TypeScript, React
+- **Package manager**: Yarn
+- **State**: `app/usePersistentState.js` for localStorage-backed prototype state. Check `isHydrated` before rendering.
+- **Icons**: `@tabler/icons-react` (primary), `@fortawesome` (secondary)
 
-1. **Hierarchy (`data`)**: A recursive tree of `Sections -> Rows -> Columns -> Elements`.
-2. **Properties (`theEles`)**: A flat map (`EleMap`) storing component types and props keyed by unique IDs.
-3. **AI Logic**: Layout generation logic and system prompts are located in [app/api/chat/route.js](app/api/chat/route.js).
+## Project Structure
 
-## 🤖 AI Integration
+- `app/cmp/` — Content Marketing Platform pages
+- `app/cms/` — CMS content management pages
+- `app/opal/` — AI agent interfaces
+- `app/components/vb/` — Visual Builder (raw HTML, NOT Axiom)
+- `app/components/` — Shared wrappers around Axiom components
+- `app/db/` — Mock data (`initialData.ts`, `mockData.ts`)
 
-- **General Intelligence**: Use [app/api/llm/route.js](app/api/llm/route.js) as a proxy for standard OpenAI completions (text generation, summarization, suggestions) inside the application.
+## No Monolithic Files (MANDATORY)
 
-## 📂 Project Organization
+On every new conversation, check if the files you're about to touch are monolithic (300+ lines, multiple concerns). If so, split them first. Never create or extend monolithic files. See full guide in `DESIGN_SYSTEM.md`.
 
-- [app/cms/](app/cms/): Prototype pages for Search, Content, and Audience management.
-- [app/opal/](app/opal/): AI Agent marketplace and assistance interfaces.
-- [app/db/](app/db/): Contains `initialData.ts` and `mockData.ts`. Use these to populate UI and define types.
-- [app/components/](app/components/): Contains project-specific wrappers like [Flex.tsx](app/components/Flex.tsx) and [Input.tsx](app/components/Input.tsx).
-    - **Preference**: ALWAYS prefer raw `@optiaxiom/react` components by default.
-    - **Usage**: Use local wrappers ONLY if their specific defaults are required (e.g., `Input` for `size="lg"`, `Flex` for `flexDirection="row"`) or if they provide specific prototype configurations. These wrappers exist to override Axiom's current "wrong" defaults and should be used to maintain consistency until fixed upstream.
+## Key Patterns
 
-## 🚦 Essential Workflows
+- The shared `app/components/template.tsx` provides sidebar + content layout
+- `useLayout()` from `app/context/LayoutContext` for layout controls
+- `useTheme()` from `app/hooks/useTheme.tsx` for theme management
+- Local wrappers in `app/components/` override Axiom defaults — prefer raw `@optiaxiom/react` unless the wrapper's defaults are needed
 
-- **Development**: `yarn dev`
-- **Installation**: Project uses **Yarn**. Ensure `corepack enable` is run if yarn is missing.
-- **Documentation**: Leverage the **Axiom MCP server** (`@optiaxiom/mcp`) for up-to-date component props and examples.
+## Git & Deployment
 
-## 💡 Key Patterns
-
-- **Hydration**: Always check `isHydrated` from `usePersistentState` before rendering content that depends on local state to avoid Next.js hydration mismatches.
-- **DRY**: If building a new CMS page, look at existing ones in [app/cms/content/page.tsx](app/cms/content/page.tsx) for layout patterns using `SubNavData` and `DetailsPane`.
+- **Repo**: `Ben-Holme/axiom-play` — **Hosting**: Vercel (auto-deploys)
+- **Never push directly to `main`** — always create a PR
+- **Never merge locally** — merge via GitHub so checks run and Vercel auto-deploys
+- Always verify build (`yarn build`) before pushing
+- Preview deploys happen automatically per PR branch

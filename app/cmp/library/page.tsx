@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useLayout } from "@/app/context/LayoutContext";
 import {
 	Box,
 	Button as AxiomButton,
@@ -545,15 +545,15 @@ function AddMenu({
 			style={{
 				position: "absolute",
 				right: 0,
-				top: 52,
-				width: 320,
+				top: 48,
+				width: 280,
 				zIndex: 80,
 			}}
 		>
-			<Box display="flex" flexDirection="column" p="8">
+			<Box display="flex" flexDirection="column" p="6">
 				{menuItems.map((item, index) =>
 					item.divider ? (
-						<Box key={index} borderT="1" borderColor="border.tertiary" my="8" />
+						<Box key={index} borderT="1" borderColor="border.tertiary" my="6" />
 					) : (
 						<button
 							key={item.label}
@@ -562,15 +562,15 @@ function AddMenu({
 								alignItems: "center",
 								background: item.highlighted ? "var(--ax-colors-bg-secondary)" : "transparent",
 								border: 0,
-								borderRadius: 12,
+								borderRadius: 10,
 								color: "var(--ax-colors-fg-default)",
 								cursor: "pointer",
 								display: "flex",
-								fontSize: 18,
-								fontWeight: 400,
-								gap: 16,
-								height: 56,
-								padding: "0 16px",
+								fontSize: 16,
+								fontWeight: 500,
+								gap: 12,
+								height: 48,
+								padding: "0 14px",
 								textAlign: "left",
 								width: "100%",
 							}}
@@ -702,6 +702,7 @@ function AssetCard({ item }: { item: LibraryItem }) {
 						<AxiomButton
 							appearance="default"
 							size="sm"
+							aria-label="Open item actions"
 							onClick={(e) => {
 								e.stopPropagation();
 								setShowMenu(!showMenu);
@@ -752,7 +753,7 @@ function AssetCard({ item }: { item: LibraryItem }) {
 }
 
 export default function CMPLibraryPage() {
-	const router = useRouter();
+	const { opalPanelControls } = useLayout();
 	const [activeTab, setActiveTab] = useState<LibraryTab>("assets");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [currentPage, setCurrentPage] = useState(1);
@@ -765,6 +766,18 @@ export default function CMPLibraryPage() {
 
 		return libraryItems.filter((item) => item.title.toLowerCase().includes(searchQuery.toLowerCase()));
 	}, [searchQuery]);
+
+	const handleGenerateImage = () => {
+		window.localStorage.setItem("cmp_opal_mode", "image-gen");
+		opalPanelControls?.clearHistory();
+		opalPanelControls?.openPanel();
+		opalPanelControls?.addMessage({
+			role: "assistant",
+			content:
+				"Hi, I'm Opal, Optimizely's AI. I can help create brand-safe visuals for campaigns, social, and event content.\n\nWhat do you want to create? I can generate a quick image draft here first, then you can decide whether to open the advanced editor.",
+		});
+		opalPanelControls?.setInputValue("Create a new dynamic image for a triathlon poster");
+	};
 
 	return (
 		<Box
@@ -790,29 +803,29 @@ export default function CMPLibraryPage() {
 
 						<TabsContent value="assets">
 							<Box alignItems="center" display="flex" gap="8" pb="20" pt="20">
-								<AxiomButton appearance="default" size="lg" icon={<IconAdjustmentsHorizontal />} />
+								<AxiomButton appearance="default" size="md" icon={<IconAdjustmentsHorizontal />} aria-label="Filter assets" />
 								<Box style={{ width: 264 }}>
 									<SearchInput
 										placeholder="Search..."
-										size="lg"
+										size="md"
 										value={searchQuery}
 										onChange={(event) => setSearchQuery(event.target.value)}
 									/>
 								</Box>
-								<AxiomButton appearance="default" size="lg" icon={<IconCopy />} />
-								<AxiomButton appearance="default" size="lg" icon={<IconPhoto />} iconPosition="start">
+								<AxiomButton appearance="default" size="md" icon={<IconCopy />} aria-label="Duplicate view" />
+								<AxiomButton appearance="default" size="md" icon={<IconPhoto />} iconPosition="start" aria-label="Media view options">
 									<IconChevronDown size={16} />
 								</AxiomButton>
-								<AxiomButton appearance="subtle" size="lg" iconPosition="end" icon={<IconChevronDown />}>
+								<AxiomButton appearance="subtle" size="md" iconPosition="end" icon={<IconChevronDown />}>
 									Last Modified
 								</AxiomButton>
-								<AxiomButton appearance="subtle" size="lg" icon={<IconArrowUp />} />
+								<AxiomButton appearance="subtle" size="md" icon={<IconArrowUp />} aria-label="Sort ascending" />
 								<Box flex="1" />
-									<AxiomButton appearance="default" size="lg">Save View</AxiomButton>
+									<AxiomButton appearance="default" size="md">Save View</AxiomButton>
 									<Box style={{ position: "relative" }}>
 										<AxiomButton
 											appearance="primary"
-											size="lg"
+											size="md"
 											iconPosition="end"
 											icon={<IconChevronDown />}
 											onClick={() => setShowAddMenu((current) => !current)}
@@ -822,9 +835,7 @@ export default function CMPLibraryPage() {
 										{showAddMenu ? (
 											<AddMenu
 												onClose={() => setShowAddMenu(false)}
-												onGenerateImage={() => {
-													router.push("/cmp/opal-studio?flow=create&asset=image&entry=library-add");
-												}}
+												onGenerateImage={handleGenerateImage}
 											/>
 										) : null}
 									</Box>
