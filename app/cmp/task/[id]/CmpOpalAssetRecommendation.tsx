@@ -46,6 +46,24 @@ export function CmpOpalAssetRecommendation() {
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
 	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
+
+	// Merge initial data fields into cached instances so new fields (e.g. tags) propagate
+	useEffect(() => {
+		if (!contentInstances?.length) return;
+		let changed = false;
+		const merged = contentInstances.map((cached: ContentInstance) => {
+			const initial = initialContentInstances.find((i: ContentInstance) => i.id === cached.id);
+			if (!initial) return cached;
+			const mergedFields = { ...initial.fields, ...cached.fields };
+			// Only update if there are new keys from initial that cached is missing
+			const cachedKeys = Object.keys(cached.fields);
+			const hasNewKeys = Object.keys(initial.fields).some(k => !cachedKeys.includes(k));
+			if (!hasNewKeys) return cached;
+			changed = true;
+			return { ...cached, fields: mergedFields };
+		});
+		if (changed) setContentInstances(merged);
+	}, []); // eslint-disable-line react-hooks/exhaustive-deps
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
 
 	// Add to Application state

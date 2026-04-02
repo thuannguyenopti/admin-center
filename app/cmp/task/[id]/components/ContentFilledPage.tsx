@@ -345,7 +345,7 @@ export function ContentFilledPage({
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
 						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
 							{selectedContentInstance
-								? selectedContentInstance.modelDisplayName
+								? (selectedContentInstance.fields.headline || selectedContentInstance.fields.title || selectedContentInstance.modelDisplayName)
 								: selectedPage
 								? selectedPage.name
 								: selectedTaskAsset?.title
