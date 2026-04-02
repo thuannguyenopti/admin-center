@@ -31,22 +31,17 @@ import {
 	IconTrash,
 } from "@tabler/icons-react";
 import type { AssetItem, TaskTab } from "../types";
-import { figmaAssets } from "../data/assets";
 import { PageHeader } from "./PageHeader";
 
 export function ContentFilledPage({
 	activeTab,
 	onAddContent,
 	onAddContentFromModel,
-	onAddArticle,
 	onOpenSuggested,
 	onSelectTaskAsset,
 	selectedTaskAssetId,
 
 	taskAssets,
-	taskArticles,
-	selectedArticleId,
-	onSelectArticle,
 	contentInstances,
 	setContentInstances,
 	selectedContentInstanceId,
@@ -69,15 +64,11 @@ export function ContentFilledPage({
 	activeTab: TaskTab;
 	onAddContent: () => void;
 	onAddContentFromModel: (model: ContentType) => void;
-	onAddArticle: () => void;
 	onOpenSuggested: () => void;
 	onSelectTaskAsset: (assetId: string | null) => void;
 	selectedTaskAssetId: string | null;
 
 	taskAssets: AssetItem[];
-	taskArticles: Array<{ id: string; title: string }>;
-	selectedArticleId: string | null;
-	onSelectArticle: (id: string | null) => void;
 	contentInstances: ContentInstance[];
 	setContentInstances: (instances: ContentInstance[]) => void;
 	selectedContentInstanceId: string | null;
@@ -119,8 +110,6 @@ export function ContentFilledPage({
 		taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
 	const selectedContentInstance =
 		contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
-	const selectedArticle =
-		taskArticles.find((article) => article.id === selectedArticleId) ?? null;
 	const selectedPage =
 		pages.find((page) => page.id === selectedPageId) ?? null;
 
@@ -141,12 +130,6 @@ export function ContentFilledPage({
 								addon: <IconPhoto size={20} />,
 								description: "Add assets from recommendations",
 								execute: () => onAddContent(),
-							},
-							{
-								label: "Article",
-								addon: <IconFileText size={20} />,
-								description: "Add a hardcoded article example",
-								execute: () => onAddArticle(),
 							},
 							{
 								label: "From CMS",
@@ -216,13 +199,12 @@ export function ContentFilledPage({
 				</Box>
 
 				<Box alignItems="center" display="flex" gap="8">
-					{[null, ...contentInstances, ...taskPages, ...taskArticles, ...taskAssets].map((item, index) => {
+					{[null, ...contentInstances, ...taskPages, ...taskAssets].map((item, index) => {
 						// Determine button type
 						const isSuggestedTrigger = index === 0;
 						const isContentInstance = item && 'modelId' in item;
 						const isPage = item && 'contentTypeId' in item && !('modelId' in item);
-						const isArticle = item && 'title' in item && !('src' in item) && !('modelId' in item) && !('contentTypeId' in item);
-						const isAsset = item && !isContentInstance && !isPage && !isArticle;
+						const isAsset = item && !isContentInstance && !isPage;
 
 						// Determine if this button is selected
 						const isSelected = isSuggestedTrigger
@@ -230,7 +212,6 @@ export function ContentFilledPage({
 							: (
 								(isContentInstance && item.id === selectedContentInstanceId) ||
 								(isPage && item.id === selectedPageId) ||
-								(isArticle && item.id === selectedArticleId) ||
 								(isAsset && item.id === selectedTaskAssetId)
 							);
 
@@ -244,23 +225,12 @@ export function ContentFilledPage({
 							if (isContentInstance) {
 								onSelectContentInstance(item.id);
 								onSelectPage(null);
-								onSelectArticle(null);
 								onSelectTaskAsset(null);
 								return;
 							}
 
 							if (isPage && item) {
 								onSelectPage(item.id);
-								onSelectContentInstance(null);
-								onSelectArticle(null);
-								onSelectTaskAsset(null);
-								return;
-							}
-
-							if (isArticle && item) {
-								if (selectedArticleId === item.id) return;
-								onSelectArticle(item.id);
-								onSelectPage(null);
 								onSelectContentInstance(null);
 								onSelectTaskAsset(null);
 								return;
@@ -271,7 +241,6 @@ export function ContentFilledPage({
 								onSelectTaskAsset(item.id);
 								onSelectPage(null);
 								onSelectContentInstance(null);
-								onSelectArticle(null);
 								return;
 							}
 						};
@@ -304,7 +273,6 @@ export function ContentFilledPage({
 										isSuggestedTrigger ? "Open suggested assets" :
 										isContentInstance ? `View ${item.modelDisplayName}` :
 										isPage ? `View ${(item as Page).name}` :
-										isArticle ? `View ${(item as { title: string }).title}` :
 										isAsset && item && 'title' in item ? `View ${(item as { title: string }).title}` :
 										"View task item"
 									}
@@ -342,8 +310,6 @@ export function ContentFilledPage({
 											}}
 											title={`Preview of ${(item as Page).name}`}
 										/>
-									) : isArticle ? (
-										<IconFileText size={16} color="var(--ax-colors-fg-secondary)" />
 									) : isAsset && item && 'src' in item ? (
 										<img
 											alt=""
@@ -382,10 +348,8 @@ export function ContentFilledPage({
 								? selectedContentInstance.modelDisplayName
 								: selectedPage
 								? selectedPage.name
-								: selectedArticle
-								? selectedArticle.title
 								: selectedTaskAsset?.title
-								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedArticleId ?? selectedTaskAssetId ?? 'unknown'}`}
+								?? `Couldn't load content with id: ${selectedContentInstanceId ?? selectedPageId ?? selectedTaskAssetId ?? 'unknown'}`}
 						</Text>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag size={16} color="var(--ax-colors-fg-secondary)" />
@@ -485,8 +449,8 @@ export function ContentFilledPage({
 														const updatedInstances = contentInstances.filter(inst => inst.id !== selectedContentInstance.id);
 														setContentInstances(updatedInstances);
 
-														// Check if any items remain (content instances, pages, articles, or assets)
-														const hasRemainingItems = updatedInstances.length > 0 || taskPages.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+														// Check if any items remain (content instances, pages, or assets)
+														const hasRemainingItems = updatedInstances.length > 0 || taskPages.length > 0 || taskAssets.length > 0;
 
 														if (hasRemainingItems) {
 															// Select first remaining item
@@ -494,8 +458,6 @@ export function ContentFilledPage({
 																onSelectContentInstance(updatedInstances[0].id);
 															} else if (taskPages.length > 0) {
 																onSelectPage(taskPages[0].id);
-															} else if (taskArticles.length > 0) {
-																onSelectArticle(taskArticles[0].id);
 															} else if (taskAssets.length > 0) {
 																onSelectTaskAsset(taskAssets[0].id);
 															}
@@ -507,19 +469,14 @@ export function ContentFilledPage({
 													},
 												},
 											]
-										: selectedArticle || selectedTaskAsset
+										: selectedTaskAsset
 										? [
 												{
 													label: "Remove from task",
 													addon: <IconTrash size={16} />,
 													description: "Remove this item from the task",
 													execute: () => {
-														if (selectedArticle) {
-															const updatedArticles = taskArticles.filter(article => article.id !== selectedArticle.id);
-															console.log('Remove article:', selectedArticle.id);
-														} else if (selectedTaskAsset) {
-															console.log('Remove asset:', selectedTaskAsset.id);
-														}
+														console.log('Remove asset:', selectedTaskAsset.id);
 													},
 												},
 											]
@@ -623,71 +580,6 @@ export function ContentFilledPage({
 								/>
 							</Box>
 						)
-					) : selectedArticle ? (
-						<>
-							<img
-								alt="Runner sponsorship package"
-								src={figmaAssets.contentHero}
-								style={{ display: "block", height: 272, objectFit: "cover", width: "100%" }}
-							/>
-
-							<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "12px 18px 0" }}>
-								<Box asChild>
-									<div style={{
-										color: "var(--ax-colors-fg-default)",
-										fontFamily: "Inter, sans-serif",
-										fontSize: 14,
-										fontStyle: "normal" as const,
-										fontWeight: 400,
-										letterSpacing: "-0.1px",
-										lineHeight: "20px",
-									}}>
-										<>
-											<p style={{ margin: 0 }}>
-												When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:
-											</p>
-											<div style={{ marginTop: 10 }}>
-												<p style={{ fontWeight: 600, margin: 0 }}>Title Sponsor: The 'Victory Lap' Package ($5M)</p>
-												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
-													<li>Headline billing on all event promotions.</li>
-													<li>Logo placement on runner jerseys.</li>
-													<li>Exclusive naming rights for the finish line.</li>
-													<li>VIP access for 50 guests.</li>
-													<li>Full-page ad in the event program.</li>
-												</ul>
-												<p style={{ fontWeight: 600, margin: 0 }}>Platinum Tier: The 'Sprint' Package ($3M)</p>
-												<ul style={{ margin: "0 0 10px 18px", padding: 0 }}>
-													<li>Prominent logo placement on event banners.</li>
-													<li>Opportunity to set up an interactive booth at the event.</li>
-													<li>VIP access for 30 guests.</li>
-													<li>Half-page ad in the event program.</li>
-												</ul>
-												<p style={{ fontWeight: 600, margin: 0 }}>Gold Tier: The 'Marathon' Package ($1.5M)</p>
-												<ul style={{ margin: "0 0 0 18px", padding: 0 }}>
-													<li>Logo placement on event signage.</li>
-													<li>Opportunity to distribute promotional materials.</li>
-												</ul>
-											</div>
-										</>
-									</div>
-								</Box>
-							</Box>
-
-							<Box display="flex" flexDirection="column" gap="10" style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", marginTop: 12, padding: "12px 18px 18px" }}>
-								<Box alignItems="center" display="flex" gap="6">
-									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Image</Text>
-									</Box>
-									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Marathoner</Text>
-									</Box>
-									<Box alignItems="center" bg="bg.secondary" display="flex" justifyContent="center" rounded="full" style={{ height: 20, padding: "0 8px" }}>
-										<Text color="fg.secondary" style={{ fontSize: 11, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>Millenials</Text>
-									</Box>
-									<Text color="fg.accent" style={{ fontSize: 12, fontWeight: 500, lineHeight: "16px", maxWidth: "none" }}>+ 6</Text>
-								</Box>
-							</Box>
-						</>
 					) : selectedTaskAsset ? (
 						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
 							<Text color="fg.secondary" fontSize="sm">

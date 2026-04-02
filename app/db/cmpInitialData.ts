@@ -129,6 +129,16 @@ export const initialCmpContentModels: CmpContentModel[] = [
 		description: "Long-form editorial content with sections and rich media",
 		properties: [
 			{
+				id: "field-art-hero-image",
+				name: "hero_image",
+				displayName: "Hero Image",
+				type: "libraryAsset",
+				required: false,
+				list: false,
+				localized: false,
+				description: "Large header image",
+			},
+			{
 				id: "field-art-headline",
 				name: "headline",
 				displayName: "Headline",
@@ -167,16 +177,6 @@ export const initialCmpContentModels: CmpContentModel[] = [
 				list: false,
 				localized: true,
 				description: "Main article content",
-			},
-			{
-				id: "field-art-hero-image",
-				name: "hero_image",
-				displayName: "Hero Image",
-				type: "libraryAsset",
-				required: false,
-				list: false,
-				localized: false,
-				description: "Large header image",
 			},
 			{
 				id: "field-art-related-articles",
@@ -521,6 +521,20 @@ export const initialContentInstances: ContentInstance[] = [
 			byline: "Dr. Carol Williams, Sports Scientist",
 			body: "<p>Understanding proper running form is crucial for injury prevention...</p>",
 			hero_image: "https://picsum.photos/seed/running-form-science/800/600",
+			related_articles: ["ci-blog-1", "ci-blog-2"]
+		}
+	},
+	{
+		id: "ci-article-sponsor",
+		modelId: "cm-article",
+		modelDisplayName: "Article",
+		createdAt: "2024-03-19T08:00:00Z",
+		fields: {
+			headline: "The runner sponsoring package",
+			subheadline: "Ironman Miami 2026 Triathlon Sponsorship Tiers",
+			byline: "STRIDE Marketing Team",
+			body: "<p>When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:</p><p><strong>Title Sponsor: The 'Victory Lap' Package ($5M)</strong></p><ul><li>Headline billing on all event promotions.</li><li>Logo placement on runner jerseys.</li><li>Exclusive naming rights for the finish line.</li><li>VIP access for 50 guests.</li><li>Full-page ad in the event program.</li></ul><p><strong>Platinum Tier: The 'Sprint' Package ($3M)</strong></p><ul><li>Prominent logo placement on event banners.</li><li>Opportunity to set up an interactive booth at the event.</li><li>VIP access for 30 guests.</li><li>Half-page ad in the event program.</li></ul><p><strong>Gold Tier: The 'Marathon' Package ($1.5M)</strong></p><ul><li>Logo placement on event signage.</li><li>Opportunity to distribute promotional materials.</li></ul>",
+			hero_image: "/hero-cycling.jpg",
 			related_articles: ["ci-blog-1", "ci-blog-2"]
 		}
 	},

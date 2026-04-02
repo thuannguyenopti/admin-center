@@ -44,10 +44,8 @@ export function CmpOpalAssetRecommendation() {
 		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
 	);
 	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
-	const [taskArticles, setTaskArticles] = useState<Array<{ id: string; title: string }>>([]);
 	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
-	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
 
 	// Add to Application state
@@ -103,7 +101,6 @@ export function CmpOpalAssetRecommendation() {
 		setSelectedPageId(result.page!.id);
 		setSelectedContentInstanceId(null);
 		setSelectedTaskAssetId(null);
-		setSelectedArticleId(null);
 
 		// Show success message
 		toaster.create(
@@ -152,28 +149,26 @@ export function CmpOpalAssetRecommendation() {
 
 	// Auto-select first item on load if nothing is selected
 	useEffect(() => {
-		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedArticleId && !selectedPageId) {
+		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedPageId) {
 			if (contentInstances.length > 0) {
 				setSelectedContentInstanceId(contentInstances[0].id);
 			} else if (taskPages.length > 0) {
 				setSelectedPageId(taskPages[0].id);
-			} else if (taskArticles.length > 0) {
-				setSelectedArticleId(taskArticles[0].id);
 			} else if (taskAssets.length > 0) {
 				setSelectedTaskAssetId(taskAssets[0].id);
 			}
 		}
-	}, [contentInstances, taskPages, taskArticles, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedArticleId, selectedPageId]);
+	}, [contentInstances, taskPages, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedPageId]);
 
 	// Switch to empty state when all items are removed
 	useEffect(() => {
-		const hasContent = contentInstances.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+		const hasContent = contentInstances.length > 0 || taskAssets.length > 0;
 		if (!hasContent && (scene === "content" || scene === "content-panel")) {
 			setScene("content-empty");
 			setHasTaskContent(false);
 			setSuggestedPanelOpen(false);
 		}
-	}, [contentInstances.length, taskArticles.length, taskAssets.length, scene]);
+	}, [contentInstances.length, taskAssets.length, scene]);
 
 	// Stable callback handlers for selections
 	const handleSelectPage = useCallback((id: string | null) => {
@@ -182,10 +177,6 @@ export function CmpOpalAssetRecommendation() {
 
 	const handleSelectContentInstance = useCallback((id: string | null) => {
 		setSelectedContentInstanceId(id);
-	}, []);
-
-	const handleSelectArticle = useCallback((id: string | null) => {
-		setSelectedArticleId(id);
 	}, []);
 
 	const handleSelectTaskAsset = useCallback((id: string | null) => {
@@ -203,12 +194,12 @@ export function CmpOpalAssetRecommendation() {
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
 
-	// Initialize hasTaskContent based on existing content instances, task assets, or articles
+	// Initialize hasTaskContent based on existing content instances or task assets
 	useEffect(() => {
-		if (contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0) {
+		if (contentInstances.length > 0 || taskAssets.length > 0) {
 			setHasTaskContent(true);
 		}
-	}, [contentInstances.length, taskAssets.length, taskArticles.length]);
+	}, [contentInstances.length, taskAssets.length]);
 
 	// Update preview outlines when selected page changes
 	useEffect(() => {
@@ -302,7 +293,7 @@ export function CmpOpalAssetRecommendation() {
 	}, [deferredWorkflowSearch]);
 
 	const openContentTab = () => {
-		const hasContent = contentInstances.length > 0 || taskAssets.length > 0 || taskArticles.length > 0;
+		const hasContent = contentInstances.length > 0 || taskAssets.length > 0;
 		setScene(hasContent ? "content" : "content-empty");
 		if (hasContent) {
 			setHasTaskContent(true);
@@ -420,21 +411,6 @@ export function CmpOpalAssetRecommendation() {
 
 		setContentInstances((current: ContentInstance[]) => [newInstance, ...current]);
 		setSelectedContentInstanceId(instanceId);
-		setSelectedTaskAssetId(null);
-		setSelectedArticleId(null);
-		setHasTaskContent(true);
-		setScene("content");
-	};
-
-	const addArticle = () => {
-		const articleId = `article-${Date.now()}`;
-		const newArticle = {
-			id: articleId,
-			title: "The runner sponsoring package",
-		};
-		setTaskArticles((current) => [...current, newArticle]);
-		setSelectedArticleId(articleId);
-		setSelectedContentInstanceId(null);
 		setSelectedTaskAssetId(null);
 		setHasTaskContent(true);
 		setScene("content");
@@ -556,7 +532,7 @@ export function CmpOpalAssetRecommendation() {
 			case "content-empty":
 				return (
 					<TaskCanvas
-						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onAddArticle={addArticle} onTabChange={handleTabChange} />}
+						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onTabChange={handleTabChange} />}
 						right={
 							<WorkflowSidebar
 								filteredTemplates={filteredWorkflowTemplates}
@@ -579,15 +555,11 @@ export function CmpOpalAssetRecommendation() {
 								activeTab={activeTab}
 								onAddContent={() => openSearch(scene)}
 								onAddContentFromModel={addContentInstanceFromModel}
-								onAddArticle={addArticle}
 								onOpenSuggested={() => setSuggestedPanelOpen(true)}
 								onSelectTaskAsset={handleSelectTaskAsset}
 
 								selectedTaskAssetId={selectedTaskAssetId}
 								taskAssets={taskAssets}
-								taskArticles={taskArticles}
-								selectedArticleId={selectedArticleId}
-								onSelectArticle={handleSelectArticle}
 								contentInstances={contentInstances}
 								setContentInstances={setContentInstances}
 								selectedContentInstanceId={selectedContentInstanceId}
@@ -659,10 +631,8 @@ export function CmpOpalAssetRecommendation() {
 		selectedAsset,
 		selectedTaskAssetId,
 		selectedContentInstanceId,
-		selectedArticleId,
 		selectedPageId,
 		taskAssets,
-		taskArticles,
 		contentInstances,
 		pages,
 		suggestedPanelOpen,
@@ -672,13 +642,11 @@ export function CmpOpalAssetRecommendation() {
 		previewCurrentEle,
 		previewHoverEle,
 		applications,
-		addArticle,
 		addContentInstanceFromModel,
 		addAssetsToTask,
 		applyWorkflowChange,
 		cancelBriefEdit,
 		handleAddToApplication,
-		handleSelectArticle,
 		handleSelectContentInstance,
 		handleSelectPage,
 		handleSelectTaskAsset,
