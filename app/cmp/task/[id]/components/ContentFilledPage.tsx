@@ -11,6 +11,7 @@ import usePersistentState from "@/app/usePersistentState";
 import { useRouter } from "next/navigation";
 import { PropertyRenderer } from "@/app/components/property-renderers";
 import "@/app/components/property-renderers";
+import { ContentPreviewRenderer } from "./content-preview/ContentPreviewRenderer";
 import PreviewCanvas, { type Outline } from "@/app/components/vb/PreviewCanvas";
 import PropertyBasedPageRenderer from "@/app/site/PropertyBasedPageRenderer";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
@@ -505,58 +506,62 @@ export function ContentFilledPage({
 					</Box>
 
 					{selectedContentInstance ? (
-						<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
-							<Text color="fg.secondary" fontSize="sm">
-								Content instance created on {new Date(selectedContentInstance.createdAt).toLocaleDateString()}
-							</Text>
-							{(() => {
-								// Find the content model for this instance
-								const contentModel = cmpContentModels.find(model => model.id === selectedContentInstance.modelId);
-								if (!contentModel) {
-									return (
-										<Text color="fg.tertiary" fontSize="sm">
-											Content model not found
-										</Text>
-									);
-								}
+						(() => {
+							const contentModel = cmpContentModels.find(model => model.id === selectedContentInstance.modelId);
+							if (!contentModel) {
+								return (
+									<Box style={{ padding: "18px" }}>
+										<Text color="fg.tertiary" fontSize="sm">Content model not found</Text>
+									</Box>
+								);
+							}
 
-								// Render each property using PropertyRenderer
-								return contentModel.properties?.map((cmpProperty) => {
-									const fieldValue = selectedContentInstance.fields[cmpProperty.name];
-									// Convert CMP property to CMS Property format
-									const cmsProperty = convertCmpPropertyToCms(cmpProperty);
+							if (isEditingContentInstance) {
+								// Edit mode: PropertyRenderer with form fields
+								return (
+									<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+										{contentModel.properties?.map((cmpProperty) => {
+											const fieldValue = selectedContentInstance.fields[cmpProperty.name];
+											const cmsProperty = convertCmpPropertyToCms(cmpProperty);
 
-									const handleChange = (newValue: any) => {
-										// Update the content instance in localStorage
-										const updatedInstance = {
-											...selectedContentInstance,
-											fields: {
-												...selectedContentInstance.fields,
-												[cmpProperty.name]: newValue
-											}
-										};
+											const handleChange = (newValue: any) => {
+												const updatedInstance = {
+													...selectedContentInstance,
+													fields: {
+														...selectedContentInstance.fields,
+														[cmpProperty.name]: newValue
+													}
+												};
+												const updatedInstances = contentInstances.map(inst =>
+													inst.id === selectedContentInstance.id ? updatedInstance : inst
+												);
+												setContentInstances(updatedInstances);
+											};
 
-										// Update the instances array
-										const updatedInstances = contentInstances.map(inst =>
-											inst.id === selectedContentInstance.id ? updatedInstance : inst
-										);
-										setContentInstances(updatedInstances);
-									};
+											return (
+												<PropertyRenderer
+													key={cmpProperty.id}
+													property={cmsProperty}
+													value={fieldValue}
+													onChange={handleChange}
+													enableAI
+													context={{ runtimeContentTypes: contentTypes }}
+													mode="edit"
+												/>
+											);
+										})}
+									</Box>
+								);
+							}
 
-									return (
-										<PropertyRenderer
-											key={cmpProperty.id}
-											property={cmsProperty}
-											value={fieldValue}
-											onChange={handleChange}
-											enableAI={isEditingContentInstance}
-											context={{ runtimeContentTypes: contentTypes }}
-											mode={isEditingContentInstance ? "edit" : "readonly"}
-										/>
-									);
-								});
-							})()}
-						</Box>
+							// Preview mode: content preview renderer
+							return (
+								<ContentPreviewRenderer
+									instance={selectedContentInstance}
+									contentModel={contentModel}
+								/>
+							);
+						})()
 					) : selectedPage ? (
 						previewOutlines.length > 0 ? (
 							<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "hidden" }}>
