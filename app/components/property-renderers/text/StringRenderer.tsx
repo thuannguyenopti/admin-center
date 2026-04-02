@@ -1,5 +1,4 @@
-import { Field, Input, Textarea, Text } from "@optiaxiom/react";
-import { Pill, PillGroup } from "@optiaxiom/react/unstable";
+import { Badge, Box, Field, Input, Textarea, Text } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const StringRenderer: React.FC<PropertyRendererProps> = ({
@@ -17,11 +16,11 @@ export const StringRenderer: React.FC<PropertyRendererProps> = ({
 		if (Array.isArray(value)) {
 			return (
 				<Field label={property.displayName || property.name}>
-					<PillGroup>
+					<Box alignItems="center" display="flex" flexWrap="wrap" gap="8">
 						{value.map((tag: string, i: number) => (
-							<Pill key={i} size="xs">{tag}</Pill>
+							<Badge key={i} intent="neutral">{tag}</Badge>
 						))}
-					</PillGroup>
+					</Box>
 				</Field>
 			);
 		}
