@@ -6,7 +6,7 @@ import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalSuggestionsProps = {
   onSuggestionClick: (suggestion: string) => void;
-  type?: 'default' | 'cms';
+  type?: 'default' | 'cms' | 'image-gen';
 };
 
 const defaultSuggestions = [
@@ -47,8 +47,32 @@ const cmsSuggestions = [
   },
 ];
 
+const imageGenSuggestions = [
+  {
+    title: "Create a triathlon hero image",
+    enhancedPrompt: "Create a new dynamic image for a triathlon poster with clean copy space, premium athletic photography, and a Stride-style endurance brand feel."
+  },
+  {
+    title: "Generate a spring race social visual",
+    enhancedPrompt: "Generate a premium paid social image for Stride's spring race season with an athlete in motion, bright natural light, and room for campaign headlines."
+  },
+  {
+    title: "Make an event poster concept",
+    enhancedPrompt: "Create a bold event poster concept for a Stride endurance launch with a dramatic hero athlete, brand-safe colors, and a clean title area."
+  },
+  {
+    title: "Create a product-forward campaign image",
+    enhancedPrompt: "Create a premium campaign image that balances athletic action with product focus for Stride, keeping the composition suitable for social and event use."
+  },
+];
+
 export function OpalSuggestions({ onSuggestionClick, type = 'default' }: OpalSuggestionsProps) {
-  const suggestions = type === 'cms' ? cmsSuggestions : defaultSuggestions;
+  const suggestions =
+    type === 'cms'
+      ? cmsSuggestions
+      : type === 'image-gen'
+        ? imageGenSuggestions
+        : defaultSuggestions;
 
   return (
     <Box display="flex" flexDirection="column" gap="8" w="full">
