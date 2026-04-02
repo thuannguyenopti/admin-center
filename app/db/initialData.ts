@@ -5809,6 +5809,15 @@ export const initialApplications: Application[] = [
 		modifiedAt: new Date().toISOString(),
 		modifiedBy: "System",
 	},
+	{
+		id: "app-stride-mobile",
+		name: "Stride Mobile",
+		appId: "5678",
+		url: "mobile.stride.com",
+		startPageId: "page-site-home",
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+	},
 ];
 
 // Helper functions for content type restrictions
