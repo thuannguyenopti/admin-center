@@ -6,11 +6,15 @@ import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
 import {useEffect, useState, useCallback} from "react";
-import {Box, Heading, Spinner, Text} from "@optiaxiom/react";
+import {Alert, Badge, Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import Link from "next/link";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
+import ContentInstancePicker from "@/app/components/ContentInstancePicker";
+import {initialContentInstances, ContentInstance} from "@/app/db/cmpInitialData";
+import {connectInstanceToPage, syncPageWithInstance, disconnectPage, getCompatibleInstances} from "@/app/lib/contentConnection";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -27,6 +31,11 @@ export default function EditPageDetail() {
 	const [hasPendingGeneration, setHasPendingGeneration] = useState(false);
 	const versionHistory = useVersionHistory(id);
 
+	// CMP Content Connection
+	const [contentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
+	const [isContentPickerOpen, setIsContentPickerOpen] = useState(false);
+
 	// Check for pending generation immediately on mount
 	useEffect(() => {
 		const pendingData = localStorage.getItem(`opal_generation_${id}`);
@@ -40,11 +49,11 @@ export default function EditPageDetail() {
 
 			// Load content type definition
 			if (found?.contentTypeId) {
-				const ct = initialContentTypes.find((ct) => ct.id === found.contentTypeId);
+				const ct = contentTypes.find((ct) => ct.id === found.contentTypeId);
 				setContentType(ct || null);
 			}
 		}
-	}, [id, pages, isHydrated]);
+	}, [id, pages, isHydrated, contentTypes]);
 
 	type PagePatch = {outlines?: any; properties?: any; variationId?: string};
 
@@ -100,6 +109,66 @@ export default function EditPageDetail() {
 			firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
 		});
 	}, [page, id, setPages]);
+
+	// CMP Content Connection Handlers
+	const handleConnectInstance = useCallback((instance: ContentInstance | ContentInstance[]) => {
+		if (!page) return;
+
+		// Only handle single instance selection (not multi-select)
+		const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
+		if (!selectedInstance) return;
+
+		const connectedPage = connectInstanceToPage(
+			selectedInstance,
+			page,
+			contentTypes
+		);
+
+		setPages((prev: Page[]) =>
+			prev.map(p => p.id === page.id ? connectedPage : p)
+		);
+
+		setPage(connectedPage);
+		setRenderKey(prev => prev + 1); // Force re-render to show updated data
+		setIsContentPickerOpen(false);
+		toaster.create("Content connected successfully", { intent: "success" });
+	}, [page, setPages, contentTypes]);
+
+	const handleSyncContent = useCallback(() => {
+		if (!page) return;
+
+		const syncedPage = syncPageWithInstance(
+			page,
+			contentInstances,
+			contentTypes
+		);
+
+		if (syncedPage) {
+			setPages((prev: Page[]) =>
+				prev.map(p => p.id === page.id ? syncedPage : p)
+			);
+			setPage(syncedPage);
+			setRenderKey(prev => prev + 1); // Force re-render to show updated data
+			toaster.create("Content synced successfully", { intent: "success" });
+		} else {
+			toaster.create("Could not sync content - instance not found", { intent: "danger" });
+		}
+	}, [page, contentInstances, setPages, contentTypes]);
+
+	const handleDisconnect = useCallback(() => {
+		if (!page) return;
+
+		const disconnectedPage = disconnectPage(page);
+
+		setPages((prev: Page[]) =>
+			prev.map(p => p.id === page.id ? disconnectedPage : p)
+		);
+
+		setPage(disconnectedPage);
+		toaster.create("Content disconnected", { intent: "information" });
+	}, [page, setPages]);
+
+	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, contentTypes) : [];
 
 	// Opal page generation hook (must be after handleSave is defined)
 	const {isGenerating} = useOpalPageGeneration(
@@ -261,6 +330,30 @@ export default function EditPageDetail() {
 		setPage(updatedPage);
 	};
 
+	const handleAddToTask = (taskId: string, taskName: string) => {
+		if (!page) return;
+		const updatedPage = {
+			...page,
+			cmpTaskMetadata: {
+				taskId,
+				taskName,
+				addedAt: new Date().toISOString(),
+				addedVia: "manual" as const,
+			},
+		};
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
+		setPage(updatedPage);
+		toaster.create(`Added to task: ${taskName}`, { intent: "success" });
+	};
+
+	const handleRemoveFromTask = () => {
+		if (!page) return;
+		const updatedPage = { ...page, cmpTaskMetadata: undefined };
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
+		setPage(updatedPage);
+		toaster.create("Removed from task", { intent: "information" });
+	};
+
 	const handleRestoreVersion = (version: any) => {
 		if (!page) return;
 
@@ -347,26 +440,68 @@ export default function EditPageDetail() {
 	};
 
 	return (
-		<VBPrototype
-			key={`${id}-${renderKey}`}
-			initialData={page}
-			contentType={contentType}
-			onSave={handleSave}
-			onPublish={handlePublish}
-			pageName={page.name}
-			pageId={page.id}
-			pageStatus={page.status}
-			variations={page.variations}
-			onAddVariation={handleAddVariation}
-			onDeleteVariation={handleDeleteVariation}
-			onRenameVariation={handleRenameVariation}
-			onRenamePage={handleRenamePage}
-			onTrash={handleTrash}
-			onViewOnWebsite={handleViewOnWebsite}
-			versionHistory={versionHistory}
-			onRestoreVersion={handleRestoreVersion}
-			isOpalGenerating={isGenerating}
-			hasPendingGeneration={hasPendingGeneration}
-		/>
+		<>
+			{/* Task Alert - show if page is part of a task */}
+			{page?.cmpTaskMetadata && (
+				<Box pl="24" pt="16" pr="12" pb="8" bg="bg.default">
+					<Alert intent="information">
+						<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+							<Text>
+								Part of task:{" "}
+								<Link
+									href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}
+									style={{
+										color: "var(--ax-colors-fg-accent)",
+										textDecoration: "underline",
+										fontWeight: 600,
+									}}
+								>
+									{page.cmpTaskMetadata.taskName}
+								</Link>
+							</Text>
+							{page.cmpConnection && (
+								<Badge intent="success">Connected to CMP</Badge>
+							)}
+						</Box>
+					</Alert>
+				</Box>
+			)}
+
+			<VBPrototype
+				key={`${id}-${renderKey}`}
+				initialData={page}
+				contentType={contentType}
+				onSave={handleSave}
+				onPublish={handlePublish}
+				pageName={page.name}
+				pageId={page.id}
+				pageStatus={page.status}
+				variations={page.variations}
+				onAddVariation={handleAddVariation}
+				onDeleteVariation={handleDeleteVariation}
+				onRenameVariation={handleRenameVariation}
+				onRenamePage={handleRenamePage}
+				onTrash={handleTrash}
+				onViewOnWebsite={handleViewOnWebsite}
+				versionHistory={versionHistory}
+				onRestoreVersion={handleRestoreVersion}
+				isOpalGenerating={isGenerating}
+				hasPendingGeneration={hasPendingGeneration}
+				onConnectContent={() => setIsContentPickerOpen(true)}
+				onSyncContent={page?.cmpConnection ? handleSyncContent : undefined}
+				onDisconnectContent={page?.cmpConnection ? handleDisconnect : undefined}
+				hasConnection={!!page?.cmpConnection}
+				onAddToTask={handleAddToTask}
+				onRemoveFromTask={page?.cmpTaskMetadata ? handleRemoveFromTask : undefined}
+				currentTaskId={page?.cmpTaskMetadata?.taskId ?? null}
+			/>
+
+			<ContentInstancePicker
+				open={isContentPickerOpen}
+				onClose={() => setIsContentPickerOpen(false)}
+				instances={compatibleInstances}
+				onSelect={handleConnectInstance}
+			/>
+		</>
 	);
 }

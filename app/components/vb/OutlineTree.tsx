@@ -30,6 +30,19 @@ function extractPlainText(value: any): string {
 	return "";
 }
 
+/** Extract filename from image URL for image element labels. */
+function getImageNameFromUrl(url: string): string {
+	if (!url) return "";
+	try {
+		const urlObj = new URL(url);
+		const pathname = urlObj.pathname;
+		const parts = pathname.split('/');
+		return parts[parts.length - 1] || "Image";
+	} catch {
+		return "Image";
+	}
+}
+
 interface OutlineProps {
 	cloning?: boolean;
 	currentHoverEle: string;
@@ -1001,6 +1014,17 @@ export default function OutlineTree({
 																											?.properties,
 																										"alt",
 																										"Alt Text"
+																									) ||
+																									getImageNameFromUrl(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"image",
+																											"Image"
+																										)
 																									) ||
 																									extractPlainText(
 																										getProperty(
