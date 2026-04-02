@@ -6,7 +6,8 @@ import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
 import {useEffect, useState, useCallback} from "react";
-import {Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import {Alert, Badge, Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
+import Link from "next/link";
 import {buildPageSlug} from "@/app/site/resolveSlug";
 import {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
@@ -416,6 +417,32 @@ export default function EditPageDetail() {
 
 	return (
 		<>
+			{/* Task Alert - show if page is part of a task */}
+			{page?.cmpTaskMetadata && (
+				<Box mb="16" mx="24">
+					<Alert intent="information">
+						<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+							<Text>
+								Part of task:{" "}
+								<Link
+									href={`/cmp/task/${page.cmpTaskMetadata.taskId}`}
+									style={{
+										color: "var(--ax-colors-fg-accent)",
+										textDecoration: "underline",
+										fontWeight: 600,
+									}}
+								>
+									{page.cmpTaskMetadata.taskName}
+								</Link>
+							</Text>
+							{page.cmpConnection && (
+								<Badge intent="success">Connected to CMP</Badge>
+							)}
+						</Box>
+					</Alert>
+				</Box>
+			)}
+
 			<VBPrototype
 				key={`${id}-${renderKey}`}
 				initialData={page}

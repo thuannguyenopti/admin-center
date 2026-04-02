@@ -1,4 +1,4 @@
-import { ContentType, ContentTypeMapping, Page } from "@/app/db/initialData";
+import { ContentType, ContentTypeMapping, Page, canCreateChildType } from "@/app/db/initialData";
 import { ContentInstance } from "@/app/db/cmpInitialData";
 import { applyMapping } from "./contentTypeMapping";
 
@@ -164,4 +164,86 @@ export function getConnectionStatus(page: Page): {
 		syncStatus: page.cmpConnection.syncStatus,
 		needsSync: page.cmpConnection.syncStatus !== "synced",
 	};
+}
+
+/**
+ * Create a new CMS page from a CMP content instance using content type mapping.
+ * Auto-selects valid parent location based on content type rules.
+ *
+ * @param instance - CMP content instance to transform
+ * @param targetContentTypeId - CMS content type to create
+ * @param contentTypes - All content types (for mapping lookup)
+ * @param pages - All existing pages (for parent selection)
+ * @param taskMetadata - Task information to attach to the page
+ * @returns Object with new page and parent location, or error
+ */
+export function createPageFromInstance(
+	instance: ContentInstance,
+	targetContentTypeId: string,
+	contentTypes: ContentType[],
+	pages: Page[],
+	taskMetadata?: { taskId: string; taskName: string }
+): {
+	page?: Page;
+	parentId?: string | null;
+	error?: string;
+} {
+	// 1. Find mapping from instance model to target content type
+	const sourceType = contentTypes.find(ct => ct.id === instance.modelId);
+	const targetType = contentTypes.find(ct => ct.id === targetContentTypeId);
+
+	if (!sourceType || !targetType) {
+		return { error: "Content type not found" };
+	}
+
+	const mapping = findMappingForConnection(instance.modelId, targetContentTypeId, contentTypes);
+
+	if (!mapping) {
+		return { error: "No mapping found between content types" };
+	}
+
+	// 2. Find valid parent location using canCreateChildType
+	const rootNode = { id: "root", contentTypeId: "ct-page" } as Page;
+	const allLocations = [rootNode, ...pages];
+	const validLocations = allLocations.filter(page =>
+		canCreateChildType(page.contentTypeId, targetContentTypeId)
+	);
+
+	if (validLocations.length === 0) {
+		return { error: "No valid location found for this content type" };
+	}
+
+	// Use first valid location (or root if that's the only option)
+	const parentLocation = validLocations[0];
+	const parentId = parentLocation.id === "root" ? null : parentLocation.id;
+
+	// 3. Apply mapping to transform instance fields to page data
+	const transformedData = applyMapping(instance.fields, mapping, sourceType, targetType);
+
+	// 4. Create new page
+	const newPage: Page = {
+		id: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+		name: instance.fields.title || instance.fields.name || "Untitled",
+		parentId,
+		status: "Draft",
+		lastModified: new Date().toISOString(),
+		contentTypeId: targetContentTypeId,
+		data: transformedData,
+		cmpConnection: {
+			instanceId: instance.id,
+			modelId: instance.modelId,
+			mappingId: mapping.id,
+			syncStatus: "synced",
+			lastSyncedAt: new Date().toISOString(),
+			syncMode: "manual",
+		},
+		cmpTaskMetadata: taskMetadata ? {
+			taskId: taskMetadata.taskId,
+			taskName: taskMetadata.taskName,
+			addedAt: new Date().toISOString(),
+			addedVia: "created",
+		} : undefined,
+	};
+
+	return { page: newPage, parentId };
 }

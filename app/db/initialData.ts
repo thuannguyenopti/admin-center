@@ -969,6 +969,13 @@ export type Page = {
 		lastSyncedAt?: string;
 		syncMode: "auto" | "manual"; // Auto-sync on CMP changes or manual only
 	};
+	/** CMP Task association - tracks which task this page belongs to */
+	cmpTaskMetadata?: {
+		taskId: string; // ID of the CMP task (from URL /cmp/task/[id])
+		taskName: string; // Display name of the task
+		addedAt: string; // ISO timestamp when page was added to task
+		addedVia: "created" | "manual"; // How it was added: created via "Add to Application" or manually added
+	};
 };
 
 export type Application = {
