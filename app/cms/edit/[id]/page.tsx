@@ -330,6 +330,30 @@ export default function EditPageDetail() {
 		setPage(updatedPage);
 	};
 
+	const handleAddToTask = (taskId: string, taskName: string) => {
+		if (!page) return;
+		const updatedPage = {
+			...page,
+			cmpTaskMetadata: {
+				taskId,
+				taskName,
+				addedAt: new Date().toISOString(),
+				addedVia: "manual" as const,
+			},
+		};
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
+		setPage(updatedPage);
+		toaster.create(`Added to task: ${taskName}`, { intent: "success" });
+	};
+
+	const handleRemoveFromTask = () => {
+		if (!page) return;
+		const updatedPage = { ...page, cmpTaskMetadata: undefined };
+		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
+		setPage(updatedPage);
+		toaster.create("Removed from task", { intent: "information" });
+	};
+
 	const handleRestoreVersion = (version: any) => {
 		if (!page) return;
 
@@ -467,6 +491,9 @@ export default function EditPageDetail() {
 				onSyncContent={page?.cmpConnection ? handleSyncContent : undefined}
 				onDisconnectContent={page?.cmpConnection ? handleDisconnect : undefined}
 				hasConnection={!!page?.cmpConnection}
+				onAddToTask={handleAddToTask}
+				onRemoveFromTask={page?.cmpTaskMetadata ? handleRemoveFromTask : undefined}
+				currentTaskId={page?.cmpTaskMetadata?.taskId ?? null}
 			/>
 
 			<ContentInstancePicker
