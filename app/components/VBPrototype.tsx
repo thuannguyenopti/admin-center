@@ -266,6 +266,9 @@ export default function VBPrototype({
 	onSyncContent,
 	onDisconnectContent,
 	hasConnection,
+	onAddToTask,
+	onRemoveFromTask,
+	currentTaskId,
 }: {
 	initialData?: PageInput;
 	contentType?: ContentType | null;
@@ -297,6 +300,9 @@ export default function VBPrototype({
 	onSyncContent?: () => void;
 	onDisconnectContent?: () => void;
 	hasConnection?: boolean;
+	onAddToTask?: (taskId: string, taskName: string) => void;
+	onRemoveFromTask?: () => void;
+	currentTaskId?: string | null;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
@@ -1373,6 +1379,9 @@ export default function VBPrototype({
 						onDisconnectContent={onDisconnectContent}
 						hasConnection={hasConnection}
 						compatibleInstancesCount={compatibleInstancesCount}
+						onAddToTask={onAddToTask}
+						onRemoveFromTask={onRemoveFromTask}
+						currentTaskId={currentTaskId}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1504,6 +1513,9 @@ export default function VBPrototype({
 					onDisconnectContent={onDisconnectContent}
 					hasConnection={hasConnection}
 					compatibleInstancesCount={compatibleInstancesCount}
+					onAddToTask={onAddToTask}
+					onRemoveFromTask={onRemoveFromTask}
+					currentTaskId={currentTaskId}
 				/>
 
 				{/* LEFT SIDEBAR */}

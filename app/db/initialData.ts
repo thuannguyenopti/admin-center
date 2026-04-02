@@ -978,6 +978,40 @@ export type Page = {
 	};
 };
 
+export type CmpTask = {
+	id: string;
+	title: string;
+	reference: string;
+	status: string;
+};
+
+export const initialCmpTasks: CmpTask[] = [
+	{
+		id: "1",
+		title: "Ironman Miami triathlon 2026 Sponsor Package task",
+		reference: "TSK-2702",
+		status: "Not Started",
+	},
+	{
+		id: "2",
+		title: "Content Rec",
+		reference: "TSK-2695",
+		status: "In Progress",
+	},
+	{
+		id: "3",
+		title: "Hotel Brochure",
+		reference: "TSK-2691",
+		status: "At Risk",
+	},
+	{
+		id: "4",
+		title: "SC content testing",
+		reference: "TSK-2689",
+		status: "Overdue",
+	},
+];
+
 export type Application = {
 	id: string;
 	name: string;
