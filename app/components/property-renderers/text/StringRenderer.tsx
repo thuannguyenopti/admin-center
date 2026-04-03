@@ -1,4 +1,4 @@
-import { Field, Input, Textarea, Text } from "@optiaxiom/react";
+import { Badge, Box, Field, Input, Textarea, Text } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const StringRenderer: React.FC<PropertyRendererProps> = ({
@@ -12,14 +12,22 @@ export const StringRenderer: React.FC<PropertyRendererProps> = ({
 	const useTextarea = property.displayAs === "textarea";
 
 	if (mode === "readonly") {
-		// Handle array values (e.g., tags, keywords)
-		const displayValue = Array.isArray(value)
-			? value.join(", ")
-			: (value || "—");
+		// Handle array values (e.g., tags, keywords) as pills
+		if (Array.isArray(value)) {
+			return (
+				<Field label={property.displayName || property.name}>
+					<Box alignItems="center" display="flex" flexWrap="wrap" gap="8">
+						{value.map((tag: string, i: number) => (
+							<Badge key={i} intent="neutral">{tag}</Badge>
+						))}
+					</Box>
+				</Field>
+			);
+		}
 
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{displayValue}</Text>
+				<Text>{value || "—"}</Text>
 			</Field>
 		);
 	}
