@@ -515,7 +515,18 @@ function SpecializedAgentSetupContent() {
     const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">(defaultGuidePanelView);
     const [enhancePopoverOpen, setEnhancePopoverOpen] = useState(false);
     const enhanceButtonRef = useRef<HTMLButtonElement>(null);
-    const [promptSelection, setPromptSelection] = useState<{ x: number; y: number; text: string } | null>(null);
+    const [promptSelection, setPromptSelection] = useState<{ x: number; y: number; text: string; start: number; end: number } | null>(null);
+    const [promptHighlight, setPromptHighlight] = useState<{ start: number; end: number } | null>(null);
+
+    // Restore textarea selection when context chip is active so the user can see what text they sent
+    useEffect(() => {
+        if (!promptHighlight) return;
+        const el = promptTemplateRef.current;
+        if (!el) return;
+        el.focus();
+        el.setSelectionRange(promptHighlight.start, promptHighlight.end);
+    }, [promptHighlight]);
+
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const [highlightedField, setHighlightedField] = useState<number | null>(null);
     const [assistantHoveredField, setAssistantHoveredField] = useState<"system-prompt" | "memory-limit" | "first-message" | null>(null);
@@ -1714,7 +1725,7 @@ function SpecializedAgentSetupContent() {
                                                                         if (selectionStart === selectionEnd) { setPromptSelection(null); return; }
                                                                         const selected = value.substring(selectionStart, selectionEnd).trim();
                                                                         if (!selected) { setPromptSelection(null); return; }
-                                                                        setPromptSelection({ x: cx, y: cy, text: selected });
+                                                                        setPromptSelection({ x: cx, y: cy, text: selected, start: selectionStart, end: selectionEnd });
                                                                     }, 10);
                                                                 }}
                                                                 onKeyUp={(e) => {
@@ -1726,7 +1737,10 @@ function SpecializedAgentSetupContent() {
                                                                     const selected = value.substring(selectionStart, selectionEnd).trim();
                                                                     if (!selected) { setPromptSelection(null); return; }
                                                                     const rect = el.getBoundingClientRect();
-                                                                    setPromptSelection({ x: rect.left + rect.width / 2, y: rect.top + 10, text: selected });
+                                                                    setPromptSelection({ x: rect.left + rect.width / 2, y: rect.top + 10, text: selected, start: selectionStart, end: selectionEnd });
+                                                                }}
+                                                                onMouseDown={() => {
+                                                                    setPromptHighlight(null);
                                                                 }}
                                                                 onKeyDown={(e) => {
                                                                     if (!e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) setPromptSelection(null);
@@ -2755,6 +2769,7 @@ function SpecializedAgentSetupContent() {
                 y={promptSelection.y}
                 onAskOpal={() => {
                     opalPanelControls?.launchWithContext("Selected text in Prompt", promptSelection.text);
+                    setPromptHighlight({ start: promptSelection.start, end: promptSelection.end });
                     setPromptSelection(null);
                 }}
                 onClose={() => setPromptSelection(null)}
