@@ -8,6 +8,7 @@
 		"validate": "npx tsx scripts/validate-initial-data.ts",
 		"bundle-sources": "node scripts/bundle-source-files.js",
 		"build": "npm run validate && npm run bundle-sources && next build",
+		"preview": "next build && next start",
 		"start": "next start",
 		"lint": "next lint",
 		"install:auth": "npx dotenv-cli -e .env -- npm install"

@@ -5,11 +5,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-yarn dev          # Start development server at http://localhost:3000
+yarn dev          # Start development server at http://localhost:3000 (Turbopack)
 yarn build        # Production build (runs validate + bundle-sources first)
-yarn start        # Run production build locally
+yarn preview      # Build + serve production bundle locally — mirrors Vercel exactly
+yarn start        # Serve a previously built production bundle
 yarn lint         # ESLint via Next.js
 ```
+
+> **`yarn dev` vs `yarn preview`**: `yarn dev` uses Turbopack and may render Axiom styles differently from production. Run `yarn preview` to see exactly what Vercel will serve before pushing.
 
 Package manager is **Yarn 4** (Corepack). Use `yarn` not `npm`. Run `corepack enable` (requires sudo) if `yarn dev` fails. To install with auth-gated registry: `yarn install:auth` (uses `.env`). Fallback without Corepack: `node_modules/.bin/next dev`.
 
