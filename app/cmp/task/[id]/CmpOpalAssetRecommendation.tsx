@@ -2,11 +2,11 @@
 
 import { Box } from "@optiaxiom/react";
 import TargetContentTypeDialog from "@/app/components/TargetContentTypeDialog";
-import { BriefEditPage } from "./components/brief/BriefEditPage";
-import { BriefPage } from "./components/brief/BriefPage";
 import { PreviewPage } from "./components/assets/PreviewPage";
 import { SearchPage } from "./components/assets/SearchPage";
 import { SuggestedAssetsPanel } from "./components/assets/SuggestedAssetsPanel";
+import { BriefEditPage } from "./components/brief/BriefEditPage";
+import { BriefPage } from "./components/brief/BriefPage";
 import { ContentEmptyPage } from "./components/content/ContentEmptyPage";
 import { ContentFilledPage } from "./components/content/ContentFilledPage";
 import { TaskCanvas } from "./components/shared/TaskCanvas";
