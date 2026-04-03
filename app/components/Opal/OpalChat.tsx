@@ -25,9 +25,10 @@ type OpalChatProps = {
   onOpenOpalRange?: (agentEndId: string) => void;
   onCloseOpalRange?: (agentEndId: string) => void;
   activeAgentCtx?: { emoji: string; name: string } | null;
+  contextChip?: string | null;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   let opalContext;
   try {
@@ -204,7 +205,11 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 color: 'var(--opal-text-body)',
               }}
             >
-              {isImageGen ? (
+              {contextChip ? (
+                <>
+                  I can help you refine your agent&apos;s prompt template. Share the section you want to improve and tell me what you&apos;re going for. I&apos;ll suggest specific changes.
+                </>
+              ) : isImageGen ? (
                 <>
                   Hi, I&apos;m Opal, Optimizely&apos;s AI. I can help create brand-safe visuals for campaigns, social, and event content.
                   <br /><br />
@@ -218,7 +223,7 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
                 </>
               )}
             </Text>
-            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
+            <OpalSuggestions onSuggestionClick={onSuggestionClick} type={contextChip ? 'agent-prompt-builder' : isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
           </>
         )
       ) : (

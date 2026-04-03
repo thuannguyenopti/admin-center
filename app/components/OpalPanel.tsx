@@ -33,6 +33,9 @@ type OpalPanelProps = {
   createNewChat: () => void;
   deleteChat: (id: string) => void;
   selectChat: (id: string) => void;
+  contextChip?: string | null;
+  contextContent?: string | null;
+  onContextChipRemove?: () => void;
 };
 
 export function OpalPanel({
@@ -57,6 +60,9 @@ export function OpalPanel({
   createNewChat,
   deleteChat,
   selectChat,
+  contextChip,
+  contextContent,
+  onContextChipRemove,
 }: OpalPanelProps) {
   const { setOpalPanelWidth } = useLayout();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
@@ -194,6 +200,7 @@ export function OpalPanel({
           messages={messages}
           onSuggestionClick={handleSuggestionClick}
           onRegenerate={regenerate}
+          contextChip={contextChip}
         />
         <div style={{ flexShrink: 0 }}>
           <OpalInput
@@ -203,6 +210,9 @@ export function OpalPanel({
             disabled={isLoading || isInputDisabled}
             isLoading={isLoading}
             error={error}
+            contextChip={contextChip}
+            contextContent={contextContent}
+            onContextChipRemove={onContextChipRemove}
           />
         </div>
       </Box>

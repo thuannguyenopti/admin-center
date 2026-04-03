@@ -20,7 +20,7 @@ import {
   IconFileArrowUp,
   IconArrowUp,
   IconCircleStop,
-  IconXmark
+  IconXmark,
 } from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
@@ -48,6 +48,9 @@ type OpalInputProps = {
   onMentionSelect?: (agent: MentionableAgent) => void;
   /** Called when the user tries to submit but is blocked (e.g. during resume flow) */
   onSubmitBlocked?: () => void;
+  contextChip?: string | null;
+  contextContent?: string | null;
+  onContextChipRemove?: () => void;
 };
 
 export function OpalInput({
@@ -64,11 +67,13 @@ export function OpalInput({
   mentionableAgents = [],
   onMentionSelect,
   onSubmitBlocked,
+  contextChip,
+  contextContent,
+  onContextChipRemove,
 }: OpalInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [dropdownWidth, setDropdownWidth] = useState<number | undefined>();
-  const [contextChip, setContextChip] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -103,6 +108,16 @@ export function OpalInput({
     }
   }, [isLoading]);
 
+  // Auto-focus textarea when a context chip is added (e.g. via "Ask Opal" from selection tooltip)
+  const prevContextChipRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevContextChipRef.current;
+    prevContextChipRef.current = contextChip;
+    if (contextChip && !prev) {
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    }
+  }, [contextChip]);
+
   // Auto-resize textarea based on content — useLayoutEffect fires synchronously
   // before paint, so heights are always correct (including reset after send)
   useLayoutEffect(() => {
@@ -118,8 +133,9 @@ export function OpalInput({
       // Offset 54px = Padding (8+8=16) + Margin (2) + Submit Button (32) + Extra Gap (4)
       const offset = 54;
       // Home variant starts taller (4-row default like Ana's design)
-      const minTextareaHeight = variant === 'home' ? 90 : 34;
-      const minContainerHeight = variant === 'home' ? 144 : 88;
+      // Context chip variant starts taller so the input is clearly in view
+      const minTextareaHeight = variant === 'home' ? 90 : contextChip ? 72 : 34;
+      const minContainerHeight = variant === 'home' ? 144 : contextChip ? 126 : 88;
       const maxContainerHeight = window.innerHeight * 0.5; // 50vh
 
       const targetTextareaHeight = Math.max(naturalHeight, minTextareaHeight);
@@ -141,7 +157,7 @@ export function OpalInput({
       container.style.boxSizing = 'border-box';
       textarea.style.boxSizing = 'border-box';
     }
-  }, [value]);
+  }, [value, contextChip]);
 
   // Filter mentionable agents based on text after @
   const mentionQuery = value.startsWith('@') ? value.slice(1).toLowerCase() : '';
@@ -173,7 +189,11 @@ export function OpalInput({
   const triggerSend = () => {
     if (disabled) { onSubmitBlocked?.(); return; }
     if (!hasValue || isLoading) return;
-    onSend(value.trim());
+    const message = contextContent
+      ? `${value.trim()}\n\nContext — Selected text in Prompt:\n\n"${contextContent}"`
+      : value.trim();
+    onSend(message);
+    onContextChipRemove?.();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -237,13 +257,6 @@ export function OpalInput({
     setTimeout(() => textareaRef.current?.focus(), 50);
   };
 
-  const removeContext = () => {
-    setContextChip(null);
-  };
-
-  const handleAddContext = () => {
-    setContextChip('Mosey Bank / Mobile Handoff'); // Mock context
-  };
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -427,23 +440,29 @@ export function OpalInput({
         {/* Active Context Chips */}
         {contextChip && (
           <Box display="flex" gap="8" mb="8" flexWrap="wrap">
-            {contextChip && (
+            <Box
+              display="inline-flex"
+              alignItems="center"
+              gap="4"
+              style={{
+                backgroundColor: 'var(--ax-colors-bg-avatar-neutral)',
+                borderRadius: '6px',
+                height: '24px',
+                padding: '2px 6px',
+                flexShrink: 0,
+              }}
+            >
+              <Text fontSize="xs" style={{ color: 'var(--ax-colors-fg-default)', whiteSpace: 'nowrap' }}>{contextChip}</Text>
               <Box
                 display="flex"
                 alignItems="center"
-                gap="4"
-                px="8"
-                py="2"
-                style={{
-                  backgroundColor: 'var(--opal-bg-sidebar)',
-                  borderRadius: '16px',
-                  border: '1px solid var(--opal-border-primary)',
-                }}
+                justifyContent="center"
+                style={{ width: 16, borderRadius: 4, padding: 2, cursor: 'pointer', color: 'var(--ax-colors-fg-secondary)' }}
+                onClick={onContextChipRemove}
               >
-                <Text fontSize="xs" color="fg.secondary">{contextChip}</Text>
-                <IconXmark size={12} style={{ cursor: 'pointer' }} onClick={removeContext} />
+                <IconXmark size={12} />
               </Box>
-            )}
+            </Box>
           </Box>
         )}
 
@@ -503,7 +522,7 @@ export function OpalInput({
               size="sm"
               icon={<IconFileArrowUp size={16} />}
               aria-label="Upload file"
-              onClick={handleAddContext}
+              onClick={undefined}
               style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
             />
           </Box>

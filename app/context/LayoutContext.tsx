@@ -16,6 +16,7 @@ type OpalPanelControls = {
 	sendMessage: (content: string) => void | Promise<void>;
 	setInputDisabled: (disabled: boolean) => void;
 	launchPrompt: (prompt: string) => void;
+	launchWithContext: (label: string, content: string) => void;
 };
 
 type CodePanelControls = {
