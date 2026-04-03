@@ -6,13 +6,13 @@ import type { ReactNode } from "react";
 import { Box, Text, Button, Textarea } from "@optiaxiom/react";
 import {
     IconSparkles,
-    IconArrowRight,
     IconChevronLeft,
     IconPen,
     IconChevronDown,
     IconChevronUp,
     IconScrewdriverWrench,
 } from "@optimizely/axiom-icons";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -408,9 +408,8 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                             Build from scratch
                                         </Button>
                                         <Button
-                                            appearance="primary"
-                                            iconPosition="end"
-                                            icon={<IconArrowRight size={13} />}
+                                            appearance="primary-opal"
+                                            icon={<Image src="/opal-orb.png" alt="Opal" width={18} height={18} />}
                                             onClick={() => setStep("designing")}
                                         >
                                             Generate Agent
@@ -524,7 +523,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                     View
                                                 </Button>
                                                 <Button
-                                                    appearance="primary"
+                                                    appearance="inverse"
                                                     size="sm"
                                                     style={{ flex: 1, justifyContent: "center" }}
                                                     onClick={() => {
