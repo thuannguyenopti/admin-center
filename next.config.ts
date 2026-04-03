@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // ⚠️ WARNING: Do NOT add custom SVG rule mutations here (config.module.rules.push/find).
+  // Mutating webpack rules breaks Next.js's CSS extraction for transpilePackages,
+  // causing @optiaxiom/react styles (borders, fills) to vanish in the Vercel build.
+  // SVG support for dev is handled by the turbopack.rules block above.
+  // Also: NEVER add --webpack to the build script in package.json for the same reason.
   webpack: (config, { isServer }) => {
     // Ensure PapaParse is only bundled for client-side
     if (!isServer) {
@@ -32,8 +37,6 @@ const nextConfig: NextConfig = {
         path: false,
       };
     }
-    // No alias needed — @optimizely/axiom-icons is installed as a real package
-
     return config;
   },
 };
