@@ -49,12 +49,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const {codePanelControls} = useLayout();
 
 	const handleCodeClick = () => {
-		// Start with the simple path
-		const simplePath = `app${pathname}/page.tsx`;
-
-		// For paths with numeric segments, also try the [id] version
-		// We'll let the CodePanel component handle trying both
-		codePanelControls?.openPanel(simplePath);
+		codePanelControls?.openPanel(pathname);
 	};
 
 	const settingsGroups = {

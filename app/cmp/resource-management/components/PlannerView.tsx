@@ -543,11 +543,14 @@ export function PlannerGrid({
 			bg="bg.default"
 			border="1"
 			borderColor="border.tertiary"
+			display="flex"
+			flexDirection="column"
 			rounded="lg"
 			overflow="hidden"
 			w="full"
+			style={{ height: "100%", minHeight: 0 }}
 		>
-			<Box overflowX="auto" w="full">
+			<Box overflow="auto" w="full" flex="1" style={{ minHeight: 0 }}>
 				<Box ref={plannerContentRef} style={{ minWidth: plannerGridMinWidth, width: "100%" }}>
 					<Box
 						display="grid"
