@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import type { ReactNode } from "react";
-import { Box, Text, Button, Textarea } from "@optiaxiom/react";
+import { Box, Text, Button, Textarea, Disclosure, DisclosureTrigger, DisclosureContent, Input } from "@optiaxiom/react";
 import {
     IconSparkles,
     IconChevronLeft,
-    IconPen,
     IconChevronDown,
     IconChevronUp,
     IconScrewdriverWrench,
@@ -85,6 +83,8 @@ const BUILDING_MSGS = ["Fine-tuning instructions...", "Configuring parameters...
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+// (SectionToggle removed — replaced with Axiom Disclosure)
+
 function ThreeDots() {
     return (
         <Box display="flex" gap="8" alignItems="center" justifyContent="center" mt="20">
@@ -110,45 +110,6 @@ function ThreeDots() {
     );
 }
 
-function SectionToggle({
-    label,
-    count,
-    open,
-    onToggle,
-    children,
-}: {
-    label: string;
-    count: number;
-    open: boolean;
-    onToggle: () => void;
-    children: ReactNode;
-}) {
-    return (
-        <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                cursor="pointer"
-                pb={open ? "12" : "0"}
-                onClick={onToggle}
-            >
-                <Text
-                    fontSize="xs"
-                    fontWeight="500"
-                    color="fg.secondary"
-                    style={{ letterSpacing: "0.07em", textTransform: "uppercase" }}
-                >
-                    {label} ({count})
-                </Text>
-                <Box color="fg.tertiary">
-                    {open ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
-                </Box>
-            </Box>
-            {open && children}
-        </Box>
-    );
-}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -162,11 +123,8 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
     const [step, setStep] = useState<Step>("entry");
     const [prompt, setPrompt] = useState("");
     const [msgIdx, setMsgIdx] = useState(0);
-    const [editingPrompt, setEditingPrompt] = useState(false);
-    const [editText, setEditText] = useState("");
-    const [toolsOpen, setToolsOpen] = useState(false);
-    const [paramsOpen, setParamsOpen] = useState(false);
-    const [edgesOpen, setEdgesOpen] = useState(false);
+    const [localPhases, setLocalPhases] = useState(MOCK.phases.map((p) => ({ ...p })));
+    const [editingPhaseIdx, setEditingPhaseIdx] = useState<number | null>(null);
     const [showAllTemplates, setShowAllTemplates] = useState(false);
 
     const msgs = step === "building" ? BUILDING_MSGS : DESIGNING_MSGS;
@@ -238,7 +196,8 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
         setTimeout(() => {
             setStep("entry");
             setPrompt("");
-            setEditingPrompt(false);
+            setEditingPhaseIdx(null);
+            setLocalPhases(MOCK.phases.map((p) => ({ ...p })));
             setShowAllTemplates(false);
         }, 300);
     };
@@ -618,59 +577,6 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                 {/* ── PREVIEW ───────────────────────────────────────────── */}
                 {step === "preview" && (
                     <Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "hidden" }}>
-                        {/* Edit Prompt overlay */}
-                        {editingPrompt && (
-                            <Box
-                                style={{
-                                    position: "absolute",
-                                    inset: 0,
-                                    zIndex: 20,
-                                    background: "rgba(0,0,0,0.45)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Box
-                                    bg="bg.default"
-                                    rounded="xl"
-                                    style={{
-                                        width: "min(480px, 88%)",
-                                        boxShadow: "0 24px 64px rgba(0,0,0,0.22)",
-                                        padding: 28,
-                                    }}
-                                >
-                                    <Text fontWeight="600" fontSize="lg">Edit Your Prompt</Text>
-                                    <Text color="fg.secondary" fontSize="sm" mt="4">
-                                        Modify your description below, then re-plan to get an updated agent blueprint.
-                                    </Text>
-                                    <Box mt="16">
-                                        <Textarea
-                                            value={editText}
-                                            onChange={(e) => setEditText(e.target.value)}
-                                            style={{ minHeight: 96 }}
-                                        />
-                                    </Box>
-                                    <Box display="flex" alignItems="center" justifyContent="flex-end" gap="8" mt="16">
-                                        <Button appearance="subtle" onClick={() => setEditingPrompt(false)}>
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            appearance="primary"
-                                            iconPosition="end"
-                                            icon={<IconSparkles size={13} />}
-                                            onClick={() => {
-                                                setEditingPrompt(false);
-                                                setStep("designing");
-                                            }}
-                                        >
-                                            Re-plan
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            </Box>
-                        )}
-
                         {/* Preview header */}
                         <Box
                             px="40"
@@ -687,50 +593,50 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     Here&apos;s what we&apos;ll build. Review the outline, then let&apos;s make it real.
                                 </Text>
                             </Box>
-                            <Box mt="4">
-                                <Button
-                                    appearance="subtle"
-                                    size="sm"
-                                    style={{ border: "1px solid var(--ax-colors-border-default)" }}
-                                >
-                                    Agent Plan
-                                </Button>
-                            </Box>
                         </Box>
 
                         {/* Scrollable content */}
                         <Box px="40" py="24" style={{ flex: 1, overflowY: "auto" }}>
                             {/* Agent identity card */}
-                            <Box
-                                bg="bg.secondary"
-                                rounded="lg"
-                                p="20"
-                                mb="24"
-                            >
+                            <Box bg="bg.secondary" rounded="lg" p="20" mb="24">
                                 <Text fontWeight="600" fontSize="lg">{MOCK.name}</Text>
                                 <Text color="fg.secondary" fontSize="sm" mt="6">{MOCK.desc}</Text>
-                                <Text
-                                    fontSize="xs"
-                                    color="fg.tertiary"
-                                    mt="10"
-                                    style={{ fontStyle: "italic" }}
-                                >
-                                    Click to edit name or description
-                                </Text>
                             </Box>
 
-                            {/* Workflow phases */}
+                            {/* Agent action plan — editable phases */}
                             <Text
                                 fontSize="xs"
                                 fontWeight="500"
                                 color="fg.secondary"
                                 style={{ letterSpacing: "0.07em", textTransform: "uppercase" }}
                             >
-                                Workflow Phases
+                                Agent action plan
                             </Text>
-                            <Box display="flex" flexDirection="column" gap="16" mt="12" mb="8">
-                                {MOCK.phases.map((phase, i) => (
-                                    <Box key={i} display="flex" gap="16" alignItems="start">
+                            <Box display="flex" flexDirection="column" gap="12" mt="12" mb="8">
+                                {localPhases.map((phase, i) => (
+                                    <Box
+                                        key={i}
+                                        display="flex"
+                                        gap="16"
+                                        alignItems="start"
+                                        rounded="lg"
+                                        p="12"
+                                        style={{
+                                            border: "1px solid",
+                                            borderColor: editingPhaseIdx === i
+                                                ? "var(--ax-colors-border-accent)"
+                                                : "var(--ax-colors-border-tertiary)",
+                                            cursor: editingPhaseIdx === i ? "default" : "pointer",
+                                            background: editingPhaseIdx === i
+                                                ? "var(--ax-colors-bg-default)"
+                                                : "var(--ax-colors-bg-secondary)",
+                                            transition: "border-color 0.15s, background 0.15s",
+                                        }}
+                                        onClick={() => {
+                                            if (editingPhaseIdx !== i) setEditingPhaseIdx(i);
+                                        }}
+                                    >
+                                        {/* Step number bubble */}
                                         <Box
                                             rounded="full"
                                             display="flex"
@@ -740,6 +646,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 width: 28,
                                                 height: 28,
                                                 flexShrink: 0,
+                                                marginTop: 2,
                                                 background: "#0f172a",
                                                 color: "white",
                                                 fontSize: 12,
@@ -748,151 +655,200 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         >
                                             {i + 1}
                                         </Box>
-                                        <Box>
-                                            <Text fontWeight="600" fontSize="sm">{phase.title}</Text>
-                                            <Text fontSize="sm" color="fg.secondary" mt="2">{phase.summary}</Text>
-                                            <Text
-                                                fontSize="xs"
-                                                mt="4"
-                                                style={{
-                                                    color: "var(--ax-colors-fg-tertiary)",
-                                                    fontStyle: "italic",
-                                                    lineHeight: 1.65,
-                                                }}
-                                            >
-                                                {phase.detail}
-                                            </Text>
-                                        </Box>
+
+                                        {editingPhaseIdx === i ? (
+                                            /* Editing state */
+                                            <Box display="flex" flexDirection="column" gap="8" style={{ flex: 1 }}>
+                                                <Input
+                                                    value={phase.title}
+                                                    onChange={(e) =>
+                                                        setLocalPhases((prev) =>
+                                                            prev.map((p, j) => j === i ? { ...p, title: e.target.value } : p)
+                                                        )
+                                                    }
+                                                    style={{ fontWeight: 600 }}
+                                                />
+                                                <Textarea
+                                                    value={phase.summary}
+                                                    onChange={(e) =>
+                                                        setLocalPhases((prev) =>
+                                                            prev.map((p, j) => j === i ? { ...p, summary: e.target.value } : p)
+                                                        )
+                                                    }
+                                                    style={{ minHeight: 56, fontSize: 13 }}
+                                                />
+                                                <Textarea
+                                                    value={phase.detail}
+                                                    onChange={(e) =>
+                                                        setLocalPhases((prev) =>
+                                                            prev.map((p, j) => j === i ? { ...p, detail: e.target.value } : p)
+                                                        )
+                                                    }
+                                                    style={{ minHeight: 72, fontSize: 12 }}
+                                                />
+                                                <Box display="flex" justifyContent="flex-end">
+                                                    <Button
+                                                        appearance="subtle"
+                                                        size="sm"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingPhaseIdx(null);
+                                                        }}
+                                                    >
+                                                        Done
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        ) : (
+                                            /* Read-only state */
+                                            <Box style={{ flex: 1 }}>
+                                                <Text fontWeight="600" fontSize="sm">{phase.title}</Text>
+                                                <Text fontSize="sm" color="fg.secondary" mt="2">{phase.summary}</Text>
+                                                <Text
+                                                    fontSize="xs"
+                                                    mt="4"
+                                                    style={{
+                                                        color: "var(--ax-colors-fg-tertiary)",
+                                                        fontStyle: "italic",
+                                                        lineHeight: 1.65,
+                                                    }}
+                                                >
+                                                    {phase.detail}
+                                                </Text>
+                                            </Box>
+                                        )}
                                     </Box>
                                 ))}
                             </Box>
 
                             {/* Tools */}
-                            <SectionToggle
-                                label="Tools"
-                                count={MOCK.tools.length}
-                                open={toolsOpen}
-                                onToggle={() => setToolsOpen((o) => !o)}
-                            >
-                                <Box display="flex" flexDirection="column" gap="8" pb="4">
-                                    {MOCK.tools.map((t) => (
-                                        <Box
-                                            key={t.name}
-                                            p="12"
-                                            rounded="md"
-                                            border="1"
-                                            borderColor="border.secondary"
-                                            bg="bg.default"
-                                        >
-                                            <Text
-                                                fontSize="sm"
-                                                fontWeight="500"
-                                                style={{ fontFamily: "monospace" }}
-                                            >
-                                                {t.name}
-                                            </Text>
-                                            <Text fontSize="sm" color="fg.secondary" mt="4">
-                                                {t.desc}
-                                            </Text>
+                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
+                                <Disclosure>
+                                    <DisclosureTrigger
+                                        fontSize="xs"
+                                        fontWeight="500"
+                                        color="fg.secondary"
+                                        style={{ letterSpacing: "0.07em", textTransform: "uppercase" as const }}
+                                    >
+                                        Tools ({MOCK.tools.length})
+                                    </DisclosureTrigger>
+                                    <DisclosureContent>
+                                        <Box display="flex" flexDirection="column" gap="8" pt="12" pb="4">
+                                            {MOCK.tools.map((t) => (
+                                                <Box
+                                                    key={t.name}
+                                                    p="12"
+                                                    rounded="md"
+                                                    border="1"
+                                                    borderColor="border.secondary"
+                                                    bg="bg.default"
+                                                >
+                                                    <Text fontSize="sm" fontWeight="500" style={{ fontFamily: "monospace" }}>
+                                                        {t.name}
+                                                    </Text>
+                                                    <Text fontSize="sm" color="fg.secondary" mt="4">
+                                                        {t.desc}
+                                                    </Text>
+                                                </Box>
+                                            ))}
                                         </Box>
-                                    ))}
-                                </Box>
-                            </SectionToggle>
+                                    </DisclosureContent>
+                                </Disclosure>
+                            </Box>
 
                             {/* Parameters */}
-                            <SectionToggle
-                                label="Parameters"
-                                count={MOCK.params.length}
-                                open={paramsOpen}
-                                onToggle={() => setParamsOpen((o) => !o)}
-                            >
-                                <Box display="flex" flexDirection="column" gap="8" pb="4">
-                                    {MOCK.params.map((p, i) => (
-                                        <Box
-                                            key={i}
-                                            p="12"
-                                            rounded="md"
-                                            border="1"
-                                            borderColor="border.secondary"
-                                            bg="bg.default"
-                                        >
-                                            <Box display="flex" gap="8" alignItems="center">
-                                                <Text
-                                                    fontSize="sm"
-                                                    fontWeight="500"
-                                                    style={{ fontFamily: "monospace" }}
-                                                >
-                                                    {p.name}
-                                                </Text>
+                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
+                                <Disclosure>
+                                    <DisclosureTrigger
+                                        fontSize="xs"
+                                        fontWeight="500"
+                                        color="fg.secondary"
+                                        style={{ letterSpacing: "0.07em", textTransform: "uppercase" as const }}
+                                    >
+                                        Parameters ({MOCK.params.length})
+                                    </DisclosureTrigger>
+                                    <DisclosureContent>
+                                        <Box display="flex" flexDirection="column" gap="8" pt="12" pb="4">
+                                            {MOCK.params.map((p, idx) => (
                                                 <Box
-                                                    px="6"
-                                                    py="2"
-                                                    rounded="full"
-                                                    style={{
-                                                        background: p.required ? "#eff6ff" : "#f9fafb",
-                                                        color: p.required ? "#1d4ed8" : "#6b7280",
-                                                        fontSize: 11,
-                                                        fontWeight: 500,
-                                                    }}
+                                                    key={idx}
+                                                    p="12"
+                                                    rounded="md"
+                                                    border="1"
+                                                    borderColor="border.secondary"
+                                                    bg="bg.default"
                                                 >
-                                                    {p.type}
+                                                    <Box display="flex" gap="8" alignItems="center">
+                                                        <Text fontSize="sm" fontWeight="500" style={{ fontFamily: "monospace" }}>
+                                                            {p.name}
+                                                        </Text>
+                                                        <Box
+                                                            px="6"
+                                                            py="2"
+                                                            rounded="full"
+                                                            style={{
+                                                                background: p.required ? "#eff6ff" : "#f9fafb",
+                                                                color: p.required ? "#1d4ed8" : "#6b7280",
+                                                                fontSize: 11,
+                                                                fontWeight: 500,
+                                                            }}
+                                                        >
+                                                            {p.type}
+                                                        </Box>
+                                                        {!p.required && (
+                                                            <Box
+                                                                px="6"
+                                                                py="2"
+                                                                rounded="full"
+                                                                style={{ background: "#f9fafb", color: "#9ca3af", fontSize: 11 }}
+                                                            >
+                                                                optional
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                    <Text fontSize="sm" color="fg.secondary" mt="6">{p.desc}</Text>
+                                                    <Text fontSize="xs" color="fg.tertiary" mt="4" style={{ fontStyle: "italic" }}>
+                                                        {p.example}
+                                                    </Text>
                                                 </Box>
-                                                {!p.required && (
+                                            ))}
+                                        </Box>
+                                    </DisclosureContent>
+                                </Disclosure>
+                            </Box>
+
+                            {/* Edge Cases */}
+                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
+                                <Disclosure>
+                                    <DisclosureTrigger
+                                        fontSize="xs"
+                                        fontWeight="500"
+                                        color="fg.secondary"
+                                        style={{ letterSpacing: "0.07em", textTransform: "uppercase" as const }}
+                                    >
+                                        Edge Cases ({MOCK.edgeCases.length})
+                                    </DisclosureTrigger>
+                                    <DisclosureContent>
+                                        <Box display="flex" flexDirection="column" gap="8" pt="12" pb="4">
+                                            {MOCK.edgeCases.map((ec, idx) => (
+                                                <Box key={idx} display="flex" gap="8" alignItems="start">
                                                     <Box
-                                                        px="6"
-                                                        py="2"
                                                         rounded="full"
                                                         style={{
-                                                            background: "#f9fafb",
-                                                            color: "#9ca3af",
-                                                            fontSize: 11,
+                                                            width: 6,
+                                                            height: 6,
+                                                            flexShrink: 0,
+                                                            background: "#f59e0b",
+                                                            marginTop: 6,
                                                         }}
-                                                    >
-                                                        optional
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                            <Text fontSize="sm" color="fg.secondary" mt="6">
-                                                {p.desc}
-                                            </Text>
-                                            <Text
-                                                fontSize="xs"
-                                                color="fg.tertiary"
-                                                mt="4"
-                                                style={{ fontStyle: "italic" }}
-                                            >
-                                                {p.example}
-                                            </Text>
+                                                    />
+                                                    <Text fontSize="sm" color="fg.secondary">{ec}</Text>
+                                                </Box>
+                                            ))}
                                         </Box>
-                                    ))}
-                                </Box>
-                            </SectionToggle>
-
-                            {/* Edge cases */}
-                            <SectionToggle
-                                label="Edge Cases"
-                                count={MOCK.edgeCases.length}
-                                open={edgesOpen}
-                                onToggle={() => setEdgesOpen((o) => !o)}
-                            >
-                                <Box display="flex" flexDirection="column" gap="8" pb="4">
-                                    {MOCK.edgeCases.map((e, i) => (
-                                        <Box key={i} display="flex" gap="8" alignItems="start">
-                                            <Box
-                                                rounded="full"
-                                                style={{
-                                                    width: 6,
-                                                    height: 6,
-                                                    flexShrink: 0,
-                                                    background: "#f59e0b",
-                                                    marginTop: 6,
-                                                }}
-                                            />
-                                            <Text fontSize="sm" color="fg.secondary">{e}</Text>
-                                        </Box>
-                                    ))}
-                                </Box>
-                            </SectionToggle>
+                                    </DisclosureContent>
+                                </Disclosure>
+                            </Box>
 
                             <Box pb="8" />
                         </Box>
@@ -916,26 +872,14 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             >
                                 Back
                             </Button>
-                            <Box display="flex" gap="12" alignItems="center">
-                                <Button
-                                    appearance="subtle"
-                                    icon={<IconPen size={13} />}
-                                    onClick={() => {
-                                        setEditText(prompt);
-                                        setEditingPrompt(true);
-                                    }}
-                                >
-                                    Edit Prompt
-                                </Button>
-                                <Button
-                                    appearance="primary"
-                                    iconPosition="end"
-                                    icon={<IconSparkles size={13} />}
-                                    onClick={() => setStep("building")}
-                                >
-                                    Looks great — Create my Agent
-                                </Button>
-                            </Box>
+                            <Button
+                                appearance="primary"
+                                iconPosition="end"
+                                icon={<IconSparkles size={13} />}
+                                onClick={() => setStep("building")}
+                            >
+                                Looks great — Create my Agent
+                            </Button>
                         </Box>
                     </Box>
                 )}
