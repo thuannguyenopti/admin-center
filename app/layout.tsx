@@ -441,6 +441,12 @@ export default function RootLayout({
 			},
 			{label: "Configurations"},
 			{
+				label: "Artifacts",
+				url: "/opal/artifacts",
+				highlight: "/opal/artifacts",
+				icon: <img src="/nav_icons/database.svg" alt="Artifacts" width={20} height={20} />,
+			},
+			{
 				label: "Agents",
 				url: "/opal/agents",
 				highlight: "/opal/agents",

@@ -18,14 +18,10 @@ import {
     Tooltip,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import {
-    IconSearch,
-    IconPlus,
-    IconChevronDown,
-} from "@tabler/icons-react";
-import { IconAgent, IconCodeBranch, IconFileImport } from "@optimizely/axiom-icons";
+import { IconAgent, IconCodeBranch, IconFileImport, IconSearch, IconPlus, IconChevronDown } from "@optimizely/axiom-icons";
 import { IconEye, IconEyeSlash } from "@/app/lib/axiom-icons";
 import { Input } from "@/app/components/Input";
+import { NewAgentDialog } from "./components/NewAgentDialog";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
@@ -255,6 +251,8 @@ export default function AgentsPage() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState("Your Agents");
+    const [addAgentOpen, setAddAgentOpen] = useState(false);
+    const [newAgentOpen, setNewAgentOpen] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const categories = Array.from(new Set(agents.flatMap((agent) => agent.tags?.map((tag) => tag.label) ?? []))).sort();
     const showCategoryColors = searchParams.get("categoryPills") !== "plain";
@@ -336,6 +334,8 @@ export default function AgentsPage() {
     };
 
     return (
+        <>
+        <NewAgentDialog open={newAgentOpen} onOpenChange={setNewAgentOpen} />
         <Box p="24" display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
             {/* Header */}
             <Box display="flex" flexDirection="column" gap="8">
@@ -412,7 +412,7 @@ export default function AgentsPage() {
                         <MenuContent />
                     </Menu>
                 </Box>
-                <DropdownMenu>
+                <DropdownMenu open={addAgentOpen} onOpenChange={setAddAgentOpen}>
                     <DropdownMenuTrigger asChild>
                         <Button
                             appearance="primary"
@@ -424,21 +424,21 @@ export default function AgentsPage() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => router.push("/opal/agents/setup")}>
+                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); setTimeout(() => setNewAgentOpen(true), 150); }}>
                             <Box mt="2" color="fg.default"><IconAgent /></Box>
                             <Box>
                                 <Text fontWeight="500" fontSize="md">Specialized Agent</Text>
                                 <Text fontSize="sm" color="fg.secondary">Purpose-built to autonomously perform specific tasks creatively within guidelines...</Text>
                             </Box>
                         </Box>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => router.push("/opal/agents/workflow")}>
+                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/workflow"); }}>
                             <Box mt="2" color="fg.default"><IconCodeBranch /></Box>
                             <Box>
                                 <Text fontWeight="500" fontSize="md">Workflow</Text>
                                 <Text fontSize="sm" color="fg.secondary">Orchestrate agents and tools to fulfill your requirements.</Text>
                             </Box>
                         </Box>
-                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md">
+                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => setAddAgentOpen(false)}>
                             <Box mt="2" color="fg.default"><IconFileImport /></Box>
                             <Box>
                                 <Text fontWeight="500" fontSize="md">Import</Text>
@@ -602,5 +602,6 @@ export default function AgentsPage() {
                 </tbody>
             </Table>
         </Box>
+        </>
     );
 }

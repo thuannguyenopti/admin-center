@@ -1121,6 +1121,8 @@ function SpecializedAgentSetupContent() {
     // Initialize state based on mode and search params
     useEffect(() => {
         const id = searchParams.get("id");
+        const from = searchParams.get("from");
+
         if (mode === "edit") {
             setDetailsOpen(true);
             setInputOpen(true);
@@ -1148,6 +1150,40 @@ function SpecializedAgentSetupContent() {
                 ]);
                 setCreativity(40);
             }
+        } else if (from === "ai") {
+            // Load AI-generated draft from the new-agent dialog
+            try {
+                const raw = sessionStorage.getItem("ai_agent_draft");
+                if (raw) {
+                    const draft = JSON.parse(raw);
+                    setDetailsOpen(true);
+                    setInputOpen(true);
+                    setIsActive(false);
+                    setAgentName(draft.agentName || "");
+                    setAgentId((draft.agentName || "").toLowerCase().replace(/[^a-z0-9]+/g, "_"));
+                    setDescription(draft.description || "");
+                    setPromptTemplate(draft.promptTemplate || "");
+                    setTools(draft.tools || "");
+                    setVariables(draft.variables || []);
+                    setCreativity(40);
+                    setInferenceLevel("balanced");
+                    return;
+                }
+            } catch {
+                // fall through to blank create
+            }
+            // Fallback if no draft stored
+            setDetailsOpen(true);
+            setInputOpen(false);
+            setAgentName("");
+            setAgentId("");
+            setIsActive(false);
+            setDescription("");
+            setPromptTemplate("");
+            setTools("");
+            setVariables([]);
+            setCreativity(40);
+            setInferenceLevel("balanced");
         } else {
             // mode === 'create'
             setDetailsOpen(true);
@@ -2653,6 +2689,7 @@ function SpecializedAgentSetupContent() {
                     onAskOpal={handleAskOpal}
                     onOpenExample={handleOpenGuideExample}
                     multiTurnMode={multiTurnMode}
+                    fromAi={searchParams.get("from") === "ai"}
                 />
             </div>
         </Box>
