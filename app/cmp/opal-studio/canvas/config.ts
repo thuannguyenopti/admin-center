@@ -112,6 +112,28 @@ export const defaultCanvasSettings: CanvasSettings = {
 export const GRID_SIZE = 20;
 export const SNAP_THRESHOLD = 8;
 
+/* ── Demo generation steps ── */
+
+export interface GenerationStep {
+	prompt: string;
+	image: string;
+}
+
+export const demoGenerationSteps: GenerationStep[] = [
+	{
+		prompt: "Create a new dynamic image for a triathlon poster",
+		image: "/hero-cycling.jpg",
+	},
+	{
+		prompt: "Keep the rider, but place them in the French Alps during the Tour de France",
+		image: "/tdf-calm.png",
+	},
+	{
+		prompt: "Love this vibe — add more fans cheering loudly with signs and flags",
+		image: "/tdf-fans.png",
+	},
+];
+
 /* ── Artboard / Pack types ── */
 
 export interface Artboard {

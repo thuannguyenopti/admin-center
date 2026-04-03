@@ -7,16 +7,16 @@ export type Scene =
 	| "content"
 	| "content-panel";
 
-export type TaskTab = "brief" | "content";
+export type TaskTab = "brief" | "content" | "fields" | "publishing" | "related" | "financial" | "history";
 
 export type AssetType = "JPG" | "PNG" | "MP4" | "PDF";
 
 export type AssetItem = {
 	id: string;
-	heroSrc?: string;
 	label: AssetType;
 	match: number;
 	metaDescription?: string;
+	heroSrc?: string;
 	src: string;
 	title: string;
 	selected?: boolean;
@@ -31,6 +31,11 @@ export type SearchAssetItem = AssetItem & {
 	keywords: string[];
 	thumbnailSrc?: string;
 	width: number;
+};
+
+export type TaskArticle = {
+	id: string;
+	title: string;
 };
 
 export type WorkflowTemplateIconKind = "calendar" | "copy" | "sparkles" | "tag" | "check";

@@ -1,414 +1,484 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Box, Button, Text, Spinner } from "@optiaxiom/react";
-import { IconX, IconCopy, IconCheck, IconChevronDown } from "@tabler/icons-react";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useEffect, useMemo, useState } from "react";
+import { Box, Button, Spinner, Text } from "@optiaxiom/react";
+import { IconCheck, IconChevronDown, IconCopy, IconX } from "@tabler/icons-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vs } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type CodePanelProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  filePath: string | null;
+	isOpen: boolean;
+	onClose: () => void;
+	target: string | null;
 };
 
 type FileOption = {
-  path: string;
-  label: string;
+	description?: string;
+	id: string;
+	label: string;
+	path: string;
 };
 
-export function CodePanel({ isOpen, onClose, filePath }: CodePanelProps) {
-  const [code, setCode] = useState<string>("");
-  const [language, setLanguage] = useState<string>("typescript");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<string | null>(null);
-  const [availableFiles, setAvailableFiles] = useState<FileOption[]>([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+type SourceResponse = {
+	availableFiles: FileOption[];
+	content: string;
+	endLine: number;
+	filePath: string;
+	isSnippet: boolean;
+	language: string;
+	panelDescription?: string | null;
+	panelTitle?: string | null;
+	selectedViewDescription?: string | null;
+	selectedViewId: string;
+	selectedViewLabel: string;
+	startLine: number;
+};
 
-  // Detect theme on mount and when it changes
-  useEffect(() => {
-    const checkTheme = () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
-                     document.documentElement.classList.contains('dark');
-      setIsDarkMode(isDark);
-    };
+const codeTheme = {
+	...vs,
+	'pre[class*="language-"]': {
+		...(vs['pre[class*="language-"]'] ?? {}),
+		background: "#ffffff",
+		color: "#213047",
+		fontFamily:
+			'"SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+		fontSize: "12.5px",
+		lineHeight: 1.72,
+		textShadow: "none",
+	},
+	'code[class*="language-"]': {
+		...(vs['code[class*="language-"]'] ?? {}),
+		background: "#ffffff",
+		color: "#213047",
+		fontFamily:
+			'"SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+		fontSize: "12.5px",
+		lineHeight: 1.72,
+		textShadow: "none",
+	},
+};
 
-    checkTheme();
+export function CodePanel({ isOpen, onClose, target }: CodePanelProps) {
+	const [code, setCode] = useState("");
+	const [language, setLanguage] = useState("typescript");
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [copied, setCopied] = useState(false);
+	const [selectedViewId, setSelectedViewId] = useState<string | null>(null);
+	const [selectedViewLabel, setSelectedViewLabel] = useState<string>("");
+	const [selectedViewDescription, setSelectedViewDescription] = useState<string>("");
+	const [resolvedFilePath, setResolvedFilePath] = useState<string>("");
+	const [availableFiles, setAvailableFiles] = useState<FileOption[]>([]);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+	const [panelTitle, setPanelTitle] = useState("Source Code");
+	const [panelDescription, setPanelDescription] = useState("");
+	const [startLine, setStartLine] = useState(1);
+	const [endLine, setEndLine] = useState(1);
+	const [isSnippet, setIsSnippet] = useState(false);
 
-    // Watch for theme changes
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme', 'class'],
-    });
+	const isRouteTarget = useMemo(() => Boolean(target?.startsWith("/")), [target]);
+	const selectedOption = useMemo(
+		() => availableFiles.find((file) => file.id === selectedViewId) ?? null,
+		[availableFiles, selectedViewId]
+	);
+	const showQuickSwitch = useMemo(() => {
+		if (!isRouteTarget) {
+			return false;
+		}
 
-    return () => observer.disconnect();
-  }, []);
+		const hasCuratedViews = availableFiles.some((file) => Boolean(file.description));
+		return hasCuratedViews && availableFiles.length > 1 && availableFiles.length <= 4;
+	}, [availableFiles, isRouteTarget]);
 
-  // Generate available files list based on the current page
-  useEffect(() => {
-    if (filePath) {
-      const files: FileOption[] = [
-        { path: filePath, label: filePath },
-      ];
+	useEffect(() => {
+		setIsDropdownOpen(false);
+	}, [target, isOpen]);
 
-      // Add common related files
-      const dir = filePath.substring(0, filePath.lastIndexOf('/'));
+	useEffect(() => {
+		if (!isOpen || !target) {
+			return;
+		}
 
-      // Determine what related files might exist based on the directory
-      const commonRelatedFiles = [
-        'mockData.ts',
-        'types.ts',
-        'constants.ts',
-        'utils.ts',
-        'hooks.ts',
-      ];
+		void fetchSourceCode(target);
+	}, [isOpen, target]);
 
-      // Add related files that might exist in the same directory
-      commonRelatedFiles.forEach((relatedFile) => {
-        const relatedPath = `${dir}/${relatedFile}`;
-        // Don't duplicate the main file
-        if (relatedPath !== filePath) {
-          files.push({ path: relatedPath, label: relatedPath });
-        }
-      });
+	const fetchSourceCode = async (
+		nextTarget: string,
+		options?: { filePathOverride?: string; viewId?: string }
+	) => {
+		setIsLoading(true);
+		setError(null);
 
-      setAvailableFiles(files);
-      setSelectedFile(filePath);
-    }
-  }, [filePath]);
+		try {
+			const params = new URLSearchParams();
+			if (nextTarget.startsWith("/")) {
+				params.set("route", nextTarget);
+				if (options?.viewId) {
+					params.set("view", options.viewId);
+				}
+			} else {
+				params.set("file", options?.filePathOverride ?? nextTarget);
+			}
 
-  useEffect(() => {
-    if (isOpen && selectedFile) {
-      fetchSourceCode(selectedFile);
-    }
-  }, [isOpen, selectedFile]);
+			const response = await fetch(`/api/source-code?${params.toString()}`);
+			const data = (await response.json()) as Partial<SourceResponse> & {
+				error?: string;
+				message?: string;
+			};
 
-  const fetchSourceCode = async (path: string) => {
-    setIsLoading(true);
-    setError(null);
+			if (!response.ok) {
+				setError(data.message || data.error || "Failed to load source code");
+				setCode("");
+				return;
+			}
 
-    // Try the straightforward path first
-    try {
-      const response = await fetch(`/api/source-code?file=${encodeURIComponent(path)}`);
-      const data = await response.json();
+			setCode(data.content ?? "");
+			setLanguage(data.language ?? "typescript");
+			setAvailableFiles(data.availableFiles ?? []);
+			setResolvedFilePath(data.filePath ?? "");
+			setSelectedViewId(data.selectedViewId ?? options?.viewId ?? data.filePath ?? null);
+			setSelectedViewLabel(data.selectedViewLabel ?? data.filePath ?? "Source");
+			setSelectedViewDescription(data.selectedViewDescription ?? "");
+			setPanelTitle(data.panelTitle ?? "Source Code");
+			setPanelDescription(data.panelDescription ?? "");
+			setStartLine(data.startLine ?? 1);
+			setEndLine(data.endLine ?? 1);
+			setIsSnippet(Boolean(data.isSnippet));
+		} catch {
+			setError("Failed to fetch source code");
+			setCode("");
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-      if (!response.ok && response.status === 404) {
-        // If 404, try converting numeric segments to [id]
-        const segments = path.split('/');
-        const dynamicPath = segments.map((segment, index) => {
-          // Only convert pure numeric segments after 'app/'
-          if (index > 0 && /^[0-9]+$/.test(segment)) {
-            return '[id]';
-          }
-          return segment;
-        }).join('/');
+	const handleCopy = async () => {
+		try {
+			await navigator.clipboard.writeText(code);
+			setCopied(true);
+			window.setTimeout(() => setCopied(false), 1800);
+		} catch (copyError) {
+			console.error("Failed to copy code:", copyError);
+		}
+	};
 
-        // Only retry if the path actually changed
-        if (dynamicPath !== path) {
-          const retryResponse = await fetch(`/api/source-code?file=${encodeURIComponent(dynamicPath)}`);
-          const retryData = await retryResponse.json();
+	const handleOptionSelect = async (option: FileOption) => {
+		if (!target) {
+			return;
+		}
 
-          if (!retryResponse.ok) {
-            setError(retryData.message || retryData.error || 'Failed to load source code');
-            setCode("");
-            return;
-          }
+		setIsDropdownOpen(false);
+		if (isRouteTarget) {
+			await fetchSourceCode(target, { viewId: option.id });
+			return;
+		}
 
-          setCode(retryData.content);
-          setLanguage(retryData.language);
-          return;
-        }
+		await fetchSourceCode(target, { filePathOverride: option.path });
+	};
 
-        setError(data.message || data.error || 'Failed to load source code');
-        setCode("");
-        return;
-      }
+	if (!isOpen) {
+		return null;
+	}
 
-      if (!response.ok) {
-        setError(data.message || data.error || 'Failed to load source code');
-        setCode("");
-        return;
-      }
+	return (
+		<>
+			<Box
+				style={{
+					backgroundColor: "rgba(15, 23, 42, 0.20)",
+					bottom: 0,
+					left: 0,
+					opacity: isOpen ? 1 : 0,
+					position: "fixed",
+					right: 0,
+					top: 0,
+					transition: "opacity 0.25s ease",
+					zIndex: 999,
+				}}
+				onClick={onClose}
+			/>
 
-      setCode(data.content);
-      setLanguage(data.language);
-    } catch (err) {
-      setError('Failed to fetch source code');
-      setCode("");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+			<Box
+				style={{
+					background: "#ffffff",
+					borderLeft: "1px solid rgba(148, 163, 184, 0.22)",
+					bottom: 0,
+					boxShadow: "-18px 0 56px rgba(15, 23, 42, 0.14)",
+					display: "flex",
+					flexDirection: "column",
+					maxWidth: "92vw",
+					position: "fixed",
+					right: 0,
+					top: 0,
+					transform: isOpen ? "translateX(0)" : "translateX(100%)",
+					transition: "transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+					width: "860px",
+					zIndex: 1000,
+				}}
+			>
+				<Box
+					style={{
+						background:
+							"linear-gradient(180deg, rgba(248,250,252,0.95) 0%, rgba(255,255,255,1) 72%)",
+						borderBottom: "1px solid rgba(226, 232, 240, 0.9)",
+						padding: "22px 28px 18px",
+					}}
+				>
+					<Box alignItems="start" display="flex" justifyContent="space-between" gap="20">
+						<Box display="flex" flexDirection="column" gap="6" style={{ minWidth: 0 }}>
+							<Text
+								fontSize="xl"
+								fontWeight="600"
+								color="fg.default"
+								style={{ color: "#23324a", letterSpacing: "-0.02em" }}
+							>
+								{panelTitle}
+							</Text>
+							{panelDescription ? (
+								<Text fontSize="sm" color="fg.secondary" style={{ color: "#627189", maxWidth: 560 }}>
+									{panelDescription}
+								</Text>
+							) : null}
+						</Box>
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy code:', err);
-    }
-  };
+						<Box display="flex" gap="8" alignItems="center">
+							{code ? (
+								<Button
+									appearance="subtle"
+									size="md"
+									onClick={handleCopy}
+									icon={copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+								>
+									{copied ? "Copied" : "Copy"}
+								</Button>
+							) : null}
+							<Button appearance="subtle" size="md" onClick={onClose} icon={<IconX size={20} />} aria-label="Close code panel" />
+						</Box>
+					</Box>
 
-  if (!isOpen) return null;
+					<Box display="flex" flexDirection="column" gap="12" mt="16">
+						<Box style={{ position: "relative" }}>
+							<Box
+								onClick={() => setIsDropdownOpen((current) => !current)}
+								style={{
+									alignItems: "center",
+									background: "#f1f5f9",
+									border: "1px solid #dbe4f0",
+									borderRadius: 12,
+									cursor: "pointer",
+									display: "flex",
+									gap: 12,
+									justifyContent: "space-between",
+									padding: "14px 16px",
+								}}
+							>
+								<Box display="flex" flexDirection="column" style={{ gap: 3, minWidth: 0 }}>
+									<Text fontSize="md" fontWeight="600" color="fg.default" style={{ color: "#23324a" }}>
+										{selectedViewLabel || selectedOption?.label || resolvedFilePath || target}
+									</Text>
+									<Text
+										fontSize="xs"
+										fontFamily="mono"
+										color="fg.secondary"
+										style={{
+											color: "#627189",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+										}}
+									>
+										{resolvedFilePath || selectedOption?.path || target}
+									</Text>
+								</Box>
+								<IconChevronDown
+									size={18}
+									style={{
+										color: "#627189",
+										flexShrink: 0,
+										transform: isDropdownOpen ? "rotate(180deg)" : "rotate(0deg)",
+										transition: "transform 0.18s ease",
+									}}
+								/>
+							</Box>
 
-  return (
-    <>
-      {/* Backdrop */}
-      <Box
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'var(--ax-colors-bg-overlay)',
-          zIndex: 999,
-          opacity: isOpen ? 1 : 0,
-          transition: 'opacity 0.3s ease',
-        }}
-        onClick={onClose}
-      />
+							{isDropdownOpen && availableFiles.length > 1 ? (
+								<Box
+									style={{
+										background: "#ffffff",
+										border: "1px solid #dbe4f0",
+										borderRadius: 12,
+										boxShadow: "0 18px 42px rgba(15, 23, 42, 0.10)",
+										left: 0,
+										marginTop: 8,
+										maxHeight: 280,
+										overflowY: "auto",
+										position: "absolute",
+										right: 0,
+										zIndex: 10,
+									}}
+								>
+									{availableFiles.map((file, index) => {
+										const isActive = file.id === selectedViewId;
+										return (
+											<Box
+												key={file.id}
+												onClick={() => void handleOptionSelect(file)}
+												style={{
+													background: isActive ? "#eef4ff" : "#ffffff",
+													borderBottom:
+														index < availableFiles.length - 1
+															? "1px solid rgba(226, 232, 240, 0.85)"
+															: "none",
+													cursor: "pointer",
+													padding: "12px 14px",
+												}}
+											>
+												<Text fontSize="sm" fontWeight="600" color="fg.default" style={{ color: "#23324a" }}>
+													{file.label}
+												</Text>
+												<Text
+													fontSize="xs"
+													fontFamily="mono"
+													color="fg.secondary"
+													style={{ color: "#627189", marginTop: 2 }}
+												>
+													{file.path}
+												</Text>
+												{file.description ? (
+													<Text fontSize="xs" color="fg.secondary" style={{ color: "#7a879c", marginTop: 6 }}>
+														{file.description}
+													</Text>
+												) : null}
+											</Box>
+										);
+									})}
+								</Box>
+							) : null}
+						</Box>
 
-      {/* Panel */}
-      <Box
-        bg="bg.default"
-        borderL="1"
-        borderColor="border.default"
-        style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '700px',
-          maxWidth: '90vw',
-          zIndex: 1000,
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.2)',
-        }}
-      >
-        {/* Header */}
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          p="16"
-          borderB="1"
-          borderColor="border.secondary"
-          bg="bg.secondary"
-        >
-          <Box display="flex" flexDirection="column" gap="8" flex="1" style={{ minWidth: 0 }}>
-            <Box display="flex" alignItems="center" gap="8">
-              <Text fontSize="lg" fontWeight="600" color="fg.default">
-                Source Code
-              </Text>
-            </Box>
-            {availableFiles.length > 0 && (
-              <Box style={{ position: 'relative' }}>
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  gap="4"
-                  p="8"
-                  rounded="md"
-                  bg="bg.tertiary"
-                  border="1"
-                  borderColor="border.tertiary"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                >
-                  <Text
-                    fontSize="sm"
-                    fontFamily="mono"
-                    color="fg.default"
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {selectedFile || filePath}
-                  </Text>
-                  <IconChevronDown
-                    size={14}
-                    style={{
-                      color: 'var(--ax-colors-fg-secondary)',
-                      flexShrink: 0,
-                      transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s',
-                    }}
-                  />
-                </Box>
+						{showQuickSwitch ? (
+							<Box display="flex" gap="8" flexWrap="wrap">
+								{availableFiles.map((file) => {
+									const isActive = file.id === selectedViewId;
+									return (
+										<button
+											key={file.id}
+											type="button"
+											onClick={() => void handleOptionSelect(file)}
+											style={{
+												background: isActive ? "#233b74" : "#f8fafc",
+												border: `1px solid ${isActive ? "#233b74" : "#dbe4f0"}`,
+												borderRadius: 999,
+												color: isActive ? "#ffffff" : "#46556d",
+												cursor: "pointer",
+												fontFamily: "inherit",
+												fontSize: 12,
+												fontWeight: 600,
+												lineHeight: "16px",
+												padding: "7px 12px",
+											}}
+										>
+											{file.label}
+										</button>
+									);
+								})}
+							</Box>
+						) : null}
 
-                {/* Dropdown Menu */}
-                {isDropdownOpen && availableFiles.length > 1 && (
-                  <Box
-                    bg="bg.tertiary"
-                    border="1"
-                    borderColor="border.default"
-                    rounded="md"
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      marginTop: '4px',
-                      zIndex: 10,
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                    }}
-                  >
-                    {availableFiles.map((file, index) => (
-                      <Box
-                        key={file.path}
-                        p="8"
-                        style={{
-                          cursor: 'pointer',
-                          backgroundColor:
-                            file.path === selectedFile
-                              ? 'var(--ax-colors-bg-accent-subtle)'
-                              : 'transparent',
-                        }}
-                        borderB={index < availableFiles.length - 1 ? "1" : undefined}
-                        borderColor="border.tertiary"
-                        onClick={() => {
-                          setSelectedFile(file.path);
-                          setIsDropdownOpen(false);
-                        }}
-                        onMouseEnter={(e) => {
-                          if (file.path !== selectedFile) {
-                            e.currentTarget.style.backgroundColor = 'var(--ax-colors-bg-tertiary-hovered)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (file.path !== selectedFile) {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }
-                        }}
-                      >
-                        <Text
-                          fontSize="sm"
-                          fontFamily="mono"
-                          color="fg.default"
-                          style={{
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {file.label}
-                        </Text>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            )}
-          </Box>
-          <Box display="flex" gap="8" alignItems="center">
-            {code && (
-              <Button
-                appearance="subtle"
-                size="md"
-                onClick={handleCopy}
-                icon={copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-              >
-                {copied ? 'Copied!' : 'Copy'}
-              </Button>
-            )}
-            <Button
-              appearance="subtle"
-              size="md"
-              onClick={onClose}
-              icon={<IconX size={20} />}
-              aria-label="Close code panel"
-            />
-          </Box>
-        </Box>
+						{selectedViewDescription ? (
+							<Text fontSize="sm" color="fg.secondary" style={{ color: "#627189" }}>
+								{selectedViewDescription}
+							</Text>
+						) : null}
+					</Box>
+				</Box>
 
-        {/* Content */}
-        <Box
-          flex="1"
-          overflow="auto"
-          bg="bg.default"
-          style={{ minHeight: 0 }}
-        >
-          {isLoading && (
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              p="48"
-              flexDirection="column"
-              gap="16"
-            >
-              <Spinner size="lg" />
-              <Text color="fg.secondary">Loading source code...</Text>
-            </Box>
-          )}
+				<Box flex="1" overflow="auto" style={{ background: "#ffffff", minHeight: 0 }}>
+					{isLoading ? (
+						<Box display="flex" alignItems="center" justifyContent="center" p="48" flexDirection="column" gap="16">
+							<Spinner size="lg" />
+							<Text color="fg.secondary">Loading source code...</Text>
+						</Box>
+					) : null}
 
-          {error && (
-            <Box p="24" display="flex" flexDirection="column" gap="12">
-              <Text fontSize="lg" fontWeight="600" color="fg.error">
-                Unable to load source code
-              </Text>
-              <Text color="fg.secondary">{error}</Text>
-              {error.includes('development mode') && (
-                <Box
-                  mt="8"
-                  p="16"
-                  bg="bg.information.subtle"
-                  rounded="md"
-                  borderL="2"
-                  borderColor="border.accent"
-                >
-                  <Text fontSize="sm" color="fg.secondary">
-                    💡 The code viewer requires access to source files, which are only available in development mode.
-                  </Text>
-                </Box>
-              )}
-            </Box>
-          )}
+					{error ? (
+						<Box display="flex" flexDirection="column" gap="12" style={{ padding: 28 }}>
+							<Text fontSize="lg" fontWeight="600" color="fg.error">
+								Unable to load source code
+							</Text>
+							<Text color="fg.secondary">{error}</Text>
+						</Box>
+					) : null}
 
-          {!isLoading && !error && code && (
-            <Box
-              style={{
-                fontSize: '13px',
-                lineHeight: '1.6',
-              }}
-            >
-              <SyntaxHighlighter
-                language={language}
-                style={isDarkMode ? vscDarkPlus : vs}
-                showLineNumbers={true}
-                wrapLines={true}
-                customStyle={{
-                  margin: 0,
-                  padding: '20px',
-                  background: 'transparent',
-                  fontSize: '13px',
-                }}
-                lineNumberStyle={{
-                  minWidth: '3em',
-                  paddingRight: '1em',
-                  color: 'var(--ax-colors-fg-tertiary)',
-                  userSelect: 'none',
-                }}
-              >
-                {code}
-              </SyntaxHighlighter>
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </>
-  );
+					{!isLoading && !error && code ? (
+						<>
+							<Box
+								alignItems="center"
+								display="flex"
+								justifyContent="space-between"
+								style={{
+									background: "#fbfcfe",
+									borderBottom: "1px solid rgba(226, 232, 240, 0.88)",
+									gap: 12,
+									padding: "12px 28px",
+								}}
+							>
+								<Box display="flex" flexWrap="wrap" gap="10" alignItems="center">
+									<Text
+										fontSize="xs"
+										fontWeight="600"
+										style={{
+											background: isSnippet ? "#e8f0ff" : "#eef2f7",
+											borderRadius: 999,
+											color: isSnippet ? "#274690" : "#55657d",
+											padding: "4px 10px",
+										}}
+									>
+										{isSnippet ? "Focused snippet" : "Full file"}
+									</Text>
+									<Text fontSize="xs" fontFamily="mono" color="fg.secondary" style={{ color: "#627189" }}>
+										{resolvedFilePath}
+									</Text>
+								</Box>
+								<Text fontSize="xs" fontFamily="mono" color="fg.secondary" style={{ color: "#627189", flexShrink: 0 }}>
+									Lines {startLine}-{endLine}
+								</Text>
+							</Box>
+
+							<Box style={{ overflowX: "auto" }}>
+								<SyntaxHighlighter
+									language={language}
+									style={codeTheme}
+									showLineNumbers
+									startingLineNumber={startLine}
+									wrapLines={false}
+									customStyle={{
+										background: "#ffffff",
+										margin: 0,
+										minWidth: "100%",
+										padding: "24px 28px 36px",
+									}}
+									codeTagProps={{
+										style: {
+											fontFamily:
+												'"SFMono-Regular", SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace',
+											fontSize: "12.5px",
+										},
+									}}
+									lineNumberStyle={{
+										color: "#9aa7bb",
+										minWidth: "3.2em",
+										paddingRight: "18px",
+										textAlign: "right",
+										userSelect: "none",
+									}}
+								>
+									{code}
+								</SyntaxHighlighter>
+							</Box>
+						</>
+					) : null}
+				</Box>
+			</Box>
+		</>
+	);
 }
