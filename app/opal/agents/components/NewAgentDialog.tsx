@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Box, Text, Button, Textarea, Disclosure, DisclosureTrigger, DisclosureContent, Input } from "@optiaxiom/react";
 import {
-    IconSparkles,
     IconChevronLeft,
     IconChevronDown,
     IconChevronUp,
     IconScrewdriverWrench,
+    IconPen,
 } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -125,6 +125,9 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
     const [msgIdx, setMsgIdx] = useState(0);
     const [localPhases, setLocalPhases] = useState(MOCK.phases.map((p) => ({ ...p })));
     const [editingPhaseIdx, setEditingPhaseIdx] = useState<number | null>(null);
+    const [hoveredPhaseIdx, setHoveredPhaseIdx] = useState<number | null>(null);
+    const [phaseEditTitle, setPhaseEditTitle] = useState("");
+    const [phaseEditBody, setPhaseEditBody] = useState("");
     const [showAllTemplates, setShowAllTemplates] = useState(false);
 
     const msgs = step === "building" ? BUILDING_MSGS : DESIGNING_MSGS;
@@ -197,6 +200,9 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
             setStep("entry");
             setPrompt("");
             setEditingPhaseIdx(null);
+            setHoveredPhaseIdx(null);
+            setPhaseEditTitle("");
+            setPhaseEditBody("");
             setLocalPhases(MOCK.phases.map((p) => ({ ...p })));
             setShowAllTemplates(false);
         }, 300);
@@ -227,6 +233,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
             />
             {/* Modal panel */}
             <div
+                data-new-agent-modal=""
                 style={{
                     position: "relative",
                     zIndex: 1,
@@ -239,10 +246,12 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                     display: "flex",
                     flexDirection: "column",
                     boxShadow: "0 24px 64px rgba(0,0,0,0.25)",
+                    fontFamily: "Inter, sans-serif",
                 }}
             >
                 <style>{`
                     @keyframes spin { to { transform: rotate(360deg); } }
+                    [data-new-agent-modal] * { font-family: Inter, sans-serif !important; }
                 `}</style>
 
                 {/* Close button — always visible */}
@@ -622,6 +631,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         rounded="lg"
                                         p="12"
                                         style={{
+                                            position: "relative",
                                             border: "1px solid",
                                             borderColor: editingPhaseIdx === i
                                                 ? "var(--ax-colors-border-accent)"
@@ -632,8 +642,16 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 : "var(--ax-colors-bg-secondary)",
                                             transition: "border-color 0.15s, background 0.15s",
                                         }}
+                                        onMouseEnter={() => setHoveredPhaseIdx(i)}
+                                        onMouseLeave={() => setHoveredPhaseIdx(null)}
                                         onClick={() => {
-                                            if (editingPhaseIdx !== i) setEditingPhaseIdx(i);
+                                            if (editingPhaseIdx !== i) {
+                                                setPhaseEditTitle(phase.title);
+                                                setPhaseEditBody(
+                                                    phase.summary + (phase.detail ? "\n\n" + phase.detail : "")
+                                                );
+                                                setEditingPhaseIdx(i);
+                                            }
                                         }}
                                     >
                                         {/* Step number bubble */}
@@ -657,34 +675,17 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         </Box>
 
                                         {editingPhaseIdx === i ? (
-                                            /* Editing state */
+                                            /* Editing state — combined title + body */
                                             <Box display="flex" flexDirection="column" gap="8" style={{ flex: 1 }}>
                                                 <Input
-                                                    value={phase.title}
-                                                    onChange={(e) =>
-                                                        setLocalPhases((prev) =>
-                                                            prev.map((p, j) => j === i ? { ...p, title: e.target.value } : p)
-                                                        )
-                                                    }
+                                                    value={phaseEditTitle}
+                                                    onChange={(e) => setPhaseEditTitle(e.target.value)}
                                                     style={{ fontWeight: 600 }}
                                                 />
                                                 <Textarea
-                                                    value={phase.summary}
-                                                    onChange={(e) =>
-                                                        setLocalPhases((prev) =>
-                                                            prev.map((p, j) => j === i ? { ...p, summary: e.target.value } : p)
-                                                        )
-                                                    }
-                                                    style={{ minHeight: 56, fontSize: 13 }}
-                                                />
-                                                <Textarea
-                                                    value={phase.detail}
-                                                    onChange={(e) =>
-                                                        setLocalPhases((prev) =>
-                                                            prev.map((p, j) => j === i ? { ...p, detail: e.target.value } : p)
-                                                        )
-                                                    }
-                                                    style={{ minHeight: 72, fontSize: 12 }}
+                                                    value={phaseEditBody}
+                                                    onChange={(e) => setPhaseEditBody(e.target.value)}
+                                                    style={{ minHeight: 96, fontSize: 13, lineHeight: 1.6 }}
                                                 />
                                                 <Box display="flex" justifyContent="flex-end">
                                                     <Button
@@ -692,6 +693,13 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                         size="sm"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
+                                                            setLocalPhases((prev) =>
+                                                                prev.map((p, j) =>
+                                                                    j === i
+                                                                        ? { ...p, title: phaseEditTitle, summary: phaseEditBody, detail: "" }
+                                                                        : p
+                                                                )
+                                                            );
                                                             setEditingPhaseIdx(null);
                                                         }}
                                                     >
@@ -704,16 +712,43 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                             <Box style={{ flex: 1 }}>
                                                 <Text fontWeight="600" fontSize="sm">{phase.title}</Text>
                                                 <Text fontSize="sm" color="fg.secondary" mt="2">{phase.summary}</Text>
-                                                <Text
-                                                    fontSize="xs"
-                                                    mt="4"
-                                                    style={{
-                                                        color: "var(--ax-colors-fg-tertiary)",
-                                                        fontStyle: "italic",
-                                                        lineHeight: 1.65,
-                                                    }}
-                                                >
-                                                    {phase.detail}
+                                                {phase.detail ? (
+                                                    <Text
+                                                        fontSize="xs"
+                                                        mt="4"
+                                                        style={{
+                                                            color: "var(--ax-colors-fg-tertiary)",
+                                                            fontStyle: "italic",
+                                                            lineHeight: 1.65,
+                                                        }}
+                                                    >
+                                                        {phase.detail}
+                                                    </Text>
+                                                ) : null}
+                                            </Box>
+                                        )}
+
+                                        {/* Hover edit indicator */}
+                                        {hoveredPhaseIdx === i && editingPhaseIdx !== i && (
+                                            <Box
+                                                display="flex"
+                                                alignItems="center"
+                                                gap="4"
+                                                style={{
+                                                    position: "absolute",
+                                                    top: 10,
+                                                    right: 12,
+                                                    background: "var(--ax-colors-bg-default)",
+                                                    border: "1px solid var(--ax-colors-border-default)",
+                                                    borderRadius: 6,
+                                                    padding: "3px 8px",
+                                                    pointerEvents: "none",
+                                                    boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                                                }}
+                                            >
+                                                <IconPen size={11} color="var(--ax-colors-fg-secondary)" />
+                                                <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 500 }}>
+                                                    Edit
                                                 </Text>
                                             </Box>
                                         )}
@@ -873,12 +908,11 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                 Back
                             </Button>
                             <Button
-                                appearance="primary"
-                                iconPosition="end"
-                                icon={<IconSparkles size={13} />}
+                                appearance="primary-opal"
+                                icon={<Image src="/opal-orb.png" alt="Opal" width={18} height={18} />}
                                 onClick={() => setStep("building")}
                             >
-                                Looks great — Create my Agent
+                                Build Agent
                             </Button>
                         </Box>
                     </Box>
