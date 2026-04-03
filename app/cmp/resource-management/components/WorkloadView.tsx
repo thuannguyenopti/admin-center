@@ -159,11 +159,14 @@ export function WorkloadGrid({
 			bg="bg.default"
 			border="1"
 			borderColor="border.tertiary"
+			display="flex"
+			flexDirection="column"
 			rounded="lg"
 			overflow="hidden"
 			w="full"
+			style={{ height: "100%", minHeight: 0 }}
 		>
-			<Box overflowX="auto" w="full">
+			<Box overflow="auto" w="full" flex="1" style={{ minHeight: 0 }}>
 				<Box
 					style={{
 						minWidth: workloadGridMinWidth,

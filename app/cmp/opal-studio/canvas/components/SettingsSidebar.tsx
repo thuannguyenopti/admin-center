@@ -4,6 +4,7 @@ import { Box, Button, Input, Switch, Text, Textarea } from "@optiaxiom/react";
 import { IconAdjustmentsHorizontal, IconUpload, IconPlus } from "@tabler/icons-react";
 import { SettingsCard, Label } from "./SettingsCard";
 import { OperationControls } from "./OperationControls";
+import type { PromptHistoryEntry } from "./PromptBar";
 import {
 	ratioOptions,
 	channelPacks,
@@ -98,6 +99,8 @@ export function SettingsSidebar({
 	selectedReferences,
 	canvasSettings,
 	setCanvasSettings,
+	promptHistory,
+	onHistoryClick,
 }: {
 	intent: IntentOption;
 	setIntent: (intent: IntentOption) => void;
@@ -123,14 +126,13 @@ export function SettingsSidebar({
 	canvasMode: "generate" | "edit";
 	canvasSettings: CanvasSettings;
 	setCanvasSettings: (settings: CanvasSettings) => void;
+	promptHistory: PromptHistoryEntry[];
+	onHistoryClick: (index: number) => void;
 }) {
 	const isEdit = canvasMode === "edit";
-	const meta = operationMeta[intent];
 
-	/* Operations that show references */
-	const showReferences = intent === "Generate" || intent === "Variation" || intent === "Edit" || intent === "Recompose";
-	/* Operations that show brand/copy */
-	const showBrandCopy = isEdit && (intent === "Edit" || intent === "Recompose" || intent === "Variation");
+	/* Operations that show references — always in generate, plus relevant edit operations */
+	const showReferences = intent === "Generate" || intent === "Variation" || intent === "Edit" || intent === "Recompose" || !isEdit;
 
 	return (
 		<Box display="flex" flexDirection="column" gap="16" style={{ minHeight: 0, alignSelf: "start" }}>
@@ -155,10 +157,12 @@ export function SettingsSidebar({
 					selectedReferenceIndexes={selectedReferenceIndexes}
 					toggleReference={toggleReference}
 					selectedReferences={selectedReferences}
+					promptHistory={promptHistory}
+					onHistoryClick={onHistoryClick}
 				/>
 			)}
 
-			{showBrandCopy && (
+			{isEdit && (
 				<BrandCopyCard
 					brandPack={brandPack}
 					setBrandPack={setBrandPack}
@@ -267,53 +271,63 @@ function ReferencesCard({
 	selectedReferenceIndexes,
 	toggleReference,
 	selectedReferences,
+	promptHistory,
+	onHistoryClick,
 }: {
 	selectedReferenceIndexes: number[];
 	toggleReference: (index: number) => void;
 	selectedReferences: typeof referenceImages;
+	promptHistory: PromptHistoryEntry[];
+	onHistoryClick: (index: number) => void;
 }) {
 	return (
 		<SettingsCard title="References">
-			<Label>Selected references</Label>
-			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
-				Use references to anchor pacing, composition, and campaign style before generating pack outputs.
-			</Text>
-			<Box display="grid" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }} gap="10">
-				{referenceImages.slice(0, 1).map((reference, index) => {
-					const active = selectedReferenceIndexes.includes(index);
-					return (
+			<Label>Generation history</Label>
+			{promptHistory.length > 0 ? (
+				<Box display="grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }} gap="8">
+					{promptHistory.map((entry, i) => (
 						<button
-							key={reference.label}
+							key={i}
 							type="button"
-							onClick={() => toggleReference(index)}
+							onClick={() => onHistoryClick(i)}
 							style={{
-								border: active ? "2px solid var(--ax-colors-border-accent)" : "1px solid var(--ax-colors-border-tertiary)",
-								borderRadius: 14,
+								border: "1px solid var(--ax-colors-border-tertiary)",
+								borderRadius: 10,
 								padding: 0,
 								background: "var(--ax-colors-bg-default)",
 								overflow: "hidden",
 								cursor: "pointer",
-								textAlign: "left",
-								aspectRatio: "1 / 1",
-								display: "flex",
-								flexDirection: "column",
 							}}
 						>
-							<img src={reference.src} alt={reference.label} style={{ display: "block", width: "100%", height: "56%", objectFit: "cover", flexShrink: 0 }} />
-							<div style={{ padding: 10, display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1 }}>
-								<Text fontSize="xs" fontWeight="700">{reference.label}</Text>
-								<Text fontSize="xs" color="fg.secondary" style={{ marginTop: 4 }}>{reference.source}</Text>
-							</div>
+							<img
+								src={entry.image}
+								alt={entry.prompt}
+								style={{
+									display: "block",
+									width: "100%",
+									aspectRatio: "16 / 9",
+									objectFit: "cover",
+								}}
+							/>
 						</button>
-					);
-				})}
+					))}
+				</Box>
+			) : (
+				<Text fontSize="xs" color="fg.tertiary">
+					No generations yet. Use the prompt bar to create images.
+				</Text>
+			)}
+
+			<Label>Source references</Label>
+			<Text fontSize="xs" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+				Upload reference images to guide composition and style.
+			</Text>
+			<Box display="grid" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }} gap="8">
 				<ReferenceSlot icon={<IconUpload size={22} />} label="Upload" dashed />
 				<ReferenceSlot icon={<IconPlus size={22} />} label="Add" />
 				<ReferenceSlot icon={<IconPlus size={22} />} label="Add" />
+				<ReferenceSlot icon={<IconPlus size={22} />} label="Add" />
 			</Box>
-			<Text fontSize="xs" color="fg.secondary">
-				{selectedReferences.length} active reference{selectedReferences.length === 1 ? "" : "s"} linked to this draft.
-			</Text>
 		</SettingsCard>
 	);
 }

@@ -16,7 +16,7 @@ type OpalPanelControls = {
 };
 
 type CodePanelControls = {
-	openPanel: (filePath: string) => void;
+	openPanel: (target: string) => void;
 	closePanel: () => void;
 	isOpen: boolean;
 };

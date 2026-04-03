@@ -16,7 +16,11 @@ export function AssetTooltipContent({ asset }: { asset: AssetItem }) {
 				</Text>
 			)}
 			{asset.tooltip && (
-				<Text color="fg.default.inverse" fontSize="xs" style={{ lineHeight: "16px", maxWidth: "none", opacity: 0.8 }}>
+				<Text
+					color="fg.default.inverse"
+					fontSize="xs"
+					style={{ lineHeight: "16px", maxWidth: "none", opacity: 0.8 }}
+				>
 					Why suggested: {asset.tooltip}
 				</Text>
 			)}

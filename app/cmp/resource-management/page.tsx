@@ -48,7 +48,17 @@ export default function CMPResourceManagementPage() {
 	}, [setHidePageHeader]);
 
 	return (
-		<Box w="full">
+		<Box
+			bg="bg.default"
+			display="flex"
+			flexDirection="column"
+			w="full"
+			style={{
+				marginLeft: -32,
+				marginRight: -32,
+				minHeight: "calc(100vh - 136px)",
+			}}
+		>
 			<Box borderB="1" borderColor="border.tertiary" display="flex" style={{ gap: 28 }}>
 				<WorkloadTabButton active={activeTab === "workload"} onClick={() => setActiveTab("workload")}>
 					Workload
@@ -61,9 +71,17 @@ export default function CMPResourceManagementPage() {
 				</WorkloadTabButton>
 			</Box>
 
-			<Box pt="20">
+			<Box
+				display="flex"
+				flex="1"
+				flexDirection="column"
+				px="32"
+				pt="20"
+				pb="24"
+				style={{ minHeight: 0 }}
+			>
 				{activeTab === "workload" ? (
-					<Box display="flex" flexDirection="column" gap="16" w="full">
+					<Box display="flex" flex="1" flexDirection="column" gap="16" w="full" style={{ minHeight: 0 }}>
 						<Box alignItems="center" display="flex" gap="12" justifyContent="space-between" flexWrap="wrap">
 							<Box alignItems="center" display="flex" gap="12" flexWrap="wrap">
 								<div style={{ position: "relative" }}>
@@ -105,7 +123,7 @@ export default function CMPResourceManagementPage() {
 							</Box>
 						</Box>
 
-						<Box w="full">
+						<Box flex="1" w="full" style={{ minHeight: 0 }}>
 							<WorkloadGrid
 								onSelectCell={handleSelectWorkloadCell}
 								rows={workloadRows}
@@ -118,7 +136,7 @@ export default function CMPResourceManagementPage() {
 				) : null}
 
 				{activeTab === "planner" ? (
-					<Box display="flex" flexDirection="column" gap="16" w="full">
+					<Box display="flex" flex="1" flexDirection="column" gap="16" w="full" style={{ minHeight: 0 }}>
 						<Box alignItems="center" display="flex" gap="12" justifyContent="space-between" flexWrap="wrap">
 							<Box alignItems="center" display="flex" gap="12" flexWrap="wrap">
 								<div style={{ position: "relative" }}>
@@ -167,13 +185,15 @@ export default function CMPResourceManagementPage() {
 							</Box>
 						</Box>
 
-						<PlannerGrid
-							cards={plannerCards}
-							selectedPersonId={selectedPlannerPersonId}
-							setCards={setPlannerCards}
-							theme={theme}
-							visibleWeeks={visiblePlannerWeeks}
-						/>
+						<Box flex="1" style={{ minHeight: 0 }}>
+							<PlannerGrid
+								cards={plannerCards}
+								selectedPersonId={selectedPlannerPersonId}
+								setCards={setPlannerCards}
+								theme={theme}
+								visibleWeeks={visiblePlannerWeeks}
+							/>
+						</Box>
 					</Box>
 				) : null}
 
@@ -184,6 +204,7 @@ export default function CMPResourceManagementPage() {
 						border="1"
 						borderColor="border.tertiary"
 						display="flex"
+						flex="1"
 						justifyContent="center"
 						rounded="lg"
 						style={{ minHeight: 320 }}

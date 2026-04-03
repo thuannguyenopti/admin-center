@@ -1,725 +1,175 @@
 "use client";
 
-import {
-	useDeferredValue,
-	useEffect,
-	useMemo,
-	useState,
-	useCallback,
-} from "react";
-import { Box, toaster } from "@optiaxiom/react";
-import { initialContentTypes, type ContentType, initialPages, type Page, initialApplications, type Application, initialCmpTasks } from "@/app/db/initialData";
-import { initialContentInstances, type ContentInstance } from "@/app/db/cmpInitialData";
-import { createPageFromInstance } from "@/app/lib/contentConnection";
-import usePersistentState from "@/app/usePersistentState";
-import { useRouter, useParams } from "next/navigation";
+import { Box } from "@optiaxiom/react";
 import TargetContentTypeDialog from "@/app/components/TargetContentTypeDialog";
-import type { Outline } from "@/app/components/vb/PreviewCanvas";
-
-import type { AssetItem, Scene, TaskTab } from "./types";
-import { suggestedAssets, initialTaskAssets, searchAssets } from "./data/assets";
-import { initialBriefHtml } from "./data/brief";
-import { perspectiveSeeds, workflowTemplates } from "./data/workflow";
-import { getSearchAssetMatch, getBriefAssetMatch } from "./utils/assetScoring";
-import { getPlainTextFromHtml } from "./utils/html";
-import { TaskCanvas } from "./components/TaskCanvas";
-import { BriefPage } from "./components/BriefPage";
-import { BriefEditPage } from "./components/BriefEditPage";
-import { SearchPage } from "./components/SearchPage";
-import { PreviewPage } from "./components/PreviewPage";
-import { ContentEmptyPage } from "./components/ContentEmptyPage";
-import { ContentFilledPage } from "./components/ContentFilledPage";
-import { WorkflowSidebar } from "./components/WorkflowSidebar";
-import { SuggestedAssetsPanel } from "./components/SuggestedAssetsPanel";
-import { WorkflowChangeModal } from "./components/WorkflowChangeModal";
+import { PreviewPage } from "./components/assets/PreviewPage";
+import { SearchPage } from "./components/assets/SearchPage";
+import { SuggestedAssetsPanel } from "./components/assets/SuggestedAssetsPanel";
+import { BriefEditPage } from "./components/brief/BriefEditPage";
+import { BriefPage } from "./components/brief/BriefPage";
+import { ContentEmptyPage } from "./components/content/ContentEmptyPage";
+import { ContentFilledPage } from "./components/content/ContentFilledPage";
+import { TaskCanvas } from "./components/shared/TaskCanvas";
+import { WorkflowChangeModal } from "./components/workflow/WorkflowChangeModal";
+import { WorkflowSidebar } from "./components/workflow/WorkflowSidebar";
+import { useCmpOpalAssetRecommendationState } from "./useCmpOpalAssetRecommendationState";
 
 export function CmpOpalAssetRecommendation() {
-	const router = useRouter();
-	const [scene, setScene] = useState<Scene>("brief");
-	const [hasTaskContent, setHasTaskContent] = useState(false);
-	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
-	const [selectedTaskAssetId, setSelectedTaskAssetId] = useState<string | null>(null);
-	const [selectedPanelAssetIds, setSelectedPanelAssetIds] = useState<string[]>([]);
-	const [selectedSearchAssetIds, setSelectedSearchAssetIds] = useState<string[]>(
-		searchAssets.filter((asset) => asset.selected).map((asset) => asset.id),
+	const state = useCmpOpalAssetRecommendationState();
+
+	const workflowSidebar = (
+		<WorkflowSidebar
+			filteredTemplates={state.filteredWorkflowTemplates}
+			isMenuOpen={state.workflowMenuOpen}
+			onRequestWorkflowChange={state.handleWorkflowSelect}
+			onToggleWorkflowMenu={state.toggleWorkflowMenu}
+			onWorkflowSearchChange={state.setWorkflowSearch}
+			searchValue={state.workflowSearch}
+			workflow={state.activeWorkflow}
+		/>
 	);
-	const [taskAssets, setTaskAssets] = useState<AssetItem[]>(initialTaskAssets);
-	const [contentInstances, setContentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
-	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
-
-	// Merge initial data fields into cached instances so new fields (e.g. tags) propagate
-	useEffect(() => {
-		if (!contentInstances?.length) return;
-		let changed = false;
-		const merged = contentInstances.map((cached: ContentInstance) => {
-			const initial = initialContentInstances.find((i: ContentInstance) => i.id === cached.id);
-			if (!initial) return cached;
-			const mergedFields = { ...initial.fields, ...cached.fields };
-			// Only update if there are new keys from initial that cached is missing
-			const cachedKeys = Object.keys(cached.fields);
-			const hasNewKeys = Object.keys(initial.fields).some(k => !cachedKeys.includes(k));
-			if (!hasNewKeys) return cached;
-			changed = true;
-			return { ...cached, fields: mergedFields };
-		});
-		if (changed) setContentInstances(merged);
-	}, []); // eslint-disable-line react-hooks/exhaustive-deps
-	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
-
-	// Add to Application state
-	const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [Page[], any];
-	const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
-	const [isTargetSelectionOpen, setIsTargetSelectionOpen] = useState(false);
-	const [instanceToAdd, setInstanceToAdd] = useState<ContentInstance | null>(null);
-
-	// Preview state for PreviewCanvas
-	const [previewCurrentEle, setPreviewCurrentEle] = useState<string>("");
-	const [previewHoverEle, setPreviewHoverEle] = useState<string>("");
-	const [previewOutlines, setPreviewOutlines] = useState<Outline[]>([]);
-
-	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
-	const [applications] = usePersistentState("applications", initialApplications) as [Application[], any];
-
-	// Get task ID from route params and derive task name from task data
-	const params = useParams();
-	const CURRENT_TASK_ID = (params?.id as string) ?? "1";
-	const CURRENT_TASK_NAME = useMemo(() => {
-		const task = initialCmpTasks.find(t => t.id === CURRENT_TASK_ID);
-		return task?.title ?? "Unknown task";
-	}, [CURRENT_TASK_ID]);
-
-	const taskPages = useMemo(() => {
-		return pages.filter(page =>
-			page.cmpTaskMetadata?.taskId === CURRENT_TASK_ID
-		);
-	}, [pages]);
-
-	// Add to Application handlers
-	const createAndAddPage = useCallback((instance: ContentInstance, targetContentTypeId: string) => {
-		const result = createPageFromInstance(
-			instance,
-			targetContentTypeId,
-			contentTypes,
-			pages,
-			{ taskId: CURRENT_TASK_ID, taskName: CURRENT_TASK_NAME }
-		);
-
-		if (result.error) {
-			toaster.create(
-				result.error,
-				{ intent: "danger" },
-			);
-			return;
-		}
-
-		// Add page to global pages state
-		setPages((prev: Page[]) => [...prev, result.page!]);
-
-		// Auto-select the newly created page
-		setSelectedPageId(result.page!.id);
-		setSelectedContentInstanceId(null);
-		setSelectedTaskAssetId(null);
-
-		// Show success message
-		toaster.create(
-			`Page "${result.page!.name}" created successfully`,
-			{ intent: "success" },
-		);
-
-		// Close dialog if open
-		setIsTargetSelectionOpen(false);
-		setInstanceToAdd(null);
-	}, [contentTypes, pages, setPages, CURRENT_TASK_ID, CURRENT_TASK_NAME]);
-
-	const handleAddToApplication = useCallback((instance: ContentInstance) => {
-		// Find all content types that this instance can map to
-		const sourceType = contentTypes.find(ct => ct.id === instance.modelId);
-		if (!sourceType || !sourceType.mappings) {
-			toaster.create(
-				"No mappings configured for this content type",
-				{ intent: "danger" },
-			);
-			return;
-		}
-
-		const availableTargets = sourceType.mappings.map(mapping => {
-			const targetType = contentTypes.find(ct => ct.id === mapping.targetContentTypeId);
-			return { mapping, targetType };
-		}).filter(t => t.targetType) as Array<{ mapping: any; targetType: ContentType }>;
-
-		if (availableTargets.length === 0) {
-			toaster.create(
-				"No CMS content types available for this content",
-				{ intent: "danger" },
-			);
-			return;
-		}
-
-		if (availableTargets.length === 1) {
-			// Single target - create page immediately
-			createAndAddPage(instance, availableTargets[0].targetType.id);
-		} else {
-			// Multiple targets - show selection dialog
-			setInstanceToAdd(instance);
-			setIsTargetSelectionOpen(true);
-		}
-	}, [contentTypes, createAndAddPage]);
-
-	// Auto-select first item on load if nothing is selected
-	useEffect(() => {
-		if (!selectedContentInstanceId && !selectedTaskAssetId && !selectedPageId) {
-			if (contentInstances.length > 0) {
-				setSelectedContentInstanceId(contentInstances[0].id);
-			} else if (taskPages.length > 0) {
-				setSelectedPageId(taskPages[0].id);
-			} else if (taskAssets.length > 0) {
-				setSelectedTaskAssetId(taskAssets[0].id);
-			}
-		}
-	}, [contentInstances, taskPages, taskAssets, selectedContentInstanceId, selectedTaskAssetId, selectedPageId]);
-
-	// Switch to empty state when all items are removed
-	useEffect(() => {
-		const hasContent = contentInstances.length > 0 || taskAssets.length > 0;
-		if (!hasContent && (scene === "content" || scene === "content-panel")) {
-			setScene("content-empty");
-			setHasTaskContent(false);
-			setSuggestedPanelOpen(false);
-		}
-	}, [contentInstances.length, taskAssets.length, scene]);
-
-	// Stable callback handlers for selections
-	const handleSelectPage = useCallback((id: string | null) => {
-		setSelectedPageId(id);
-	}, []);
-
-	const handleSelectContentInstance = useCallback((id: string | null) => {
-		setSelectedContentInstanceId(id);
-	}, []);
-
-	const handleSelectTaskAsset = useCallback((id: string | null) => {
-		setSelectedTaskAssetId(id);
-	}, []);
-
-	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
-	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
-	const [briefContent, setBriefContent] = useState(initialBriefHtml);
-	const [draftBriefContent, setDraftBriefContent] = useState(initialBriefHtml);
-	const [searchReturnScene, setSearchReturnScene] = useState<Scene>("brief-edit");
-	const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
-	const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
-	const [workflowSearch, setWorkflowSearch] = useState("");
-	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
-	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
-
-	// Initialize hasTaskContent based on existing content instances or task assets
-	useEffect(() => {
-		if (contentInstances.length > 0 || taskAssets.length > 0) {
-			setHasTaskContent(true);
-		}
-	}, [contentInstances.length, taskAssets.length]);
-
-	// Update preview outlines when selected page changes
-	useEffect(() => {
-		if (selectedPageId) {
-			const page = pages.find((p) => p.id === selectedPageId);
-			if (page) {
-				const outlines = page.variations?.[0]?.outlines || page.outlines || [];
-				setPreviewOutlines(outlines);
-			} else {
-				setPreviewOutlines([]);
-			}
-		} else {
-			setPreviewOutlines([]);
-		}
-	}, [selectedPageId, pages]);
-
-	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
-	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
-	const effectiveBriefText = useMemo(() => getPlainTextFromHtml(effectiveBriefContent), [effectiveBriefContent]);
-	const deferredBriefContent = useDeferredValue(effectiveBriefText);
-	const deferredWorkflowSearch = useDeferredValue(workflowSearch);
-	const deferredPerspectives = useDeferredValue(perspectives);
-	const deferredExclude = useDeferredValue(exclude);
-	const activeWorkflowId = selectedWorkflowId ?? (scene === "content-empty" ? "starter" : "newsletter");
-	const activeWorkflow = workflowTemplates.find((template) => template.id === activeWorkflowId) ?? workflowTemplates[0];
-	const rankedSearchAssets = useMemo(() => {
-		return searchAssets
-			.map((asset, index) => ({
-				...asset,
-				match: getSearchAssetMatch({
-					asset,
-					exclude: deferredExclude,
-					perspectives: deferredPerspectives,
-				}),
-				selected: selectedSearchAssetIds.includes(asset.id),
-				originalIndex: index,
-			}))
-			.sort((left, right) => {
-				if (right.match !== left.match) {
-					return right.match - left.match;
-				}
-
-				return left.originalIndex - right.originalIndex;
-			})
-			.map(({ originalIndex, ...asset }) => asset);
-	}, [deferredExclude, deferredPerspectives, selectedSearchAssetIds]);
-	const panelAssetsWithSelection = useMemo(
-		() => {
-			const taskAssetIds = new Set(taskAssets.map((asset) => asset.id));
-
-			return searchAssets
-				.filter((asset) => !taskAssetIds.has(asset.id))
-				.map((asset, index) => {
-					const isSelected = selectedPanelAssetIds.includes(asset.id);
-
-					return {
-						...asset,
-						match: getBriefAssetMatch({
-							asset,
-							brief: deferredBriefContent,
-						}),
-						originalIndex: index,
-						selected: isSelected,
-					};
-				})
-				.sort((left, right) => {
-					if (left.selected !== right.selected) {
-						return left.selected ? -1 : 1;
-					}
-
-					if (right.match !== left.match) {
-						return right.match - left.match;
-					}
-
-					return left.originalIndex - right.originalIndex;
-				})
-				.map(({ originalIndex, ...asset }) => asset);
-		},
-		[deferredBriefContent, selectedPanelAssetIds, taskAssets],
-	);
-	const filteredWorkflowTemplates = useMemo(() => {
-		const query = deferredWorkflowSearch.trim().toLowerCase();
-
-		if (!query) {
-			return workflowTemplates;
-		}
-
-		return workflowTemplates.filter((template) =>
-			`${template.name} ${template.subtitle ?? ""}`.toLowerCase().includes(query),
-		);
-	}, [deferredWorkflowSearch]);
-
-	const openContentTab = () => {
-		const hasContent = contentInstances.length > 0 || taskAssets.length > 0;
-		setScene(hasContent ? "content" : "content-empty");
-		if (hasContent) {
-			setHasTaskContent(true);
-		}
-	};
-
-	const openBriefEdit = () => {
-		setDraftBriefContent(briefContent);
-		setScene("brief-edit");
-	};
-
-	const cancelBriefEdit = () => {
-		setDraftBriefContent(briefContent);
-		setScene("brief");
-	};
-
-	const saveBriefEdit = () => {
-		setBriefContent(draftBriefContent);
-		setScene("brief");
-	};
-
-	const openSearch = (returnScene: Scene) => {
-		setSearchReturnScene(returnScene);
-		setWorkflowMenuOpen(false);
-		setScene("search");
-	};
-
-	const handleTabChange = (tab: string) => {
-		if (tab === "brief") {
-			setWorkflowMenuOpen(false);
-			setScene("brief");
-			return;
-		}
-
-		if (tab === "content") {
-			openContentTab();
-		}
-	};
-
-	const handleWorkflowSelect = (workflowId: string) => {
-		if (workflowId === activeWorkflowId) {
-			setWorkflowMenuOpen(false);
-			return;
-		}
-
-		setPendingWorkflowId(workflowId);
-		setWorkflowMenuOpen(false);
-		setWorkflowDialogOpen(true);
-	};
-
-	const applyWorkflowChange = () => {
-		if (pendingWorkflowId) {
-			setSelectedWorkflowId(pendingWorkflowId);
-		}
-
-		setWorkflowDialogOpen(false);
-		setPendingWorkflowId(null);
-		setWorkflowSearch("");
-	};
-
-	const addAssetsToTask = (assetsToAdd: AssetItem[]) => {
-		if (assetsToAdd.length === 0) {
-			return;
-		}
-
-		const normalizedAssets = assetsToAdd.map((asset) => ({
-			...asset,
-			thumbnailSrc: asset.thumbnailSrc ?? asset.previewSrc ?? asset.src,
-		}));
-		const firstImage = normalizedAssets.find((asset) => asset.preview === "image");
-
-		setTaskAssets((current) => {
-			const existing = current.filter(
-				(asset) => !normalizedAssets.some((candidate) => candidate.id === asset.id),
-			);
-
-			return [...normalizedAssets, ...existing];
-		});
-
-		if (firstImage) {
-			setSelectedTaskAssetId(firstImage.id);
-		}
-
-		setSelectedPanelAssetIds([]);
-		setHasTaskContent(true);
-		setScene("content");
-	};
-
-	const addContentInstanceFromModel = (model: ContentType) => {
-		const instanceId = `ci-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-		// Initialize field values based on model properties
-		const fields: Record<string, any> = {};
-		model.properties.forEach((prop: any) => {
-			if (prop.type === "text") {
-				fields[prop.name] = "";
-			} else if (prop.type === "longText" || prop.type === "richText") {
-				fields[prop.name] = "";
-			} else if (prop.type === "datetime") {
-				fields[prop.name] = new Date().toISOString();
-			} else if (prop.list) {
-				fields[prop.name] = [];
-			} else {
-				fields[prop.name] = null;
-			}
-		});
-
-		const newInstance: ContentInstance = {
-			id: instanceId,
-			modelId: model.id,
-			modelDisplayName: model.displayName || model.name,
-			createdAt: new Date().toISOString(),
-			fields,
-		};
-
-		setContentInstances((current: ContentInstance[]) => [newInstance, ...current]);
-		setSelectedContentInstanceId(instanceId);
-		setSelectedTaskAssetId(null);
-		setHasTaskContent(true);
-		setScene("content");
-	};
-
-	const closeWorkflowDialog = () => {
-		setWorkflowDialogOpen(false);
-		setPendingWorkflowId(null);
-	};
-
-	useEffect(() => {
-		const availablePanelAssetIds = new Set(panelAssetsWithSelection.map((asset) => asset.id));
-
-		setSelectedPanelAssetIds((current) => {
-			const next = current.filter((id) => availablePanelAssetIds.has(id));
-
-			if (next.length === current.length && next.every((id, index) => id === current[index])) {
-				return current;
-			}
-
-			return next;
-		});
-	}, [panelAssetsWithSelection]);
-
-	const mainContent = useMemo(() => {
-		switch (scene) {
-			case "brief":
-				return (
-					<TaskCanvas
-						left={
-							<BriefPage
-								activeTab={activeTab}
-								briefContent={briefContent}
-								onOpenEdit={openBriefEdit}
-								onTabChange={handleTabChange}
-							/>
-						}
-						right={
-							<WorkflowSidebar
-								filteredTemplates={filteredWorkflowTemplates}
-								isMenuOpen={workflowMenuOpen}
-								onRequestWorkflowChange={handleWorkflowSelect}
-								onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
-								onWorkflowSearchChange={setWorkflowSearch}
-								searchValue={workflowSearch}
-								workflow={activeWorkflow}
-							/>
-						}
-					/>
-				);
-			case "brief-edit":
-				return (
-					<TaskCanvas
-						left={
-							<BriefEditPage
-								activeTab={activeTab}
-								briefContent={draftBriefContent}
-								onBriefContentChange={setDraftBriefContent}
-								onCancel={cancelBriefEdit}
-								onSave={saveBriefEdit}
-								onTabChange={handleTabChange}
-							/>
-						}
-							right={
-								<SuggestedAssetsPanel
-									assets={panelAssetsWithSelection}
-									onAddToTask={() =>
-										addAssetsToTask(panelAssetsWithSelection.filter((asset) => asset.selected))
-									}
-									onClearSelection={() => setSelectedPanelAssetIds([])}
-									onClose={() => setScene("brief")}
-									onEditSearch={() => openSearch("brief-edit")}
-									onToggleSelect={(assetId) =>
-										setSelectedPanelAssetIds((current) =>
-											current.includes(assetId)
-												? current.filter((id) => id !== assetId)
-												: [...current, assetId],
-										)
-									}
-								/>
-							}
-						/>
-				);
-			case "search":
-				return (
-					<SearchPage
-						assets={rankedSearchAssets}
-						exclude={exclude}
-						onAdd={() => addAssetsToTask(rankedSearchAssets.filter((asset) => asset.selected))}
-						onAssetClick={(asset) => {
-							setSelectedAsset(asset);
-							setScene("preview");
-						}}
-						onBack={() => setScene(searchReturnScene)}
-						onExcludeChange={setExclude}
-						onPerspectiveChange={(index, value) =>
-							setPerspectives((current) =>
-								current.map((item, itemIndex) => (itemIndex === index ? value : item)),
-							)
-						}
-						onToggleSelect={(assetId) =>
-							setSelectedSearchAssetIds((current) =>
-								current.includes(assetId)
-									? current.filter((id) => id !== assetId)
-									: [...current, assetId],
-							)
-						}
-						perspectives={perspectives}
-					/>
-				);
-			case "preview":
-				return (
-					<PreviewPage
-						asset={selectedAsset}
-						onAdd={() => addAssetsToTask([selectedAsset])}
-						onClose={() => setScene("search")}
-					/>
-				);
-			case "content-empty":
-				return (
-					<TaskCanvas
-						left={<ContentEmptyPage activeTab={activeTab} onAddContent={() => openSearch("content-empty")} onAddContentFromModel={addContentInstanceFromModel} onTabChange={handleTabChange} />}
-						right={
-							<WorkflowSidebar
-								filteredTemplates={filteredWorkflowTemplates}
-								isMenuOpen={workflowMenuOpen}
-								onRequestWorkflowChange={handleWorkflowSelect}
-								onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
-								onWorkflowSearchChange={setWorkflowSearch}
-								searchValue={workflowSearch}
-								workflow={activeWorkflow}
-							/>
-						}
-					/>
-				);
-			case "content":
-			case "content-panel":
-				return (
-					<TaskCanvas
-						left={
-							<ContentFilledPage
-								activeTab={activeTab}
-								onAddContent={() => openSearch(scene)}
-								onAddContentFromModel={addContentInstanceFromModel}
-								onOpenSuggested={() => setSuggestedPanelOpen(true)}
-								onSelectTaskAsset={handleSelectTaskAsset}
-
-								selectedTaskAssetId={selectedTaskAssetId}
-								taskAssets={taskAssets}
-								contentInstances={contentInstances}
-								setContentInstances={setContentInstances}
-								selectedContentInstanceId={selectedContentInstanceId}
-								onSelectContentInstance={handleSelectContentInstance}
-								onTabChange={handleTabChange}
-								selectedPageId={selectedPageId}
-								pages={pages}
-								setPages={setPages}
-								onSelectPage={handleSelectPage}
-								onAddToApplication={handleAddToApplication}
-								previewOutlines={previewOutlines}
-								previewCurrentEle={previewCurrentEle}
-								previewHoverEle={previewHoverEle}
-								setPreviewCurrentEle={setPreviewCurrentEle}
-								setPreviewHoverEle={setPreviewHoverEle}
-								setPreviewOutlines={setPreviewOutlines}
-								applications={applications}
-								taskId={CURRENT_TASK_ID}
-							/>
-						}
-						right={
-							suggestedPanelOpen ? (
-								<SuggestedAssetsPanel
-									assets={panelAssetsWithSelection}
-									onAddToTask={() =>
-										addAssetsToTask(panelAssetsWithSelection.filter((asset) => asset.selected))
-									}
-									onClearSelection={() => setSelectedPanelAssetIds([])}
-									onClose={() => setSuggestedPanelOpen(false)}
-									onEditSearch={() => openSearch(scene)}
-									onToggleSelect={(assetId) =>
-										setSelectedPanelAssetIds((current) =>
-											current.includes(assetId)
-												? current.filter((id) => id !== assetId)
-												: [...current, assetId],
-										)
-									}
-								/>
-							) : (
-								<WorkflowSidebar
-									filteredTemplates={filteredWorkflowTemplates}
-									isMenuOpen={workflowMenuOpen}
-									onRequestWorkflowChange={handleWorkflowSelect}
-									onToggleWorkflowMenu={() => setWorkflowMenuOpen((open) => !open)}
-									onWorkflowSearchChange={setWorkflowSearch}
-									searchValue={workflowSearch}
-									workflow={activeWorkflow}
-								/>
-							)
-						}
-					/>
-				);
-			default:
-				return null;
-		}
-	}, [
-		activeTab,
-		activeWorkflow,
-		briefContent,
-		draftBriefContent,
-		exclude,
-		filteredWorkflowTemplates,
-		hasTaskContent,
-		panelAssetsWithSelection,
-		perspectives,
-		rankedSearchAssets,
-		scene,
-		searchReturnScene,
-		selectedAsset,
-		selectedTaskAssetId,
-		selectedContentInstanceId,
-		selectedPageId,
-		taskAssets,
-		contentInstances,
-		pages,
-		suggestedPanelOpen,
-		workflowMenuOpen,
-		workflowSearch,
-		previewOutlines,
-		previewCurrentEle,
-		previewHoverEle,
-		applications,
-		addContentInstanceFromModel,
-		addAssetsToTask,
-		applyWorkflowChange,
-		cancelBriefEdit,
-		handleAddToApplication,
-		handleSelectContentInstance,
-		handleSelectPage,
-		handleSelectTaskAsset,
-		handleTabChange,
-		handleWorkflowSelect,
-		openBriefEdit,
-		openSearch,
-		saveBriefEdit,
-		setContentInstances,
-		setPages,
-		setPreviewCurrentEle,
-		setPreviewHoverEle,
-		setPreviewOutlines,
-		setPerspectives,
-		setScene,
-		setSelectedPanelAssetIds,
-		setSuggestedPanelOpen,
-		setWorkflowMenuOpen,
-		setWorkflowSearch,
-	]);
 
 	return (
-		<Box
-			style={{
-				minHeight: "calc(100vh - 48px)",
-			}}
-		>
-			{mainContent}
-			{workflowDialogOpen && (
-				<WorkflowChangeModal
-					onCancel={closeWorkflowDialog}
-					onConfirm={applyWorkflowChange}
-					workflowName={
-						workflowTemplates.find((template) => template.id === pendingWorkflowId)?.name ?? "workflow"
+		<Box style={{ minHeight: "calc(100vh - 48px)" }}>
+			{state.scene === "brief" && (
+				<TaskCanvas
+					left={
+						<BriefPage
+							activeTab={state.activeTab}
+							briefContent={state.briefContent}
+							onOpenEdit={state.openBriefEdit}
+							onTabChange={state.handleTabChange}
+						/>
+					}
+					right={workflowSidebar}
+				/>
+			)}
+
+			{state.scene === "brief-edit" && (
+				<TaskCanvas
+					left={
+						<BriefEditPage
+							activeTab={state.activeTab}
+							briefContent={state.draftBriefContent}
+							onBriefContentChange={state.setDraftBriefContent}
+							onCancel={state.cancelBriefEdit}
+							onSave={state.saveBriefEdit}
+							onTabChange={state.handleTabChange}
+						/>
+					}
+					right={
+						<SuggestedAssetsPanel
+							assets={state.panelAssetsWithSelection}
+							onAddToTask={state.addSelectedPanelAssetsToTask}
+							onClearSelection={state.clearPanelAssetSelection}
+							onClose={() => state.handleTabChange("brief")}
+							onEditSearch={() => state.openSearch("brief-edit")}
+							onToggleSelect={state.togglePanelAssetSelection}
+						/>
 					}
 				/>
 			)}
-			{/* Target Content Type Selection Dialog */}
-			{instanceToAdd && (
-				<TargetContentTypeDialog
-					open={isTargetSelectionOpen}
-					onClose={() => {
-						setIsTargetSelectionOpen(false);
-						setInstanceToAdd(null);
-					}}
-					availableTargets={
-						contentTypes
-							.find(ct => ct.id === instanceToAdd.modelId)
-							?.mappings?.map(mapping => ({
-								mapping,
-								targetType: contentTypes.find(ct => ct.id === mapping.targetContentTypeId)!,
-							}))
-							.filter(t => t.targetType) || []
+
+			{state.scene === "search" && (
+				<SearchPage
+					assets={state.rankedSearchAssets}
+					exclude={state.exclude}
+					onAdd={state.addSelectedSearchAssetsToTask}
+					onAssetClick={state.openSelectedAssetPreview}
+					onBack={state.returnFromSearch}
+					onExcludeChange={state.setExclude}
+					onPerspectiveChange={state.updatePerspective}
+					onToggleSelect={state.toggleSearchAssetSelection}
+					perspectives={state.perspectives}
+				/>
+			)}
+
+			{state.scene === "preview" && (
+				<PreviewPage asset={state.selectedAsset} onAdd={state.addSelectedSingleAssetToTask} onClose={state.closePreview} />
+			)}
+
+			{state.scene === "content-empty" && (
+				<TaskCanvas
+					left={
+						<ContentEmptyPage
+							activeTab={state.activeTab}
+							onAddArticle={state.addArticle}
+							onAddContent={() => state.openSearch("content-empty")}
+							onAddContentFromModel={state.addContentInstanceFromModel}
+							onTabChange={state.handleTabChange}
+						/>
 					}
-					onSelect={(targetContentTypeId) => createAndAddPage(instanceToAdd, targetContentTypeId)}
+					right={workflowSidebar}
+				/>
+			)}
+
+			{(state.scene === "content" || state.scene === "content-panel") && (
+				<TaskCanvas
+					left={
+						<ContentFilledPage
+							activeTab={state.activeTab}
+							applications={state.applications}
+							contentInstances={state.contentInstances}
+							onAddArticle={state.addArticle}
+							onAddContent={() => state.openSearch(state.scene)}
+							onAddContentFromModel={state.addContentInstanceFromModel}
+							onAddToApplication={state.handleAddToApplication}
+							onOpenSuggested={() => state.setSuggestedPanelOpen(true)}
+							onSelectArticle={state.setSelectedArticleId}
+							onSelectContentInstance={state.setSelectedContentInstanceId}
+							onSelectPage={state.setSelectedPageId}
+							onSelectTaskAsset={state.setSelectedTaskAssetId}
+							onTabChange={state.handleTabChange}
+							pages={state.pages}
+							previewCurrentEle={state.previewCurrentEle}
+							previewHoverEle={state.previewHoverEle}
+							previewOutlines={state.previewOutlines}
+							selectedArticleId={state.selectedArticleId}
+							selectedContentInstanceId={state.selectedContentInstanceId}
+							selectedPageId={state.selectedPageId}
+							selectedTaskAssetId={state.selectedTaskAssetId}
+							setContentInstances={state.setContentInstances}
+							setPages={state.setPages}
+							setPreviewCurrentEle={state.setPreviewCurrentEle}
+							setPreviewHoverEle={state.setPreviewHoverEle}
+							setPreviewOutlines={state.setPreviewOutlines}
+							setTaskArticles={state.setTaskArticles}
+							setTaskAssets={state.setTaskAssets}
+							taskArticles={state.taskArticles}
+							taskAssets={state.taskAssets}
+						/>
+					}
+					right={
+						state.suggestedPanelOpen ? (
+							<SuggestedAssetsPanel
+								assets={state.panelAssetsWithSelection}
+								onAddToTask={state.addSelectedPanelAssetsToTask}
+								onClearSelection={state.clearPanelAssetSelection}
+								onClose={() => state.setSuggestedPanelOpen(false)}
+								onEditSearch={() => state.openSearch(state.scene)}
+								onToggleSelect={state.togglePanelAssetSelection}
+							/>
+						) : (
+							workflowSidebar
+						)
+					}
+				/>
+			)}
+
+			{state.workflowDialogOpen && (
+				<WorkflowChangeModal
+					onCancel={state.closeWorkflowDialog}
+					onConfirm={state.applyWorkflowChange}
+					workflowName={state.pendingWorkflowName}
+				/>
+			)}
+
+			{state.instanceToAdd && (
+				<TargetContentTypeDialog
+					availableTargets={state.targetDialogAvailableTargets}
+					onClose={state.closeTargetSelection}
+					onSelect={(targetContentTypeId) => state.createAndAddPage(state.instanceToAdd!, targetContentTypeId)}
+					open={state.isTargetSelectionOpen}
 				/>
 			)}
 		</Box>

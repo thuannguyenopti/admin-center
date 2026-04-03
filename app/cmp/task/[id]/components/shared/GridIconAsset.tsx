@@ -1,7 +1,7 @@
 "use client";
 
-import type { ComponentType, ReactNode, SVGProps } from "react";
 import { Box } from "@optiaxiom/react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
 
 export function GridIconAsset({
 	active = false,
@@ -17,8 +17,8 @@ export function GridIconAsset({
 				color: active ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
 				display: "block",
 				height: 14,
-				opacity: active ? 1 : 0.5,
 				flexShrink: 0,
+				opacity: active ? 1 : 0.5,
 				width: 18,
 			}}
 		/>
