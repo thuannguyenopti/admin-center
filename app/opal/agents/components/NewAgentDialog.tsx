@@ -448,7 +448,13 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                             <Text
                                                 fontSize="xs"
                                                 color="fg.secondary"
-                                                style={{ lineHeight: 1.55, flex: 1 }}
+                                                style={{
+                                                    lineHeight: 1.55,
+                                                    overflow: "hidden",
+                                                    display: "-webkit-box",
+                                                    WebkitLineClamp: 3,
+                                                    WebkitBoxOrient: "vertical",
+                                                } as React.CSSProperties}
                                             >
                                                 {agent.desc}
                                             </Text>
