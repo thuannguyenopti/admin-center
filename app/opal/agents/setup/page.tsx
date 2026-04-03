@@ -1150,14 +1150,14 @@ function SpecializedAgentSetupContent() {
                 ]);
                 setCreativity(40);
             }
-        } else if (from === "ai") {
-            // Load AI-generated draft from the new-agent dialog
+        } else if (from === "ai" || from === "template") {
+            // Load draft from the new-agent dialog (AI-generated or template selection)
             try {
                 const raw = sessionStorage.getItem("ai_agent_draft");
                 if (raw) {
                     const draft = JSON.parse(raw);
                     setDetailsOpen(true);
-                    setInputOpen(true);
+                    setInputOpen(from === "ai");
                     setIsActive(false);
                     setAgentName(draft.agentName || "");
                     setAgentId((draft.agentName || "").toLowerCase().replace(/[^a-z0-9]+/g, "_"));
@@ -2689,7 +2689,7 @@ function SpecializedAgentSetupContent() {
                     onAskOpal={handleAskOpal}
                     onOpenExample={handleOpenGuideExample}
                     multiTurnMode={multiTurnMode}
-                    fromAi={searchParams.get("from") === "ai"}
+                    fromAi={searchParams.get("from") === "ai" || searchParams.get("from") === "template"}
                 />
             </div>
         </Box>
