@@ -12,6 +12,7 @@ import {
 } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -78,8 +79,8 @@ const MOCK = {
     ],
 };
 
-const DESIGNING_MSGS = ["Reading your requirements...", "Mapping workflow phases...", "Selecting tools..."];
-const BUILDING_MSGS = ["Fine-tuning instructions...", "Configuring parameters...", "Finalizing your agent..."];
+const DESIGNING_MSGS = ["Thinking really hard right now...", "Drawing up the game plan...", "Picking the perfect tools..."];
+const BUILDING_MSGS = ["Mixing all the ingredients...", "Adding the finishing touches...", "Your agent is almost alive..."];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -226,7 +227,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                 style={{
                     position: "absolute",
                     inset: 0,
-                    background: "rgba(0,0,0,0.5)",
+                    background: "color-mix(in srgb, var(--ax-colors-fg-default) 50%, transparent)",
                     backdropFilter: "blur(2px)",
                 }}
                 onClick={handleClose}
@@ -239,6 +240,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                     zIndex: 1,
                     maxWidth: 860,
                     width: "92vw",
+                    height: "88vh",
                     maxHeight: "88vh",
                     background: "var(--ax-colors-bg-default)",
                     borderRadius: 12,
@@ -266,14 +268,14 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                         height: 32,
                         borderRadius: "50%",
                         border: "none",
-                        background: "rgba(0,0,0,0.08)",
+                        background: "var(--ax-colors-bg-secondary)",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 18,
+                        fontSize: "var(--ax-fontSize-xl-fontSize)",
                         lineHeight: 1,
-                        color: "#374151",
+                        color: "var(--ax-colors-fg-secondary)",
                     }}
                     aria-label="Close"
                 >
@@ -286,17 +288,18 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                         {/* Gradient hero — fixed */}
                         <Box
                             px="40"
-                            pt="32"
+                            pt="24"
                             style={{
                                 background: "linear-gradient(140deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%)",
                                 flexShrink: 0,
-                                paddingBottom: 40,
+                                paddingBottom: 24,
                             }}
                         >
                             <Text
                                 fontWeight="700"
+                                fontSize="4xl"
+                                color="fg.default"
                                 style={{
-                                    fontSize: 32,
                                     lineHeight: 1.2,
                                     background: "linear-gradient(90deg, #111827 40%, #0069ff 100%)",
                                     WebkitBackgroundClip: "text",
@@ -309,8 +312,9 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Text>
                             <Text
                                 fontWeight="700"
+                                fontSize="4xl"
+                                color="fg.default"
                                 style={{
-                                    fontSize: 32,
                                     lineHeight: 1.2,
                                     background: "linear-gradient(90deg, #0069ff 0%, #7c3aed 100%)",
                                     WebkitBackgroundClip: "text",
@@ -330,7 +334,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                         {/* Scrollable body */}
                         <Box style={{ flex: 1, overflowY: "auto" }}>
                             {/* Floating textarea card */}
-                            <Box px="40" py="24">
+                            <Box px="40" py="16">
                                 <Box
                                     bg="bg.default"
                                     rounded="lg"
@@ -345,12 +349,12 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         value={prompt}
                                         onChange={(e) => setPrompt(e.target.value)}
                                         style={{
-                                            minHeight: 100,
+                                            minHeight: 160,
                                             resize: "vertical",
                                             border: "none",
                                             outline: "none",
                                             boxShadow: "none",
-                                            fontSize: 15,
+                                            fontSize: "var(--ax-fontSize-md-fontSize)",
                                             lineHeight: 1.65,
                                             padding: 0,
                                         }}
@@ -387,20 +391,20 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Box>
 
                             {/* ── Templates section ─────────────────────── */}
-                            <Box px="40" pb="32">
+                            <Box px="40" pb="24">
                                 {/* Divider label */}
                                 <Box
                                     display="flex"
                                     alignItems="center"
                                     gap="12"
-                                    style={{ marginBottom: 20 }}
+                                    style={{ marginTop: 24, marginBottom: 24 }}
                                 >
                                     <Box style={{ flex: 1, height: 1, background: "var(--ax-colors-border-tertiary)" }} />
                                     <Text
-                                        fontSize="xs"
+                                        fontSize="sm"
                                         fontWeight="500"
                                         color="fg.tertiary"
-                                        style={{ letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}
+                                        style={{ whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: "0.06em" }}
                                     >
                                         Or start from a template
                                     </Text>
@@ -416,68 +420,67 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     }}
                                 >
                                     {(showAllTemplates ? TEMPLATE_AGENTS : TEMPLATE_AGENTS.slice(0, 3)).map((agent) => (
-                                        <Box
+                                        <div
                                             key={agent.name}
-                                            display="flex"
-                                            flexDirection="column"
-                                            rounded="lg"
-                                            p="16"
                                             style={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                borderRadius: 8,
+                                                padding: 20,
                                                 border: "1px solid var(--ax-colors-border-tertiary)",
                                                 background: "var(--ax-colors-bg-default)",
                                                 transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+                                                gap: 8,
                                             }}
                                             onMouseEnter={(e) => {
-                                                (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
-                                                (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-default)";
+                                                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
+                                                e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
                                             }}
                                             onMouseLeave={(e) => {
-                                                (e.currentTarget as HTMLElement).style.boxShadow = "";
-                                                (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-tertiary)";
+                                                e.currentTarget.style.boxShadow = "";
+                                                e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)";
                                             }}
                                         >
                                             {/* Emoji + name */}
-                                            <Box display="flex" alignItems="center" gap="10" mb="8">
-                                                <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
-                                                <Text fontWeight="600" fontSize="sm" style={{ lineHeight: 1.3 }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                                <span style={{ fontSize: "var(--ax-fontSize-xl-fontSize)", lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
+                                                <Text fontWeight="600" fontSize="md" color="fg.default" style={{ lineHeight: 1.3 }}>
                                                     {agent.name}
                                                 </Text>
-                                            </Box>
+                                            </div>
 
                                             {/* Description */}
                                             <Text
-                                                fontSize="xs"
+                                                fontSize="sm"
                                                 color="fg.secondary"
-                                                style={{ lineHeight: 1.55, flex: 1 }}
+                                                style={{ lineHeight: 1.5, flex: 1 }}
                                             >
                                                 {agent.desc}
                                             </Text>
 
                                             {/* Tags */}
-                                            <Box display="flex" gap="4" mt="10" mb="12" style={{ flexWrap: "wrap" }}>
+                                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                                                 {agent.tags.map((tag) => (
-                                                    <Box
+                                                    <span
                                                         key={tag}
-                                                        px="6"
-                                                        py="2"
-                                                        rounded="full"
                                                         style={{
+                                                            fontSize: "var(--ax-fontSize-sm-fontSize)",
+                                                            color: "var(--ax-colors-fg-secondary)",
                                                             background: "var(--ax-colors-bg-secondary)",
-                                                            fontSize: 10,
-                                                            color: "var(--ax-colors-fg-tertiary)",
-                                                            fontWeight: 500,
+                                                            borderRadius: 12,
+                                                            padding: "2px 10px",
                                                         }}
                                                     >
                                                         {tag}
-                                                    </Box>
+                                                    </span>
                                                 ))}
-                                            </Box>
+                                            </div>
 
-                                            {/* CTAs */}
-                                            <Box display="flex" gap="8" alignItems="center">
+                                            {/* CTAs — always visible */}
+                                            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                                                 <Button
                                                     appearance="subtle"
-                                                    size="sm"
+                                                    size="md"
                                                     style={{
                                                         flex: 1,
                                                         border: "1px solid var(--ax-colors-border-default)",
@@ -492,7 +495,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 </Button>
                                                 <Button
                                                     appearance="inverse"
-                                                    size="sm"
+                                                    size="md"
                                                     style={{ flex: 1, justifyContent: "center" }}
                                                     onClick={() => {
                                                         try {
@@ -512,8 +515,8 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 >
                                                     Select
                                                 </Button>
-                                            </Box>
-                                        </Box>
+                                            </div>
+                                        </div>
                                     ))}
                                 </Box>
 
@@ -534,52 +537,23 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                     </Box>
                 )}
 
-                {/* ── LOADING (designing / building) ─────────────────────── */}
+                {/* ── DESIGNING / BUILDING ──────────────────────────────── */}
                 {(step === "designing" || step === "building") && (
                     <Box
                         display="flex"
                         flexDirection="column"
                         alignItems="center"
                         justifyContent="center"
-                        p="40"
                         style={{ flex: 1 }}
                     >
-                        <Box
-                            bg="bg.default"
-                            rounded="xl"
-                            p="48"
-                            display="flex"
-                            flexDirection="column"
-                            alignItems="center"
-                            style={{
-                                width: "100%",
-                                maxWidth: 460,
-                                boxShadow: "0 2px 20px rgba(0,0,0,0.06)",
-                                border: "1px solid var(--ax-colors-border-tertiary)",
-                            }}
-                        >
-                            {step === "building" ? (
-                                <span style={{ fontSize: 42, lineHeight: 1 }}>🎯</span>
-                            ) : (
-                                <Box
-                                    rounded="full"
-                                    style={{
-                                        width: 40,
-                                        height: 40,
-                                        border: "3px solid var(--ax-colors-border-default)",
-                                        borderTopColor: "#0069ff",
-                                        animation: "spin 0.85s linear infinite",
-                                    }}
-                                />
-                            )}
-                            <Text fontWeight="600" fontSize="xl" mt="20" style={{ textAlign: "center" }}>
-                                {step === "designing" ? "Designing your agent" : "Building your agent"}
-                            </Text>
-                            <Text color="fg.secondary" mt="8" fontSize="sm" style={{ textAlign: "center" }}>
-                                {msgs[msgIdx % msgs.length]}
-                            </Text>
-                            <ThreeDots />
-                        </Box>
+                        <OpalLoaderV5 size={40} color="#7c5cff" />
+                        <Text fontWeight="600" fontSize="xl" color="fg.default" mt="24" style={{ textAlign: "center" }}>
+                            {step === "designing" ? "Designing your agent" : "Building your agent"}
+                        </Text>
+                        <Text color="fg.secondary" mt="8" fontSize="sm" style={{ textAlign: "center" }}>
+                            {msgs[msgIdx % msgs.length]}
+                        </Text>
+                        <ThreeDots />
                     </Box>
                 )}
 
@@ -597,7 +571,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             style={{ paddingTop: 28, paddingBottom: 20, flexShrink: 0 }}
                         >
                             <Box>
-                                <Text fontWeight="700" fontSize="2xl">Your Agent Preview</Text>
+                                <Text fontWeight="700" fontSize="2xl" color="fg.default">Your Agent Preview</Text>
                                 <Text color="fg.secondary" fontSize="sm" mt="4">
                                     Here&apos;s what we&apos;ll build. Review the outline, then let&apos;s make it real.
                                 </Text>
@@ -608,16 +582,15 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                         <Box px="40" py="24" style={{ flex: 1, overflowY: "auto" }}>
                             {/* Agent identity card */}
                             <Box bg="bg.secondary" rounded="lg" p="20" mb="24">
-                                <Text fontWeight="600" fontSize="lg">{MOCK.name}</Text>
+                                <Text fontWeight="600" fontSize="lg" color="fg.default">{MOCK.name}</Text>
                                 <Text color="fg.secondary" fontSize="sm" mt="6">{MOCK.desc}</Text>
                             </Box>
 
                             {/* Agent action plan — editable phases */}
                             <Text
-                                fontSize="xs"
+                                fontSize="md"
                                 fontWeight="500"
                                 color="fg.secondary"
-                                style={{ letterSpacing: "0.07em", textTransform: "uppercase" }}
                             >
                                 Agent action plan
                             </Text>
@@ -665,9 +638,9 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 height: 28,
                                                 flexShrink: 0,
                                                 marginTop: 2,
-                                                background: "#0f172a",
-                                                color: "white",
-                                                fontSize: 12,
+                                                background: "var(--ax-colors-fg-default)",
+                                                color: "var(--ax-colors-bg-default)",
+                                                fontSize: "var(--ax-fontSize-sm-fontSize)",
                                                 fontWeight: 600,
                                             }}
                                         >
@@ -685,7 +658,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 <Textarea
                                                     value={phaseEditBody}
                                                     onChange={(e) => setPhaseEditBody(e.target.value)}
-                                                    style={{ minHeight: 96, fontSize: 13, lineHeight: 1.6 }}
+                                                    style={{ minHeight: 96, fontSize: "var(--ax-fontSize-md-fontSize)", lineHeight: 1.6 }}
                                                 />
                                                 <Box display="flex" justifyContent="flex-end">
                                                     <Button
@@ -710,21 +683,10 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         ) : (
                                             /* Read-only state */
                                             <Box style={{ flex: 1 }}>
-                                                <Text fontWeight="600" fontSize="sm">{phase.title}</Text>
-                                                <Text fontSize="sm" color="fg.secondary" mt="2">{phase.summary}</Text>
-                                                {phase.detail ? (
-                                                    <Text
-                                                        fontSize="xs"
-                                                        mt="4"
-                                                        style={{
-                                                            color: "var(--ax-colors-fg-tertiary)",
-                                                            fontStyle: "italic",
-                                                            lineHeight: 1.65,
-                                                        }}
-                                                    >
-                                                        {phase.detail}
-                                                    </Text>
-                                                ) : null}
+                                                <Text fontWeight="600" fontSize="sm" color="fg.default">{phase.title}</Text>
+                                                <Text fontSize="sm" color="fg.secondary" mt="2" style={{ lineHeight: 1.6 }}>
+                                                    {phase.summary}{phase.detail ? ` ${phase.detail}` : ""}
+                                                </Text>
                                             </Box>
                                         )}
 
@@ -747,7 +709,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 }}
                                             >
                                                 <IconPen size={11} color="var(--ax-colors-fg-secondary)" />
-                                                <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 500 }}>
+                                                <Text fontSize="sm" color="fg.secondary" style={{ fontWeight: 500 }}>
                                                     Edit
                                                 </Text>
                                             </Box>
@@ -757,13 +719,12 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Box>
 
                             {/* Tools */}
-                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
+                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="16">
                                 <Disclosure>
                                     <DisclosureTrigger
-                                        fontSize="xs"
+                                        fontSize="md"
                                         fontWeight="500"
                                         color="fg.secondary"
-                                        style={{ letterSpacing: "0.07em", textTransform: "uppercase" as const }}
                                     >
                                         Tools ({MOCK.tools.length})
                                     </DisclosureTrigger>
@@ -778,7 +739,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                     borderColor="border.secondary"
                                                     bg="bg.default"
                                                 >
-                                                    <Text fontSize="sm" fontWeight="500" style={{ fontFamily: "monospace" }}>
+                                                    <Text fontSize="sm" fontWeight="500" color="fg.default" style={{ fontFamily: "monospace" }}>
                                                         {t.name}
                                                     </Text>
                                                     <Text fontSize="sm" color="fg.secondary" mt="4">
@@ -792,13 +753,12 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Box>
 
                             {/* Parameters */}
-                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
+                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="16">
                                 <Disclosure>
                                     <DisclosureTrigger
-                                        fontSize="xs"
+                                        fontSize="md"
                                         fontWeight="500"
                                         color="fg.secondary"
-                                        style={{ letterSpacing: "0.07em", textTransform: "uppercase" as const }}
                                     >
                                         Parameters ({MOCK.params.length})
                                     </DisclosureTrigger>
@@ -814,7 +774,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                     bg="bg.default"
                                                 >
                                                     <Box display="flex" gap="8" alignItems="center">
-                                                        <Text fontSize="sm" fontWeight="500" style={{ fontFamily: "monospace" }}>
+                                                        <Text fontSize="sm" fontWeight="500" color="fg.default" style={{ fontFamily: "monospace" }}>
                                                             {p.name}
                                                         </Text>
                                                         <Box
@@ -822,9 +782,9 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                             py="2"
                                                             rounded="full"
                                                             style={{
-                                                                background: p.required ? "#eff6ff" : "#f9fafb",
-                                                                color: p.required ? "#1d4ed8" : "#6b7280",
-                                                                fontSize: 11,
+                                                                background: p.required ? "var(--ax-colors-bg-accent-subtle)" : "var(--ax-colors-bg-secondary)",
+                                                                color: p.required ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)",
+                                                                fontSize: "var(--ax-fontSize-sm-fontSize)",
                                                                 fontWeight: 500,
                                                             }}
                                                         >
@@ -835,14 +795,14 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                                 px="6"
                                                                 py="2"
                                                                 rounded="full"
-                                                                style={{ background: "#f9fafb", color: "#9ca3af", fontSize: 11 }}
+                                                                style={{ background: "var(--ax-colors-bg-secondary)", color: "var(--ax-colors-fg-tertiary)", fontSize: "var(--ax-fontSize-sm-fontSize)" }}
                                                             >
                                                                 optional
                                                             </Box>
                                                         )}
                                                     </Box>
                                                     <Text fontSize="sm" color="fg.secondary" mt="6">{p.desc}</Text>
-                                                    <Text fontSize="xs" color="fg.tertiary" mt="4" style={{ fontStyle: "italic" }}>
+                                                    <Text fontSize="sm" color="fg.tertiary" mt="4" style={{ fontStyle: "italic" }}>
                                                         {p.example}
                                                     </Text>
                                                 </Box>
@@ -853,13 +813,12 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Box>
 
                             {/* Edge Cases */}
-                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="4">
+                            <Box borderT="1" borderColor="border.tertiary" pt="16" mt="16">
                                 <Disclosure>
                                     <DisclosureTrigger
-                                        fontSize="xs"
+                                        fontSize="md"
                                         fontWeight="500"
                                         color="fg.secondary"
-                                        style={{ letterSpacing: "0.07em", textTransform: "uppercase" as const }}
                                     >
                                         Edge Cases ({MOCK.edgeCases.length})
                                     </DisclosureTrigger>
@@ -873,7 +832,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                             width: 6,
                                                             height: 6,
                                                             flexShrink: 0,
-                                                            background: "#f59e0b",
+                                                            background: "var(--ax-colors-fg-warning)",
                                                             marginTop: 6,
                                                         }}
                                                     />
