@@ -78,6 +78,8 @@ import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import type { Version } from "./components/VersionHistory";
 import { AgentAssistantPanel } from "./components/AgentAssistantPanel";
+import { EnhancePopover } from "./components/EnhancePopover";
+import { SelectionTooltip } from "./components/SelectionTooltip";
 import { ResizableDetailsTray } from "./components/ResizableDetailsTray";
 
 const VersionHistory = dynamic(
@@ -511,6 +513,9 @@ function SpecializedAgentSetupContent() {
     // Assistant panel
     const [showGuidePanel, setShowGuidePanel] = useState(shouldDefaultGuideOpen);
     const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">(defaultGuidePanelView);
+    const [enhancePopoverOpen, setEnhancePopoverOpen] = useState(false);
+    const enhanceButtonRef = useRef<HTMLButtonElement>(null);
+    const [promptSelection, setPromptSelection] = useState<{ x: number; y: number; text: string } | null>(null);
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const [highlightedField, setHighlightedField] = useState<number | null>(null);
     const [assistantHoveredField, setAssistantHoveredField] = useState<"system-prompt" | "memory-limit" | "first-message" | null>(null);
@@ -1156,7 +1161,7 @@ function SpecializedAgentSetupContent() {
                 const raw = sessionStorage.getItem("ai_agent_draft");
                 if (raw) {
                     const draft = JSON.parse(raw);
-                    setDetailsOpen(true);
+                    setDetailsOpen(from !== "ai");
                     setInputOpen(from === "ai");
                     setIsActive(false);
                     setAgentName(draft.agentName || "");
@@ -1167,6 +1172,9 @@ function SpecializedAgentSetupContent() {
                     setVariables(draft.variables || []);
                     setCreativity(40);
                     setInferenceLevel("balanced");
+                    if (from === "ai") {
+                        setTimeout(() => promptTemplateRef.current?.focus(), 300);
+                    }
                     return;
                 }
             } catch {
@@ -1205,6 +1213,7 @@ function SpecializedAgentSetupContent() {
 
 
     return (
+        <>
         <Box h="full" bg="bg.page" display="flex" flexDirection="row" suppressHydrationWarning>
             {/* Main Content */}
             <Box flex="1" display="flex" flexDirection="column" style={{ minWidth: 0 }}>
@@ -1593,6 +1602,18 @@ function SpecializedAgentSetupContent() {
                                                         transition: "outline-color 0.3s ease",
                                                     }}
                                                 >
+                                                <Box style={{ position: "relative" }}>
+                                                <Button
+                                                    ref={enhanceButtonRef}
+                                                    appearance="default"
+                                                    size="sm"
+                                                    onClick={() => setEnhancePopoverOpen((o) => !o)}
+                                                    style={{ position: "absolute", top: -4, right: 0, zIndex: 1 }}
+                                                >
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src="/opal-orb.png" alt="" width={14} height={14} style={{ display: "inline-block", marginRight: "4px", verticalAlign: "middle" }} />
+                                                    Enhance
+                                                </Button>
                                                 <HoverCard openDelay={300}>
                                                 <Field
                                                     label={
@@ -1684,6 +1705,32 @@ function SpecializedAgentSetupContent() {
                                                                     zIndex: 0,
                                                                     caretColor: "var(--ax-colors-fg-default)",
                                                                 }}
+                                                                onMouseUp={(e) => {
+                                                                    const el = e.currentTarget as HTMLTextAreaElement;
+                                                                    const cx = e.clientX;
+                                                                    const cy = e.clientY;
+                                                                    setTimeout(() => {
+                                                                        const { selectionStart, selectionEnd, value } = el;
+                                                                        if (selectionStart === selectionEnd) { setPromptSelection(null); return; }
+                                                                        const selected = value.substring(selectionStart, selectionEnd).trim();
+                                                                        if (!selected) { setPromptSelection(null); return; }
+                                                                        setPromptSelection({ x: cx, y: cy, text: selected });
+                                                                    }, 10);
+                                                                }}
+                                                                onKeyUp={(e) => {
+                                                                    const isSelectAction = e.shiftKey || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a");
+                                                                    if (!isSelectAction) return;
+                                                                    const el = e.currentTarget as HTMLTextAreaElement;
+                                                                    const { selectionStart, selectionEnd, value } = el;
+                                                                    if (selectionStart === selectionEnd) { setPromptSelection(null); return; }
+                                                                    const selected = value.substring(selectionStart, selectionEnd).trim();
+                                                                    if (!selected) { setPromptSelection(null); return; }
+                                                                    const rect = el.getBoundingClientRect();
+                                                                    setPromptSelection({ x: rect.left + rect.width / 2, y: rect.top + 10, text: selected });
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (!e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) setPromptSelection(null);
+                                                                }}
                                                             />
                                                         </Box>
                                                     )}
@@ -1702,6 +1749,7 @@ function SpecializedAgentSetupContent() {
                                                     </Box>
                                                 </HoverCardContent>
                                                 </HoverCard>
+                                                </Box>
                                                 </div>
 
                                                 <div
@@ -2690,8 +2738,28 @@ function SpecializedAgentSetupContent() {
                     onOpenExample={handleOpenGuideExample}
                     multiTurnMode={multiTurnMode}
                     fromAi={searchParams.get("from") === "ai" || searchParams.get("from") === "template"}
+                    enhancePopoverOpen={enhancePopoverOpen}
                 />
             </div>
         </Box>
+
+        <EnhancePopover
+            anchorEl={enhanceButtonRef.current}
+            isOpen={enhancePopoverOpen}
+            onClose={() => setEnhancePopoverOpen(false)}
+            onSubmit={handleAskOpal}
+        />
+        {promptSelection && (
+            <SelectionTooltip
+                x={promptSelection.x}
+                y={promptSelection.y}
+                onAskOpal={() => {
+                    opalPanelControls?.launchWithContext("Selected text in Prompt", promptSelection.text);
+                    setPromptSelection(null);
+                }}
+                onClose={() => setPromptSelection(null)}
+            />
+        )}
+        </>
     );
 }

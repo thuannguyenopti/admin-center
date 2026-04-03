@@ -54,6 +54,7 @@ function TemplateContent({
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
 	const [pendingOpalPrompt, setPendingOpalPrompt] = useState<PendingOpalPrompt | null>(null);
+	const [opalContextChip, setOpalContextChip] = useState<{ label: string; content: string } | null>(null);
 	const isOpalStudio = path.startsWith("/cmp/opal-studio");
 
 	// Code panel state
@@ -143,6 +144,11 @@ function TemplateContent({
 				const chatId = createNewChat();
 				openOpal();
 				setPendingOpalPrompt({chatId, prompt: trimmed});
+			},
+			launchWithContext: (label: string, content: string) => {
+				createNewChat();
+				openOpal();
+				setOpalContextChip({ label, content });
 			},
 		});
 		return () => setOpalPanelControls(null);
@@ -505,6 +511,9 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 				createNewChat={createNewChat}
 				deleteChat={deleteChat}
 				selectChat={selectChat}
+			contextChip={opalContextChip?.label ?? null}
+			contextContent={opalContextChip?.content ?? null}
+			onContextChipRemove={() => setOpalContextChip(null)}
 			/>
 			<CodePanel
 				isOpen={isCodePanelOpen}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Box, Text, Button, Textarea } from "@optiaxiom/react";
+import { Alert, Box, Text, Button, Textarea } from "@optiaxiom/react";
 import {
     HoverCard,
     HoverCardContent,
@@ -579,6 +579,7 @@ interface AgentAssistantPanelProps {
     onOpenExample?: (step: 1 | 2) => void;
     multiTurnMode?: boolean;
     fromAi?: boolean;
+    enhancePopoverOpen?: boolean;
 }
 
 // ─── Multi-turn Step 5 Data ───────────────────────────────────────────────────
@@ -617,6 +618,7 @@ export function AgentAssistantPanel({
     onOpenExample,
     multiTurnMode = false,
     fromAi = false,
+    enhancePopoverOpen = false,
 }: AgentAssistantPanelProps) {
     const router = useRouter();
     const DEFAULT_PANEL_WIDTH = 348;
@@ -1142,37 +1144,44 @@ export function AgentAssistantPanel({
                                     <Box
                                         display="flex"
                                         flexDirection="column"
-                                        gap="12"
+                                        gap="8"
                                         style={{
                                             background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
                                             borderRadius: "8px",
-                                            padding: "10px 16px 12px",
+                                            padding: "12px 14px 14px",
+                                            opacity: enhancePopoverOpen ? 0.4 : 1,
+                                            pointerEvents: enhancePopoverOpen ? "none" : undefined,
+                                            transition: "opacity 0.2s ease",
                                         }}
                                     >
-                                        <Box display="flex" alignItems="center" gap="12">
-                                            <Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
-                                            <Text fontWeight="500" fontSize="md" color="fg.default">
+                                        <Box display="flex" alignItems="center" gap="8">
+                                            <Image src="/opal-orb.png" alt="Opal" width={18} height={18} />
+                                            <Text fontWeight="600" fontSize="md" style={{ color: "#080736" }}>
                                                 Ask Opal to help you build
                                             </Text>
                                         </Box>
-                                        <Box display="flex" flexDirection="column" gap="8">
-                                            <Textarea
-                                                resize="none"
-                                                value={assistantQuery}
-                                                onChange={(event) => setAssistantQuery(event.target.value)}
-                                                placeholder="Describe the agent you want to build, what it should do, or where you're stuck..."
-                                                style={{ minHeight: "82px" }}
-                                            />
-                                            <Box display="flex" justifyContent="flex-start">
-                                                <Button
-                                                    appearance="primary-opal"
-                                                    size="sm"
-                                                    disabled={!assistantQuery.trim()}
-                                                    onClick={() => onAskOpal?.(assistantQuery.trim())}
-                                                >
-                                                    Ask Opal
-                                                </Button>
-                                            </Box>
+                                        <Textarea
+                                            resize="none"
+                                            value={assistantQuery}
+                                            onChange={(event) => setAssistantQuery(event.target.value)}
+                                            placeholder="Describe the agent you want to build, what it should do, or where you're stuck..."
+                                            style={{ minHeight: "82px" }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                                    if (assistantQuery.trim()) onAskOpal?.(assistantQuery.trim());
+                                                }
+                                            }}
+                                        />
+                                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                                            <Text fontSize="sm" color="fg.tertiary">⌘↵ to send</Text>
+                                            <Button
+                                                appearance="primary"
+                                                size="sm"
+                                                disabled={!assistantQuery.trim()}
+                                                onClick={() => onAskOpal?.(assistantQuery.trim())}
+                                            >
+                                                Send
+                                            </Button>
                                         </Box>
                                     </Box>
                                     {documentationButton}
@@ -1183,37 +1192,9 @@ export function AgentAssistantPanel({
                             {assistantFlow === "contextual" && (
                                 <Box display="flex" flexDirection="column" gap="32">
                                     {fromAi ? (
-                                        <Box
-                                            display="flex"
-                                            flexDirection="column"
-                                            gap="10"
-                                            style={{
-                                                background: "linear-gradient(135deg, #ecfdf5 0%, #eff6ff 100%)",
-                                                border: "1px solid #bbf7d0",
-                                                borderRadius: 10,
-                                                padding: "14px 16px",
-                                            }}
-                                        >
-                                            <Box display="flex" alignItems="center" gap="8">
-                                                <span style={{ fontSize: 16 }}>🎯</span>
-                                                <Text fontWeight="600" fontSize="md" color="fg.default">
-                                                    Your agent is ready
-                                                </Text>
-                                            </Box>
-                                            <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.55" }}>
-                                                I&apos;ve set up the instructions, tools, and parameters based on your prompt. Review the details, tweak anything you need, and save when it looks right.
-                                            </Text>
-                                            <Box display="flex" gap="8" mt="4">
-                                                <Button
-                                                    appearance="subtle"
-                                                    size="sm"
-                                                    style={{ border: "1px solid var(--ax-colors-border-default)", fontSize: 12 }}
-                                                    onClick={() => router.push("/opal/agents")}
-                                                >
-                                                    Regenerate from prompt
-                                                </Button>
-                                            </Box>
-                                        </Box>
+                                        <Alert intent="success">
+                                            Your Agent is ready
+                                        </Alert>
                                     ) : (
                                         <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.55" }}>
                                             The prompt is the instruction that tells the agent exactly how to behave.
@@ -1293,39 +1274,44 @@ export function AgentAssistantPanel({
                                     <Box
                                         display="flex"
                                         flexDirection="column"
-                                        gap="12"
+                                        gap="8"
                                             style={{
                                                 background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
                                                 borderRadius: "8px",
-                                                padding: "10px 16px 12px",
+                                                padding: "12px 14px 14px",
+                                                opacity: enhancePopoverOpen ? 0.4 : 1,
+                                                pointerEvents: enhancePopoverOpen ? "none" : undefined,
+                                                transition: "opacity 0.2s ease",
                                             }}
                                         >
-                                        <Box display="flex" alignItems="center" gap="12">
-                                            <Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
-                                            <Text fontWeight="500" fontSize="md" color="fg.default">
-                                                {fromAi ? "Continue working with Opal" : "Ask Opal to help you build"}
+                                        <Box display="flex" alignItems="center" gap="8">
+                                            <Image src="/opal-orb.png" alt="Opal" width={18} height={18} />
+                                            <Text fontWeight="600" fontSize="md" style={{ color: "#080736" }}>
+                                                Ask Opal to help you build
                                             </Text>
                                         </Box>
-                                        <Box display="flex" flexDirection="column" gap="8">
-                                            <Textarea
-                                                resize="none"
-                                                value={assistantQuery}
-                                                onChange={(event) => setAssistantQuery(event.target.value)}
-                                                placeholder={fromAi
-                                                    ? "Ask me to adjust the instructions, add a tool, refine the parameters, or anything else..."
-                                                    : "Describe the agent you want to build, what it should do, or where you're stuck..."}
-                                                style={{ minHeight: "82px" }}
-                                            />
-                                            <Box display="flex" justifyContent="flex-start">
-                                                <Button
-                                                    appearance="primary-opal"
-                                                    size="sm"
-                                                    disabled={!assistantQuery.trim()}
-                                                    onClick={() => onAskOpal?.(assistantQuery.trim())}
-                                                >
-                                                    Ask Opal
-                                                </Button>
-                                            </Box>
+                                        <Textarea
+                                            resize="none"
+                                            value={assistantQuery}
+                                            onChange={(event) => setAssistantQuery(event.target.value)}
+                                            placeholder="Describe the agent you want to build, what it should do, or where you're stuck..."
+                                            style={{ minHeight: "82px" }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                                                    if (assistantQuery.trim()) onAskOpal?.(assistantQuery.trim());
+                                                }
+                                            }}
+                                        />
+                                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                                            <Text fontSize="sm" color="fg.tertiary">⌘↵ to send</Text>
+                                            <Button
+                                                appearance="primary"
+                                                size="sm"
+                                                disabled={!assistantQuery.trim()}
+                                                onClick={() => onAskOpal?.(assistantQuery.trim())}
+                                            >
+                                                Send
+                                            </Button>
                                         </Box>
                                     </Box>
 
