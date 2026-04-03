@@ -254,6 +254,18 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                 <style>{`
                     @keyframes spin { to { transform: rotate(360deg); } }
                     [data-new-agent-modal] * { font-family: Inter, sans-serif !important; }
+                    [data-agent-card-ctas] {
+                        opacity: 0;
+                        transition: opacity 0.15s ease;
+                        position: absolute;
+                        bottom: 0; left: 0; right: 0;
+                        padding: 32px 16px 16px;
+                        background: linear-gradient(to bottom, transparent, var(--ax-colors-bg-default) 48%);
+                        display: flex;
+                        gap: 8px;
+                    }
+                    [data-agent-card]:hover [data-agent-card-ctas] { opacity: 1; }
+                    [data-agent-card]:hover { border-color: var(--ax-colors-border-default) !important; box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
                 `}</style>
 
                 {/* Close button — always visible */}
@@ -415,30 +427,27 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                 <Box
                                     style={{
                                         display: "grid",
-                                        gridTemplateColumns: "repeat(3, 1fr)",
+                                        gridTemplateColumns: "repeat(2, 1fr)",
                                         gap: 12,
                                     }}
                                 >
-                                    {(showAllTemplates ? TEMPLATE_AGENTS : TEMPLATE_AGENTS.slice(0, 3)).map((agent) => (
+                                    {(showAllTemplates ? TEMPLATE_AGENTS : TEMPLATE_AGENTS.slice(0, 4)).map((agent) => (
                                         <div
                                             key={agent.name}
+                                            data-agent-card=""
                                             style={{
+                                                position: "relative",
                                                 display: "flex",
                                                 flexDirection: "column",
                                                 borderRadius: 8,
                                                 padding: 20,
+                                                paddingBottom: 24,
                                                 border: "1px solid var(--ax-colors-border-tertiary)",
                                                 background: "var(--ax-colors-bg-default)",
                                                 transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+                                                overflow: "hidden",
+                                                minHeight: 140,
                                                 gap: 8,
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
-                                                e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.boxShadow = "";
-                                                e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)";
                                             }}
                                         >
                                             {/* Emoji + name */}
@@ -449,7 +458,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 </Text>
                                             </div>
 
-                                            {/* Description */}
+                                            {/* Description — clamped so it stays above the hover CTA overlay */}
                                             <Text
                                                 fontSize="sm"
                                                 color="fg.secondary"
@@ -457,7 +466,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                     lineHeight: 1.5,
                                                     overflow: "hidden",
                                                     display: "-webkit-box",
-                                                    WebkitLineClamp: 3,
+                                                    WebkitLineClamp: 2,
                                                     WebkitBoxOrient: "vertical",
                                                 } as React.CSSProperties}
                                             >
@@ -482,8 +491,8 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                 ))}
                                             </div>
 
-                                            {/* CTAs — always visible */}
-                                            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                                            {/* CTAs — hover-only via CSS */}
+                                            <div data-agent-card-ctas="">
                                                 <Button
                                                     appearance="subtle"
                                                     size="md"
@@ -535,7 +544,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         icon={showAllTemplates ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
                                         onClick={() => setShowAllTemplates((v) => !v)}
                                     >
-                                        {showAllTemplates ? "Show less" : `Show more (${TEMPLATE_AGENTS.length - 3} more)`}
+                                        {showAllTemplates ? "Show less" : `Show more (${TEMPLATE_AGENTS.length - 4} more)`}
                                     </Button>
                                 </Box>
                             </Box>
