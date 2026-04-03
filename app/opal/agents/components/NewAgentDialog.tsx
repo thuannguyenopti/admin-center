@@ -19,6 +19,21 @@ import { useRouter } from "next/navigation";
 
 type Step = "entry" | "designing" | "preview" | "building";
 
+// ─── Template Agents (from opal-v3) ──────────────────────────────────────────
+
+const TEMPLATE_AGENTS = [
+    { emoji: "✍️", name: "Write an email campaign", desc: "Draft multi-step email sequences from a single brief, personalised per audience segment.", tags: ["Content strategy", "Copywriting"] },
+    { emoji: "🌐", name: "Optimize my GEO", desc: "Audit your GEO footprint against competitors and generate localised messaging recommendations.", tags: ["SEO/GEO", "Analytics"] },
+    { emoji: "📊", name: "Analyze my competitors", desc: "Map competitor messaging at scale and surface content gaps into an actionable brief.", tags: ["Competitive analysis", "Research"] },
+    { emoji: "🧪", name: "Set up an A/B experiment", desc: "Define hypothesis, write variants, and configure your test without clunky back-and-forth.", tags: ["Testing", "Experimentation"] },
+    { emoji: "🗓️", name: "Build a content calendar", desc: "Plan and schedule content across channels with smart timing recommendations.", tags: ["Content strategy", "Planning"] },
+    { emoji: "⚡", name: "Generate ad variations", desc: "Create multiple ad copy variations from a single brief, scored by predicted performance.", tags: ["Paid media", "Testing"] },
+    { emoji: "🔍", name: "Audit my SEO performance", desc: "Crawl your site for technical SEO issues and benchmark keyword rankings against competitors.", tags: ["Technical SEO", "Keywords"] },
+    { emoji: "📱", name: "Create social media strategy", desc: "Build a channel-by-channel strategy with tone, cadence, and a 30-day content starter pack.", tags: ["Strategy", "Social media"] },
+    { emoji: "🚀", name: "Launch a campaign from brief", desc: "Turn a creative brief into a fully configured campaign with copy, targeting, and scheduling.", tags: ["Automation", "Campaigns"] },
+    { emoji: "🎯", name: "Personalize audience segments", desc: "Cluster your audience into high-value segments and generate tailored messaging for each.", tags: ["Personalization", "Segmentation"] },
+];
+
 // ─── Mock Preview Data ────────────────────────────────────────────────────────
 
 const MOCK = {
@@ -152,6 +167,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
     const [toolsOpen, setToolsOpen] = useState(false);
     const [paramsOpen, setParamsOpen] = useState(false);
     const [edgesOpen, setEdgesOpen] = useState(false);
+    const [showAllTemplates, setShowAllTemplates] = useState(false);
 
     const msgs = step === "building" ? BUILDING_MSGS : DESIGNING_MSGS;
 
@@ -223,6 +239,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
             setStep("entry");
             setPrompt("");
             setEditingPrompt(false);
+            setShowAllTemplates(false);
         }, 300);
     };
 
@@ -298,7 +315,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                 {/* ── ENTRY ─────────────────────────────────────────────── */}
                 {step === "entry" && (
                     <Box display="flex" flexDirection="column" style={{ height: "100%" }}>
-                        {/* Gradient hero */}
+                        {/* Gradient hero — fixed */}
                         <Box
                             px="40"
                             pt="32"
@@ -342,65 +359,211 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Text>
                         </Box>
 
-                        {/* Floating textarea card */}
-                        <Box px="40" py="24" style={{ flexShrink: 0 }}>
-                            <Box
-                                bg="bg.default"
-                                rounded="lg"
-                                p="20"
-                                style={{
-                                    boxShadow: "0 4px 24px rgba(0,0,0,0.09)",
-                                    border: "1px solid var(--ax-colors-border-tertiary)",
-                                }}
-                            >
-                                <Textarea
-                                    placeholder="I need an agent to..."
-                                    value={prompt}
-                                    onChange={(e) => setPrompt(e.target.value)}
+                        {/* Scrollable body */}
+                        <Box style={{ flex: 1, overflowY: "auto" }}>
+                            {/* Floating textarea card */}
+                            <Box px="40" py="24">
+                                <Box
+                                    bg="bg.default"
+                                    rounded="lg"
+                                    p="20"
                                     style={{
-                                        minHeight: 100,
-                                        resize: "vertical",
-                                        border: "none",
-                                        outline: "none",
-                                        boxShadow: "none",
-                                        fontSize: 15,
-                                        lineHeight: 1.65,
-                                        padding: 0,
+                                        boxShadow: "0 4px 24px rgba(0,0,0,0.09)",
+                                        border: "1px solid var(--ax-colors-border-tertiary)",
                                     }}
-                                />
+                                >
+                                    <Textarea
+                                        placeholder="I need an agent to..."
+                                        value={prompt}
+                                        onChange={(e) => setPrompt(e.target.value)}
+                                        style={{
+                                            minHeight: 100,
+                                            resize: "vertical",
+                                            border: "none",
+                                            outline: "none",
+                                            boxShadow: "none",
+                                            fontSize: 15,
+                                            lineHeight: 1.65,
+                                            padding: 0,
+                                        }}
+                                    />
+                                    <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="space-between"
+                                        mt="12"
+                                        pt="12"
+                                        borderT="1"
+                                        borderColor="border.tertiary"
+                                    >
+                                        <Button
+                                            appearance="subtle"
+                                            size="sm"
+                                            icon={<IconScrewdriverWrench size={13} />}
+                                            onClick={() => {
+                                                handleClose();
+                                                router.push("/opal/agents/setup");
+                                            }}
+                                        >
+                                            Build from scratch
+                                        </Button>
+                                        <Button
+                                            appearance="primary"
+                                            iconPosition="end"
+                                            icon={<IconArrowRight size={13} />}
+                                            onClick={() => setStep("designing")}
+                                        >
+                                            Generate Agent
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            </Box>
+
+                            {/* ── Templates section ─────────────────────── */}
+                            <Box px="40" pb="32">
+                                {/* Divider label */}
                                 <Box
                                     display="flex"
                                     alignItems="center"
-                                    justifyContent="space-between"
-                                    mt="12"
-                                    pt="12"
-                                    borderT="1"
-                                    borderColor="border.tertiary"
+                                    gap="12"
+                                    style={{ marginBottom: 20 }}
                                 >
+                                    <Box style={{ flex: 1, height: 1, background: "var(--ax-colors-border-tertiary)" }} />
+                                    <Text
+                                        fontSize="xs"
+                                        fontWeight="500"
+                                        color="fg.tertiary"
+                                        style={{ letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}
+                                    >
+                                        Or start from a template
+                                    </Text>
+                                    <Box style={{ flex: 1, height: 1, background: "var(--ax-colors-border-tertiary)" }} />
+                                </Box>
+
+                                {/* Agent cards grid */}
+                                <Box
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns: "repeat(3, 1fr)",
+                                        gap: 12,
+                                    }}
+                                >
+                                    {(showAllTemplates ? TEMPLATE_AGENTS : TEMPLATE_AGENTS.slice(0, 3)).map((agent) => (
+                                        <Box
+                                            key={agent.name}
+                                            display="flex"
+                                            flexDirection="column"
+                                            rounded="lg"
+                                            p="16"
+                                            style={{
+                                                border: "1px solid var(--ax-colors-border-tertiary)",
+                                                background: "var(--ax-colors-bg-default)",
+                                                transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.08)";
+                                                (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-default)";
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                (e.currentTarget as HTMLElement).style.boxShadow = "";
+                                                (e.currentTarget as HTMLElement).style.borderColor = "var(--ax-colors-border-tertiary)";
+                                            }}
+                                        >
+                                            {/* Emoji + name */}
+                                            <Box display="flex" alignItems="center" gap="10" mb="8">
+                                                <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
+                                                <Text fontWeight="600" fontSize="sm" style={{ lineHeight: 1.3 }}>
+                                                    {agent.name}
+                                                </Text>
+                                            </Box>
+
+                                            {/* Description */}
+                                            <Text
+                                                fontSize="xs"
+                                                color="fg.secondary"
+                                                style={{ lineHeight: 1.55, flex: 1 }}
+                                            >
+                                                {agent.desc}
+                                            </Text>
+
+                                            {/* Tags */}
+                                            <Box display="flex" gap="4" mt="10" mb="12" style={{ flexWrap: "wrap" }}>
+                                                {agent.tags.map((tag) => (
+                                                    <Box
+                                                        key={tag}
+                                                        px="6"
+                                                        py="2"
+                                                        rounded="full"
+                                                        style={{
+                                                            background: "var(--ax-colors-bg-secondary)",
+                                                            fontSize: 10,
+                                                            color: "var(--ax-colors-fg-tertiary)",
+                                                            fontWeight: 500,
+                                                        }}
+                                                    >
+                                                        {tag}
+                                                    </Box>
+                                                ))}
+                                            </Box>
+
+                                            {/* CTAs */}
+                                            <Box display="flex" gap="8" alignItems="center">
+                                                <Button
+                                                    appearance="subtle"
+                                                    size="sm"
+                                                    style={{
+                                                        flex: 1,
+                                                        border: "1px solid var(--ax-colors-border-default)",
+                                                        justifyContent: "center",
+                                                    }}
+                                                    onClick={() => {
+                                                        handleClose();
+                                                        router.push("/opal/opal-v3");
+                                                    }}
+                                                >
+                                                    View
+                                                </Button>
+                                                <Button
+                                                    appearance="primary"
+                                                    size="sm"
+                                                    style={{ flex: 1, justifyContent: "center" }}
+                                                    onClick={() => {
+                                                        try {
+                                                            const draft = {
+                                                                agentName: agent.name,
+                                                                description: agent.desc,
+                                                                promptTemplate: "",
+                                                                tools: "",
+                                                                variables: [],
+                                                            };
+                                                            sessionStorage.setItem("ai_agent_draft", JSON.stringify(draft));
+                                                        } catch { /* ignore */ }
+                                                        onOpenChange(false);
+                                                        setTimeout(() => setStep("entry"), 400);
+                                                        router.push("/opal/agents/setup?mode=create&from=template");
+                                                    }}
+                                                >
+                                                    Select
+                                                </Button>
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </Box>
+
+                                {/* Show more / Show less */}
+                                <Box display="flex" justifyContent="center" mt="16">
                                     <Button
                                         appearance="subtle"
                                         size="sm"
-                                        icon={<IconScrewdriverWrench size={13} />}
-                                        onClick={() => {
-                                            handleClose();
-                                            router.push("/opal/agents/setup");
-                                        }}
-                                    >
-                                        Build from scratch
-                                    </Button>
-                                    <Button
-                                        appearance="primary"
                                         iconPosition="end"
-                                        icon={<IconArrowRight size={13} />}
-                                        onClick={() => setStep("designing")}
+                                        icon={showAllTemplates ? <IconChevronUp size={13} /> : <IconChevronDown size={13} />}
+                                        onClick={() => setShowAllTemplates((v) => !v)}
                                     >
-                                        Generate Agent
+                                        {showAllTemplates ? "Show less" : `Show more (${TEMPLATE_AGENTS.length - 3} more)`}
                                     </Button>
                                 </Box>
                             </Box>
                         </Box>
-
-                        <Box style={{ flex: 1 }} />
                     </Box>
                 )}
 
