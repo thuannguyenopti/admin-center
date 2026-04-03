@@ -13,6 +13,16 @@ yarn lint         # ESLint via Next.js
 
 Package manager is **Yarn 4** (Corepack). Use `yarn` not `npm`. Run `corepack enable` (requires sudo) if `yarn dev` fails. To install with auth-gated registry: `yarn install:auth` (uses `.env`). Fallback without Corepack: `node_modules/.bin/next dev`.
 
+## ⚠️ Critical: Build Script & Webpack Rules
+
+**NEVER add `--webpack` to the `next build` command.** Forcing webpack mode breaks Next.js's internal CSS extraction pipeline for `transpilePackages: ["@optiaxiom/react"]`, causing all Axiom component styles (borders, fills, backgrounds) to be silently stripped from the Vercel production build.
+
+**NEVER add custom `webpack(config)` SVG rule mutations** (pushing to `config.module.rules`, wrapping/excluding asset rules). Mutating the raw webpack rules array breaks the same CSS extraction. For SVG support:
+- Dev (Turbopack): use the `turbopack.rules` block in `next.config.ts` — already configured
+- Production: SVGs in `public/` are served as static assets; React SVG components in `app/cmp/assets/` use SVGR via import — no extra webpack rule needed
+
+If Axiom component styles (button borders, input fills, etc.) are missing in production but work locally, the root cause is almost always one of the above.
+
 ## Architecture
 
 This is a **multi-product UI prototype** built with Next.js 16 (App Router), React 19, TypeScript, and the Optimizely Axiom design system. It renders several independent product areas as a single Next.js app:
