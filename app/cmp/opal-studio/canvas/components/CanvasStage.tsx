@@ -44,6 +44,7 @@ export function CanvasStage({
 	animatingIds,
 	onArtboardMove,
 	canvasSettings,
+	isGenerating = false,
 	promptBarHeight = 160,
 }: {
 	artboards: Artboard[];
@@ -56,6 +57,7 @@ export function CanvasStage({
 	animatingIds: string[];
 	onArtboardMove: (id: string, x: number, y: number) => void;
 	canvasSettings: CanvasSettings;
+	isGenerating?: boolean;
 	promptBarHeight?: number;
 }) {
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -332,6 +334,21 @@ export function CanvasStage({
 									pointerEvents: "none",
 								}}
 							/>
+
+							{/* Generating shimmer overlay */}
+							{isGenerating && (
+								<div
+									style={{
+										position: "absolute",
+										inset: 0,
+										background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)",
+										backgroundSize: "200% 100%",
+										animation: "shimmer 1.5s ease-in-out infinite",
+										pointerEvents: "none",
+										zIndex: 5,
+									}}
+								/>
+							)}
 
 							{/* Text overlay — scales proportionally per artboard */}
 							{textOverlayEnabled && (() => {
