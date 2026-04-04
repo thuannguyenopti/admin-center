@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { GEO_AUDITOR, SEO_METADATA_OPTIMIZATION, CONTENT_REFRESH_ANALYSIS } from "../suggestedAgentData";
 import { Box, Text, Button, Textarea, Disclosure, DisclosureTrigger, DisclosureContent, Input } from "@optiaxiom/react";
 import {
     IconChevronLeft,
@@ -23,16 +24,17 @@ type Step = "entry" | "designing" | "preview" | "building";
 // ─── Template Agents (from opal-v3) ──────────────────────────────────────────
 
 const TEMPLATE_AGENTS = [
-    { emoji: "✍️", name: "Write an email campaign", desc: "Draft multi-step email sequences from a single brief, personalised per audience segment.", tags: ["Content strategy", "Copywriting"] },
-    { emoji: "🌐", name: "Optimize my GEO", desc: "Audit your GEO footprint against competitors and generate localised messaging recommendations.", tags: ["SEO/GEO", "Analytics"] },
-    { emoji: "📊", name: "Analyze my competitors", desc: "Map competitor messaging at scale and surface content gaps into an actionable brief.", tags: ["Competitive analysis", "Research"] },
-    { emoji: "🧪", name: "Set up an A/B experiment", desc: "Define hypothesis, write variants, and configure your test without clunky back-and-forth.", tags: ["Testing", "Experimentation"] },
-    { emoji: "🗓️", name: "Build a content calendar", desc: "Plan and schedule content across channels with smart timing recommendations.", tags: ["Content strategy", "Planning"] },
-    { emoji: "⚡", name: "Generate ad variations", desc: "Create multiple ad copy variations from a single brief, scored by predicted performance.", tags: ["Paid media", "Testing"] },
-    { emoji: "🔍", name: "Audit my SEO performance", desc: "Crawl your site for technical SEO issues and benchmark keyword rankings against competitors.", tags: ["Technical SEO", "Keywords"] },
-    { emoji: "📱", name: "Create social media strategy", desc: "Build a channel-by-channel strategy with tone, cadence, and a 30-day content starter pack.", tags: ["Strategy", "Social media"] },
-    { emoji: "🚀", name: "Launch a campaign from brief", desc: "Turn a creative brief into a fully configured campaign with copy, targeting, and scheduling.", tags: ["Automation", "Campaigns"] },
-    { emoji: "🎯", name: "Personalize audience segments", desc: "Cluster your audience into high-value segments and generate tailored messaging for each.", tags: ["Personalization", "Segmentation"] },
+    { emoji: "✍️", name: "Write an email campaign", desc: "Draft multi-step email sequences from a single brief, personalised per audience segment.", tags: ["Content strategy", "Copywriting"], promptTemplate: "You are an expert email marketer. Draft a multi-step email sequence from [[brief]], personalised per audience segment.\n\n{Instruction}\n1. Define the email sequence structure (welcome, nurture, conversion).\n2. Write subject lines and body copy for each step, tailored to [[segment]].\n3. Recommend send cadence and A/B test variants for subject lines.\n\nUse `Email Validator`, `Template Gallery`, `Audience Segmenter`.", tools: "", variables: [], inferenceLevel: "balanced", creativity: 0.4 },
+    { emoji: "🌐", name: "Optimize my GEO", desc: GEO_AUDITOR.description, tags: ["SEO/GEO", "Analytics"], promptTemplate: GEO_AUDITOR.promptTemplate, tools: GEO_AUDITOR.tools, variables: GEO_AUDITOR.variables },
+    { emoji: "📊", name: "Analyze my competitors", desc: "Map competitor messaging at scale and surface content gaps into an actionable brief.", tags: ["Competitive analysis", "Research"], promptTemplate: "", tools: "", variables: [] },
+    { emoji: "🧪", name: "Set up an A/B experiment", desc: "Define hypothesis, write variants, and configure your test without clunky back-and-forth.", tags: ["Testing", "Experimentation"], promptTemplate: "", tools: "", variables: [] },
+    { emoji: "🗓️", name: "Build a content calendar", desc: "Plan and schedule content across channels with smart timing recommendations.", tags: ["Content strategy", "Planning"], promptTemplate: "", tools: "", variables: [] },
+    { emoji: "⚡", name: "Generate ad variations", desc: "Create multiple ad copy variations from a single brief, scored by predicted performance.", tags: ["Paid media", "Testing"], promptTemplate: "", tools: "", variables: [] },
+    { emoji: "🔍", name: "Audit my SEO performance", desc: SEO_METADATA_OPTIMIZATION.description, tags: ["Technical SEO", "Keywords"], promptTemplate: SEO_METADATA_OPTIMIZATION.promptTemplate, tools: SEO_METADATA_OPTIMIZATION.tools, variables: SEO_METADATA_OPTIMIZATION.variables },
+    { emoji: "🔄", name: "Content Refresh Analysis", desc: CONTENT_REFRESH_ANALYSIS.description, tags: ["SEO", "Content"], promptTemplate: CONTENT_REFRESH_ANALYSIS.promptTemplate, tools: CONTENT_REFRESH_ANALYSIS.tools, variables: CONTENT_REFRESH_ANALYSIS.variables },
+    { emoji: "📱", name: "Create social media strategy", desc: "Build a channel-by-channel strategy with tone, cadence, and a 30-day content starter pack.", tags: ["Strategy", "Social media"], promptTemplate: "", tools: "", variables: [] },
+    { emoji: "🚀", name: "Launch a campaign from brief", desc: "Turn a creative brief into a fully configured campaign with copy, targeting, and scheduling.", tags: ["Automation", "Campaigns"], promptTemplate: "You are a campaign launch specialist. Turn the provided creative brief into a fully configured campaign with copy, targeting, and scheduling.\n\n{Instruction}\n1. Parse [[brief]] and extract campaign goals, audience, and key messages.\n2. Write copy variants for each channel: email, social, paid.\n3. Define audience targeting parameters and recommended scheduling.\n4. Output a campaign launch checklist.\n\nUse `Campaign Builder`, `Audience Segmenter`, `Copy Generator`.", tools: "", variables: [] },
+    { emoji: "🎯", name: "Personalize audience segments", desc: "Cluster your audience into high-value segments and generate tailored messaging for each.", tags: ["Personalization", "Segmentation"], promptTemplate: "", tools: "", variables: [] },
 ];
 
 // ─── Mock Preview Data ────────────────────────────────────────────────────────
@@ -121,6 +123,26 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
     const [showAllTemplates, setShowAllTemplates] = useState(false);
 
     const msgs = step === "building" ? BUILDING_MSGS : DESIGNING_MSGS;
+
+    // Suggest agents based on keywords in the prompt
+    const getSuggestedAgents = (text: string) => {
+        const lower = text.toLowerCase();
+        const matched = new Set<string>();
+        if (/\bgeo\b/.test(lower)) {
+            matched.add("Optimize my GEO");
+        }
+        if (/\bseo\b/.test(lower)) {
+            matched.add("Audit my SEO performance");
+            matched.add("Optimize my GEO");
+            matched.add("Content Refresh Analysis");
+        }
+        if (/campaign brief|campaign from brief|brief/.test(lower)) {
+            matched.add("Launch a campaign from brief");
+            matched.add("Write an email campaign");
+        }
+        return TEMPLATE_AGENTS.filter((a) => matched.has(a.name));
+    };
+    const suggestedAgents = getSuggestedAgents(prompt);
 
     // Cycle loading messages
     useEffect(() => {
@@ -333,6 +355,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         placeholder="I need an agent to..."
                                         value={prompt}
                                         onChange={(e) => setPrompt(e.target.value)}
+                                        autoFocus
                                         style={{
                                             minHeight: 160,
                                             resize: "vertical",
@@ -370,6 +393,136 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     </Box>
                                 </Box>
                             </Box>
+
+                            {/* ── Opal Suggestions ──────────────────────── */}
+                            {suggestedAgents.length > 0 && (
+                                <Box px="40" pt="4" pb="8">
+                                    <Box
+                                        style={{
+                                            borderRadius: 10,
+                                            background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)",
+                                            padding: "16px 20px",
+                                        }}
+                                    >
+                                        {/* Header */}
+                                        <Box display="flex" alignItems="center" gap="8" mb="12">
+                                            <img src="/opal-orb.png" alt="Opal" width={16} height={16} style={{ flexShrink: 0 }} />
+                                            <Text fontWeight="500" fontSize="md" color="fg.default">
+                                                Start with the following agents and fine tune them for your team
+                                            </Text>
+                                        </Box>
+
+                                        {/* Suggested agent cards */}
+                                        <Box
+                                            style={{
+                                                display: "grid",
+                                                gridTemplateColumns: suggestedAgents.length === 1 ? "1fr" : "repeat(2, 1fr)",
+                                                gap: 10,
+                                            }}
+                                        >
+                                            {suggestedAgents.map((agent) => (
+                                                <div
+                                                    key={agent.name}
+                                                    data-agent-card=""
+                                                    style={{
+                                                        position: "relative",
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        borderRadius: 8,
+                                                        padding: "14px 16px",
+                                                        paddingBottom: 24,
+                                                        border: "1px solid #ddd6fe",
+                                                        background: "var(--ax-colors-bg-default)",
+                                                        transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+                                                        overflow: "hidden",
+                                                        minHeight: 120,
+                                                        gap: 6,
+                                                    }}
+                                                >
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                                        <span style={{ fontSize: "var(--ax-fontSize-xl-fontSize)", lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
+                                                        <Text fontWeight="600" fontSize="md" color="fg.default" style={{ lineHeight: 1.3 }}>
+                                                            {agent.name}
+                                                        </Text>
+                                                    </div>
+                                                    <Text
+                                                        fontSize="sm"
+                                                        color="fg.secondary"
+                                                        style={{
+                                                            lineHeight: 1.5,
+                                                            overflow: "hidden",
+                                                            display: "-webkit-box",
+                                                            WebkitLineClamp: 2,
+                                                            WebkitBoxOrient: "vertical",
+                                                        } as React.CSSProperties}
+                                                    >
+                                                        {agent.desc}
+                                                    </Text>
+                                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                                        {agent.tags.map((tag) => (
+                                                            <span
+                                                                key={tag}
+                                                                style={{
+                                                                    fontSize: "var(--ax-fontSize-sm-fontSize)",
+                                                                    color: "var(--ax-colors-fg-secondary)",
+                                                                    background: "var(--ax-colors-bg-secondary)",
+                                                                    borderRadius: 12,
+                                                                    padding: "2px 10px",
+                                                                }}
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    {/* CTAs — hover-only via CSS */}
+                                                    <div data-agent-card-ctas="">
+                                                        <Button
+                                                            appearance="subtle"
+                                                            size="md"
+                                                            style={{
+                                                                flex: 1,
+                                                                border: "1px solid var(--ax-colors-border-default)",
+                                                                justifyContent: "center",
+                                                            }}
+                                                            onClick={() => {
+                                                                handleClose();
+                                                                router.push("/opal/opal-v3");
+                                                            }}
+                                                        >
+                                                            View
+                                                        </Button>
+                                                        <Button
+                                                            appearance="inverse"
+                                                            size="md"
+                                                            style={{ flex: 1, justifyContent: "center" }}
+                                                            onClick={() => {
+                                                                try {
+                                                                    const draft = {
+                                                                        agentName: agent.name,
+                                                                        description: agent.desc,
+                                                                        emoji: agent.emoji || "",
+                                                                        promptTemplate: agent.promptTemplate || "",
+                                                                        tools: agent.tools || "",
+                                                                        variables: agent.variables || [],
+                                                                        inferenceLevel: agent.inferenceLevel || "balanced",
+                                                                        creativity: agent.creativity ?? 0.4,
+                                                                    };
+                                                                    sessionStorage.setItem("ai_agent_draft", JSON.stringify(draft));
+                                                                } catch { /* ignore */ }
+                                                                onOpenChange(false);
+                                                                setTimeout(() => setStep("entry"), 400);
+                                                                router.push("/opal/agents/setup?mode=create&from=suggested");
+                                                            }}
+                                                        >
+                                                            Customize
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            )}
 
                             {/* ── Templates section ─────────────────────── */}
                             <Box px="40" pb="24">
@@ -486,6 +639,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                                             const draft = {
                                                                 agentName: agent.name,
                                                                 description: agent.desc,
+                                                                emoji: agent.emoji || "",
                                                                 promptTemplate: "",
                                                                 tools: "",
                                                                 variables: [],

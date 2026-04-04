@@ -417,6 +417,40 @@ function SpecializedAgentSetupContent() {
     const shouldAutoOpenAssistant = searchParams.get("capturePanel") === "assistant";
     const promptTemplateRef = useRef<HTMLTextAreaElement | null>(null);
     const [isMounted, setIsMounted] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleSave = () => {
+        setIsSaving(true);
+        const now = new Date();
+        const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        const savedAgent = {
+            id: agentId || `user_agent_${Date.now()}`,
+            emoji: agentEmoji,
+            name: agentName || "Untitled Agent",
+            handle: `@${(agentId || "agent").replace(/[^a-z0-9_]/g, "_")}`,
+            description,
+            promptTemplate,
+            tools,
+            variables,
+            inferenceLevel,
+            creativity,
+            creator: { name: "You", type: "user" as const },
+            tags: [] as { label: string; bg: string; color: string }[],
+            activity: "0 Runs",
+            lastModified: { date: dateStr, user: "You" },
+            status: "Active",
+            savedAt: Date.now(),
+        };
+        try {
+            const existing = JSON.parse(localStorage.getItem("opal_user_agents") || "[]");
+            const idx = existing.findIndex((a: { id: string }) => a.id === savedAgent.id);
+            if (idx >= 0) existing[idx] = savedAgent;
+            else existing.unshift(savedAgent);
+            localStorage.setItem("opal_user_agents", JSON.stringify(existing));
+        } catch { /* ignore */ }
+        setTimeout(() => router.push("/opal/agents"), 500);
+    };
+
     useEffect(() => {
         setIsMounted(true);
         // Only show coach mark if panel is closed and user hasn't dismissed it
@@ -486,6 +520,7 @@ function SpecializedAgentSetupContent() {
     // Setup Fields State
     const [agentName, setAgentName] = useState("");
     const [agentId, setAgentId] = useState("");
+    const [agentEmoji, setAgentEmoji] = useState("");
     const [isActive, setIsActive] = useState(false);
     const [description, setDescription] = useState("");
     const [creativity, setCreativity] = useState(40);
@@ -1159,24 +1194,26 @@ function SpecializedAgentSetupContent() {
                 ]);
                 setCreativity(40);
             }
-        } else if (from === "ai" || from === "template") {
+        } else if (from === "ai" || from === "template" || from === "suggested") {
             // Load draft from the new-agent dialog (AI-generated or template selection)
             try {
                 const raw = sessionStorage.getItem("ai_agent_draft");
                 if (raw) {
                     const draft = JSON.parse(raw);
-                    setDetailsOpen(from !== "ai");
-                    setInputOpen(from === "ai");
+                    setDetailsOpen(true);
+                    setInputOpen(true);
+                    setOutputOpen(from === "suggested");
                     setIsActive(false);
                     setAgentName(draft.agentName || "");
                     setAgentId((draft.agentName || "").toLowerCase().replace(/[^a-z0-9]+/g, "_"));
+                    setAgentEmoji(draft.emoji || "");
                     setDescription(draft.description || "");
                     setPromptTemplate(draft.promptTemplate || "");
                     setTools(draft.tools || "");
                     setVariables(draft.variables || []);
-                    setCreativity(40);
-                    setInferenceLevel("balanced");
-                    if (from === "ai") {
+                    setInferenceLevel(draft.inferenceLevel || "balanced");
+                    setCreativity(draft.creativity !== undefined ? Math.round(draft.creativity * 100) : 40);
+                    if (from === "ai" || from === "suggested") {
                         setTimeout(() => promptTemplateRef.current?.focus(), 300);
                     }
                     return;
@@ -1270,7 +1307,7 @@ function SpecializedAgentSetupContent() {
                                         )}
                                         {(() => {
                                             const agentId = searchParams.get("id");
-                                            const emoji = agentId ? AGENT_EMOJIS[agentId] : undefined;
+                                            const emoji = agentId ? AGENT_EMOJIS[agentId] : agentEmoji || undefined;
                                             return emoji ? (
                                                 <Box style={{
                                                     flexShrink: 0,
@@ -1297,13 +1334,11 @@ function SpecializedAgentSetupContent() {
                                         <Button
                                             appearance="primary"
                                             size="lg"
-                                            onClick={() => {
-                                                // Save logic here
-                                                console.log('Saving...');
-                                            }}
-                                            disabled={isReadOnly}
+                                            onClick={handleSave}
+                                            disabled={isReadOnly || isSaving}
+                                            loading={isSaving}
                                         >
-                                            Save
+                                            {isSaving ? "Saving..." : "Save"}
                                         </Button>
                                         <div
                                             id="button-test-run"
