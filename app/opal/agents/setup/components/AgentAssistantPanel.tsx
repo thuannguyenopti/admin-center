@@ -21,7 +21,7 @@ type CheckerCategory = {
     maxScore: number;
 };
 
-type CheckerResult = {
+export type CheckerResult = {
     total: number;
     maxTotal: number;
     passed: boolean;
@@ -155,7 +155,7 @@ const STEPPER_ITEMS = [
 
 // ─── Evaluator Functions ──────────────────────────────────────────────────────
 
-function evaluateStep1(prompt: string): CheckerResult {
+export function evaluateStep1(prompt: string): CheckerResult {
     const categories: CheckerCategory[] = [
         {
             key: "C",
@@ -238,6 +238,42 @@ function evaluateStep2(prompt: string, variables: any[]): CheckerResult {
     return { total, maxTotal: 100, passed, categories, suggestions, summary };
 }
 
+function evaluateAgent(prompt: string, variables: any[], tools: string): CheckerResult {
+    const toolList = tools.split(",").map(t => t.trim()).filter(Boolean);
+    const hasRole = /(you are|your role is|as a)/i.test(prompt);
+    const hasStructure = prompt.split("\n").filter(l => l.trim()).length > 3;
+    const hasVarSyntax = /\[\[.+?\]\]/.test(prompt);
+    const hasVarDefined = variables.length > 0;
+    const hasConstraints = /(don'?t|never|always|avoid|do not)/i.test(prompt);
+
+    const varScore = hasVarSyntax && hasVarDefined ? 20 : (hasVarSyntax || hasVarDefined ? 10 : 0);
+
+    const categories: CheckerCategory[] = [
+        { key: "R", label: "Prompt — Role & context",   score: hasRole       ? 20 : 0, maxScore: 20 },
+        { key: "S", label: "Prompt — Structure",        score: hasStructure  ? 20 : 0, maxScore: 20 },
+        { key: "V", label: "Variables wired",           score: varScore,               maxScore: 20 },
+        { key: "T", label: "Tools configured",          score: toolList.length > 0 ? 20 : 0, maxScore: 20 },
+        { key: "C", label: "Constraints & guardrails",  score: hasConstraints ? 20 : 0, maxScore: 20 },
+    ];
+
+    const total = categories.reduce((s, c) => s + c.score, 0);
+    const passed = total >= 60;
+
+    const suggestions: string[] = [];
+    if (!hasRole) suggestions.push("Define a role — e.g. 'You are a helpful marketing assistant...'");
+    if (!hasStructure) suggestions.push("Add more structure with sections or numbered steps");
+    if (!hasVarSyntax) suggestions.push("Use [[variable_name]] in the prompt to make it dynamic");
+    else if (!hasVarDefined) suggestions.push("Define matching variables in the Variables section");
+    if (toolList.length === 0) suggestions.push("Add at least one tool to extend your agent's capabilities");
+    if (!hasConstraints) suggestions.push("Add guardrails — e.g. 'Never fabricate data' or 'Always respond in English'");
+
+    const summary = passed
+        ? "This agent has a solid foundation — clear role, structured prompt, and key configuration in place."
+        : "A few additions will make this agent significantly more reliable and useful.";
+
+    return { total, maxTotal: 100, passed, categories, suggestions, summary };
+}
+
 function suggestTools(prompt: string): { name: string; description: string; snippet: string }[] {
     const lower = prompt.toLowerCase();
     const tools: { name: string; description: string; snippet: string }[] = [];
@@ -308,21 +344,32 @@ function KeyConceptCallout({
     );
 }
 
-function SuggestedNextMovesCallout({ onOpenGuidedSetup }: { onOpenGuidedSetup: () => void }) {
+function SuggestedNextMovesCallout({
+    onOpenGuidedSetup,
+    prompt,
+    variables,
+    tools,
+}: {
+    onOpenGuidedSetup: () => void;
+    prompt: string;
+    variables: any[];
+    tools: string;
+}) {
+    const [scoreResult, setScoreResult] = useState<CheckerResult | null>(null);
+
     return (
         <Box
             display="flex"
-            gap="10"
+            flexDirection="column"
+            gap="8"
             style={{
                 background: "rgba(99,102,241,0.06)",
                 border: "1px solid rgba(99,102,241,0.18)",
                 borderRadius: "12px",
-                padding: "12px 14px",
+                padding: "12px 22px",
             }}
         >
-            <IconBook size={16} style={{ flexShrink: 0, marginTop: "3px", color: "#5B5CEB" }} />
-            <Box display="flex" flexDirection="column" gap="8">
-                <Text fontSize="md" fontWeight="500" style={{ color: "#4338ca" }}>
+                <Text fontSize="md" fontWeight="600" style={{ color: "#4338ca" }}>
                     Suggested next moves
                 </Text>
                 <Text fontSize="md" style={{ color: "#4f576e", lineHeight: "1.55" }}>
@@ -348,7 +395,40 @@ function SuggestedNextMovesCallout({ onOpenGuidedSetup }: { onOpenGuidedSetup: (
                     </button>{" "}
                     to stitch the steps together. If you&apos;re still shaping the idea, ask Opal to help.
                 </Text>
-            </Box>
+
+                {/* Score Agent */}
+                {!scoreResult ? (
+                    <Box style={{ alignSelf: "flex-start", marginTop: "4px" }}>
+                        <Button
+                            appearance="default"
+                            size="sm"
+                            icon={<IconCircleCheckAxiom size={13} />}
+                            onClick={() => setScoreResult(evaluateAgent(prompt, variables, tools))}
+                        >
+                            Score Agent
+                        </Button>
+                    </Box>
+                ) : (
+                    <Box mt="8" display="flex" flexDirection="column" gap="8">
+                        <CheckerCard result={scoreResult} />
+                        <button
+                            type="button"
+                            onClick={() => setScoreResult(null)}
+                            style={{
+                                alignSelf: "flex-start",
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                color: "#4f576e",
+                                fontSize: "12px",
+                                textDecoration: "underline",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Reset score
+                        </button>
+                    </Box>
+                )}
         </Box>
     );
 }
@@ -580,6 +660,7 @@ interface AgentAssistantPanelProps {
     multiTurnMode?: boolean;
     fromAi?: boolean;
     enhancePopoverOpen?: boolean;
+    promptReviewResult?: CheckerResult | null;
 }
 
 // ─── Multi-turn Step 5 Data ───────────────────────────────────────────────────
@@ -619,6 +700,7 @@ export function AgentAssistantPanel({
     multiTurnMode = false,
     fromAi = false,
     enhancePopoverOpen = false,
+    promptReviewResult = null,
 }: AgentAssistantPanelProps) {
     const router = useRouter();
     const DEFAULT_PANEL_WIDTH = 348;
@@ -1148,7 +1230,7 @@ export function AgentAssistantPanel({
                                         style={{
                                             background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
                                             borderRadius: "8px",
-                                            padding: "12px 14px 14px",
+                                            padding: "12px 18px 14px",
                                             opacity: enhancePopoverOpen ? 0.4 : 1,
                                             pointerEvents: enhancePopoverOpen ? "none" : undefined,
                                             transition: "opacity 0.2s ease",
@@ -1201,8 +1283,21 @@ export function AgentAssistantPanel({
                                         </Text>
                                     )}
 
+                                    {/* ── Prompt Review Result ─────────────────── */}
+                                    {promptReviewResult && (
+                                        <Box display="flex" flexDirection="column" gap="8">
+                                            <Text fontSize="md" fontWeight="600" color="fg.default">Prompt Review</Text>
+                                            <CheckerCard result={promptReviewResult} />
+                                        </Box>
+                                    )}
+
                                         <Box display="flex" flexDirection="column" gap="32">
-                                            <SuggestedNextMovesCallout onOpenGuidedSetup={goToGuidedHome} />
+                                            <SuggestedNextMovesCallout
+                                                onOpenGuidedSetup={goToGuidedHome}
+                                                prompt={promptTemplate}
+                                                variables={variables}
+                                                tools={tools}
+                                            />
 
                                             <Box display="flex" flexDirection="column" gap="10">
                                                 <Text fontSize="md" fontWeight="500" color="fg.default" style={{ lineHeight: "1.4" }}>
@@ -1278,7 +1373,7 @@ export function AgentAssistantPanel({
                                             style={{
                                                 background: "radial-gradient(circle at 10% 20%, rgba(245,243,255,1) 0%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
                                                 borderRadius: "8px",
-                                                padding: "12px 14px 14px",
+                                                padding: "12px 18px 14px",
                                                 opacity: enhancePopoverOpen ? 0.4 : 1,
                                                 pointerEvents: enhancePopoverOpen ? "none" : undefined,
                                                 transition: "opacity 0.2s ease",

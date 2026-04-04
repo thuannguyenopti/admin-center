@@ -77,7 +77,7 @@ import { useLayout } from "@/app/context/LayoutContext";
 import { Range, FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import type { Version } from "./components/VersionHistory";
-import { AgentAssistantPanel } from "./components/AgentAssistantPanel";
+import { AgentAssistantPanel, evaluateStep1, type CheckerResult } from "./components/AgentAssistantPanel";
 import { EnhancePopover } from "./components/EnhancePopover";
 import { SelectionTooltip } from "./components/SelectionTooltip";
 import { ResizableDetailsTray } from "./components/ResizableDetailsTray";
@@ -276,6 +276,7 @@ type AutoGrowTextareaProps = React.ComponentProps<typeof Textarea> & {
     minHeight?: string;
     textareaRef?: React.RefObject<HTMLTextAreaElement | null>;
 };
+
 
 function AutoGrowTextarea({ minHeight = "256px", textareaRef, style, ...props }: AutoGrowTextareaProps) {
     const internalRef = useRef<HTMLTextAreaElement | null>(null);
@@ -514,18 +515,10 @@ function SpecializedAgentSetupContent() {
     const [showGuidePanel, setShowGuidePanel] = useState(shouldDefaultGuideOpen);
     const [guidePanelView, setGuidePanelView] = useState<"assistant" | "guide">(defaultGuidePanelView);
     const [enhancePopoverOpen, setEnhancePopoverOpen] = useState(false);
+    const [promptReviewResult, setPromptReviewResult] = useState<CheckerResult | null>(null);
     const enhanceButtonRef = useRef<HTMLButtonElement>(null);
     const [promptSelection, setPromptSelection] = useState<{ x: number; y: number; text: string; start: number; end: number } | null>(null);
     const [promptHighlight, setPromptHighlight] = useState<{ start: number; end: number } | null>(null);
-
-    // Restore textarea selection when context chip is active so the user can see what text they sent
-    useEffect(() => {
-        if (!promptHighlight) return;
-        const el = promptTemplateRef.current;
-        if (!el) return;
-        el.focus();
-        el.setSelectionRange(promptHighlight.start, promptHighlight.end);
-    }, [promptHighlight]);
 
     const [activeGuideStep, setActiveGuideStep] = useState<number | null>(null);
     const [highlightedField, setHighlightedField] = useState<number | null>(null);
@@ -1613,18 +1606,6 @@ function SpecializedAgentSetupContent() {
                                                         transition: "outline-color 0.3s ease",
                                                     }}
                                                 >
-                                                <Box style={{ position: "relative" }}>
-                                                <Button
-                                                    ref={enhanceButtonRef}
-                                                    appearance="default"
-                                                    size="sm"
-                                                    onClick={() => setEnhancePopoverOpen((o) => !o)}
-                                                    style={{ position: "absolute", top: -4, right: 0, zIndex: 1 }}
-                                                >
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src="/opal-orb.png" alt="" width={14} height={14} style={{ display: "inline-block", marginRight: "4px", verticalAlign: "middle" }} />
-                                                    Enhance
-                                                </Button>
                                                 <HoverCard openDelay={300}>
                                                 <Field
                                                     label={
@@ -1739,13 +1720,46 @@ function SpecializedAgentSetupContent() {
                                                                     const rect = el.getBoundingClientRect();
                                                                     setPromptSelection({ x: rect.left + rect.width / 2, y: rect.top + 10, text: selected, start: selectionStart, end: selectionEnd });
                                                                 }}
+
                                                                 onMouseDown={() => {
                                                                     setPromptHighlight(null);
                                                                 }}
                                                                 onKeyDown={(e) => {
-                                                                    if (!e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) setPromptSelection(null);
+                                                                    if (!e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                                                                        setPromptSelection(null);
+                                                                        setPromptHighlight(null);
+                                                                    }
                                                                 }}
                                                             />
+                                                            <Box
+                                                                display="flex"
+                                                                alignItems="center"
+                                                                justifyContent="flex-end"
+                                                                gap="4"
+                                                                mt="8"
+                                                            >
+                                                                <Button
+                                                                    ref={enhanceButtonRef}
+                                                                    appearance="subtle"
+                                                                    size="sm"
+                                                                    onClick={() => setEnhancePopoverOpen((o) => !o)}
+                                                                >
+                                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                                    <img src="/opal-orb.png" alt="" width={13} height={13} style={{ display: "inline-block", marginRight: "4px", verticalAlign: "middle" }} />
+                                                                    Enhance
+                                                                </Button>
+                                                                <Button
+                                                                    appearance="subtle"
+                                                                    size="sm"
+                                                                    icon={<IconCircleCheck size={13} />}
+                                                                    disabled={isReadOnly}
+                                                                    onClick={() => {
+                                                                        setPromptReviewResult(evaluateStep1(promptTemplate));
+                                                                        setShowGuidePanel(true);
+                                                                        setGuidePanelView("assistant");
+                                                                    }}
+                                                                >Review Prompt</Button>
+                                                            </Box>
                                                         </Box>
                                                     )}
                                                 </Field>
@@ -1763,7 +1777,6 @@ function SpecializedAgentSetupContent() {
                                                     </Box>
                                                 </HoverCardContent>
                                                 </HoverCard>
-                                                </Box>
                                                 </div>
 
                                                 <div
@@ -1771,6 +1784,7 @@ function SpecializedAgentSetupContent() {
                                                     onFocus={() => setActiveGuideStep(2)}
                                                     onBlur={() => setActiveGuideStep(null)}
                                                     style={{
+                                                        marginTop: "16px",
                                                         outline: highlightedField === 2 ? "2px solid var(--ax-colors-border-accent)" : "2px solid transparent",
                                                         outlineOffset: "8px",
                                                         borderRadius: "8px",
@@ -1850,7 +1864,16 @@ function SpecializedAgentSetupContent() {
                                                         transition: "outline-color 0.3s ease",
                                                     }}
                                                 >
-                                                <Field label="Tools" info="Select tools for the agent">
+                                                <Box>
+                                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb="8">
+                                                        <Box display="flex" alignItems="center" gap="4">
+                                                            <Text fontWeight="400" fontSize="md">Tools</Text>
+                                                            <Tooltip delayDuration={300} content="Select tools for the agent">
+                                                                <span style={{ display: "inline-flex" }}><IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" /></span>
+                                                            </Tooltip>
+                                                        </Box>
+                                                        <Button appearance="subtle" size="sm" icon={<IconPlus />} disabled={isReadOnly}>Add Tools</Button>
+                                                    </Box>
                                                     {isComparing && comparisonData ? (
                                                         <FieldComparison
                                                             previousValue={comparisonData.tools}
@@ -1904,7 +1927,7 @@ function SpecializedAgentSetupContent() {
                                                             )}
                                                         </Box>
                                                     )}
-                                                </Field>
+                                                </Box>
                                                 </div>
 
                                                 <Field label="Inference Level" info="Select model intelligence" style={{ maxWidth: "320px" }}>
@@ -2753,6 +2776,7 @@ function SpecializedAgentSetupContent() {
                     multiTurnMode={multiTurnMode}
                     fromAi={searchParams.get("from") === "ai" || searchParams.get("from") === "template"}
                     enhancePopoverOpen={enhancePopoverOpen}
+                    promptReviewResult={promptReviewResult}
                 />
             </div>
         </Box>
@@ -2768,8 +2792,8 @@ function SpecializedAgentSetupContent() {
                 x={promptSelection.x}
                 y={promptSelection.y}
                 onAskOpal={() => {
-                    opalPanelControls?.launchWithContext("Selected text in Prompt", promptSelection.text);
                     setPromptHighlight({ start: promptSelection.start, end: promptSelection.end });
+                    opalPanelControls?.launchWithContext("Selected text in Prompt", promptSelection.text);
                     setPromptSelection(null);
                 }}
                 onClose={() => setPromptSelection(null)}

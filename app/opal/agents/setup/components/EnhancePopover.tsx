@@ -84,7 +84,7 @@ export function EnhancePopover({ anchorEl, isOpen, onClose, onSubmit }: EnhanceP
                 display="flex"
                 flexDirection="column"
                 gap="8"
-                style={{ padding: "12px 14px 14px" }}
+                style={{ padding: "12px 18px 14px" }}
             >
                 {/* Header */}
                 <Box display="flex" alignItems="center" justifyContent="space-between">

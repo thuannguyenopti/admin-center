@@ -18,7 +18,7 @@ import {
     Tooltip,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { IconAgent, IconCodeBranch, IconFileImport, IconSearch, IconPlus, IconChevronDown } from "@optimizely/axiom-icons";
+import { IconAgent, IconCodeBranch, IconUpload, IconSearch, IconPlus, IconChevronDown } from "@optimizely/axiom-icons";
 import { IconEye, IconEyeSlash } from "@/app/lib/axiom-icons";
 import { Input } from "@/app/components/Input";
 import { NewAgentDialog } from "./components/NewAgentDialog";
@@ -255,7 +255,7 @@ export default function AgentsPage() {
     const [newAgentOpen, setNewAgentOpen] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const categories = Array.from(new Set(agents.flatMap((agent) => agent.tags?.map((tag) => tag.label) ?? []))).sort();
-    const showCategoryColors = searchParams.get("categoryPills") !== "plain";
+    const showCategoryColors = searchParams.get("categoryPills") === "colored";
     const filteredAgents = agents.filter((agent) =>
         selectedCategories.length === 0 ? true : agent.tags?.some((tag) => selectedCategories.includes(tag.label))
     );
@@ -324,9 +324,9 @@ export default function AgentsPage() {
         const nextParams = new URLSearchParams(searchParams.toString());
 
         if (showCategoryColors) {
-            nextParams.set("categoryPills", "plain");
-        } else {
             nextParams.delete("categoryPills");
+        } else {
+            nextParams.set("categoryPills", "colored");
         }
 
         const nextQuery = nextParams.toString();
@@ -425,6 +425,16 @@ export default function AgentsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); setTimeout(() => setNewAgentOpen(true), 150); }}>
+                            <Box mt="2" style={{ flexShrink: 0 }}>
+                                <img src="/opal.png" width={20} height={20} style={{ borderRadius: 5, display: "block" }} alt="Opal" />
+                            </Box>
+                            <Box>
+                                <Text fontWeight="500" fontSize="md">Build with Opal</Text>
+                                <Text fontSize="sm" color="fg.secondary">Describe the agent you want and Opal will configure it for you.</Text>
+                            </Box>
+                        </Box>
+                        <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+                        <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/setup"); }}>
                             <Box mt="2" color="fg.default"><IconAgent /></Box>
                             <Box>
                                 <Text fontWeight="500" fontSize="md">Specialized Agent</Text>
@@ -439,10 +449,10 @@ export default function AgentsPage() {
                             </Box>
                         </Box>
                         <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => setAddAgentOpen(false)}>
-                            <Box mt="2" color="fg.default"><IconFileImport /></Box>
+                            <Box mt="2" color="fg.default"><IconUpload /></Box>
                             <Box>
-                                <Text fontWeight="500" fontSize="md">Import</Text>
-                                <Text fontSize="sm" color="fg.secondary">Import an agent from JSON data.</Text>
+                                <Text fontWeight="500" fontSize="md">Upload</Text>
+                                <Text fontSize="sm" color="fg.secondary">Upload an agent from a JSON file.</Text>
                             </Box>
                         </Box>
                     </DropdownMenuContent>
