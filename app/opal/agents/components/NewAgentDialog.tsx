@@ -8,7 +8,9 @@ import {
     IconChevronDown,
     IconChevronUp,
     IconScrewdriverWrench,
+    IconUpload,
     IconPen,
+    IconXmark,
 } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -86,31 +88,6 @@ const BUILDING_MSGS = ["Mixing all the ingredients...", "Adding the finishing to
 
 // (SectionToggle removed — replaced with Axiom Disclosure)
 
-function ThreeDots() {
-    return (
-        <Box display="flex" gap="8" alignItems="center" justifyContent="center" mt="20">
-            <style>{`
-                @keyframes dotPulse {
-                    0%, 100% { opacity: 0.25; transform: scale(0.8); }
-                    50% { opacity: 1; transform: scale(1); }
-                }
-            `}</style>
-            {[0, 1, 2].map((i) => (
-                <Box
-                    key={i}
-                    rounded="full"
-                    style={{
-                        width: 8,
-                        height: 8,
-                        background: "var(--ax-colors-fg-tertiary)",
-                        animation: `dotPulse 1.4s ease-in-out ${i * 0.22}s infinite`,
-                    }}
-                />
-            ))}
-        </Box>
-    );
-}
-
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -129,6 +106,18 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
     const [hoveredPhaseIdx, setHoveredPhaseIdx] = useState<number | null>(null);
     const [phaseEditTitle, setPhaseEditTitle] = useState("");
     const [phaseEditBody, setPhaseEditBody] = useState("");
+    const [editingPlanText, setEditingPlanText] = useState<string | null>(null);
+
+    const serializePlan = (phases: typeof localPhases) =>
+        phases.map((p, i) => `${i + 1}. ${p.title}\n${p.summary}${p.detail ? "\n" + p.detail : ""}`).join("\n\n");
+
+    const deserializePlan = (text: string): typeof localPhases =>
+        text.split(/\n\n+/).filter(Boolean).map((block) => {
+            const lines = block.split("\n");
+            const titleLine = lines[0].replace(/^\d+\.\s*/, "").trim();
+            const body = lines.slice(1).join("\n").trim();
+            return { title: titleLine, summary: body, detail: "" };
+        });
     const [showAllTemplates, setShowAllTemplates] = useState(false);
 
     const msgs = step === "building" ? BUILDING_MSGS : DESIGNING_MSGS;
@@ -268,31 +257,15 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                     [data-agent-card]:hover { border-color: var(--ax-colors-border-default) !important; box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important; }
                 `}</style>
 
-                {/* Close button — always visible */}
-                <button
-                    onClick={handleClose}
-                    style={{
-                        position: "absolute",
-                        top: 16,
-                        right: 16,
-                        zIndex: 10,
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        border: "none",
-                        background: "var(--ax-colors-bg-secondary)",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "var(--ax-fontSize-xl-fontSize)",
-                        lineHeight: 1,
-                        color: "var(--ax-colors-fg-secondary)",
-                    }}
-                    aria-label="Close"
-                >
-                    ×
-                </button>
+                {/* Close button — Axiom standard dismiss */}
+                <Box style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>
+                    <Button
+                        appearance="subtle"
+                        icon={<IconXmark />}
+                        aria-label="Close"
+                        onClick={handleClose}
+                    />
+                </Box>
 
                 {/* ── ENTRY ─────────────────────────────────────────────── */}
                 {step === "entry" && (
@@ -383,13 +356,9 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         <Button
                                             appearance="subtle"
                                             size="sm"
-                                            icon={<IconScrewdriverWrench size={13} />}
-                                            onClick={() => {
-                                                handleClose();
-                                                router.push("/opal/agents/setup");
-                                            }}
+                                            icon={<IconUpload size={13} />}
                                         >
-                                            Build from scratch
+                                            Upload
                                         </Button>
                                         <Button
                                             appearance="primary-opal"
@@ -548,6 +517,29 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     </Button>
                                 </Box>
                             </Box>
+
+                            {/* ── Build from scratch (bottom) ───────────────── */}
+                            <Box
+                                display="flex"
+                                justifyContent="center"
+                                alignItems="center"
+                                px="40"
+                                py="20"
+                                borderT="1"
+                                borderColor="border.tertiary"
+                            >
+                                <Button
+                                    appearance="subtle"
+                                    size="sm"
+                                    icon={<IconScrewdriverWrench size={13} />}
+                                    onClick={() => {
+                                        handleClose();
+                                        router.push("/opal/agents/setup");
+                                    }}
+                                >
+                                    Build from scratch
+                                </Button>
+                            </Box>
                         </Box>
                     </Box>
                 )}
@@ -559,7 +551,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                         flexDirection="column"
                         alignItems="center"
                         justifyContent="center"
-                        style={{ flex: 1 }}
+                        style={{ flex: 1, paddingBottom: "20%" }}
                     >
                         <OpalLoaderV5 size={40} color="#7c5cff" />
                         <Text fontWeight="600" fontSize="xl" color="fg.default" mt="24" style={{ textAlign: "center" }}>
@@ -568,7 +560,6 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                         <Text color="fg.secondary" mt="8" fontSize="sm" style={{ textAlign: "center" }}>
                             {msgs[msgIdx % msgs.length]}
                         </Text>
-                        <ThreeDots />
                     </Box>
                 )}
 
@@ -602,13 +593,50 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                             </Box>
 
                             {/* Agent action plan — editable phases */}
-                            <Text
-                                fontSize="md"
-                                fontWeight="500"
-                                color="fg.secondary"
-                            >
-                                Agent action plan
-                            </Text>
+                            <Box display="flex" alignItems="center" justifyContent="space-between">
+                                <Text fontSize="md" fontWeight="500" color="fg.secondary">
+                                    Agent action plan
+                                </Text>
+                                {editingPlanText === null ? (
+                                    <Button
+                                        appearance="subtle"
+                                        size="sm"
+                                        icon={<IconPen />}
+                                        onClick={() => setEditingPlanText(serializePlan(localPhases))}
+                                    >
+                                        Edit plan
+                                    </Button>
+                                ) : (
+                                    <Box display="flex" gap="8">
+                                        <Button
+                                            appearance="subtle"
+                                            size="sm"
+                                            onClick={() => setEditingPlanText(null)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            appearance="primary"
+                                            size="sm"
+                                            onClick={() => {
+                                                const parsed = deserializePlan(editingPlanText);
+                                                if (parsed.length > 0) setLocalPhases(parsed);
+                                                setEditingPlanText(null);
+                                            }}
+                                        >
+                                            Done
+                                        </Button>
+                                    </Box>
+                                )}
+                            </Box>
+
+                            {editingPlanText !== null ? (
+                                <Textarea
+                                    value={editingPlanText}
+                                    onChange={(e) => setEditingPlanText(e.target.value)}
+                                    style={{ minHeight: 320, marginTop: 12, fontSize: "var(--ax-fontSize-sm-fontSize)", lineHeight: 1.7, fontFamily: "monospace" }}
+                                />
+                            ) : (
                             <Box display="flex" flexDirection="column" gap="12" mt="12" mb="8">
                                 {localPhases.map((phase, i) => (
                                     <Box
@@ -732,6 +760,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     </Box>
                                 ))}
                             </Box>
+                            )}
 
                             {/* Tools */}
                             <Box borderT="1" borderColor="border.tertiary" pt="16" mt="16">
