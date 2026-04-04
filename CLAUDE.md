@@ -109,3 +109,63 @@ Before writing code, check if files you're touching are monolithic (300+ lines, 
 - **Never merge locally** — merge via GitHub so CI checks run first
 - Vercel auto-deploys `main` to production; preview deploys on every PR branch
 - Verify build (`yarn build`) before pushing
+
+## Efficient Batch Workflow
+
+To minimize tokens and round-trips, always batch related changes into a single request using this format:
+
+```
+1. [FileName.tsx ~line N] description of change
+2. [FileName.tsx ~line N] description of change
+3. commit: "message"
+```
+
+### Execution rules
+1. **Grep first** — find exact location before reading
+2. **Read in sections** — use `offset`/`limit` on large files (setup/page.tsx is 2700+ lines)
+3. **Group by file** — do all edits to a file before moving to the next
+4. **Never re-read** a section already in context
+5. **One commit** per batch covering all changed files
+
+### Recurring UI patterns (copy-paste ready)
+
+**Field header row** (label left, action right):
+```tsx
+<Box display="flex" justifyContent="space-between" alignItems="center" mb="8">
+  <Text fontWeight="400" fontSize="md">Label</Text>
+  <Button appearance="subtle" size="sm" icon={<IconPlus />}>Add Item</Button>
+</Box>
+```
+
+**Info tooltip next to label:**
+```tsx
+<Tooltip delayDuration={300} content="Explanation">
+  <span style={{ display: "inline-flex" }}>
+    <IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+  </span>
+</Tooltip>
+```
+
+**Opal orb in a button:**
+```tsx
+<img src="/opal-orb.png" alt="" width={13} height={13} style={{ display: "inline-block", marginRight: "4px", verticalAlign: "middle" }} />
+```
+
+**Vertical divider between inline buttons:**
+```tsx
+<Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+```
+
+**Dropdown separator:**
+```tsx
+<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+```
+
+### Key agent files (opal/agents area)
+| File | Lines | Notes |
+|---|---|---|
+| `app/opal/agents/setup/page.tsx` | ~2700 | Read in 50–80 line sections |
+| `app/opal/agents/components/NewAgentDialog.tsx` | ~600 | Agent builder wizard |
+| `app/opal/agents/page.tsx` | ~400 | Agents listing |
+| `app/opal/agents/setup/components/AgentAssistantPanel.tsx` | ~1900 | Guide/assistant panel |
+| `app/opal/agents/setup/components/EnhancePopover.tsx` | ~150 | Enhance popup |
