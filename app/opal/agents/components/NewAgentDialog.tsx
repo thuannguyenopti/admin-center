@@ -504,8 +504,19 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                     ))}
                                 </Box>
 
-                                {/* Show more / Show less */}
-                                <Box display="flex" justifyContent="center" mt="16">
+                                {/* Show more / Show less + Build from scratch */}
+                                <Box display="flex" justifyContent="space-between" alignItems="center" mt="16">
+                                    <Button
+                                        appearance="subtle"
+                                        size="sm"
+                                        icon={<IconScrewdriverWrench size={13} />}
+                                        onClick={() => {
+                                            handleClose();
+                                            router.push("/opal/agents/setup");
+                                        }}
+                                    >
+                                        Build from scratch
+                                    </Button>
                                     <Button
                                         appearance="subtle"
                                         size="sm"
@@ -516,29 +527,6 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
                                         {showAllTemplates ? "Show less" : `Show more (${TEMPLATE_AGENTS.length - 4} more)`}
                                     </Button>
                                 </Box>
-                            </Box>
-
-                            {/* ── Build from scratch (bottom) ───────────────── */}
-                            <Box
-                                display="flex"
-                                justifyContent="center"
-                                alignItems="center"
-                                px="40"
-                                py="20"
-                                borderT="1"
-                                borderColor="border.tertiary"
-                            >
-                                <Button
-                                    appearance="subtle"
-                                    size="sm"
-                                    icon={<IconScrewdriverWrench size={13} />}
-                                    onClick={() => {
-                                        handleClose();
-                                        router.push("/opal/agents/setup");
-                                    }}
-                                >
-                                    Build from scratch
-                                </Button>
                             </Box>
                         </Box>
                     </Box>
