@@ -22,11 +22,11 @@ import { IconAgent, IconCodeBranch, IconUpload, IconSearch, IconPlus, IconChevro
 import { IconEye, IconEyeSlash } from "@/app/lib/axiom-icons";
 import { Input } from "@/app/components/Input";
 import { NewAgentDialog } from "./components/NewAgentDialog";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
-const agents = [
+const STATIC_AGENTS = [
     {
         id: "email-campaign",
         icon: <IconAgent />,
@@ -252,6 +252,23 @@ export default function AgentsPage() {
     const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState("Your Agents");
     const [addAgentOpen, setAddAgentOpen] = useState(false);
+    const [userAgents, setUserAgents] = useState<typeof STATIC_AGENTS>([]);
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem("opal_user_agents");
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                setUserAgents(parsed.map((a: Record<string, unknown>) => ({
+                    ...a,
+                    icon: <IconAgent />,
+                    tag: "Draft",
+                })));
+            }
+        } catch { /* ignore */ }
+    }, []);
+
+    const agents = useMemo(() => [...userAgents, ...STATIC_AGENTS], [userAgents]);
     const [newAgentOpen, setNewAgentOpen] = useState(false);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const categories = Array.from(new Set(agents.flatMap((agent) => agent.tags?.map((tag) => tag.label) ?? []))).sort();
@@ -429,7 +446,7 @@ export default function AgentsPage() {
                                 <img src="/opal.png" width={20} height={20} style={{ borderRadius: 5, display: "block" }} alt="Opal" />
                             </Box>
                             <Box>
-                                <Text fontWeight="500" fontSize="md">Build with Opal</Text>
+                                <Text fontWeight="500" fontSize="md">Add with Opal</Text>
                                 <Text fontSize="sm" color="fg.secondary">Describe the agent you want and Opal will configure it for you.</Text>
                             </Box>
                         </Box>
@@ -538,6 +555,10 @@ export default function AgentsPage() {
                                                             {agent.tag}
                                                         </Text>
                                                     </Box>
+                                                ) : agent.tag === "Draft" ? (
+                                                    <Badge intent="neutral" variant="subtle">
+                                                        {agent.tag}
+                                                    </Badge>
                                                 ) : (
                                                     <Badge intent="success" variant="subtle">
                                                         {agent.tag}
