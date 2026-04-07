@@ -11,9 +11,11 @@ import { opalTypography } from "@/app/styles/opalTypography";
 type OpalChatProps = {
   messages: ChatMessage[];
   onSuggestionClick: (suggestion: string) => void;
+  onSubmitPrompt: (message: string) => void;
+  isLoading: boolean;
 };
 
-export function OpalChat({ messages, onSuggestionClick }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, isLoading }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
@@ -55,7 +57,13 @@ export function OpalChat({ messages, onSuggestionClick }: OpalChatProps) {
       ) : (
         <Box display="flex" flexDirection="column" w="full">
           {messages.map((message) => (
-            <OpalMessage key={message.id} message={message} />
+            <OpalMessage
+              key={message.id}
+              message={message}
+              onSuggestionClick={onSuggestionClick}
+              onSubmitPrompt={onSubmitPrompt}
+              isOpalLoading={isLoading}
+            />
           ))}
         </Box>
       )}

@@ -2,6 +2,28 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { OpalContextType } from '@/app/context/OpalContext';
+import { useExperimentResultsContext } from '@/app/context/ExperimentResultsContext';
+import type { ExperimentSummaryPayload } from '@/app/web-experimentation/optimizations/[id]/results/types';
+import { EXPERIMENT_SUMMARY_STEP_LABELS } from '@/app/web-experimentation/optimizations/[id]/results/summaryStepLabels';
+import type { ExperimentCreationAgentPayload } from '@/app/components/Opal/experimentCreationAgentTypes';
+import {
+  addDynamicOptimization,
+  setPendingVariationBuild,
+} from '@/app/web-experimentation/optimizations/dynamicOptimizationStorage';
+import {
+  buildExperimentCreatedRationale,
+  parseExperimentCreationRunMessage,
+} from '@/app/web-experimentation/optimizations/parseExperimentCreationRun';
+import type { Optimization } from '@/app/web-experimentation/optimizations/mockData';
+
+const EXPERIMENT_CREATION_STEPS = [
+  'Parsing experiment inputs',
+  'Creating A/B test',
+  'Applying targeting from your context',
+  'Saving experiment draft',
+] as const;
+
+const EXPERIMENT_CREATION_STEP_MS = 1150;
 
 export type ChatMessage = {
   id: string;
@@ -9,6 +31,13 @@ export type ChatMessage = {
   content: string;
   timestamp: number;
   isLoading?: boolean;
+  /** When set, message is rendered as experiment summary block */
+  type?: 'text' | 'experiment_summary' | 'experiment_creation_agent';
+  payload?: ExperimentSummaryPayload | ExperimentCreationAgentPayload;
+  /** Shown in loading state for summary requests */
+  loadingSteps?: string[];
+  /** Current step index while running summary pipeline (0..length-1 active, length = all done) */
+  loadingStepIndex?: number;
 };
 
 export type OpalState = {
@@ -25,6 +54,8 @@ type UseOpalStateProps = {
   activeChatId?: string | null;
   onMessageSent?: (content: string) => void;
   opalContext?: OpalContextType;
+  /** Used after Opal creates an experiment from the adaptive card (smooth navigation to Variations). */
+  onNavigate?: (path: string) => void;
 };
 
 const MOCK_CHAT_IDS = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
@@ -107,7 +138,21 @@ function getSeedMessagesForMockChat(activeChatId: string): ChatMessage[] | null 
   }
 }
 
-export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOpalStateProps = {}) {
+const SUMMARY_STEP_MS = 1180;
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+export function useOpalState({
+  activeChatId,
+  onMessageSent,
+  opalContext,
+  onNavigate,
+}: UseOpalStateProps = {}) {
+  const { optimizationId } = useExperimentResultsContext();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -223,77 +268,216 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     return newMessage;
   }, []);
 
+  const showExperimentCreationAgent = useCallback(
+    (payload: ExperimentCreationAgentPayload) => {
+      setIsOpen(true);
+      addMessage({
+        role: 'assistant',
+        content: '',
+        type: 'experiment_creation_agent',
+        payload,
+      });
+    },
+    [addMessage],
+  );
+
   const updateMessage = useCallback((id: string, updates: Partial<ChatMessage>) => {
     setMessages(prev => prev.map(msg =>
       msg.id === id ? { ...msg, ...updates } : msg
     ));
   }, []);
 
+  const handleChatError = useCallback(
+    (errorMessage: string, loadingMessageId: string) => {
+      setError(errorMessage);
+      setMessages((prev) => prev.filter((msg) => msg.id !== loadingMessageId));
+    },
+    [],
+  );
+
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
+
+    const trimmed = content.trim();
+    const isExperimentCreationRun = trimmed.startsWith('Run the Experiment Creation agent');
+    const isSummarizeRequest =
+      optimizationId != null &&
+      (trimmed.toLowerCase().includes('summarize') || trimmed.toLowerCase().includes('summary'));
 
     setError(undefined);
     setIsLoading(true);
 
     // Add user message
-    const userMessage = addMessage({
+    addMessage({
       role: 'user',
-      content: content.trim(),
+      content: trimmed,
     });
 
-    // Notify parent about new message
     if (onMessageSent) {
-      onMessageSent(content.trim());
+      onMessageSent(trimmed);
     }
 
-    // Clear input
     setInputValue('');
 
-    // Add loading message
+    const summaryStepLabels = [...EXPERIMENT_SUMMARY_STEP_LABELS];
+
+    // Add loading message; show steps when this is an experiment summary request
     const loadingMessage = addMessage({
       role: 'assistant',
       content: '',
       isLoading: true,
+      ...(isSummarizeRequest && {
+        loadingSteps: summaryStepLabels,
+        loadingStepIndex: 0,
+      }),
+      ...(isExperimentCreationRun && {
+        loadingSteps: [...EXPERIMENT_CREATION_STEPS],
+        loadingStepIndex: 0,
+      }),
     });
 
     try {
-      // Call API with context
+      if (isExperimentCreationRun) {
+        for (let i = 0; i < EXPERIMENT_CREATION_STEPS.length; i++) {
+          updateMessage(loadingMessage.id, { loadingStepIndex: i });
+          await delay(EXPERIMENT_CREATION_STEP_MS);
+        }
+        updateMessage(loadingMessage.id, {
+          loadingStepIndex: EXPERIMENT_CREATION_STEPS.length,
+        });
+        await delay(420);
+
+        const fields = parseExperimentCreationRunMessage(trimmed);
+        const newId = `opal-exp-${Date.now()}`;
+        const optimization: Optimization = {
+          id: newId,
+          name: fields.name,
+          description:
+            fields.description ||
+            fields.hypothesis ||
+            'A/B test created from your draft idea in Opal.',
+          type: 'A/B Test',
+          status: 'Not Started',
+          modified: new Date().toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        };
+        addDynamicOptimization(optimization);
+        const rationale = buildExperimentCreatedRationale(fields);
+
+        updateMessage(loadingMessage.id, {
+          isLoading: false,
+          loadingSteps: undefined,
+          loadingStepIndex: undefined,
+          content: `Your A/B test “${optimization.name}” has been created.\n\n${rationale}`,
+        });
+
+        setPendingVariationBuild({
+          optimizationId: newId,
+          experimentName: fields.name,
+          description: fields.description,
+          hypothesis: fields.hypothesis,
+          destination: fields.destination,
+        });
+
+        await delay(580);
+        onNavigate?.(`/web-experimentation/optimizations/${newId}`);
+        setIsLoading(false);
+        return;
+      }
+
+      if (isSummarizeRequest) {
+        for (let i = 0; i < summaryStepLabels.length; i++) {
+          updateMessage(loadingMessage.id, { loadingStepIndex: i });
+          await delay(SUMMARY_STEP_MS);
+        }
+        updateMessage(loadingMessage.id, {
+          loadingStepIndex: summaryStepLabels.length,
+        });
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userMessage: content.trim(),
-          context: opalContext ? {
-            currentPage: opalContext.currentPage,
-            availableFeatures: opalContext.availableFeatures,
-            opalCapabilities: opalContext.opalCapabilities,
-          } : undefined,
+          userMessage: trimmed,
+          context: opalContext
+            ? {
+              currentPage: opalContext.currentPage,
+              availableFeatures: opalContext.availableFeatures,
+              opalCapabilities: opalContext.opalCapabilities,
+            }
+            : undefined,
+          experimentContext:
+            optimizationId && isSummarizeRequest
+              ? { optimizationId, requestSummary: true }
+              : undefined,
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from Opal');
+        let errorMessage = 'Failed to get response from Opal. Please try again.';
+        try {
+          const errorData = await response.json();
+          if (errorData?.error && typeof errorData.error === 'string') {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          /* ignore */
+        }
+        handleChatError(errorMessage, loadingMessage.id);
+        return;
       }
 
-      const data = await response.json();
+      let data: { response?: string; summary?: unknown };
+      try {
+        data = await response.json();
+      } catch {
+        handleChatError('Invalid response from Opal. Please try again.', loadingMessage.id);
+        return;
+      }
 
-      // Update loading message with actual response
-      updateMessage(loadingMessage.id, {
-        content: data.response || 'Sorry, I couldn\'t generate a response.',
-        isLoading: false,
-      });
+      if (data.summary != null) {
+        const summary = data.summary as ExperimentSummaryPayload;
+        // Replace loading message with experiment summary message
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === loadingMessage.id
+              ? {
+                ...msg,
+                content: summary.title,
+                isLoading: false,
+                type: 'experiment_summary' as const,
+                payload: summary,
+                loadingSteps: undefined,
+                loadingStepIndex: undefined,
+              }
+              : msg,
+          ),
+        );
+      } else {
+        updateMessage(loadingMessage.id, {
+          content: data.response || "Sorry, I couldn't generate a response.",
+          isLoading: false,
+          loadingSteps: undefined,
+          loadingStepIndex: undefined,
+        });
+      }
     } catch (err) {
       console.error('Error sending message:', err);
-      setError('Failed to send message. Please try again.');
-
-      // Remove loading message on error
-      setMessages(prev => prev.filter(msg => msg.id !== loadingMessage.id));
+      const message =
+        err instanceof Error && err.message === 'Failed to get response from Opal'
+          ? err.message
+          : 'Failed to send message. Please try again.';
+      handleChatError(message, loadingMessage.id);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, addMessage, updateMessage, opalContext]);
+  }, [isLoading, addMessage, updateMessage, handleChatError, opalContext, optimizationId, onNavigate]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
@@ -315,8 +499,11 @@ export function useOpalState({ activeChatId, onMessageSent, opalContext }: UseOp
     togglePanel,
     closePanel,
     openPanel,
+    showExperimentCreationAgent,
     setInputValue,
     sendMessage,
     clearHistory,
+    addMessage,
+    updateMessage,
   };
 }

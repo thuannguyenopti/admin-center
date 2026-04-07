@@ -28,6 +28,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
 
 	const getCurrentProduct = () => {
+		if (pathname.startsWith("/web-experimentation")) return "Web Experimentation";
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
@@ -104,6 +105,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						{
 							label: "Content Management System",
 							execute: () => router.push("/cms/dashboard"),
+						},
+						{
+							label: "Web Experimentation",
+							execute: () => router.push("/web-experimentation"),
 						},
 						{
 							label: "Content Marketing Platform",

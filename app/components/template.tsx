@@ -1,22 +1,25 @@
 "use client";
 
-import {Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator} from "@optiaxiom/react";
-import {Button} from "./Button";
-import {Text} from "./Text";
-import {useEffect, useState, Suspense} from "react";
+import { Box, Sidebar, NavBody, NavItem, Nav, Heading, SubNav, Indicator, Tooltip } from "@optiaxiom/react";
+import { Button } from "./Button";
+import { Text } from "./Text";
+import { useEffect, useState, Suspense } from "react";
 
-import {useRouter, usePathname} from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import VT from "./VT";
 import GlobalBar from "./GlobalBar";
-import {LayoutProvider, useLayout} from "../context/LayoutContext";
-import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
-import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
+import { LayoutProvider, useLayout } from "../context/LayoutContext";
+import { OpalContextProvider, useOpalContext } from "../context/OpalContext";
+import { OpalPanelActionsProvider } from "../context/OpalPanelActionsContext";
+import { OpalVariationBuildProvider } from "../context/OpalVariationBuildContext";
+import { ExperimentResultsProvider } from "../context/ExperimentResultsContext";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
-import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
+import { FilterPanelProvider } from "../cms/content/context/FilterPanelContext";
 import ContentManagerSidebar from "../cms/content/components/ContentManagerSidebar";
-import {OpalPanel} from "./OpalPanel";
-import {useOpalState} from "@/app/hooks/useOpalState";
-import {useOpalHistory} from "@/app/hooks/useOpalHistory";
+import { OpalPanel } from "./OpalPanel";
+import { useOpalState } from "@/app/hooks/useOpalState";
+import { useOpalHistory } from "@/app/hooks/useOpalHistory";
 
 function TemplateContent({
 	children,
@@ -25,7 +28,7 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent} = useLayout();
+	const { asideContent, titleActions } = useLayout();
 	const opalContext = useOpalContext();
 	const router = useRouter();
 	const path = usePathname();
@@ -54,12 +57,28 @@ function TemplateContent({
 		error,
 		togglePanel: toggleOpal,
 		closePanel: closeOpal,
+		openPanel,
+		showExperimentCreationAgent,
 		setInputValue,
 		sendMessage,
-	} = useOpalState({activeChatId: activeChat, opalContext});
+		addMessage,
+		updateMessage,
+	} = useOpalState({
+		activeChatId: activeChat,
+		opalContext,
+		onNavigate: (path) => {
+			router.push(path);
+		},
+	});
 
-	const menuClick = (url: string) => {
+	const menuClick = (url: string, e?: React.MouseEvent) => {
+		e?.stopPropagation();
 		router.push(`${url}`);
+	};
+
+	const toggleSidebar = (e?: React.MouseEvent) => {
+		e?.stopPropagation();
+		setIsExpanded((prev: boolean) => !prev);
 	};
 
 	const menuItems = Array.isArray(structure) ? structure : [];
@@ -78,7 +97,7 @@ function TemplateContent({
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
-	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
+	const desc = lvl4?.description || lvl3?.description || lvl2?.description || highlight1?.description;
 
 	// Check if we're on the Content Manager page
 	const isContentManager = path.includes("/cms/content");
@@ -96,38 +115,93 @@ function TemplateContent({
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
-	if (!isHydrated) return <Box style={{height: "100vh"}} bg="bg.page" />;
+	// Experiment Results: hide "Optimizations" heading and push content up to where it was
+	const isExperimentResultsPage =
+		path.includes("/web-experimentation/optimizations") && path.includes("/results");
+	// Experiment detail (Variations): full-bleed layout with its own title and sidebar
+	const isOptimizationDetailPage = /^\/web-experimentation\/optimizations\/[^/]+$/.test(path);
+	// Visual Editor: dedicated full-viewport surface (no app shell chrome)
+	const isOptimizationVisualEditorPage =
+		/^\/web-experimentation\/optimizations\/[^/]+\/visual-editor/.test(path);
+	// List ↔ detail ↔ results change padding and overflow; skip the shell slide so navigation feels instant
+	const instantOptimizationsLayout = path.startsWith("/web-experimentation/optimizations");
+	const shellTransition = instantOptimizationsLayout ? "none" : ".7s cubic-bezier(0, 1, 0, 1)";
+
+	if (!isHydrated) return <Box style={{ height: "100vh" }} bg="bg.page" />;
 
 	if (isWorkflowBuilder) {
 		return (
-			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
+			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
+				{children}
+			</Box>
+		);
+	}
+
+	if (isOptimizationVisualEditorPage) {
+		return (
+			<Box
+				style={{
+					height: "100dvh",
+					width: "100vw",
+					maxHeight: "100dvh",
+					overflow: "hidden",
+					display: "flex",
+					flexDirection: "column",
+				}}
+				bg="bg.default"
+			>
 				{children}
 			</Box>
 		);
 	}
 
 	return (
-		<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
-			<GlobalBar onOpalClick={toggleOpal} />
-			<Box display="flex" z="10" style={{minHeight: 0}}>
-				<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
-					<Nav>
-						<NavBody>
-							{menuItems.map((menuItem: any) =>
-								menuItem.url ? (
-									<NavItem
-										onClick={() => menuClick(menuItem.url)}
-										active={
-											menuItem.exact
-												? path === menuItem.highlight
-												: path.includes(menuItem.highlight)
+		<OpalPanelActionsProvider
+			openPanel={openPanel}
+			sendMessage={sendMessage}
+			openExperimentCreationAgent={showExperimentCreationAgent}
+		>
+			<OpalVariationBuildProvider addMessage={addMessage} updateMessage={updateMessage}>
+			<Box className="grid grid-cols-[0fr_1fr] grid-rows-[0fr_1fr] h-screen" bg="bg.page">
+				<GlobalBar onOpalClick={toggleOpal} />
+				<Box display="flex" z="10" style={{ minHeight: 0 }}>
+					<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
+						<Box
+							onClick={toggleSidebar}
+							style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+						>
+							<Nav>
+								<NavBody>
+									{menuItems.map((menuItem: any) => {
+										// Section headers without a URL
+										if (!menuItem.url) {
+											return (
+												<Box
+													key={menuItem.label}
+													px="16"
+													py="8"
+													mt="4"
+													borderT="1"
+													borderColor="border.tertiary"
+													onClick={(e) => e.stopPropagation()}
+												>
+													{isExpanded && (
+														<Text fontSize="sm" color="fg.tertiary" mt="2">
+															{menuItem.label}
+														</Text>
+													)}
+												</Box>
+											);
 										}
-										key={menuItem.label}
-										aria-label={menuItem.label}
-										icon={
+
+										const isActive = menuItem.exact
+											? path === menuItem.highlight
+											: path.includes(menuItem.highlight);
+
+										const icon =
 											menuItem.label === "Notifications" &&
-											!path.startsWith("/opal/notifications") ? (
-												<Box style={{position: "relative"}}>
+												!path.startsWith("/opal/notifications") ? (
+												<Box style={{ position: "relative" }}>
 													{menuItem.icon}
 													<Box
 														style={{
@@ -144,196 +218,222 @@ function TemplateContent({
 												</Box>
 											) : (
 												menuItem.icon
-											)
+											);
+
+										const itemClick = (e: React.MouseEvent) => menuClick(menuItem.url, e);
+
+										// Expanded: plain NavItem with label
+										if (isExpanded) {
+											return (
+												<NavItem
+													key={menuItem.label}
+													onClick={itemClick}
+													active={isActive}
+													aria-label={menuItem.label}
+													icon={icon}
+												>
+													{menuItem.label}
+												</NavItem>
+											);
 										}
-									>
-										{menuItem.label}
-									</NavItem>
-								) : (
-									<Box
-										key={menuItem.label}
-										px="16"
-										py="8"
-										mt="4"
-										borderT="1"
-										borderColor="border.tertiary"
-									>
-										{isExpanded && (
-											<Text fontSize="sm" color="fg.tertiary" mt="2">
-												{menuItem.label}
-											</Text>
-										)}
-									</Box>
-								)
-							)}
-						</NavBody>
-					</Nav>
-					<Box className="absolute bottom-0 left-0 right-0" p="8">
-						<Button
-							aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-							icon={
-								!isExpanded ? (
-									<IconChevronRight size={16} />
-								) : (
-									<IconChevronLeft size={16} />
-								)
-							}
-							onClick={() => setIsExpanded(!isExpanded)}
-							appearance="subtle"
-						/>
-					</Box>
-				</Sidebar>
-				<Box
-					style={{
-						marginLeft: "-224px",
-						transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
-						transition: ".7s cubic-bezier(0, 1, 0, 1)",
-						overflowX: "hidden",
-						overflowY: isContentManager ? "hidden" : undefined,
-						minHeight: isContentManager ? 0 : undefined,
-					}}
-					borderR="1"
-					borderColor="border.tertiary"
-					bg="bg.default"
-					overflow="hidden"
-					h="full"
-					className="slide w-[224px] h-[calc(100vh-58px)]"
-				>
-					{isContentManager ? (
-						<ContentManagerSidebar />
-					) : showVT ? (
-						<Sidebar
-							className="flex"
-							h="full"
-							style={{overflowY: "auto", overflowX: "hidden"}}
-						>
-							<SubNav
-								style={{
-									height: "100%",
-									overflowY: "auto",
-									overflowX: "hidden",
-									borderRight: 0,
-								}}
+
+										// Collapsed: NavItem wrapped in Tooltip so label shows on hover
+										return (
+											<Tooltip key={menuItem.label} content={menuItem.label} side="right">
+												<NavItem
+													onClick={itemClick}
+													active={isActive}
+													aria-label={menuItem.label}
+													icon={icon}
+												>
+													{menuItem.label}
+												</NavItem>
+											</Tooltip>
+										);
+									})}
+								</NavBody>
+							</Nav>
+						</Box>
+						<Box className="absolute bottom-0 left-0 right-0" p="8" onClick={(e) => e.stopPropagation()}>
+							<Button
+								aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
+								icon={
+									!isExpanded ? (
+										<IconChevronRight size={16} />
+									) : (
+										<IconChevronLeft size={16} />
+									)
+								}
+								onClick={toggleSidebar}
+								appearance="subtle"
+							/>
+						</Box>
+					</Sidebar>
+					<Box
+						style={{
+							marginLeft: "-224px",
+							transform: showSecondarySidebar ? "translatex(224px)" : "translatex(0px)",
+							transition: shellTransition,
+							overflowX: "hidden",
+							overflowY: isContentManager ? "hidden" : undefined,
+							minHeight: isContentManager ? 0 : undefined,
+						}}
+						borderR="1"
+						borderColor="border.tertiary"
+						bg="bg.default"
+						overflow="hidden"
+						h="full"
+						className="slide w-[224px] h-[calc(100vh-58px)]"
+					>
+						{isContentManager ? (
+							<ContentManagerSidebar />
+						) : showVT ? (
+							<Sidebar
+								className="flex"
+								h="full"
+								style={{ overflowY: "auto", overflowX: "hidden" }}
 							>
-								<div
-									className="flex w-[500%]"
+								<SubNav
 									style={{
-										transform: `translateX(-${
-											224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
-										}px)`,
-										transition: ".7s cubic-bezier(0, 1, 0, 1)",
-										minHeight: "100%",
+										height: "100%",
+										overflowY: "auto",
 										overflowX: "hidden",
+										borderRight: 0,
 									}}
 								>
-									{showVT && highlight1?.children && (
-										<VT
-											backLink={undefined}
-											title={highlight1?.children?.title || highlight1?.label}
-											description={highlight1?.children?.description}
-											items={highlight1?.children}
-										/>
-									)}
-									{showVT && lvl3 && (
-										<VT
-											backLink={lvl2}
-											title={lvl2.children?.title}
-											description={lvl2.children?.description}
-											items={lvl2.children?.children}
-										/>
-									)}
-									{showVT && lvl4 && (
-										<VT
-											backLink={lvl3}
-											title={lvl3.children?.title}
-											description={lvl3.children?.description}
-											items={lvl3.children?.children}
-										/>
-									)}
-								</div>
-							</SubNav>
-						</Sidebar>
-					) : null}
+									<div
+										className="flex w-[500%]"
+										style={{
+											transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)
+												}px)`,
+											transition: ".7s cubic-bezier(0, 1, 0, 1)",
+											minHeight: "100%",
+											overflowX: "hidden",
+										}}
+									>
+										{showVT && highlight1?.children && (
+											<VT
+												backLink={undefined}
+												title={highlight1?.children?.title || highlight1?.label}
+												description={highlight1?.children?.description}
+												items={highlight1?.children}
+											/>
+										)}
+										{showVT && lvl3 && (
+											<VT
+												backLink={lvl2}
+												title={lvl2.children?.title}
+												description={lvl2.children?.description}
+												items={lvl2.children?.children}
+											/>
+										)}
+										{showVT && lvl4 && (
+											<VT
+												backLink={lvl3}
+												title={lvl3.children?.title}
+												description={lvl3.children?.description}
+												items={lvl3.children?.children}
+											/>
+										)}
+									</div>
+								</SubNav>
+							</Sidebar>
+						) : null}
+					</Box>
 				</Box>
-			</Box>
-			<Box
-				overflowX="hidden"
-				display="flex"
-				flexDirection="row"
-				fontSize="md"
-				color="fg.default"
-				h="full"
-				style={{minHeight: 0}}
-			>
 				<Box
-					flex="1"
-					className="min-w-0 relative"
-					overflow={customLayout ? "hidden" : "auto"}
+					overflowX="hidden"
+					display="flex"
+					flexDirection="row"
+					fontSize="md"
+					color="fg.default"
 					h="full"
+					style={{ minHeight: 0 }}
 				>
-					{customLayout ? (
-						children
-					) : (
+					<Box
+						flex="1"
+						className="min-w-0 relative"
+						overflow={customLayout || isOptimizationDetailPage ? "hidden" : "auto"}
+						h="full"
+					>
+						{customLayout ? (
+							children
+						) : (
+							<Box
+								style={{
+									marginLeft: "224px",
+									marginRight: "-224px",
+									width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
+									transform: showSecondarySidebar
+										? "translatex(0px)"
+										: "translatex(-224px)",
+									transition: shellTransition,
+									...(isOptimizationDetailPage
+										? { minHeight: 0, height: "100%" }
+										: {}),
+								}}
+								color="fg.default"
+								overflow={isOptimizationDetailPage ? "hidden" : "auto"}
+								px={isOptimizationDetailPage ? "0" : "32"}
+								py={isOptimizationDetailPage ? "0" : "24"}
+								display={isOptimizationDetailPage ? "flex" : undefined}
+								flexDirection={isOptimizationDetailPage ? "column" : undefined}
+								h={isOptimizationDetailPage ? "full" : undefined}
+							>
+								{isExperimentResultsPage || isOptimizationDetailPage ? (
+									children
+								) : (
+									<>
+										<Box display="flex" justifyContent="space-between" alignItems="center" w="full">
+											<Heading level="3">{heading || highlight1?.label}</Heading>
+											{titleActions}
+										</Box>
+										{desc && <Text mt="4">{desc}</Text>}
+										<Box mt="16" z="10" className="relative">
+											{children}
+										</Box>
+									</>
+								)}
+							</Box>
+						)}
+					</Box>
+					{asideContent && (
 						<Box
-							style={{
-								marginLeft: "224px",
-								marginRight: "-224px",
-								width: !showSecondarySidebar ? "100%" : "calc(100% - 224px)",
-								transform: showSecondarySidebar
-									? "translatex(0px)"
-									: "translatex(-224px)",
-								transition: ".7s cubic-bezier(0, 1, 0, 1)",
-							}}
-							color="fg.default"
+							borderL="1"
+							borderColor="border.tertiary"
+							bg="bg.default"
+							h="full"
 							overflow="auto"
-							px="32"
-							py="24"
+							style={{ width: "384px", minWidth: "384px" }}
 						>
-							<>
-								<Heading level="3">{heading || highlight1?.label}</Heading>
-								{desc && <Text mt="4">{desc}</Text>}
-								<Box mt="16" z="10" className="relative">
-									{children}
-								</Box>
-							</>
+							{asideContent}
 						</Box>
 					)}
 				</Box>
-				{asideContent && (
-					<Box
-						borderL="1"
-						borderColor="border.tertiary"
-						bg="bg.default"
-						h="full"
-						overflow="auto"
-						style={{width: "384px", minWidth: "384px"}}
-					>
-						{asideContent}
-					</Box>
-				)}
+				<OpalPanel
+					isOpen={isOpalOpen}
+					onClose={closeOpal}
+					messages={messages}
+					inputValue={inputValue}
+					isLoading={isLoading}
+					error={error}
+					setInputValue={setInputValue}
+					sendMessage={sendMessage}
+					groupedHistory={groupedHistory}
+					activeChat={activeChat}
+					searchQuery={searchQuery}
+					isHistoryVisible={isHistoryVisible}
+					mode={mode}
+					setSearchQuery={setSearchQuery}
+					toggleHistory={toggleHistory}
+					toggleMode={toggleMode}
+					createNewChat={createNewChat}
+					deleteChat={deleteChat}
+					selectChat={selectChat}
+				/>
 			</Box>
-			<OpalPanel
-				isOpen={isOpalOpen}
-				onClose={closeOpal}
-				messages={messages}
-				inputValue={inputValue}
-				isLoading={isLoading}
-				error={error}
-				setInputValue={setInputValue}
-				sendMessage={sendMessage}
-				groupedHistory={groupedHistory}
-				activeChat={activeChat}
-				searchQuery={searchQuery}
-				isHistoryVisible={isHistoryVisible}
-				mode={mode}
-				setSearchQuery={setSearchQuery}
-				toggleHistory={toggleHistory}
-				toggleMode={toggleMode}
-				createNewChat={createNewChat}
-				deleteChat={deleteChat}
-				selectChat={selectChat}
-			/>
-		</Box>
+			</OpalVariationBuildProvider>
+		</OpalPanelActionsProvider>
 	);
 }
 
@@ -358,7 +458,9 @@ export default function Template(props: any) {
 	return (
 		<LayoutProvider>
 			<OpalContextProvider navigationStructure={props.structure}>
-				<TemplateWrapper {...props} />
+				<ExperimentResultsProvider>
+					<TemplateWrapper {...props} />
+				</ExperimentResultsProvider>
 			</OpalContextProvider>
 		</LayoutProvider>
 	);
