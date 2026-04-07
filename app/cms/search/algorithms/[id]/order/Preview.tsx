@@ -10,10 +10,10 @@ import {
 	MenuTrigger,
 	MenuContent,
 } from "@optiaxiom/react";
-import {Flex} from "@/app/components/Flex";
-import {Text} from "@/app/components/Text";
-import {Input} from "@/app/components/Input";
-import {Button} from "@/app/components/Button";
+import { Flex } from "@/app/components/Flex";
+import { Text } from "@/app/components/Text";
+import { Input } from "@/app/components/Input";
+import { Button } from "@/app/components/Button";
 import {
 	IconSearch,
 	IconSettings,
@@ -22,8 +22,8 @@ import {
 	IconArrowsExchange,
 	IconPinned,
 } from "@tabler/icons-react";
-import {useState, useMemo, useEffect, useRef} from "react";
-import {useParams} from "next/navigation";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {
 	Algorithm,
@@ -144,7 +144,7 @@ export default function Preview({
 	const algorithmSynonyms = externalAlgorithmSynonyms ?? localAlgorithmSynonyms;
 
 	const [optimisticPinnedResults, setOptimisticPinnedResults] = useState<
-		(PinnedResult & {status: "Active" | "Inactive"})[]
+		(PinnedResult & { status: "Active" | "Inactive" })[]
 	>([]);
 
 	const onCreatePinnedResult = (query: string) => {
@@ -174,7 +174,7 @@ export default function Preview({
 
 		setOptimisticPinnedResults((prev) => [
 			...prev,
-			{...newGlobalPinnedResult, status: newPinnedResult.status},
+			{ ...newGlobalPinnedResult, status: newPinnedResult.status },
 		]);
 
 		setIsPinnedResultDialogOpen(false);
@@ -205,10 +205,10 @@ export default function Preview({
 			.map((ref) => {
 				const bb = globalPinnedResults.find((g) => g.id === ref.pinnedResultId);
 				if (!bb) return null;
-				return {...bb, status: ref.status};
+				return { ...bb, status: ref.status };
 			})
 			.filter(
-				(item): item is PinnedResult & {status: "Active" | "Inactive"} => item !== null
+				(item): item is PinnedResult & { status: "Active" | "Inactive" } => item !== null
 			);
 	}, [algorithmPinnedResults, globalPinnedResults]);
 
@@ -340,13 +340,13 @@ export default function Preview({
 	// Check for active pinned results matching the query
 	const activePinnedResults = showPinnedResults
 		? effectivePinnedResults.filter(
-				(bb) =>
-					bb.status === "Active" &&
-					query &&
-					bb.query
-						.split(";")
-						.some((phrase) => phrase.trim().toLowerCase().includes(query.toLowerCase()))
-			)
+			(bb) =>
+				bb.status === "Active" &&
+				query &&
+				bb.query
+					.split(";")
+					.some((phrase) => phrase.trim().toLowerCase().includes(query.toLowerCase()))
+		)
 		: [];
 
 	return (
@@ -367,7 +367,7 @@ export default function Preview({
 							{searchBar && (
 								<Flex gap="8" flexDirection="row">
 									<Box flex="1" asChild>
-										<div style={{position: "relative"}}>
+										<div style={{ position: "relative" }}>
 											<Input
 												placeholder="Search Preview"
 												addonBefore={<IconSearch size={16} />}
@@ -412,7 +412,7 @@ export default function Preview({
 																		rounded="sm"
 																		bg={
 																			index ===
-																			highlightedIndex
+																				highlightedIndex
 																				? "bg.default.hovered"
 																				: undefined
 																		}
@@ -606,7 +606,7 @@ export default function Preview({
 				open={isPinnedResultDialogOpen}
 				setOpen={setIsPinnedResultDialogOpen}
 				mode="create"
-				initialData={{query: pinnedResultQuery, destination: ""}}
+				initialData={{ query: pinnedResultQuery, destination: "" }}
 				onSave={handleSavePinnedResult}
 				showStatus={true}
 			/>
@@ -638,7 +638,7 @@ function DetailedResultItem({
 		const parts = text.split(new RegExp(`(${query})`, "gi"));
 		return parts.map((part, i) =>
 			part.toLowerCase() === query.toLowerCase() ? (
-				<span key={i} style={{color: "#0066CC", fontWeight: "bold"}}>
+				<span key={i} style={{ color: "#0066CC", fontWeight: "bold" }}>
 					{part}
 				</span>
 			) : (
@@ -648,7 +648,7 @@ function DetailedResultItem({
 	};
 
 	return (
-		<Box bg="bg.default" style={{borderBottom: "1px solid #e2e8f0"}}>
+		<Box bg="bg.default" style={{ borderBottom: "1px solid #e2e8f0" }}>
 			<Flex flexDirection="row" justifyContent="space-between" alignItems="start" mb="8">
 				<Flex flexDirection="column" gap="4">
 					{isPinnedResult && (
@@ -660,7 +660,7 @@ function DetailedResultItem({
 						<Text
 							color="fg.secondary"
 							fontSize="sm"
-							style={{textTransform: "uppercase"}}
+							style={{ textTransform: "uppercase" }}
 						>
 							SCORE:
 						</Text>
@@ -696,7 +696,7 @@ function GridRow({
 }) {
 	return (
 		<Flex flexDirection="row" gap="8" mb="4">
-			<Flex style={{width: "100px"}} justifyContent="flex-end" alignItems="center" gap="4">
+			<Flex style={{ width: "100px" }} justifyContent="flex-end" alignItems="center" gap="4">
 				{multiplier && (
 					<Badge intent="information" size="sm" variant="subtle">
 						x{multiplier}

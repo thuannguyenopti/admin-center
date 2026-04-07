@@ -1,19 +1,22 @@
 "use client";
 
-import {createContext, useContext, useState, useEffect, ReactNode} from "react";
+import {createContext, useContext, useState, ReactNode} from "react";
 
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	titleActions: ReactNode | null;
+	setTitleActions: (content: ReactNode | null) => void;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({children}: {children: ReactNode}) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent}}>
+		<LayoutContext.Provider value={{asideContent, setAsideContent, titleActions, setTitleActions}}>
 			{children}
 		</LayoutContext.Provider>
 	);
