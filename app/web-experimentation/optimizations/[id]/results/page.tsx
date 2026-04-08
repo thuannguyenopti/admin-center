@@ -201,7 +201,7 @@ export default function ExperimentResultsPage() {
 
 			{/* Page title */}
 			<Box pt="8" pb="16">
-				<Heading level={3}>Experiment Results</Heading>
+				<Heading level="3">Experiment Results</Heading>
 			</Box>
 
 			{/* Tabs: Summary | Explore results data + separator */}
