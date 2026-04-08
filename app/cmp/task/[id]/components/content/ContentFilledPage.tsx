@@ -93,11 +93,11 @@ export function ContentFilledPage({
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], (value: ContentType[]) => void];
 	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
 	const router = useRouter();
-	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [pages]);
+	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [currentTaskId, pages]);
 	const taskContentInstances = useMemo(() => contentInstances.filter((instance) => {
 		const taskId = instance.taskId ?? initialContentInstances.find((i) => i.id === instance.id)?.taskId;
 		return taskId === currentTaskId;
-	}), [contentInstances]);
+	}), [contentInstances, currentTaskId]);
 	const selectedTaskAsset = taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
 	const selectedContentInstance = taskContentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
 	const selectedArticle = taskArticles.find((article) => article.id === selectedArticleId) ?? null;

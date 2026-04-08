@@ -46,7 +46,7 @@ export function useCmpTaskComputedData({
 	taskAssets,
 	workflowSearch,
 }: UseCmpTaskComputedDataArgs) {
-	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [pages]);
+	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [currentTaskId, pages]);
 	const taskContentInstances = useMemo(() => contentInstances.filter((instance) => {
 		const taskId = instance.taskId ?? initialContentInstances.find((i) => i.id === instance.id)?.taskId;
 		return taskId === currentTaskId;
