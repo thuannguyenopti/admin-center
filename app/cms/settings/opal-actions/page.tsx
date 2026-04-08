@@ -37,7 +37,19 @@ export default function OpalActionsPage() {
 
 	// Clean up invalid locations from old localStorage data
 	useEffect(() => {
-		const validLocations = ["toolbar-improve", "toolbar-context", "asset-panel", "property-editor"];
+		const validLocations = [
+			"toolbar-improve",
+			"toolbar-page",
+			"toolbar-context",
+			"asset-panel",
+			"outline-section",
+			"property-text",
+			"property-image",
+			"property-number",
+			"property-datetime",
+			"property-reference",
+			"property-editor"
+		];
 		const hasInvalidLocations = opalConfig.locations.some(loc => !validLocations.includes(loc.id));
 
 		if (hasInvalidLocations) {
@@ -55,7 +67,19 @@ export default function OpalActionsPage() {
 	const [editingLocation, setEditingLocation] = useState<LocationMenu | null>(null);
 
 	// Valid location IDs for the Menus tab (excludes system agents)
-	const validMenuLocations = ["toolbar-improve", "toolbar-context", "asset-panel", "property-editor"];
+	const validMenuLocations = [
+		"toolbar-improve",
+		"toolbar-page",
+		"toolbar-context",
+		"asset-panel",
+		"outline-section",
+		"property-text",
+		"property-image",
+		"property-number",
+		"property-datetime",
+		"property-reference",
+		"property-editor"
+	];
 
 	// Filter locations for Menus tab
 	const filteredLocations = opalConfig.locations.filter((location) => {

@@ -18,6 +18,10 @@ export function createEmptyLocation(locationId: LocationId): LocationMenu {
 			name: "Toolbar Improve Button",
 			description: "Actions shown in the Improve dropdown button",
 		},
+		"toolbar-page": {
+			name: "Page",
+			description: "Actions shown in the page context menu",
+		},
 		"toolbar-context": {
 			name: "Toolbar Context Menu",
 			description: "Actions shown in the toolbar context menu (three dots)",
@@ -25,6 +29,30 @@ export function createEmptyLocation(locationId: LocationId): LocationMenu {
 		"asset-panel": {
 			name: "Asset Panel",
 			description: "Actions shown in the asset panel",
+		},
+		"outline-section": {
+			name: "Section",
+			description: "Actions shown in the outline section context menu",
+		},
+		"property-text": {
+			name: "Text",
+			description: "Actions shown when editing text properties",
+		},
+		"property-image": {
+			name: "Image",
+			description: "Actions shown when editing image properties",
+		},
+		"property-number": {
+			name: "Number",
+			description: "Actions shown when editing number properties",
+		},
+		"property-datetime": {
+			name: "Date/Time",
+			description: "Actions shown when editing date/time properties",
+		},
+		"property-reference": {
+			name: "Reference",
+			description: "Actions shown when editing reference properties",
 		},
 		"property-editor": {
 			name: "Property Editor",
@@ -48,16 +76,30 @@ export function migrateOpalActions(oldActions: OpalAction[]): OpalConfiguration 
 	// Initialize all location menus
 	const locations: LocationMenu[] = [
 		createEmptyLocation("toolbar-improve"),
+		createEmptyLocation("toolbar-page"),
 		createEmptyLocation("toolbar-context"),
 		createEmptyLocation("asset-panel"),
+		createEmptyLocation("outline-section"),
+		createEmptyLocation("property-text"),
+		createEmptyLocation("property-image"),
+		createEmptyLocation("property-number"),
+		createEmptyLocation("property-datetime"),
+		createEmptyLocation("property-reference"),
 		createEmptyLocation("property-editor"),
 	];
 
 	// Track order within each location
 	const orderCounters: Record<LocationId, number> = {
 		"toolbar-improve": 0,
+		"toolbar-page": 0,
 		"toolbar-context": 0,
 		"asset-panel": 0,
+		"outline-section": 0,
+		"property-text": 0,
+		"property-image": 0,
+		"property-number": 0,
+		"property-datetime": 0,
+		"property-reference": 0,
 		"property-editor": 0,
 	};
 
