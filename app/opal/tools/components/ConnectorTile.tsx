@@ -1,0 +1,94 @@
+"use client";
+
+import { Box, Text, Button } from "@optiaxiom/react";
+import type { Connector } from "../data/connectors";
+import { ConnectorAvatar } from "./ConnectorAvatar";
+
+interface ConnectorTileProps {
+    connector: Connector;
+    isConnected?: boolean;
+    onDetails: (connector: Connector) => void;
+    onConfigure: (connector: Connector) => void;
+}
+
+export function ConnectorTile({ connector, isConnected = false, onDetails, onConfigure }: ConnectorTileProps) {
+    const usesDirectConnect = connector.category === "Google Workspace" || connector.category === "Microsoft 365";
+
+    return (
+        <Box
+            border="1"
+            borderColor="border.tertiary"
+            rounded="md"
+            p="16"
+            display="flex"
+            flexDirection="column"
+            gap="12"
+            className="group cursor-default"
+            style={{ position: "relative", background: "var(--ax-colors-bg-default)", transition: "background 0.15s" }}
+        >
+            {/* Status dot */}
+            <Box
+                rounded="full"
+                style={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    width: 8,
+                    height: 8,
+                    background: isConnected
+                        ? "var(--ax-colors-bg-success-strong)"
+                        : "var(--ax-colors-border-tertiary)",
+                }}
+            />
+
+            {/* Icon + name row */}
+            <Box display="flex" alignItems="center" gap="12">
+                <ConnectorAvatar connector={connector} size={40} />
+                <Text fontWeight="500" fontSize="sm">
+                    {connector.name}
+                </Text>
+            </Box>
+
+            {/* Description */}
+            <Text
+                fontSize="sm"
+                color="fg.secondary"
+                style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                    lineHeight: "1.4",
+                    minHeight: "2.8em",
+                }}
+            >
+                {connector.description}
+            </Text>
+
+            {/* Hover actions */}
+            <Box
+                display="flex"
+                gap="8"
+                className="opacity-0 group-hover:opacity-100"
+                style={{ transition: "opacity 0.15s" }}
+            >
+                <Button
+                    appearance="subtle"
+                    size="sm"
+                    onClick={() => onDetails(connector)}
+                    style={{ flex: 1 }}
+                >
+                    Details
+                </Button>
+                <Button
+                    appearance="primary"
+                    size="sm"
+                    onClick={() => onConfigure(connector)}
+                    style={{ flex: 1 }}
+                >
+                    {usesDirectConnect ? "Connect" : "Configure"}
+                </Button>
+            </Box>
+        </Box>
+    );
+}
