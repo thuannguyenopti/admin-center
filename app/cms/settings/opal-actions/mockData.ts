@@ -12,6 +12,8 @@ export const availableAgents: Agent[] = [
 	{id: "content-refresh-analysis", name: "Content Refresh Analysis", category: "Content"},
 	{id: "content-translation", name: "Content Translation", category: "Content"},
 	{id: "brand-tone-audit", name: "Brand Tone of Voice Audit", category: "Content"},
+	{id: "content-tagging", name: "Content Tagging", category: "Content"},
+	{id: "content-mapping", name: "Content Mapping", category: "Content"},
 
 	// GEO category
 	{id: "geo-recommendations", name: "GEO Recommendations", category: "GEO"},
@@ -392,6 +394,13 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 			name: "Content Suggestions",
 			description: "Get AI suggestions for improving your content",
 			enabled: true,
+			category: "productivity",
+		},
+		{
+			id: "auto-mapping",
+			name: "Auto-mapping",
+			description: "Automatically map content types based on structure and usage patterns",
+			enabled: false,
 			category: "productivity",
 		},
 	],

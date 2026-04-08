@@ -110,7 +110,7 @@ export default function OpalActionsPage() {
 				<TabsList mb="24">
 					<TabsTrigger value="menus">Menus</TabsTrigger>
 					<TabsTrigger value="system-agents">System Agents</TabsTrigger>
-					<TabsTrigger value="app-companion">App Companion</TabsTrigger>
+					<TabsTrigger value="app-companion">Automated Features</TabsTrigger>
 				</TabsList>
 
 			{/* Menus Tab */}
@@ -239,7 +239,7 @@ export default function OpalActionsPage() {
 				</Table>
 			</TabsContent>
 
-			{/* App Companion Tab */}
+			{/* Automated Features Tab */}
 			<TabsContent value="app-companion">
 				<Box pb="24">
 					<Box fontSize="md" color="fg.secondary" mb="16">

@@ -559,6 +559,11 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		}
 	};
 
+	// Check if Generate Page with Opal is enabled
+	const isOpalGenerateEnabled = opalConfig.systemAgents?.some(
+		agent => agent.id === "generate-page-with-opal" && agent.enabled
+	) ?? false;
+
 	return (
 		<>
 			<Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -819,10 +824,10 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 								Back
 							</Button>
 							<Group gap="8">
-								<Button appearance="primary" onClick={handleCreate} disabled={validLocations.length === 0}>
+								<Button appearance={isOpalGenerateEnabled ? "default" : "primary"} onClick={handleCreate} disabled={validLocations.length === 0}>
 									Create Page
 								</Button>
-								{opalConfig.systemAgents?.some(agent => agent.id === "generate-page-with-opal" && agent.enabled) && (
+								{isOpalGenerateEnabled && (
 									<Button appearance="primary-opal" onClick={handleCreateWithOpal} disabled={validLocations.length === 0} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
 										Generate Page
 									</Button>
