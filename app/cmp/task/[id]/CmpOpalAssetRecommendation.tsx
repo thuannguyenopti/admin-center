@@ -14,8 +14,8 @@ import { WorkflowChangeModal } from "./components/workflow/WorkflowChangeModal";
 import { WorkflowSidebar } from "./components/workflow/WorkflowSidebar";
 import { useCmpOpalAssetRecommendationState } from "./useCmpOpalAssetRecommendationState";
 
-export function CmpOpalAssetRecommendation() {
-	const state = useCmpOpalAssetRecommendationState();
+export function CmpOpalAssetRecommendation({ taskId }: { taskId: string }) {
+	const state = useCmpOpalAssetRecommendationState(taskId);
 
 	const workflowSidebar = (
 		<WorkflowSidebar
@@ -39,6 +39,7 @@ export function CmpOpalAssetRecommendation() {
 							briefContent={state.briefContent}
 							onOpenEdit={state.openBriefEdit}
 							onTabChange={state.handleTabChange}
+							taskTitle={state.taskTitle}
 						/>
 					}
 					right={workflowSidebar}
@@ -55,6 +56,7 @@ export function CmpOpalAssetRecommendation() {
 							onCancel={state.cancelBriefEdit}
 							onSave={state.saveBriefEdit}
 							onTabChange={state.handleTabChange}
+							taskTitle={state.taskTitle}
 						/>
 					}
 					right={
@@ -97,6 +99,7 @@ export function CmpOpalAssetRecommendation() {
 							onAddContent={() => state.openSearch("content-empty")}
 							onAddContentFromModel={state.addContentInstanceFromModel}
 							onTabChange={state.handleTabChange}
+							taskTitle={state.taskTitle}
 						/>
 					}
 					right={workflowSidebar}
@@ -110,6 +113,8 @@ export function CmpOpalAssetRecommendation() {
 							activeTab={state.activeTab}
 							applications={state.applications}
 							contentInstances={state.contentInstances}
+							currentTaskId={state.taskId}
+							taskTitle={state.taskTitle}
 							onAddArticle={state.addArticle}
 							onAddContent={() => state.openSearch(state.scene)}
 							onAddContentFromModel={state.addContentInstanceFromModel}

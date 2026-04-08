@@ -14,6 +14,7 @@ type BriefEditPageProps = {
 	onCancel: () => void;
 	onSave: () => void;
 	onTabChange: (tab: string) => void;
+	taskTitle: string;
 };
 
 export function BriefEditPage({
@@ -23,14 +24,15 @@ export function BriefEditPage({
 	onCancel,
 	onSave,
 	onTabChange,
+	taskTitle,
 }: BriefEditPageProps) {
 	return (
 		<Box pb="32">
-			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
+			<PageHeader activeTab={activeTab} onTabChange={onTabChange} taskTitle={taskTitle} />
 			<Box display="flex" flexDirection="column" style={{ gap: 18, padding: "24px 28px 0", width: "100%" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
 					<Text color="fg.default" fontSize="xl" fontWeight="500" style={{ maxWidth: "none" }}>
-						Brief - Create Sponsor Package for Ironman / STRIDE event in...
+						Brief - {taskTitle}
 					</Text>
 					<Box alignItems="center" display="flex" style={{ gap: 14 }}>
 						<Button appearance="subtle" onClick={onCancel} size="sm">

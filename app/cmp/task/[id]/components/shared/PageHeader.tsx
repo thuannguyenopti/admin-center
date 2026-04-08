@@ -7,9 +7,10 @@ import type { TaskTab } from "../../types";
 type PageHeaderProps = {
 	activeTab: TaskTab;
 	onTabChange: (tab: string) => void;
+	taskTitle: string;
 };
 
-export function PageHeader({ activeTab, onTabChange }: PageHeaderProps) {
+export function PageHeader({ activeTab, onTabChange, taskTitle }: PageHeaderProps) {
 	return (
 		<Box display="flex" flexDirection="column" style={{ gap: 14, padding: "18px 32px 0" }}>
 			<Box alignItems="center" display="flex" style={{ gap: 10 }}>
@@ -40,7 +41,7 @@ export function PageHeader({ activeTab, onTabChange }: PageHeaderProps) {
 					maxWidth: "none",
 				}}
 			>
-				Ironman Miami triathlon 2026 Sponsor Package
+				{taskTitle}
 			</Text>
 
 			<Tabs onValueChange={onTabChange} value={activeTab}>

@@ -13,16 +13,17 @@ type BriefPageProps = {
 	briefContent: string;
 	onOpenEdit: () => void;
 	onTabChange: (tab: string) => void;
+	taskTitle: string;
 };
 
-export function BriefPage({ activeTab, briefContent, onOpenEdit, onTabChange }: BriefPageProps) {
+export function BriefPage({ activeTab, briefContent, onOpenEdit, onTabChange, taskTitle }: BriefPageProps) {
 	return (
 		<Box pb="32">
-			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
+			<PageHeader activeTab={activeTab} onTabChange={onTabChange} taskTitle={taskTitle} />
 			<Box display="flex" flexDirection="column" style={{ gap: 18, padding: "24px 28px 0", width: "100%" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
 					<Text color="fg.default" fontSize="xl" fontWeight="500" style={{ maxWidth: "none" }}>
-						Brief - Create Sponsor Package for Ironman / STRIDE event in March 2026
+						Brief - {taskTitle}
 					</Text>
 					<Button appearance="subtle" aria-label="More" icon={<IconDots size={18} />} size="sm" />
 				</Box>

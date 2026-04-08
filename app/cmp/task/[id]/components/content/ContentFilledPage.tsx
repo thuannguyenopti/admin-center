@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Outline } from "@/app/components/vb/PreviewCanvas";
 import type { AssetItem, TaskArticle, TaskTab } from "../../types";
-import { currentTaskId } from "../../constants";
+
 import { PageHeader } from "../shared/PageHeader";
 import { AddContentButtonLabel, buildAddContentMenuOptions } from "./buildAddContentMenuOptions";
 import { getContentItemMenuOptions } from "./getContentItemMenuOptions";
@@ -25,6 +25,7 @@ type ContentFilledPageProps = {
 	activeTab: TaskTab;
 	applications: Application[];
 	contentInstances: ContentInstance[];
+	currentTaskId: string;
 	onAddArticle: () => void;
 	onAddContent: () => void;
 	onAddContentFromModel: (model: ContentType) => void;
@@ -52,12 +53,14 @@ type ContentFilledPageProps = {
 	setTaskAssets: React.Dispatch<React.SetStateAction<AssetItem[]>>;
 	taskArticles: TaskArticle[];
 	taskAssets: AssetItem[];
+	taskTitle: string;
 };
 
 export function ContentFilledPage({
 	activeTab,
 	applications,
 	contentInstances,
+	currentTaskId,
 	onAddArticle,
 	onAddContent,
 	onAddContentFromModel,
@@ -85,6 +88,7 @@ export function ContentFilledPage({
 	setTaskAssets,
 	taskArticles,
 	taskAssets,
+	taskTitle,
 }: ContentFilledPageProps) {
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], (value: ContentType[]) => void];
 	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
@@ -111,6 +115,7 @@ export function ContentFilledPage({
 	const menuOptions = getContentItemMenuOptions({
 		applications,
 		contentInstances,
+		currentTaskId,
 		onAddToApplication,
 		onSelectArticle,
 		onSelectContentInstance,
@@ -138,7 +143,7 @@ export function ContentFilledPage({
 
 	return (
 		<Box pb="32" style={{ position: "relative" }}>
-			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
+			<PageHeader activeTab={activeTab} onTabChange={onTabChange} taskTitle={taskTitle} />
 			<Box display="flex" flexDirection="column" style={{ gap: 18, maxWidth: 812, padding: "20px 32px 0" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
 					<Menu options={buildAddContentMenuOptions({ onAddArticle, onAddAsset: onAddContent, onAddContentFromModel })}>

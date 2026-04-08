@@ -8,11 +8,12 @@ import { initialApplications, initialContentTypes, initialPages } from "@/app/db
 import usePersistentState from "@/app/usePersistentState";
 import { useEffect, useState } from "react";
 import { initialTaskAssets, searchAssets, suggestedAssets } from "./mockData";
-import { perspectiveSeeds } from "./constants";
+import { initialBriefContent, perspectiveSeeds, taskBriefContents } from "./constants";
 import type { AssetItem, Scene, TaskArticle } from "./types";
-import { initialBriefHtml } from "./utils";
+import { formatInitialBriefHtml } from "./utils";
 
-export function useCmpTaskBaseState() {
+export function useCmpTaskBaseState(taskId: string) {
+	const taskBriefHtml = formatInitialBriefHtml(taskBriefContents[taskId] ?? initialBriefContent);
 	const [scene, setScene] = useState<Scene>("brief");
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
 	const [selectedTaskAssetId, setSelectedTaskAssetId] = useState<string | null>(null);
@@ -60,8 +61,8 @@ export function useCmpTaskBaseState() {
 	const [applications] = usePersistentState("applications", initialApplications) as [Application[], unknown];
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
-	const [briefContent, setBriefContent] = useState(initialBriefHtml);
-	const [draftBriefContent, setDraftBriefContent] = useState(initialBriefHtml);
+	const [briefContent, setBriefContent] = useState(taskBriefHtml);
+	const [draftBriefContent, setDraftBriefContent] = useState(taskBriefHtml);
 	const [searchReturnScene, setSearchReturnScene] = useState<Scene>("brief-edit");
 	const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 	const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);

@@ -5,7 +5,6 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import type { ContentType } from "@/app/db/initialData";
 import type { TaskTab } from "../../types";
-import { recommendationAssets } from "../../constants";
 import { PageHeader } from "../shared/PageHeader";
 import { AddContentButtonLabel, buildAddContentMenuOptions } from "./buildAddContentMenuOptions";
 
@@ -15,6 +14,7 @@ type ContentEmptyPageProps = {
 	onAddContentFromModel: (model: ContentType) => void;
 	onAddArticle: () => void;
 	onTabChange: (tab: string) => void;
+	taskTitle: string;
 };
 
 export function ContentEmptyPage({
@@ -23,10 +23,11 @@ export function ContentEmptyPage({
 	onAddContentFromModel,
 	onAddArticle,
 	onTabChange,
+	taskTitle,
 }: ContentEmptyPageProps) {
 	return (
 		<Box pb="40" style={{ minHeight: "calc(100vh - 48px)", position: "relative" }}>
-			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
+			<PageHeader activeTab={activeTab} onTabChange={onTabChange} taskTitle={taskTitle} />
 			<Box
 				alignItems="center"
 				display="flex"
@@ -63,22 +64,7 @@ export function ContentEmptyPage({
 					</Menu>
 				</Box>
 
-				<img
-					alt=""
-					aria-hidden="true"
-					src={recommendationAssets.emptyState}
-					style={{
-						left: "50%",
-						maxWidth: 452,
-						opacity: 0.92,
-						pointerEvents: "none",
-						position: "absolute",
-						top: "50%",
-						transform: "translate(-50%, -5%)",
-						width: "40vw",
-					}}
-				/>
-			</Box>
+				</Box>
 		</Box>
 	);
 }
