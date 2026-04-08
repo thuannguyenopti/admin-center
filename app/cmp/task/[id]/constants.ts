@@ -12,9 +12,6 @@ Content #1: Sponsorship Overview Document
 • Distribution Channels: Direct outreach to potential sponsors, event website, and email campaigns.
 • Social Channels: Instagram, Facebook, and LinkedIn.`;
 
-export const currentTaskId = "1";
-export const currentTaskName = "Ironman Miami triathlon 2026 Sponsor Package task";
-
 export const taskBriefContents: Record<string, string> = {
 	"1": initialBriefContent,
 	"2": `Objective:
