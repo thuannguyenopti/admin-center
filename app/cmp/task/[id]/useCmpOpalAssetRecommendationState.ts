@@ -5,18 +5,20 @@ import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { createPageFromInstance } from "@/app/lib/contentConnection";
 import { useCallback, useEffect } from "react";
-import { currentTaskId, currentTaskName } from "./constants";
+import { initialCmpTasks } from "@/app/db/initialData";
 import { workflowTemplates } from "./mockData";
 import type { AssetItem, Scene } from "./types";
 import { useCmpTaskBaseState } from "./useCmpTaskBaseState";
 import { useCmpTaskComputedData } from "./useCmpTaskComputedData";
 
-export function useCmpOpalAssetRecommendationState() {
-	const state = useCmpTaskBaseState();
+export function useCmpOpalAssetRecommendationState(taskId: string) {
+	const currentTaskName = initialCmpTasks.find((t) => t.id === taskId)?.title ?? "Unknown Task";
+	const state = useCmpTaskBaseState(taskId);
 	const computed = useCmpTaskComputedData({
 		briefContent: state.briefContent,
 		contentInstances: state.contentInstances,
 		contentTypes: state.contentTypes,
+		currentTaskId: taskId,
 		draftBriefContent: state.draftBriefContent,
 		exclude: state.exclude,
 		instanceToAdd: state.instanceToAdd,
@@ -85,7 +87,7 @@ export function useCmpOpalAssetRecommendationState() {
 	const createAndAddPage = useCallback(
 		(instance: ContentInstance, targetContentTypeId: string) => {
 			const result = createPageFromInstance(instance, targetContentTypeId, state.contentTypes, state.pages, {
-				taskId: currentTaskId,
+				taskId,
 				taskName: currentTaskName,
 			});
 
@@ -223,6 +225,7 @@ export function useCmpOpalAssetRecommendationState() {
 			id: instanceId,
 			modelDisplayName: model.displayName || model.name,
 			modelId: model.id,
+			taskId,
 		};
 
 		state.setContentInstances((current) => [newInstance, ...current]);
@@ -259,6 +262,8 @@ export function useCmpOpalAssetRecommendationState() {
 	return {
 		...state,
 		...computed,
+		taskId,
+		taskTitle: currentTaskName,
 		addArticle,
 		addContentInstanceFromModel,
 		addSelectedPanelAssetsToTask: () => addAssetsToTask(computed.panelAssetsWithSelection.filter((asset) => asset.selected)),

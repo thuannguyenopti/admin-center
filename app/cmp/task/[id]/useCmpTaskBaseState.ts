@@ -6,13 +6,14 @@ import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { Application, ContentType, Page } from "@/app/db/initialData";
 import { initialApplications, initialContentTypes, initialPages } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { initialTaskAssets, searchAssets, suggestedAssets } from "./mockData";
-import { perspectiveSeeds } from "./constants";
+import { initialBriefContent, perspectiveSeeds, taskBriefContents } from "./constants";
 import type { AssetItem, Scene, TaskArticle } from "./types";
-import { initialBriefHtml } from "./utils";
+import { formatInitialBriefHtml } from "./utils";
 
-export function useCmpTaskBaseState() {
+export function useCmpTaskBaseState(taskId: string) {
+	const taskBriefHtml = formatInitialBriefHtml(taskBriefContents[taskId] ?? initialBriefContent);
 	const [scene, setScene] = useState<Scene>("brief");
 	const [selectedAsset, setSelectedAsset] = useState<AssetItem>(suggestedAssets[6]);
 	const [selectedTaskAssetId, setSelectedTaskAssetId] = useState<string | null>(null);
@@ -26,6 +27,23 @@ export function useCmpTaskBaseState() {
 		ContentInstance[],
 		React.Dispatch<React.SetStateAction<ContentInstance[]>>,
 	];
+	// Merge taskId from initial data into cached instances
+	useEffect(() => {
+		if (!contentInstances?.length) return;
+		let changed = false;
+		const merged = contentInstances.map((cached: ContentInstance) => {
+			const initial = initialContentInstances.find((i: ContentInstance) => i.id === cached.id);
+			if (!initial) return cached;
+			if (initial.taskId && cached.taskId !== initial.taskId) {
+				changed = true;
+				return { ...cached, taskId: initial.taskId };
+			}
+			return cached;
+		});
+		if (changed) setContentInstances(merged);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
@@ -43,8 +61,8 @@ export function useCmpTaskBaseState() {
 	const [applications] = usePersistentState("applications", initialApplications) as [Application[], unknown];
 	const [perspectives, setPerspectives] = useState(perspectiveSeeds);
 	const [exclude, setExclude] = useState("bicycles, skateboards, longboards");
-	const [briefContent, setBriefContent] = useState(initialBriefHtml);
-	const [draftBriefContent, setDraftBriefContent] = useState(initialBriefHtml);
+	const [briefContent, setBriefContent] = useState(taskBriefHtml);
+	const [draftBriefContent, setDraftBriefContent] = useState(taskBriefHtml);
 	const [searchReturnScene, setSearchReturnScene] = useState<Scene>("brief-edit");
 	const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 	const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);

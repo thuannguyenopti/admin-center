@@ -5,6 +5,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
+import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { Application, ContentType, Page } from "@/app/db/initialData";
 import { initialContentTypes } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
@@ -13,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Outline } from "@/app/components/vb/PreviewCanvas";
 import type { AssetItem, TaskArticle, TaskTab } from "../../types";
-import { currentTaskId } from "../../constants";
+
 import { PageHeader } from "../shared/PageHeader";
 import { AddContentButtonLabel, buildAddContentMenuOptions } from "./buildAddContentMenuOptions";
 import { getContentItemMenuOptions } from "./getContentItemMenuOptions";
@@ -24,6 +25,7 @@ type ContentFilledPageProps = {
 	activeTab: TaskTab;
 	applications: Application[];
 	contentInstances: ContentInstance[];
+	currentTaskId: string;
 	onAddArticle: () => void;
 	onAddContent: () => void;
 	onAddContentFromModel: (model: ContentType) => void;
@@ -51,12 +53,14 @@ type ContentFilledPageProps = {
 	setTaskAssets: React.Dispatch<React.SetStateAction<AssetItem[]>>;
 	taskArticles: TaskArticle[];
 	taskAssets: AssetItem[];
+	taskTitle: string;
 };
 
 export function ContentFilledPage({
 	activeTab,
 	applications,
 	contentInstances,
+	currentTaskId,
 	onAddArticle,
 	onAddContent,
 	onAddContentFromModel,
@@ -84,21 +88,34 @@ export function ContentFilledPage({
 	setTaskAssets,
 	taskArticles,
 	taskAssets,
+	taskTitle,
 }: ContentFilledPageProps) {
 	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], (value: ContentType[]) => void];
 	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
 	const router = useRouter();
-	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [pages]);
+	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [currentTaskId, pages]);
+	const taskContentInstances = useMemo(() => contentInstances.filter((instance) => {
+		const taskId = instance.taskId ?? initialContentInstances.find((i) => i.id === instance.id)?.taskId;
+		return taskId === currentTaskId;
+	}), [contentInstances, currentTaskId]);
 	const selectedTaskAsset = taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
-	const selectedContentInstance = contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
+	const selectedContentInstance = taskContentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
 	const selectedArticle = taskArticles.find((article) => article.id === selectedArticleId) ?? null;
 	const selectedPage = pages.find((page) => page.id === selectedPageId) ?? null;
+	// Auto-select first task content instance if none selected
+	useEffect(() => {
+		if (!selectedContentInstance && taskContentInstances.length > 0 && !selectedPageId && !selectedTaskAssetId && !selectedArticleId) {
+			onSelectContentInstance(taskContentInstances[0].id);
+		}
+	}, [taskContentInstances, selectedContentInstance, selectedPageId, selectedTaskAssetId, selectedArticleId, onSelectContentInstance]);
+
 	useEffect(() => {
 		setIsEditingContentInstance(false);
 	}, [selectedContentInstanceId]);
 	const menuOptions = getContentItemMenuOptions({
 		applications,
 		contentInstances,
+		currentTaskId,
 		onAddToApplication,
 		onSelectArticle,
 		onSelectContentInstance,
@@ -126,7 +143,7 @@ export function ContentFilledPage({
 
 	return (
 		<Box pb="32" style={{ position: "relative" }}>
-			<PageHeader activeTab={activeTab} onTabChange={onTabChange} />
+			<PageHeader activeTab={activeTab} onTabChange={onTabChange} taskTitle={taskTitle} />
 			<Box display="flex" flexDirection="column" style={{ gap: 18, maxWidth: 812, padding: "20px 32px 0" }}>
 				<Box alignItems="center" display="flex" justifyContent="space-between">
 					<Menu options={buildAddContentMenuOptions({ onAddArticle, onAddAsset: onAddContent, onAddContentFromModel })}>
@@ -152,7 +169,7 @@ export function ContentFilledPage({
 				</Box>
 
 				<TaskItemStrip
-					contentInstances={contentInstances}
+					contentInstances={taskContentInstances}
 					onOpenSuggested={onOpenSuggested}
 					onSelectArticle={onSelectArticle}
 					onSelectContentInstance={onSelectContentInstance}
@@ -170,7 +187,9 @@ export function ContentFilledPage({
 				<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="lg" style={{ overflow: "hidden" }}>
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
 						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
-							{selectedContentInstance?.modelDisplayName ||
+							{selectedContentInstance?.fields.headline ||
+								selectedContentInstance?.fields.title ||
+								selectedContentInstance?.modelDisplayName ||
 								selectedPage?.name ||
 								selectedArticle?.title ||
 								selectedTaskAsset?.title ||

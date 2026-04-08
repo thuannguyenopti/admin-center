@@ -12,6 +12,7 @@ import type { AssetItem, TaskArticle } from "../../types";
 import { recommendationAssets } from "../../constants";
 import { initialCmpContentModels } from "@/app/db/cmpInitialData";
 import { convertCmpModelToContentType } from "@/app/lib/contentTypeMigration";
+import { ContentPreviewRenderer } from "../content-preview/ContentPreviewRenderer";
 
 const cmpContentModels = initialCmpContentModels.map(convertCmpModelToContentType);
 
@@ -69,36 +70,42 @@ export function SelectedContentBody({
 			);
 		}
 
-		return (
-			<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
-				<Text color="fg.secondary" fontSize="sm">
-					Content instance created on {new Date(selectedContentInstance.createdAt).toLocaleDateString()}
-				</Text>
-				{contentModel.properties?.map((cmpProperty) => {
-					const cmsProperty = convertCmpPropertyToCms(cmpProperty);
-					const fieldValue = selectedContentInstance.fields[cmpProperty.name];
+		if (isEditingContentInstance) {
+			return (
+				<Box display="flex" flexDirection="column" style={{ gap: 16, padding: "18px" }}>
+					{contentModel.properties?.map((cmpProperty) => {
+						const cmsProperty = convertCmpPropertyToCms(cmpProperty);
+						const fieldValue = selectedContentInstance.fields[cmpProperty.name];
 
-					return (
-						<PropertyRenderer
-							context={{ runtimeContentTypes: contentTypes }}
-							enableAI={isEditingContentInstance}
-							key={cmpProperty.id}
-							mode={isEditingContentInstance ? "edit" : "readonly"}
-							onChange={(newValue: unknown) =>
-								onContentInstanceChange({
-									...selectedContentInstance,
-									fields: {
-										...selectedContentInstance.fields,
-										[cmpProperty.name]: newValue,
-									},
-								})
-							}
-							property={cmsProperty}
-							value={fieldValue}
-						/>
-					);
-				})}
-			</Box>
+						return (
+							<PropertyRenderer
+								context={{ runtimeContentTypes: contentTypes }}
+								enableAI
+								key={cmpProperty.id}
+								mode="edit"
+								onChange={(newValue: unknown) =>
+									onContentInstanceChange({
+										...selectedContentInstance,
+										fields: {
+											...selectedContentInstance.fields,
+											[cmpProperty.name]: newValue,
+										},
+									})
+								}
+								property={cmsProperty}
+								value={fieldValue}
+							/>
+						);
+					})}
+				</Box>
+			);
+		}
+
+		return (
+			<ContentPreviewRenderer
+				contentModel={contentModel}
+				instance={selectedContentInstance}
+			/>
 		);
 	}
 

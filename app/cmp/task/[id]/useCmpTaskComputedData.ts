@@ -1,16 +1,18 @@
 "use client";
 
 import { useDeferredValue, useMemo } from "react";
-import { currentTaskId } from "./constants";
+
 import { searchAssets, workflowTemplates } from "./mockData";
 import type { ContentType, Page } from "@/app/db/initialData";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
+import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { AssetItem, Scene, SearchAssetItem, TaskArticle, TaskTab } from "./types";
 import { getBriefAssetMatch, getPlainTextFromHtml, getSearchAssetMatch } from "./utils";
 
 type UseCmpTaskComputedDataArgs = {
 	briefContent: string;
 	contentInstances: ContentInstance[];
+	currentTaskId: string;
 	contentTypes: ContentType[];
 	draftBriefContent: string;
 	exclude: string;
@@ -30,6 +32,7 @@ export function useCmpTaskComputedData({
 	briefContent,
 	contentInstances,
 	contentTypes,
+	currentTaskId,
 	draftBriefContent,
 	exclude,
 	instanceToAdd,
@@ -43,8 +46,12 @@ export function useCmpTaskComputedData({
 	taskAssets,
 	workflowSearch,
 }: UseCmpTaskComputedDataArgs) {
-	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [pages]);
-	const hasTaskContent = contentInstances.length > 0 || taskPages.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
+	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [currentTaskId, pages]);
+	const taskContentInstances = useMemo(() => contentInstances.filter((instance) => {
+		const taskId = instance.taskId ?? initialContentInstances.find((i) => i.id === instance.id)?.taskId;
+		return taskId === currentTaskId;
+	}), [contentInstances, currentTaskId]);
+	const hasTaskContent = taskContentInstances.length > 0 || taskPages.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
 	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
 	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
 	const effectiveBriefText = useMemo(() => getPlainTextFromHtml(effectiveBriefContent), [effectiveBriefContent]);
