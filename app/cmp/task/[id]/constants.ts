@@ -15,6 +15,59 @@ Content #1: Sponsorship Overview Document
 export const currentTaskId = "1";
 export const currentTaskName = "Ironman Miami triathlon 2026 Sponsor Package task";
 
+export const taskBriefContents: Record<string, string> = {
+	"1": initialBriefContent,
+	"2": `Objective:
+Curate and organize recommended content assets for the upcoming product launch.
+
+Content Strategy:
+Identify and recommend high-performing content pieces that align with campaign goals:
+
+Content #1: Product Feature Highlights
+• Title: Key Features Overview
+• Asset Type: Web Page
+• Brief: Compile a set of product feature highlights suitable for the landing page, email campaigns, and social media.
+• Target Audience: Existing customers and prospects evaluating the product.
+• Distribution Channels: Website, email newsletters, and partner portals.`,
+	"3": `Objective:
+Design and produce a hotel brochure for the Miami Grand Resort partnership.
+
+Brochure Strategy:
+Create a visually appealing brochure showcasing accommodation options for event participants:
+
+Content #1: Hotel Overview
+• Title: Miami Grand Resort — Your Home During the Event
+• Asset Type: PDF Brochure
+• Brief: Highlight room categories, amenities, proximity to event venues, and exclusive athlete discounts.
+• Target Audience: Event participants, sponsors, and VIP guests.
+• Distribution Channels: Event registration confirmation emails, partner websites, and on-site distribution.`,
+	"4": `Objective:
+Test and validate structured content types in the CMS pipeline.
+
+Testing Strategy:
+Create sample content instances using various content models to verify rendering and field mapping:
+
+Content #1: Structured Content Validation
+• Title: SC Pipeline Test Cases
+• Asset Type: Mixed content types
+• Brief: Create instances of each content model, verify field rendering, and validate content type mappings.
+• Target Audience: Internal QA and development teams.
+• Distribution Channels: Staging environment only.`,
+	"5": `Objective:
+Launch a series of blog posts to build excitement for the STRIDE running community.
+
+Blog Launch Strategy:
+Publish engaging blog content targeting running enthusiasts and first-time triathlon participants:
+
+Content #1: Getting Started with Running
+• Title: From Couch to 5K — A Beginner's Guide
+• Asset Type: Blog Post
+• Brief: Write an approachable guide for beginners looking to start running, with tips on gear, training plans, and motivation.
+• Target Audience: Fitness beginners and casual runners.
+• Distribution Channels: Company blog, social media, and email newsletter.
+• Social Channels: Instagram, Twitter, and Facebook.`,
+};
+
 export const richTextContentStyles = `
 .brief-rich-content,
 .brief-editor-content {
