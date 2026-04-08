@@ -634,66 +634,153 @@ export default function CMSToolbar({
 				</Menu>
 
 				{/* Improve Button with Opal Actions */}
-				{improveGroups.length > 0 && (
-					<Menu
-						options={improveGroups.flatMap((group) => {
-							// If group has multiple agents, create submenu items
-							if (group.agents.length > 1) {
-								return group.agents.map((agentId, index) => {
-									const agent = availableAgents.find((a) => a.id === agentId);
-									return {
-										label: agent?.name || agentId,
-										group: {label: group.name, hidden: index > 0},
+				{improveGroups.length > 0 && (() => {
+					const totalAgents = improveGroups.reduce((sum, g) => sum + g.agents.length, 0);
+					const hasMultipleGroups = improveGroups.length > 1;
+					const useSubmenus = totalAgents > 5 && hasMultipleGroups;
+
+					if (useSubmenus) {
+						// Use dropdown with submenus (like context menu)
+						return (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										appearance="default"
+										icon={<IconChevronDown size={12} />}
+										iconPosition="end"
+									>
+										<Box display="flex" alignItems="center" gap="4">
+											<IconSparkles size={16} />
+											Improve
+										</Box>
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									{improveGroups.map((group) => {
+										// If group has multiple agents, create nested submenu
+										if (group.agents.length > 1) {
+											return (
+												<DropdownMenuSub key={group.id}>
+													<DropdownMenuSubTrigger>
+														{group.name}
+													</DropdownMenuSubTrigger>
+													<DropdownMenuSubContent>
+														{group.agents.map((agentId) => {
+															const agent = availableAgents.find(
+																(a) => a.id === agentId
+															);
+															return (
+																<DropdownMenuItem
+																	key={agentId}
+																	onSelect={() => {
+																		if (agentId === "preflight-audit") {
+																			handlePreflightAudit();
+																		} else if (agentId === "brand-tone-audit") {
+																			handleBrandToneAnalysis();
+																		} else {
+																			console.log(
+																				"Execute Opal Action:",
+																				group.name,
+																				"- Agent:",
+																				agent?.name
+																			);
+																		}
+																	}}
+																>
+																	{agent?.name || agentId}
+																</DropdownMenuItem>
+															);
+														})}
+													</DropdownMenuSubContent>
+												</DropdownMenuSub>
+											);
+										}
+										// Single agent, just show the group name
+										const agentId = group.agents[0];
+										return (
+											<DropdownMenuItem
+												key={group.id}
+												onSelect={() => {
+													if (agentId === "preflight-audit") {
+														handlePreflightAudit();
+													} else if (agentId === "brand-tone-audit") {
+														handleBrandToneAnalysis();
+													} else {
+														console.log("Execute Opal Action:", group.name);
+													}
+												}}
+											>
+												{group.name}
+											</DropdownMenuItem>
+										);
+									})}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						);
+					}
+
+					// Use flat menu with groups
+					return (
+						<Menu
+							options={improveGroups.flatMap((group) => {
+								// If group has multiple agents, create submenu items
+								if (group.agents.length > 1) {
+									return group.agents.map((agentId, index) => {
+										const agent = availableAgents.find((a) => a.id === agentId);
+										return {
+											label: agent?.name || agentId,
+											group: {label: group.name, hidden: index > 0},
+											execute: () => {
+												if (agentId === "preflight-audit") {
+													handlePreflightAudit();
+												} else if (agentId === "brand-tone-audit") {
+													handleBrandToneAnalysis();
+												} else {
+													console.log(
+														"Execute Opal Action:",
+														group.name,
+														"- Agent:",
+														agent?.name
+													);
+												}
+											},
+										};
+									});
+								}
+								// Single agent, just show the group name
+								const agentId = group.agents[0];
+								return [
+									{
+										label: group.name,
 										execute: () => {
 											if (agentId === "preflight-audit") {
 												handlePreflightAudit();
 											} else if (agentId === "brand-tone-audit") {
 												handleBrandToneAnalysis();
 											} else {
-												console.log(
-													"Execute Opal Action:",
-													group.name,
-													"- Agent:",
-													agent?.name
-												);
+												console.log("Execute Opal Action:", group.name);
 											}
 										},
-									};
-								});
-							}
-							// Single agent, just show the group name
-							const agentId = group.agents[0];
-							return [
-								{
-									label: group.name,
-									execute: () => {
-										if (agentId === "preflight-audit") {
-											handlePreflightAudit();
-										} else if (agentId === "brand-tone-audit") {
-											handleBrandToneAnalysis();
-										} else {
-											console.log("Execute Opal Action:", group.name);
-										}
 									},
-								},
-							];
-						})}
-					>
-						<MenuTrigger asChild>
-							<Button
-								appearance="default"
-								icon={<IconChevronDown size={12} />}
-								iconPosition="end"
-							>
-								<Box display="flex" alignItems="center" gap="4">
-									<IconSparkles size={16} />
-									Improve
-								</Box>
-							</Button>
-						</MenuTrigger>
-						<MenuContent />
-					</Menu>
-				)}
+								];
+							})}
+						>
+							<MenuTrigger asChild>
+								<Button
+									appearance="default"
+									icon={<IconChevronDown size={12} />}
+									iconPosition="end"
+								>
+									<Box display="flex" alignItems="center" gap="4">
+										<IconSparkles size={16} />
+										Improve
+									</Box>
+								</Button>
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
+					);
+				})()}
 
 				{/* Publish Button with Menu */}
 				<Menu
@@ -764,7 +851,7 @@ export default function CMSToolbar({
 									<DropdownMenuSubTrigger>
 										<Box display="flex" alignItems="center" gap="8">
 											<IconSparkles size={16} />
-											Opal Actions
+											Opal
 										</Box>
 									</DropdownMenuSubTrigger>
 									<DropdownMenuSubContent>

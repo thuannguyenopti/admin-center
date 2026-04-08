@@ -141,7 +141,7 @@ export default function DashboardPage() {
           <Alert intent="opal" mb="24">
             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
               <Text>
-                {unconfiguredAgents.length} agent{unconfiguredAgents.length === 1 ? '' : 's'} not configured in Opal Actions.
+                {unconfiguredAgents.length} agent{unconfiguredAgents.length === 1 ? '' : 's'} not configured in Opal.
               </Text>
               <Link href="/cms/settings/opal-actions">
                 <Button appearance="primary" size="sm">Configure now</Button>

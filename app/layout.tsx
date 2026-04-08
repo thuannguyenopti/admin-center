@@ -226,7 +226,7 @@ export default function RootLayout({
 						},
 					},
 					{label: "AI & Automation"},
-					{label: "Opal Actions", url: "/cms/settings/opal-actions"},
+					{label: "Opal", url: "/cms/settings/opal-actions"},
 					{label: "Config"},
 					{label: "Languages", url: "/cms/settings/languages"},
 					{label: "Property Groups", url: "/cms/settings/edit-tabs"},

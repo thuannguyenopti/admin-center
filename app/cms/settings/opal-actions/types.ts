@@ -63,7 +63,7 @@ export interface SystemAgent {
 	category: "page-generation" | "workflow" | "other";
 }
 
-// App companion feature configuration (for App Companion tab)
+// Automated feature configuration (for Automated Features tab)
 export interface AppCompanionFeature {
 	id: string;
 	name: string;
@@ -77,7 +77,7 @@ export interface OpalConfiguration {
 	version: number; // For migration tracking
 	locations: LocationMenu[]; // Menus tab
 	systemAgents: SystemAgent[]; // System Agents tab
-	appCompanion: AppCompanionFeature[]; // App Companion tab
+	appCompanion: AppCompanionFeature[]; // Automated Features tab
 	modified: string;
 }
 

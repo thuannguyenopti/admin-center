@@ -158,6 +158,13 @@ export function migrateOpalActions(oldActions: OpalAction[]): OpalConfiguration 
 			enabled: true,
 			category: "productivity" as const,
 		},
+		{
+			id: "auto-mapping",
+			name: "Auto-mapping",
+			description: "Automatically map content types based on structure and usage patterns",
+			enabled: false,
+			category: "productivity" as const,
+		},
 	];
 
 	return {
