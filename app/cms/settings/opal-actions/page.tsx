@@ -167,12 +167,24 @@ export default function OpalActionsPage() {
 									</Box>
 								</Td>
 								<Td>
-									<Box
-										fontSize="sm"
-										fontWeight="500"
-										color={location.enabled ? "fg.success" : "fg.secondary"}
-									>
-										{location.enabled ? "Enabled" : "Disabled"}
+									<Box display="flex" alignItems="center" gap="8">
+										<Switch
+											checked={location.enabled}
+											onChange={(e) => {
+												const isChecked = e.currentTarget.checked;
+												e.stopPropagation();
+												setOpalConfig((prev) => ({
+													...prev,
+													locations: prev.locations.map((loc) =>
+														loc.id === location.id ? {...loc, enabled: isChecked} : loc
+													),
+													modified: new Date().toISOString(),
+												}));
+											}}
+										/>
+										<Text fontSize="sm" color="fg.secondary">
+											{location.enabled ? "Enabled" : "Disabled"}
+										</Text>
 									</Box>
 								</Td>
 							</Tr>
