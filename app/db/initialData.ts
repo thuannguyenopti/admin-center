@@ -1010,6 +1010,12 @@ export const initialCmpTasks: CmpTask[] = [
 		reference: "TSK-2689",
 		status: "Overdue",
 	},
+	{
+		id: "5",
+		title: "STRIDE Blog Launch",
+		reference: "TSK-2710",
+		status: "In Progress",
+	},
 ];
 
 export type Application = {

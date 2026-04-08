@@ -4,13 +4,14 @@ import { toaster } from "@optiaxiom/react";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { Application, Page } from "@/app/db/initialData";
 import { IconEye, IconPencil, IconTag, IconTrash } from "@tabler/icons-react";
-import { currentTaskId } from "../../constants";
+
 import type { AssetItem, TaskArticle } from "../../types";
 import { selectFirstRemainingTaskItem } from "./selectFirstRemainingTaskItem";
 
 type GetContentItemMenuOptionsArgs = {
 	applications: Application[];
 	contentInstances: ContentInstance[];
+	currentTaskId: string;
 	onAddToApplication: (instance: ContentInstance) => void;
 	onSelectArticle: (id: string | null) => void;
 	onSelectContentInstance: (id: string | null) => void;
@@ -36,6 +37,7 @@ type GetContentItemMenuOptionsArgs = {
 export function getContentItemMenuOptions({
 	applications,
 	contentInstances,
+	currentTaskId,
 	onAddToApplication,
 	onSelectArticle,
 	onSelectContentInstance,
