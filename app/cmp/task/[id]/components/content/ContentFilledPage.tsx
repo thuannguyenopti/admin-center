@@ -5,6 +5,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import Grid2Icon from "@/app/cmp/assets/grid2.svg";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
+import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { Application, ContentType, Page } from "@/app/db/initialData";
 import { initialContentTypes } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
@@ -89,10 +90,21 @@ export function ContentFilledPage({
 	const [isEditingContentInstance, setIsEditingContentInstance] = useState(false);
 	const router = useRouter();
 	const taskPages = useMemo(() => pages.filter((page) => page.cmpTaskMetadata?.taskId === currentTaskId), [pages]);
+	const taskContentInstances = useMemo(() => contentInstances.filter((instance) => {
+		const taskId = instance.taskId ?? initialContentInstances.find((i) => i.id === instance.id)?.taskId;
+		return taskId === currentTaskId;
+	}), [contentInstances]);
 	const selectedTaskAsset = taskAssets.find((asset) => asset.id === selectedTaskAssetId) ?? null;
-	const selectedContentInstance = contentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
+	const selectedContentInstance = taskContentInstances.find((instance) => instance.id === selectedContentInstanceId) ?? null;
 	const selectedArticle = taskArticles.find((article) => article.id === selectedArticleId) ?? null;
 	const selectedPage = pages.find((page) => page.id === selectedPageId) ?? null;
+	// Auto-select first task content instance if none selected
+	useEffect(() => {
+		if (!selectedContentInstance && taskContentInstances.length > 0 && !selectedPageId && !selectedTaskAssetId && !selectedArticleId) {
+			onSelectContentInstance(taskContentInstances[0].id);
+		}
+	}, [taskContentInstances, selectedContentInstance, selectedPageId, selectedTaskAssetId, selectedArticleId, onSelectContentInstance]);
+
 	useEffect(() => {
 		setIsEditingContentInstance(false);
 	}, [selectedContentInstanceId]);
@@ -152,7 +164,7 @@ export function ContentFilledPage({
 				</Box>
 
 				<TaskItemStrip
-					contentInstances={contentInstances}
+					contentInstances={taskContentInstances}
 					onOpenSuggested={onOpenSuggested}
 					onSelectArticle={onSelectArticle}
 					onSelectContentInstance={onSelectContentInstance}
@@ -170,7 +182,9 @@ export function ContentFilledPage({
 				<Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="lg" style={{ overflow: "hidden" }}>
 					<Box alignItems="center" display="flex" justifyContent="space-between" style={{ padding: "18px 18px 14px" }}>
 						<Text color="fg.default" style={{ fontSize: 20, fontWeight: 500, lineHeight: "28px", maxWidth: "none" }}>
-							{selectedContentInstance?.modelDisplayName ||
+							{selectedContentInstance?.fields.headline ||
+								selectedContentInstance?.fields.title ||
+								selectedContentInstance?.modelDisplayName ||
 								selectedPage?.name ||
 								selectedArticle?.title ||
 								selectedTaskAsset?.title ||

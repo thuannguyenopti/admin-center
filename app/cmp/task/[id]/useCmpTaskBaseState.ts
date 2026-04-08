@@ -6,7 +6,7 @@ import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { Application, ContentType, Page } from "@/app/db/initialData";
 import { initialApplications, initialContentTypes, initialPages } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { initialTaskAssets, searchAssets, suggestedAssets } from "./mockData";
 import { perspectiveSeeds } from "./constants";
 import type { AssetItem, Scene, TaskArticle } from "./types";
@@ -26,6 +26,23 @@ export function useCmpTaskBaseState() {
 		ContentInstance[],
 		React.Dispatch<React.SetStateAction<ContentInstance[]>>,
 	];
+	// Merge taskId from initial data into cached instances
+	useEffect(() => {
+		if (!contentInstances?.length) return;
+		let changed = false;
+		const merged = contentInstances.map((cached: ContentInstance) => {
+			const initial = initialContentInstances.find((i: ContentInstance) => i.id === cached.id);
+			if (!initial) return cached;
+			if (initial.taskId && cached.taskId !== initial.taskId) {
+				changed = true;
+				return { ...cached, taskId: initial.taskId };
+			}
+			return cached;
+		});
+		if (changed) setContentInstances(merged);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	const [selectedContentInstanceId, setSelectedContentInstanceId] = useState<string | null>(null);
 	const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
 	const [suggestedPanelOpen, setSuggestedPanelOpen] = useState(false);
