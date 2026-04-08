@@ -21,6 +21,7 @@ export type ContentInstance = {
 	modelDisplayName: string;
 	createdAt: string;
 	modifiedAt?: string;
+	taskId?: string; // Which CMP task this instance belongs to
 	fields: Record<string, any>; // Field values conforming to model properties
 };
 
@@ -534,6 +535,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-blog-post",
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-20T10:00:00Z",
+		taskId: "5",
 		fields: {
 			headline: "Getting Started with Running",
 			byline: "Alice Johnson",
@@ -551,6 +553,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-blog-post",
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-21T14:30:00Z",
+		taskId: "5",
 		fields: {
 			headline: "Marathon Training Tips",
 			byline: "Bob Smith",
@@ -568,6 +571,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-article",
 		modelDisplayName: "Article",
 		createdAt: "2024-03-22T09:00:00Z",
+		taskId: "1",
 		fields: {
 			headline: "The Science of Running Form",
 			subheadline: "How biomechanics can improve your performance",
@@ -583,6 +587,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-article",
 		modelDisplayName: "Article",
 		createdAt: "2024-03-19T08:00:00Z",
+		taskId: "1",
 		fields: {
 			headline: "The runner sponsoring package",
 			subheadline: "Ironman Miami 2026 Triathlon Sponsorship Tiers",
@@ -598,6 +603,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-banner",
 		modelDisplayName: "Banner",
 		createdAt: "2024-03-23T08:00:00Z",
+		taskId: "3",
 		fields: {
 			message: "Spring Sale! Up to 40% off running gear",
 			cta_text: "Shop Now",
@@ -612,6 +618,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-hero-component",
 		modelDisplayName: "Hero Component",
 		createdAt: "2024-03-24T10:00:00Z",
+		taskId: "4",
 		fields: {
 			headline: "Run Faster, Go Further",
 			subheadline: "Introducing the new Stride Elite Runner",
