@@ -405,15 +405,9 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Context",
-				url: "/opal/instructions",
-				highlight: "/opal/instructions",
-				icon: <img src="/nav_icons/folder-bookmark.svg" alt="Context" width={20} height={20} />,
-			},
-			{
 				label: "Prompt Library",
-				url: "/opal/prompt-library",
-				highlight: "/opal/prompt-library",
+				url: "/opal/artifacts",
+				highlight: "/opal/artifacts",
 				icon: (
 					<img
 						src="/nav_icons/grid-round-2-plus.svg"
@@ -422,6 +416,13 @@ export default function RootLayout({
 						height={20}
 					/>
 				),
+				hidePageHeader: true,
+			},
+			{
+				label: "Context",
+				url: "/opal/instructions",
+				highlight: "/opal/instructions",
+				icon: <img src="/nav_icons/folder-bookmark.svg" alt="Context" width={20} height={20} />,
 			},
 			{
 				label: "Notifications",
@@ -441,12 +442,6 @@ export default function RootLayout({
 			},
 			{label: "Configurations"},
 			{
-				label: "Artifacts",
-				url: "/opal/artifacts",
-				highlight: "/opal/artifacts",
-				icon: <img src="/nav_icons/database.svg" alt="Artifacts" width={20} height={20} />,
-			},
-			{
 				label: "Agents",
 				url: "/opal/agents",
 				highlight: "/opal/agents",
@@ -465,6 +460,7 @@ export default function RootLayout({
 						height={20}
 					/>
 				),
+				hidePageHeader: true,
 			},
 			{
 				label: "Settings",
