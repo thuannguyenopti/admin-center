@@ -3,8 +3,15 @@
 // Location identifiers for different menu placements
 export type LocationId =
 	| "toolbar-improve"
+	| "toolbar-page"
 	| "toolbar-context"
 	| "asset-panel"
+	| "outline-section"
+	| "property-text"
+	| "property-image"
+	| "property-number"
+	| "property-datetime"
+	| "property-reference"
 	| "property-editor";
 
 // Property types that can be configured for property editor location
