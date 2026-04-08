@@ -266,11 +266,9 @@ export default function ArtifactsPage() {
                                                 Download
                                             </Box>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem>
-                                            <Box display="flex" alignItems="center" gap="8" color="fg.danger">
-                                                <IconTrashCan size={14} />
-                                                Delete
-                                            </Box>
+                                        <DropdownMenuItem style={{ color: "var(--ax-colors-fg-danger)" }}>
+                                            <IconTrashCan size={14} />
+                                            Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
