@@ -63,7 +63,9 @@ import {sep} from "path";
 import {IconCalendar, IconPaperPlaneTop, IconTrashCan} from "@optimizely/axiom-icons";
 import Link from "next/link";
 import usePersistentState from "@/app/usePersistentState";
-import {OpalAction, availableAgents, opalActions as initialOpalActions} from "@/app/cms/settings/opal-actions/mockData";
+import {availableAgents, defaultOpalConfiguration} from "@/app/cms/settings/opal-actions/mockData";
+import {OpalConfiguration} from "@/app/cms/settings/opal-actions/types";
+import {getLocationMenu, getEnabledGroups} from "@/app/cms/settings/opal-actions/helpers";
 import {useBrandTone} from "@/app/components/ai/BrandToneProvider";
 import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
@@ -227,17 +229,19 @@ export default function CMSToolbar({
 	);
 
 	// Get enabled Opal Actions for Improve button and context menu
-	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
+	const [opalConfig] = usePersistentState("opal-config", defaultOpalConfiguration) as [
+		OpalConfiguration,
+		any
+	];
 	const {analyzePage} = useBrandTone();
 	const {opalPanelControls} = useLayout();
 	const {initializeContext} = usePreflightContext();
 
-	const improveActions = opalActions.filter(
-		(action) => action.enabled && action.locations.toolbar.improveButton
-	);
-	const contextMenuActions = opalActions.filter(
-		(action) => action.enabled && action.locations.toolbar.contextMenu
-	);
+	const improveMenu = getLocationMenu(opalConfig, "toolbar-improve");
+	const improveGroups = getEnabledGroups(improveMenu);
+
+	const contextMenu = getLocationMenu(opalConfig, "toolbar-context");
+	const contextMenuGroups = getEnabledGroups(contextMenu);
 
 	// Extract text content from page elements
 	const getPageFields = () => {
@@ -630,16 +634,16 @@ export default function CMSToolbar({
 				</Menu>
 
 				{/* Improve Button with Opal Actions */}
-				{improveActions.length > 0 && (
+				{improveGroups.length > 0 && (
 					<Menu
-						options={improveActions.flatMap((action) => {
-							// If action has multiple agents, create submenu items
-							if (action.agents.length > 1) {
-								return action.agents.map((agentId, index) => {
+						options={improveGroups.flatMap((group) => {
+							// If group has multiple agents, create submenu items
+							if (group.agents.length > 1) {
+								return group.agents.map((agentId, index) => {
 									const agent = availableAgents.find((a) => a.id === agentId);
 									return {
 										label: agent?.name || agentId,
-										group: {label: action.name, hidden: index > 0},
+										group: {label: group.name, hidden: index > 0},
 										execute: () => {
 											if (agentId === "preflight-audit") {
 												handlePreflightAudit();
@@ -648,7 +652,7 @@ export default function CMSToolbar({
 											} else {
 												console.log(
 													"Execute Opal Action:",
-													action.name,
+													group.name,
 													"- Agent:",
 													agent?.name
 												);
@@ -657,18 +661,18 @@ export default function CMSToolbar({
 									};
 								});
 							}
-							// Single agent, just show the action name
-							const agentId = action.agents[0];
+							// Single agent, just show the group name
+							const agentId = group.agents[0];
 							return [
 								{
-									label: action.name,
+									label: group.name,
 									execute: () => {
 										if (agentId === "preflight-audit") {
 											handlePreflightAudit();
 										} else if (agentId === "brand-tone-audit") {
 											handleBrandToneAnalysis();
 										} else {
-											console.log("Execute Opal Action:", action.name);
+											console.log("Execute Opal Action:", group.name);
 										}
 									},
 								},
@@ -754,7 +758,7 @@ export default function CMSToolbar({
 					/>
 					<DropdownMenuContent>
 						{/* Opal Actions Submenu */}
-						{contextMenuActions.length > 0 && (
+						{contextMenuGroups.length > 0 && (
 							<>
 								<DropdownMenuSub>
 									<DropdownMenuSubTrigger>
@@ -764,16 +768,16 @@ export default function CMSToolbar({
 										</Box>
 									</DropdownMenuSubTrigger>
 									<DropdownMenuSubContent>
-										{contextMenuActions.map((action) => {
-											// If action has multiple agents, create nested submenu
-											if (action.agents.length > 1) {
+										{contextMenuGroups.map((group) => {
+											// If group has multiple agents, create nested submenu
+											if (group.agents.length > 1) {
 												return (
-													<DropdownMenuSub key={action.id}>
+													<DropdownMenuSub key={group.id}>
 														<DropdownMenuSubTrigger>
-															{action.name}
+															{group.name}
 														</DropdownMenuSubTrigger>
 														<DropdownMenuSubContent>
-															{action.agents.map((agentId) => {
+															{group.agents.map((agentId) => {
 																const agent = availableAgents.find(
 																	(a) => a.id === agentId
 																);
@@ -786,7 +790,7 @@ export default function CMSToolbar({
 																			} else {
 																				console.log(
 																					"Execute Opal Action:",
-																					action.name,
+																					group.name,
 																					"- Agent:",
 																					agent?.name
 																				);
@@ -801,20 +805,20 @@ export default function CMSToolbar({
 													</DropdownMenuSub>
 												);
 											}
-											// Single agent, just show the action name
-											const agentId = action.agents[0];
+											// Single agent, just show the group name
+											const agentId = group.agents[0];
 											return (
 												<DropdownMenuItem
-													key={action.id}
+													key={group.id}
 													onSelect={() => {
 														if (agentId === "brand-tone-audit") {
 															handleBrandToneAnalysis();
 														} else {
-															console.log("Execute Opal Action:", action.name);
+															console.log("Execute Opal Action:", group.name);
 														}
 													}}
 												>
-													{action.name}
+													{group.name}
 												</DropdownMenuItem>
 											);
 										})}
