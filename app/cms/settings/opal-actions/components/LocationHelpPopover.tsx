@@ -185,7 +185,7 @@ export const LocationHelpPopover: React.FC = () => {
 
 						{/* Panel Locations */}
 						<Box>
-							<Text fontSize="xs" fontWeight="600" color="fg.neutral">
+							<Text fontSize="xs" fontWeight="600" color="fg.secondary">
 								Panels
 							</Text>
 							<Box ml="8" mt="4">
