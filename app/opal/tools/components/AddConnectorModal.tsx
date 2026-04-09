@@ -6,6 +6,9 @@ import {
     Text,
     Button,
     Badge,
+    Disclosure,
+    DisclosureContent,
+    DisclosureTrigger,
     Dialog,
     DialogContent,
     Switch,
@@ -14,13 +17,16 @@ import {
 } from "@optiaxiom/react";
 import {
     IconSearch,
-    IconLock,
     IconCheck,
+    IconEye,
+    IconPen,
+    IconTrashCan,
 } from "@optimizely/axiom-icons";
 import { Input } from "@/app/components/Input";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { ConnectorTile } from "./ConnectorTile";
 import { ConnectorAvatar } from "./ConnectorAvatar";
+import { ModalStepper } from "./ModalStepper";
 import { CONNECTORS, type Connector, type ToolAction } from "../data/connectors";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -43,6 +49,7 @@ interface AddConnectorModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onConnectorAdded: (connector: ConnectedConnector) => void;
+    onDisconnect: (id: string) => void;
     connectedIds?: string[];
     initialConnector?: Connector | null;
     initialScreen?: Screen;
@@ -53,75 +60,6 @@ function isUserLevelConnector(connector: Connector) {
     return connector.category === "Google Workspace" || connector.category === "Microsoft 365";
 }
 
-// ── Stepper ───────────────────────────────────────────────────────────────────
-
-const STEPS = ["PERMISSIONS", "TYPE", "TOOLS"] as const;
-
-function StepperHeader({ step }: { step: number }) {
-    return (
-        <Box display="flex" alignItems="center" mb="32" mt="8">
-            {STEPS.map((label, i) => (
-                <Box key={label} display="flex" alignItems="center" style={{ flex: i < STEPS.length - 1 ? 1 : "initial" }}>
-                    <Box display="flex" flexDirection="column" alignItems="center" gap="4">
-                        <Box
-                            rounded="full"
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                            style={{
-                                width: 28,
-                                height: 28,
-                                background: i <= step
-                                    ? "var(--ax-colors-bg-accent)"
-                                    : "var(--ax-colors-bg-tertiary)",
-                                flexShrink: 0,
-                            }}
-                        >
-                            {i < step ? (
-                                <IconCheck size={14} style={{ color: "var(--ax-colors-fg-default-inverse)" }} />
-                            ) : (
-                                <Text
-                                    fontSize="sm"
-                                    fontWeight="600"
-                                    style={{
-                                        color: i <= step
-                                            ? "var(--ax-colors-fg-default-inverse)"
-                                            : "var(--ax-colors-fg-secondary)",
-                                        lineHeight: 1,
-                                    }}
-                                >
-                                    {i + 1}
-                                </Text>
-                            )}
-                        </Box>
-                        <Text
-                            fontSize="xs"
-                            fontWeight={i === step ? "600" : "400"}
-                            style={{ color: i <= step ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)", letterSpacing: "0.05em" }}
-                        >
-                            {label}
-                        </Text>
-                    </Box>
-                    {i < STEPS.length - 1 && (
-                        <Box
-                            style={{
-                                flex: 1,
-                                height: 1,
-                                background: i < step
-                                    ? "var(--ax-colors-bg-accent)"
-                                    : "var(--ax-colors-border-tertiary)",
-                                marginBottom: 20,
-                                marginLeft: 8,
-                                marginRight: 8,
-                            }}
-                        />
-                    )}
-                </Box>
-            ))}
-        </Box>
-    );
-}
-
 // ── Tool action badge intent ───────────────────────────────────────────────────
 
 const actionIntent: Record<ToolAction, "information" | "warning" | "success" | "danger"> = {
@@ -129,6 +67,13 @@ const actionIntent: Record<ToolAction, "information" | "warning" | "success" | "
     Update: "warning",
     Create: "success",
     Delete: "danger",
+};
+
+const actionIcon: Record<ToolAction, React.ReactNode> = {
+    Read: <IconEye size={16} />,
+    Update: <IconPen size={16} />,
+    Create: <IconPen size={16} />,
+    Delete: <IconTrashCan size={16} />,
 };
 
 // ── SelectionCard ─────────────────────────────────────────────────────────────
@@ -169,6 +114,7 @@ export function AddConnectorModal({
     open,
     onOpenChange,
     onConnectorAdded,
+    onDisconnect,
     connectedIds = [],
     initialConnector = null,
     initialScreen = "browse",
@@ -293,17 +239,21 @@ export function AddConnectorModal({
         return selected.tools.slice(start, start + TOOLS_PER_PAGE);
     }, [selected, detailPage]);
 
+    const allFilteredToolsSelected = filteredTools.length > 0 && filteredTools.every(tool => selectedTools.includes(tool.id));
+
     // ── Toggle tool ───────────────────────────────────────────────────────────
     const toggleTool = (id: string) => {
         setSelectedTools(prev => prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]);
     };
 
+    const isSelectedConnected = selected ? connectedIds.includes(selected.id) : false;
+
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
                 style={{
-                    width: "min(880px, 95vw)",
-                    height: "82vh",
+                    width: "min(760px, 92vw)",
+                    height: "74vh",
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
@@ -378,20 +328,20 @@ export function AddConnectorModal({
                                 <ConnectorAvatar connector={selected} size={48} />
                                 <Box flex="1">
                                     <Box display="flex" alignItems="center" gap="8">
-                                        <Text fontWeight="700" fontSize="xl" style={{ textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                                        <Text fontWeight="700" fontSize="xl">
                                             {selected.name}
                                         </Text>
                                         <Badge intent="neutral" >
-                                            {selected.type === "mcp" ? "MCP Server" : "Connector built by Opal"}
+                                            {selected.type === "mcp" ? "MCP Server" : "Developed by Optimizely"}
                                         </Badge>
                                     </Box>
                                     <Box display="flex" alignItems="center" gap="8" mt="4">
                                         <Box
                                             rounded="full"
-                                            style={{ width: 8, height: 8, background: connectedIds.includes(selected.id) ? "var(--ax-colors-bg-success-strong)" : "var(--ax-colors-border-tertiary)", flexShrink: 0 }}
+                                            style={{ width: 8, height: 8, background: isSelectedConnected ? "var(--ax-colors-fg-success)" : "var(--ax-colors-border-tertiary)", flexShrink: 0 }}
                                         />
                                         <Text fontSize="sm" color="fg.secondary">
-                                            {connectedIds.includes(selected.id) ? "Connected" : "Not connected"}
+                                            {isSelectedConnected ? "Connected" : "Not connected"}
                                         </Text>
                                     </Box>
                                 </Box>
@@ -404,86 +354,83 @@ export function AddConnectorModal({
                             <Box display="flex" gap="48" mb="32">
                                 <Box style={{ flex: 2 }}>
                                     <Text fontWeight="600" mb="8">About</Text>
-                                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: "1.6" }}>
+                                    <Text fontSize="md" color="fg.secondary" style={{ lineHeight: "1.6" }}>
                                         {selected.about}
                                     </Text>
                                 </Box>
                                 <Box style={{ flex: 1 }}>
                                     <Text fontWeight="600" mb="8">Authentication</Text>
-                                    <Text fontSize="sm">{selected.authType}</Text>
+                                    <Text fontSize="md">{selected.authType}</Text>
                                 </Box>
                             </Box>
 
                             {/* Tools table */}
                             {selected.tools.length > 0 ? (
-                                <>
-                                    <Box display="flex" justifyContent="space-between" alignItems="center" mb="12">
-                                        <Text fontWeight="600">Tools</Text>
-                                        <Input
-                                            placeholder="Search tools..."
-                                            value={toolSearch}
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setToolSearch(e.target.value)}
-                                            addonBefore={<IconSearch size={14} />}
-                                            style={{ width: 200 }}
-                                        />
-                                    </Box>
-                                    <Table>
-                                        <thead>
-                                            <Tr>
-                                                <Th style={{ width: 32 }}></Th>
-                                                <Th>Tools</Th>
-                                                <Th>Type</Th>
-                                                <Th>Descriptions</Th>
-                                            </Tr>
-                                        </thead>
-                                        <tbody>
-                                            {(toolSearch ? filteredTools : pagedTools).map(tool => (
-                                                <Tr key={tool.id}>
-                                                    <Td>
-                                                        <IconLock size={14} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
-                                                    </Td>
-                                                    <Td type="header">{tool.name}</Td>
-                                                    <Td>
-                                                        <Badge intent={actionIntent[tool.action]} >
-                                                            {tool.action}
-                                                        </Badge>
-                                                    </Td>
-                                                    <Td>
-                                                        <Text fontSize="sm" color="fg.secondary">{tool.description}</Text>
-                                                    </Td>
-                                                </Tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                    {!toolSearch && selected.tools.length > TOOLS_PER_PAGE && (
-                                        <Box display="flex" justifyContent="space-between" alignItems="center" mt="16">
-                                            <Text fontSize="sm" color="fg.secondary">
-                                                {TOOLS_PER_PAGE} PER PAGE
-                                            </Text>
-                                            <Box display="flex" alignItems="center" gap="8">
-                                                <Text fontSize="sm" color="fg.secondary">
-                                                    PAGE {detailPage} OF {Math.ceil(selected.tools.length / TOOLS_PER_PAGE)}
-                                                </Text>
-                                                <Button
-                                                    appearance="subtle"
-                                                    
-                                                    disabled={detailPage <= 1}
-                                                    onClick={() => setDetailPage(p => Math.max(1, p - 1))}
-                                                >
-                                                    &lsaquo;
-                                                </Button>
-                                                <Button
-                                                    appearance="subtle"
-                                                    
-                                                    disabled={detailPage >= Math.ceil(selected.tools.length / TOOLS_PER_PAGE)}
-                                                    onClick={() => setDetailPage(p => p + 1)}
-                                                >
-                                                    &rsaquo;
-                                                </Button>
-                                            </Box>
+                                <Disclosure>
+                                    <DisclosureTrigger chevronPosition="start">
+                                        <Box display="inline-flex" alignItems="center" gap="8">
+                                            <Text fontWeight="600" color="fg.default">Tools</Text>
+                                            <Badge intent="neutral">{selected.tools.length}</Badge>
                                         </Box>
-                                    )}
-                                </>
+                                    </DisclosureTrigger>
+                                    <DisclosureContent>
+                                        <Box mt="12">
+                                            <Table>
+                                                <thead>
+                                                    <Tr>
+                                                        <Th>Tools</Th>
+                                                        <Th>Type</Th>
+                                                        <Th>Descriptions</Th>
+                                                    </Tr>
+                                                </thead>
+                                                <tbody>
+                                                    {pagedTools.map(tool => (
+                                                        <Tr key={tool.id}>
+                                                            <Td type="header">{tool.name}</Td>
+                                                            <Td>
+                                                                <Box display="flex" alignItems="center" gap="8">
+                                                                    <Box color="fg.secondary" display="flex" alignItems="center">
+                                                                        {actionIcon[tool.action]}
+                                                                    </Box>
+                                                                    <Text fontSize="sm">{tool.action}</Text>
+                                                                </Box>
+                                                            </Td>
+                                                            <Td>
+                                                                <Text fontSize="sm" color="fg.secondary">{tool.description}</Text>
+                                                            </Td>
+                                                        </Tr>
+                                                    ))}
+                                                </tbody>
+                                            </Table>
+                                            {selected.tools.length > TOOLS_PER_PAGE && (
+                                                <Box display="flex" justifyContent="space-between" alignItems="center" mt="16">
+                                                    <Text fontSize="sm" color="fg.secondary">
+                                                        {TOOLS_PER_PAGE} PER PAGE
+                                                    </Text>
+                                                    <Box display="flex" alignItems="center" gap="8">
+                                                        <Text fontSize="sm" color="fg.secondary">
+                                                            PAGE {detailPage} OF {Math.ceil(selected.tools.length / TOOLS_PER_PAGE)}
+                                                        </Text>
+                                                        <Button
+                                                            appearance="subtle"
+                                                            disabled={detailPage <= 1}
+                                                            onClick={() => setDetailPage(p => Math.max(1, p - 1))}
+                                                        >
+                                                            &lsaquo;
+                                                        </Button>
+                                                        <Button
+                                                            appearance="subtle"
+                                                            disabled={detailPage >= Math.ceil(selected.tools.length / TOOLS_PER_PAGE)}
+                                                            onClick={() => setDetailPage(p => p + 1)}
+                                                        >
+                                                            &rsaquo;
+                                                        </Button>
+                                                    </Box>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </DisclosureContent>
+                                </Disclosure>
                             ) : (
                                 <Box p="24" textAlign="center">
                                     <Text color="fg.tertiary" fontSize="sm">
@@ -497,13 +444,26 @@ export function AddConnectorModal({
                         <Box
                             p="16"
                             display="flex"
-                            justifyContent="space-between"
+                            justifyContent="flex-end"
+                            gap="8"
                             style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", flexShrink: 0 }}
                         >
-                            <Button appearance="subtle" onClick={() => setScreen("browse")}>Back</Button>
-                            <Button appearance="primary" onClick={() => handleConfigure(selected)}>
-                                {isUserLevelConnector(selected) ? "Connect" : "Configure"}
-                            </Button>
+                            <Button appearance="subtle" onClick={() => handleOpenChange(false)}>Cancel</Button>
+                            {isSelectedConnected ? (
+                                <Button
+                                    appearance="inverse"
+                                    onClick={() => {
+                                        onDisconnect(selected.id);
+                                        handleOpenChange(false);
+                                    }}
+                                >
+                                    Disconnect
+                                </Button>
+                            ) : (
+                                <Button appearance="primary" onClick={() => handleConfigure(selected)}>
+                                    {isUserLevelConnector(selected) ? "Connect" : "Configure"}
+                                </Button>
+                            )}
                         </Box>
                     </Box>
                 )}
@@ -529,7 +489,7 @@ export function AddConnectorModal({
                                 style={{ background: "var(--ax-colors-bg-secondary)", border: "1px solid var(--ax-colors-border-tertiary)" }}
                             >
                                 <Box>
-                                    <Text fontWeight="500" fontSize="sm">Enable for my org</Text>
+                                    <Text fontWeight="500" fontSize="md">Enable for my org</Text>
                                     <Text fontSize="sm" color="fg.secondary">
                                         When off, the integration is visible but users must request access
                                     </Text>
@@ -543,7 +503,10 @@ export function AddConnectorModal({
 
                         {/* Stepper + step content */}
                         <Box style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-                            <StepperHeader step={step} />
+                            <ModalStepper
+                                currentStep={step}
+                                steps={["Permissions", "Type", "Tools"]}
+                            />
 
                             {/* Step 0: Permissions */}
                             {step === 0 && (
@@ -625,17 +588,16 @@ export function AddConnectorModal({
                                                 </Box>
                                                 <Button
                                                     appearance="subtle"
-                                                    
-                                                    onClick={() => setSelectedTools(filteredTools.map(t => t.id))}
+                                                    onClick={() => {
+                                                        if (allFilteredToolsSelected) {
+                                                            setSelectedTools(prev => prev.filter(id => !filteredTools.some(tool => tool.id === id)));
+                                                            return;
+                                                        }
+
+                                                        setSelectedTools(prev => Array.from(new Set([...prev, ...filteredTools.map(t => t.id)])));
+                                                    }}
                                                 >
-                                                    Select all
-                                                </Button>
-                                                <Button
-                                                    appearance="subtle"
-                                                    
-                                                    onClick={() => setSelectedTools([])}
-                                                >
-                                                    Clear all
+                                                    {allFilteredToolsSelected ? "Clear all" : "Select all"}
                                                 </Button>
                                             </Box>
 
@@ -695,18 +657,21 @@ export function AddConnectorModal({
                             p="16"
                             display="flex"
                             justifyContent="space-between"
+                            alignItems="center"
                             style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", flexShrink: 0 }}
                         >
-                            <Button appearance="subtle" onClick={() => handleOpenChange(false)}>Cancel</Button>
-                            <Box display="flex" gap="8">
-                                {step > 0 && (
+                            <Box>
+                                {step > 0 ? (
                                     <Button
                                         appearance="default"
                                         onClick={() => setStep(s => (s - 1) as 0 | 1 | 2)}
                                     >
                                         Previous
                                     </Button>
-                                )}
+                                ) : null}
+                            </Box>
+                            <Box display="flex" gap="12">
+                                <Button appearance="subtle" onClick={() => handleOpenChange(false)}>Cancel</Button>
                                 {step < 2 ? (
                                     <Button
                                         appearance="primary"
