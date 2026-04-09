@@ -388,7 +388,7 @@ export default function CMPResourceManagementPage() {
 		>
 			{/* Tabs */}
 			{reportsView !== "configure" && (
-				<Box borderB="1" borderColor="border.tertiary" display="flex" style={{ gap: 28, margin: "32px 32px 0", paddingBottom: 0 }}>
+				<Box borderB="1" borderColor="border.tertiary" display="flex" style={{ gap: 28, margin: "16px 32px 0" }}>
 					<WorkloadTabButton active={activeTab === "workload"} onClick={() => setActiveTab("workload")}>
 						Workload
 					</WorkloadTabButton>
