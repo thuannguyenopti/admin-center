@@ -19,10 +19,11 @@ import {
 	Checkbox,
 	Badge,
 } from "@optiaxiom/react";
-import {IconX, IconPlus, IconHelp, IconGripVertical, IconDots} from "@tabler/icons-react";
+import {IconX, IconPlus, IconGripVertical, IconDots} from "@tabler/icons-react";
 import {LocationMenu, LocationId, MenuGroup, UserGroup, GroupAgent} from "../types";
 import {availableAgents} from "../mockData";
 import {AgentPicker} from "./AgentPicker";
+import {LocationHelpPopover} from "./LocationHelpPopover";
 
 interface LocationMenuEditorProps {
 	location: LocationMenu;
@@ -462,12 +463,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 					<Field label="Location">
 						<Box display="flex" alignItems="center" gap="8">
 							<Text fontSize="sm">{location.name}</Text>
-							<Button
-								appearance="subtle"
-								size="sm"
-								icon={<IconHelp size={14} />}
-								aria-label="Help"
-							/>
+							<LocationHelpPopover />
 						</Box>
 					</Field>
 
