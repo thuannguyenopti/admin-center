@@ -33,7 +33,7 @@ import PageIcon from "@/app/assets/page-icon.svg";
 import BlockIcon from "@/app/assets/block-icon.svg";
 import usePersistentState from "@/app/usePersistentState";
 import { availableAgents, opalActions as initialOpalActions } from "@/app/cms/settings/opal-actions/mockData";
-import type { OpalAction } from "@/app/cms/settings/opal-actions/mockData";
+import type { OpalAction } from "@/app/cms/settings/opal-actions/types";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<WorkflowStatus>("draft");
@@ -141,7 +141,7 @@ export default function DashboardPage() {
           <Alert intent="opal" mb="24">
             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
               <Text>
-                {unconfiguredAgents.length} agent{unconfiguredAgents.length === 1 ? '' : 's'} not configured in Opal Actions.
+                {unconfiguredAgents.length} agent{unconfiguredAgents.length === 1 ? '' : 's'} not configured in Opal.
               </Text>
               <Link href="/cms/settings/opal-actions">
                 <Button appearance="primary" size="sm">Configure now</Button>
