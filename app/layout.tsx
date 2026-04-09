@@ -510,6 +510,7 @@ export default function RootLayout({
 				url: "/cmp/resource-management",
 				highlight: "/cmp/resource-management",
 				icon: <CMPResourceManagementIcon />,
+				customLayout: true,
 			},
 			{
 				label: "Idea Lab",
