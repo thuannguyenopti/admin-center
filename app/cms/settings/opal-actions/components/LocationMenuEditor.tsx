@@ -1,9 +1,26 @@
 "use client";
 
 import React, {useState, useEffect, useCallback, useMemo} from "react";
-import {Box, Text, Button, Field, Menu, MenuTrigger, MenuContent, Input} from "@optiaxiom/react";
-import {IconX, IconPlus, IconHelp, IconGripVertical, IconTrash, IconDots} from "@tabler/icons-react";
-import {LocationMenu, LocationId, MenuGroup} from "../types";
+import {
+	Box,
+	Text,
+	Button,
+	Field,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	Input,
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogBody,
+	DialogFooter,
+	DialogClose,
+	Checkbox,
+	Badge,
+} from "@optiaxiom/react";
+import {IconX, IconPlus, IconHelp, IconGripVertical, IconDots} from "@tabler/icons-react";
+import {LocationMenu, LocationId, MenuGroup, UserGroup, GroupAgent} from "../types";
 import {availableAgents} from "../mockData";
 import {AgentPicker} from "./AgentPicker";
 
@@ -27,9 +44,35 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 	const [groupDropIndex, setGroupDropIndex] = useState<number | null>(null);
 	const [agentDropTarget, setAgentDropTarget] = useState<{groupId: string; agentIndex: number} | null>(null);
 
-	// Update local state when location prop changes
+	// Permissions modal state
+	const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+	const [editingPermissions, setEditingPermissions] = useState<{
+		groupId: string;
+		agentId: string;
+		currentPermissions: UserGroup[];
+	} | null>(null);
+
+	// Update local state when location prop changes and normalize data
 	useEffect(() => {
-		setEditedLocation(location);
+		// Normalize agents to ensure they have GroupAgent structure
+		const normalizedLocation = {
+			...location,
+			groups: location.groups.map((group) => ({
+				...group,
+				agents: group.agents.map((agent) => {
+					// If agent is a string (old format), convert to GroupAgent
+					if (typeof agent === "string") {
+						return {id: agent, permissions: ["Everyone"] as UserGroup[]};
+					}
+					// If agent is already a GroupAgent but missing permissions
+					if (!agent.permissions) {
+						return {...agent, permissions: ["Everyone"] as UserGroup[]};
+					}
+					return agent;
+				}),
+			})),
+		};
+		setEditedLocation(normalizedLocation);
 	}, [location]);
 
 	const handleSave = useCallback(() => {
@@ -66,7 +109,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 	const usedAgentIds = useMemo(() => {
 		const ids = new Set<string>();
 		editedLocation.groups.forEach((group) => {
-			group.agents.forEach((agentId) => ids.add(agentId));
+			group.agents.forEach((groupAgent) => ids.add(groupAgent.id));
 		});
 		return Array.from(ids);
 	}, [editedLocation.groups]);
@@ -80,7 +123,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 			const newGroup: MenuGroup = {
 				id: `group-${Date.now()}`,
 				name: agentName,
-				agents: [agentId],
+				agents: [{id: agentId, permissions: ["Everyone"]}],
 				enabled: true,
 				visibleAt: "Everyone",
 				order: 0,
@@ -181,13 +224,16 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 				if (!sourceGroup) return prev;
 
 				// Remove agent from source group
-				sourceGroup.agents = sourceGroup.agents.filter((id) => id !== draggedAgentId);
+				const draggedAgent = sourceGroup.agents.find((ga) => ga.id === draggedAgentId);
+				sourceGroup.agents = sourceGroup.agents.filter((ga) => ga.id !== draggedAgentId);
+
+				if (!draggedAgent) return prev;
 
 				// Create new group
 				const newGroup: MenuGroup = {
 					id: `group-${Date.now()}`,
 					name: agentName,
-					agents: [draggedAgentId],
+					agents: [draggedAgent],
 					enabled: true,
 					visibleAt: "Everyone",
 					order: groupDropIndex,
@@ -289,13 +335,15 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 			if (!sourceGroup || !targetGroup) return prev;
 
 			// Check if agent already exists in target group (and it's a different group)
-			if (targetGroup.agents.includes(draggedAgentId) && draggedFromGroupId !== agentDropTarget.groupId) {
+			if (targetGroup.agents.some((ga) => ga.id === draggedAgentId) && draggedFromGroupId !== agentDropTarget.groupId) {
 				return prev;
 			}
 
-			// Remove from source
-			const draggedIndex = sourceGroup.agents.indexOf(draggedAgentId);
-			sourceGroup.agents.splice(draggedIndex, 1);
+			// Find and remove from source
+			const draggedIndex = sourceGroup.agents.findIndex((ga) => ga.id === draggedAgentId);
+			const [draggedAgent] = sourceGroup.agents.splice(draggedIndex, 1);
+
+			if (!draggedAgent) return prev;
 
 			// Calculate target index
 			let targetIndex = agentDropTarget.agentIndex;
@@ -306,7 +354,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 			}
 
 			// Insert at target position
-			targetGroup.agents.splice(targetIndex, 0, draggedAgentId);
+			targetGroup.agents.splice(targetIndex, 0, draggedAgent);
 
 			return {
 				...prev,
@@ -331,10 +379,52 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 			...prev,
 			groups: prev.groups.map((g) =>
 				g.id === groupId
-					? {...g, agents: g.agents.filter((id) => id !== agentId)}
+					? {...g, agents: g.agents.filter((ga) => ga.id !== agentId)}
 					: g
 			),
 		}));
+	}, []);
+
+	const handleOpenPermissions = useCallback((groupId: string, agentId: string) => {
+		const group = editedLocation.groups.find((g) => g.id === groupId);
+		const groupAgent = group?.agents.find((ga) => ga.id === agentId);
+
+		if (groupAgent) {
+			setEditingPermissions({
+				groupId,
+				agentId,
+				currentPermissions: groupAgent.permissions ? [...groupAgent.permissions] : ["Everyone"],
+			});
+			setPermissionsDialogOpen(true);
+		}
+	}, [editedLocation.groups]);
+
+	const handleSavePermissions = useCallback((permissions: UserGroup[]) => {
+		if (!editingPermissions) return;
+
+		setEditedLocation((prev) => ({
+			...prev,
+			groups: prev.groups.map((g) =>
+				g.id === editingPermissions.groupId
+					? {
+							...g,
+							agents: g.agents.map((ga) =>
+								ga.id === editingPermissions.agentId
+									? {...ga, permissions}
+									: ga
+							),
+						}
+					: g
+			),
+		}));
+
+		setPermissionsDialogOpen(false);
+		setEditingPermissions(null);
+	}, [editingPermissions]);
+
+	const handleCancelPermissions = useCallback(() => {
+		setPermissionsDialogOpen(false);
+		setEditingPermissions(null);
 	}, []);
 
 	return (
@@ -529,10 +619,16 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 												onDrop={handleAgentDrop}
 												style={{minHeight: "40px"}}
 											>
-												{group.agents.map((agentId, agentIndex) => {
+												{group.agents.map((groupAgent, agentIndex) => {
+													// Handle both old (string) and new (GroupAgent) formats
+													const agentId = typeof groupAgent === "string" ? groupAgent : groupAgent.id;
 													const agent = availableAgents.find((a) => a.id === agentId);
+													// Ensure we're working with GroupAgent format
+													const normalizedAgent: GroupAgent = typeof groupAgent === "string"
+														? {id: groupAgent, permissions: ["Everyone"]}
+														: groupAgent;
 													return (
-														<React.Fragment key={agentId}>
+														<React.Fragment key={`${agentId}-${agentIndex}`}>
 															{/* Insertion bar before agent */}
 															{agentDropTarget?.groupId === group.id && agentDropTarget.agentIndex === agentIndex && (
 																<Box style={{height: "2px", pointerEvents: "none"}} bg="bg.accent" rounded="full" mx="12" />
@@ -548,30 +644,55 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 																alignItems="center"
 																justifyContent="space-between"
 																draggable
-																onDragStart={(e) => handleAgentDragStart(e, agentId, group.id)}
-																onDragOver={(e) => handleAgentDragOver(e, group.id, agentId, agentIndex)}
+																onDragStart={(e) => handleAgentDragStart(e, normalizedAgent.id, group.id)}
+																onDragOver={(e) => handleAgentDragOver(e, group.id, normalizedAgent.id, agentIndex)}
 																onDrop={handleAgentDrop}
 																onDragEnd={handleAgentDragEnd}
 																style={{
 																	cursor: "move",
-																	opacity: draggedAgentId === agentId ? 0.5 : 1,
+																	opacity: draggedAgentId === normalizedAgent.id ? 0.5 : 1,
 																}}
 															>
-															<Box display="flex" alignItems="center" gap="12">
-																<IconGripVertical size={20} color="var(--ax-colors-fg-tertiary)" />
-																<Text fontSize="md">{agent?.name || agentId}</Text>
+																<Box display="flex" alignItems="center" gap="12">
+																	<IconGripVertical size={20} color="var(--ax-colors-fg-tertiary)" />
+																	<Box display="flex" flexDirection="column" gap="4">
+																		<Text fontSize="md">{agent?.name || normalizedAgent.id}</Text>
+																		{normalizedAgent.permissions && normalizedAgent.permissions.length > 0 && (
+																			<Box display="flex" gap="4" flexWrap="wrap">
+																				{normalizedAgent.permissions.map((permission, idx) => (
+																					<Badge key={`${permission}-${idx}`} intent="neutral" variant="subtle">
+																						{permission}
+																					</Badge>
+																				))}
+																			</Box>
+																		)}
+																	</Box>
+																</Box>
+																<Menu
+																	options={[
+																		{
+																			execute: () => handleOpenPermissions(group.id, normalizedAgent.id),
+																			label: "Permissions...",
+																		},
+																		{
+																			execute: () => handleRemoveAgent(group.id, normalizedAgent.id),
+																			intent: "danger",
+																			label: "Remove",
+																		},
+																	]}
+																>
+																	<MenuTrigger asChild>
+																		<Button
+																			appearance="subtle"
+																			size="sm"
+																			icon={<IconDots size={16} />}
+																			aria-label="Agent options"
+																			onClick={(e) => e.stopPropagation()}
+																		/>
+																	</MenuTrigger>
+																	<MenuContent />
+																</Menu>
 															</Box>
-															<Button
-																appearance="subtle"
-																size="sm"
-																icon={<IconTrash size={20} />}
-																aria-label="Remove agent"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	handleRemoveAgent(group.id, agentId);
-																}}
-															/>
-														</Box>
 
 													</React.Fragment>
 												)})}
@@ -641,6 +762,56 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 					</Button>
 				</Box>
 			</Box>
+
+			{/* Permissions Dialog */}
+			<Dialog open={permissionsDialogOpen} onOpenChange={setPermissionsDialogOpen}>
+				<DialogContent>
+					<DialogHeader>Agent Permissions</DialogHeader>
+					<DialogBody>
+						<Text fontSize="sm" color="fg.secondary" mb="16">
+							Select which user groups can see this agent:
+						</Text>
+						<Box display="flex" flexDirection="column" gap="12">
+							{(["Everyone", "Editors", "Marketers", "Administrators", "Developers", "Designers"] as UserGroup[]).map(
+								(userGroup) => (
+									<Checkbox
+										key={userGroup}
+										checked={editingPermissions?.currentPermissions.includes(userGroup) || false}
+										onCheckedChange={(checked) => {
+											if (!editingPermissions) return;
+											const newPermissions = checked
+												? [...editingPermissions.currentPermissions, userGroup]
+												: editingPermissions.currentPermissions.filter((p) => p !== userGroup);
+											setEditingPermissions({
+												...editingPermissions,
+												currentPermissions: newPermissions,
+											});
+										}}
+									>
+										{userGroup}
+									</Checkbox>
+								)
+							)}
+						</Box>
+					</DialogBody>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button appearance="subtle">Cancel</Button>
+						</DialogClose>
+						<Button
+							appearance="primary"
+							onClick={() => {
+								if (editingPermissions) {
+									handleSavePermissions(editingPermissions.currentPermissions);
+								}
+							}}
+							disabled={!editingPermissions?.currentPermissions.length}
+						>
+							Save Permissions
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</Box>
 	);
 };

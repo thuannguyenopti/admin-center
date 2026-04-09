@@ -40,11 +40,20 @@ export interface Agent {
 	category: string;
 }
 
+// User groups for permissions
+export type UserGroup = "Everyone" | "Editors" | "Marketers" | "Administrators" | "Developers" | "Designers";
+
+// Agent configuration within a group (includes permissions)
+export interface GroupAgent {
+	id: string; // Agent ID
+	permissions: UserGroup[]; // Which user groups can see this agent
+}
+
 // Group of agents within a location menu
 export interface MenuGroup {
 	id: string;
 	name: string;
-	agents: string[]; // Agent IDs
+	agents: GroupAgent[]; // Agent configurations with permissions
 	enabled: boolean;
 	visibleAt: "Everyone" | "Editors" | "Administrators";
 	helpText?: string;
