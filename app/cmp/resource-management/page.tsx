@@ -407,7 +407,7 @@ export default function CMPResourceManagementPage() {
 				flex="1"
 				flexDirection="column"
 				px="32"
-				pt="20"
+				pt="32"
 				pb="24"
 				style={{ minHeight: 0, overflow: "auto" }}
 			>
