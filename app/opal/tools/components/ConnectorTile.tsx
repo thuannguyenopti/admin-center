@@ -19,28 +19,15 @@ export function ConnectorTile({ connector, isConnected = false, onDetails, onCon
             border="1"
             borderColor="border.tertiary"
             rounded="md"
-            p="16"
+            pt="16"
+            px="16"
+            pb={isConnected ? "8" : "16"}
             display="flex"
             flexDirection="column"
             gap="12"
             className="group cursor-default"
-            style={{ position: "relative", background: "var(--ax-colors-bg-default)", transition: "background 0.15s" }}
+            style={{ position: "relative", background: "var(--ax-colors-bg-default)", transition: "background 0.15s", minHeight: 152, height: "100%" }}
         >
-            {/* Status dot */}
-            <Box
-                rounded="full"
-                style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    width: 8,
-                    height: 8,
-                    background: isConnected
-                        ? "var(--ax-colors-bg-success-strong)"
-                        : "var(--ax-colors-border-tertiary)",
-                }}
-            />
-
             {/* Icon + name row */}
             <Box display="flex" alignItems="center" gap="12">
                 <ConnectorAvatar connector={connector} size={40} />
@@ -64,6 +51,28 @@ export function ConnectorTile({ connector, isConnected = false, onDetails, onCon
             >
                 {connector.description}
             </Text>
+
+            {isConnected && (
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap="8"
+                    pt="10"
+                >
+                    <Box
+                        rounded="full"
+                        style={{
+                            width: 8,
+                            height: 8,
+                            background: "var(--ax-colors-fg-success)",
+                            flexShrink: 0,
+                        }}
+                    />
+                    <Text fontSize="sm" fontWeight="500" color="fg.success">
+                        Connected
+                    </Text>
+                </Box>
+            )}
 
             {/* Hover actions */}
             <Box
