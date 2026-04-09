@@ -377,14 +377,12 @@ export default function CMPResourceManagementPage() {
 
 	return (
 		<Box
-			bg="bg.default"
+			bg="bg.page"
 			display="flex"
 			flexDirection="column"
-			w="full"
 			style={{
-				marginLeft: -32,
-				marginRight: -32,
-				minHeight: "calc(100vh - 136px)",
+				height: "100%",
+				overflow: "hidden",
 				position: "relative",
 			}}
 		>
@@ -411,7 +409,7 @@ export default function CMPResourceManagementPage() {
 				px="32"
 				pt="20"
 				pb="24"
-				style={{ minHeight: 0 }}
+				style={{ minHeight: 0, overflow: "auto" }}
 			>
 				{/* Workload tab */}
 				{activeTab === "workload" ? (
