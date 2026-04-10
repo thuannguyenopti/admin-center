@@ -215,6 +215,7 @@ export function OpalChatView({
                         onOpenOpalRange={onOpenOpalRange}
                         onCloseOpalRange={onCloseOpalRange}
                         activeAgentCtx={activeAgentCtx}
+                        contextualActionCard={contextualActionCard}
                     />
                 </Box>
 
@@ -236,7 +237,6 @@ export function OpalChatView({
                             maxWidth: variant === 'home' ? '800px' : 'none',
                         }}
                     >
-                        {contextualActionCard}
                         <OpalInput
                             variant={variant}
                             value={inputValue}

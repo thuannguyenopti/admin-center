@@ -26,9 +26,10 @@ type OpalChatProps = {
   onCloseOpalRange?: (agentEndId: string) => void;
   activeAgentCtx?: { emoji: string; name: string } | null;
   contextChip?: string | null;
+  contextualActionCard?: React.ReactNode;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   let opalContext;
   try {
@@ -224,6 +225,11 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
               )}
             </Text>
             <OpalSuggestions onSuggestionClick={onSuggestionClick} type={contextChip ? 'agent-prompt-builder' : isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
+            {contextualActionCard && (
+              <Box w="full">
+                {contextualActionCard}
+              </Box>
+            )}
           </>
         )
       ) : (
@@ -344,6 +350,11 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
               </Box>
             );
           })}
+          {contextualActionCard && (
+            <Box w="full">
+              {contextualActionCard}
+            </Box>
+          )}
         </Box>
       )}
       <div ref={chatEndRef} />
