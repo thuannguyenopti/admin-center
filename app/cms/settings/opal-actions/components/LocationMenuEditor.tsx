@@ -29,14 +29,17 @@ interface LocationMenuEditorProps {
 	location: LocationMenu;
 	onClose: () => void;
 	onSave: (location: LocationMenu) => void;
+	onUnsavedChangesChange?: (hasChanges: boolean) => void;
 }
 
 export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 	location,
 	onClose,
 	onSave,
+	onUnsavedChangesChange,
 }) => {
 	const [editedLocation, setEditedLocation] = useState<LocationMenu>(location);
+	const [originalLocation, setOriginalLocation] = useState<LocationMenu>(location);
 	const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
 	const [renameValue, setRenameValue] = useState("");
 	const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null);
@@ -74,7 +77,18 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 			})),
 		};
 		setEditedLocation(normalizedLocation);
+		setOriginalLocation(normalizedLocation);
 	}, [location]);
+
+	// Check if there are unsaved changes
+	const hasUnsavedChanges = useMemo(() => {
+		return JSON.stringify(editedLocation) !== JSON.stringify(originalLocation);
+	}, [editedLocation, originalLocation]);
+
+	// Notify parent of unsaved changes
+	useEffect(() => {
+		onUnsavedChangesChange?.(hasUnsavedChanges);
+	}, [hasUnsavedChanges, onUnsavedChangesChange]);
 
 	const handleSave = useCallback(() => {
 		onSave(editedLocation);
@@ -753,7 +767,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 					<Button appearance="subtle" onClick={onClose}>
 						Cancel
 					</Button>
-					<Button appearance="primary" onClick={handleSave}>
+					<Button appearance="primary" onClick={handleSave} disabled={!hasUnsavedChanges}>
 						Save
 					</Button>
 				</Box>
