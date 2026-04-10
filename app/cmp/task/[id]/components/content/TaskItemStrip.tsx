@@ -2,7 +2,7 @@
 
 import { Box } from "@optiaxiom/react";
 import SparklesIcon from "@/app/cmp/assets/sparkles 16.svg";
-import { IconFileText } from "@tabler/icons-react";
+import { IconBrowser, IconFileText } from "@tabler/icons-react";
 import type { Page } from "@/app/db/initialData";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { AssetItem, TaskArticle } from "../../types";
@@ -145,20 +145,7 @@ export function TaskItemStrip({
 							) : entry.kind === "content-instance" ? (
 								<IconFileText color="var(--ax-colors-fg-secondary)" size={16} />
 							) : entry.kind === "page" ? (
-								<iframe
-									src={`/cms/edit/${entry.item.id}?preview=true`}
-									style={{
-										border: "none",
-										display: "block",
-										height: 32,
-										objectFit: "cover",
-										pointerEvents: "none",
-										transform: "scale(0.15)",
-										transformOrigin: "top left",
-										width: 213,
-									}}
-									title={`Preview of ${entry.item.name}`}
-								/>
+								<IconBrowser color="var(--ax-colors-fg-secondary)" size={16} />
 							) : entry.kind === "article" ? (
 								<IconFileText color="var(--ax-colors-fg-secondary)" size={16} />
 							) : (
