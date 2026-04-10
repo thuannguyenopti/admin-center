@@ -103,13 +103,14 @@ function findMappingForConnection(
 }
 
 /**
- * Get list of content instances compatible with a page's content type
- * Includes instances of same type and instances that can be mapped
+ * Get list of content instances compatible with a page's content type.
+ * Includes CMP instances and CMS pages whose content types have mappings to the target type.
  */
 export function getCompatibleInstances(
 	page: Page,
 	instances: ContentInstance[],
-	contentTypes: ContentType[]
+	contentTypes: ContentType[],
+	pages?: Page[]
 ): ContentInstance[] {
 	const pageContentType = contentTypes.find(ct => ct.id === page.contentTypeId);
 	if (!pageContentType) return [];
@@ -132,10 +133,54 @@ export function getCompatibleInstances(
 		}
 	});
 
-	// Filter instances to only those with compatible model IDs
-	return instances.filter(instance =>
+	// Filter CMP instances to only those with compatible model IDs
+	const cmpResults = instances.filter(instance =>
 		compatibleSourceTypeIds.has(instance.modelId)
 	);
+
+	// Also include CMS pages whose content type is compatible (excluding the page itself)
+	const cmsResults: ContentInstance[] = [];
+	if (pages) {
+		for (const p of pages) {
+			if (p.id === page.id) continue;
+			if (!compatibleSourceTypeIds.has(p.contentTypeId)) continue;
+
+			const ct = contentTypes.find(c => c.id === p.contentTypeId);
+			cmsResults.push({
+				id: p.id,
+				modelId: p.contentTypeId,
+				modelDisplayName: ct?.displayName || ct?.name || p.contentTypeId,
+				createdAt: p.lastModified || new Date().toISOString(),
+				fields: p.data || {},
+			});
+		}
+	}
+
+	return [...cmpResults, ...cmsResults];
+}
+
+/**
+ * Get the set of target property IDs that are data-bound for a connected page.
+ * Returns an empty Set if the page has no connection or no mapping is found.
+ */
+export function getBoundPropertyIds(
+	page: Page,
+	contentTypes: ContentType[]
+): Set<string> {
+	if (!page.cmpConnection?.mappingId) return new Set();
+
+	for (const ct of contentTypes) {
+		if (!ct.mappings) continue;
+		const mapping = ct.mappings.find(m => m.id === page.cmpConnection!.mappingId);
+		if (mapping) {
+			return new Set(mapping.propertyMappings.map(pm => {
+				const id = pm.targetPropertyId;
+				return id.includes('.') ? id.split('.')[0] : id;
+			}));
+		}
+	}
+
+	return new Set();
 }
 
 /**
