@@ -18,7 +18,7 @@ Package manager is **Yarn 4** (Corepack). Use `yarn` not `npm`. Run `corepack en
 
 ## ⚠️ Critical: Build Script & Webpack Rules
 
-**NEVER add `--webpack` to the `next build` command.** Forcing webpack mode breaks Next.js's internal CSS extraction pipeline for `transpilePackages: ["@optiaxiom/react"]`, causing all Axiom component styles (borders, fills, backgrounds) to be silently stripped from the Vercel production build.
+**NEVER add `--webpack` or `--turbopack` to the `next build` command.** Forcing either bundler mode breaks Next.js's internal CSS extraction pipeline for `transpilePackages: ["@optiaxiom/react"]`, causing all Axiom component styles (borders, fills, backgrounds) to be silently stripped from the Vercel production build. The correct build command is simply `next build` with no bundler flags.
 
 **NEVER add custom `webpack(config)` SVG rule mutations** (pushing to `config.module.rules`, wrapping/excluding asset rules). Mutating the raw webpack rules array breaks the same CSS extraction. For SVG support:
 - Dev (Turbopack): use the `turbopack.rules` block in `next.config.ts` — already configured
