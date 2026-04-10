@@ -6,9 +6,10 @@ type ItemProps = {
 	icon: ReactNode;
 	title: string;
 	description?: string;
+	endAdornment?: ReactNode;
 };
 
-export default function Item({icon, title, description}: ItemProps) {
+export default function Item({icon, title, description, endAdornment}: ItemProps) {
 	return (
 		<Box
 			asChild
@@ -31,7 +32,12 @@ export default function Item({icon, title, description}: ItemProps) {
 					flexDirection="column"
 				>
 					<span>
-						<span>{title}</span>
+						<Box asChild display="flex" alignItems="center" gap="4">
+							<span>
+								<span>{title}</span>
+								{endAdornment}
+							</span>
+						</Box>
 						{description && (
 							<Text
 								asChild
