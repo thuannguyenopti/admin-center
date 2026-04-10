@@ -34,7 +34,10 @@ function PagePreviewThumbnail({ page }: { page: Page }) {
 
 	const measure = useCallback(() => {
 		if (containerRef.current) {
-			setScale(containerRef.current.offsetWidth / RENDER_WIDTH);
+			const containerWidth = containerRef.current.offsetWidth;
+			setScale(RENDER_WIDTH > 0
+				? Math.min(1, Math.max(containerWidth / RENDER_WIDTH, 0))
+				: 1);
 		}
 	}, []);
 
@@ -46,17 +49,17 @@ function PagePreviewThumbnail({ page }: { page: Page }) {
 	}, [measure]);
 
 	return (
-		<div
+		<Box
 			ref={containerRef}
+			overflow="hidden"
+			w="full"
 			style={{
 				height: PREVIEW_HEIGHT,
-				overflow: "hidden",
 				position: "relative",
-				width: "100%",
 			}}
 		>
 			{scale > 0 && (
-				<div
+				<Box
 					style={{
 						left: 0,
 						pointerEvents: "none",
@@ -68,9 +71,9 @@ function PagePreviewThumbnail({ page }: { page: Page }) {
 					}}
 				>
 					<WebsitePagePreview page={page} />
-				</div>
+				</Box>
 			)}
-		</div>
+		</Box>
 	);
 }
 

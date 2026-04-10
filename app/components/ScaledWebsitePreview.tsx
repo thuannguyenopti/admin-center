@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Box } from "@optiaxiom/react";
 import type { Page } from "@/app/db/initialData";
 import type { Outline } from "@/app/db/initialData";
 import WebsitePagePreview from "./WebsitePagePreview";
@@ -35,7 +36,9 @@ export default function ScaledWebsitePreview({
 		if (!container || !inner) return;
 
 		const containerWidth = container.offsetWidth;
-		const newScale = containerWidth / renderWidth;
+		const newScale = renderWidth > 0
+			? Math.min(1, Math.max(containerWidth / renderWidth, 0))
+			: 1;
 		setScale(newScale);
 		setInnerHeight(inner.scrollHeight);
 	}, [renderWidth]);
@@ -51,17 +54,16 @@ export default function ScaledWebsitePreview({
 	}, [updateDimensions]);
 
 	return (
-		<div
+		<Box
 			ref={containerRef}
+			overflow="hidden"
+			w="full"
 			style={{
-				overflow: "hidden",
 				position: "relative",
-				width: "100%",
-				// Scale the inner height to match the container's coordinate space
 				height: innerHeight * scale || "auto",
 			}}
 		>
-			<div
+			<Box
 				ref={innerRef}
 				style={{
 					position: "absolute",
@@ -73,7 +75,7 @@ export default function ScaledWebsitePreview({
 				}}
 			>
 				<WebsitePagePreview page={page} outlines={outlines} />
-			</div>
-		</div>
+			</Box>
+		</Box>
 	);
 }
