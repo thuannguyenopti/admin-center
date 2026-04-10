@@ -110,7 +110,7 @@ export function migrateOpalActions(oldActions: OpalAction[]): OpalConfiguration 
 			const group: MenuGroup = {
 				id: generateId(),
 				name: action.name,
-				agents: [...action.agents],
+				agents: action.agents.map((agentId) => ({ id: agentId, permissions: ["Everyone" as const] })),
 				enabled: action.enabled,
 				visibleAt: action.visibleAt,
 				helpText: action.helpText,

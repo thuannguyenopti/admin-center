@@ -107,7 +107,7 @@ export default function OpalActionsPage() {
 		const groupCount = location.groups.length;
 		const uniqueAgents = new Set<string>();
 		location.groups.forEach((group) => {
-			group.agents.forEach((agentId) => uniqueAgents.add(agentId));
+			group.agents.forEach((agent) => uniqueAgents.add(agent.id));
 		});
 		return {
 			groupCount,
