@@ -69,6 +69,7 @@ export function PublishingPage({
 				id: instance.id,
 				name: getInstanceName(instance),
 				locale: "EN",
+				type: "instance",
 			});
 		}
 		for (const page of pages) {
@@ -76,6 +77,7 @@ export function PublishingPage({
 				id: page.id,
 				name: page.name,
 				locale: "EN",
+				type: "page",
 			});
 		}
 		return items;
@@ -108,6 +110,12 @@ export function PublishingPage({
 
 	const editingChannel = channels.find((ch) => ch.id === editingChannelId);
 	const editingChannelDef = editingChannel ? getChannelDef(editingChannel.channelTypeId) : undefined;
+
+	/** CMS channels only accept pages; other channels only accept CMP content instances */
+	const getContentForChannel = (channelTypeId: string) =>
+		channelTypeId === "cms-12"
+			? allContentItems.filter((item) => item.type === "page")
+			: allContentItems.filter((item) => item.type === "instance");
 
 	return (
 		<Box display="flex" flexDirection="column" h="full">
@@ -142,9 +150,11 @@ export function PublishingPage({
 							const def = getChannelDef(channel.channelTypeId);
 							if (!def) return null;
 
+							const eligible = getContentForChannel(channel.channelTypeId);
+							const eligibleIds = new Set(eligible.map((i) => i.id));
 							const items = channel.selectedContentIds
 								.map((id) => contentById.get(id))
-								.filter(Boolean) as ContentItem[];
+								.filter((item): item is ContentItem => !!item && eligibleIds.has(item.id));
 
 							return (
 								<ChannelCard
@@ -166,7 +176,7 @@ export function PublishingPage({
 					open={!!editingChannelId}
 					onClose={() => setEditingChannelId(null)}
 					channelDef={editingChannelDef}
-					allContent={allContentItems}
+					allContent={getContentForChannel(editingChannel.channelTypeId)}
 					selectedIds={editingChannel.selectedContentIds}
 					onSave={(ids) => onEditChannel(editingChannel.id, ids)}
 				/>

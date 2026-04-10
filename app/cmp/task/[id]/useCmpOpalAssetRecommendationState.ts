@@ -267,10 +267,10 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 
 	// Publishing channel actions
 	const addPublishingChannel = (channelTypeId: string) => {
-		const allContentIds = [
-			...computed.taskContentInstances.map((i) => i.id),
-			...computed.taskPages.map((p) => p.id),
-		];
+		// CMS channels only accept CMS pages; other channels only accept CMP content instances
+		const allContentIds = channelTypeId === "cms-12"
+			? computed.taskPages.map((p) => p.id)
+			: computed.taskContentInstances.map((i) => i.id);
 		state.setPublishingChannels((current) => [
 			...current,
 			{
