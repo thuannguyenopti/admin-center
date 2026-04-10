@@ -49,7 +49,10 @@ export function getEnabledGroups(
 export function getUsedAgentsInLocation(menu: LocationMenu): Set<string> {
 	const usedAgents = new Set<string>();
 	menu.groups.forEach((group) => {
-		group.agents.forEach((agentId) => usedAgents.add(agentId));
+		group.agents.forEach((agent) => {
+			const agentId = typeof agent === "string" ? agent : agent.id;
+			usedAgents.add(agentId);
+		});
 	});
 	return usedAgents;
 }
