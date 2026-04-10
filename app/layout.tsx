@@ -348,6 +348,13 @@ export default function RootLayout({
 						description: "Manage phrases for autocomplete suggestions.",
 						url: "/cms/search/autocomplete-phrases",
 					},
+
+					{label: "Developer"},
+					{
+						label: "Development Account Management",
+						description: "Request and manage developer instance access.",
+						url: "/cms/search/development-account-management",
+					},
 				],
 			},
 		],
@@ -420,7 +427,14 @@ export default function RootLayout({
 				label: "Context",
 				url: "/opal/instructions",
 				highlight: "/opal/instructions",
-				icon: <img src="/nav_icons/folder-bookmark.svg" alt="Context" width={20} height={20} />,
+				icon: (
+					<img
+						src="/nav_icons/folder-bookmark.svg"
+						alt="Context"
+						width={20}
+						height={20}
+					/>
+				),
 			},
 			{
 				label: "Prompt Library",
@@ -567,7 +581,11 @@ export default function RootLayout({
 					{label: "Eloqua", url: "/cmp/settings/eloqua"},
 					{label: "Salesforce", url: "/cmp/settings/salesforce"},
 					{label: "Apps & Webhooks", url: "/cmp/settings/apps-webhooks"},
-					{label: "Brand Compliance", url: "/cmp/settings/brand-compliance", separator: true},
+					{
+						label: "Brand Compliance",
+						url: "/cmp/settings/brand-compliance",
+						separator: true,
+					},
 					{label: "Social Accounts", url: "/cmp/settings/social-accounts"},
 				],
 			},
