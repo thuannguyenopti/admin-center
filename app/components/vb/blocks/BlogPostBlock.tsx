@@ -5,6 +5,27 @@ import { BlogPostHeader } from "./BlogPostHeader";
 import { BlogPostBody } from "./BlogPostBody";
 import { BlogPostAuthor } from "./BlogPostAuthor";
 
+/** Safely extract a string from a value that might be a structured object */
+function toText(val: unknown): string {
+	if (val == null) return "";
+	if (typeof val === "string") return val;
+	if (typeof val === "number" || typeof val === "boolean") return String(val);
+	if (typeof val === "object") {
+		const obj = val as Record<string, any>;
+		// Handle ProseMirror/TipTap rich text documents: {type: "doc", content: [...]}
+		if (obj.type === "text" && typeof obj.text === "string") return obj.text;
+		if (Array.isArray(obj.content)) {
+			return obj.content.map((node: unknown) => toText(node)).join("");
+		}
+		// Handle simple wrappers: {content: "..."} or {value: "..."}
+		if (typeof obj.content === "string") return obj.content;
+		if (typeof obj.value === "string") return obj.value;
+		if (typeof obj.text === "string") return obj.text;
+		return "";
+	}
+	return String(val);
+}
+
 export const BlogPostBlock = React.memo(function BlogPostBlock({
 	properties,
 	pageId,
@@ -13,11 +34,15 @@ export const BlogPostBlock = React.memo(function BlogPostBlock({
 	pageId?: string;
 }) {
 	// Extract properties - handle both {value} format and flat format
-	const title = properties?.title?.value || properties?.title || "Untitled Post";
-	const subtitle = properties?.subtitle?.value || properties?.subtitle;
-	const body = properties?.body?.value || properties?.body || "";
+	const rawTitle = properties?.title?.value || properties?.title;
+	const rawSubtitle = properties?.subtitle?.value || properties?.subtitle;
+	const rawBody = properties?.body?.value || properties?.body;
 	const featuredImage = properties?.featuredImage?.value || properties?.featuredImage;
 	const author = properties?.author?.value || properties?.author;
+
+	const title = toText(rawTitle) || "Untitled Post";
+	const subtitle = toText(rawSubtitle) || undefined;
+	const body = toText(rawBody);
 
 	return (
 		<article className="w-full py-12">

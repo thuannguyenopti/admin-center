@@ -1,11 +1,14 @@
-import { ContentType, ContentTypeMapping, Page, canCreateChildType } from "@/app/db/initialData";
+import { ContentType, ContentTypeMapping, Page, canCreateChildType, initialContentTypes } from "@/app/db/initialData";
 import { ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
 import { applyMapping } from "./contentTypeMapping";
 
 /**
- * Normalize CMP instance fields so that values are accessible by both
- * the original property names (used as data keys) AND any current
+ * Normalize instance/page fields so that values are accessible by both
+ * the original property names/IDs (used as data keys) AND any current
  * property names/IDs that may differ due to content type edits.
+ *
+ * Works for both CMP instances (fields keyed by property name) and
+ * CMS pages (data keyed by property ID).
  *
  * Matches original → current properties using the description field,
  * then adds the value under the current property name and ID.
@@ -17,16 +20,22 @@ function normalizeInstanceFields(
 ): Record<string, any> {
 	if (!currentSourceType) return fields;
 
-	const originalModel = initialCmpContentModels.find(m => m.id === modelId);
-	if (!originalModel) return fields;
-
 	const normalized: Record<string, any> = { ...fields };
 
-	// For each original property that has data, also index by property ID
-	for (const origProp of originalModel.properties) {
-		if (fields[origProp.name] === undefined) continue;
-		// Add under original property ID
-		normalized[origProp.id] = fields[origProp.name];
+	// Find original property definitions — try CMP models first, then CMS initial types
+	const originalCmpModel = initialCmpContentModels.find(m => m.id === modelId);
+	const originalCmsType = initialContentTypes.find(ct => ct.id === modelId);
+	const originalProperties = originalCmpModel?.properties || originalCmsType?.properties || [];
+
+	if (originalProperties.length === 0) return fields;
+
+	// For each original property that has data, also index by property ID and name
+	for (const origProp of originalProperties) {
+		const origValue = fields[origProp.name] ?? fields[origProp.id];
+		if (origValue === undefined) continue;
+		// Add under both original property ID and name
+		if (normalized[origProp.id] === undefined) normalized[origProp.id] = origValue;
+		if (normalized[origProp.name] === undefined) normalized[origProp.name] = origValue;
 	}
 
 	// Bridge renamed properties: match original → current by description
@@ -36,13 +45,15 @@ function normalizeInstanceFields(
 		if (normalized[currentProp.id] !== undefined) continue;
 		if (!currentProp.description) continue;
 
-		// Find an original property with the same description
-		const matchingOriginal = originalModel.properties.find(
-			op => op.description === currentProp.description && fields[op.name] !== undefined
+		// Find an original property with the same description that has data
+		const matchingOriginal = originalProperties.find(
+			(op: any) => op.description === currentProp.description &&
+				(fields[op.name] !== undefined || fields[op.id] !== undefined)
 		);
 		if (matchingOriginal) {
-			normalized[currentProp.name] = fields[matchingOriginal.name];
-			normalized[currentProp.id] = fields[matchingOriginal.name];
+			const value = fields[matchingOriginal.name] ?? fields[matchingOriginal.id];
+			normalized[currentProp.name] = value;
+			normalized[currentProp.id] = value;
 		}
 	}
 
