@@ -1,4 +1,4 @@
-import { Field, Checkbox, Text } from "@optiaxiom/react";
+import { Field, Checkbox } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const BooleanRenderer: React.FC<PropertyRendererProps> = ({
@@ -10,7 +10,7 @@ export const BooleanRenderer: React.FC<PropertyRendererProps> = ({
 }) => {
 	if (mode === "readonly") {
 		return (
-			<Field label={property.displayName || property.name}>
+			<Field>
 				<Checkbox
 					checked={value ?? false}
 					disabled
