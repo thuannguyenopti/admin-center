@@ -10,6 +10,7 @@ import { BriefPage } from "./components/brief/BriefPage";
 import { ContentEmptyPage } from "./components/content/ContentEmptyPage";
 import { ContentFilledPage } from "./components/content/ContentFilledPage";
 import { TaskCanvas } from "./components/shared/TaskCanvas";
+import { PublishingPage } from "./components/publishing/PublishingPage";
 import { WorkflowChangeModal } from "./components/workflow/WorkflowChangeModal";
 import { WorkflowSidebar } from "./components/workflow/WorkflowSidebar";
 import { useCmpOpalAssetRecommendationState } from "./useCmpOpalAssetRecommendationState";
@@ -158,6 +159,25 @@ export function CmpOpalAssetRecommendation({ taskId }: { taskId: string }) {
 							workflowSidebar
 						)
 					}
+				/>
+			)}
+
+			{state.scene === "publishing" && (
+				<TaskCanvas
+					left={
+						<PublishingPage
+							activeTab={state.activeTab}
+							channels={state.publishingChannels}
+							contentInstances={state.taskContentInstances}
+							onAddChannel={state.addPublishingChannel}
+							onEditChannel={state.updateChannelContent}
+							onRemoveChannel={state.removePublishingChannel}
+							onTabChange={state.handleTabChange}
+							pages={state.taskPages}
+							taskTitle={state.taskTitle}
+						/>
+					}
+					right={workflowSidebar}
 				/>
 			)}
 

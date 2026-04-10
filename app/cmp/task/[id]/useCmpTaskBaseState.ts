@@ -9,7 +9,7 @@ import usePersistentState from "@/app/usePersistentState";
 import { useEffect, useState } from "react";
 import { initialTaskAssets, searchAssets, suggestedAssets } from "./mockData";
 import { initialBriefContent, perspectiveSeeds, taskBriefContents } from "./constants";
-import type { AssetItem, Scene, TaskArticle } from "./types";
+import type { AssetItem, PublishingChannel, Scene, TaskArticle } from "./types";
 import { formatInitialBriefHtml } from "./utils";
 
 export function useCmpTaskBaseState(taskId: string) {
@@ -69,6 +69,7 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
+	const [publishingChannels, setPublishingChannels] = useState<PublishingChannel[]>([]);
 
 	return {
 		applications,
@@ -82,6 +83,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		pages,
 		pendingWorkflowId,
 		perspectives,
+		publishingChannels,
 		previewCurrentEle,
 		previewHoverEle,
 		previewOutlines,
@@ -104,6 +106,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		setPages,
 		setPendingWorkflowId,
 		setPerspectives,
+		setPublishingChannels,
 		setPreviewCurrentEle,
 		setPreviewHoverEle,
 		setPreviewOutlines,

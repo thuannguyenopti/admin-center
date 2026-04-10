@@ -52,7 +52,11 @@ export function useCmpTaskComputedData({
 		return taskId === currentTaskId;
 	}), [contentInstances, currentTaskId]);
 	const hasTaskContent = taskContentInstances.length > 0 || taskPages.length > 0 || taskArticles.length > 0 || taskAssets.length > 0;
-	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit" ? "brief" : "content";
+	const activeTab: TaskTab = scene === "brief" || scene === "brief-edit"
+		? "brief"
+		: scene === "publishing"
+		? "publishing"
+		: "content";
 	const effectiveBriefContent = scene === "brief-edit" ? draftBriefContent : briefContent;
 	const effectiveBriefText = useMemo(() => getPlainTextFromHtml(effectiveBriefContent), [effectiveBriefContent]);
 	const deferredBriefContent = useDeferredValue(effectiveBriefText);
@@ -139,6 +143,7 @@ export function useCmpTaskComputedData({
 		panelAssetsWithSelection,
 		rankedSearchAssets,
 		targetDialogAvailableTargets,
+		taskContentInstances,
 		taskPages,
 	};
 }
