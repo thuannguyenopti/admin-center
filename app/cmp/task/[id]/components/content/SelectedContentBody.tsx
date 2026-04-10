@@ -6,8 +6,8 @@ import type { ContentType, Page } from "@/app/db/initialData";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import { convertCmpPropertyToCms } from "@/app/lib/contentTypeMigration";
 import { PropertyRenderer } from "@/app/components/property-renderers";
-import PreviewCanvas, { type Outline } from "@/app/components/vb/PreviewCanvas";
-import PropertyBasedPageRenderer from "@/app/site/PropertyBasedPageRenderer";
+import type { Outline } from "@/app/components/vb/PreviewCanvas";
+import ScaledWebsitePreview from "@/app/components/ScaledWebsitePreview";
 import type { AssetItem, TaskArticle } from "../../types";
 import { recommendationAssets } from "../../constants";
 import { initialCmpContentModels } from "@/app/db/cmpInitialData";
@@ -110,31 +110,11 @@ export function SelectedContentBody({
 	}
 
 	if (selectedPage) {
-		if (previewOutlines.length > 0) {
-			return (
-				<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "hidden" }}>
-					<PreviewCanvas
-						currentEle={previewCurrentEle}
-						currentHoverEle={previewHoverEle}
-						outlines={previewOutlines}
-						preview={{ mode: "responsive", width: 1440, maxWidth: 1440 }}
-						setCurrentEle={setPreviewCurrentEle}
-						setCurrentHoverEle={setPreviewHoverEle}
-						setOutlines={setPreviewOutlines}
-						theEles={{}}
-					/>
-				</Box>
-			);
-		}
-
 		return (
-			<Box display="flex" flexDirection="column" style={{ height: "100%", overflow: "auto" }}>
-				<PropertyBasedPageRenderer
-					contentTypeId={selectedPage.contentTypeId}
-					pageId={selectedPage.id}
-					properties={selectedPage.data || {}}
-				/>
-			</Box>
+			<ScaledWebsitePreview
+				page={selectedPage}
+				outlines={previewOutlines.length > 0 ? previewOutlines : undefined}
+			/>
 		);
 	}
 

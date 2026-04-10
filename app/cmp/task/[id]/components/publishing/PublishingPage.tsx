@@ -78,6 +78,7 @@ export function PublishingPage({
 				name: page.name,
 				locale: "EN",
 				type: "page",
+				page,
 			});
 		}
 		return items;
@@ -126,7 +127,7 @@ export function PublishingPage({
 				<Box display="flex" alignItems="center" justifyContent="flex-end">
 					<Menu options={menuOptions} inputVisible="always">
 						<MenuTrigger asChild>
-							<Button appearance="primary" size="sm" icon={<IconPlus size={16} />}>
+							<Button appearance="primary" size="lg" icon={<IconPlus size={16} />}>
 								Add Channel
 							</Button>
 						</MenuTrigger>
