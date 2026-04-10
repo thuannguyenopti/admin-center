@@ -55,6 +55,7 @@ type OpalChatViewProps = {
     disabled?: boolean;
     /** Called when the user tries to submit while blocked (e.g. resume flow). */
     onSubmitBlocked?: () => void;
+    contextualActionCard?: ReactNode;
 };
 
 export function OpalChatView({
@@ -96,6 +97,7 @@ export function OpalChatView({
     activeAgentCtx,
     disabled,
     onSubmitBlocked,
+    contextualActionCard,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -225,21 +227,32 @@ export function OpalChatView({
                         width: '100%'
                     }}
                 >
-                    <OpalInput
-                        variant={variant}
-                        value={inputValue}
-                        onChange={setInputValue}
-                        onSend={(content) => onSend(content ?? inputValue)}
-                        disabled={isLoading || !!disabled}
-                        isLoading={isLoading}
-                        error={error}
-                        enableAI={enableAI}
-                        onEnableAIChange={onEnableAIChange}
-                        agentBar={agentBar}
-                        mentionableAgents={mentionableAgents}
-                        onMentionSelect={onMentionSelect}
-                        onSubmitBlocked={onSubmitBlocked}
-                    />
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        gap="16"
+                        style={{
+                            width: '100%',
+                            maxWidth: variant === 'home' ? '800px' : 'none',
+                        }}
+                    >
+                        {contextualActionCard}
+                        <OpalInput
+                            variant={variant}
+                            value={inputValue}
+                            onChange={setInputValue}
+                            onSend={(content) => onSend(content ?? inputValue)}
+                            disabled={isLoading || !!disabled}
+                            isLoading={isLoading}
+                            error={error}
+                            enableAI={enableAI}
+                            onEnableAIChange={onEnableAIChange}
+                            agentBar={agentBar}
+                            mentionableAgents={mentionableAgents}
+                            onMentionSelect={onMentionSelect}
+                            onSubmitBlocked={onSubmitBlocked}
+                        />
+                    </Box>
                 </Box>
             </Box>
             <OpalLoaderDevPanel />

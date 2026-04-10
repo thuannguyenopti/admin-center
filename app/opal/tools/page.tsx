@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useState, useEffect, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
     Box,
     Text,
@@ -38,6 +39,8 @@ import { RegisterRemoteMcpProviderModal, type RemoteMcpProviderDraft } from "./c
 import { CONNECTORS, type Connector } from "./data/connectors";
 
 const STORAGE_KEY = "opal_connected_connectors";
+const TAB_VALUES = ["connectors", "tools", "registries", "auth-providers"] as const;
+type ToolsTabValue = (typeof TAB_VALUES)[number];
 
 // ── Static Auth Provider mock data (from OCP) ─────────────────────────────────
 type AuthScope = "Instance" | "System";
@@ -74,6 +77,9 @@ const DEFAULT_AUTH_PROVIDERS: AuthProvider[] = [
 ];
 
 export default function ToolsPage() {
+    const pathname = usePathname();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [connectedConnectors, setConnectedConnectors] = useState<ConnectedConnector[]>([]);
     const [authProviders, setAuthProviders] = useState<AuthProvider[]>(DEFAULT_AUTH_PROVIDERS);
 
@@ -84,7 +90,10 @@ export default function ToolsPage() {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalInitialConnector, setModalInitialConnector] = useState<Connector | null>(null);
     const [modalInitialScreen, setModalInitialScreen] = useState<"browse" | "detail" | "configure">("browse");
+    const [modalInitialStep, setModalInitialStep] = useState<0 | 1 | 2>(0);
+    const [modalInitialToolsDisclosureOpen, setModalInitialToolsDisclosureOpen] = useState(false);
     const [addAuthProviderOpen, setAddAuthProviderOpen] = useState(false);
+    const [remoteMcpInitialStep, setRemoteMcpInitialStep] = useState<0 | 1 | 2>(0);
     const [registerRemoteMcpOpen, setRegisterRemoteMcpOpen] = useState(false);
 
     // Connector tab filters
@@ -237,6 +246,69 @@ export default function ToolsPage() {
         setAuthProviders(prev => [nextProvider, ...prev]);
     };
 
+    const activeTab = useMemo<ToolsTabValue>(() => {
+        const tab = searchParams.get("tab");
+        return TAB_VALUES.includes(tab as ToolsTabValue) ? (tab as ToolsTabValue) : "connectors";
+    }, [searchParams]);
+
+    useEffect(() => {
+        const panelId = searchParams.get("panel");
+
+        if (!panelId) {
+            setOcpConnector(null);
+            return;
+        }
+
+        const panelConnector = CONNECTORS.find(connector => connector.id === panelId && connector.usesOCP) ?? null;
+        setOcpConnector(panelConnector);
+    }, [searchParams]);
+
+    useEffect(() => {
+        const modalType = searchParams.get("modal");
+
+        if (modalType === "connector") {
+            const connectorId = searchParams.get("connector");
+            const screen = searchParams.get("screen");
+            const connector = connectorId ? CONNECTORS.find(item => item.id === connectorId) ?? null : null;
+            const initialScreen = screen === "detail" || screen === "configure" || screen === "browse" ? screen : "browse";
+            const parsedStep = Number(searchParams.get("step") ?? "0");
+            const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
+            const initialToolsDisclosureOpen = searchParams.get("tools") === "expanded";
+
+            setModalInitialConnector(connector);
+            setModalInitialScreen(initialScreen);
+            setModalInitialStep(initialStep);
+            setModalInitialToolsDisclosureOpen(initialToolsDisclosureOpen);
+            setModalOpen(true);
+            return;
+        }
+
+        setModalInitialToolsDisclosureOpen(false);
+        setModalOpen(false);
+    }, [searchParams]);
+
+    useEffect(() => {
+        const modalType = searchParams.get("modal");
+
+        if (modalType === "remote-mcp") {
+            const parsedStep = Number(searchParams.get("step") ?? "0");
+            const initialStep = parsedStep === 1 || parsedStep === 2 ? parsedStep : 0;
+            setRemoteMcpInitialStep(initialStep);
+            setRegisterRemoteMcpOpen(true);
+            return;
+        }
+
+        setRegisterRemoteMcpOpen(false);
+    }, [searchParams]);
+
+    const handleTabChange = (tab: string) => {
+        if (!TAB_VALUES.includes(tab as ToolsTabValue)) return;
+
+        const nextParams = new URLSearchParams(searchParams.toString());
+        nextParams.set("tab", tab);
+        router.replace(`${pathname}?${nextParams.toString()}`, { scroll: false });
+    };
+
     return (
         <>
             <AddConnectorModal
@@ -247,11 +319,14 @@ export default function ToolsPage() {
                 connectedIds={connectedIds}
                 initialConnector={modalInitialConnector}
                 initialScreen={modalInitialScreen}
+                initialStep={modalInitialStep}
+                initialToolsDisclosureOpen={modalInitialToolsDisclosureOpen}
             />
             <RegisterRemoteMcpProviderModal
                 open={registerRemoteMcpOpen}
                 onOpenChange={setRegisterRemoteMcpOpen}
                 onRegistered={handleRemoteMcpProviderRegistered}
+                initialStep={remoteMcpInitialStep}
             />
             <AddAuthProviderModal
                 open={addAuthProviderOpen}
@@ -267,7 +342,7 @@ export default function ToolsPage() {
                 </Box>
 
                 {/* ── Tabs ─────────────────────────────────────────────────── */}
-                <Tabs defaultValue="connectors">
+                <Tabs value={activeTab} onValueChange={handleTabChange}>
                     <TabsList>
                         <TabsTrigger value="connectors">Connectors</TabsTrigger>
                         <TabsTrigger value="tools">Tools</TabsTrigger>

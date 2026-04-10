@@ -5,7 +5,12 @@ import {
     Box,
     Button,
     Dialog,
+    DialogBody,
     DialogContent,
+    DialogFooter,
+    DialogForm,
+    DialogHeader,
+    Field,
     Input,
     Text,
     Textarea,
@@ -99,161 +104,170 @@ export function AddAuthProviderModal({
         onOpenChange(false);
     };
 
+    const labelContent = (label: string, required = false) => (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <span
+                style={{
+                    fontSize: 14,
+                    fontWeight: 400,
+                    lineHeight: "20px",
+                    color: "var(--ax-colors-fg-secondary)",
+                }}
+            >
+                {label}
+            </span>
+            {required ? (
+                <span aria-hidden="true" style={{ color: "var(--ax-colors-fg-danger)" }}>*</span>
+            ) : null}
+        </span>
+    );
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
+                size="md"
                 style={{
-                    width: "min(720px, 92vw)",
                     padding: 0,
                     overflow: "hidden",
+                    maxHeight: "88vh",
                 }}
             >
-                <Box display="flex" flexDirection="column" style={{ maxHeight: "88vh" }}>
-                    <Box p="24" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
-                        <Text fontSize="xl" fontWeight="600">Add Authentication Provider</Text>
-                    </Box>
-
-                    <Box
-                        p="24"
-                        display="flex"
-                        flexDirection="column"
-                        gap="16"
-                        style={{ overflowY: "auto", flex: 1 }}
+                <Box display="flex" flexDirection="column" style={{ height: "100%", minHeight: 0 }}>
+                    <DialogHeader>Add Authentication Provider</DialogHeader>
+                    <DialogForm
+                        style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            handleSave();
+                        }}
                     >
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Provider Name</Text>
-                            <Input
-                                placeholder="e.g., Google, Microsoft, GitHub"
-                                value={draft.name}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("name", e.target.value)}
-                            />
-                        </Box>
+                        <DialogBody style={{ overflowY: "auto", minHeight: 0 }}>
+                            <Box
+                                display="flex"
+                                flexDirection="column"
+                                gap="16"
+                                style={{ flex: 1, minHeight: 0 }}
+                            >
+                                <Field label={labelContent("Provider Name", true)}>
+                                    <Input
+                                        placeholder="e.g., Google, Microsoft, GitHub"
+                                        value={draft.name}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("name", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Provider ID</Text>
-                            <Input
-                                placeholder="e.g., google, microsoft, github"
-                                value={draft.providerId}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    setProviderIdTouched(true);
-                                    updateField("providerId", e.target.value);
-                                }}
-                            />
-                            <Text fontSize="xs" color="fg.tertiary">
-                                Used in URLs and code. Auto-generated from name.
-                            </Text>
-                        </Box>
+                                <Field label={labelContent("Provider ID", true)}>
+                                    <Input
+                                        placeholder="e.g., google, microsoft, github"
+                                        value={draft.providerId}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                            setProviderIdTouched(true);
+                                            updateField("providerId", e.target.value);
+                                        }}
+                                    />
+                                </Field>
+                                <Text fontSize="xs" color="fg.tertiary" style={{ marginTop: -12 }}>
+                                    Used in URLs and code. Auto-generated from name.
+                                </Text>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Description</Text>
-                            <Input
-                                placeholder="OAuth provider for Google services"
-                                value={draft.description}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("description", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Description")}>
+                                    <Textarea
+                                        placeholder="OAuth provider for Google services"
+                                        value={draft.description}
+                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateField("description", e.target.value)}
+                                        resize="vertical"
+                                        rows={3}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Auth Type</Text>
-                            <Input
-                                value={draft.authType}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("authType", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Auth Type", true)}>
+                                    <Input
+                                        value={draft.authType}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("authType", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Authorization URL</Text>
-                            <Input
-                                placeholder="https://accounts.google.com/o/oauth2/v2/auth"
-                                value={draft.authUrl}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("authUrl", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Authorization URL", true)}>
+                                    <Input
+                                        placeholder="https://accounts.google.com/o/oauth2/v2/auth"
+                                        value={draft.authUrl}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("authUrl", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="6">
-                            <Text fontSize="sm" fontWeight="500">Authorization URL Custom Parameters (Optional)</Text>
-                            <Text fontSize="xs" color="fg.tertiary">
-                                Additional query parameters to include in the authorization URL.
-                            </Text>
-                            <Textarea
-                                placeholder="e.g., access_type=offline"
-                                value={draft.authUrlCustomParameters}
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateField("authUrlCustomParameters", e.target.value)}
-                                resize="vertical"
-                                rows={3}
-                            />
-                        </Box>
+                                <Field label={labelContent("Authorization URL Custom Parameters")}>
+                                    <Textarea
+                                        placeholder="e.g., access_type=offline"
+                                        value={draft.authUrlCustomParameters}
+                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateField("authUrlCustomParameters", e.target.value)}
+                                        resize="vertical"
+                                        rows={3}
+                                    />
+                                </Field>
+                                <Text fontSize="xs" color="fg.tertiary" style={{ marginTop: -12 }}>
+                                    Additional query parameters to include in the authorization URL.
+                                </Text>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Token URL</Text>
-                            <Input
-                                placeholder="https://oauth2.googleapis.com/token"
-                                value={draft.tokenUrl}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("tokenUrl", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Token URL", true)}>
+                                    <Input
+                                        placeholder="https://oauth2.googleapis.com/token"
+                                        value={draft.tokenUrl}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("tokenUrl", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Revoke URL (Optional)</Text>
-                            <Input
-                                placeholder="https://oauth2.googleapis.com/revoke"
-                                value={draft.revokeUrl}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("revokeUrl", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Revoke URL")}>
+                                    <Input
+                                        placeholder="https://oauth2.googleapis.com/revoke"
+                                        value={draft.revokeUrl}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("revokeUrl", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Refresh URL (Optional)</Text>
-                            <Input
-                                placeholder="https://oauth2.googleapis.com/token"
-                                value={draft.refreshUrl}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("refreshUrl", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Refresh URL")}>
+                                    <Input
+                                        placeholder="https://oauth2.googleapis.com/token"
+                                        value={draft.refreshUrl}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("refreshUrl", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">UserInfo URL (Optional)</Text>
-                            <Input
-                                placeholder="https://openidconnect.googleapis.com/v1/userinfo"
-                                value={draft.userInfoUrl}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("userInfoUrl", e.target.value)}
-                            />
-                            <Text fontSize="xs" color="fg.tertiary">
-                                OIDC UserInfo endpoint for token validation when expiry is unknown.
-                            </Text>
-                        </Box>
+                                <Field label={labelContent("UserInfo URL")}>
+                                    <Input
+                                        placeholder="https://openidconnect.googleapis.com/v1/userinfo"
+                                        value={draft.userInfoUrl}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("userInfoUrl", e.target.value)}
+                                    />
+                                </Field>
+                                <Text fontSize="xs" color="fg.tertiary" style={{ marginTop: -12 }}>
+                                    OIDC UserInfo endpoint for token validation when expiry is unknown.
+                                </Text>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Client ID</Text>
-                            <Input
-                                placeholder="Enter OAuth client ID"
-                                value={draft.clientId}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("clientId", e.target.value)}
-                            />
-                        </Box>
+                                <Field label={labelContent("Client ID", true)}>
+                                    <Input
+                                        placeholder="Enter OAuth client ID"
+                                        value={draft.clientId}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("clientId", e.target.value)}
+                                    />
+                                </Field>
 
-                        <Box display="flex" flexDirection="column" gap="8">
-                            <Text fontSize="sm" fontWeight="500">Client Secret</Text>
-                            <Input
-                                placeholder="Enter OAuth client secret"
-                                value={draft.clientSecret}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("clientSecret", e.target.value)}
-                            />
-                        </Box>
-                    </Box>
+                                <Field label={labelContent("Client Secret", true)}>
+                                    <Input
+                                        placeholder="Enter OAuth client secret"
+                                        value={draft.clientSecret}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField("clientSecret", e.target.value)}
+                                    />
+                                </Field>
+                            </Box>
+                        </DialogBody>
 
-                    <Box
-                        p="16"
-                        display="flex"
-                        justifyContent="flex-end"
-                        gap="12"
-                        style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
-                    >
-                        <Button appearance="subtle" onClick={() => onOpenChange(false)}>Cancel</Button>
-                        <Button appearance="primary" disabled={!canSave} onClick={handleSave}>
-                            Save Provider
-                        </Button>
-                    </Box>
+                        <DialogFooter>
+                            <Button appearance="subtle" onClick={() => onOpenChange(false)} type="button">Cancel</Button>
+                            <Button appearance="primary" disabled={!canSave} type="submit">
+                                Save Provider
+                            </Button>
+                        </DialogFooter>
+                    </DialogForm>
                 </Box>
             </DialogContent>
         </Dialog>

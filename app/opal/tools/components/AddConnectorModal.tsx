@@ -53,21 +53,14 @@ interface AddConnectorModalProps {
     connectedIds?: string[];
     initialConnector?: Connector | null;
     initialScreen?: Screen;
+    initialStep?: 0 | 1 | 2;
+    initialToolsDisclosureOpen?: boolean;
 }
 
 function isUserLevelConnector(connector: Connector) {
     if (connector.id === "google-analytics") return false;
     return connector.category === "Google Workspace" || connector.category === "Microsoft 365";
 }
-
-// ── Tool action badge intent ───────────────────────────────────────────────────
-
-const actionIntent: Record<ToolAction, "information" | "warning" | "success" | "danger"> = {
-    Read: "information",
-    Update: "warning",
-    Create: "success",
-    Delete: "danger",
-};
 
 const actionIcon: Record<ToolAction, React.ReactNode> = {
     Read: <IconEye size={16} />,
@@ -118,6 +111,8 @@ export function AddConnectorModal({
     connectedIds = [],
     initialConnector = null,
     initialScreen = "browse",
+    initialStep = 0,
+    initialToolsDisclosureOpen = false,
 }: AddConnectorModalProps) {
     const [screen, setScreen] = useState<Screen>(initialScreen);
     const [selected, setSelected] = useState<Connector | null>(initialConnector);
@@ -129,6 +124,7 @@ export function AddConnectorModal({
     const [toolSearch, setToolSearch] = useState("");
     const [browseSearch, setBrowseSearch] = useState("");
     const [detailPage, setDetailPage] = useState(1);
+    const [detailToolsDisclosureOpen, setDetailToolsDisclosureOpen] = useState(initialToolsDisclosureOpen);
 
     const TOOLS_PER_PAGE = 10;
 
@@ -137,13 +133,14 @@ export function AddConnectorModal({
         if (open) {
             setScreen(initialScreen);
             setSelected(initialConnector);
-            setStep(0);
+            setStep(initialStep);
+            setDetailToolsDisclosureOpen(initialToolsDisclosureOpen);
             if (initialConnector) {
                 setSelectedTools(initialConnector.tools.map(t => t.id));
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open]);
+    }, [open, initialStep, initialScreen, initialConnector, initialToolsDisclosureOpen]);
 
     const resetModal = () => {
         setScreen("browse");
@@ -156,6 +153,7 @@ export function AddConnectorModal({
         setToolSearch("");
         setBrowseSearch("");
         setDetailPage(1);
+        setDetailToolsDisclosureOpen(false);
     };
 
     const handleOpenChange = (val: boolean) => {
@@ -251,6 +249,7 @@ export function AddConnectorModal({
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent
+                id="add-connector-modal"
                 style={{
                     width: "min(760px, 92vw)",
                     height: "74vh",
@@ -366,7 +365,7 @@ export function AddConnectorModal({
 
                             {/* Tools table */}
                             {selected.tools.length > 0 ? (
-                                <Disclosure>
+                                <Disclosure open={detailToolsDisclosureOpen} onOpenChange={setDetailToolsDisclosureOpen}>
                                     <DisclosureTrigger chevronPosition="start">
                                         <Box display="inline-flex" alignItems="center" gap="8">
                                             <Text fontWeight="600" color="fg.default">Tools</Text>
@@ -632,9 +631,14 @@ export function AddConnectorModal({
                                                         <Box flex="1">
                                                             <Box display="flex" alignItems="center" gap="8" mb="2">
                                                                 <Text fontSize="sm" fontWeight="500">{tool.name}</Text>
-                                                                <Badge intent={actionIntent[tool.action]} >
-                                                                    {tool.action}
-                                                                </Badge>
+                                                                <Box display="flex" alignItems="center" gap="6">
+                                                                    <Box color="fg.secondary" display="flex" alignItems="center">
+                                                                        {actionIcon[tool.action]}
+                                                                    </Box>
+                                                                    <Text fontSize="sm" color="fg.secondary">
+                                                                        {tool.action}
+                                                                    </Text>
+                                                                </Box>
                                                             </Box>
                                                             <Text fontSize="sm" color="fg.secondary">
                                                                 {tool.description}
