@@ -27,7 +27,8 @@ export function applyMapping(
 		const sourceProp = sourceType.properties.find(p => p.id === propMapping.sourcePropertyId);
 		const sourceKey = sourceProp?.name || propMapping.sourcePropertyId;
 
-		const sourceValue = sourceData[sourceKey];
+		// Try lookup by property name first (CMP instances), then by property ID (CMS pages)
+		const sourceValue = sourceData[sourceKey] ?? sourceData[propMapping.sourcePropertyId];
 		console.log(`  📋 Mapping: ${propMapping.sourcePropertyId} → ${propMapping.targetPropertyId}`);
 		console.log(`     Source prop:`, sourceProp);
 		console.log(`     Source key: "${sourceKey}"`);
@@ -41,6 +42,9 @@ export function applyMapping(
 		);
 		console.log(`     Transformed value:`, transformedValue);
 
+		// Coerce value to match target property type
+		const coercedValue = coerceValue(transformedValue, targetType, propMapping.targetPropertyId);
+
 		// Handle nested properties (dot notation like "author.name")
 		const targetPath = propMapping.targetPropertyId.split('.');
 		if (targetPath.length > 1) {
@@ -53,10 +57,10 @@ export function applyMapping(
 				}
 				current = current[key];
 			}
-			current[targetPath[targetPath.length - 1]] = transformedValue;
+			current[targetPath[targetPath.length - 1]] = coercedValue;
 		} else {
 			// Top-level property
-			result[propMapping.targetPropertyId] = transformedValue;
+			result[propMapping.targetPropertyId] = coercedValue;
 		}
 	}
 
@@ -65,6 +69,44 @@ export function applyMapping(
 	console.log('  Result keys:', Object.keys(result));
 
 	return result;
+}
+
+/**
+ * Coerce a value to match the expected target property type.
+ * Prevents structured objects (e.g. {type, content}) from being
+ * passed where a plain string is expected.
+ */
+function coerceValue(value: any, targetType: ContentType, targetPropertyId: string): any {
+	if (value == null) return value;
+
+	const targetProp = targetType.properties.find(p => p.id === targetPropertyId);
+	if (!targetProp) return value;
+
+	const stringTypes = ["String", "LongString", "XhtmlString", "text", "textarea", "richtext", "Url"];
+	if (stringTypes.includes(targetProp.type) && typeof value === "object" && !Array.isArray(value)) {
+		return extractText(value);
+	}
+
+	return value;
+}
+
+/** Recursively extract plain text from a ProseMirror/TipTap document or simple wrapper */
+function extractText(val: any): string {
+	if (val == null) return "";
+	if (typeof val === "string") return val;
+	if (typeof val !== "object") return String(val);
+	// ProseMirror text node: {type: "text", text: "..."}
+	if (val.type === "text" && typeof val.text === "string") return val.text;
+	// Node with children: {type: "doc"|"paragraph"|..., content: [...]}
+	if (Array.isArray(val.content)) {
+		const separator = val.type === "doc" ? "\n\n" : "";
+		return val.content.map((node: any) => extractText(node)).join(separator);
+	}
+	// Simple wrappers
+	if (typeof val.content === "string") return val.content;
+	if (typeof val.value === "string") return val.value;
+	if (typeof val.text === "string") return val.text;
+	return "";
 }
 
 /**

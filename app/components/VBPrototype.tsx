@@ -266,6 +266,7 @@ export default function VBPrototype({
 	onSyncContent,
 	onDisconnectContent,
 	hasConnection,
+	boundPropertyIds,
 	onAddToTask,
 	onRemoveFromTask,
 	currentTaskId,
@@ -300,6 +301,7 @@ export default function VBPrototype({
 	onSyncContent?: () => void;
 	onDisconnectContent?: () => void;
 	hasConnection?: boolean;
+	boundPropertyIds?: Set<string>;
 	onAddToTask?: (taskId: string, taskName: string) => void;
 	onRemoveFromTask?: () => void;
 	currentTaskId?: string | null;
@@ -425,7 +427,8 @@ export default function VBPrototype({
 		return getCompatibleInstances(
 			{contentTypeId: initialData.contentTypeId} as any,
 			cmpContentInstances,
-			persistentContentTypes
+			persistentContentTypes,
+			[]
 		).length;
 	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
 
@@ -1406,6 +1409,7 @@ export default function VBPrototype({
 									pageName={pageName ?? undefined}
 									pageId={initialData?.id}
 									contentTypeId={contentType?.id}
+									boundPropertyIds={boundPropertyIds}
 									onRegisterGenerateTrigger={(fn) => {
 										generateTriggerRef.current = fn;
 									}}
@@ -1789,6 +1793,7 @@ export default function VBPrototype({
 													pageName={pageName ?? undefined}
 													pageId={initialData?.id}
 													contentTypeId={contentType?.id}
+													boundPropertyIds={boundPropertyIds}
 													onRegisterGenerateTrigger={(fn) => {
 														generateTriggerRef.current = fn;
 													}}
@@ -1998,6 +2003,7 @@ export default function VBPrototype({
 														pageName={pageName ?? undefined}
 														pageId={initialData?.id}
 														contentTypeId={contentType?.id}
+														boundPropertyIds={boundPropertyIds}
 														onRegisterGenerateTrigger={(fn) => {
 															generateTriggerRef.current = fn;
 														}}
