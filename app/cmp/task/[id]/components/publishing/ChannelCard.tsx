@@ -22,17 +22,12 @@ type ChannelCardProps = {
 
 export function ChannelCard({ channelDef, contentItems, onEdit, onRemove }: ChannelCardProps) {
 	return (
-		<Card p="16">
-			<Box display="flex" flexDirection="column" gap="12">
-				{/* Header */}
-				<Box display="flex" alignItems="center" justifyContent="space-between">
-					<Box display="flex" alignItems="center" gap="8">
-						<ChannelIcon icon={channelDef.icon} size={18} />
-						<Text fontWeight="600">
-							Sending to {channelDef.name}
-						</Text>
-					</Box>
-					<Box display="flex" alignItems="center" gap="4">
+		<Card>
+			<CardHeader
+				addonBefore={<ChannelIcon icon={channelDef.icon} size={18} />}
+				description={`${contentItems.length} content selected`}
+				addonAfter={
+					<>
 						<Tooltip content="Sync">
 							<Button appearance="subtle" size="sm" icon={<IconRefresh size={16} />} />
 						</Tooltip>
@@ -42,13 +37,13 @@ export function ChannelCard({ channelDef, contentItems, onEdit, onRemove }: Chan
 						<Tooltip content="Remove">
 							<Button appearance="subtle" size="sm" icon={<IconTrash size={16} />} onClick={onRemove} />
 						</Tooltip>
-					</Box>
-				</Box>
+					</>
+				}
+			>
+				Sending to {channelDef.name}
+			</CardHeader>
 
-				{/* Content count */}
-				<Text fontSize="sm" color="fg.secondary">
-					{contentItems.length} content selected
-				</Text>
+			<Box display="flex" flexDirection="column" gap="12" p="16" pt="0">
 
 				{/* Content list */}
 				{contentItems.length > 0 && (
