@@ -116,29 +116,12 @@ export default function RootLayout({
 				url: "/cms/settings",
 				icon: <IconSettings />,
 				children: [
-					{label: "Taxonomy"},
-					{label: "Categories", url: "/cms/settings/categories"},
-					{label: "Tags", url: "/cms/settings/tags"},
-					{label: "Configure"},
-					{
-						label: "Applications",
-						url: "/cms/settings/applications",
-						children: {
-							title: "Stride",
-							children: [
-								{
-									label: "Settings",
-									url: "/cms/settings/applications/mosey-bank/settings",
-								},
-								{label: "Advanced"},
-								{
-									label: "Hostnames",
-									url: "/cms/settings/applications/mosey-bank/hostnames",
-								},
-							],
-						},
-					},
-					{label: "Blueprints", url: "/cms/settings/blueprints"},
+					// 1. AI & Automation (moved to top - prioritized)
+					{label: "AI & Automation"},
+					{label: "Opal", url: "/cms/settings/opal-actions"},
+
+					// 2. Content (NEW GROUP - combines content-related settings)
+					{label: "Content"},
 					{
 						label: "Content Types",
 						url: "/cms/settings/content-types",
@@ -197,11 +180,42 @@ export default function RootLayout({
 								}
 							: undefined,
 					},
+					{label: "Blueprints", url: "/cms/settings/blueprints"},
 					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
+					{label: "Property Groups", url: "/cms/settings/edit-tabs"},
+
+					// 3. Taxonomy (moved to third position)
+					{label: "Taxonomy"},
+					{label: "Categories", url: "/cms/settings/categories"},
+					{label: "Tags", url: "/cms/settings/tags"},
+
+					// 4. Configure (merged with old Config section)
+					{label: "Configure"},
+					{
+						label: "Applications",
+						url: "/cms/settings/applications",
+						children: {
+							title: "Stride",
+							children: [
+								{
+									label: "Settings",
+									url: "/cms/settings/applications/mosey-bank/settings",
+								},
+								{label: "Advanced"},
+								{
+									label: "Hostnames",
+									url: "/cms/settings/applications/mosey-bank/hostnames",
+								},
+							],
+						},
+					},
 					{label: "Access Rights", url: "/cms/settings/access-rights"},
 					{label: "API Clients", url: "/cms/settings/api-clients"},
 					{label: "API Keys", url: "/cms/settings/api-keys"},
 					{label: "Set Access Rights", url: "/cms/settings/set-access-rights"},
+					{label: "Languages", url: "/cms/settings/languages"},
+
+					// 5. Data & Sync Management (unchanged)
 					{label: "Data & Sync Management"},
 					{label: "GraphiQL", url: "/cms/settings/graphiql"},
 					{label: "Scheduled Jobs", url: "/cms/settings/scheduled-jobs"},
@@ -225,17 +239,16 @@ export default function RootLayout({
 								: [],
 						},
 					},
-					{label: "AI & Automation"},
-					{label: "Opal", url: "/cms/settings/opal-actions"},
-					{label: "Config"},
-					{label: "Languages", url: "/cms/settings/languages"},
-					{label: "Property Groups", url: "/cms/settings/edit-tabs"},
+
+					// 6. Tools (unchanged)
 					{label: "Tools"},
 					{label: "Change Log", url: "/cms/settings/change-log"},
 					{label: "Convert Pages", url: "/cms/settings/convert-pages"},
 					{label: "Export Data", url: "/cms/settings/export-data"},
 					{label: "Import Data", url: "/cms/settings/import-data"},
 					{label: "Search Configuration", url: "/cms/settings/search-configuration"},
+
+					// 7. Add-ons (unchanged)
 					{label: "Add-ons"},
 					{label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn"},
 				],
