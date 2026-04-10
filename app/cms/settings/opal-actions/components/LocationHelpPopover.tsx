@@ -76,7 +76,7 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 					{/* Visual CMS Mockup */}
 					<Box border="1" borderColor="border.secondary" rounded="md" overflow="hidden">
 						{/* Top Menu */}
-						<Box bg="bg.tertiary" borderB="1" borderColor="border.secondary" p="4">
+						<Box bg="bg.page" borderB="1" borderColor="border.secondary" p="4">
 							<Text fontSize="xs" color="fg.secondary">
 								Top Menu
 							</Text>
@@ -86,11 +86,13 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 						<Box display="flex" style={{minHeight: "180px"}}>
 							{/* Left: Main Navigation */}
 							<Box
-								style={{flexBasis: "32px", flexGrow: 0, flexShrink: 0}}
-								bg="bg.tertiary"
+								style={{flexBasis: "26px", flexGrow: 0, flexShrink: 0}}
+								bg="bg.page"
 								borderR="1"
 								borderColor="border.secondary"
 								p="4"
+								display="flex"
+								alignItems="start"
 							>
 								<Text fontSize="xs" color="fg.secondary" style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>
 									Nav
@@ -103,12 +105,16 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 								<Box
 									bg={isToolbarLocation ? "bg.accent.subtle" : "bg.secondary"}
 									borderB="1"
-									borderColor={isToolbarLocation ? "border.accent" : "border.secondary"}
+									borderColor="border.secondary"
 									p="6"
 									display="flex"
 									alignItems="center"
-									justifyContent="center"
+									justifyContent="space-between"
+									style={isToolbarLocation ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}}
 								>
+									<Text fontSize="xs" color="fg.secondary">
+										Toolbar
+									</Text>
 									{isToolbarLocation && (
 										<Box
 											style={{width: "12px", height: "12px", borderRadius: "50%"}}
@@ -121,16 +127,21 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 								<Box display="flex" flex="1">
 									{/* Outline */}
 									<Box
-										style={{flexBasis: "100px", flexGrow: 0, flexShrink: 0}}
-										bg={isOutlineLocation ? "bg.accent.subtle" : "bg.secondary"}
+										style={{
+											flexBasis: "60px",
+											flexGrow: 0,
+											flexShrink: 0,
+											...((isOutlineLocation || isPropertyLocation) ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}),
+										}}
+										bg={(isOutlineLocation || isPropertyLocation) ? "bg.accent.subtle" : "bg.secondary"}
 										borderR="1"
-										borderColor={isOutlineLocation ? "border.accent" : "border.secondary"}
+										borderColor="border.secondary"
 										p="6"
 										display="flex"
-										alignItems="center"
-										justifyContent="center"
+										alignItems="start"
+										justifyContent="start"
 									>
-										{isOutlineLocation && (
+										{(isOutlineLocation || isPropertyLocation) && (
 											<Box
 												style={{width: "12px", height: "12px", borderRadius: "50%"}}
 												bg="bg.accent"
@@ -139,44 +150,29 @@ export const LocationHelpPopover: React.FC<LocationHelpPopoverProps> = ({locatio
 									</Box>
 
 									{/* Main Content Area */}
-									<Box flex="1" display="flex" flexDirection="column">
-										<Box flex="1" bg="bg.page" p="6">
-											<Text fontSize="xs" color="fg.secondary">
-												Content
-											</Text>
-										</Box>
-
-										{/* Properties */}
-										<Box
-											bg={isPropertyLocation ? "bg.accent.subtle" : "bg.secondary"}
-											borderT="1"
-											borderColor={isPropertyLocation ? "border.accent" : "border.secondary"}
-											p="6"
-											display="flex"
-											alignItems="center"
-											justifyContent="center"
-										>
-											{isPropertyLocation && (
-												<Box
-													style={{width: "12px", height: "12px", borderRadius: "50%"}}
-													bg="bg.accent"
-												/>
-											)}
-										</Box>
+									<Box flex="1" bg="bg.page" p="6" display="flex" alignItems="start">
+										<Text fontSize="xs" color="fg.secondary">
+											Content
+										</Text>
 									</Box>
 								</Box>
 							</Box>
 
 							{/* Right: Assets Panel */}
 							<Box
-								style={{flexBasis: "100px", flexGrow: 0, flexShrink: 0}}
+								style={{
+									flexBasis: "50px",
+									flexGrow: 0,
+									flexShrink: 0,
+									...(isAssetLocation ? {boxShadow: "inset 0 0 0 2px var(--ax-colors-border-accent)"} : {}),
+								}}
 								borderL="1"
-								borderColor={isAssetLocation ? "border.accent" : "border.secondary"}
+								borderColor="border.secondary"
 								bg={isAssetLocation ? "bg.accent.subtle" : "bg.secondary"}
 								p="6"
 								display="flex"
-								alignItems="center"
-								justifyContent="center"
+								alignItems="start"
+								justifyContent="start"
 							>
 								{isAssetLocation && (
 									<Box
