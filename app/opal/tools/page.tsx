@@ -8,6 +8,7 @@ import {
     Button,
     Badge,
     Heading,
+    Switch,
     Tabs,
     TabsList,
     TabsTrigger,
@@ -34,6 +35,8 @@ import { Input } from "@/app/components/Input";
 import { AddConnectorModal, type ConnectedConnector } from "./components/AddConnectorModal";
 import { ConnectorAvatar } from "./components/ConnectorAvatar";
 import { OCPConfigPanel } from "./components/OCPConfigPanel";
+import { OCPConfigModal } from "./components/OCPConfigModal";
+import { ConfigureStepperPanel } from "./components/ConfigureStepperPanel";
 import { AddAuthProviderModal, type AuthProviderDraft } from "./components/AddAuthProviderModal";
 import { RegisterRemoteMcpProviderModal, type RemoteMcpProviderDraft } from "./components/RegisterRemoteMcpProviderModal";
 import { CONNECTORS, type Connector } from "./data/connectors";
@@ -85,6 +88,14 @@ export default function ToolsPage() {
 
     // OCP config panel state
     const [ocpConnector, setOcpConnector] = useState<Connector | null>(null);
+    const [ocpModalOpen, setOcpModalOpen] = useState(false);
+
+    // Stepper panel state
+    const [stepperPanelConnector, setStepperPanelConnector] = useState<Connector | null>(null);
+
+    // Feedback toggles
+    const [ocpAsModal, setOcpAsModal] = useState(false);
+    const [stepperInPanel, setStepperInPanel] = useState(false);
 
     // Modal state — which connector (if any) and which screen to open to
     const [modalOpen, setModalOpen] = useState(false);
@@ -134,6 +145,10 @@ export default function ToolsPage() {
     };
 
     const openConfigure = (connector: Connector) => {
+        if (stepperInPanel) {
+            setStepperPanelConnector(connector);
+            return;
+        }
         setModalInitialConnector(connector);
         setModalInitialScreen("configure");
         setModalOpen(true);
@@ -145,7 +160,10 @@ export default function ToolsPage() {
         setModalOpen(true);
     };
 
-    const openOCP = (connector: Connector) => setOcpConnector(connector);
+    const openOCP = (connector: Connector) => {
+        setOcpConnector(connector);
+        if (ocpAsModal) setOcpModalOpen(true);
+    };
     const openAddAuthProvider = () => setAddAuthProviderOpen(true);
     const openRegisterRemoteMcp = () => setRegisterRemoteMcpOpen(true);
     const isUserLevelConnector = (connector: Connector) =>
@@ -321,6 +339,7 @@ export default function ToolsPage() {
                 initialScreen={modalInitialScreen}
                 initialStep={modalInitialStep}
                 initialToolsDisclosureOpen={modalInitialToolsDisclosureOpen}
+                onConfigureInPanel={stepperInPanel ? (c) => setStepperPanelConnector(c) : undefined}
             />
             <RegisterRemoteMcpProviderModal
                 open={registerRemoteMcpOpen}
@@ -334,11 +353,70 @@ export default function ToolsPage() {
                 onSaved={handleAuthProviderAdded}
             />
 
+            {/* OCP config modal (feedback: toggle 1) */}
+            {ocpAsModal && ocpConnector && (
+                <OCPConfigModal
+                    connector={ocpConnector}
+                    isInstalled={connectedIds.includes(ocpConnector.id)}
+                    open={ocpModalOpen}
+                    onOpenChange={(open) => { setOcpModalOpen(open); if (!open) setOcpConnector(null); }}
+                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) })}
+                    onUninstall={() => handleDisconnect(ocpConnector.id)}
+                />
+            )}
+
+            {/* OCP config side panel (feedback: toggle 1 off) */}
+            {!ocpAsModal && ocpConnector && (
+                <OCPConfigPanel
+                    connector={ocpConnector}
+                    isInstalled={connectedIds.includes(ocpConnector.id)}
+                    onClose={() => setOcpConnector(null)}
+                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) })}
+                    onUninstall={() => handleDisconnect(ocpConnector.id)}
+                />
+            )}
+
+            {/* Configure stepper panel (feedback: toggle 2 on) */}
+            {stepperInPanel && stepperPanelConnector && (
+                <ConfigureStepperPanel
+                    connector={stepperPanelConnector}
+                    onClose={() => setStepperPanelConnector(null)}
+                    onSave={handleConnectorAdded}
+                />
+            )}
+
             <Box display="flex" flexDirection="column" gap="24">
-                {/* ── Page header ──────────────────────────────────────────── */}
-                <Box display="flex" flexDirection="column" gap="8">
-                    <Heading level="1" fontSize="2xl">Connectors</Heading>
-                    <Text color="fg.secondary">Enable connectors and tools your agents will use.</Text>
+                {/* ── Page header + feedback toggles ───────────────────────── */}
+                <Box display="flex" alignItems="center" justifyContent="space-between" gap="16">
+                    <Box display="flex" flexDirection="column" gap="8">
+                        <Heading level="1" fontSize="2xl">Connectors</Heading>
+                        <Text color="fg.secondary">Enable connectors and tools your agents will use.</Text>
+                    </Box>
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap="16"
+                        px="12"
+                        py="8"
+                        rounded="md"
+                        style={{
+                            flexShrink: 0,
+                            background: "var(--ax-colors-bg-secondary)",
+                            border: "1px dashed var(--ax-colors-border-secondary)",
+                        }}
+                    >
+                        <Text fontSize="xs" fontWeight="500" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.06em", flexShrink: 0 }}>
+                            Feedback
+                        </Text>
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Switch checked={ocpAsModal} onCheckedChange={setOcpAsModal} />
+                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>OCP as Modal</Text>
+                        </Box>
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Switch checked={stepperInPanel} onCheckedChange={setStepperInPanel} />
+                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>Setup as Panel</Text>
+                        </Box>
+                    </Box>
                 </Box>
 
                 {/* ── Tabs ─────────────────────────────────────────────────── */}
@@ -352,18 +430,6 @@ export default function ToolsPage() {
 
                     {/* ── Connectors tab: all 33 tiles ─────────────────────── */}
                     <TabsContent value="connectors">
-                        {ocpConnector && (
-                            <OCPConfigPanel
-                                connector={ocpConnector}
-                                isInstalled={connectedIds.includes(ocpConnector.id)}
-                                onClose={() => setOcpConnector(null)}
-                                onInstall={() => {
-                                    handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) });
-                                    toaster.create(`${ocpConnector.name} activated`, { intent: "success" });
-                                }}
-                                onUninstall={() => { handleDisconnect(ocpConnector.id); }}
-                            />
-                        )}
                         <Box display="flex" flexDirection="column" gap="16" pt="16">
                             {/* Filters */}
                             <Box display="flex" gap="12" alignItems="center">
