@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentType, SVGProps } from "react";
 import { Box, Text } from "@optiaxiom/react";
 import type { Connector } from "../data/connectors";
 import asanaLogo from "../connector logos/Asana Logo.png";
@@ -11,14 +12,14 @@ import googleDocLogo from "../connector logos/google doc.png";
 import googleSheetsLogo from "../connector logos/google_sheet.png";
 import googleSlidesLogo from "../connector logos/google slides.png";
 import hubspotLogo from "../connector logos/HubSpot Logo.png";
-import confluenceLogo from "../connector logos/confluence.png";
-import jiraLogo from "../connector logos/jira.jpeg";
+import atlassianRovoLogo from "../connector logos/Atlassian 1.svg";
 import outlookLogo from "../connector logos/outlook.jpeg";
 import salesforceLogo from "../connector logos/Salesforce Logo Brand Assets.png";
 import tableauLogo from "../connector logos/Tableau Logo.png";
 import teamsLogo from "../connector logos/teams.jpeg";
 
-type LogoSource = string | { src: string };
+type SvgLogoComponent = ComponentType<SVGProps<SVGElement>>;
+type LogoSource = string | { src: string } | SvgLogoComponent;
 
 const CONNECTOR_LOGOS: Partial<Record<Connector["id"], { src: LogoSource; alt: string; inset?: number }>> = {
     gmail: { src: gmailLogo, alt: "Gmail", inset: 5 },
@@ -32,8 +33,7 @@ const CONNECTOR_LOGOS: Partial<Record<Connector["id"], { src: LogoSource; alt: s
     salesforce: { src: salesforceLogo, alt: "Salesforce", inset: 5 },
     hubspot: { src: hubspotLogo, alt: "HubSpot", inset: 5 },
     amplitude: { src: amplitudeLogo, alt: "Amplitude", inset: 5 },
-    jira: { src: jiraLogo, alt: "Jira", inset: 5 },
-    confluence: { src: confluenceLogo, alt: "Confluence", inset: 5 },
+    "atlassian-rovo": { src: atlassianRovoLogo, alt: "Atlassian Rovo", inset: 5 },
     asana: { src: asanaLogo, alt: "Asana", inset: 5 },
     bynder: { src: bynderLogo, alt: "Bynder", inset: 5 },
     tableau: { src: tableauLogo, alt: "Tableau", inset: 5 },
@@ -54,6 +54,39 @@ export function ConnectorAvatar({ connector, size = 40 }: ConnectorAvatarProps) 
     const logo = CONNECTOR_LOGOS[connector.id];
 
     if (logo) {
+        const inset = logo.inset ?? 8;
+        const innerSize = size - inset * 2;
+
+        if (typeof logo.src === "function") {
+            const SvgLogo = logo.src;
+
+            return (
+                <Box
+                    rounded="md"
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    style={{
+                        width: size,
+                        height: size,
+                        background: "var(--ax-colors-bg-secondary)",
+                        color: connector.color,
+                        border: "1px solid var(--ax-colors-border-tertiary)",
+                        flexShrink: 0,
+                    }}
+                >
+                    <SvgLogo
+                        aria-label={logo.alt}
+                        style={{
+                            width: innerSize,
+                            height: innerSize,
+                            display: "block",
+                        }}
+                    />
+                </Box>
+            );
+        }
+
         const src = typeof logo.src === "string" ? logo.src : logo.src.src;
 
         return (
@@ -75,8 +108,8 @@ export function ConnectorAvatar({ connector, size = 40 }: ConnectorAvatarProps) 
                     src={src}
                     alt={logo.alt}
                     style={{
-                        width: size - (logo.inset ?? 8) * 2,
-                        height: size - (logo.inset ?? 8) * 2,
+                        width: innerSize,
+                        height: innerSize,
                         objectFit: "contain",
                         display: "block",
                     }}

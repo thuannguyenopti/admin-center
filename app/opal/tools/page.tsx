@@ -155,13 +155,18 @@ export default function ToolsPage() {
             : "var(--ax-colors-border-secondary)";
 
         return (
-            <Box display="flex" alignItems="center" gap="8">
-                <Box
-                    rounded="full"
-                    style={{ width: 8, height: 8, background: dotColor, flexShrink: 0 }}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span
+                    style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "999px",
+                        background: dotColor,
+                        flexShrink: 0,
+                    }}
                 />
                 <span>{status}</span>
-            </Box>
+            </span>
         );
     };
 

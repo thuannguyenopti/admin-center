@@ -405,17 +405,10 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Prompt Library",
+				label: "Artifacts",
 				url: "/opal/artifacts",
 				highlight: "/opal/artifacts",
-				icon: (
-					<img
-						src="/nav_icons/grid-round-2-plus.svg"
-						alt="Prompt Library"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <CMPLibraryIcon />,
 				hidePageHeader: true,
 			},
 			{
@@ -425,10 +418,10 @@ export default function RootLayout({
 				icon: <img src="/nav_icons/folder-bookmark.svg" alt="Context" width={20} height={20} />,
 			},
 			{
-				label: "Notifications",
+				label: "Inbox",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
-				icon: <img src="/nav_icons/inbox.svg" alt="Notifications" width={20} height={20} />,
+				icon: <img src="/nav_icons/inbox.svg" alt="Inbox" width={20} height={20} />,
 				customLayout: true,
 			},
 			{
@@ -449,13 +442,13 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Tools",
+				label: "Connectors",
 				url: "/opal/tools",
 				highlight: "/opal/tools",
 				icon: (
 					<img
-						src="/nav_icons/screwdriver-wrench.svg"
-						alt="Tools"
+						src="/nav_icons/grid-round-2-plus.svg"
+						alt="Connectors"
 						width={20}
 						height={20}
 					/>
