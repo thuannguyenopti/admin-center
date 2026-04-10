@@ -17,7 +17,7 @@ export const channelDefinitions: ChannelDefinition[] = [
 	{ id: "wordpress-v2-sa", name: "Optimizely SA Demo", group: "WordPress V2", icon: "wordpress" },
 	{ id: "wordpress-v2-demo", name: "WordPress Demo", group: "WordPress V2", icon: "wordpress" },
 	{ id: "youtube-opticmp", name: "Optimizely CMP", group: "YouTube", icon: "youtube" },
-	{ id: "facebook-moseybank", name: "Mosey Bank", group: "Facebook", icon: "facebook" },
+	{ id: "facebook-moseybank", name: "Mosey Bank Page", group: "Facebook", icon: "facebook" },
 ];
 
 export function getChannelDef(channelTypeId: string): ChannelDefinition | undefined {
