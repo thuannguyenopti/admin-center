@@ -463,7 +463,7 @@ export const LocationMenuEditor: React.FC<LocationMenuEditorProps> = ({
 					<Field label="Location">
 						<Box display="flex" alignItems="center" gap="8">
 							<Text fontSize="sm">{location.name}</Text>
-							<LocationHelpPopover />
+							<LocationHelpPopover locationId={location.id} />
 						</Box>
 					</Field>
 
