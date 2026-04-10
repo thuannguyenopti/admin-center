@@ -22,12 +22,25 @@ export function applyMapping(
 
 	const result: Record<string, any> = {};
 
+	// Build a lookup from source property ID → actual data key.
+	// The source type definition may use different property names than the
+	// instance data (e.g. CMS mirror has "title" but CMP data uses "headline").
+	// When the resolved name isn't in the data, fall back to finding a data key
+	// that matches the property's displayName (case-insensitive).
+	const dataKeys = Object.keys(sourceData);
+
 	for (const propMapping of mapping.propertyMappings) {
 		// Find the source property to get its name (used as key in instance data)
 		const sourceProp = sourceType.properties.find(p => p.id === propMapping.sourcePropertyId);
 		const sourceKey = sourceProp?.name || propMapping.sourcePropertyId;
 
-		const sourceValue = sourceData[sourceKey];
+		let sourceValue = sourceData[sourceKey] ?? sourceData[propMapping.sourcePropertyId];
+		// If still not found, try displayName match against actual data keys
+		if (sourceValue === undefined && sourceProp?.displayName) {
+			const displayLower = sourceProp.displayName.toLowerCase();
+			const dnKey = dataKeys.find(k => k.toLowerCase() === displayLower);
+			if (dnKey) sourceValue = sourceData[dnKey];
+		}
 		console.log(`  📋 Mapping: ${propMapping.sourcePropertyId} → ${propMapping.targetPropertyId}`);
 		console.log(`     Source prop:`, sourceProp);
 		console.log(`     Source key: "${sourceKey}"`);
