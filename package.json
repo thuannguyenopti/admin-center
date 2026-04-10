@@ -7,7 +7,7 @@
 		"dev": "next dev",
 		"validate": "npx tsx scripts/validate-initial-data.ts",
 		"bundle-sources": "node scripts/bundle-source-files.js",
-		"build": "npm run validate && npm run bundle-sources && next build",
+		"build": "npm run validate && npm run bundle-sources && NODE_OPTIONS=--max-old-space-size=4096 next build",
 		"preview": "next build && next start",
 		"start": "next start",
 		"lint": "next lint",
