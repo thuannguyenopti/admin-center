@@ -665,17 +665,17 @@ export default function CMSToolbar({
 														{group.name}
 													</DropdownMenuSubTrigger>
 													<DropdownMenuSubContent>
-														{group.agents.map((agentId) => {
+														{group.agents.map((groupAgent) => {
 															const agent = availableAgents.find(
-																(a) => a.id === agentId
+																(a) => a.id === groupAgent.id
 															);
 															return (
 																<DropdownMenuItem
-																	key={agentId}
+																	key={groupAgent.id}
 																	onSelect={() => {
-																		if (agentId === "preflight-audit") {
+																		if (groupAgent.id === "preflight-audit") {
 																			handlePreflightAudit();
-																		} else if (agentId === "brand-tone-audit") {
+																		} else if (groupAgent.id === "brand-tone-audit") {
 																			handleBrandToneAnalysis();
 																		} else {
 																			console.log(
@@ -687,7 +687,7 @@ export default function CMSToolbar({
 																		}
 																	}}
 																>
-																	{agent?.name || agentId}
+																	{agent?.name || groupAgent.id}
 																</DropdownMenuItem>
 															);
 														})}
@@ -696,14 +696,14 @@ export default function CMSToolbar({
 											);
 										}
 										// Single agent, just show the group name
-										const agentId = group.agents[0];
+										const singleAgent = group.agents[0];
 										return (
 											<DropdownMenuItem
 												key={group.id}
 												onSelect={() => {
-													if (agentId === "preflight-audit") {
+													if (singleAgent.id === "preflight-audit") {
 														handlePreflightAudit();
-													} else if (agentId === "brand-tone-audit") {
+													} else if (singleAgent.id === "brand-tone-audit") {
 														handleBrandToneAnalysis();
 													} else {
 														console.log("Execute Opal Action:", group.name);
@@ -725,15 +725,15 @@ export default function CMSToolbar({
 							options={improveGroups.flatMap((group) => {
 								// If group has multiple agents, create submenu items
 								if (group.agents.length > 1) {
-									return group.agents.map((agentId, index) => {
-										const agent = availableAgents.find((a) => a.id === agentId);
+									return group.agents.map((groupAgent, index) => {
+										const agent = availableAgents.find((a) => a.id === groupAgent.id);
 										return {
-											label: agent?.name || agentId,
+											label: agent?.name || groupAgent.id,
 											group: {label: group.name, hidden: index > 0},
 											execute: () => {
-												if (agentId === "preflight-audit") {
+												if (groupAgent.id === "preflight-audit") {
 													handlePreflightAudit();
-												} else if (agentId === "brand-tone-audit") {
+												} else if (groupAgent.id === "brand-tone-audit") {
 													handleBrandToneAnalysis();
 												} else {
 													console.log(
@@ -748,14 +748,14 @@ export default function CMSToolbar({
 									});
 								}
 								// Single agent, just show the group name
-								const agentId = group.agents[0];
+								const singleAgent = group.agents[0];
 								return [
 									{
 										label: group.name,
 										execute: () => {
-											if (agentId === "preflight-audit") {
+											if (singleAgent.id === "preflight-audit") {
 												handlePreflightAudit();
-											} else if (agentId === "brand-tone-audit") {
+											} else if (singleAgent.id === "brand-tone-audit") {
 												handleBrandToneAnalysis();
 											} else {
 												console.log("Execute Opal Action:", group.name);
@@ -864,15 +864,15 @@ export default function CMSToolbar({
 															{group.name}
 														</DropdownMenuSubTrigger>
 														<DropdownMenuSubContent>
-															{group.agents.map((agentId) => {
+															{group.agents.map((groupAgent) => {
 																const agent = availableAgents.find(
-																	(a) => a.id === agentId
+																	(a) => a.id === groupAgent.id
 																);
 																return (
 																	<DropdownMenuItem
-																		key={agentId}
+																		key={groupAgent.id}
 																		onSelect={() => {
-																			if (agentId === "brand-tone-audit") {
+																			if (groupAgent.id === "brand-tone-audit") {
 																				handleBrandToneAnalysis();
 																			} else {
 																				console.log(
@@ -884,7 +884,7 @@ export default function CMSToolbar({
 																			}
 																		}}
 																	>
-																		{agent?.name || agentId}
+																		{agent?.name || groupAgent.id}
 																	</DropdownMenuItem>
 																);
 															})}
@@ -893,12 +893,12 @@ export default function CMSToolbar({
 												);
 											}
 											// Single agent, just show the group name
-											const agentId = group.agents[0];
+											const singleAgent = group.agents[0];
 											return (
 												<DropdownMenuItem
 													key={group.id}
 													onSelect={() => {
-														if (agentId === "brand-tone-audit") {
+														if (singleAgent.id === "brand-tone-audit") {
 															handleBrandToneAnalysis();
 														} else {
 															console.log("Execute Opal Action:", group.name);
