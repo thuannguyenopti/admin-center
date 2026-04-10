@@ -5,7 +5,7 @@ import {useParams} from "next/navigation";
 import {use} from "react";
 import usePersistentState from "@/app/usePersistentState";
 import {initialPages, Page, initialContentTypes, ContentType} from "@/app/db/initialData";
-import {useEffect, useState, useCallback} from "react";
+import {useEffect, useState, useCallback, useMemo} from "react";
 import {Alert, Badge, Box, Heading, Spinner, Text, toaster} from "@optiaxiom/react";
 import Link from "next/link";
 import {buildPageSlug} from "@/app/site/resolveSlug";
@@ -14,7 +14,7 @@ import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 import ContentInstancePicker from "@/app/components/ContentInstancePicker";
 import {initialContentInstances, ContentInstance} from "@/app/db/cmpInitialData";
-import {connectInstanceToPage, syncPageWithInstance, disconnectPage, getCompatibleInstances} from "@/app/lib/contentConnection";
+import {connectInstanceToPage, syncPageWithInstance, disconnectPage, getCompatibleInstances, getBoundPropertyIds} from "@/app/lib/contentConnection";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -168,7 +168,11 @@ export default function EditPageDetail() {
 		toaster.create("Content disconnected", { intent: "information" });
 	}, [page, setPages]);
 
-	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, contentTypes) : [];
+	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, contentTypes, pages) : [];
+	const boundPropertyIds = useMemo(() => {
+		if (!page) return new Set<string>();
+		return getBoundPropertyIds(page, contentTypes);
+	}, [page, contentTypes]);
 
 	// Opal page generation hook (must be after handleSave is defined)
 	const {isGenerating} = useOpalPageGeneration(
@@ -491,6 +495,7 @@ export default function EditPageDetail() {
 				onSyncContent={page?.cmpConnection ? handleSyncContent : undefined}
 				onDisconnectContent={page?.cmpConnection ? handleDisconnect : undefined}
 				hasConnection={!!page?.cmpConnection}
+				boundPropertyIds={boundPropertyIds}
 				onAddToTask={handleAddToTask}
 				onRemoveFromTask={page?.cmpTaskMetadata ? handleRemoveFromTask : undefined}
 				currentTaskId={page?.cmpTaskMetadata?.taskId ?? null}
