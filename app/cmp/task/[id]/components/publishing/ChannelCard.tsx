@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge, Box, Button, Card, Separator, Tooltip } from "@optiaxiom/react";
+import { Badge, Box, Button, Card, CardHeader, Separator, Tooltip } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconPencil, IconRefresh, IconTrash } from "@tabler/icons-react";
+import { IconBrowser, IconFileText, IconPencil, IconRefresh, IconTrash } from "@tabler/icons-react";
 import type { ChannelDefinition } from "./channelDefinitions";
 import { ChannelIcon } from "./ChannelIcon";
 
@@ -10,6 +10,7 @@ export type ContentItem = {
 	id: string;
 	name: string;
 	locale?: string;
+	type: "page" | "instance";
 };
 
 type ChannelCardProps = {
@@ -53,12 +54,14 @@ export function ChannelCard({ channelDef, contentItems, onEdit, onRemove }: Chan
 				{contentItems.length > 0 && (
 					<Box display="flex" flexDirection="column" gap="8">
 						{contentItems.map((item) => (
-							<Box key={item.id} display="flex" alignItems="center" justifyContent="space-between">
-								<Text fontSize="sm">
+							<Card key={item.id}>
+								<CardHeader
+									addonBefore={item.type === "page" ? <IconBrowser size={16} /> : <IconFileText size={16} />}
+									addonAfter={<Badge>{item.locale || "EN"}</Badge>}
+								>
 									{item.name}
-								</Text>
-								<Badge>{item.locale || "EN"}</Badge>
-							</Box>
+								</CardHeader>
+							</Card>
 						))}
 					</Box>
 				)}
