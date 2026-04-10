@@ -5138,6 +5138,7 @@ export interface UnifiedContentItem {
 	lastModified: string;
 	tags: string[];      // array of tag slugs
 	categories: string[]; // array of category slugs
+	hasConnection?: boolean; // true if page has an active content connection
 }
 
 const reportNames = [
@@ -5583,6 +5584,7 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 			lastModified: formattedDate,
 			tags,
 			categories,
+			hasConnection: !!p.cmpConnection,
 		};
 	});
 	return [...pageItems, ...initialOtherContent];
