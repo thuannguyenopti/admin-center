@@ -309,6 +309,12 @@ body.dark {
   background-color: var(--opal-bg-input);
 }
 
+@media (max-width: 768px) {
+  .opal-landing-shell {
+    padding-inline: 24px;
+  }
+}
+
 /* Send Button */
 .opal-send-btn {
   width: 24px;
