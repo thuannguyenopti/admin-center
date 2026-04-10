@@ -18,7 +18,11 @@ function normalizeInstanceFields(
 	modelId: string,
 	currentSourceType?: ContentType
 ): Record<string, any> {
-	if (!currentSourceType) return fields;
+	console.log('🔄 normalizeInstanceFields - START');
+	console.log('  modelId:', modelId);
+	console.log('  field keys:', Object.keys(fields));
+	console.log('  currentSourceType:', currentSourceType?.name);
+	if (!currentSourceType) { console.log('  ⚠️ No currentSourceType - returning fields as-is'); return fields; }
 
 	const normalized: Record<string, any> = { ...fields };
 
@@ -27,7 +31,11 @@ function normalizeInstanceFields(
 	const originalCmsType = initialContentTypes.find(ct => ct.id === modelId);
 	const originalProperties = originalCmpModel?.properties || originalCmsType?.properties || [];
 
-	if (originalProperties.length === 0) return fields;
+	console.log('  originalCmpModel found:', !!originalCmpModel);
+	console.log('  originalCmsType found:', !!originalCmsType);
+	console.log('  originalProperties count:', originalProperties.length);
+
+	if (originalProperties.length === 0) { console.log('  ⚠️ No original properties found'); return fields; }
 
 	// For each original property that has data, also index by property ID and name
 	for (const origProp of originalProperties) {
@@ -54,9 +62,13 @@ function normalizeInstanceFields(
 			const value = fields[matchingOriginal.name] ?? fields[matchingOriginal.id];
 			normalized[currentProp.name] = value;
 			normalized[currentProp.id] = value;
+			console.log(`  🔗 Bridged: "${matchingOriginal.name}" → "${currentProp.name}" (via description: "${currentProp.description}")`);
+		} else {
+			console.log(`  ❌ No bridge found for: "${currentProp.name}" (description: "${currentProp.description}")`);
 		}
 	}
 
+	console.log('  Normalized keys:', Object.keys(normalized));
 	return normalized;
 }
 
