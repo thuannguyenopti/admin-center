@@ -55,6 +55,7 @@ interface AddConnectorModalProps {
     initialScreen?: Screen;
     initialStep?: 0 | 1 | 2;
     initialToolsDisclosureOpen?: boolean;
+    onConfigureInPanel?: (connector: Connector) => void;
 }
 
 function isUserLevelConnector(connector: Connector) {
@@ -114,6 +115,7 @@ export function AddConnectorModal({
     initialScreen = "browse",
     initialStep = 0,
     initialToolsDisclosureOpen = false,
+    onConfigureInPanel,
 }: AddConnectorModalProps) {
     const [screen, setScreen] = useState<Screen>(initialScreen);
     const [selected, setSelected] = useState<Connector | null>(initialConnector);
@@ -200,6 +202,12 @@ export function AddConnectorModal({
                 access: "All users",
                 toolIds: c.tools.map(t => t.id),
             });
+            return;
+        }
+
+        if (onConfigureInPanel) {
+            handleOpenChange(false);
+            onConfigureInPanel(c);
             return;
         }
 

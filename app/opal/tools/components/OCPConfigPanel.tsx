@@ -18,7 +18,7 @@ import { IconXmark } from "@optimizely/axiom-icons";
 import type { Connector } from "../data/connectors";
 import { ConnectorAvatar } from "./ConnectorAvatar";
 
-function SectionHeading({ children }: { children: string }) {
+export function SectionHeading({ children }: { children: string }) {
     return (
         <Text
             fontSize="md"
@@ -30,7 +30,7 @@ function SectionHeading({ children }: { children: string }) {
     );
 }
 
-function ToggleRow({
+export function ToggleRow({
     label,
     description,
     checked,
@@ -52,7 +52,7 @@ function ToggleRow({
     );
 }
 
-function SalesforceConfig() {
+export function SalesforceConfig() {
     const [instanceOAuth, setInstanceOAuth] = useState(false);
     const [instanceUrl, setInstanceUrl] = useState("");
     const [enableReading, setEnableReading] = useState(true);
@@ -104,7 +104,7 @@ function SalesforceConfig() {
 
 type GAAuthMethod = "oauth2" | "service-account" | "adc";
 
-function GA4Config() {
+export function GA4Config() {
     const [authMethod, setAuthMethod] = useState<GAAuthMethod>("oauth2");
     const [oauthClientId, setOauthClientId] = useState("");
     const [oauthClientSecret, setOauthClientSecret] = useState("");
