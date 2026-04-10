@@ -1,6 +1,53 @@
 import { ContentType, ContentTypeMapping, Page, canCreateChildType } from "@/app/db/initialData";
-import { ContentInstance } from "@/app/db/cmpInitialData";
+import { ContentInstance, initialCmpContentModels } from "@/app/db/cmpInitialData";
 import { applyMapping } from "./contentTypeMapping";
+
+/**
+ * Normalize CMP instance fields so that values are accessible by both
+ * the original property names (used as data keys) AND any current
+ * property names/IDs that may differ due to content type edits.
+ *
+ * Matches original → current properties using the description field,
+ * then adds the value under the current property name and ID.
+ */
+function normalizeInstanceFields(
+	fields: Record<string, any>,
+	modelId: string,
+	currentSourceType?: ContentType
+): Record<string, any> {
+	if (!currentSourceType) return fields;
+
+	const originalModel = initialCmpContentModels.find(m => m.id === modelId);
+	if (!originalModel) return fields;
+
+	const normalized: Record<string, any> = { ...fields };
+
+	// For each original property that has data, also index by property ID
+	for (const origProp of originalModel.properties) {
+		if (fields[origProp.name] === undefined) continue;
+		// Add under original property ID
+		normalized[origProp.id] = fields[origProp.name];
+	}
+
+	// Bridge renamed properties: match original → current by description
+	for (const currentProp of currentSourceType.properties) {
+		// Skip if data already exists under the current name or ID
+		if (normalized[currentProp.name] !== undefined) continue;
+		if (normalized[currentProp.id] !== undefined) continue;
+		if (!currentProp.description) continue;
+
+		// Find an original property with the same description
+		const matchingOriginal = originalModel.properties.find(
+			op => op.description === currentProp.description && fields[op.name] !== undefined
+		);
+		if (matchingOriginal) {
+			normalized[currentProp.name] = fields[matchingOriginal.name];
+			normalized[currentProp.id] = fields[matchingOriginal.name];
+		}
+	}
+
+	return normalized;
+}
 
 /**
  * Connect a CMP content instance to a CMS page
@@ -29,9 +76,12 @@ export function connectInstanceToPage(
 	console.log('  Source type:', sourceType?.name);
 	console.log('  Target type:', targetType?.name);
 
+	// Normalize instance fields so renamed properties can still be found
+	const normalizedFields = normalizeInstanceFields(instance.fields, instance.modelId, sourceType);
+
 	let pageData = page.data || {};
 	if (mapping && sourceType && targetType) {
-		pageData = applyMapping(instance.fields, mapping, sourceType, targetType);
+		pageData = applyMapping(normalizedFields, mapping, sourceType, targetType);
 	} else {
 		console.log('  ⚠️ No mapping found - using direct field copy');
 		// Fallback: direct field copy if no mapping
@@ -80,14 +130,16 @@ export function disconnectPage(page: Page): Page {
 }
 
 /**
- * Find appropriate mapping for connection
+ * Find appropriate mapping for connection.
+ * Searches for a direct mapping (source→target) first, then checks for
+ * a reverse mapping (target→source) and flips its property mappings.
  */
 function findMappingForConnection(
 	sourceTypeId: string,
 	targetTypeId: string,
 	contentTypes: ContentType[]
 ): ContentTypeMapping | null {
-	// Search through ALL content types - mappings are stored on the SOURCE type
+	// 1. Try direct match first
 	for (const contentType of contentTypes) {
 		if (contentType.mappings) {
 			const mapping = contentType.mappings.find(
@@ -99,6 +151,30 @@ function findMappingForConnection(
 			}
 		}
 	}
+
+	// 2. Try reverse match — if a mapping exists from target→source,
+	//    flip the property mappings so they work in the other direction
+	for (const contentType of contentTypes) {
+		if (contentType.mappings) {
+			const reverseMapping = contentType.mappings.find(
+				m => m.sourceContentTypeId === targetTypeId &&
+					m.targetContentTypeId === sourceTypeId
+			);
+			if (reverseMapping) {
+				return {
+					...reverseMapping,
+					sourceContentTypeId: sourceTypeId,
+					targetContentTypeId: targetTypeId,
+					propertyMappings: reverseMapping.propertyMappings.map(pm => ({
+						...pm,
+						sourcePropertyId: pm.targetPropertyId,
+						targetPropertyId: pm.sourcePropertyId,
+					})),
+				};
+			}
+		}
+	}
+
 	return null;
 }
 
@@ -121,13 +197,17 @@ export function getCompatibleInstances(
 	// Add the page's own content type
 	compatibleSourceTypeIds.add(page.contentTypeId);
 
-	// Search through ALL content types to find ones with mappings to this page type
-	// Mappings are stored on the SOURCE content type, not the target
-	contentTypes.forEach(sourceType => {
-		if (sourceType.mappings) {
-			sourceType.mappings.forEach(mapping => {
+	// Search through ALL content types to find ones with mappings to/from this page type
+	contentTypes.forEach(ct => {
+		if (ct.mappings) {
+			ct.mappings.forEach(mapping => {
+				// Direct: another type maps TO this page type
 				if (mapping.targetContentTypeId === page.contentTypeId) {
 					compatibleSourceTypeIds.add(mapping.sourceContentTypeId);
+				}
+				// Reverse: this page type maps TO another type (can connect in reverse)
+				if (mapping.sourceContentTypeId === page.contentTypeId) {
+					compatibleSourceTypeIds.add(mapping.targetContentTypeId);
 				}
 			});
 		}
@@ -160,7 +240,9 @@ export function getCompatibleInstances(
 }
 
 /**
- * Get the set of target property IDs that are data-bound for a connected page.
+ * Get the set of property IDs that are data-bound for a connected page.
+ * Handles both direct mappings (target matches page type) and reverse
+ * mappings (source matches page type, meaning the mapping was used in reverse).
  * Returns an empty Set if the page has no connection or no mapping is found.
  */
 export function getBoundPropertyIds(
@@ -173,8 +255,12 @@ export function getBoundPropertyIds(
 		if (!ct.mappings) continue;
 		const mapping = ct.mappings.find(m => m.id === page.cmpConnection!.mappingId);
 		if (mapping) {
+			// Determine which side of the mapping corresponds to this page's content type.
+			// If targetContentTypeId matches, use targetPropertyId (direct mapping).
+			// If sourceContentTypeId matches, use sourcePropertyId (reverse mapping).
+			const useSource = mapping.sourceContentTypeId === page.contentTypeId;
 			return new Set(mapping.propertyMappings.map(pm => {
-				const id = pm.targetPropertyId;
+				const id = useSource ? pm.sourcePropertyId : pm.targetPropertyId;
 				return id.includes('.') ? id.split('.')[0] : id;
 			}));
 		}
