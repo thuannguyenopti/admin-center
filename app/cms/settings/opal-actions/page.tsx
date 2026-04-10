@@ -65,6 +65,7 @@ export default function OpalActionsPage() {
 	const [typeFilter, setTypeFilter] = useState("All");
 	const [searchQuery, setSearchQuery] = useState("");
 	const [editingLocation, setEditingLocation] = useState<LocationMenu | null>(null);
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
 	// Valid location IDs for the Menus tab (excludes system agents)
 	const validMenuLocations = [
@@ -106,7 +107,7 @@ export default function OpalActionsPage() {
 		const groupCount = location.groups.length;
 		const uniqueAgents = new Set<string>();
 		location.groups.forEach((group) => {
-			group.agents.forEach((agentId) => uniqueAgents.add(agentId));
+			group.agents.forEach((agent) => uniqueAgents.add(agent.id));
 		});
 		return {
 			groupCount,
@@ -126,7 +127,21 @@ export default function OpalActionsPage() {
 
 	const handleCloseEditor = () => {
 		setEditingLocation(null);
+		setHasUnsavedChanges(false);
 	};
+
+	// Warn before navigating away with unsaved changes
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (hasUnsavedChanges) {
+				e.preventDefault();
+				e.returnValue = "";
+			}
+		};
+
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+	}, [hasUnsavedChanges]);
 
 	return (
 		<>
@@ -316,6 +331,7 @@ export default function OpalActionsPage() {
 						location={editingLocation}
 						onClose={handleCloseEditor}
 						onSave={handleSaveLocation}
+						onUnsavedChangesChange={setHasUnsavedChanges}
 					/>
 				</Aside>
 			)}

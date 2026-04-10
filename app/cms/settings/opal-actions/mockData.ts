@@ -214,7 +214,7 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-improve-0",
 					name: "Preflight Audit",
-					agents: ["preflight-audit"],
+					agents: [{id: "preflight-audit", permissions: ["Everyone"]}],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Run all pre-publish checks to ensure content quality",
@@ -223,7 +223,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-improve-1",
 					name: "GEO",
-					agents: ["geo-recommendations", "geo-schema-optimization"],
+					agents: [
+						{id: "geo-recommendations", permissions: ["Everyone"]},
+						{id: "geo-schema-optimization", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Optimize your content for Generative Engine Optimization",
@@ -232,7 +235,11 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-improve-2",
 					name: "SEO",
-					agents: ["seo-audit", "seo-keyword-research", "seo-meta-optimization"],
+					agents: [
+						{id: "seo-audit", permissions: ["Everyone"]},
+						{id: "seo-keyword-research", permissions: ["Everyone"]},
+						{id: "seo-meta-optimization", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Improve search engine rankings and visibility",
@@ -241,7 +248,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-improve-3",
 					name: "Accessibility",
-					agents: ["a11y-wcag-audit", "a11y-aria-check"],
+					agents: [
+						{id: "a11y-wcag-audit", permissions: ["Everyone"]},
+						{id: "a11y-aria-check", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Ensure content is accessible to all users",
@@ -250,7 +260,7 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-improve-4",
 					name: "Translate",
-					agents: ["content-translation"],
+					agents: [{id: "content-translation", permissions: ["Everyone"]}],
 					enabled: true,
 					visibleAt: "Editors",
 					helpText: "Translate content to other languages",
@@ -259,7 +269,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-improve-5",
 					name: "Content Quality",
-					agents: ["content-refresh-analysis", "brand-tone-audit"],
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Analyze and improve content quality and readability",
@@ -276,7 +289,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-context-0",
 					name: "GEO",
-					agents: ["geo-recommendations", "geo-schema-optimization"],
+					agents: [
+						{id: "geo-recommendations", permissions: ["Everyone"]},
+						{id: "geo-schema-optimization", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Optimize your content for Generative Engine Optimization",
@@ -285,7 +301,11 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-context-1",
 					name: "SEO",
-					agents: ["seo-audit", "seo-keyword-research", "seo-meta-optimization"],
+					agents: [
+						{id: "seo-audit", permissions: ["Everyone"]},
+						{id: "seo-keyword-research", permissions: ["Everyone"]},
+						{id: "seo-meta-optimization", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Improve search engine rankings and visibility",
@@ -294,7 +314,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-context-2",
 					name: "Accessibility",
-					agents: ["a11y-wcag-audit", "a11y-aria-check"],
+					agents: [
+						{id: "a11y-wcag-audit", permissions: ["Everyone"]},
+						{id: "a11y-aria-check", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Ensure content is accessible to all users",
@@ -303,7 +326,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-context-3",
 					name: "Content Quality",
-					agents: ["content-refresh-analysis", "brand-tone-audit"],
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Analyze and improve content quality and readability",
@@ -320,7 +346,7 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "asset-panel-0",
 					name: "Translate",
-					agents: ["content-translation"],
+					agents: [{id: "content-translation", permissions: ["Everyone"]}],
 					enabled: true,
 					visibleAt: "Editors",
 					helpText: "Translate content to other languages",
@@ -329,7 +355,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "asset-panel-1",
 					name: "Content Quality",
-					agents: ["content-refresh-analysis", "brand-tone-audit"],
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Analyze and improve content quality and readability",
@@ -338,7 +367,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "asset-panel-2",
 					name: "Analytics",
-					agents: ["ga4-traffic-report", "conversion-analysis"],
+					agents: [
+						{id: "ga4-traffic-report", permissions: ["Everyone"]},
+						{id: "conversion-analysis", permissions: ["Everyone"]},
+					],
 					enabled: false,
 					visibleAt: "Administrators",
 					helpText: "Generate performance reports and insights",
@@ -355,7 +387,11 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "toolbar-page-0",
 					name: "SEO",
-					agents: ["seo-audit", "seo-keyword-research", "seo-meta-optimization"],
+					agents: [
+						{id: "seo-audit", permissions: ["Everyone"]},
+						{id: "seo-keyword-research", permissions: ["Everyone"]},
+						{id: "seo-meta-optimization", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					order: 0,
@@ -371,7 +407,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "outline-section-0",
 					name: "Content Quality",
-					agents: ["content-refresh-analysis", "brand-tone-audit"],
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					order: 0,
@@ -387,7 +426,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "property-text-0",
 					name: "Content Quality",
-					agents: ["content-refresh-analysis", "brand-tone-audit"],
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					order: 0,
@@ -403,7 +445,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "property-image-0",
 					name: "Accessibility",
-					agents: ["a11y-wcag-audit", "a11y-aria-check"],
+					agents: [
+						{id: "a11y-wcag-audit", permissions: ["Everyone"]},
+						{id: "a11y-aria-check", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					order: 0,
@@ -441,7 +486,10 @@ export const defaultOpalConfiguration: OpalConfiguration = {
 				{
 					id: "property-editor-0",
 					name: "Content Quality",
-					agents: ["content-refresh-analysis", "brand-tone-audit"],
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
 					enabled: true,
 					visibleAt: "Everyone",
 					helpText: "Analyze and improve content quality and readability",
