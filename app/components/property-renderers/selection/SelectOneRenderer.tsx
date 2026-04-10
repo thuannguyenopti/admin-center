@@ -1,4 +1,4 @@
-import { Field, Select, SelectTrigger, SelectContent, Text } from "@optiaxiom/react";
+import { Field, Select, SelectTrigger, SelectContent, Input } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const SelectOneRenderer: React.FC<PropertyRendererProps> = ({
@@ -14,7 +14,7 @@ export const SelectOneRenderer: React.FC<PropertyRendererProps> = ({
 		const selectedOption = options.find((opt) => opt.value === value);
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{selectedOption?.label || value || "—"}</Text>
+				<Input value={selectedOption?.label || value || ""} disabled />
 			</Field>
 		);
 	}

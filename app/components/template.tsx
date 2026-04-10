@@ -59,7 +59,7 @@ function TemplateContent({
 
 	// Code panel state
 	const [isCodePanelOpen, setIsCodePanelOpen] = useState(false);
-	const [codePanelFilePath, setCodePanelFilePath] = useState<string | null>(null);
+	const [codePanelTarget, setCodePanelTarget] = useState<string | null>(null);
 
 	useEffect(() => {
 		setMounted(true);
@@ -157,8 +157,8 @@ function TemplateContent({
 	// Provide Code panel controls through LayoutContext
 	useEffect(() => {
 		setCodePanelControls({
-			openPanel: (filePath: string) => {
-				setCodePanelFilePath(filePath);
+			openPanel: (target: string) => {
+				setCodePanelTarget(target);
 				setIsCodePanelOpen(true);
 			},
 			closePanel: () => {
@@ -518,7 +518,7 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 			<CodePanel
 				isOpen={isCodePanelOpen}
 				onClose={() => setIsCodePanelOpen(false)}
-				filePath={codePanelFilePath}
+				target={codePanelTarget}
 			/>
 		</Box>
 	);

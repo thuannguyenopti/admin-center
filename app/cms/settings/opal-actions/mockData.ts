@@ -1,49 +1,4 @@
-export interface Agent {
-	id: string;
-	name: string;
-	category: string;
-}
-
-export interface OpalAction {
-	id: string;
-	name: string;
-	enabled: boolean;
-	helpText?: string;
-	locations: {
-		toolbar: {
-			contextMenu: boolean;
-			improveButton: boolean;
-		};
-		assetPanel: boolean;
-		propertyEditor: {
-			enabled: boolean;
-			propertyTypes: PropertyType[];
-		};
-		pageCreation?: boolean; // For system actions like "Generate Page With Opal"
-	};
-	agents: string[]; // Agent IDs
-	visibleAt: "Everyone" | "Editors" | "Administrators";
-	modified: string;
-	isSystemAction?: boolean; // True for built-in actions that can't be fully configured
-}
-
-export type PropertyType =
-	| "String"
-	| "LongString"
-	| "XhtmlString"
-	| "Int"
-	| "Double"
-	| "Boolean"
-	| "DateTime"
-	| "ContentReference"
-	| "PageReference"
-	| "ImageReference"
-	| "VideoReference"
-	| "Url"
-	| "SelectOne"
-	| "SelectMany"
-	| "ContentArea"
-	| "LinkItemCollection";
+import {Agent, OpalConfiguration, OpalAction} from "./types";
 
 export const availableAgents: Agent[] = [
 	// System category (for built-in actions)
@@ -57,6 +12,8 @@ export const availableAgents: Agent[] = [
 	{id: "content-refresh-analysis", name: "Content Refresh Analysis", category: "Content"},
 	{id: "content-translation", name: "Content Translation", category: "Content"},
 	{id: "brand-tone-audit", name: "Brand Tone of Voice Audit", category: "Content"},
+	{id: "content-tagging", name: "Content Tagging", category: "Content"},
+	{id: "content-mapping", name: "Content Mapping", category: "Content"},
 
 	// GEO category
 	{id: "geo-recommendations", name: "GEO Recommendations", category: "GEO"},
@@ -242,3 +199,343 @@ export const opalActions: OpalAction[] = [
 		modified: "2026-02-17 14:00:00",
 	},
 ];
+
+// Default OpalConfiguration (new data model)
+// This represents the migrated state of the opalActions above
+export const defaultOpalConfiguration: OpalConfiguration = {
+	version: 1,
+	locations: [
+		{
+			id: "toolbar-improve",
+			name: "Toolbar Improve Button",
+			description: "Actions shown in the Improve dropdown button",
+			enabled: true,
+			groups: [
+				{
+					id: "toolbar-improve-0",
+					name: "Preflight Audit",
+					agents: [{id: "preflight-audit", permissions: ["Everyone"]}],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Run all pre-publish checks to ensure content quality",
+					order: 0,
+				},
+				{
+					id: "toolbar-improve-1",
+					name: "GEO",
+					agents: [
+						{id: "geo-recommendations", permissions: ["Everyone"]},
+						{id: "geo-schema-optimization", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Optimize your content for Generative Engine Optimization",
+					order: 1,
+				},
+				{
+					id: "toolbar-improve-2",
+					name: "SEO",
+					agents: [
+						{id: "seo-audit", permissions: ["Everyone"]},
+						{id: "seo-keyword-research", permissions: ["Everyone"]},
+						{id: "seo-meta-optimization", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Improve search engine rankings and visibility",
+					order: 2,
+				},
+				{
+					id: "toolbar-improve-3",
+					name: "Accessibility",
+					agents: [
+						{id: "a11y-wcag-audit", permissions: ["Everyone"]},
+						{id: "a11y-aria-check", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Ensure content is accessible to all users",
+					order: 3,
+				},
+				{
+					id: "toolbar-improve-4",
+					name: "Translate",
+					agents: [{id: "content-translation", permissions: ["Everyone"]}],
+					enabled: true,
+					visibleAt: "Editors",
+					helpText: "Translate content to other languages",
+					order: 4,
+				},
+				{
+					id: "toolbar-improve-5",
+					name: "Content Quality",
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Analyze and improve content quality and readability",
+					order: 5,
+				},
+			],
+		},
+		{
+			id: "toolbar-context",
+			name: "Toolbar Context Menu",
+			description: "Actions shown in the toolbar context menu (three dots)",
+			enabled: true,
+			groups: [
+				{
+					id: "toolbar-context-0",
+					name: "GEO",
+					agents: [
+						{id: "geo-recommendations", permissions: ["Everyone"]},
+						{id: "geo-schema-optimization", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Optimize your content for Generative Engine Optimization",
+					order: 0,
+				},
+				{
+					id: "toolbar-context-1",
+					name: "SEO",
+					agents: [
+						{id: "seo-audit", permissions: ["Everyone"]},
+						{id: "seo-keyword-research", permissions: ["Everyone"]},
+						{id: "seo-meta-optimization", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Improve search engine rankings and visibility",
+					order: 1,
+				},
+				{
+					id: "toolbar-context-2",
+					name: "Accessibility",
+					agents: [
+						{id: "a11y-wcag-audit", permissions: ["Everyone"]},
+						{id: "a11y-aria-check", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Ensure content is accessible to all users",
+					order: 2,
+				},
+				{
+					id: "toolbar-context-3",
+					name: "Content Quality",
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Analyze and improve content quality and readability",
+					order: 3,
+				},
+			],
+		},
+		{
+			id: "asset-panel",
+			name: "Asset Panel",
+			description: "Actions shown in the asset panel",
+			enabled: true,
+			groups: [
+				{
+					id: "asset-panel-0",
+					name: "Translate",
+					agents: [{id: "content-translation", permissions: ["Everyone"]}],
+					enabled: true,
+					visibleAt: "Editors",
+					helpText: "Translate content to other languages",
+					order: 0,
+				},
+				{
+					id: "asset-panel-1",
+					name: "Content Quality",
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Analyze and improve content quality and readability",
+					order: 1,
+				},
+				{
+					id: "asset-panel-2",
+					name: "Analytics",
+					agents: [
+						{id: "ga4-traffic-report", permissions: ["Everyone"]},
+						{id: "conversion-analysis", permissions: ["Everyone"]},
+					],
+					enabled: false,
+					visibleAt: "Administrators",
+					helpText: "Generate performance reports and insights",
+					order: 2,
+				},
+			],
+		},
+		{
+			id: "toolbar-page",
+			name: "Page",
+			description: "Actions shown in the page context menu",
+			enabled: true,
+			groups: [
+				{
+					id: "toolbar-page-0",
+					name: "SEO",
+					agents: [
+						{id: "seo-audit", permissions: ["Everyone"]},
+						{id: "seo-keyword-research", permissions: ["Everyone"]},
+						{id: "seo-meta-optimization", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					order: 0,
+				},
+			],
+		},
+		{
+			id: "outline-section",
+			name: "Section",
+			description: "Actions shown in the outline section context menu",
+			enabled: true,
+			groups: [
+				{
+					id: "outline-section-0",
+					name: "Content Quality",
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					order: 0,
+				},
+			],
+		},
+		{
+			id: "property-text",
+			name: "Text",
+			description: "Actions shown when editing text properties",
+			enabled: true,
+			groups: [
+				{
+					id: "property-text-0",
+					name: "Content Quality",
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					order: 0,
+				},
+			],
+		},
+		{
+			id: "property-image",
+			name: "Image",
+			description: "Actions shown when editing image properties",
+			enabled: true,
+			groups: [
+				{
+					id: "property-image-0",
+					name: "Accessibility",
+					agents: [
+						{id: "a11y-wcag-audit", permissions: ["Everyone"]},
+						{id: "a11y-aria-check", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					order: 0,
+				},
+			],
+		},
+		{
+			id: "property-number",
+			name: "Number",
+			description: "Actions shown when editing number properties",
+			enabled: true,
+			groups: [],
+		},
+		{
+			id: "property-datetime",
+			name: "Date/Time",
+			description: "Actions shown when editing date/time properties",
+			enabled: true,
+			groups: [],
+		},
+		{
+			id: "property-reference",
+			name: "Reference",
+			description: "Actions shown when editing reference properties",
+			enabled: true,
+			groups: [],
+		},
+		{
+			id: "property-editor",
+			name: "Property Editor",
+			description: "Actions shown when editing properties",
+			enabled: true,
+			propertyTypes: ["String", "LongString", "XhtmlString"],
+			groups: [
+				{
+					id: "property-editor-0",
+					name: "Content Quality",
+					agents: [
+						{id: "content-refresh-analysis", permissions: ["Everyone"]},
+						{id: "brand-tone-audit", permissions: ["Everyone"]},
+					],
+					enabled: true,
+					visibleAt: "Everyone",
+					helpText: "Analyze and improve content quality and readability",
+					order: 0,
+				},
+			],
+		},
+	],
+	systemAgents: [
+		{
+			id: "generate-page-with-opal",
+			name: "Generate Page With Opal",
+			description: "AI-powered page generation with custom instructions and file uploads",
+			enabled: true,
+			category: "page-generation",
+		},
+	],
+	appCompanion: [
+		{
+			id: "autocomplete",
+			name: "Auto-complete",
+			description: "AI-powered content suggestions as you type",
+			enabled: true,
+			category: "editor",
+		},
+		{
+			id: "smart-paste",
+			name: "Smart Paste",
+			description: "Automatically format pasted content",
+			enabled: false,
+			category: "editor",
+		},
+		{
+			id: "content-suggestions",
+			name: "Content Suggestions",
+			description: "Get AI suggestions for improving your content",
+			enabled: true,
+			category: "productivity",
+		},
+		{
+			id: "auto-mapping",
+			name: "Auto-mapping",
+			description: "Automatically map content types based on structure and usage patterns",
+			enabled: false,
+			category: "productivity",
+		},
+	],
+	modified: "2026-03-16T10:00:00.000Z",
+};

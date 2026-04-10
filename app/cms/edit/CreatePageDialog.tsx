@@ -46,7 +46,8 @@ import Item from "@/app/components/Item";
 import {Page, ContentType, initialContentTypes, canCreateChildType} from "@/app/db/initialData";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 import usePersistentState from "@/app/usePersistentState";
-import {opalActions as initialOpalActions, OpalAction} from "@/app/cms/settings/opal-actions/mockData";
+import {defaultOpalConfiguration} from "@/app/cms/settings/opal-actions/mockData";
+import {OpalConfiguration} from "@/app/cms/settings/opal-actions/types";
 
 type PageNode = Page & {children: PageNode[]};
 
@@ -289,7 +290,10 @@ const CATEGORY_OPTIONS = [
 export function CreatePageDialog({children, pages, preselectedLocation, onCreatePage}: CreatePageDialogProps) {
 	const router = useRouter();
 	const {setPendingGeneration} = useOpalGeneration();
-	const [opalActions] = usePersistentState("opal-actions", initialOpalActions) as [OpalAction[], any];
+	const [opalConfig] = usePersistentState("opal-config", defaultOpalConfiguration) as [
+		OpalConfiguration,
+		any
+	];
 	const [open, setOpen] = useState(false);
 	const [step, setStep] = useState<'template' | 'location'>('template');
 	const [opalDialogOpen, setOpalDialogOpen] = useState(false);
@@ -555,6 +559,11 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 		}
 	};
 
+	// Check if Generate Page with Opal is enabled
+	const isOpalGenerateEnabled = opalConfig.systemAgents?.some(
+		agent => agent.id === "generate-page-with-opal" && agent.enabled
+	) ?? false;
+
 	return (
 		<>
 			<Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -815,10 +824,10 @@ export function CreatePageDialog({children, pages, preselectedLocation, onCreate
 								Back
 							</Button>
 							<Group gap="8">
-								<Button appearance="primary" onClick={handleCreate} disabled={validLocations.length === 0}>
+								<Button appearance={isOpalGenerateEnabled ? "default" : "primary"} onClick={handleCreate} disabled={validLocations.length === 0}>
 									Create Page
 								</Button>
-								{opalActions.find((a) => a.id === "system-page-generator")?.enabled && (
+								{isOpalGenerateEnabled && (
 									<Button appearance="primary-opal" onClick={handleCreateWithOpal} disabled={validLocations.length === 0} icon={<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />}>
 										Generate Page
 									</Button>
