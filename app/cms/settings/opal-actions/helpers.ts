@@ -93,7 +93,7 @@ export function getTotalAgentCount(config: OpalConfiguration): number {
 	const allAgents = new Set<string>();
 	config.locations.forEach((loc) => {
 		loc.groups.forEach((group) => {
-			group.agents.forEach((agentId) => allAgents.add(agentId));
+			group.agents.forEach((agent) => allAgents.add(agent.id));
 		});
 	});
 	return allAgents.size;
