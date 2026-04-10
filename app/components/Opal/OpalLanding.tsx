@@ -201,10 +201,11 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
 
   return (
     <Box
+      className="opal-landing-shell"
       display="flex"
       flexDirection="column"
       alignItems="center"
-      style={{ paddingTop: "120px", position: "relative" }}
+      style={{ paddingTop: "120px", position: "relative", width: "100%", boxSizing: "border-box" }}
     >
       {/* Radial gradient glow behind input */}
       <Box
