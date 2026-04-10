@@ -4,6 +4,7 @@ import {
 	PropertyMapping,
 	PropertyType,
 } from "@/app/db/initialData";
+import { initialCmpContentModels } from "@/app/db/cmpInitialData";
 
 /**
  * Apply a content type mapping to transform data from source to target format
@@ -22,13 +23,35 @@ export function applyMapping(
 
 	const result: Record<string, any> = {};
 
+	// When the source type definition uses different property names than the
+	// actual data keys (e.g. CMS mirror has "title" but CMP data uses "headline"),
+	// build a description-based bridge from the original CMP model.
+	const cmpModel = initialCmpContentModels.find(m => m.id === sourceType.id);
+	const dataKeys = Object.keys(sourceData);
+
 	for (const propMapping of mapping.propertyMappings) {
 		// Find the source property to get its name (used as key in instance data)
 		const sourceProp = sourceType.properties.find(p => p.id === propMapping.sourcePropertyId);
 		const sourceKey = sourceProp?.name || propMapping.sourcePropertyId;
 
 		// Try lookup by property name first (CMP instances), then by property ID (CMS pages)
-		const sourceValue = sourceData[sourceKey] ?? sourceData[propMapping.sourcePropertyId];
+		let sourceValue = sourceData[sourceKey] ?? sourceData[propMapping.sourcePropertyId];
+
+		// Fallback: bridge via CMP model description when names don't match
+		if (sourceValue === undefined && sourceProp?.description && cmpModel) {
+			const cmpProp = cmpModel.properties.find(
+				(p: any) => p.description === sourceProp.description
+			);
+			if (cmpProp) {
+				sourceValue = sourceData[cmpProp.name] ?? sourceData[cmpProp.id];
+			}
+		}
+		// Last resort: try displayName match against actual data keys
+		if (sourceValue === undefined && sourceProp?.displayName) {
+			const displayLower = sourceProp.displayName.toLowerCase();
+			const dnKey = dataKeys.find(k => k.toLowerCase() === displayLower);
+			if (dnKey) sourceValue = sourceData[dnKey];
+		}
 		console.log(`  📋 Mapping: ${propMapping.sourcePropertyId} → ${propMapping.targetPropertyId}`);
 		console.log(`     Source prop:`, sourceProp);
 		console.log(`     Source key: "${sourceKey}"`);
