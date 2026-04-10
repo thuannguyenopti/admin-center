@@ -102,28 +102,20 @@ export const SOCIAL_CONNECTORS: Connector[] = [
 
 export const PRODUCTIVITY_CONNECTORS: Connector[] = [
     {
-        id: "jira", name: "Jira", category: "Project Management",
-        description: "Create and query Jira issues, projects, and sprint data.",
-        about: "The Jira REST API lets agents create, retrieve, update, and delete issues and projects.",
-        type: "auth_provider", authType: "OAuth 2.0", initials: "Ji", color: "#0052CC", textColor: "#ffffff",
+        id: "atlassian-rovo", name: "Atlassian Rovo", category: "Project Management",
+        description: "Search and act across Jira issues and Confluence pages in Atlassian.",
+        about: "The Atlassian platform APIs let agents work across Jira and Confluence from one connector. Use it to search issues, read project context, create tickets, comment on work, and read or update Confluence content.",
+        type: "auth_provider", authType: "OAuth 2.0", initials: "AR", color: "#172B4D", textColor: "#ffffff",
         tools: [
-            { id: "jira_search", name: "issues_search", description: "Searches for issues using a JQL query.", action: "Read" },
-            { id: "jira_get_issue", name: "issues_get", description: "Returns the details of a specific issue.", action: "Read" },
-            { id: "jira_create_issue", name: "issues_create", description: "Creates an issue or sub-task in a project.", action: "Create" },
-            { id: "jira_update_issue", name: "issues_update", description: "Updates an issue's fields, status, or assignee.", action: "Update" },
-            { id: "jira_add_comment", name: "comments_add", description: "Adds a comment to a Jira issue.", action: "Create" },
-        ],
-    },
-    {
-        id: "confluence", name: "Confluence", category: "Project Management",
-        description: "Read and create Confluence pages and spaces.",
-        about: "The Confluence REST API lets agents read and write wiki pages, search spaces, and manage content.",
-        type: "auth_provider", authType: "OAuth 2.0", initials: "Cf", color: "#172B4D", textColor: "#ffffff",
-        tools: [
-            { id: "cf_search", name: "content_search", description: "Searches Confluence content using CQL.", action: "Read" },
-            { id: "cf_get_page", name: "content_get", description: "Returns a specific page or blog post by ID.", action: "Read" },
-            { id: "cf_create_page", name: "content_create", description: "Creates a new page in a specified space.", action: "Create" },
-            { id: "cf_update_page", name: "content_update", description: "Updates the title or body of an existing page.", action: "Update" },
+            { id: "atlassian_issues_search", name: "issues_search", description: "Searches Jira issues using a JQL query.", action: "Read" },
+            { id: "atlassian_issue_get", name: "issues_get", description: "Returns the details of a specific Jira issue.", action: "Read" },
+            { id: "atlassian_issue_create", name: "issues_create", description: "Creates an issue or sub-task in a Jira project.", action: "Create" },
+            { id: "atlassian_issue_update", name: "issues_update", description: "Updates a Jira issue's fields, status, or assignee.", action: "Update" },
+            { id: "atlassian_comment_add", name: "comments_add", description: "Adds a comment to a Jira issue.", action: "Create" },
+            { id: "atlassian_content_search", name: "content_search", description: "Searches Confluence content using CQL.", action: "Read" },
+            { id: "atlassian_content_get", name: "content_get", description: "Returns a specific Confluence page or blog post by ID.", action: "Read" },
+            { id: "atlassian_content_create", name: "content_create", description: "Creates a new Confluence page in a specified space.", action: "Create" },
+            { id: "atlassian_content_update", name: "content_update", description: "Updates the title or body of an existing Confluence page.", action: "Update" },
         ],
     },
     {
