@@ -8,11 +8,8 @@ import { OpalHistorySidebar } from "./Opal/OpalHistorySidebar";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
 import { useLayout } from "@/app/context/LayoutContext";
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { AddConnectorModal, type ConnectedConnector } from "@/app/opal/tools/components/AddConnectorModal";
-import { CONNECTORS } from "@/app/opal/tools/data/connectors";
-import { ConnectorSuggestionCard } from "@/app/components/Opal/ConnectorSuggestionCard";
+import { useEffect, useState, useCallback } from "react";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 
 type OpalPanelProps = {
   isOpen: boolean;
@@ -68,16 +65,10 @@ export function OpalPanel({
   contextContent,
   onContextChipRemove,
 }: OpalPanelProps) {
-  const router = useRouter();
   const { setOpalPanelWidth } = useLayout();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const [connectedConnectors, setConnectedConnectors] = useState<ConnectedConnector[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalInitialConnector, setModalInitialConnector] = useState(
-    CONNECTORS.find((connector) => connector.id === "atlassian-rovo") ?? null
-  );
-  const STORAGE_KEY = "opal_connected_connectors";
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
 
   const handleSend = (content?: string) => {
     const msg = content ?? inputValue;
@@ -89,57 +80,6 @@ export function OpalPanel({
   const handleSuggestionClick = (suggestion: string) => {
     setInputValue(suggestion);
   };
-
-  const connectedIds = connectedConnectors.map((connector) => connector.id);
-  const atlassianConnector = useMemo(
-    () => CONNECTORS.find((connector) => connector.id === "atlassian-rovo") ?? null,
-    []
-  );
-  const atlassianIntentPattern =
-    /\b(jira|ticket|tickets|sprint|backlog|confluence|atlassian|issue|issues)\b/i;
-  const shouldShowAtlassianCard =
-    Boolean(inputValue.trim()) &&
-    atlassianIntentPattern.test(inputValue) &&
-    !connectedIds.includes("atlassian-rovo");
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setConnectedConnectors(JSON.parse(raw));
-      }
-    } catch {
-      // no-op
-    }
-  }, []);
-
-  const handleConnectorAdded = (connector: ConnectedConnector) => {
-    setConnectedConnectors((prev) => {
-      const next = prev.some((item) => item.id === connector.id)
-        ? prev.map((item) => (item.id === connector.id ? connector : item))
-        : [...prev, connector];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const handleDisconnect = (id: string) => {
-    setConnectedConnectors((prev) => {
-      const next = prev.filter((item) => item.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const atlassianActionCard = shouldShowAtlassianCard && atlassianConnector ? (
-    <ConnectorSuggestionCard
-      onBrowseAll={() => router.push("/opal/connectors?tab=connectors")}
-      onConnect={() => {
-        setModalInitialConnector(atlassianConnector);
-        setModalOpen(true);
-      }}
-    />
-  ) : null;
 
   // Resize handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -210,16 +150,7 @@ export function OpalPanel({
         transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
       }}
     >
-      <AddConnectorModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onConnectorAdded={handleConnectorAdded}
-        onDisconnect={handleDisconnect}
-        connectedIds={connectedIds}
-        initialConnector={modalInitialConnector}
-        initialScreen="configure"
-        initialStep={0}
-      />
+      {modalElement}
       {/* Grab Handle - only in docked mode */}
       {mode === 'docked' && (
         <Box

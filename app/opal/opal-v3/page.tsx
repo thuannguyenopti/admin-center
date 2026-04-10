@@ -5,17 +5,14 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch, IconBrandFigma } from "@tabler/icons-react";
 import { IconAgent } from "@optimizely/axiom-icons";
-import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalLanding } from "@/app/components/Opal/OpalLanding";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
-import { useRouter } from "next/navigation";
-import { AddConnectorModal, type ConnectedConnector } from "@/app/opal/tools/components/AddConnectorModal";
-import { CONNECTORS } from "@/app/opal/tools/data/connectors";
-import { ConnectorSuggestionCard } from "@/app/components/Opal/ConnectorSuggestionCard";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 
 const LIBRARY_TABS = ["Recommended for you", "Featured", "Brainstorm & Plan", "Create", "Test & Experiment", "Optimize", "Search"];
 
@@ -265,7 +262,6 @@ function AgentCard({ agent, onSelect }: { agent: Agent; onSelect: (a: Agent) => 
 }
 
 export default function OpalPage() {
-  const router = useRouter();
   const opalContext = useOpalContext();
   const {
     messages,
@@ -316,15 +312,10 @@ export default function OpalPage() {
   const [activeTab, setActiveTab] = useState("Recommended for you");
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [connectedConnectors, setConnectedConnectors] = useState<ConnectedConnector[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalInitialConnector, setModalInitialConnector] = useState(
-    CONNECTORS.find((connector) => connector.id === "atlassian-rovo") ?? null
-  );
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pageScrollRef = useRef<HTMLDivElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
-  const STORAGE_KEY = "opal_connected_connectors";
 
   // Wraps every agent-selection path: scroll to top + focus the chat input
   const handleAgentActivated = useCallback((agent: Parameters<typeof handleSelectAgent>[0]) => {
@@ -340,56 +331,6 @@ export default function OpalPage() {
   }, [handleSelectAgent, lastEndedSession]);
 
   const hasMessages = messages.length > 0;
-  const connectedIds = connectedConnectors.map((connector) => connector.id);
-  const atlassianConnector = useMemo(
-    () => CONNECTORS.find((connector) => connector.id === "atlassian-rovo") ?? null,
-    []
-  );
-  const atlassianIntentPattern =
-    /\b(jira|ticket|tickets|sprint|backlog|confluence|atlassian|issue|issues)\b/i;
-  const shouldShowAtlassianCard =
-    Boolean(inputValue.trim()) &&
-    atlassianIntentPattern.test(inputValue) &&
-    !connectedIds.includes("atlassian-rovo");
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setConnectedConnectors(JSON.parse(raw));
-      }
-    } catch {
-      // no-op
-    }
-  }, []);
-
-  const handleConnectorAdded = (connector: ConnectedConnector) => {
-    setConnectedConnectors((prev) => {
-      const next = prev.some((item) => item.id === connector.id)
-        ? prev.map((item) => (item.id === connector.id ? connector : item))
-        : [...prev, connector];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const handleDisconnect = (id: string) => {
-    setConnectedConnectors((prev) => {
-      const next = prev.filter((item) => item.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const atlassianActionCard = shouldShowAtlassianCard && atlassianConnector ? (
-    <ConnectorSuggestionCard
-      onBrowseAll={() => router.push("/opal/connectors?tab=connectors")}
-      onConnect={() => {
-        setModalInitialConnector(atlassianConnector);
-        setModalOpen(true);
-      }}
-    />
-  ) : null;
 
   // Once a conversation starts, show the full chat view
   if (hasMessages) {
@@ -402,16 +343,7 @@ export default function OpalPage() {
         w="full"
         style={{ backgroundColor: 'var(--opal-bg-page)', overflow: 'hidden', minHeight: 0 }}
       >
-        <AddConnectorModal
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          onConnectorAdded={handleConnectorAdded}
-          onDisconnect={handleDisconnect}
-          connectedIds={connectedIds}
-          initialConnector={modalInitialConnector}
-          initialScreen="configure"
-          initialStep={0}
-        />
+        {modalElement}
         <OpalChatView
           variant="home"
           messages={messages}
@@ -455,16 +387,7 @@ export default function OpalPage() {
 
   return (
     <Box ref={pageScrollRef} style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
-      <AddConnectorModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        onConnectorAdded={handleConnectorAdded}
-        onDisconnect={handleDisconnect}
-        connectedIds={connectedIds}
-        initialConnector={modalInitialConnector}
-        initialScreen="configure"
-        initialStep={0}
-      />
+      {modalElement}
 
       {/* Shared landing: heading + OpalInput + chips + dropdown */}
       <OpalLanding
