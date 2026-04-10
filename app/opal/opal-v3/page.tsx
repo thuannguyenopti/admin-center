@@ -12,6 +12,7 @@ import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalLanding } from "@/app/components/Opal/OpalLanding";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 
 const LIBRARY_TABS = ["Recommended for you", "Featured", "Brainstorm & Plan", "Create", "Test & Experiment", "Optimize", "Search"];
 
@@ -311,6 +312,7 @@ export default function OpalPage() {
   const [activeTab, setActiveTab] = useState("Recommended for you");
   const [searchActive, setSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const pageScrollRef = useRef<HTMLDivElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
@@ -341,6 +343,7 @@ export default function OpalPage() {
         w="full"
         style={{ backgroundColor: 'var(--opal-bg-page)', overflow: 'hidden', minHeight: 0 }}
       >
+        {modalElement}
         <OpalChatView
           variant="home"
           messages={messages}
@@ -376,6 +379,7 @@ export default function OpalPage() {
           activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
           disabled={isResuming}
           onSubmitBlocked={triggerResumeHighlight}
+          contextualActionCard={atlassianActionCard}
         />
       </Box>
     );
@@ -383,6 +387,7 @@ export default function OpalPage() {
 
   return (
     <Box ref={pageScrollRef} style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}>
+      {modalElement}
 
       {/* Shared landing: heading + OpalInput + chips + dropdown */}
       <OpalLanding
@@ -464,6 +469,7 @@ export default function OpalPage() {
           </div>
         }
         onSuggestionClick={handleSuggestionClick}
+        contextualActionCard={atlassianActionCard}
       />
 
     {/* Scrollable agent library section */}

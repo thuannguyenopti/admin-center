@@ -17,10 +17,12 @@ export const Table = ({
 	children,
 	style,
 	className,
+	tableStyle,
 }: {
 	children: ReactNode;
 	style?: React.CSSProperties;
 	className?: string;
+	tableStyle?: React.CSSProperties;
 }) => {
 	return (
 		<div
@@ -31,7 +33,7 @@ export const Table = ({
 				...style,
 			}}
 		>
-			<table className="border-collapse w-full">{children}</table>
+			<table className="border-collapse w-full" style={tableStyle}>{children}</table>
 		</div>
 	);
 };
@@ -83,6 +85,7 @@ export const Th = ({
 	sortDirection,
 	onSort,
 	tooltip,
+	...rest
 }: {
 	children?: ReactNode;
 	align?: any;
@@ -92,16 +95,18 @@ export const Th = ({
 	sortDirection?: "asc" | "desc" | null;
 	onSort?: () => void;
 	tooltip?: string;
+	[key: string]: any;
 }) => {
 	const interactive = !!(onSort || onClick);
 	return (
 		<th
-			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
+			className={`relative text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
 			style={{
 				textAlign: align,
 				...style,
 			}}
 			onClick={onSort || onClick}
+			{...rest}
 		>
 			<span className="inline-flex items-center gap-1">
 				{children}

@@ -117,6 +117,7 @@ export function renderWithMentions(text: string) {
 type OpalLandingProps = {
   /** The OpalInput element, configured and owned by the parent page. */
   inputSlot: React.ReactNode;
+  contextualActionCard?: React.ReactNode;
   /** Optional slot rendered between the heading and the input (e.g. View Agents pills). */
   topSlot?: React.ReactNode;
   /**
@@ -127,7 +128,7 @@ type OpalLandingProps = {
   onSuggestionClick: (suggestion: string) => void;
 };
 
-export function OpalLanding({ inputSlot, topSlot, onSuggestionClick }: OpalLandingProps) {
+export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSuggestionClick }: OpalLandingProps) {
   const [activePill, setActivePill] = useState<string | null>(null);
   const [hoveredPill, setHoveredPill] = useState<string | null>(null);
   const [focusedChipIndex, setFocusedChipIndex] = useState(-1);
@@ -255,6 +256,20 @@ export function OpalLanding({ inputSlot, topSlot, onSuggestionClick }: OpalLandi
       >
         {inputSlot}
       </Box>
+
+      {contextualActionCard && (
+        <Box
+          style={{
+            position: "relative",
+            zIndex: 1,
+            width: "100%",
+            maxWidth: "800px",
+            marginBottom: "20px",
+          }}
+        >
+          {contextualActionCard}
+        </Box>
+      )}
 
       {/* Quick action chips */}
       <Box
