@@ -49,7 +49,10 @@ export function getEnabledGroups(
 export function getUsedAgentsInLocation(menu: LocationMenu): Set<string> {
 	const usedAgents = new Set<string>();
 	menu.groups.forEach((group) => {
-		group.agents.forEach((agentId) => usedAgents.add(agentId));
+		group.agents.forEach((agent) => {
+			const agentId = typeof agent === "string" ? agent : agent.id;
+			usedAgents.add(agentId);
+		});
 	});
 	return usedAgents;
 }
@@ -90,7 +93,7 @@ export function getTotalAgentCount(config: OpalConfiguration): number {
 	const allAgents = new Set<string>();
 	config.locations.forEach((loc) => {
 		loc.groups.forEach((group) => {
-			group.agents.forEach((agentId) => allAgents.add(agentId));
+			group.agents.forEach((agent) => allAgents.add(agent.id));
 		});
 	});
 	return allAgents.size;
