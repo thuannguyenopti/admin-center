@@ -6,7 +6,7 @@ import type { ContentType, Page } from "@/app/db/initialData";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import { convertCmpPropertyToCms } from "@/app/lib/contentTypeMigration";
 import { PropertyRenderer } from "@/app/components/property-renderers";
-import type { Outline } from "@/app/components/vb/PreviewCanvas";
+import type { Outline } from "@/app/db/initialData";
 import ScaledWebsitePreview from "@/app/components/ScaledWebsitePreview";
 import type { AssetItem, TaskArticle } from "../../types";
 import { recommendationAssets } from "../../constants";

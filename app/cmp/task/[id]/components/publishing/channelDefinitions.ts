@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 export type ChannelDefinition = {
 	id: string;
 	name: string;
