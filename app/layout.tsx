@@ -1,6 +1,8 @@
 "use client";
+import { useEffect } from "react";
 import Template from "./components/template";
 import "./globals.css";
+import Script from "next/script";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
 import {OpalGenerationProvider} from "@/app/context/OpalGenerationContext";
@@ -44,6 +46,22 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.location.hash.includes("figmacapture=")) {
+			return;
+		}
+
+		if (document.querySelector("script[data-figma-capture-script]")) {
+			return;
+		}
+
+		const script = document.createElement("script");
+		script.src = "https://mcp.figma.com/mcp/html-to-design/capture.js";
+		script.async = true;
+		script.setAttribute("data-figma-capture-script", "true");
+		document.head.appendChild(script);
+	}, []);
+
 	const path = usePathname() ?? "";
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
@@ -424,6 +442,13 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
+				label: "Artifacts",
+				url: "/opal/artifacts",
+				highlight: "/opal/artifacts",
+				icon: <CMPLibraryIcon />,
+				hidePageHeader: true,
+			},
+			{
 				label: "Context",
 				url: "/opal/instructions",
 				highlight: "/opal/instructions",
@@ -437,23 +462,10 @@ export default function RootLayout({
 				),
 			},
 			{
-				label: "Prompt Library",
-				url: "/opal/prompt-library",
-				highlight: "/opal/prompt-library",
-				icon: (
-					<img
-						src="/nav_icons/grid-round-2-plus.svg"
-						alt="Prompt Library"
-						width={20}
-						height={20}
-					/>
-				),
-			},
-			{
-				label: "Notifications",
+				label: "Inbox",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
-				icon: <img src="/nav_icons/inbox.svg" alt="Notifications" width={20} height={20} />,
+				icon: <img src="/nav_icons/inbox.svg" alt="Inbox" width={20} height={20} />,
 				customLayout: true,
 			},
 			{
@@ -474,17 +486,11 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Tools",
-				url: "/opal/tools",
-				highlight: "/opal/tools",
-				icon: (
-					<img
-						src="/nav_icons/screwdriver-wrench.svg"
-						alt="Tools"
-						width={20}
-						height={20}
-					/>
-				),
+				label: "Connectors",
+				url: "/opal/connectors",
+				highlight: "/opal/connectors",
+				icon: <img src="/nav_icons/grid-2-plus.svg" alt="Connectors" width={20} height={20} />,
+				hidePageHeader: true,
 			},
 			{
 				label: "Settings",
@@ -605,6 +611,7 @@ export default function RootLayout({
 				/>
 			</head>
 			<body suppressHydrationWarning>
+				<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>

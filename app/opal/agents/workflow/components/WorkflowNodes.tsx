@@ -1,7 +1,6 @@
 import { Handle, Position, NodeProps, useReactFlow, MarkerType, BaseEdge, getSmoothStepPath, EdgeLabelRenderer, type EdgeProps } from '@xyflow/react';
 import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type BoxProps } from '@optiaxiom/react';
-import { IconPlus, IconHome, IconCode } from '@tabler/icons-react';
-import { IconPlay, IconEllipsisStroke, IconSplit } from '@optimizely/axiom-icons';
+import { IconPlay, IconEllipsisStroke, IconSplit, IconPlus, IconHouse as IconHome, IconCode } from '@optimizely/axiom-icons';
 import { ReactNode } from 'react';
 
 // Common wrapper for nodes to handle selection state and basic styling

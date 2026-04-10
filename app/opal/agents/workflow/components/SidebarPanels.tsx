@@ -30,15 +30,6 @@ import {
 import { Input } from "@/app/components/Input";
 import { getSelectValueInOptions } from "@/utils/selectValue";
 import {
-    IconX,
-    IconDots,
-    IconTrash,
-    IconPlus,
-    IconInfoCircle,
-    IconHelp,
-    IconSearch,
-} from "@tabler/icons-react";
-import {
     IconEnvelope,
     IconSplit,
     IconHandPointer,
@@ -46,14 +37,17 @@ import {
     IconCodeBranch,
     IconCalendar,
     IconSparkles,
-    IconFileImport,
     IconXmark,
-} from "@optimizely/axiom-icons";
-import {
+    IconEllipsisSolid,
+    IconTrashCan,
+    IconPlus,
+    IconCircleInfo,
+    IconCircleQuestion as IconHelp,
+    IconSearch,
     IconChevronDown,
     IconChevronRight,
     IconCode,
-} from "@tabler/icons-react";
+} from "@optimizely/axiom-icons";
 import { useReactFlow, MarkerType } from "@xyflow/react";
 import { useState, useEffect } from "react";
 
@@ -143,7 +137,7 @@ const PanelContainer = ({
                     {headerAction}
                     {!hideCloseButton && (
                         <Button
-                            icon={<IconX size={16} />}
+                            icon={<IconXmark size={16} />}
                             appearance="subtle"
                             aria-label="Close"
                             size="sm"
@@ -170,7 +164,7 @@ const PanelContainer = ({
                 flex="1"
             >
                 {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
-                {!hideMenuButton && <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />}
+                {!hideMenuButton && <Button appearance="subtle" icon={<IconEllipsisSolid size={16} />} aria-label="More options" />}
                 <Button appearance="primary" onClick={onSave}>Apply</Button>
             </Box>
         </DetailsPanelFooter>
@@ -212,7 +206,7 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
                         <Box style={{ flex: 2 }}>
                             <Input placeholder="Enter filter criteria" />
                         </Box>
-                        <IconTrash size={16} className="cursor-pointer text-fg-tertiary hover:text-fg-default" />
+                        <IconTrashCan size={16} className="cursor-pointer text-fg-tertiary hover:text-fg-default" />
                     </Box>
                 </Field>
             </Box>
@@ -746,7 +740,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                     </Tabs>
 
                     <Box bg="bg.information.subtle" p="12" rounded="md" display="flex" gap="12">
-                        <IconInfoCircle size={20} className="text-fg-information" />
+                        <IconCircleInfo size={20} className="text-fg-information" />
                         <Box>
                             <Text fontWeight="600" fontSize="sm">Preview</Text>
                             <Text fontSize="sm" color="fg.secondary">{getPreviewText()}</Text>
@@ -937,7 +931,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
             </DetailsPanelBody>
             <DetailsPanelFooter>
                 <Box display="flex" justifyContent="flex-end" gap="8" flex="1">
-                    <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />
+                    <Button appearance="subtle" icon={<IconEllipsisSolid size={16} />} aria-label="More options" />
                     <Button appearance="primary" onClick={onClose}>Done</Button>
                 </Box>
             </DetailsPanelFooter>

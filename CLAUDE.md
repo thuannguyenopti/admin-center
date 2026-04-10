@@ -1,70 +1,171 @@
-# Axiom Play — AI Assistant Instructions
+# CLAUDE.md
 
-## Design System (MANDATORY)
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Read **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** before writing any UI code. It contains all tokens, components, colors, and rules for the Optiaxiom design system. Everything in one place.
+## Commands
 
-**Quick rules:**
-- Always use `@optiaxiom/react` components — never raw HTML for product UI
-- Always use spacing tokens (`p="16"`, `gap="12"`) — never arbitrary px
-- Always use semantic color tokens (`bg.default`, `fg.secondary`) — never hex
-- Exception: `app/components/vb/blocks/` uses raw HTML + Tailwind (customer website, not CMS UI)
-- Use `[data-theme="dark"]` for dark mode — never `@media (prefers-color-scheme: dark)`
-
-## MCP Tools
-
-An **Axiom MCP server** (`@optiaxiom/mcp`) is available. Use it to look up component props, examples, and API details when the docs in DESIGN_SYSTEM.md aren't enough.
-
-## Tech Stack
-
-- **Framework**: Next.js (App Router), TypeScript, React
-- **Package manager**: Yarn (`corepack enable` if missing)
-- **Dev server**: `yarn dev`
-- **State**: `app/usePersistentState.js` for localStorage-backed prototype state. Check `isHydrated` before rendering.
-- **Icons**: `@tabler/icons-react` (primary), `@fortawesome` (secondary)
-
-## Project Structure
-
-```
-app/
-├── components/     # Shared components (wrappers around Axiom)
-├── cmp/            # Content Marketing Platform pages
-├── cms/            # CMS (content management) pages
-├── opal/           # AI agent interfaces
-├── components/vb/  # Visual Builder (uses raw HTML, NOT Axiom)
-├── context/        # React contexts (Layout, Opal, etc.)
-├── hooks/          # Custom hooks (useTheme, useOpalState, etc.)
-└── db/             # Mock data (initialData.ts, mockData.ts)
+```bash
+yarn dev          # Start development server at http://localhost:3000 (Turbopack)
+yarn build        # Production build (runs validate + bundle-sources first)
+yarn preview      # Build + serve production bundle locally — mirrors Vercel exactly
+yarn start        # Serve a previously built production bundle
+yarn lint         # ESLint via Next.js
 ```
 
-## No Monolithic Files (MANDATORY)
+> **`yarn dev` vs `yarn preview`**: `yarn dev` uses Turbopack and may render Axiom styles differently from production. Run `yarn preview` to see exactly what Vercel will serve before pushing.
 
-**On every new conversation**, before writing code:
-1. Check if the files you're about to touch are monolithic (300+ lines, multiple concerns in one file)
-2. If so, **split them first**, then make your changes in the correct new file
+Package manager is **Yarn 4** (Corepack). Use `yarn` not `npm`. Run `corepack enable` (requires sudo) if `yarn dev` fails. To install with auth-gated registry: `yarn install:auth` (uses `.env`). Fallback without Corepack: `node_modules/.bin/next dev`.
 
-Never create or extend monolithic files. See the full splitting guide in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md#code-architecture-no-monoliths).
+## ⚠️ Critical: Build Script & Webpack Rules
 
-## Layout
+**NEVER add `--webpack` or `--turbopack` to the `next build` command.** Forcing either bundler mode breaks Next.js's internal CSS extraction pipeline for `transpilePackages: ["@optiaxiom/react"]`, causing all Axiom component styles (borders, fills, backgrounds) to be silently stripped from the Vercel production build. The correct build command is simply `next build` with no bundler flags.
 
-The shared `app/components/template.tsx` provides the sidebar + content grid. Pages access layout controls via `useLayout()` from `app/context/LayoutContext`.
+**NEVER add custom `webpack(config)` SVG rule mutations** (pushing to `config.module.rules`, wrapping/excluding asset rules). Mutating the raw webpack rules array breaks the same CSS extraction. For SVG support:
+- Dev (Turbopack): use the `turbopack.rules` block in `next.config.ts` — already configured
+- Production: SVGs in `public/` are served as static assets; React SVG components in `app/cmp/assets/` use SVGR via import — no extra webpack rule needed
 
-## Git & Deployment Workflow
+If Axiom component styles (button borders, input fills, etc.) are missing in production but work locally, the root cause is almost always one of the above.
 
-**Repo**: `Ben-Holme/axiom-play` on GitHub
-**Hosting**: Vercel (auto-deploys from GitHub)
-**Live URL**: https://axiom-play-lac.vercel.app
+## Architecture
 
-### How to ship changes:
-1. **Commit** to your feature branch
-2. **Push** to `origin`
-3. **Create a PR** against `main` using `gh pr create`
-4. **GitHub runs checks** — wait for them to pass
-5. **Merge via GitHub** (not locally) — Vercel auto-deploys to production on merge to `main`
-6. Preview deploys happen automatically for every PR branch
+This is a **multi-product UI prototype** built with Next.js 16 (App Router), React 19, TypeScript, and the Optimizely Axiom design system. It renders several independent product areas as a single Next.js app:
 
-### Rules:
-- **Never push directly to `main`** — always go through a PR
-- **Never merge locally** — merge via GitHub so checks run first
-- **Always verify build** (`yarn build` or `npx next build`) before pushing
-- The team reviews PRs on GitHub; Vercel deploys the preview automatically per branch
+| Route prefix | Product |
+|---|---|
+| `/cms` | Optimizely CMS |
+| `/cmp` | Content Marketing Platform |
+| `/opal` | Opal AI assistant |
+| `/connect-platform` | Connect Platform |
+| `/fe-hosting` | Frontend Hosting |
+
+### Navigation & Layout
+
+**`app/layout.tsx`** is a client component that defines the entire sidebar navigation structure for each product as a `structure` object keyed by the first path segment. It passes the matching nav tree to `app/components/template.tsx`.
+
+**`app/components/template.tsx`** renders the shell: primary sidebar (`Sidebar`/`Nav`), optional secondary sidebar (VT drill-down or Content Manager sidebar), a scrollable main content area, an optional footer bar, and the Opal slide-out panel. Pages get `px="32" py="24"` padding and an auto-generated `<Heading>` page title by default.
+
+**`customLayout: true`** on a nav item bypasses the padding and page header — required for full-bleed pages (e.g., Opal chat, CMS Edit). Full-width table pages instead use negative margins: `-m-6 -mt-[72px]`.
+
+**Secondary sidebar drill-down (VT)** — when a nav item has nested `children` objects with a `title` and `children` array, clicking sub-items causes `VT.tsx` to slide in a sub-panel. Up to 4 levels deep (lvl2–lvl4).
+
+### Design System
+
+Full reference: **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** — read before writing any UI code.
+
+All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements if an Axiom equivalent exists.
+
+**Exception**: `app/components/vb/blocks/` uses raw HTML + Tailwind (Visual Builder renders customer website content, not product UI).
+
+**Critical rules:**
+- Spacing tokens only: `"0" "2" "4" "6" "8" "10" "12" "16" "20" "24" "32" "40" "48" "56" "64" "80"` — never arbitrary px
+- Semantic color tokens: `fg.*`, `bg.*`, `border.*` — never hex values
+- Border radius: `rounded` prop (not `borderRadius`); shadow: `shadow` prop (not `boxShadow`)
+- `Input`/`SearchInput` only support `size="md"` (default), `"lg"`, `"xl"` — never `"sm"`
+- Wrap inputs with `<Field label="...">` — never manual `<Text>` labels
+- Dark mode: use `[data-theme="dark"]` selector — never `@media (prefers-color-scheme: dark)`
+
+### Icons
+
+**ALWAYS use `@optimizely/axiom-icons` — NEVER `@tabler/icons-react` in product UI code.**
+
+- **`@optimizely/axiom-icons`** — the real Axiom icons package (FontAwesome Pro Light). This is the ONLY icon source for all product UI. Import from it normally: `import { IconAgent, IconSparkles } from "@optimizely/axiom-icons"`.
+- **`app/lib/axiom-icons.tsx`** — a bridge shim that re-exports the real Axiom icons and provides Tabler fallbacks only for icons not yet in the Axiom package. The shim is aliased via `next.config.ts` so `@optimizely/axiom-icons` always works.
+- **`@tabler/icons-react`** — only allowed in `app/lib/axiom-icons.tsx` for fallback mappings. Never import Tabler directly in any other file.
+- **CMP custom SVG icons** — in `app/cmp/assets/`, imported as React components (SVGR), use `fill="currentColor"`
+
+**When adding a new icon**: first check if it exists in `@optimizely/axiom-icons`. If not, add a Tabler fallback entry to `app/lib/axiom-icons.tsx`.
+
+### Key Patterns
+
+**`usePersistentState(key, defaultValue)`** — localStorage-backed state at `app/usePersistentState.js`. Returns `[state, setState, isHydrated]`. Always check `isHydrated` before rendering hydration-sensitive UI.
+
+**`useLayout()`** — from `app/context/LayoutContext.tsx`. Exposes `asideContent`, `footerContent`, `hidePageHeader`, `opalPanelControls` (including `launchPrompt`), and `codePanelControls`. Use `setAsideContent` / `setFooterContent` from a page component to inject into the template's aside panel or sticky footer bar.
+
+**`useOpalContext()`** — from `app/context/OpalContext.tsx`. Provides context-aware data (current page, selection, etc.) for the Opal AI panel.
+
+**Providers stack**: `LayoutProvider` → `BrandToneProvider` → `PreflightProvider` → `OpalContextProvider` → `ContentManagerLayoutProvider` (CMS content only) → `FilterPanelProvider` (CMS content only).
+
+### MCP Servers
+
+Configured in `.mcp.json`:
+- **`axiom`** (`@optiaxiom/mcp`) — fetch Axiom component docs and valid prop values
+- **`figma`** — Figma design context
+- **`coda`** — Coda docs integration
+- **`optimizely`** — Optimizely project data
+
+### Data Visualization Colors
+
+Use the shared data-viz palette (see `app/DATA_VISUALIZATION_COLORS.md`) for charts, legends, heatmaps. Do not use Axiom UI tokens (`bg.*`, `fg.*`) for data-encoding. Live reference: `/data-viz-colors`.
+
+## No Monolithic Files
+
+Before writing code, check if files you're touching are monolithic (300+ lines, multiple concerns). If so, split them first. See [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) for the splitting guide.
+
+## Git & Deployment
+
+**Repo**: `Ben-Holme/axiom-play` | **Live**: https://axiom-play-lac.vercel.app
+
+- **Never push directly to `main`** — always use a PR via `gh pr create`
+- **Never merge locally** — merge via GitHub so CI checks run first
+- Vercel auto-deploys `main` to production; preview deploys on every PR branch
+- Verify build (`yarn build`) before pushing
+
+## Efficient Batch Workflow
+
+To minimize tokens and round-trips, always batch related changes into a single request using this format:
+
+```
+1. [FileName.tsx ~line N] description of change
+2. [FileName.tsx ~line N] description of change
+3. commit: "message"
+```
+
+### Execution rules
+1. **Grep first** — find exact location before reading
+2. **Read in sections** — use `offset`/`limit` on large files (setup/page.tsx is 2700+ lines)
+3. **Group by file** — do all edits to a file before moving to the next
+4. **Never re-read** a section already in context
+5. **One commit** per batch covering all changed files
+
+### Recurring UI patterns (copy-paste ready)
+
+**Field header row** (label left, action right):
+```tsx
+<Box display="flex" justifyContent="space-between" alignItems="center" mb="8">
+  <Text fontWeight="400" fontSize="md">Label</Text>
+  <Button appearance="subtle" size="sm" icon={<IconPlus />}>Add Item</Button>
+</Box>
+```
+
+**Info tooltip next to label:**
+```tsx
+<Tooltip delayDuration={300} content="Explanation">
+  <span style={{ display: "inline-flex" }}>
+    <IconCircleQuestion size={14} color="var(--ax-colors-fg-tertiary)" />
+  </span>
+</Tooltip>
+```
+
+**Opal orb in a button:**
+```tsx
+<img src="/opal-orb.png" alt="" width={13} height={13} style={{ display: "inline-block", marginRight: "4px", verticalAlign: "middle" }} />
+```
+
+**Vertical divider between inline buttons:**
+```tsx
+<Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+```
+
+**Dropdown separator:**
+```tsx
+<Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+```
+
+### Key agent files (opal/agents area)
+| File | Lines | Notes |
+|---|---|---|
+| `app/opal/agents/setup/page.tsx` | ~2700 | Read in 50–80 line sections |
+| `app/opal/agents/components/NewAgentDialog.tsx` | ~600 | Agent builder wizard |
+| `app/opal/agents/page.tsx` | ~400 | Agents listing |
+| `app/opal/agents/setup/components/AgentAssistantPanel.tsx` | ~1900 | Guide/assistant panel |
+| `app/opal/agents/setup/components/EnhancePopover.tsx` | ~150 | Enhance popup |

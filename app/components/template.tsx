@@ -35,6 +35,11 @@ import {useOpalState} from "@/app/hooks/useOpalState";
 import {useOpalHistory} from "@/app/hooks/useOpalHistory";
 import {CodePanel} from "./CodePanel";
 
+type PendingOpalPrompt = {
+	chatId: string;
+	prompt: string;
+};
+
 function TemplateContent({
 	children,
 	structure,
@@ -48,6 +53,8 @@ function TemplateContent({
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
+	const [pendingOpalPrompt, setPendingOpalPrompt] = useState<PendingOpalPrompt | null>(null);
+	const [opalContextChip, setOpalContextChip] = useState<{ label: string; content: string } | null>(null);
 	const isOpalStudio = path.startsWith("/cmp/opal-studio");
 
 	// Code panel state
@@ -92,6 +99,16 @@ function TemplateContent({
 		removeMessage,
 	} = useOpalState({activeChatId: activeChat, opalContext});
 
+	useEffect(() => {
+		if (!pendingOpalPrompt || isLoading) return;
+		if (activeChat !== pendingOpalPrompt.chatId) return;
+		if (messages.length > 0) return;
+
+		setInputValue(pendingOpalPrompt.prompt);
+		void sendMessage(pendingOpalPrompt.prompt);
+		setPendingOpalPrompt(null);
+	}, [activeChat, isLoading, messages.length, pendingOpalPrompt, sendMessage, setInputValue]);
+
 	const closeOpalWithRouteAwareness = () => {
 		if (isOpalStudio) {
 			const returnTo =
@@ -112,15 +129,30 @@ function TemplateContent({
 			openPanel: openOpal,
 			togglePanel: toggleOpal,
 			closePanel: closeOpal,
+			createNewChat,
 			clearHistory,
-			setInputValue,
 			addMessage,
 			updateMessage,
 			removeMessage,
+			setInputValue,
+			sendMessage,
 			setInputDisabled,
+			launchPrompt: (prompt: string) => {
+				const trimmed = prompt.trim();
+				if (!trimmed) return;
+
+				const chatId = createNewChat();
+				openOpal();
+				setPendingOpalPrompt({chatId, prompt: trimmed});
+			},
+			launchWithContext: (label: string, content: string) => {
+				createNewChat();
+				openOpal();
+				setOpalContextChip({ label, content });
+			},
 		});
 		return () => setOpalPanelControls(null);
-	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, clearHistory, setInputValue, addMessage, updateMessage, removeMessage, setInputDisabled]);
+	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, createNewChat, clearHistory, addMessage, updateMessage, removeMessage, setInputValue, sendMessage, setInputDisabled]);
 
 	// Provide Code panel controls through LayoutContext
 	useEffect(() => {
@@ -143,7 +175,7 @@ function TemplateContent({
 
 	const menuItems = Array.isArray(structure) ? structure : [];
 	const highlight1 = menuItems
-		.filter((item: any) => item?.highlight != null && path.includes(item.highlight))
+		.filter((item: any) => item?.highlight != null && (item.exact ? path === item.highlight : path.includes(item.highlight)))
 		.sort((a: any, b: any) => b.highlight.length - a.highlight.length)[0];
 	const isCmpTaskDetail = path.startsWith("/cmp/task/");
 	const routeHighlight = isCmpTaskDetail
@@ -479,6 +511,9 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 				createNewChat={createNewChat}
 				deleteChat={deleteChat}
 				selectChat={selectChat}
+			contextChip={opalContextChip?.label ?? null}
+			contextContent={opalContextChip?.content ?? null}
+			onContextChipRemove={() => setOpalContextChip(null)}
 			/>
 			<CodePanel
 				isOpen={isCodePanelOpen}

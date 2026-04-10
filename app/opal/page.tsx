@@ -3,12 +3,19 @@
 import { Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { IconAgent } from "@optimizely/axiom-icons";
+import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
-import { OpalChatView } from "@/app/components/Opal/OpalChatView";
-import { OpalLanding } from "@/app/components/Opal/OpalLanding";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
+
+const OpalChatView = dynamic(
+  () => import("@/app/components/Opal/OpalChatView").then((mod) => mod.OpalChatView)
+);
+const OpalLanding = dynamic(
+  () => import("@/app/components/Opal/OpalLanding").then((mod) => mod.OpalLanding)
+);
 
 export default function OpalPage() {
   const opalContext = useOpalContext();
@@ -23,6 +30,7 @@ export default function OpalPage() {
     switchVersion,
     addMessage,
   } = opalContext.chatState;
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
 
   const {
     agentSession,
@@ -70,6 +78,7 @@ export default function OpalPage() {
         w="full"
         style={{ backgroundColor: 'var(--opal-bg-page)', overflow: 'hidden', minHeight: 0 }}
       >
+        {modalElement}
         <OpalChatView
           variant="home"
           messages={messages}
@@ -105,6 +114,7 @@ export default function OpalPage() {
           activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
           disabled={isResuming}
           onSubmitBlocked={triggerResumeHighlight}
+          contextualActionCard={atlassianActionCard}
         />
       </Box>
     );
@@ -113,6 +123,7 @@ export default function OpalPage() {
   // Landing state
   return (
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
+      {modalElement}
       <OpalLanding
         topSlot={
           <Box
@@ -189,6 +200,7 @@ export default function OpalPage() {
             onSubmitBlocked={triggerResumeHighlight}
           />
         }
+        contextualActionCard={atlassianActionCard}
         onSuggestionClick={handleSuggestionClick}
       />
     </Box>

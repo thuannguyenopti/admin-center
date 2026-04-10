@@ -1,10 +1,13 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Button,
-  Switch,
+  Menu,
+  MenuContent,
+  MenuTrigger,
   Popover,
   PopoverAnchor,
   PopoverContent,
@@ -12,18 +15,26 @@ import {
   ListboxGroup,
   ListboxItem,
   ListboxLabel,
+  type MenuOption,
 } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { IconMicrophone } from "@tabler/icons-react";
 import {
   IconAgent,
-  IconFileArrowUp,
   IconArrowUp,
+  IconBook,
   IconCircleStop,
-  IconXmark
+  IconFolderImage,
+  IconGrid2Plus,
+  IconPlus,
+  IconUpload,
+  IconXmark,
 } from "@/app/lib/axiom-icons";
-import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect } from "react";
+import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
+import { QUICK_ACTIONS } from "./OpalLanding";
+import { CONNECTORS } from "@/app/opal/tools/data/connectors";
+import { ConnectorAvatar } from "@/app/opal/tools/components/ConnectorAvatar";
 
 export type MentionableAgent = {
   id: string;
@@ -48,6 +59,9 @@ type OpalInputProps = {
   onMentionSelect?: (agent: MentionableAgent) => void;
   /** Called when the user tries to submit but is blocked (e.g. during resume flow) */
   onSubmitBlocked?: () => void;
+  contextChip?: string | null;
+  contextContent?: string | null;
+  onContextChipRemove?: () => void;
 };
 
 export function OpalInput({
@@ -64,11 +78,18 @@ export function OpalInput({
   mentionableAgents = [],
   onMentionSelect,
   onSubmitBlocked,
+  contextChip,
+  contextContent,
+  onContextChipRemove,
 }: OpalInputProps) {
+  const featuredConnectorMenuIds = useMemo(
+    () => ["figma", "google-docs", "google-sheets", "google-slides"],
+    []
+  );
+  const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [dropdownWidth, setDropdownWidth] = useState<number | undefined>();
-  const [contextChip, setContextChip] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -103,6 +124,16 @@ export function OpalInput({
     }
   }, [isLoading]);
 
+  // Auto-focus textarea when a context chip is added (e.g. via "Ask Opal" from selection tooltip)
+  const prevContextChipRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const prev = prevContextChipRef.current;
+    prevContextChipRef.current = contextChip;
+    if (contextChip && !prev) {
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    }
+  }, [contextChip]);
+
   // Auto-resize textarea based on content — useLayoutEffect fires synchronously
   // before paint, so heights are always correct (including reset after send)
   useLayoutEffect(() => {
@@ -118,8 +149,9 @@ export function OpalInput({
       // Offset 54px = Padding (8+8=16) + Margin (2) + Submit Button (32) + Extra Gap (4)
       const offset = 54;
       // Home variant starts taller (4-row default like Ana's design)
-      const minTextareaHeight = variant === 'home' ? 90 : 34;
-      const minContainerHeight = variant === 'home' ? 144 : 88;
+      // Context chip variant starts taller so the input is clearly in view
+      const minTextareaHeight = variant === 'home' ? 90 : contextChip ? 72 : 34;
+      const minContainerHeight = variant === 'home' ? 144 : contextChip ? 126 : 88;
       const maxContainerHeight = window.innerHeight * 0.5; // 50vh
 
       const targetTextareaHeight = Math.max(naturalHeight, minTextareaHeight);
@@ -141,7 +173,7 @@ export function OpalInput({
       container.style.boxSizing = 'border-box';
       textarea.style.boxSizing = 'border-box';
     }
-  }, [value]);
+  }, [value, contextChip]);
 
   // Filter mentionable agents based on text after @
   const mentionQuery = value.startsWith('@') ? value.slice(1).toLowerCase() : '';
@@ -173,7 +205,11 @@ export function OpalInput({
   const triggerSend = () => {
     if (disabled) { onSubmitBlocked?.(); return; }
     if (!hasValue || isLoading) return;
-    onSend(value.trim());
+    const message = contextContent
+      ? `${value.trim()}\n\nContext — Selected text in Prompt:\n\n"${contextContent}"`
+      : value.trim();
+    onSend(message);
+    onContextChipRemove?.();
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -237,18 +273,110 @@ export function OpalInput({
     setTimeout(() => textareaRef.current?.focus(), 50);
   };
 
-  const removeContext = () => {
-    setContextChip(null);
-  };
-
-  const handleAddContext = () => {
-    setContextChip('Mosey Bank / Mobile Handoff'); // Mock context
-  };
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [featuredConnectorIds, setFeaturedConnectorIds] = useState<string[]>([
+    "google-docs",
+    "google-sheets",
+    "google-slides",
+  ]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  const featuredConnectors = useMemo(
+    () =>
+      featuredConnectorMenuIds
+        .map((connectorId) => CONNECTORS.find((connector) => connector.id === connectorId))
+        .filter((connector): connector is NonNullable<typeof connector> => Boolean(connector)),
+    [featuredConnectorMenuIds]
+  );
+
+  const addActionMenuOptions = useMemo<MenuOption[]>(
+    () => [
+      {
+        addon: <IconUpload size={16} />,
+        group: { hidden: true, label: "Primary actions", priority: 2 },
+        key: "upload-device",
+        label: "Upload from device",
+      },
+      {
+        addon: <IconFolderImage size={16} />,
+        group: { hidden: true, label: "Primary actions", priority: 2 },
+        key: "add-dam",
+        label: "Add from DAM",
+      },
+      {
+        addon: <IconGrid2Plus size={16} />,
+        group: { hidden: true, label: "Primary actions", priority: 2, separator: true },
+        key: "connector-submenu",
+        label: "Connectors",
+        subOptions: [
+          ...featuredConnectors.map<MenuOption>((connector) => ({
+            addon: <ConnectorAvatar connector={connector} size={16} framed={false} />,
+            group: { label: "Connectors", priority: 2 },
+            key: connector.id,
+            label: connector.name,
+            selected: featuredConnectorIds.includes(connector.id),
+            switch: true,
+            execute: () => {
+              setFeaturedConnectorIds((prev) =>
+                prev.includes(connector.id)
+                  ? prev.filter((id) => id !== connector.id)
+                  : [...prev, connector.id]
+              );
+            },
+          })),
+          {
+            group: { hidden: true, label: "Connectors footer", priority: 1, separator: true },
+            key: "view-all-connectors",
+            label: "Browse all connectors",
+            execute: () => {
+              router.push("/opal/connectors?tab=connectors");
+            },
+          },
+        ],
+      },
+    ],
+    [featuredConnectors, featuredConnectorIds, router]
+  );
+
+  const agentMenuOptions = useMemo<MenuOption[]>(
+    () =>
+      filteredAgents.slice(0, 8).map((agent) => ({
+        addon: agent.emoji ? (
+          <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
+        ) : (
+          <IconAgent size={16} />
+        ),
+        description: agent.subtitle,
+        group: { label: "Recently used agents", priority: 2 },
+        key: agent.id,
+        label: agent.name,
+        execute: () => handleSelectAgent(agent),
+      })),
+    [filteredAgents]
+  );
+
+  const instructionMenuOptions = useMemo<MenuOption[]>(
+    () =>
+      QUICK_ACTIONS.map<MenuOption>((action) => ({
+        addon: <span style={{ fontSize: 16, lineHeight: 1 }}>{action.emoji}</span>,
+        group: { label: "Instructions", priority: 2 },
+        key: action.label,
+        label: action.label,
+        subOptions: action.suggestions.map<MenuOption>((suggestion) => ({
+          group: { hidden: true, label: `${action.label} suggestions`, priority: 2 },
+          key: suggestion,
+          label: suggestion,
+          execute: () => {
+            onChange(suggestion);
+            setTimeout(() => textareaRef.current?.focus(), 50);
+          },
+        })),
+      })),
+    [onChange]
+  );
 
   const toggleRecording = async () => {
     if (isRecording) {
@@ -427,23 +555,29 @@ export function OpalInput({
         {/* Active Context Chips */}
         {contextChip && (
           <Box display="flex" gap="8" mb="8" flexWrap="wrap">
-            {contextChip && (
+            <Box
+              display="inline-flex"
+              alignItems="center"
+              gap="4"
+              style={{
+                backgroundColor: 'var(--ax-colors-bg-avatar-neutral)',
+                borderRadius: '6px',
+                height: '24px',
+                padding: '2px 6px',
+                flexShrink: 0,
+              }}
+            >
+              <Text fontSize="xs" style={{ color: 'var(--ax-colors-fg-default)', whiteSpace: 'nowrap' }}>{contextChip}</Text>
               <Box
                 display="flex"
                 alignItems="center"
-                gap="4"
-                px="8"
-                py="2"
-                style={{
-                  backgroundColor: 'var(--opal-bg-sidebar)',
-                  borderRadius: '16px',
-                  border: '1px solid var(--opal-border-primary)',
-                }}
+                justifyContent="center"
+                style={{ width: 16, borderRadius: 4, padding: 2, cursor: 'pointer', color: 'var(--ax-colors-fg-secondary)' }}
+                onClick={onContextChipRemove}
               >
-                <Text fontSize="xs" color="fg.secondary">{contextChip}</Text>
-                <IconXmark size={12} style={{ cursor: 'pointer' }} onClick={removeContext} />
+                <IconXmark size={12} />
               </Box>
-            )}
+            </Box>
           </Box>
         )}
 
@@ -487,25 +621,42 @@ export function OpalInput({
         >
           {/* Left Actions */}
           <Box display="flex" gap="4">
-            <Button
-              appearance="subtle"
-              size="sm"
-              icon={<IconAgent size={16} />}
-              aria-label="Agent selection"
-              style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
-              onClick={() => {
-                onChange('@');
-                setTimeout(() => textareaRef.current?.focus(), 0);
-              }}
-            />
-            <Button
-              appearance="subtle"
-              size="sm"
-              icon={<IconFileArrowUp size={16} />}
-              aria-label="Upload file"
-              onClick={handleAddContext}
-              style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
-            />
+            <Menu options={addActionMenuOptions}>
+              <MenuTrigger asChild>
+                <Button
+                  appearance="subtle"
+                  size="sm"
+                  icon={<IconPlus size={16} />}
+                  aria-label="Add content"
+                  style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
+                />
+              </MenuTrigger>
+              <MenuContent align="start" side="top" sideOffset={8} />
+            </Menu>
+            <Menu options={agentMenuOptions}>
+              <MenuTrigger asChild>
+                <Button
+                  appearance="subtle"
+                  size="sm"
+                  icon={<IconAgent size={16} />}
+                  aria-label="Agent selection"
+                  style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
+                />
+              </MenuTrigger>
+              <MenuContent align="start" side="top" sideOffset={8} />
+            </Menu>
+            <Menu options={instructionMenuOptions}>
+              <MenuTrigger asChild>
+                <Button
+                  appearance="subtle"
+                  size="sm"
+                  icon={<IconBook size={16} />}
+                  aria-label="Instruction menu"
+                  style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
+                />
+              </MenuTrigger>
+              <MenuContent align="start" side="top" sideOffset={8} />
+            </Menu>
           </Box>
 
           {/* Right Actions (Mic + Send) */}

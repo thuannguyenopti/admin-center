@@ -21,10 +21,11 @@ import {
 import { Layout } from "@optiaxiom/react/unstable";
 import {
     IconSearch,
-    IconMenu2,
+    IconBars,
     IconGripVertical,
     IconChevronDown,
-} from "@tabler/icons-react";
+    IconSparkles as IconWand,
+} from "@optimizely/axiom-icons";
 import {
     IconAgent,
     IconCodeBranch,
@@ -40,6 +41,7 @@ import {
     IconPlay,
     IconXmark,
     IconEllipsisStroke,
+    IconFileArrowUp,
 } from "@optimizely/axiom-icons";
 import { useState, useRef, useCallback, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -60,7 +62,6 @@ import {
     StepPlaceholderNode,
     ConditionEdge
 } from "./components/WorkflowNodes";
-import BroomIcon from "./icon/BroomIcon";
 import WebhookIcon from "./icon/WebhookIcon";
 import {
     ReactFlow,
@@ -385,7 +386,9 @@ function WorkflowBuilder() {
             { name: "Design Analyst", icon: <IconAgent />, bg: "bg.avatar.purple", type: 'action', outputType: 'JSON' },
             { name: "Hypothesis Creator", icon: <IconCodeBranch />, bg: "bg.avatar.purple", type: 'action', outputType: 'JSON' },
         ],
-        Data: [],
+        Data: [
+            { name: "Import (Upload)", icon: <IconFileArrowUp />, bg: "bg.accent.subtle", type: 'action' },
+        ],
         Inputs: [
             { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
             { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle", type: 'action' },
@@ -798,7 +801,7 @@ function WorkflowBuilder() {
                         <Box display="flex" alignItems="center" gap="16">
                             {(!isViewingExisting || isEditing) && (
                                 <Button
-                                    icon={<IconMenu2 />}
+                                    icon={<IconBars />}
                                     appearance={isLibraryOpen ? "default" : "subtle"}
                                     aria-label="Toggle Component Library"
                                     onClick={() => setIsLibraryOpen(!isLibraryOpen)}
@@ -1041,7 +1044,7 @@ function WorkflowBuilder() {
                                     backgroundColor: isElkEnabled ? 'var(--ax-colors-bg-accent-subtle)' : undefined,
                                 }}
                             >
-                                <BroomIcon size={16} />
+                                <IconWand size={16} />
                             </ControlButton>
                         </Controls>
                         <MiniMap />
