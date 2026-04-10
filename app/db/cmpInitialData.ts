@@ -21,6 +21,7 @@ export type ContentInstance = {
 	modelDisplayName: string;
 	createdAt: string;
 	modifiedAt?: string;
+	taskId?: string; // Which CMP task this instance belongs to
 	fields: Record<string, any>; // Field values conforming to model properties
 };
 
@@ -30,12 +31,22 @@ export const initialCmpContentModels: CmpContentModel[] = [
 		name: "blog_post",
 		displayName: "Blog Post",
 		baseType: "Page",
-		description: "A standard blog post with title, author, content, and metadata",
+		description: "Short-form, author-driven content with publish dates and SEO metadata",
 		properties: [
 			{
-				id: "field-bp-title",
-				name: "title",
-				displayName: "Title",
+				id: "field-bp-hero-image",
+				name: "hero_image",
+				displayName: "Hero Image",
+				type: "libraryAsset",
+				required: false,
+				list: false,
+				localized: false,
+				description: "Main image for the blog post",
+			},
+			{
+				id: "field-bp-headline",
+				name: "headline",
+				displayName: "Headline",
 				type: "text",
 				required: true,
 				list: false,
@@ -43,14 +54,14 @@ export const initialCmpContentModels: CmpContentModel[] = [
 				description: "The main title of the blog post",
 			},
 			{
-				id: "field-bp-author",
-				name: "author",
-				displayName: "Author",
+				id: "field-bp-byline",
+				name: "byline",
+				displayName: "Byline",
 				type: "text",
 				required: true,
 				list: false,
 				localized: false,
-				description: "Name of the blog post author",
+				description: "Author name",
 			},
 			{
 				id: "field-bp-publish-date",
@@ -73,24 +84,25 @@ export const initialCmpContentModels: CmpContentModel[] = [
 				description: "Short summary for previews and SEO",
 			},
 			{
-				id: "field-bp-content",
-				name: "content",
-				displayName: "Content",
+				id: "field-bp-category",
+				name: "category",
+				displayName: "Category",
+				type: "choice",
+				required: false,
+				list: false,
+				localized: false,
+				description: "Blog post category",
+				options: ["News", "Tips", "Guides", "Stories", "Updates"],
+			},
+			{
+				id: "field-bp-body",
+				name: "body",
+				displayName: "Body",
 				type: "richText",
 				required: true,
 				list: false,
 				localized: true,
 				description: "The main blog post content",
-			},
-			{
-				id: "field-bp-featured-image",
-				name: "featured_image",
-				displayName: "Featured Image",
-				type: "libraryAsset",
-				required: false,
-				list: false,
-				localized: false,
-				description: "Main image for the blog post",
 			},
 			{
 				id: "field-bp-tags",
@@ -128,6 +140,16 @@ export const initialCmpContentModels: CmpContentModel[] = [
 		baseType: "Page",
 		description: "Long-form editorial content with sections and rich media",
 		properties: [
+			{
+				id: "field-art-hero-image",
+				name: "hero_image",
+				displayName: "Hero Image",
+				type: "libraryAsset",
+				required: false,
+				list: false,
+				localized: false,
+				description: "Large header image",
+			},
 			{
 				id: "field-art-headline",
 				name: "headline",
@@ -169,14 +191,44 @@ export const initialCmpContentModels: CmpContentModel[] = [
 				description: "Main article content",
 			},
 			{
-				id: "field-art-hero-image",
-				name: "hero_image",
-				displayName: "Hero Image",
-				type: "libraryAsset",
+				id: "field-art-tags",
+				name: "tags",
+				displayName: "Tags",
+				type: "text",
+				required: false,
+				list: true,
+				localized: false,
+				description: "Tags for categorizing the article",
+			},
+			{
+				id: "field-art-excerpt",
+				name: "excerpt",
+				displayName: "Excerpt",
+				type: "longText",
+				required: false,
+				list: false,
+				localized: true,
+				description: "Short summary for listings and SEO",
+			},
+			{
+				id: "field-art-publish-date",
+				name: "publish_date",
+				displayName: "Publish Date",
+				type: "datetime",
 				required: false,
 				list: false,
 				localized: false,
-				description: "Large header image",
+				description: "Publication date",
+			},
+			{
+				id: "field-art-seo-keywords",
+				name: "seo_keywords",
+				displayName: "SEO Keywords",
+				type: "text",
+				required: false,
+				list: true,
+				localized: true,
+				description: "Keywords for search engine optimization",
 			},
 			{
 				id: "field-art-related-articles",
@@ -483,13 +535,15 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-blog-post",
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-20T10:00:00Z",
+		taskId: "5",
 		fields: {
-			title: "Getting Started with Running",
-			author: "Alice Johnson",
+			headline: "Getting Started with Running",
+			byline: "Alice Johnson",
 			publish_date: "2024-03-20",
 			excerpt: "Everything you need to know to start your running journey",
-			content: "<p>Welcome to our comprehensive guide for beginner runners...</p>",
-			featured_image: "https://picsum.photos/seed/running-beginner/800/600",
+			category: "Guides",
+			body: "<p>Welcome to our comprehensive guide for beginner runners...</p>",
+			hero_image: "https://picsum.photos/seed/running-beginner/800/600",
 			tags: ["running", "beginner", "fitness"],
 			seo_keywords: ["running tips", "beginner running", "fitness guide"]
 		}
@@ -499,13 +553,15 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-blog-post",
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-21T14:30:00Z",
+		taskId: "5",
 		fields: {
-			title: "Marathon Training Tips",
-			author: "Bob Smith",
+			headline: "Marathon Training Tips",
+			byline: "Bob Smith",
 			publish_date: "2024-03-21",
 			excerpt: "Expert advice for marathon preparation",
-			content: "<p>Training for a marathon requires dedication and proper planning...</p>",
-			featured_image: "https://picsum.photos/seed/marathon-training/800/600",
+			category: "Tips",
+			body: "<p>Training for a marathon requires dedication and proper planning...</p>",
+			hero_image: "https://picsum.photos/seed/marathon-training/800/600",
 			tags: ["marathon", "training", "advanced"],
 			seo_keywords: ["marathon training", "running tips", "endurance"]
 		}
@@ -515,12 +571,30 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-article",
 		modelDisplayName: "Article",
 		createdAt: "2024-03-22T09:00:00Z",
+		taskId: "1",
 		fields: {
 			headline: "The Science of Running Form",
 			subheadline: "How biomechanics can improve your performance",
 			byline: "Dr. Carol Williams, Sports Scientist",
 			body: "<p>Understanding proper running form is crucial for injury prevention...</p>",
 			hero_image: "https://picsum.photos/seed/running-form-science/800/600",
+			tags: ["Running", "Biomechanics", "Fitness", "Science", "Training"],
+			related_articles: ["ci-blog-1", "ci-blog-2"]
+		}
+	},
+	{
+		id: "ci-article-sponsor",
+		modelId: "cm-article",
+		modelDisplayName: "Article",
+		createdAt: "2024-03-19T08:00:00Z",
+		taskId: "1",
+		fields: {
+			headline: "The runner sponsoring package",
+			subheadline: "Ironman Miami 2026 Triathlon Sponsorship Tiers",
+			byline: "STRIDE Marketing Team",
+			body: "<p>When the whole world is gearing up for the Ironman Miami 2026 triathlon, here's a sneak peek at the Runner Sponsorship Package:</p><p><strong>Title Sponsor: The 'Victory Lap' Package ($5M)</strong></p><ul><li>Headline billing on all event promotions.</li><li>Logo placement on runner jerseys.</li><li>Exclusive naming rights for the finish line.</li><li>VIP access for 50 guests.</li><li>Full-page ad in the event program.</li></ul><p><strong>Platinum Tier: The 'Sprint' Package ($3M)</strong></p><ul><li>Prominent logo placement on event banners.</li><li>Opportunity to set up an interactive booth at the event.</li><li>VIP access for 30 guests.</li><li>Half-page ad in the event program.</li></ul><p><strong>Gold Tier: The 'Marathon' Package ($1.5M)</strong></p><ul><li>Logo placement on event signage.</li><li>Opportunity to distribute promotional materials.</li></ul>",
+			hero_image: "/hero-cycling.jpg",
+			tags: ["Image", "Marathoner", "Millennials", "Triathlon", "Sponsorship", "Cycling", "Fitness", "Endurance", "Event"],
 			related_articles: ["ci-blog-1", "ci-blog-2"]
 		}
 	},
@@ -529,6 +603,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-banner",
 		modelDisplayName: "Banner",
 		createdAt: "2024-03-23T08:00:00Z",
+		taskId: "3",
 		fields: {
 			message: "Spring Sale! Up to 40% off running gear",
 			cta_text: "Shop Now",
@@ -543,6 +618,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelId: "cm-hero-component",
 		modelDisplayName: "Hero Component",
 		createdAt: "2024-03-24T10:00:00Z",
+		taskId: "4",
 		fields: {
 			headline: "Run Faster, Go Further",
 			subheadline: "Introducing the new Stride Elite Runner",

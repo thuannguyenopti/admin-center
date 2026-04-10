@@ -1,4 +1,4 @@
-import { Field, Input, Text } from "@optiaxiom/react";
+import { Field, Input } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const UrlRenderer: React.FC<PropertyRendererProps> = ({
@@ -11,7 +11,7 @@ export const UrlRenderer: React.FC<PropertyRendererProps> = ({
 	if (mode === "readonly") {
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{value ? <a href={value} target="_blank" rel="noopener noreferrer">{value}</a> : "—"}</Text>
+				<Input value={value ?? ""} disabled />
 			</Field>
 		);
 	}

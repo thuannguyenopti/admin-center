@@ -1,4 +1,4 @@
-import { Field, Input, Textarea, Text } from "@optiaxiom/react";
+import { Field, Input, Textarea } from "@optiaxiom/react";
 import { PropertyRendererProps } from "../types";
 
 export const StringRenderer: React.FC<PropertyRendererProps> = ({
@@ -12,14 +12,20 @@ export const StringRenderer: React.FC<PropertyRendererProps> = ({
 	const useTextarea = property.displayAs === "textarea";
 
 	if (mode === "readonly") {
-		// Handle array values (e.g., tags, keywords)
-		const displayValue = Array.isArray(value)
-			? value.join(", ")
-			: (value || "—");
-
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{displayValue}</Text>
+				{useTextarea ? (
+					<Textarea
+						value={value ?? ""}
+						disabled
+						rows={3}
+					/>
+				) : (
+					<Input
+						value={value ?? ""}
+						disabled
+					/>
+				)}
 			</Field>
 		);
 	}

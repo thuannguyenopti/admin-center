@@ -8,6 +8,7 @@ import {
 	socialPackArtboards,
 	operationMeta,
 	defaultCanvasSettings,
+	demoGenerationSteps,
 	type Artboard,
 	type CanvasSettings,
 	type RatioOption,
@@ -16,6 +17,7 @@ import {
 	type EditToolOption,
 	type TextLayoutOption,
 } from "./config";
+import type { PromptHistoryEntry } from "./components/PromptBar";
 import { useTextLayoutStyle } from "./useTextLayoutStyle";
 import { CanvasToolbar } from "./components/CanvasToolbar";
 import { CanvasStage } from "./components/CanvasStage";
@@ -57,8 +59,15 @@ export default function OpalStudioCanvasPage() {
 	const [subheadline, setSubheadline] = useState("");
 	const [selectedReferenceIndexes, setSelectedReferenceIndexes] = useState<number[]>([0, 1]);
 	const [saveState, setSaveState] = useState<"Saved" | "Autosaved">("Saved");
-	const [prompt, setPrompt] = useState(initialPrompt);
+	const [prompt, setPrompt] = useState(
+		initialPrompt || demoGenerationSteps[1]?.prompt || "",
+	);
 	const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>(defaultCanvasSettings);
+	const [isGenerating, setIsGenerating] = useState(false);
+	const [promptHistory, setPromptHistory] = useState<PromptHistoryEntry[]>([
+		{ prompt: initialPrompt || demoGenerationSteps[0].prompt, image: draft },
+	]);
+	const [generationStep, setGenerationStep] = useState(0);
 
 	/* ── Artboard state ── */
 	const defaultArtboard: Artboard = useMemo(() => ({
@@ -126,15 +135,55 @@ export default function OpalStudioCanvasPage() {
 		);
 	}
 
-	function handleGenerate() {
-		setSaveState("Saved");
-	}
+	const handleGenerate = useCallback(() => {
+		if (isGenerating || !prompt.trim()) return;
+
+		// Find the next demo step — step 0 is the initial image (already shown),
+		// so first Generate produces step 1, second produces step 2
+		const nextStep = Math.min(generationStep + 1, demoGenerationSteps.length - 1);
+		const stepData = demoGenerationSteps[nextStep];
+
+		setIsGenerating(true);
+
+		// Simulate generation delay (2 seconds)
+		setTimeout(() => {
+			// Add to history with the generated image
+			setPromptHistory((prev) => [...prev, { prompt, image: stepData.image }]);
+
+			// Update the artboard image
+			setArtboards((prev) =>
+				prev.map((ab) => ({ ...ab, image: stepData.image })),
+			);
+
+			// Advance step
+			setGenerationStep(nextStep);
+
+			// Auto-fill with the next step's prompt if available, otherwise clear
+			const followingStep = nextStep + 1;
+			if (followingStep < demoGenerationSteps.length) {
+				setPrompt(demoGenerationSteps[followingStep].prompt);
+			} else {
+				setPrompt("");
+			}
+
+			setIsGenerating(false);
+			setSaveState("Saved");
+		}, 2000);
+	}, [isGenerating, prompt, generationStep]);
+
+	const handleHistoryClick = useCallback((index: number) => {
+		const entry = promptHistory[index];
+		setArtboards((prev) =>
+			prev.map((ab) => ({ ...ab, image: entry.image })),
+		);
+	}, [promptHistory]);
 
 	const handleGeneratePack = useCallback(() => {
 		if (!packSelected) return;
 
-		// Build laid-out artboards from the social pack config
-		const packed = layoutArtboards(socialPackArtboards, draft, 40);
+		// Use current artboard image (latest generation), fall back to draft
+		const currentImage = artboards[0]?.image || draft;
+		const packed = layoutArtboards(socialPackArtboards, currentImage, 40);
 
 		// Mark all new IDs as animating (hidden initially)
 		const newIds = packed.map((a) => a.id);
@@ -149,7 +198,7 @@ export default function OpalStudioCanvasPage() {
 				setAnimatingIds((prev) => prev.filter((aid) => aid !== id));
 			}, 300 + i * 150);
 		});
-	}, [packSelected, draft]);
+	}, [packSelected, draft, artboards]);
 
 	return (
 		<div
@@ -211,6 +260,7 @@ export default function OpalStudioCanvasPage() {
 							animatingIds={animatingIds}
 							onArtboardMove={handleArtboardMove}
 							canvasSettings={canvasSettings}
+							isGenerating={isGenerating}
 						/>
 					</div>
 
@@ -218,6 +268,7 @@ export default function OpalStudioCanvasPage() {
 						prompt={prompt}
 						setPrompt={setPrompt}
 						onGenerate={handleGenerate}
+						isGenerating={isGenerating}
 					/>
 				</div>
 
@@ -255,6 +306,8 @@ export default function OpalStudioCanvasPage() {
 						selectedReferences={selectedReferences}
 						canvasSettings={canvasSettings}
 						setCanvasSettings={setCanvasSettings}
+						promptHistory={promptHistory}
+						onHistoryClick={handleHistoryClick}
 					/>
 				</div>
 			</div>

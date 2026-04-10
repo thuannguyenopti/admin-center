@@ -20,7 +20,8 @@ import {
 } from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
-import {OpalAction, availableAgents, PropertyType} from "./mockData";
+import {availableAgents} from "./mockData";
+import {OpalAction, PropertyType} from "./types";
 
 interface OpalActionDialogProps {
 	open: boolean;
