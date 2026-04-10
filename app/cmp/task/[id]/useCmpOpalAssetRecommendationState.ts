@@ -164,6 +164,12 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 
 		if (tab === "content") {
 			openContentTab();
+			return;
+		}
+
+		if (tab === "publishing") {
+			state.setScene("publishing");
+			return;
 		}
 	};
 	const handleWorkflowSelect = (workflowId: string) => {
@@ -259,6 +265,30 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 	const updatePerspective = (index: number, value: string) =>
 		state.setPerspectives((current: string[]) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
 
+	// Publishing channel actions
+	const addPublishingChannel = (channelTypeId: string) => {
+		// CMS channels only accept CMS pages; other channels only accept CMP content instances
+		const allContentIds = channelTypeId === "cms-12"
+			? computed.taskPages.map((p) => p.id)
+			: computed.taskContentInstances.map((i) => i.id);
+		state.setPublishingChannels((current) => [
+			...current,
+			{
+				id: `ch-${Date.now()}`,
+				channelTypeId,
+				selectedContentIds: allContentIds,
+			},
+		]);
+	};
+	const removePublishingChannel = (channelId: string) => {
+		state.setPublishingChannels((current) => current.filter((ch) => ch.id !== channelId));
+	};
+	const updateChannelContent = (channelId: string, contentIds: string[]) => {
+		state.setPublishingChannels((current) =>
+			current.map((ch) => (ch.id === channelId ? { ...ch, selectedContentIds: contentIds } : ch)),
+		);
+	};
+
 	return {
 		...state,
 		...computed,
@@ -266,6 +296,9 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 		taskTitle: currentTaskName,
 		addArticle,
 		addContentInstanceFromModel,
+		addPublishingChannel,
+		removePublishingChannel,
+		updateChannelContent,
 		addSelectedPanelAssetsToTask: () => addAssetsToTask(computed.panelAssetsWithSelection.filter((asset) => asset.selected)),
 		addSelectedSearchAssetsToTask: () => addAssetsToTask(computed.rankedSearchAssets.filter((asset) => asset.selected)),
 		addSelectedSingleAssetToTask: () => addAssetsToTask([state.selectedAsset]),

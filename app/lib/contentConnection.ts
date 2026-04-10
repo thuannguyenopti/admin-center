@@ -377,7 +377,7 @@ export function createPageFromInstance(
 	// 4. Create new page
 	const newPage: Page = {
 		id: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-		name: instance.fields.title || instance.fields.name || "Untitled",
+		name: instance.fields.title || instance.fields.headline || instance.fields.name || instance.fields.message || "Untitled",
 		parentId,
 		status: "Draft",
 		lastModified: new Date().toISOString(),
