@@ -63,11 +63,12 @@ function isUserLevelConnector(connector: Connector) {
 }
 
 const actionIcon: Record<ToolAction, React.ReactNode> = {
-    Read: <IconEye size={16} />,
-    Update: <IconPen size={16} />,
-    Create: <IconPen size={16} />,
-    Delete: <IconTrashCan size={16} />,
+    Read: <IconEye size={14} />,
+    Update: <IconPen size={14} />,
+    Create: <IconPen size={14} />,
+    Delete: <IconTrashCan size={14} />,
 };
+
 
 // ── SelectionCard ─────────────────────────────────────────────────────────────
 
@@ -612,7 +613,7 @@ export function AddConnectorModal({
                                                     <Box
                                                         key={tool.id}
                                                         display="flex"
-                                                        alignItems="start"
+                                                        alignItems="center"
                                                         gap="12"
                                                         p="12"
                                                         onClick={() => toggleTool(tool.id)}
@@ -621,21 +622,21 @@ export function AddConnectorModal({
                                                             cursor: "pointer",
                                                         }}
                                                     >
-                                                        <Box pt="2">
+                                                        <Box>
                                                             <Checkbox
                                                                 checked={selectedTools.includes(tool.id)}
                                                                 onCheckedChange={() => toggleTool(tool.id)}
                                                                 onClick={e => e.stopPropagation()}
                                                             />
                                                         </Box>
-                                                        <Box flex="1">
-                                                            <Box display="flex" alignItems="center" gap="8" mb="2">
+                                                        <Box flex="1" style={{ minWidth: 0 }}>
+                                                            <Box display="flex" alignItems="center" justifyContent="space-between" gap="8" mb="2">
                                                                 <Text fontSize="sm" fontWeight="500">{tool.name}</Text>
-                                                                <Box display="flex" alignItems="center" gap="6">
+                                                                <Box display="flex" alignItems="center" gap="6" style={{ flexShrink: 0 }}>
                                                                     <Box color="fg.secondary" display="flex" alignItems="center">
                                                                         {actionIcon[tool.action]}
                                                                     </Box>
-                                                                    <Text fontSize="sm" color="fg.secondary">
+                                                                    <Text fontSize="sm" color="fg.default">
                                                                         {tool.action}
                                                                     </Text>
                                                                 </Box>

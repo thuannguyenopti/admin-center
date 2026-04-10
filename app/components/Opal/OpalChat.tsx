@@ -43,12 +43,12 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
     opalContext?.currentPage?.productArea?.includes('CMS');
   const isImageGen = opalContext?.currentPage?.path?.startsWith('/cmp/opal-studio');
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages or the contextual action card change
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
-  }, [messages]);
+  }, [messages, contextualActionCard]);
 
   // Compute per-message rendering context (agent header, opal header, collapsed)
   const augmented = useMemo(() => {
@@ -194,6 +194,7 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
         overflowY: 'auto',
         minHeight: '300px',
         width: '100%',
+        paddingBottom: contextualActionCard && hasMessages ? '24px' : undefined,
       }}
     >
       {!hasMessages ? (
@@ -226,7 +227,13 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
             </Text>
             <OpalSuggestions onSuggestionClick={onSuggestionClick} type={contextChip ? 'agent-prompt-builder' : isImageGen ? 'image-gen' : isCMS ? 'cms' : 'default'} />
             {contextualActionCard && (
-              <Box w="full">
+              <Box
+                w="full"
+                style={{
+                  animation: "opal-card-fade-in 180ms ease-out",
+                  transformOrigin: "bottom center",
+                }}
+              >
                 {contextualActionCard}
               </Box>
             )}
@@ -351,13 +358,31 @@ export function OpalChat({ messages, onSuggestionClick, onRegenerate, onVersionC
             );
           })}
           {contextualActionCard && (
-            <Box w="full">
+            <Box
+              w="full"
+              style={{
+                animation: "opal-card-fade-in 180ms ease-out",
+                transformOrigin: "bottom center",
+              }}
+            >
               {contextualActionCard}
             </Box>
           )}
         </Box>
       )}
       <div ref={chatEndRef} />
+      <style jsx>{`
+        @keyframes opal-card-fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </Box>
   );
 }
