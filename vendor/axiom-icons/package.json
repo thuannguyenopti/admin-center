@@ -1,0 +1,46 @@
+{
+  "name": "@optimizely/axiom-icons",
+  "publishConfig": {
+    "registry": "https://optimizely.jfrog.io/optimizely/api/npm/npm-local/"
+  },
+  "repository": {
+    "directory": "projects/axiom-icons",
+    "type": "git",
+    "url": "https://github.com/optimizely/axiom.git"
+  },
+  "type": "module",
+  "version": "1.16.0",
+  "files": [
+    "dist/**",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/esm/projects/axiom-icons/src/index.mjs",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "module": "./dist/esm/projects/axiom-icons/src/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^6.7.2"
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/pro-light-svg-icons": "^6.7.2",
+    "@fortawesome/pro-solid-svg-icons": "^6.7.2",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@types/react": "~17.0.83"
+  },
+  "peerDependencies": {
+    "react": "^16.14.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^16.14.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+  },
+  "scripts": {
+    "build": "rm -rf dist && NODE_ENV=production rollup -c",
+    "lint": "../../scripts/lint.sh",
+    "start": "rm -rf dist && rollup -cw"
+  }
+}
