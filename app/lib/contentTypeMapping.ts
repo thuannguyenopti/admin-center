@@ -99,7 +99,8 @@ function extractText(val: any): string {
 	if (val.type === "text" && typeof val.text === "string") return val.text;
 	// Node with children: {type: "doc"|"paragraph"|..., content: [...]}
 	if (Array.isArray(val.content)) {
-		return val.content.map((node: any) => extractText(node)).join("");
+		const separator = val.type === "doc" ? "\n\n" : "";
+		return val.content.map((node: any) => extractText(node)).join(separator);
 	}
 	// Simple wrappers
 	if (typeof val.content === "string") return val.content;

@@ -15,7 +15,8 @@ function toText(val: unknown): string {
 		// Handle ProseMirror/TipTap rich text documents: {type: "doc", content: [...]}
 		if (obj.type === "text" && typeof obj.text === "string") return obj.text;
 		if (Array.isArray(obj.content)) {
-			return obj.content.map((node: unknown) => toText(node)).join("");
+			const separator = obj.type === "doc" ? "\n\n" : "";
+			return obj.content.map((node: unknown) => toText(node)).join(separator);
 		}
 		// Handle simple wrappers: {content: "..."} or {value: "..."}
 		if (typeof obj.content === "string") return obj.content;

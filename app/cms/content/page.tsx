@@ -405,9 +405,9 @@ export default function ContentPage() {
 									title={item.name}
 									endAdornment={item.hasConnection ? (
 										<Tooltip content="Connected to content" auto>
-											<span style={{ display: "inline-flex", color: "var(--ax-color-fg-accent)" }}>
+											<Box display="inline-flex" color="fg.accent">
 												<IconLink size={14} />
-											</span>
+											</Box>
 										</Tooltip>
 									) : undefined}
 								/>
