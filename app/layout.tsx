@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import Template from "./components/template";
 import "./globals.css";
 import Script from "next/script";
@@ -45,6 +46,22 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.location.hash.includes("figmacapture=")) {
+			return;
+		}
+
+		if (document.querySelector("script[data-figma-capture-script]")) {
+			return;
+		}
+
+		const script = document.createElement("script");
+		script.src = "https://mcp.figma.com/mcp/html-to-design/capture.js";
+		script.async = true;
+		script.setAttribute("data-figma-capture-script", "true");
+		document.head.appendChild(script);
+	}, []);
+
 	const path = usePathname() ?? "";
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
@@ -443,16 +460,9 @@ export default function RootLayout({
 			},
 			{
 				label: "Connectors",
-				url: "/opal/tools",
-				highlight: "/opal/tools",
-				icon: (
-					<img
-						src="/nav_icons/grid-round-2-plus.svg"
-						alt="Connectors"
-						width={20}
-						height={20}
-					/>
-				),
+				url: "/opal/connectors",
+				highlight: "/opal/connectors",
+				icon: <img src="/nav_icons/grid-2-plus.svg" alt="Connectors" width={20} height={20} />,
 				hidePageHeader: true,
 			},
 			{

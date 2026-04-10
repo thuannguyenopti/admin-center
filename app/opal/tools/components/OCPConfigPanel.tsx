@@ -235,6 +235,7 @@ export function OCPConfigPanel({ connector, isInstalled, onClose, onInstall, onU
 
     const panel = (
         <Box
+            id="ocp-config-panel"
             style={{
                 position: "fixed",
                 top: 0,

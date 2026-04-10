@@ -21,7 +21,7 @@ import teamsLogo from "../connector logos/teams.jpeg";
 type SvgLogoComponent = ComponentType<SVGProps<SVGElement>>;
 type LogoSource = string | { src: string } | SvgLogoComponent;
 
-const CONNECTOR_LOGOS: Partial<Record<Connector["id"], { src: LogoSource; alt: string; inset?: number }>> = {
+const CONNECTOR_LOGOS: Partial<Record<Connector["id"], { src: LogoSource; alt: string; inset?: number; offsetY?: number }>> = {
     gmail: { src: gmailLogo, alt: "Gmail", inset: 5 },
     "google-calendar": { src: "https://www.gstatic.com/images/branding/product/1x/googleg_32dp.png", alt: "Google Calendar", inset: 8 },
     "google-docs": { src: googleDocLogo, alt: "Google Docs", inset: 5 },
@@ -33,7 +33,7 @@ const CONNECTOR_LOGOS: Partial<Record<Connector["id"], { src: LogoSource; alt: s
     salesforce: { src: salesforceLogo, alt: "Salesforce", inset: 5 },
     hubspot: { src: hubspotLogo, alt: "HubSpot", inset: 5 },
     amplitude: { src: amplitudeLogo, alt: "Amplitude", inset: 5 },
-    "atlassian-rovo": { src: atlassianRovoLogo, alt: "Atlassian Rovo", inset: 5 },
+    "atlassian-rovo": { src: atlassianRovoLogo, alt: "Atlassian Rovo", inset: 5, offsetY: -4 },
     asana: { src: asanaLogo, alt: "Asana", inset: 5 },
     bynder: { src: bynderLogo, alt: "Bynder", inset: 5 },
     tableau: { src: tableauLogo, alt: "Tableau", inset: 5 },
@@ -48,17 +48,34 @@ const CONNECTOR_LOGOS: Partial<Record<Connector["id"], { src: LogoSource; alt: s
 interface ConnectorAvatarProps {
     connector: Connector;
     size?: number;
+    framed?: boolean;
 }
 
-export function ConnectorAvatar({ connector, size = 40 }: ConnectorAvatarProps) {
+export function ConnectorAvatar({ connector, size = 40, framed = true }: ConnectorAvatarProps) {
     const logo = CONNECTOR_LOGOS[connector.id];
 
     if (logo) {
         const inset = logo.inset ?? 8;
-        const innerSize = size - inset * 2;
+        const innerSize = framed ? size - inset * 2 : size;
+        const offsetY = logo.offsetY ?? 0;
 
         if (typeof logo.src === "function") {
             const SvgLogo = logo.src;
+
+            if (!framed) {
+                return (
+                    <SvgLogo
+                        aria-label={logo.alt}
+                        style={{
+                            width: innerSize,
+                            height: innerSize,
+                            display: "block",
+                            flexShrink: 0,
+                            transform: `translateY(${offsetY}px)`,
+                        }}
+                    />
+                );
+            }
 
             return (
                 <Box
@@ -81,6 +98,7 @@ export function ConnectorAvatar({ connector, size = 40 }: ConnectorAvatarProps) 
                             width: innerSize,
                             height: innerSize,
                             display: "block",
+                            transform: `translateY(${offsetY}px)`,
                         }}
                     />
                 </Box>
@@ -88,6 +106,23 @@ export function ConnectorAvatar({ connector, size = 40 }: ConnectorAvatarProps) 
         }
 
         const src = typeof logo.src === "string" ? logo.src : logo.src.src;
+
+        if (!framed) {
+            return (
+                <img
+                    src={src}
+                    alt={logo.alt}
+                    style={{
+                        width: innerSize,
+                        height: innerSize,
+                        objectFit: "contain",
+                        display: "block",
+                        flexShrink: 0,
+                        transform: `translateY(${offsetY}px)`,
+                    }}
+                />
+            );
+        }
 
         return (
             <Box
@@ -112,6 +147,7 @@ export function ConnectorAvatar({ connector, size = 40 }: ConnectorAvatarProps) 
                         height: innerSize,
                         objectFit: "contain",
                         display: "block",
+                        transform: `translateY(${offsetY}px)`,
                     }}
                 />
             </Box>
