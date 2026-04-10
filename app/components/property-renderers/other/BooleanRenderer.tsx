@@ -11,7 +11,12 @@ export const BooleanRenderer: React.FC<PropertyRendererProps> = ({
 	if (mode === "readonly") {
 		return (
 			<Field label={property.displayName || property.name}>
-				<Text>{value ? "Yes" : "No"}</Text>
+				<Checkbox
+					checked={value ?? false}
+					disabled
+				>
+					{property.displayName || property.name}
+				</Checkbox>
 			</Field>
 		);
 	}

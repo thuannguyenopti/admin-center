@@ -437,8 +437,12 @@ export default function PropertiesPanel({
 
 		// Use shared PropertyRenderer for all other property types
 		return (
-			<Box key={prop.id} display="flex" flexDirection="column">
-				{isBound && <BoundPropertyIndicator />}
+			<Box key={prop.id} style={{ position: "relative" }}>
+				{isBound && (
+					<Box style={{ position: "absolute", top: 0, right: 0, zIndex: 1 }}>
+						<BoundPropertyIndicator />
+					</Box>
+				)}
 				<PropertyRenderer
 					property={prop}
 					value={propValue}

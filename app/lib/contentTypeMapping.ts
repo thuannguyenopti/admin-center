@@ -27,7 +27,8 @@ export function applyMapping(
 		const sourceProp = sourceType.properties.find(p => p.id === propMapping.sourcePropertyId);
 		const sourceKey = sourceProp?.name || propMapping.sourcePropertyId;
 
-		const sourceValue = sourceData[sourceKey];
+		// Try lookup by property name first (CMP instances), then by property ID (CMS pages)
+		const sourceValue = sourceData[sourceKey] ?? sourceData[propMapping.sourcePropertyId];
 		console.log(`  📋 Mapping: ${propMapping.sourcePropertyId} → ${propMapping.targetPropertyId}`);
 		console.log(`     Source prop:`, sourceProp);
 		console.log(`     Source key: "${sourceKey}"`);

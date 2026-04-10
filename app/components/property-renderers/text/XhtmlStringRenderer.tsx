@@ -84,14 +84,13 @@ export const XhtmlStringRenderer: React.FC<PropertyRendererProps> = ({
 	) : undefined;
 
 	if (mode === "readonly") {
-		// If value is already HTML (not TipTap doc), render it directly
-		const htmlContent = typeof value === "string" && value.trim().startsWith("<")
-			? value
-			: markdownValue;
-
 		return (
 			<Field label={property.displayName || property.name}>
-				<Box dangerouslySetInnerHTML={{ __html: htmlContent }} />
+				<Textarea
+					value={markdownValue || ""}
+					disabled
+					rows={4}
+				/>
 			</Field>
 		);
 	}
