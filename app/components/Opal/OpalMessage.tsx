@@ -30,7 +30,6 @@ import "../ai/blocks"; // Auto-register all blocks
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
-import { IconCopy, IconPen, IconArrowsRotate, IconThumbsUp, IconThumbsDown } from "@/app/lib/axiom-icons";
 import { useState, useEffect, useRef } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 import { OpalLoader } from "@/app/opal/components/OpalLoader";
