@@ -596,7 +596,7 @@ export function useOpalState({
       if (isIterating) {
         // Handle iteration response
         updateMessage(loadingMessage.id, {
-          content: data.summary || 'Changes applied successfully!',
+          content: (data.summary as string) || 'Changes applied successfully!',
           isLoading: false,
         });
 
