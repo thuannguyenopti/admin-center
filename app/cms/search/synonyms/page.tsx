@@ -1,6 +1,6 @@
 "use client";
 
-import {Box} from "@optiaxiom/react";
+import {Box, SearchInput} from "@optiaxiom/react";
 import {Button} from "@/app/components/Button";
 import {Input} from "@/app/components/Input";
 import {Flex} from "@/app/components/Flex";
@@ -11,6 +11,7 @@ import {Synonym, initialSynonyms} from "@/app/db/initialData";
 import SynonymsTable from "../components/SynonymsTable";
 import SynonymDialog from "../components/SynonymDialog";
 import AbstractDialog from "@/app/components/AbstractDialog";
+import EmptyList from "@/app/components/EmptyList";
 
 const PAGE_SIZE = 10;
 
@@ -120,6 +121,32 @@ export default function SynonymsPage() {
 		}
 	}, [currentPage, effectivePage]);
 
+	if (synonyms.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No synonyms yet"
+					body="Create synonyms to help users find content using alternative terms and improve search recall."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Synonym
+					</Button>
+				</EmptyList>
+
+				<SynonymDialog
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					mode="create"
+					onSave={handleCreateSynonym}
+				/>
+			</Box>
+		);
+	}
+
 	return (
 		<Box>
 			<Flex
@@ -129,12 +156,11 @@ export default function SynonymsPage() {
 				gap="16"
 				mb="24"
 			>
-				<Input
-					addonBefore={<IconSearch size={16} />}
-					placeholder="Search synonyms..."
-					style={{width: "320px"}}
+				<SearchInput
+					size="lg"
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
+					placeholder="Search synonyms..."
 				/>
 				<Button
 					icon={<IconPlus size={16} />}

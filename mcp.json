@@ -1,17 +1,24 @@
 {
-  "inputs": [],
-  "servers": {
-    "axiom": {
-      "command": "npx",
-      "args": ["-y", "@optiaxiom/mcp"]
-    },
-    "figma": {
-      "url": "https://mcp.figma.com/mcp",
-      "type": "http"
-    },
-    "TalkToFigma": {
-      "command": "bunx",
-      "args": ["cursor-talk-to-figma-mcp@latest"]
-    }
-  }
+	"mcpServers": {
+		"axiom": {
+			"command": "npx",
+			"args": ["-y", "@optiaxiom/mcp"]
+		},
+		"coda": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["-y", "coda-mcp"],
+			"env": {
+				"CODA_API_TOKEN": "4eaa5f7a-be80-47a1-a5c9-98f882813020"
+			}
+		},
+		"figma": {
+			"type": "http",
+			"url": "https://mcp.figma.com/mcp"
+		},
+		"TalkToFigma": {
+			"command": "bunx",
+			"args": ["cursor-talk-to-figma-mcp@latest"]
+		}
+	}
 }

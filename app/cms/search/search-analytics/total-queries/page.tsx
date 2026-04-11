@@ -8,6 +8,7 @@ import {IconSearch, IconTrendingUp, IconTrendingDown} from "@tabler/icons-react"
 import {useState, useMemo} from "react";
 import {volumeQueries, VolumeQuery, scaleValue} from "@/app/db/analyticsData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
+import EmptyList from "@/app/components/EmptyList";
 
 const allData: VolumeQuery[] = volumeQueries;
 
@@ -72,7 +73,6 @@ export default function TotalQueriesPage() {
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
-						style={{width: "320px"}}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
@@ -94,38 +94,45 @@ export default function TotalQueriesPage() {
 				</Flex>
 			</Flex>
 
-			<Table>
-				<thead>
-					<Tr>
-						<Th>Query</Th>
-						<Th>Total Searches</Th>
-						<Th>Trend (7d)</Th>
-					</Tr>
-				</thead>
-				<tbody>
-					{filteredData.map((row, i) => (
-						<Tr key={i}>
-							<Td type="header">{row.query}</Td>
-							<Td>{row.count.toLocaleString()}</Td>
-							<Td>
-								<Flex
-									alignItems="center"
-									gap="4"
-									flexDirection="row"
-									color={row.trend >= 0 ? "fg.success" : "fg.error"}
-								>
-									{row.trend >= 0 ? (
-										<IconTrendingUp size={16} />
-									) : (
-										<IconTrendingDown size={16} />
-									)}
-									<Text>{Math.abs(row.trend)}%</Text>
-								</Flex>
-							</Td>
+			{filteredData.length === 0 ? (
+				<EmptyList
+					heading="No results found"
+					body="No queries match your current filters. Try adjusting the time range or search terms."
+				/>
+			) : (
+				<Table>
+					<thead>
+						<Tr>
+							<Th>Query</Th>
+							<Th>Total Searches</Th>
+							<Th>Trend (7d)</Th>
 						</Tr>
-					))}
-				</tbody>
-			</Table>
+					</thead>
+					<tbody>
+						{filteredData.map((row, i) => (
+							<Tr key={i}>
+								<Td type="header">{row.query}</Td>
+								<Td>{row.count.toLocaleString()}</Td>
+								<Td>
+									<Flex
+										alignItems="center"
+										gap="4"
+										flexDirection="row"
+										color={row.trend >= 0 ? "fg.success" : "fg.error"}
+									>
+										{row.trend >= 0 ? (
+											<IconTrendingUp size={16} />
+										) : (
+											<IconTrendingDown size={16} />
+										)}
+										<Text>{Math.abs(row.trend)}%</Text>
+									</Flex>
+								</Td>
+							</Tr>
+						))}
+					</tbody>
+				</Table>
+			)}
 		</Box>
 	);
 }

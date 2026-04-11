@@ -1,0 +1,5 @@
+name,slug,visibility
+,missing-name,public
+Beginner Friendly,beginner-friendly,public
+A,short-name,public
+Valid Tag,valid-tag,private
