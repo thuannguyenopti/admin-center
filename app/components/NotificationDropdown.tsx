@@ -2,7 +2,7 @@
 
 import { Box, Button, Text, Badge } from "@optiaxiom/react";
 import { DetailsPanel, DetailsPanelHeader, DetailsPanelBody } from "@optiaxiom/react/unstable";
-import { IconBell, IconX, IconSettings, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
+import { IconBell, IconX, IconChecks, IconSpeakerphone, IconLoader2, IconPlug, IconUsers, IconTicket } from "@tabler/icons-react";
 import { IconCircleExclamation, IconTriangleExclamation, IconSpinner, IconFileLines, IconCircleCheck as AxiomCircleCheck, IconAgent } from "@optimizely/axiom-icons";
 import { useMemo, useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from "react";
 import { mockNotifications, getUnreadCount, type Notification } from "@/app/opal/notifications/mockData";
@@ -238,7 +238,6 @@ export function NotificationPanel({ onClose, initialActiveTab, onTabChange, dism
                     py="12"
                     addonAfter={
                         <Box display="flex" gap="4" alignItems="center">
-                            <Button icon={<IconSettings size={16} />} appearance="subtle" size="sm" aria-label="Settings" />
                             <Button
                                 icon={<IconX size={16} />}
                                 appearance="subtle"
