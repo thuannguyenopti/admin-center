@@ -4,15 +4,41 @@ import {Box, Heading, Menu, MenuTrigger, MenuContent, LabelMenuButton} from "@op
 import {useState, useMemo} from "react";
 import MetricCard from "../../../components/MetricCard";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
-import {metricsData, topQueries} from "@/app/db/analyticsData";
+import {metricsData, topQueries, TopQuery} from "@/app/db/analyticsData";
 import {Flex} from "@/app/components/Flex";
 import {Button} from "@/app/components/Button";
 import {IconSparkles} from "@tabler/icons-react";
 
+type SortColumn = keyof TopQuery;
+type SortDirection = "asc" | "desc";
+
 type TimeRange = "24h" | "7d" | "30d" | "90d";
+
+const parseNumeric = (val: string) => parseFloat(val.replace(/[^\d.]/g, ""));
 
 export default function SearchAnalytics() {
 	const [timeRange, setTimeRange] = useState<TimeRange>("7d");
+	const [sortColumn, setSortColumn] = useState<SortColumn>("ctr");
+	const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+	const handleSort = (column: SortColumn) => {
+		if (sortColumn === column) {
+			setSortDirection((d) => (d === "asc" ? "desc" : "asc"));
+		} else {
+			setSortColumn(column);
+			setSortDirection("asc");
+		}
+	};
+
+	const sortedQueries = useMemo(() => {
+		return [...topQueries].sort((a, b) => {
+			const dir = sortDirection === "asc" ? 1 : -1;
+			if (sortColumn === "query") {
+				return dir * a.query.localeCompare(b.query);
+			}
+			return dir * (parseNumeric(a[sortColumn]) - parseNumeric(b[sortColumn]));
+		});
+	}, [sortColumn, sortDirection]);
 
 	const timeRangeLabels = {
 		"24h": "Last 24 hours",
@@ -122,14 +148,37 @@ export default function SearchAnalytics() {
 			<Table>
 				<thead>
 					<Tr>
-						<Th>Query</Th>
-						<Th>CTR ↓</Th>
-						<Th>Zero-Result</Th>
-						<Th>Avg Latency</Th>
+						<Th
+							onSort={() => handleSort("query")}
+							sortDirection={sortColumn === "query" ? sortDirection : null}
+						>
+							Query
+						</Th>
+						<Th
+							onSort={() => handleSort("ctr")}
+							sortDirection={sortColumn === "ctr" ? sortDirection : null}
+							tooltip="CTR (Click-Through Rate) — The percentage of searches for this query that resulted in a user clicking a result. Lower CTR may indicate poor relevance, weak result presentation, or missing intent match."
+						>
+							CTR
+						</Th>
+						<Th
+							onSort={() => handleSort("zeroResult")}
+							sortDirection={sortColumn === "zeroResult" ? sortDirection : null}
+							tooltip="Zero-Result Rate — The percentage of times this query returned no results. High rates indicate gaps in the index or query parsing failures."
+						>
+							Zero-Result
+						</Th>
+						<Th
+							onSort={() => handleSort("avgLatency")}
+							sortDirection={sortColumn === "avgLatency" ? sortDirection : null}
+							tooltip="Avg Latency — The average time in milliseconds to return results for this query. Higher latency can negatively impact user experience and conversion."
+						>
+							Avg Latency
+						</Th>
 					</Tr>
 				</thead>
 				<tbody>
-					{topQueries.map((row) => (
+					{sortedQueries.map((row) => (
 						<Tr key={row.query}>
 							<Td>{row.query}</Td>
 							<Td>{row.ctr}</Td>

@@ -9,13 +9,15 @@ interface CategoriesTableProps {
   categories: Category[];
   selectedIds: Set<string>;
   onToggleSelection: (id: string) => void;
-  onToggleAll: () => void;
+  /** Called with the visible (current-page) categories to toggle. */
+  onToggleAll: (categoriesToToggle: Category[]) => void;
   onToggleExpand: (id: string) => void;
   onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
   sortColumn?: string;
   sortDirection?: 'asc' | 'desc';
   onSort?: (column: string) => void;
+  newlyImportedIds?: Set<string>;
 }
 
 export function CategoriesTable({
@@ -29,10 +31,15 @@ export function CategoriesTable({
   sortColumn,
   sortDirection,
   onSort,
+  newlyImportedIds = new Set(),
 }: CategoriesTableProps) {
   const rootCategories = getChildren(null, categories);
-  const allSelected = categories.length > 0 && selectedIds.size === categories.length;
-  const someSelected = selectedIds.size > 0 && selectedIds.size < categories.length;
+  const allSelected =
+    rootCategories.length > 0 &&
+    rootCategories.every((category) => selectedIds.has(category.id));
+  const someSelected =
+    rootCategories.some((category) => selectedIds.has(category.id)) &&
+    !allSelected;
 
   const renderSortIcon = (column: string) => {
     const isActive = sortColumn === column;
@@ -72,7 +79,7 @@ export function CategoriesTable({
             <Checkbox
               checked={allSelected}
               indeterminate={someSelected}
-              onCheckedChange={onToggleAll}
+              onCheckedChange={() => onToggleAll(rootCategories)}
             />
           </Th>
           <Th
@@ -132,6 +139,7 @@ export function CategoriesTable({
             onToggleExpand={onToggleExpand}
             onEdit={onEdit}
             onDelete={onDelete}
+            newlyImportedIds={newlyImportedIds}
           />
         ))}
       </tbody>

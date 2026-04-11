@@ -1,5 +1,78 @@
 /* Opal Panel Styles - Using Axiom Design Tokens for consistent theming */
 
+@keyframes agentBarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 200px;
+  }
+}
+
+@keyframes resumeBarSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes resumeBarShake {
+  0%, 100% { transform: translateX(0); }
+  11%       { transform: translateX(-6px); }
+  22%       { transform: translateX(6px); }
+  33%       { transform: translateX(-5px); }
+  44%       { transform: translateX(5px); }
+  55%       { transform: translateX(-4px); }
+  66%       { transform: translateX(4px); }
+  78%       { transform: translateX(-2px); }
+  89%       { transform: translateX(2px); }
+}
+
+@keyframes opalPullIn {
+  0%   { opacity: 1;    transform: translateY(0)    scaleY(1);    max-height: 800px; }
+  35%  { opacity: 0.7;  transform: translateY(-10px) scaleY(0.65); max-height: 500px; }
+  75%  { opacity: 0.15; transform: translateY(-28px) scaleY(0.15); max-height: 100px; }
+  100% { opacity: 0;    transform: translateY(-40px) scaleY(0);    max-height: 0;     }
+}
+
+@keyframes disclosureCollectIn {
+  0%   { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes disclosureHighlight {
+  0%   { background-color: rgba(124, 58, 237, 0.14); border-radius: 8px; }
+  100% { background-color: transparent;              border-radius: 8px; }
+}
+
+.opal-pull-slow {
+  animation: opalPullIn 0.6s cubic-bezier(0.4, 0, 1, 0.6) forwards;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center top;
+}
+
+.opal-pull-fast {
+  animation: opalPullIn 0.28s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: center top;
+}
+
+.opal-disclosure-collect {
+  animation: disclosureCollectIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.opal-disclosure-highlight {
+  animation: disclosureHighlight 0.5s ease-out forwards;
+}
+
 :root {
   /* Background Colors - Using Axiom tokens with fallbacks */
   --opal-bg-primary: var(--ax-colors-bg-default, #ffffff);
@@ -42,13 +115,7 @@
 }
 
 /* Dark Mode - Gradients need special handling since they can't use light-dark() */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --opal-bg-suggest: linear-gradient(135deg, #1e1b3a 0%, #1a2b45 100%);
-    --opal-bg-suggest-hover: linear-gradient(135deg, #2a2650 0%, #243654 100%);
-  }
-}
-
+/* Only use data-attribute/class selectors so app theme overrides OS preference */
 [data-theme="dark"],
 html.dark,
 body.dark {
@@ -85,6 +152,17 @@ body.dark {
 
 .opal-loading-spinner {
   animation: spin 0.8s linear infinite;
+}
+
+@keyframes agentBarSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Shimmer loading placeholder for Opal (tag suggest, generate) */
@@ -319,6 +397,12 @@ body.dark {
   border-radius: 8px;
   border: 1px solid var(--opal-border-input);
   background-color: var(--opal-bg-input);
+}
+
+@media (max-width: 768px) {
+  .opal-landing-shell {
+    padding-inline: 24px;
+  }
 }
 
 /* Send Button */

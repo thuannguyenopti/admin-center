@@ -1,3 +1,15 @@
+const daysAgo = (days: number, hour: number, minute: number): string => {
+	const d = new Date();
+	d.setDate(d.getDate() - days);
+	d.setHours(hour, minute, 0, 0);
+	const yyyy = d.getFullYear();
+	const mm = String(d.getMonth() + 1).padStart(2, "0");
+	const dd = String(d.getDate()).padStart(2, "0");
+	const hh = String(d.getHours()).padStart(2, "0");
+	const min = String(d.getMinutes()).padStart(2, "0");
+	return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+};
+
 export type ZeroResultQuery = {
 	query: string;
 	frequency: number;
@@ -9,73 +21,73 @@ export const zeroResultQueries: ZeroResultQuery[] = [
 	{
 		query: "kids running shoes",
 		frequency: 145,
-		lastSeen: "2025-12-05 09:15",
+		lastSeen: daysAgo(0, 9, 15),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "yoga mat",
 		frequency: 89,
-		lastSeen: "2025-12-04 16:20",
+		lastSeen: daysAgo(1, 16, 20),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "gift card",
 		frequency: 76,
-		lastSeen: "2025-12-05 11:05",
+		lastSeen: daysAgo(0, 11, 5),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "swimming goggles",
 		frequency: 62,
-		lastSeen: "2025-12-03 14:45",
+		lastSeen: daysAgo(2, 14, 45),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "protein powder",
 		frequency: 54,
-		lastSeen: "2025-12-05 08:30",
+		lastSeen: daysAgo(0, 8, 30),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "track order",
 		frequency: 48,
-		lastSeen: "2025-12-05 10:10",
+		lastSeen: daysAgo(0, 10, 10),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "return policy",
 		frequency: 42,
-		lastSeen: "2025-12-04 13:55",
+		lastSeen: daysAgo(1, 13, 55),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "store hours",
 		frequency: 35,
-		lastSeen: "2025-12-02 17:20",
+		lastSeen: daysAgo(3, 17, 20),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "runing shoes",
 		frequency: 28,
-		lastSeen: "2025-12-05 12:00",
+		lastSeen: daysAgo(0, 12, 0),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "trail running poles",
 		frequency: 21,
-		lastSeen: "2025-12-01 09:45",
+		lastSeen: daysAgo(4, 9, 45),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "marathon training plan",
 		frequency: 18,
-		lastSeen: "2025-11-30 15:10",
+		lastSeen: daysAgo(6, 15, 10),
 		algorithm: "Main Site Search",
 	},
 	{
 		query: "hydration pack",
 		frequency: 15,
-		lastSeen: "2025-11-29 11:25",
+		lastSeen: daysAgo(7, 11, 25),
 		algorithm: "Main Site Search",
 	},
 ];
@@ -114,7 +126,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 1927,
 		ctr: 12.5,
 		position: 1.2,
-		lastSeen: "2025-12-05 10:30",
+		lastSeen: daysAgo(0, 10, 30),
 	},
 	{
 		query: "mens shorts",
@@ -122,7 +134,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 700,
 		ctr: 8.2,
 		position: 2.5,
-		lastSeen: "2025-12-04 14:15",
+		lastSeen: daysAgo(1, 14, 15),
 	},
 	{
 		query: "womens leggings",
@@ -130,7 +142,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 1328,
 		ctr: 10.8,
 		position: 1.8,
-		lastSeen: "2025-12-05 09:45",
+		lastSeen: daysAgo(0, 9, 45),
 	},
 	{
 		query: "water bottle",
@@ -138,7 +150,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 856,
 		ctr: 15.3,
 		position: 1.1,
-		lastSeen: "2025-12-03 16:20",
+		lastSeen: daysAgo(2, 16, 20),
 	},
 	{
 		query: "hoodie",
@@ -146,7 +158,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 837,
 		ctr: 9.1,
 		position: 3.2,
-		lastSeen: "2025-11-28 11:10",
+		lastSeen: daysAgo(8, 11, 10),
 	},
 	{
 		query: "socks",
@@ -154,7 +166,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 832,
 		ctr: 18.5,
 		position: 1.0,
-		lastSeen: "2025-12-05 08:05",
+		lastSeen: daysAgo(0, 8, 5),
 	},
 	{
 		query: "gym bag",
@@ -162,7 +174,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 236,
 		ctr: 7.4,
 		position: 4.5,
-		lastSeen: "2025-11-15 13:40",
+		lastSeen: daysAgo(21, 13, 40),
 	},
 	{
 		query: "sports bra",
@@ -170,7 +182,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 873,
 		ctr: 11.2,
 		position: 2.1,
-		lastSeen: "2025-12-01 10:55",
+		lastSeen: daysAgo(5, 10, 55),
 	},
 	{
 		query: "trail runners",
@@ -178,7 +190,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 189,
 		ctr: 9.0,
 		position: 2.8,
-		lastSeen: "2025-10-20 09:30",
+		lastSeen: daysAgo(45, 9, 30),
 	},
 	{
 		query: "cycling jersey",
@@ -186,7 +198,7 @@ export const ctrQueries: CTRQuery[] = [
 		clicks: 210,
 		ctr: 14.0,
 		position: 1.5,
-		lastSeen: "2025-09-15 15:25",
+		lastSeen: daysAgo(80, 15, 25),
 	},
 ];
 
@@ -204,56 +216,56 @@ export const reformulationQueries: ReformulationQuery[] = [
 		reformulatedQuery: "running shoes",
 		count: 450,
 		confidence: 0.98,
-		lastSeen: "2025-12-05 11:20",
+		lastSeen: daysAgo(0, 11, 20),
 	},
 	{
 		originalQuery: "mens shorts",
 		reformulatedQuery: "men's shorts",
 		count: 320,
 		confidence: 0.95,
-		lastSeen: "2025-12-04 13:10",
+		lastSeen: daysAgo(1, 13, 10),
 	},
 	{
 		originalQuery: "watter bottle",
 		reformulatedQuery: "water bottle",
 		count: 210,
 		confidence: 0.99,
-		lastSeen: "2025-12-02 09:50",
+		lastSeen: daysAgo(3, 9, 50),
 	},
 	{
 		originalQuery: "joga mat",
 		reformulatedQuery: "yoga mat",
 		count: 180,
 		confidence: 0.92,
-		lastSeen: "2025-11-30 16:45",
+		lastSeen: daysAgo(6, 16, 45),
 	},
 	{
 		originalQuery: "swiming suit",
 		reformulatedQuery: "swimming suit",
 		count: 150,
 		confidence: 0.97,
-		lastSeen: "2025-12-05 08:15",
+		lastSeen: daysAgo(0, 8, 15),
 	},
 	{
 		originalQuery: "protien powder",
 		reformulatedQuery: "protein powder",
 		count: 120,
 		confidence: 0.96,
-		lastSeen: "2025-11-25 14:30",
+		lastSeen: daysAgo(11, 14, 30),
 	},
 	{
 		originalQuery: "dumbells",
 		reformulatedQuery: "dumbbells",
 		count: 95,
 		confidence: 0.99,
-		lastSeen: "2025-10-10 11:00",
+		lastSeen: daysAgo(55, 11, 0),
 	},
 	{
 		originalQuery: "t shirt",
 		reformulatedQuery: "t-shirt",
 		count: 85,
 		confidence: 0.9,
-		lastSeen: "2025-09-05 10:20",
+		lastSeen: daysAgo(85, 10, 20),
 	},
 ];
 
@@ -265,16 +277,16 @@ export type VolumeQuery = {
 };
 
 export const volumeQueries: VolumeQuery[] = [
-	{query: "running shoes", count: 15420, trend: 12, lastSeen: "2025-12-05 12:10"},
-	{query: "womens leggings", count: 12300, trend: 8, lastSeen: "2025-12-04 15:45"},
-	{query: "hoodie", count: 9200, trend: -5, lastSeen: "2025-11-29 10:30"},
-	{query: "mens shorts", count: 8540, trend: 15, lastSeen: "2025-12-05 09:20"},
-	{query: "sports bra", count: 7800, trend: 3, lastSeen: "2025-12-01 14:50"},
-	{query: "water bottle", count: 5600, trend: 25, lastSeen: "2025-12-03 11:15"},
-	{query: "socks", count: 4500, trend: 2, lastSeen: "2025-12-05 08:40"},
-	{query: "gym bag", count: 3200, trend: -2, lastSeen: "2025-11-10 16:00"},
-	{query: "trail runners", count: 2100, trend: 18, lastSeen: "2025-10-25 13:20"},
-	{query: "cycling jersey", count: 1500, trend: 5, lastSeen: "2025-09-20 10:10"},
+	{query: "running shoes", count: 15420, trend: 12, lastSeen: daysAgo(0, 12, 10)},
+	{query: "womens leggings", count: 12300, trend: 8, lastSeen: daysAgo(1, 15, 45)},
+	{query: "hoodie", count: 9200, trend: -5, lastSeen: daysAgo(7, 10, 30)},
+	{query: "mens shorts", count: 8540, trend: 15, lastSeen: daysAgo(0, 9, 20)},
+	{query: "sports bra", count: 7800, trend: 3, lastSeen: daysAgo(5, 14, 50)},
+	{query: "water bottle", count: 5600, trend: 25, lastSeen: daysAgo(2, 11, 15)},
+	{query: "socks", count: 4500, trend: 2, lastSeen: daysAgo(0, 8, 40)},
+	{query: "gym bag", count: 3200, trend: -2, lastSeen: daysAgo(25, 16, 0)},
+	{query: "trail runners", count: 2100, trend: 18, lastSeen: daysAgo(40, 13, 20)},
+	{query: "cycling jersey", count: 1500, trend: 5, lastSeen: daysAgo(75, 10, 10)},
 ];
 
 const generateDailyData = (days: number) => {

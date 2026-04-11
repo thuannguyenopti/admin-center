@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Bikes",
+    "slug": "bikes",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Road Bikes",
+    "slug": "road-bikes",
+    "parentSlug": "bikes",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Mountain Bikes",
+    "slug": "mountain-bikes",
+    "parentSlug": "bikes",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Accessories",
+    "slug": "accessories",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Helmets",
+    "slug": "helmets",
+    "parentSlug": "accessories",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Lights",
+    "slug": "lights",
+    "parentSlug": "accessories",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Nutrition",
+    "slug": "nutrition",
+    "parentSlug": "training",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Plans",
+    "slug": "plans",
+    "parentSlug": "training",
+    "status": "published",
+    "visibility": "public"
+  }
+]

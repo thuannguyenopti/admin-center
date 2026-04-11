@@ -12,14 +12,13 @@ import {
 } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input"; // Using local Input wrapper as seen in page.tsx
 import {
-    IconX,
-    IconChevronRight,
-} from "@tabler/icons-react";
-import {
     IconPlay,
-    IconArrowRotateLeft,
+    IconArrowsRotate,
+    IconChevronRight,
 } from "@optimizely/axiom-icons";
 import { useState } from "react";
+import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
+import { ResizableDetailsTray } from "./ResizableDetailsTray";
 
 interface Variable {
     name: string;
@@ -34,6 +33,13 @@ interface TestRunTrayProps {
     variables: Variable[];
 }
 
+const MOCK_MEMORY_CHUNKS = [
+    { label: "Target region", content: "United States (en-US)" },
+    { label: "Brand voice", content: "Professional, approachable tone" },
+    { label: "Terminology", content: "American English spelling, active voice preferred" },
+    { label: "Prior runs", content: "2 previous localizations for this content" },
+];
+
 export function TestRunTray({
     isOpen,
     onClose,
@@ -42,6 +48,8 @@ export function TestRunTray({
     const [inputValues, setInputValues] = useState<Record<string, string>>({});
     const [output, setOutput] = useState("");
     const [isRunning, setIsRunning] = useState(false);
+    const [showScaffold, setShowScaffold] = useState(false);
+    const [showSkeleton, setShowSkeleton] = useState(false);
     const [isInputOpen, setIsInputOpen] = useState(true);
 
     const handleInputChange = (name: string, value: string) => {
@@ -53,11 +61,17 @@ export function TestRunTray({
 
     const handleRun = () => {
         setIsRunning(true);
-        // Simulate a run
+        setShowScaffold(false);
+        setShowSkeleton(false);
+        setOutput("");
+        setTimeout(() => setShowScaffold(true), 300);    // Phase 1 → 2
+        setTimeout(() => setShowSkeleton(true), 2300);   // Phase 2 → 3
         setTimeout(() => {
-            setOutput("This is a simulated output based on your inputs.\n\nGenerated content would appear here.");
+            setOutput("Localized content for United States (en-US):\n\nHello world — adapted for American English with regional context applied. Brand voice maintained throughout.");
             setIsRunning(false);
-        }, 1500);
+            setShowScaffold(false);
+            setShowSkeleton(false);
+        }, 6800);                                         // Phase 4 (5300 + 1500ms)
     };
 
     const handleClearInputs = () => {
@@ -66,57 +80,25 @@ export function TestRunTray({
             return acc;
         }, {} as Record<string, string>);
         setInputValues(cleared);
+        setShowScaffold(false);
+        setShowSkeleton(false);
     };
 
     const hasInputs = Object.values(inputValues).some(val => val.length > 0);
 
     return (
-        <Box
-            style={{
-                width: isOpen ? "400px" : "0px", // Slightly wider for inputs
-                transition: "width 0.3s ease-in-out",
-                overflow: "hidden",
-                borderLeft: isOpen ? "1px solid var(--ax-colors-border-secondary)" : "none",
-                backgroundColor: "var(--ax-colors-bg-default)",
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0,
-            }}
+        <ResizableDetailsTray
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Test Run"
+            defaultWidth={400}
+            minWidth={360}
+            maxWidth={720}
+            bodyPadding="16"
         >
-            {isOpen && (
-                <>
-                    {/* Header */}
-                    <Box
-                        px="16"
-                        py="12"
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                    >
-                        <Text fontWeight="600" fontSize="md">
-                            Test Run
-                        </Text>
-                        <Button
-                            appearance="subtle"
-                            size="sm"
-                            icon={<IconX size={16} />}
-                            aria-label="Close"
-                            onClick={onClose}
-                        />
-                    </Box>
-
-                    {/* Content */}
-                    <Box
-                        flex="1"
-                        overflowY="auto"
-                        px="16"
-                        py="16"
-                        display="flex"
-                        flexDirection="column"
-                        gap="16"
-                    >
+                    <Box display="flex" flexDirection="column" gap="16">
                         {/* Input Section */}
-                        <Disclosure defaultOpen onOpenChange={setIsInputOpen} bg="bg.secondary" rounded="md" pl="8" py="4" pr="8">
+                        <Disclosure defaultOpen onOpenChange={setIsInputOpen} bg="bg.secondary" rounded="md" px="16" pt="4" pb="12">
                             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                                 <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
@@ -173,7 +155,7 @@ export function TestRunTray({
                         </Disclosure>
 
                         {/* Output Section */}
-                        <Disclosure defaultOpen bg="bg.secondary" rounded="md" pl="8" py="4" pr="8">
+                        <Disclosure defaultOpen bg="bg.secondary" rounded="md" px="16" pt="4" pb="12">
                             <Box display="flex" alignItems="center" justifyContent="space-between" w="full">
                                 <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
                                     <Box display="flex" alignItems="center" gap="8">
@@ -184,7 +166,7 @@ export function TestRunTray({
                                     <Button
                                         appearance="subtle"
                                         size="sm"
-                                        icon={<IconArrowRotateLeft size={16} />}
+                                        icon={<IconArrowsRotate size={16} />}
                                         aria-label="Re-run test"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -195,19 +177,100 @@ export function TestRunTray({
                             </Box>
                             <DisclosureContent>
                                 <Box pt="12">
-                                    <Textarea
-                                        value={output}
-                                        readOnly
-                                        placeholder="Output will appear here after running..."
-                                        className="h-64"
-                                        style={{ fontFamily: "monospace", fontSize: "13px" }}
-                                    />
+                                    {isRunning ? (
+                                        // Phase 1 & 2: placeholder text only
+                                        <Text
+                                            color="fg.tertiary"
+                                            fontSize="sm"
+                                            style={{ fontFamily: "monospace", lineHeight: "1.6" }}
+                                        >
+                                            Generated content would appear here.
+                                        </Text>
+                                    ) : (
+                                        // Phase 3: actual output
+                                        <Textarea
+                                            value={output}
+                                            readOnly
+                                            placeholder="Output will appear here after running..."
+                                            className="h-32"
+                                            style={{ fontFamily: "monospace", fontSize: "13px" }}
+                                        />
+                                    )}
                                 </Box>
                             </DisclosureContent>
                         </Disclosure>
+
+                        {/* Execution Memory Section — hidden in Phase 1, appears in Phase 2 & 3 */}
+                        {(isRunning && showScaffold) || (!isRunning && output) ? (
+                            <Disclosure
+                                key={isRunning ? "memory-loading" : "memory-done"}
+                                defaultOpen={isRunning}
+                                bg="bg.secondary"
+                                rounded="md"
+                                px="16"
+                                pt="4"
+                                pb="12"
+                            >
+                                <DisclosureTrigger style={{ flex: 1, textAlign: "left" }}>
+                                    <Box display="flex" alignItems="center" gap="8">
+                                        <Text fontWeight="600">Execution Memory</Text>
+                                        {!isRunning && (
+                                            <Text
+                                                color="fg.tertiary"
+                                                fontSize="xs"
+                                                style={{
+                                                    background: "var(--ax-colors-bg-default)",
+                                                    borderRadius: "10px",
+                                                    padding: "1px 7px",
+                                                    fontWeight: 500,
+                                                }}
+                                            >
+                                                {MOCK_MEMORY_CHUNKS.length}
+                                            </Text>
+                                        )}
+                                    </Box>
+                                </DisclosureTrigger>
+                                <DisclosureContent>
+                                    <Box pt="12">
+                                        {isRunning ? (
+                                            // Phase 2 & 3: V5 loader, with skeleton appearing in Phase 3
+                                            <Box display="flex" flexDirection="column" gap="12">
+                                                <Box display="flex" justifyContent="center" alignItems="center" style={{ height: "80px" }}>
+                                                    <OpalLoaderV5 size={32} color="#7C3AED" />
+                                                </Box>
+                                                {showSkeleton && (
+                                                    <div className="animate-pulse flex flex-col gap-3">
+                                                        <div className="h-8 rounded bg-gray-200 w-full" />
+                                                        <div className="h-8 rounded bg-gray-200 w-full" />
+                                                        <div className="h-8 rounded bg-gray-200 w-full" />
+                                                        <div className="h-8 rounded bg-gray-200 w-full" />
+                                                    </div>
+                                                )}
+                                            </Box>
+                                        ) : (
+                                            // Phase 3: memory chunks
+                                            <Box display="flex" flexDirection="column" gap="8">
+                                                {MOCK_MEMORY_CHUNKS.map((chunk, i) => (
+                                                    <Box key={i} display="flex" gap="12">
+                                                        <Text
+                                                            color="fg.tertiary"
+                                                            fontSize="sm"
+                                                            style={{ minWidth: "96px", flexShrink: 0 }}
+                                                        >
+                                                            {chunk.label}
+                                                        </Text>
+                                                        <Text color="fg.secondary" fontSize="sm">
+                                                            {chunk.content}
+                                                        </Text>
+                                                    </Box>
+                                                ))}
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </DisclosureContent>
+                            </Disclosure>
+                        ) : null}
                     </Box>
-                </>
-            )}
-        </Box>
+        </ResizableDetailsTray>
     );
 }

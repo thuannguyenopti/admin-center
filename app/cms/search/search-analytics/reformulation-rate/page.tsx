@@ -8,6 +8,7 @@ import {IconSearch, IconArrowRight} from "@tabler/icons-react";
 import {useState, useMemo} from "react";
 import {reformulationQueries, ReformulationQuery, scaleValue} from "@/app/db/analyticsData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
+import EmptyList from "@/app/components/EmptyList";
 
 const allData: ReformulationQuery[] = reformulationQueries;
 
@@ -74,7 +75,6 @@ export default function ReformulationRatePage() {
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
-						style={{width: "320px"}}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
@@ -96,36 +96,43 @@ export default function ReformulationRatePage() {
 				</Flex>
 			</Flex>
 
-			<Table>
-				<thead>
-					<Tr>
-						<Th>Original Query</Th>
-						<Th></Th>
-						<Th>Reformulated To</Th>
-						<Th align="right">Occurrences</Th>
-						<Th>Confidence</Th>
-					</Tr>
-				</thead>
-				<tbody>
-					{filteredData.map((row, i) => (
-						<Tr key={i}>
-							<Td>
-								<Text color="fg.secondary">{row.originalQuery}</Text>
-							</Td>
-							<Td>
-								<IconArrowRight size={16} />
-							</Td>
-							<Td>{row.reformulatedQuery}</Td>
-							<Td type="numeric">{row.count.toLocaleString()}</Td>
-							<Td width={100}>
-								<Badge intent={row.confidence > 0.9 ? "success" : "warning"}>
-									{(row.confidence * 100).toFixed(0)}%
-								</Badge>
-							</Td>
+			{filteredData.length === 0 ? (
+				<EmptyList
+					heading="No results found"
+					body="No queries match your current filters. Try adjusting the time range or search terms."
+				/>
+			) : (
+				<Table>
+					<thead>
+						<Tr>
+							<Th>Original Query</Th>
+							<Th></Th>
+							<Th>Reformulated To</Th>
+							<Th align="right">Occurrences</Th>
+							<Th>Confidence</Th>
 						</Tr>
-					))}
-				</tbody>
-			</Table>
+					</thead>
+					<tbody>
+						{filteredData.map((row, i) => (
+							<Tr key={i}>
+								<Td>
+									<Text color="fg.secondary">{row.originalQuery}</Text>
+								</Td>
+								<Td>
+									<IconArrowRight size={16} />
+								</Td>
+								<Td>{row.reformulatedQuery}</Td>
+								<Td type="numeric">{row.count.toLocaleString()}</Td>
+								<Td width={100}>
+									<Badge intent={row.confidence > 0.9 ? "success" : "warning"}>
+										{(row.confidence * 100).toFixed(0)}%
+									</Badge>
+								</Td>
+							</Tr>
+						))}
+					</tbody>
+				</Table>
+			)}
 		</Box>
 	);
 }

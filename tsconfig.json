@@ -25,6 +25,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@optimizely/axiom-icons": [
+        "./node_modules/@optimizely/axiom-icons"
       ]
     }
   },

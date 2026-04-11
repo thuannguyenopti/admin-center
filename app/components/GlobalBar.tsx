@@ -1,8 +1,7 @@
 "use client";
 
-import {Box, Heading, Menu, MenuContent, MenuTrigger, Button, Indicator} from "@optiaxiom/react";
+import {Box, Menu, MenuContent, MenuTrigger, Button} from "@optiaxiom/react";
 import {Text} from "./Text";
-import {ReactNode} from "react";
 import {useRouter, usePathname} from "next/navigation";
 import {
 	IconSearch,
@@ -10,13 +9,32 @@ import {
 	IconHelp,
 	IconUser,
 	IconSunFilled,
-	IconWashMachine,
 	IconMoon,
 	IconDeviceDesktop,
+	IconBuilding,
+	IconUsers,
+	IconSparkles,
+	IconFolder,
+	IconCircleDot,
+	IconApps,
+	IconGitBranch,
+	IconTarget,
+	IconTemplate,
+	IconList,
+	IconFileDownload,
+	IconActivity,
+	IconTrash,
+	IconShare,
+	IconShieldCheck,
+	IconMail,
+	IconCloud,
+	IconWebhook,
+	IconCode,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
+import {useLayout} from "@/app/context/LayoutContext";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -25,11 +43,28 @@ type GlobalBarProps = {
 export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const router = useRouter();
 	const pathname = usePathname();
+	const isCmpTaskDetail = pathname.startsWith("/cmp/task/");
+	const isCmpRoute = pathname.startsWith("/cmp");
 	const {preference: themePreference, setPreference: setThemePreference} = useTheme();
+	const {codePanelControls} = useLayout();
+
+	const handleCodeClick = () => {
+		codePanelControls?.openPanel(pathname);
+	};
+
+	const settingsGroups = {
+		userOrg: { label: "User", separator: false, hidden: true },
+		ai: { label: "AI", separator: true, hidden: true },
+		main: { label: "Main", separator: true, hidden: true },
+		management: { label: "Management", separator: true, hidden: true },
+		integrations: { label: "Integrations", separator: true, hidden: true },
+		social: { label: "Social", separator: false, hidden: true },
+	};
 
 	const getCurrentProduct = () => {
 		if (pathname.startsWith("/web-experimentation")) return "Web Experimentation";
 		if (pathname.startsWith("/cms")) return "CMS";
+		if (pathname.startsWith("/cmp")) return "CMP";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
@@ -42,12 +77,13 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			py="12"
 			px="20"
 			bg="bg.default"
-			gridColumn="2"
+			style={{ gridColumn: "1 / -1" }}
 			borderB="1"
 			borderColor="border.tertiary"
 			display="flex"
 			alignItems="center"
 			justifyContent="space-between"
+			className="global-bar"
 		>
 			<Box display="flex" alignItems="center">
 				<Link href={"/"}>
@@ -79,17 +115,11 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						/>
 					</svg>
 				</Link>
-				<Box ml="32" display="flex" alignItems={"center"} gap="8">
+				<Box ml="32" display="flex" alignItems="center" gap="8">
 					<Text fontSize="md" fontWeight="500" color="fg.default">
 						Stride
 					</Text>
-					<svg
-						width="14"
-						height="12"
-						viewBox="0 0 14 12"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
-					>
+					<svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path
 							d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
 							fill="#2E3442"
@@ -112,7 +142,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						},
 						{
 							label: "Content Marketing Platform",
-							disabledReason: "TBD",
+							execute: () => router.push("/cmp/dashboard"),
 						},
 						{
 							label: "Connect Platform",
@@ -136,20 +166,15 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Box
 							ml="32"
 							display="flex"
-							alignItems={"center"}
+							alignItems="center"
 							gap="8"
 							style={{cursor: "pointer"}}
+							suppressHydrationWarning
 						>
 							<Text fontSize="md" fontWeight="500" color="fg.default">
 								{getCurrentProduct()}
 							</Text>
-							<svg
-								width="14"
-								height="12"
-								viewBox="0 0 14 12"
-								fill="none"
-								xmlns="http://www.w3.org/2000/svg"
-							>
+							<svg width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
 								<path
 									d="M12.3125 4.37498L7.34373 8.87498C7.15623 9.06248 6.87498 9.06248 6.68748 8.87498L1.65623 4.37498C1.43748 4.18748 1.43748 3.87498 1.62498 3.68748C1.81248 3.46873 2.12498 3.46873 2.31248 3.65623L6.99998 7.84373L11.6562 3.65623C11.8437 3.46873 12.1562 3.46873 12.3437 3.68748C12.5312 3.87498 12.5312 4.18748 12.3125 4.37498Z"
 									fill="#2E3442"
@@ -187,13 +212,11 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						<Button
 							appearance="subtle"
 							size="md"
-							icon={
-								{
-									system: <IconDeviceDesktop />,
-									light: <IconSunFilled />,
-									dark: <IconMoon />,
-								}[themePreference]
-							}
+							icon={{
+								system: <IconDeviceDesktop />,
+								light: <IconSunFilled />,
+								dark: <IconMoon />,
+							}[themePreference]}
 							aria-label="Theme"
 							className="capitalize"
 						>
@@ -202,20 +225,17 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</MenuTrigger>
 					<MenuContent />
 				</Menu>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconSearch size={20} />}
-					aria-label="Search"
-				/>
-				<Button
-					appearance="subtle"
-					size="md"
-					aria-label="Opal AI Assistant"
-					onClick={onOpalClick}
-				>
-					<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+				<Button appearance="subtle" size="md" aria-label="Opal AI Assistant" onClick={onOpalClick}>
+					<Box display="flex" alignItems="center" gap="8">
+						<Image src="/opal-orb.png" alt="Opal" width={20} height={20} />
+						{isCmpTaskDetail && (
+							<Text fontSize="md" fontWeight="500" color="fg.default">
+								Ask Opal
+							</Text>
+						)}
+					</Box>
 				</Button>
+				<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 				<Box style={{position: "relative"}}>
 					<Button
 						appearance="subtle"
@@ -236,18 +256,152 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						rounded="full"
 					/>
 				</Box>
+				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
 				<Button
 					appearance="subtle"
 					size="md"
-					icon={<IconHelp size={20} />}
-					aria-label="Help"
+					icon={<IconCode size={20} />}
+					aria-label="View source code"
+					onClick={handleCodeClick}
 				/>
-				<Button
-					appearance="subtle"
-					size="md"
-					icon={<IconUser size={20} />}
-					aria-label="User profile"
-				/>
+				{isCmpRoute ? (
+					<Menu
+						options={[
+							{
+								group: settingsGroups.userOrg,
+								label: "Stefan Svebeck (Admin)",
+								addon: <IconUser size={16} />,
+							},
+							{
+								group: settingsGroups.userOrg,
+								label: "Organization",
+								addon: <IconBuilding size={16} />,
+							},
+							{
+								group: settingsGroups.userOrg,
+								label: "Users & Teams",
+								addon: <IconUsers size={16} />,
+							},
+							{
+								group: settingsGroups.ai,
+								label: "AI",
+								addon: <IconSparkles size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Assets",
+								addon: <IconFolder size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Fields",
+								addon: <IconCircleDot size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Integrations",
+								addon: <IconApps size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Routing Rules",
+								addon: <IconGitBranch size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Strategy",
+								addon: <IconTarget size={16} />,
+							},
+							{
+								group: settingsGroups.main,
+								label: "Templates",
+								addon: <IconTemplate size={16} />,
+								execute: () => router.push("/cmp/settings/content-models"),
+							},
+							{
+								group: settingsGroups.main,
+								label: "Workflows",
+								addon: <IconList size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Reports",
+								addon: <IconFileDownload size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Activity Log",
+								addon: <IconActivity size={16} />,
+							},
+							{
+								group: settingsGroups.management,
+								label: "Recycle Bin",
+								addon: <IconTrash size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Marketo",
+								addon: <IconMail size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Eloqua",
+								addon: <IconMail size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Salesforce",
+								addon: <IconCloud size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Apps & Webhooks",
+								addon: <IconWebhook size={16} />,
+							},
+							{
+								group: settingsGroups.integrations,
+								label: "Brand Compliance",
+								addon: <IconShieldCheck size={16} />,
+							},
+							{
+								group: settingsGroups.social,
+								label: "Social Accounts",
+								addon: <IconShare size={16} />,
+							},
+						]}
+					>
+						<MenuTrigger asChild>
+							<Button appearance="subtle" size="md" aria-label="User profile">
+								{isCmpTaskDetail ? (
+									<Image
+										src="/avatars/aamr-fakhry.png"
+										alt="User profile"
+										width={24}
+										height={24}
+										style={{borderRadius: 999}}
+									/>
+								) : (
+									<IconUser size={20} />
+								)}
+							</Button>
+						</MenuTrigger>
+						<MenuContent style={{ minWidth: "240px" }} />
+					</Menu>
+				) : (
+					<Button appearance="subtle" size="md" aria-label="User profile">
+						{isCmpTaskDetail ? (
+							<Image
+								src="/avatars/aamr-fakhry.png"
+								alt="User profile"
+								width={24}
+								height={24}
+								style={{borderRadius: 999}}
+							/>
+						) : (
+							<IconUser size={20} />
+						)}
+					</Button>
+				)}
 			</Box>
 		</Box>
 	);

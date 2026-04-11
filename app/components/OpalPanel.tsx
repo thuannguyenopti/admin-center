@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Box } from "@optiaxiom/react";
 import { OpalHeader } from "./Opal/OpalHeader";
 import { OpalChat } from "./Opal/OpalChat";
@@ -8,11 +8,8 @@ import { OpalInput } from "./Opal/OpalInput";
 import { OpalHistorySidebar } from "./Opal/OpalHistorySidebar";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
-
-const MIN_WIDTH = 320;
-const MAX_WIDTH = 800;
-const DEFAULT_TOP = 64;
-const DEFAULT_RIGHT = 20;
+import { useLayout } from "@/app/context/LayoutContext";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 
 type OpalPanelProps = {
   isOpen: boolean;
@@ -20,9 +17,11 @@ type OpalPanelProps = {
   messages: ChatMessage[];
   inputValue: string;
   isLoading: boolean;
+  isInputDisabled?: boolean;
   error?: string;
   setInputValue: (value: string) => void;
   sendMessage: (content: string) => void;
+  regenerate?: (id: string) => void;
 
   groupedHistory: { [key: string]: ChatHistoryItem[] };
   activeChat: string | null;
@@ -35,6 +34,9 @@ type OpalPanelProps = {
   createNewChat: () => void;
   deleteChat: (id: string) => void;
   selectChat: (id: string) => void;
+  contextChip?: string | null;
+  contextContent?: string | null;
+  onContextChipRemove?: () => void;
 };
 
 export function OpalPanel({
@@ -43,9 +45,11 @@ export function OpalPanel({
   messages,
   inputValue,
   isLoading,
+  isInputDisabled = false,
   error,
   setInputValue,
   sendMessage,
+  regenerate,
   groupedHistory,
   activeChat,
   searchQuery,
@@ -57,31 +61,19 @@ export function OpalPanel({
   createNewChat,
   deleteChat,
   selectChat,
+  contextChip,
+  contextContent,
+  onContextChipRemove,
 }: OpalPanelProps) {
-  const baseWidth = mode === 'docked' ? 400 : 449;
-  const historyWidth = mode === 'docked' ? 272 : 256;
-  const defaultTotalWidth = isHistoryVisible ? baseWidth + historyWidth : baseWidth;
-
-  const [position, setPosition] = useState<{ top: number; left: number | null }>({
-    top: DEFAULT_TOP,
-    left: null,
-  });
-  const [size, setSize] = useState({ width: defaultTotalWidth, height: 600 });
-
-  useEffect(() => {
-    setSize((s) => ({ ...s, height: window.innerHeight - 84 }));
-  }, []);
-  const [isDragging, setIsDragging] = useState(false);
+  const { setOpalPanelWidth } = useLayout();
+  const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
-  const dragStartRef = useRef<{ x: number; y: number; left: number; top: number }>({ x: 0, y: 0, left: 0, top: 0 });
-  const resizeStartRef = useRef<{ x: number; width: number; left: number }>({ x: 0, width: 0, left: 0 });
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
 
-  const totalWidth = size.width;
-  const panelHeight = size.height;
-
-  const handleSend = () => {
-    if (inputValue.trim() && !isLoading) {
-      sendMessage(inputValue);
+  const handleSend = (content?: string) => {
+    const msg = content ?? inputValue;
+    if (msg.trim() && !isLoading && !isInputDisabled) {
+      sendMessage(msg);
     }
   };
 
@@ -89,117 +81,92 @@ export function OpalPanel({
     setInputValue(suggestion);
   };
 
-  const handleHeaderMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest("button")) return;
-      const left = position.left ?? (typeof window !== "undefined" ? window.innerWidth - totalWidth - DEFAULT_RIGHT : 0);
-      dragStartRef.current = { x: e.clientX, y: e.clientY, left, top: position.top };
-      setIsDragging(true);
-    },
-    [position.left, position.top, totalWidth],
-  );
-
-  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+  // Resize handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    const left = position.left ?? (typeof window !== "undefined" ? window.innerWidth - size.width - DEFAULT_RIGHT : 0);
-    resizeStartRef.current = { x: e.clientX, width: size.width, left };
     setIsResizing(true);
-  }, [size.width, position.left]);
+  }, []);
 
-  useEffect(() => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isResizing) return;
-    const onMove = (e: MouseEvent) => {
-      const delta = resizeStartRef.current.x - e.clientX;
-      const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, resizeStartRef.current.width + delta));
-      const rightEdge = resizeStartRef.current.left + resizeStartRef.current.width;
-      setSize((s) => ({ ...s, width: next }));
-      setPosition((p) => ({ ...p, left: rightEdge - next }));
-    };
-    const onUp = () => {
-      setIsResizing(false);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
+    const newWidth = window.innerWidth - e.clientX;
+    if (newWidth >= 300 && newWidth <= 800) {
+      setCustomWidth(newWidth);
+    }
   }, [isResizing]);
 
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  // Add/remove global mouse event listeners for resizing
   useEffect(() => {
-    if (!isDragging) return;
-    const onMove = (e: MouseEvent) => {
-      setPosition({
-        top: dragStartRef.current.top + e.clientY - dragStartRef.current.y,
-        left: dragStartRef.current.left + e.clientX - dragStartRef.current.x,
-      });
-    };
-    const onUp = () => {
-      setIsDragging(false);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.body.style.cursor = "move";
-    document.body.style.userSelect = "none";
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [isDragging]);
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      };
+    }
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
+  // Calculate width - use custom width if set, otherwise use default
+  const baseWidth = customWidth || 400;
+  const historyWidth = 272;
+  const totalWidth = isHistoryVisible ? baseWidth + historyWidth : baseWidth;
+
+  // Update layout context with panel width
+  useEffect(() => {
+    if (isOpen) {
+      setOpalPanelWidth(totalWidth);
+    } else {
+      setOpalPanelWidth(0);
+    }
+  }, [isOpen, totalWidth, setOpalPanelWidth]);
 
   if (!isOpen) return null;
-
-  const boxShadow = mode === 'docked'
-    ? '-6px 6px 25px rgba(12, 16, 29, 0.08)'
-    : '0px 6px 18px rgba(9, 30, 66, 0.04), 0px 6px 12px rgba(9, 30, 66, 0.08), 0px 4px 4px 1px rgba(9, 30, 66, 0.04)';
-
-  const styleLeft = position.left;
-  const styleRight = styleLeft == null ? DEFAULT_RIGHT : undefined;
-  const styleTop = Math.max(0, position.top);
 
   return (
     <Box
       className="opal-panel"
       style={{
         position: 'fixed',
-        top: `${styleTop}px`,
-        ...(styleLeft != null ? { left: `${styleLeft}px` } : {}),
-        ...(styleRight != null ? { right: `${styleRight}px` } : {}),
+        top: '57px',
+        right: 0,
+        bottom: 0,
         width: `${totalWidth}px`,
-        height: `${panelHeight}px`,
-        backgroundColor: 'var(--opal-bg-sidebar)',
-        border: '1px solid var(--opal-border-primary)',
-        borderRadius: '8px',
-        boxShadow,
+        backgroundColor: 'var(--opal-bg-primary)',
+        borderLeft: '1px solid var(--opal-border-primary)',
         zIndex: 50,
         display: 'flex',
         flexDirection: 'row',
-        overflow: 'hidden',
+        overflowX: 'visible',
+        overflowY: 'hidden',
+        transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
       }}
     >
-      {/* Resize handle - only in docked mode */}
+      {modalElement}
+      {/* Grab Handle - only in docked mode */}
       {mode === 'docked' && (
         <Box
-          role="separator"
-          aria-label="Resize panel"
-          onMouseDown={handleResizeMouseDown}
+          onMouseDown={handleMouseDown}
           style={{
             position: 'absolute',
-            left: '-5px',
+            left: '0',
             top: '50%',
-            transform: 'translateY(-50%)',
+            transform: 'translate(-50%, -50%)',
             width: '10px',
             height: '52px',
             backgroundColor: 'var(--opal-bg-primary)',
             border: '1px solid var(--opal-border-secondary)',
             borderRadius: '4px',
-            cursor: 'col-resize',
+            cursor: 'ew-resize',
+            zIndex: 100,
           }}
         />
       )}
@@ -226,34 +193,32 @@ export function OpalPanel({
           overflow: 'hidden',
         }}
       >
-        <Box
-          onMouseDown={handleHeaderMouseDown}
-          style={{
-            cursor: isDragging ? "grabbing" : "move",
-            flexShrink: 0,
-          }}
-        >
-          <OpalHeader 
-            onClose={onClose}
-            mode={mode}
-            isHistoryVisible={isHistoryVisible}
-            onToggleHistory={toggleHistory}
-            onToggleMode={toggleMode}
-          />
-        </Box>
+        <OpalHeader
+          onClose={onClose}
+          onToggleHistory={toggleHistory}
+          onNewChat={createNewChat}
+          onToggleMode={toggleMode}
+        />
         <OpalChat
           messages={messages}
           onSuggestionClick={handleSuggestionClick}
-          onSubmitPrompt={sendMessage}
-          isLoading={isLoading}
+          onRegenerate={regenerate}
+          contextChip={contextChip}
+          contextualActionCard={atlassianActionCard}
         />
-        <OpalInput
-          value={inputValue}
-          onChange={setInputValue}
-          onSend={handleSend}
-          disabled={isLoading}
-          error={error}
-        />
+        <div style={{ flexShrink: 0 }}>
+          <OpalInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSend}
+            disabled={isLoading || isInputDisabled}
+            isLoading={isLoading}
+            error={error}
+            contextChip={contextChip}
+            contextContent={contextContent}
+            onContextChipRemove={onContextChipRemove}
+          />
+        </div>
       </Box>
     </Box>
   );

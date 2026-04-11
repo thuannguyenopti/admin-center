@@ -28,15 +28,7 @@ import {
     Layout,
 } from "@optiaxiom/react/unstable";
 import { Input } from "@/app/components/Input";
-import {
-    IconX,
-    IconDots,
-    IconTrash,
-    IconPlus,
-    IconInfoCircle,
-    IconHelp,
-    IconSearch,
-} from "@tabler/icons-react";
+import { getSelectValueInOptions } from "@/utils/selectValue";
 import {
     IconEnvelope,
     IconSplit,
@@ -45,14 +37,17 @@ import {
     IconCodeBranch,
     IconCalendar,
     IconSparkles,
-    IconFileImport,
     IconXmark,
-} from "@optimizely/axiom-icons";
-import {
+    IconEllipsisSolid,
+    IconTrashCan,
+    IconPlus,
+    IconCircleInfo,
+    IconCircleQuestion as IconHelp,
+    IconSearch,
     IconChevronDown,
     IconChevronRight,
     IconCode,
-} from "@tabler/icons-react";
+} from "@optimizely/axiom-icons";
 import { useReactFlow, MarkerType } from "@xyflow/react";
 import { useState, useEffect } from "react";
 
@@ -142,7 +137,7 @@ const PanelContainer = ({
                     {headerAction}
                     {!hideCloseButton && (
                         <Button
-                            icon={<IconX size={16} />}
+                            icon={<IconXmark size={16} />}
                             appearance="subtle"
                             aria-label="Close"
                             size="sm"
@@ -169,7 +164,7 @@ const PanelContainer = ({
                 flex="1"
             >
                 {(hideCloseButton || onSave) && <Button appearance="subtle" onClick={onClose}>Cancel</Button>}
-                {!hideMenuButton && <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />}
+                {!hideMenuButton && <Button appearance="subtle" icon={<IconEllipsisSolid size={16} />} aria-label="More options" />}
                 <Button appearance="primary" onClick={onSave}>Apply</Button>
             </Box>
         </DetailsPanelFooter>
@@ -211,7 +206,7 @@ export function EmailTriggerPanel({ onClose }: PanelProps) {
                         <Box style={{ flex: 2 }}>
                             <Input placeholder="Enter filter criteria" />
                         </Box>
-                        <IconTrash size={16} className="cursor-pointer text-fg-tertiary hover:text-fg-default" />
+                        <IconTrashCan size={16} className="cursor-pointer text-fg-tertiary hover:text-fg-default" />
                     </Box>
                 </Field>
             </Box>
@@ -335,16 +330,28 @@ export function ConditionPanel({ onClose, node }: PanelProps & { node: any }) {
                     <Box key={index} display="flex" flexDirection="column" gap="16">
                         <Text fontWeight="600" fontSize="md" color="fg.secondary">Condition {index + 1}</Text>
                         <Field label="Match type" required>
-                            <Select
-                                value={condition.matchType}
-                                onValueChange={(val) => updateCondition(index, { matchType: val })}
-                                options={MATCH_TYPES}
-                            >
-                                <SelectTrigger size="lg">
-                                    {MATCH_TYPES.find(m => m.value === condition.matchType)?.label}
-                                </SelectTrigger>
-                                <SelectContent />
-                            </Select>
+                            {(() => {
+                                const matchTypeValue = getSelectValueInOptions(
+                                    condition.matchType,
+                                    MATCH_TYPES,
+                                    "equals"
+                                );
+                                return (
+                                    <Select
+                                        value={matchTypeValue}
+                                        onValueChange={(val) =>
+                                            updateCondition(index, { matchType: val })
+                                        }
+                                        options={MATCH_TYPES}
+                                    >
+                                        <SelectTrigger size="lg">
+                                            {MATCH_TYPES.find((m) => m.value === matchTypeValue)
+                                                ?.label}
+                                        </SelectTrigger>
+                                        <SelectContent />
+                                    </Select>
+                                );
+                            })()}
                         </Field>
                         <Field label="Condition" required>
                             <Input
@@ -517,15 +524,33 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
                     <Field label="Trigger Time">
                         <Box display="flex" gap="4">
-                            <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startHour, [{ label: "9", value: "9" }], "9")}
+                                onValueChange={setStartHour}
+                                options={[{ label: "9", value: "9" }]}
+                            >
                                 <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                 <SelectContent />
                             </Select>
-                            <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startMinute, [{ label: "00", value: "00" }], "00")}
+                                onValueChange={setStartMinute}
+                                options={[{ label: "00", value: "00" }]}
+                            >
                                 <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                 <SelectContent />
                             </Select>
-                            <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
+                            <Select
+                                value={getSelectValueInOptions(startPeriod, [
+                                    { label: "AM", value: "AM" },
+                                    { label: "PM", value: "PM" },
+                                ], "AM")}
+                                onValueChange={setStartPeriod}
+                                options={[
+                                    { label: "AM", value: "AM" },
+                                    { label: "PM", value: "PM" },
+                                ]}
+                            >
                                 <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                 <SelectContent />
                             </Select>
@@ -571,9 +596,25 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                                             <Input value={recurValue} onChange={(e) => setRecurValue(e.target.value)} />
                                         </Box>
                                         <Box style={{ flex: 2 }}>
-                                            <Select value={recurUnit} onValueChange={setRecurUnit} options={recurUnitOptions}>
+                                            <Select
+                                                value={getSelectValueInOptions(
+                                                    recurUnit,
+                                                    recurUnitOptions,
+                                                    "week"
+                                                )}
+                                                onValueChange={setRecurUnit}
+                                                options={recurUnitOptions}
+                                            >
                                                 <SelectTrigger size="lg">
-                                                    {recurUnitOptions.find(o => o.value === recurUnit)?.label}
+                                                    {recurUnitOptions.find(
+                                                        (o) =>
+                                                            o.value ===
+                                                            getSelectValueInOptions(
+                                                                recurUnit,
+                                                                recurUnitOptions,
+                                                                "week"
+                                                            )
+                                                    )?.label}
                                                 </SelectTrigger>
                                                 <SelectContent />
                                             </Select>
@@ -608,15 +649,45 @@ export function SchedulerPanel({ onClose }: PanelProps) {
 
                                 <Field label="Start time">
                                     <Box display="flex" gap="4">
-                                        <Select value={startHour} onValueChange={setStartHour} options={[{ label: "9", value: "9" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startHour,
+                                                [{ label: "9", value: "9" }],
+                                                "9"
+                                            )}
+                                            onValueChange={setStartHour}
+                                            options={[{ label: "9", value: "9" }]}
+                                        >
                                             <SelectTrigger size="lg">{startHour}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
-                                        <Select value={startMinute} onValueChange={setStartMinute} options={[{ label: "00", value: "00" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startMinute,
+                                                [{ label: "00", value: "00" }],
+                                                "00"
+                                            )}
+                                            onValueChange={setStartMinute}
+                                            options={[{ label: "00", value: "00" }]}
+                                        >
                                             <SelectTrigger size="lg">{startMinute}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
-                                        <Select value={startPeriod} onValueChange={setStartPeriod} options={[{ label: "AM", value: "AM" }, { label: "PM", value: "PM" }]}>
+                                        <Select
+                                            value={getSelectValueInOptions(
+                                                startPeriod,
+                                                [
+                                                    { label: "AM", value: "AM" },
+                                                    { label: "PM", value: "PM" },
+                                                ],
+                                                "AM"
+                                            )}
+                                            onValueChange={setStartPeriod}
+                                            options={[
+                                                { label: "AM", value: "AM" },
+                                                { label: "PM", value: "PM" },
+                                            ]}
+                                        >
                                             <SelectTrigger size="lg">{startPeriod}</SelectTrigger>
                                             <SelectContent />
                                         </Select>
@@ -669,7 +740,7 @@ export function SchedulerPanel({ onClose }: PanelProps) {
                     </Tabs>
 
                     <Box bg="bg.information.subtle" p="12" rounded="md" display="flex" gap="12">
-                        <IconInfoCircle size={20} className="text-fg-information" />
+                        <IconCircleInfo size={20} className="text-fg-information" />
                         <Box>
                             <Text fontWeight="600" fontSize="sm">Preview</Text>
                             <Text fontSize="sm" color="fg.secondary">{getPreviewText()}</Text>
@@ -860,7 +931,7 @@ export function AgentNodePanel({ onClose, node }: PanelProps & { node: any }) {
             </DetailsPanelBody>
             <DetailsPanelFooter>
                 <Box display="flex" justifyContent="flex-end" gap="8" flex="1">
-                    <Button appearance="subtle" icon={<IconDots size={16} />} aria-label="More options" />
+                    <Button appearance="subtle" icon={<IconEllipsisSolid size={16} />} aria-label="More options" />
                     <Button appearance="primary" onClick={onClose}>Done</Button>
                 </Box>
             </DetailsPanelFooter>

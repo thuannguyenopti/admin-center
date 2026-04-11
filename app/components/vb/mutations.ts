@@ -94,8 +94,8 @@ const defaultProps: Record<string, EleDef["properties"]> = {
 		required: { value: false },
 	},
 	"ct-image": {
-		imageUrl: { value: "https://placehold.co/800x400" },
-		altText: { value: "" },
+		src: { value: "https://placehold.co/800x400" },
+		alt: { value: "" },
 		width: { value: "" },
 		height: { value: "" },
 	},

@@ -2,16 +2,27 @@ import { ReactNode, isValidElement } from "react";
 import { Badge, Box, Avatar, Tooltip } from "@optiaxiom/react";
 import { Text } from "./Text";
 import { Button } from "./Button";
-import { IconDots as IconMenu } from "@tabler/icons-react";
+import {
+	IconDots as IconMenu,
+	IconInfoCircle,
+	IconCaretUp,
+	IconCaretDown,
+	IconCaretUpDown,
+	IconCaretDownFilled,
+	IconCaretUpFilled,
+	IconCaretUpDownFilled,
+} from "@tabler/icons-react";
 
 export const Table = ({
 	children,
 	style,
 	className,
+	tableStyle,
 }: {
 	children: ReactNode;
 	style?: React.CSSProperties;
 	className?: string;
+	tableStyle?: React.CSSProperties;
 }) => {
 	return (
 		<div
@@ -22,7 +33,7 @@ export const Table = ({
 				...style,
 			}}
 		>
-			<table className="border-collapse w-full">{children}</table>
+			<table className="border-collapse w-full" style={tableStyle}>{children}</table>
 		</div>
 	);
 };
@@ -35,6 +46,7 @@ export const Tr = ({
 	suppressActiveStyle,
 	style,
 	className,
+	...props
 }: {
 	children: ReactNode;
 	url?: string;
@@ -43,6 +55,7 @@ export const Tr = ({
 	suppressActiveStyle?: boolean;
 	style?: React.CSSProperties;
 	className?: string;
+	[key: string]: any;
 }) => {
 	const router = useRouter();
 	const rowClick = (href: string) => {
@@ -79,6 +92,7 @@ export const Tr = ({
 				(className ? ` ${className}` : "")
 			}
 			style={style}
+			{...props}
 		>
 			{children}
 		</tr>
@@ -90,23 +104,50 @@ export const Th = ({
 	style,
 	className,
 	onClick,
+	sortDirection,
+	onSort,
+	tooltip,
+	...rest
 }: {
 	children?: ReactNode;
 	align?: any;
 	style?: React.CSSProperties;
 	className?: string;
 	onClick?: () => void;
+	sortDirection?: "asc" | "desc" | null;
+	onSort?: () => void;
+	tooltip?: string;
+	[key: string]: any;
 }) => {
+	const interactive = !!(onSort || onClick);
 	return (
 		<th
-			className={`text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${className || ""}`}
+			className={`relative text-left p-4 text-xs font-normal py-3 align-top text-[var(--ax-colors-fg-tertiary)] ${interactive ? "cursor-pointer select-none hover:text-[var(--ax-colors-fg-secondary)]" : ""} ${className || ""}`}
 			style={{
 				textAlign: align,
 				...style,
 			}}
-			onClick={onClick}
+			onClick={onSort || onClick}
+			{...rest}
 		>
-			{children}
+			<span className="inline-flex items-center gap-1">
+				{children}
+				{onSort &&
+					(sortDirection === "asc" ? (
+						<IconCaretUpFilled size={14} aria-hidden />
+					) : sortDirection === "desc" ? (
+						<IconCaretDownFilled size={14} aria-hidden />
+					) : (
+						<IconCaretUpDownFilled size={14} aria-hidden />
+					))}
+				{tooltip && (
+					<Tooltip content={tooltip}>
+						<span className="inline-flex" onClick={(e) => e.stopPropagation()}>
+							<IconInfoCircle size={14} />
+						</span>
+					</Tooltip>
+				)}
+			</span>
 		</th>
 	);
 };

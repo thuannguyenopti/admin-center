@@ -27,6 +27,10 @@ type FilterPanelContextType = {
   onTagsChange: (contentId: string, tags: string[]) => void;
   /** Batch persist tag changes for multiple items in one state update (avoids batching bug) */
   onTagsChangeBatch: (updates: Array<{ id: string; tags: string[] }>) => void;
+  /** Persist category changes for page-derived content */
+  onCategoriesChange: (contentId: string, categories: string[]) => void;
+  /** Batch persist category changes for multiple items */
+  onCategoriesChangeBatch: (updates: Array<{ id: string; categories: string[] }>) => void;
 };
 
 const FilterPanelContext = createContext<FilterPanelContextType | undefined>(undefined);
@@ -39,8 +43,13 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
   const hasAppliedUrlFilters = useRef(false);
 
   // Get content for filter state (pages is read/write for Option A tag persistence)
-  const [pages, setPages] = usePersistentState("pages", initialPages) as [Page[], (value: Page[] | ((prev: Page[]) => Page[])) => void, boolean];
+  const [pages, setPages] = usePersistentState("pages_v5", initialPages) as [Page[], (value: Page[] | ((prev: Page[]) => Page[])) => void, boolean];
   const [contentTagOverrides, setContentTagOverrides] = usePersistentState("contentTagOverrides", {}) as [
+    Record<string, string[]>,
+    (value: Record<string, string[]> | ((prev: Record<string, string[]>) => Record<string, string[]>)) => void,
+    boolean
+  ];
+  const [contentCategoryOverrides, setContentCategoryOverrides] = usePersistentState("contentCategoryOverrides", {}) as [
     Record<string, string[]>,
     (value: Record<string, string[]> | ((prev: Record<string, string[]>) => Record<string, string[]>)) => void,
     boolean
@@ -57,18 +66,22 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
     [pages]
   );
   const allContentItems = useMemo(() => {
-    const overrides =
+    const tagOverrides =
       contentTagOverrides && typeof contentTagOverrides === "object" && !Array.isArray(contentTagOverrides)
         ? contentTagOverrides
         : {};
+    const categoryOverrides =
+      contentCategoryOverrides && typeof contentCategoryOverrides === "object" && !Array.isArray(contentCategoryOverrides)
+        ? contentCategoryOverrides
+        : {};
     return (baseContentItems ?? []).map((item) => {
-      const override = overrides[item.id];
-      if (Array.isArray(override)) {
-        return { ...item, tags: override };
-      }
-      return item;
+      const tagOverride = tagOverrides[item.id];
+      const categoryOverride = categoryOverrides[item.id];
+      const withTags = Array.isArray(tagOverride) ? { ...item, tags: tagOverride } : item;
+      const withCategories = Array.isArray(categoryOverride) ? { ...withTags, categories: categoryOverride } : withTags;
+      return withCategories;
     });
-  }, [baseContentItems, contentTagOverrides]);
+  }, [baseContentItems, contentTagOverrides, contentCategoryOverrides]);
 
   const onTagsChange = useCallback(
     (contentId: string, tags: string[]) => {
@@ -114,6 +127,52 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
       }
     },
     [setPages, setContentTagOverrides, pageIds]
+  );
+
+  const onCategoriesChange = useCallback(
+    (contentId: string, categories: string[]) => {
+      if (pageIds.has(contentId)) {
+        setPages((prev) => {
+          const page = prev?.find((p) => p.id === contentId);
+          if (!page) return prev ?? initialPages;
+          return (prev ?? initialPages).map((p) =>
+            p.id === contentId ? { ...p, categories } : p
+          );
+        });
+      } else {
+        setContentCategoryOverrides((prev) => {
+          const next = { ...(prev && typeof prev === "object" && !Array.isArray(prev) ? prev : {}) };
+          next[contentId] = categories;
+          return next;
+        });
+      }
+    },
+    [setPages, setContentCategoryOverrides, pageIds]
+  );
+
+  const onCategoriesChangeBatch = useCallback(
+    (updates: Array<{ id: string; categories: string[] }>) => {
+      if (updates.length === 0) return;
+      const updateMap = new Map(updates.map((u) => [u.id, u.categories]));
+      setPages((prev) => {
+        const base = prev ?? initialPages;
+        return base.map((p) => {
+          const newCategories = updateMap.get(p.id);
+          return newCategories !== undefined ? { ...p, categories: newCategories } : p;
+        });
+      });
+      const nonPageUpdates = updates.filter((u) => !pageIds.has(u.id));
+      if (nonPageUpdates.length > 0) {
+        setContentCategoryOverrides((prev) => {
+          const next = { ...(prev && typeof prev === "object" && !Array.isArray(prev) ? prev : {}) };
+          nonPageUpdates.forEach(({ id, categories }) => {
+            next[id] = categories;
+          });
+          return next;
+        });
+      }
+    },
+    [setPages, setContentCategoryOverrides, pageIds]
   );
 
   const contentItems: ContentItem[] = useMemo(
@@ -191,6 +250,8 @@ export function FilterPanelProvider({ children }: { children: ReactNode }) {
       getCategoryNameBySlug,
       onTagsChange,
       onTagsChangeBatch,
+      onCategoriesChange,
+      onCategoriesChangeBatch,
     }}>
       {children}
     </FilterPanelContext.Provider>
