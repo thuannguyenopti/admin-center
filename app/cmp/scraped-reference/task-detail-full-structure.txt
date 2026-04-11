@@ -1,0 +1,572 @@
+================================================================================
+CMP TASK DETAIL PAGE - COMPLETE STRUCTURE REFERENCE
+================================================================================
+URL: /cloud/taskv3/:taskId
+Scraped: February 26, 2026
+Sample Task: TSK-8 "Article post"
+Layout Pattern: Two-panel design (Left ~60% | Right ~40%)
+
+================================================================================
+GLOBAL TOP BAR
+================================================================================
+Left Section:
+  - "Optimizely" logo/branding
+
+Center Section:
+  - Search control (⌘ K shortcut)
+  - "Ask Opal" button
+
+Right Section:
+  - Notifications icon (badge showing count, e.g., "19")
+  - Assignments icon
+  - Help icon
+  - User avatar (e.g., "DS" for David Steinberg)
+
+Status Banner:
+  - Yellow/warning-colored banner spanning width
+  - Text: "Action required: one or more of your social channel's access
+    tokens have expired..."
+  - Appears below main top bar
+
+================================================================================
+BREADCRUMB NAVIGATION
+================================================================================
+Pattern: Button / Text / Text
+Elements:
+  1. "Add Campaign" button with dropdown chevron
+  2. Forward slash separator
+  3. "Task" text (inactive)
+  4. Forward slash separator
+  5. Task ID text (e.g., "TSK-8")
+
+================================================================================
+PAGE HEADER
+================================================================================
+Left Section:
+  - Task title (large heading, e.g., "Article post")
+
+Right Section:
+  - Status label (e.g., "Not Started")
+  - Plain text, right-aligned
+  - Not a button/control
+
+================================================================================
+LEFT PANEL - MAIN CONTENT AREA (~60% width)
+================================================================================
+
+TAB BAR
+------
+Tab labels (horizontal, left-aligned):
+  1. Brief (default active)
+  2. Content
+  3. Fields
+  4. Publishing
+  5. Related
+  6. Financials
+  7. History
+
+Visual indicator: Active tab has blue underline
+
+================================================================================
+TAB 1: BRIEF
+================================================================================
+Layout: Centered content area
+
+Content Structure:
+  - Large centered heading: "Add a Creative Brief"
+  - Subtitle text: "Build your task strategy here, i.e. Key objectives,
+    Audiences, Pillars."
+  - File uploader area:
+    * Hidden file input element
+    * Upload zone (clickable)
+  - Button row (centered):
+    * "Select Brief" button (with right chevron dropdown icon)
+    * Text: "or"
+    * "Write Brief" button (secondary style)
+
+Accessibility:
+  - Content wrapped in <banner> region
+  - Heading marked with appropriate level
+  - Buttons are interactive, file input is hidden but functional
+
+================================================================================
+TAB 2: CONTENT
+================================================================================
+Top Controls:
+  - "+ Add Content" button (primary style, left-aligned)
+  - View mode toggle buttons (right-aligned):
+    * Table view icon
+    * Single view icon
+    * Grid view icon
+    * List view icon
+  - Content count badge (shows number of items)
+
+Main Content Area:
+  - Horizontal row of content thumbnails
+  - Each thumbnail:
+    * Image preview
+    * Content title below
+    * Clickable to select
+
+Selected Content Details (below thumbnails):
+  - File name/title (bold heading)
+  - Action icons (edit, delete, more options)
+  - Preview pane:
+    * Image or content preview
+    * If image: displays with aspect ratio preserved
+  - Description field:
+    * Label: "Description"
+    * Text input/textarea for editing
+    * Expandable/collapsible
+  - Fields section (collapsible):
+    * Expand/collapse toggle
+    * When expanded: field entries with labels and values
+
+================================================================================
+TAB 3: FIELDS
+================================================================================
+Description Text:
+  "Use fields to organize your work with a strategic structure for
+  classification. They allow for the filtering, customization, and analysis
+  of content by strategic priorities."
+
+Controls:
+  - "+ Add Field" button (primary style)
+  - Dropdown chevron next to button (for field type selection)
+
+Content Area:
+  - List of fields (when present)
+  - Each field entry:
+    * Field label/name
+    * Field value
+    * Edit/delete controls
+
+================================================================================
+TAB 4: PUBLISHING
+================================================================================
+Top Controls:
+  - View toggle buttons (two variant icons, left-aligned)
+  - "+ Add Channel" button (primary style, right-aligned)
+  - Dropdown chevron on Add Channel button
+
+Channel Cards:
+  - Card container with border
+  - Header row:
+    * Platform icon (e.g., Facebook "f" logo)
+    * Channel name/description (e.g., "Posting to 50 published page")
+    * Description is blue link color
+    * Edit icon (pencil)
+    * Delete icon (trash)
+  - Warning banner (yellow background):
+    * Text: "This channel is not connected. Please contact your admin to
+      reconnect and avoid publish failure."
+
+Social Post Preview Card:
+  - Avatar of poster
+  - Poster name / timestamp / globe (public) icon
+  - Post text content
+  - Link preview section:
+    * Domain: "CMP.OPTIMIZELY.COM"
+    * Link title: "I want this to be published"
+    * Link description: "This is the one!"
+  - Social interaction buttons:
+    * Like button
+    * Comment button
+    * Share button
+
+================================================================================
+TAB 5: RELATED
+================================================================================
+Description Text:
+  "Add tasks that support this task or link any related activities."
+
+Controls:
+  - "+ Add Related" button (primary style, blue, with plus icon)
+
+Content Area:
+  - List of related tasks (when present)
+  - Each related task entry:
+    * Task ID
+    * Task title
+    * Remove button (x icon)
+
+================================================================================
+TAB 6: FINANCIALS
+================================================================================
+Information Banner (light blue background):
+  "Financial data is only available for Tasks with a Campaign"
+
+Content Area:
+  - Currently empty/informational state
+  - No financial data displayed when task is not attached to campaign
+
+================================================================================
+TAB 7: HISTORY
+================================================================================
+Timeline Structure:
+  - Date-based grouping (e.g., "22 May, 2023")
+  - Reverse chronological order (newest first)
+
+History Entry Format (each entry):
+  - Time (HH:MM AM/PM, e.g., "04:28 PM")
+  - User avatar (circular, small)
+  - User name (e.g., "Hsiao-Pei Chien")
+  - Action description (what was done)
+  - Related content/icon (if applicable):
+    * Platform icon (e.g., Facebook icon for publishing channel changes)
+    * Resource reference (e.g., "50 published page", "article AI content")
+    * Thumbnail for media items
+  - Status indicators:
+    * Strikethrough text for removed items (e.g., "NC CMS")
+    * Blue links for clickable content references
+    * Badges/icons for action types
+
+Sample History Entries (from Task TSK-8):
+  - 04:28 PM - Hsiao-Pei Chien updated the article AI content
+  - 04:22 PM - Hsiao-Pei Chien added publishing channel [Facebook] 50 published page
+  - 04:22 PM - Hsiao-Pei Chien set article as primary "I want this to be published"
+  - 04:22 PM - Hsiao-Pei Chien removed publishing channel [Facebook] NC CMS
+  - 04:21 PM - Hsiao-Pei Chien added publishing channel [Facebook] NC CMS
+  - 04:21 PM - Hsiao-Pei Chien added a featured image to the article "AI content"
+  - 04:21 PM - Hsiao-Pei Chien added an image [thumbnail] "Image"
+  - 04:19 PM - Hsiao-Pei Chien added an article "I want this"
+  - 04:13 PM - Hsiao-Pei Chien added an article "A"
+  - 04:10 PM - Hsiao-Pei Chien created the task "Article post"
+
+================================================================================
+RIGHT PANEL - WORKFLOW & DETAILS (~40% width)
+================================================================================
+
+TOP ROW - QUICK ACTIONS
+------------------------
+Left Section:
+  - Avatar of task creator/primary user (circular, small image)
+    * Displays user profile picture
+
+Center/Right Section (horizontal layout):
+  - "Share" button (people icon + text label)
+    * Toggles or opens share dialog
+  - Watcher dropdown button:
+    * Eye icon
+    * Badge showing watcher count (e.g., "1")
+    * Dropdown indicator
+  - "Mark Complete" button:
+    * Outlined style (not filled)
+    * Text label only
+    * Action: completes the task
+  - "..." more options button:
+    * Ellipsis menu
+    * Opens dropdown with additional actions
+
+DATE BUTTONS ROW
+----------------
+Two button controls in row:
+  1. "Task Start Date" button
+     - Calendar icon
+     - Text label
+     - No date currently set (shows placeholder)
+     - Opens date picker on click
+
+  2. "Task Due Date" button
+     - Calendar icon
+     - Text label
+     - No date currently set (shows placeholder)
+     - Opens date picker on click
+
+TAB BAR (RIGHT PANEL)
+---------------------
+Tab labels (horizontal):
+  1. Workflow (default active)
+  2. Comments
+  3. Attachments
+
+Additional Controls:
+  - Collapse/minimize button (→ arrow icon, right-aligned)
+    * Collapses right panel
+    * Text label: " " (empty, just icon indicates collapse)
+
+================================================================================
+WORKFLOW TAB (Right Panel Default)
+================================================================================
+
+Top Controls:
+  - "Select Workflow" dropdown button (left-aligned)
+    * Opens workflow template selection
+    * Displays currently selected workflow (if any)
+  - Workflow menu button:
+    * "..." (ellipsis)
+    * Positioned right of dropdown
+    * Opens additional workflow options
+
+Workflow Steps List:
+  - Numbered list of steps
+  - Step counter at top: "Steps: N"
+  - Each step row contains:
+
+    Step Row Elements (left to right):
+      1. Expand/collapse chevron (>)
+         - Toggles step details view
+      2. Step number (bold, e.g., "1.")
+      3. Step name field:
+         - Placeholder text: "Enter a step name - E.g. Research"
+         - Editable text input
+         - Updates workflow definition
+      4. Set step due date button:
+         - Calendar icon in dashed circle
+         - Opens date picker for step-specific deadline
+      5. Assignee picker button:
+         - Person icon in dashed circle
+         - Opens assignee selection dialog
+         - Shows avatar if assigned, dashed circle if unassigned
+
+  - Step expansion (when chevron clicked):
+    * Additional details become visible
+    * May include step description, additional fields, sub-tasks
+    * Collapse hides these details
+
+Delete Step Control:
+  - Delete icon (trash) appears on step row
+  - Removes step from workflow
+  - Confirmation may be required
+
+Add Steps Section:
+  - "+ Add Step" button (primary style, centered or left-aligned)
+  - Creates new workflow step at end of list
+  - New step inherits default properties
+  - Editable immediately after creation
+
+Workflow Data Structure:
+  - Each step is independent
+  - Order matters (sequential workflow)
+  - Step due dates cascade/inherit from task due date if not set
+  - Assignees are optional per step
+
+================================================================================
+COMMENTS TAB (Right Panel)
+================================================================================
+
+Input Section:
+  - Large textarea control
+  - Placeholder text: "Use @ to mention your teammates or post an update ..."
+  - Full width within panel
+  - Supports @mention functionality
+
+Empty State:
+  - Text: "No comment found."
+  - Purple/brand-colored clip art illustration
+  - Appears when no comments exist
+  - Centered in content area
+
+Comment List (when comments exist):
+  - Reverse chronological order (newest first)
+  - Each comment shows:
+    * User avatar
+    * User name
+    * Timestamp (e.g., "2 hours ago")
+    * Comment text
+    * Edit/delete buttons (for user's own comments)
+    * Reply functionality (may be indented for nested replies)
+
+================================================================================
+ATTACHMENTS TAB (Right Panel)
+================================================================================
+
+Add Attachment Control:
+  - "+" button (dashed circle border, centered)
+  - Opens file picker on click
+  - Supports drag-and-drop in this area
+
+Empty State:
+  - Text or icon indicating "No attachments"
+  - Appears when no files are attached
+  - Centered in tab content
+
+Attachment List (when files exist):
+  - Each attachment shows:
+    * File icon (based on file type)
+    * File name
+    * File size
+    * Upload date/timestamp
+    * Download button/link
+    * Delete button (x icon)
+  - Organized in list format
+  - Supports preview for images/PDFs
+
+================================================================================
+ACCESSIBILITY TREE STRUCTURE
+================================================================================
+
+Main Regions:
+  <region> main content area
+    - <navigation> breadcrumb area
+      * <list> breadcrumb items
+        - <listitem> "Add Campaign" (button with chevron)
+        - <listitem> "Task" (text)
+        - <listitem> "TSK-8" (text)
+
+    - <generic> task title "Article post"
+    - <generic> status "Not Started"
+
+    - <tablist> left panel tabs
+      * <tab> Brief (active state indicated)
+      * <tab> Content
+      * <tab> Fields
+      * <tab> Publishing
+      * <tab> Related
+      * <tab> Financials
+      * <tab> History
+
+    - <region> current tab content panel
+      * [Tab-specific content - see above sections]
+
+  <region> right panel
+    - <image> user avatar "Hsiao-Pei Chien"
+    - <button> "Share"
+    - <button> Watcher dropdown (badge: "1")
+    - <button> "Mark Complete"
+    - <button> Show options "..."
+
+    - <button> "Task Start Date" (calendar icon)
+    - <button> "Task Due Date" (calendar icon)
+
+    - <tablist> right panel tabs
+      * <tab> Workflow (active state indicated)
+      * <tab> Comments
+      * <tab> Attachments
+
+    - <region> workflow tab content
+      * <button> "Select Workflow" (dropdown)
+      * <button> Workflow menu "..."
+      * <list> workflow steps
+        - <listitem> step 1
+          * <button> expand chevron
+          * <text> step number
+          * <textbox> step name
+          * <button> due date picker
+          * <button> assignee picker
+          * <button> delete
+        - <listitem> step 2
+          * [same structure as step 1]
+      * <button> "+ Add Step"
+
+================================================================================
+INTERACTION PATTERNS
+================================================================================
+
+Tab Navigation:
+  - Click tab label to switch active tab
+  - Content updates to show tab-specific information
+  - Active tab visually indicated with blue underline
+  - Tab state persists during page session
+
+File Upload (Brief Tab):
+  - Click to open file picker
+  - Drag-and-drop supported
+  - File processed and content loaded
+
+Dropdown Controls:
+  - Chevron icon indicates dropdown
+  - Click to open menu
+  - Click again or click outside to close
+  - Menu items are clickable/selectable
+
+Workflow Step Management:
+  - Drag-to-reorder may be supported (need verification)
+  - Click chevron to expand step details
+  - Type in step name field to update
+  - Click date button to set step due date
+  - Click person icon to assign step
+  - Click trash icon to delete step
+  - Click "+ Add Step" to append new step
+
+Publishing Channel Management:
+  - Click "+ Add Channel" to add new publishing destination
+  - Each channel card shows warning state if disconnected
+  - Edit/delete icons available per channel
+  - Social preview automatically generated for configured channels
+
+Modal/Dialog Interactions:
+  - Date pickers open modally
+  - Workflow selection opens modally
+  - Share dialog appears on "Share" click
+  - Assignee picker opens on person icon click
+
+================================================================================
+RESPONSIVE BEHAVIOR
+================================================================================
+
+Two-Panel Layout:
+  - Left panel: ~60% width (primary content)
+  - Right panel: ~40% width (secondary content)
+  - Right panel can be collapsed/minimized
+  - Collapsing right panel expands left panel
+
+Mobile Breakpoints (behavior not fully specified):
+  - Likely single-column stacked layout on small screens
+  - Right panel may become hidden by default
+  - Tabs may scroll horizontally if many present
+
+Right Panel Collapse:
+  - Arrow button (→) collapses right panel
+  - Clicking again expands right panel
+  - Scroll behavior adjusts after collapse/expand
+
+================================================================================
+DATA PRESERVATION & STATE
+================================================================================
+
+Unsaved Changes:
+  - Real-time saving appears to occur (need verification)
+  - No explicit "Save" button visible
+  - Changes may be auto-saved on field blur
+
+Tab State:
+  - Active tab persists when switching between right panel tabs
+  - Switching left panel tabs doesn't close right panel
+  - Workflow steps maintain scroll position when scrolling
+
+Workflow Steps:
+  - Added steps maintain order
+  - Deleted steps removed from list
+  - Modified step names update in real-time
+  - Assignees and dates persist per step
+
+Publishing Configuration:
+  - Added channels persist
+  - Channel settings can be edited post-creation
+  - Social preview updates when content changes
+
+================================================================================
+NOTES & OBSERVATIONS
+================================================================================
+
+Warning States:
+  - Social channel disconnection warning displayed prominently
+  - Indicates action needed (token refresh/reconnection)
+  - Yellow/warning color scheme used
+
+Status Display:
+  - Task status (e.g., "Not Started") displayed prominently
+  - Status shown in header, right-aligned
+  - Status update mechanism not fully defined in scraping
+
+Empty States:
+  - Brief tab: prompts user to upload or create brief
+  - Comments tab: shows "No comment found" with illustration
+  - Attachments tab: shows empty state indicator
+  - Financials tab: shows informational banner instead of error
+
+User Attribution:
+  - All history entries attributed to "Hsiao-Pei Chien"
+  - Avatar shown with each history entry
+  - Current task editor shown in right panel header
+
+Content Types Supported:
+  - Articles (multiple referenced in history)
+  - Images (featured images, attachments)
+  - Publishing channels (Facebook observed in example)
+  - Workflow steps (configurable multi-step processes)
+
+================================================================================
+END OF REFERENCE FILE
+================================================================================

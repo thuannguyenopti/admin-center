@@ -1,0 +1,77 @@
+## CMP Task Detail Page DOM Structure
+## URL: /cloud/taskv3/:taskId
+## Scraped: Feb 26, 2026 (Task TSK-6)
+
+### Layout: Two-panel design
+Left panel (main content ~60%) | Right panel (workflow/details ~40%)
+
+### Breadcrumb
+"CPN-5: Social Me..." (link with edit icon) / "Task" / "TSK-6"
+
+### Header
+Title: "Make a splash (Test)"
+Status badge: "Overdue" (red badge, top-right of title)
+Actions: "CD DS" avatars | "Share" button | View count (eye icon + 1) | "..." more menu
+
+### Left Panel - Content Area
+
+#### Tabs
+Brief | Content (active) | Fields | Publishing | Related | Financials | History
+
+#### Content Tab
+- "+ Add Content" button (blue)
+- View mode toggles: 4 icons (table, single, grid, list)
+- Content count badge: "2"
+- Content thumbnails row (clickable)
+- Selected content details:
+  - File name: "ScreenRecording_JiraProblem.mov"
+  - Action icons: download, pin, more (...)
+  - Video player preview
+  - Description: "Problem accessing Jira"
+- Fields section:
+  - "Fields" label with count badge "18-35"
+  - Expand/collapse chevron
+  - Field rows: "Asset Expiry Date" → "Set Expiry Date"
+
+### Right Panel - Workflow
+
+#### Date Bar
+"Started: May 01, 2023" (calendar icon)
+"Due: Jul 31, 2023" (red text = overdue, calendar icon)
+Progress dot indicator on timeline
+
+#### Tabs
+Workflow (active) | Comments | Attachments
+Arrow icon (→) for navigation
+
+#### Quick Share Section
+"Quick Share" with settings gear and chevron
+"..." more options
+
+#### Workflow Steps
+Numbered list (1. Author, schedule, and publish a post)
+  - Lock icon + Avatar "DS"
+  - "Assigned to David Steinberg"
+  - Checklist:
+    □ Write Your Share
+    □ Specify Publishing Time
+    □ Publish. Share.
+    □ Edit Fields
+  - Status dropdown: "In Progress ▼" (green badge)
+  - Comment icon
+
+### Visual Details
+- Two-panel layout with clear divider
+- Left panel scrollable independently
+- Status badges use semantic colors (red=overdue, green=in progress)
+- Content thumbnails have selection highlight (blue border)
+- Video player is inline with standard controls
+- Workflow checklist items are interactive checkboxes
+- Progress timeline is a horizontal bar with dot indicator
+
+### DOM Classes (meaningful)
+- task-TaskPage (main container)
+- task-TaskHeader (breadcrumb + title area)
+- task-TaskContent (left panel)
+- task-TaskSidebar or task-TaskWorkflow (right panel)
+- Workflow step classes likely: wf-WorkflowStep, wf-Checklist

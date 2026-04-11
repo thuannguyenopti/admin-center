@@ -1,11 +1,11 @@
 "use client";
 
-import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip, Skeleton } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureTrigger, DisclosureContent, Button, Input, Badge, Popover, PopoverTrigger, PopoverContent, Tooltip, Skeleton, Alert } from "@optiaxiom/react";
 import { IconX, IconStack2, IconFile, IconPhoto, IconShoppingBag, IconBlocks, IconBox, IconLayoutGrid, IconCheck, IconArrowLeft, IconChevronLeft, IconChevronRight, IconSparkles } from "@tabler/icons-react";
 import { Text } from "@/app/components/Text";
 import { ContentItem } from "./page";
 import { useMultiSelectMetadata } from "./useMultiSelectMetadata";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
 import { useGlobalCategories } from "../hooks/useGlobalCategories";
 import type { Tag } from "../settings/tags/types";
@@ -38,6 +38,8 @@ interface MultiSelectDetailsPaneProps {
   onCategoriesChange?: (contentId: string, categories: string[]) => void;
   onCategoriesChangeBatch?: (updates: Array<{ id: string; categories: string[] }>) => void;
   onClose: () => void;
+  /** When provided, parent will not overwrite controlled tags/categories while batch edit is active. */
+  onBatchEditModeChange?: (mode: { tags: boolean; categories: boolean }) => void;
 }
 
 export default function MultiSelectDetailsPane({
@@ -51,6 +53,7 @@ export default function MultiSelectDetailsPane({
   onCategoriesChange,
   onCategoriesChangeBatch,
   onClose,
+  onBatchEditModeChange,
 }: MultiSelectDetailsPaneProps) {
   const metadata = useMultiSelectMetadata(items);
   const isControlled = setControlledTags != null;
@@ -121,6 +124,8 @@ export default function MultiSelectDetailsPane({
   const [suggestedSlugs, setSuggestedSlugs] = useState<string[]>([]);
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [suggestEmpty, setSuggestEmpty] = useState(false);
+  const [batchTagsExpanded, setBatchTagsExpanded] = useState(false);
+  const [batchCategoriesExpanded, setBatchCategoriesExpanded] = useState(true);
   const initialTagsRef = useRef<string[]>([]);
   const initialCategoriesRef = useRef<string[]>([]);
   const hoverCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -143,19 +148,31 @@ export default function MultiSelectDetailsPane({
     }
   }, [isCategoriesControlled, controlledCategories, setControlledCategories, items.length, metadata.categories.join(",")]);
 
-  // Sync tags when selection changes (new union) — only when not controlled
+  // Sync tags when selection changes (new union) — only when not controlled and not in batch edit
   useEffect(() => {
-    if (!isControlled) setLocalTags(metadata.tags);
-  }, [isControlled, metadata.tags.join(","), metadata.count]);
+    if (!isControlled && !isBatchEditMode) setLocalTags(metadata.tags);
+  }, [isControlled, isBatchEditMode, metadata.tags.join(","), metadata.count]);
 
   useEffect(() => {
-    if (!isCategoriesControlled) setLocalCategories(metadata.categories);
-  }, [isCategoriesControlled, metadata.categories.join(","), metadata.count]);
+    if (!isCategoriesControlled && !isCategoryBatchEditMode) setLocalCategories(metadata.categories);
+  }, [isCategoriesControlled, isCategoryBatchEditMode, metadata.categories.join(","), metadata.count]);
 
   // Clear last summary when selection count changes
   useEffect(() => {
     setLastSummary(null);
   }, [metadata.count]);
+
+  // When selection changes during batch edit, merge the new union into the batch so "union" works with subsequent items (different tags)
+  const batchEditSelectionKeyRef = useRef<string>("");
+  const selectionKeyForBatch = useMemo(
+    () => (items.length > 0 ? [...items.map((i) => i.id)].sort().join(",") : ""),
+    [items]
+  );
+  useEffect(() => {
+    if (!isBatchEditMode || items.length === 0 || selectionKeyForBatch === batchEditSelectionKeyRef.current) return;
+    batchEditSelectionKeyRef.current = selectionKeyForBatch;
+    setTags((prev) => [...new Set([...prev, ...metadata.tags])]);
+  }, [isBatchEditMode, selectionKeyForBatch, metadata.tags, items.length]);
 
   const TAGS_INITIAL_VISIBLE = 10;
   const CATEGORIES_INITIAL_VISIBLE = 10;
@@ -188,6 +205,7 @@ export default function MultiSelectDetailsPane({
     setSuggestedSlugs([]);
     setSuggestError(null);
     setSuggestEmpty(false);
+    onBatchEditModeChange?.({ tags: true, categories: false });
   };
   const exitBatchEdit = (apply: boolean) => {
     if (!apply) setTags(metadata.tags);
@@ -196,6 +214,7 @@ export default function MultiSelectDetailsPane({
     setSuggestedSlugs([]);
     setSuggestError(null);
     setSuggestEmpty(false);
+    onBatchEditModeChange?.({ tags: false, categories: isCategoryBatchEditMode });
   };
 
   const enterCategoryBatchEdit = () => {
@@ -203,14 +222,25 @@ export default function MultiSelectDetailsPane({
     setIsBatchEditMode(false);
     setIsCategoryBatchEditMode(true);
     setIsPanelExpanded(true);
+    onBatchEditModeChange?.({ tags: false, categories: true });
   };
   const exitCategoryBatchEdit = (apply: boolean) => {
     if (!apply) setCategories(metadata.categories);
     setIsCategoryBatchEditMode(false);
+    onBatchEditModeChange?.({ tags: isBatchEditMode, categories: false });
   };
   const handleApplyCategories = () => {
     if (!onCategoriesChangeBatch || items.length === 0) return;
-    onCategoriesChangeBatch(items.map((item) => ({ id: item.id, categories })));
+    const initial = initialCategoriesRef.current;
+    const removed = initial.filter((s) => !categories.includes(s));
+    const added = categories.filter((s) => !initial.includes(s));
+    const updates = items.map((item) => {
+      const existing = item.categories ?? [];
+      const withoutRemoved = existing.filter((slug) => !removed.includes(slug));
+      const merged = Array.from(new Set([...withoutRemoved, ...added]));
+      return { id: item.id, categories: merged };
+    });
+    onCategoriesChangeBatch(updates);
     exitCategoryBatchEdit(true);
   };
 
@@ -235,7 +265,15 @@ export default function MultiSelectDetailsPane({
     const initial = initialTagsRef.current;
     const removed = initial.filter((s) => !tags.includes(s));
     const added = tags.filter((s) => !initial.includes(s));
-    onTagsChangeBatch(items.map((item) => ({ id: item.id, tags })));
+    // Apply changes as per-item deltas so we don't overwrite
+    // each item's unique tags with a single shared list.
+    const updates = items.map((item) => {
+      const existing = item.tags ?? [];
+      const withoutRemoved = existing.filter((slug) => !removed.includes(slug));
+      const merged = Array.from(new Set([...withoutRemoved, ...added]));
+      return { id: item.id, tags: merged };
+    });
+    onTagsChangeBatch(updates);
     const parts: string[] = [];
     removed.forEach((slug) => {
       const count = items.filter((i) => (i.tags ?? []).includes(slug)).length;
@@ -268,12 +306,11 @@ export default function MultiSelectDetailsPane({
   };
 
   const handleSuggestTagsForSelected = async () => {
-    if (items.length === 0 || globalTags.length === 0) return;
+    if (items.length === 0) return;
     setSuggestLoading(true);
     setSuggestError(null);
     setSuggestEmpty(false);
     setSuggestedSlugs([]);
-    const taxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
     try {
       const settled = await Promise.allSettled(
         items.map((item) => {
@@ -282,15 +319,18 @@ export default function MultiSelectDetailsPane({
             name: item.name,
             baseType: item.baseType,
           });
+          const payload: any = {
+            itemName: item.name,
+            contentTypeId: item.contentTypeId,
+            imageUrl,
+          };
+          if (globalTags.length > 0) {
+            payload.tagTaxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
+          }
           return fetch("/api/tags/suggest", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              itemName: item.name,
-              contentTypeId: item.contentTypeId,
-              tagTaxonomy: taxonomy,
-              imageUrl,
-            }),
+            body: JSON.stringify(payload),
           }).then(async (res) => {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Request failed");
@@ -417,7 +457,11 @@ export default function MultiSelectDetailsPane({
             />
           )}
           <Text fontSize="lg" fontWeight="600">
-            {metadata.count} items selected
+            {isBatchEditMode
+              ? `Batch edit tags (${metadata.count})`
+              : isCategoryBatchEditMode
+                ? `Batch edit categories (${metadata.count})`
+                : `${metadata.count} items selected`}
           </Text>
         </Box>
         <Box display="flex" alignItems="center" gap="4">
@@ -497,7 +541,7 @@ export default function MultiSelectDetailsPane({
                             e.preventDefault();
                             handleSuggestTagsForSelected();
                           }}
-                          disabled={suggestLoading || globalTags.length === 0}
+                          disabled={suggestLoading}
                           loading={suggestLoading}
                           aria-label="Suggest tags for selected with Opal"
                         />
@@ -617,48 +661,80 @@ export default function MultiSelectDetailsPane({
                 </Box>
               </Box>
             )}
-            <Box display="flex" flexDirection="column" gap="8">
-              {suggestedSlugs.length > 0 && tags.length > 0 && (
-                <Text fontSize="xs" color="fg.secondary" fontWeight="600">
-                  Existing
-                </Text>
-              )}
-              {tags.map((slug) => {
-                const itemsWithTag = items.filter((item) => (item.tags ?? []).includes(slug));
-                const count = itemsWithTag.length;
-                const isAddedInBatch = addedTagsInBatch.includes(slug);
-                return (
-                  <Box key={slug} display="flex" alignItems="center" gap="4">
-                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
-                      <Box display="flex" alignItems="center" gap="4">
-                        <span>{getDisplayName(slug)}</span>
-                        <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
-                          on {count} {count === 1 ? "item" : "items"}
-                        </Text>
-                        <button
-                          onClick={() => handleRemoveTag(slug)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            lineHeight: 1,
-                            color: "inherit",
-                          }}
-                          aria-label={`Remove tag ${getDisplayName(slug)}`}
-                        >
-                          ×
-                        </button>
-                      </Box>
-                    </Badge>
+            {tags.length > 0 && (
+              <Disclosure open={batchTagsExpanded} onOpenChange={setBatchTagsExpanded}>
+                <DisclosureTrigger asChild>
+                  <button
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      padding: '8px 0',
+                      border: 'none',
+                      background: 'transparent',
+                      width: '100%',
+                    }}
+                  >
+                    <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                      Batch tags ({tags.length})
+                    </Text>
+                    <Box
+                      style={{
+                        transform: batchTagsExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <IconChevronRight size={14} />
+                    </Box>
+                  </button>
+                </DisclosureTrigger>
+                <DisclosureContent>
+                  <Box display="flex" flexDirection="column" gap="8" pt="8">
+                    {tags.map((slug) => {
+                      const itemsWithTag = items.filter((item) => (item.tags ?? []).includes(slug));
+                      const count = itemsWithTag.length;
+                      const isAddedInBatch = addedTagsInBatch.includes(slug);
+                      return (
+                        <Box key={slug} display="flex" alignItems="center" gap="4">
+                          <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
+                            <Box display="flex" alignItems="center" gap="4">
+                              <span>{getDisplayName(slug)}</span>
+                              {!isAddedInBatch && (
+                                <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                                  on {count} {count === 1 ? "item" : "items"}
+                                </Text>
+                              )}
+                              <button
+                                onClick={() => handleRemoveTag(slug)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  lineHeight: 1,
+                                  color: "inherit",
+                                }}
+                                aria-label={`Remove tag ${getDisplayName(slug)}`}
+                              >
+                                ×
+                              </button>
+                            </Box>
+                          </Badge>
+                        </Box>
+                      );
+                    })}
                   </Box>
-                );
-              })}
-            </Box>
+                </DisclosureContent>
+              </Disclosure>
+            )}
           </Box>
           {/* Tag preview (fills remaining height, scrolls within) */}
           <Box
@@ -669,6 +745,35 @@ export default function MultiSelectDetailsPane({
             style={{ minHeight: 0 }}
             overflow="hidden"
           >
+            {(() => {
+              // Calculate summary stats
+              const initial = initialTagsRef.current;
+              const tagsBeingAdded = tags.filter((s) => !initial.includes(s));
+              const tagsBeingRemoved = initial.filter((s) => !tags.includes(s));
+              const itemsWithChanges = items.filter((item) => {
+                const itemTags = item.tags ?? [];
+                const hasRemovals = initial.some((s) => itemTags.includes(s) && !tags.includes(s));
+                const hasAdditions = tags.some((s) => !itemTags.includes(s));
+                return hasRemovals || hasAdditions;
+              });
+
+              return (
+                (tagsBeingAdded.length > 0 || tagsBeingRemoved.length > 0) && (
+                  <Alert intent="information" rounded="md" style={{ flexShrink: 0 }}>
+                    <Box display="flex" flexDirection="column" gap="4">
+                      <Text fontSize="sm" fontWeight="600">
+                        Summary of changes
+                      </Text>
+                      <Text fontSize="sm">
+                        {itemsWithChanges.length} of {items.length} {items.length === 1 ? 'item' : 'items'} will be modified
+                        {tagsBeingAdded.length > 0 && ` • Adding ${tagsBeingAdded.length} tag${tagsBeingAdded.length === 1 ? '' : 's'}`}
+                        {tagsBeingRemoved.length > 0 && ` • Removing ${tagsBeingRemoved.length} tag${tagsBeingRemoved.length === 1 ? '' : 's'}`}
+                      </Text>
+                    </Box>
+                  </Alert>
+                )
+              );
+            })()}
             <Text fontSize="sm" fontWeight="600" color="fg.default" style={{ flexShrink: 0 }}>
               Tag preview
             </Text>
@@ -682,8 +787,8 @@ export default function MultiSelectDetailsPane({
             >
               {items.slice(0, items.length > 20 ? 15 : items.length).map((item) => {
                 const itemTags = item.tags ?? [];
-                // Union of item's current tags and batch selection: show removed, kept, and added
-                const allSlugsForItem = Array.from(new Set([...itemTags, ...tags]));
+                  // Union of item's current tags and batch selection: show removed, kept, and added
+                  const allSlugsForItem = Array.from(new Set([...itemTags, ...tags]));
                 const hasAnyTags = allSlugsForItem.length > 0;
                 return (
                   <Box
@@ -724,21 +829,57 @@ export default function MultiSelectDetailsPane({
                         {allSlugsForItem.map((slug) => {
                           const wasOnItem = itemTags.includes(slug);
                           const isInBatch = tags.includes(slug);
-                          const isRemoved = wasOnItem && !isInBatch; // user removed this tag from batch → danger subtle + strikethrough
-                          const willBeAdded = !wasOnItem && isInBatch; // tag in batch but not on this item
-                          const isNewTag = willBeAdded && addedTagsInBatch.includes(slug); // added from autocomplete → success subtle
-                          const isMissingOnThisItem = willBeAdded && !isNewTag; // other items have it, this item doesn't → warning subtle
+                          const isRemoved = wasOnItem && !isInBatch; // removed from batch → red + strikethrough
+                          const willBeAdded = !wasOnItem && isInBatch;
+                          const isNewTag = willBeAdded && addedTagsInBatch.includes(slug); // new in this batch → green
+                          const canRemove = isInBatch; // remove from batch; pill stays and shows red + strikethrough
+
+                          // Calculate tooltip content
+                          const tooltipContent = isRemoved
+                            ? `Will remove from all ${items.length} ${items.length === 1 ? 'item' : 'items'}`
+                            : isNewTag
+                              ? `Will add to all ${items.length} ${items.length === 1 ? 'item' : 'items'}`
+                              : `Common to all items`;
+
                           return (
-                            <Badge
-                              key={slug}
-                              intent={
-                                isRemoved ? "danger" : isNewTag ? "success" : isMissingOnThisItem ? "warning" : "neutral"
-                              }
-                              variant={isRemoved || isNewTag || isMissingOnThisItem ? "subtle" : undefined}
-                              style={isRemoved ? { textDecoration: "line-through" } : undefined}
-                            >
-                              {getDisplayName(slug)}
-                            </Badge>
+                            <Tooltip key={slug} content={tooltipContent}>
+                              <Badge
+                                intent={
+                                  isRemoved ? "danger" : isNewTag ? "success" : "neutral"
+                                }
+                                variant={isRemoved || isNewTag ? "subtle" : undefined}
+                                style={isRemoved ? { textDecoration: "line-through" } : undefined}
+                              >
+                                <Box display="flex" alignItems="center" gap="4">
+                                  <span>{getDisplayName(slug)}</span>
+                                  {canRemove && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveTag(slug);
+                                      }}
+                                      aria-label={`Remove ${getDisplayName(slug)} from batch`}
+                                      style={{
+                                        background: "none",
+                                        border: "none",
+                                        cursor: "pointer",
+                                        padding: 0,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        fontSize: "14px",
+                                        lineHeight: 1,
+                                        color: "inherit",
+                                        opacity: 0.8,
+                                      }}
+                                    >
+                                      ×
+                                    </button>
+                                  )}
+                                </Box>
+                              </Badge>
+                            </Tooltip>
                           );
                         })}
                       </Box>
@@ -838,43 +979,80 @@ export default function MultiSelectDetailsPane({
                 </Box>
               </PopoverContent>
             </Popover>
-            <Box display="flex" flexDirection="column" gap="8">
-              {categories.map((slug) => {
-                const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
-                const count = itemsWithCategory.length;
-                const isAddedInBatch = addedCategoriesInBatch.includes(slug);
-                return (
-                  <Box key={slug} display="flex" alignItems="center" gap="4">
-                    <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
-                      <Box display="flex" alignItems="center" gap="4">
-                        <span>{getCategoryDisplayName(slug)}</span>
-                        <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
-                          on {count} {count === 1 ? "item" : "items"}
-                        </Text>
-                        <button
-                          onClick={() => handleRemoveCategory(slug)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            lineHeight: "1",
-                            color: "inherit",
-                          }}
-                          aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
-                        >
-                          ×
-                        </button>
-                      </Box>
-                    </Badge>
+            {categories.length > 0 && (
+              <Disclosure open={batchCategoriesExpanded} onOpenChange={setBatchCategoriesExpanded}>
+                <DisclosureTrigger asChild>
+                  <button
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      padding: '8px 0',
+                      border: 'none',
+                      background: 'transparent',
+                      width: '100%',
+                    }}
+                  >
+                    <Text fontSize="xs" color="fg.secondary" fontWeight="600">
+                      Batch categories ({categories.length})
+                    </Text>
+                    <Box
+                      style={{
+                        transform: batchCategoriesExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <IconChevronRight size={14} />
+                    </Box>
+                  </button>
+                </DisclosureTrigger>
+                <DisclosureContent>
+                  <Box display="flex" flexDirection="column" gap="8" pt="8">
+                    {categories.map((slug) => {
+                      const itemsWithCategory = items.filter((item) => (item.categories ?? []).includes(slug));
+                      const count = itemsWithCategory.length;
+                      const isAddedInBatch = addedCategoriesInBatch.includes(slug);
+                      return (
+                        <Box key={slug} display="flex" alignItems="center" gap="4">
+                          <Badge intent={isAddedInBatch ? "success" : "neutral"} variant={isAddedInBatch ? "subtle" : undefined}>
+                            <Box display="flex" alignItems="center" gap="4">
+                              <span>{getCategoryDisplayName(slug)}</span>
+                              {!isAddedInBatch && (
+                                <Text fontSize="xs" color="fg.secondary" style={{ fontWeight: 400 }}>
+                                  on {count} {count === 1 ? "item" : "items"}
+                                </Text>
+                              )}
+                              <button
+                                onClick={() => handleRemoveCategory(slug)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  padding: 0,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  lineHeight: "1",
+                                  color: "inherit",
+                                }}
+                                aria-label={`Remove category ${getCategoryDisplayName(slug)}`}
+                              >
+                                ×
+                              </button>
+                            </Box>
+                          </Badge>
+                        </Box>
+                      );
+                    })}
                   </Box>
-                );
-              })}
-            </Box>
+                </DisclosureContent>
+              </Disclosure>
+            )}
           </Box>
           {/* Category preview (fills remaining height, scrolls within) */}
           <Box

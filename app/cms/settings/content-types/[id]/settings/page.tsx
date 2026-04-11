@@ -30,6 +30,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { use } from "react";
 import usePersistentState from "@/app/usePersistentState";
+import { Footer } from "@/app/context/LayoutContext";
 
 export default function ContentTypeSettingsPage() {
 	const params = useParams();
@@ -98,7 +99,7 @@ export default function ContentTypeSettingsPage() {
 				? {
 						...ct,
 						name: name.trim() || ct.name,
-						displayName: displayName.trim() || undefined,
+						displayName: displayName.trim() || name.trim() || ct.name,
 						description: description.trim() || undefined,
 						sortOrder,
 						isAvailable,
@@ -145,9 +146,8 @@ export default function ContentTypeSettingsPage() {
 	const ctDisplayLabel = contentType.displayName || contentType.name;
 
 	return (
-		<Box display="flex" flexDirection="column" style={{ height: "calc(100vh - 130px)", marginLeft: "-32px", marginRight: "-32px", marginTop: "-16px", marginBottom: "-24px" }}>
-			<Box flex="1" overflow="auto" px="32" py="16">
-				<Box style={{ maxWidth: "640px" }}>
+		<>
+			<Box style={{ maxWidth: "640px" }}>
 				{/* Content Type Details */}
 				<Heading level="4" mb="24">
 					Content Type Details
@@ -265,24 +265,14 @@ export default function ContentTypeSettingsPage() {
 				<Button appearance="danger" onClick={() => setDeleteDialogOpen(true)}>
 					Delete Content Type
 				</Button>
-				</Box>
 			</Box>
 
 			{/* Fixed Save Footer */}
-			<Box
-				borderT="1"
-				borderColor="border.secondary"
-				bg="bg.default"
-				px="32"
-				py="16"
-				display="flex"
-				justifyContent="end"
-				z="10"
-			>
+			<Footer>
 				<Button appearance="primary" onClick={handleSave}>
 					Save
 				</Button>
-			</Box>
+			</Footer>
 
 			{/* Delete Confirmation Dialog */}
 			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -323,6 +313,6 @@ export default function ContentTypeSettingsPage() {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
-		</Box>
+		</>
 	);
 }

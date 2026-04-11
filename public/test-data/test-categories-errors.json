@@ -1,0 +1,37 @@
+[
+  {
+    "name": "",
+    "slug": "missing-name",
+    "parentSlug": "",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Bikes",
+    "slug": "bikes",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "A",
+    "slug": "short",
+    "parentSlug": "equipment",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Invalid Parent",
+    "slug": "invalid-parent",
+    "parentSlug": "nonexistent",
+    "status": "published",
+    "visibility": "public"
+  },
+  {
+    "name": "Road Bikes",
+    "slug": "road-bikes",
+    "parentSlug": "bikes",
+    "status": "invalid-status",
+    "visibility": "public"
+  }
+]

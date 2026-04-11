@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useMemo, useState} from "react";
-import {Box, Button} from "@optiaxiom/react";
+import {Box, Button, Text} from "@optiaxiom/react";
 import {IconPlus} from "@tabler/icons-react";
 
 import Section from "./Section";
@@ -30,6 +30,19 @@ function extractPlainText(value: any): string {
 	return "";
 }
 
+/** Extract filename from image URL for image element labels. */
+function getImageNameFromUrl(url: string): string {
+	if (!url) return "";
+	try {
+		const urlObj = new URL(url);
+		const pathname = urlObj.pathname;
+		const parts = pathname.split('/');
+		return parts[parts.length - 1] || "Image";
+	} catch {
+		return "Image";
+	}
+}
+
 interface OutlineProps {
 	cloning?: boolean;
 	currentHoverEle: string;
@@ -42,6 +55,7 @@ interface OutlineProps {
 	setCurrentHoverEle: React.Dispatch<React.SetStateAction<string>>;
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 	onEditProperties?: (id: string) => void;
+	onOpenStyleEditor?: (elementId: string) => void;
 
 	data: any[];
 }
@@ -106,6 +120,7 @@ export default function OutlineTree({
 	setTheEles,
 	dragging,
 	onEditProperties,
+	onOpenStyleEditor,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -542,6 +557,7 @@ export default function OutlineTree({
 								onDragStart={(e: any) => onDragStart(e, section.id)}
 								removeSection={() => removeSection(sindex)}
 								onEditProperties={() => onEditProperties?.(section.id)}
+								onOpenStyleEditor={() => onOpenStyleEditor?.(section.id)}
 								// Add Section Before
 								addSection={() => addSection(sindex)}
 								// Add Section After
@@ -865,7 +881,27 @@ export default function OutlineTree({
 																			}
 																		}}
 																	>
-																		{/* Removed the dashed "Drop here" box per user request */}
+																		{/* Empty state for columns with no elements */}
+																		{(getColChildren(col) ?? []).length === 0 && !dragging && (
+																			<Box
+																				display="flex"
+																				flexDirection="column"
+																				alignItems="center"
+																				justifyContent="center"
+																				gap="8"
+																				p="16"
+																				rounded="md"
+																				bg="bg.default.hovered"
+																				style={{
+																					minHeight: "80px",
+																					border: "1px dashed var(--border-secondary)",
+																				}}
+																			>
+																				<Text fontSize="sm" color="fg.tertiary" textAlign="center">
+																					Drop elements here or use the + button
+																				</Text>
+																			</Box>
+																		)}
 
 																		{(
 																			getColChildren(col) ??
@@ -970,6 +1006,26 @@ export default function OutlineTree({
 																										"name",
 																										"Name"
 																									) ||
+																									getProperty(
+																										theEles[
+																											element
+																												.id
+																										]
+																											?.properties,
+																										"alt",
+																										"Alt Text"
+																									) ||
+																									getImageNameFromUrl(
+																										getProperty(
+																											theEles[
+																												element
+																													.id
+																											]
+																												?.properties,
+																											"image",
+																											"Image"
+																										)
+																									) ||
 																									extractPlainText(
 																										getProperty(
 																											theEles[
@@ -988,6 +1044,11 @@ export default function OutlineTree({
 																								}
 																								setCurrentHoverEle={
 																									setCurrentHoverEle
+																								}
+																								onOpenStyleEditor={
+																									onOpenStyleEditor
+																										? () => onOpenStyleEditor(element.id)
+																										: undefined
 																								}
 																							/>
 																						</div>
@@ -1146,7 +1207,30 @@ export default function OutlineTree({
 					);
 				})}
 
-				{data.length === 0 && (
+				{data.length === 0 && !dragging && (
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						justifyContent="center"
+						gap="12"
+						p="32"
+						rounded="md"
+						bg="bg.default.hovered"
+						style={{
+							minHeight: "200px",
+							border: "1px dashed var(--border-secondary)",
+						}}
+					>
+						<Text fontSize="md" fontWeight="600" color="fg.secondary">
+							No sections yet
+						</Text>
+						<Text fontSize="sm" color="fg.tertiary" textAlign="center">
+							Click the + button above or drag elements to get started
+						</Text>
+					</Box>
+				)}
+				{data.length === 0 && dragging && (
 					<div
 						onDragOver={(e) => {
 							if (dragging && isSectionId(dragging)) onDragHover(e, "section-last");

@@ -197,6 +197,61 @@ export const initialUsers: User[] = [
 	},
 ];
 
+// Property Groups - Central registry for organizing properties in the UI
+export type PropertyGroup = {
+	id: string;
+	name: string;
+	description?: string;
+};
+
+export const initialPropertyGroups: PropertyGroup[] = [
+	{
+		id: "content",
+		name: "Content",
+		description: "Main content and data fields",
+	},
+	{
+		id: "design",
+		name: "Design",
+		description: "Visual elements, images, and layout",
+	},
+	{
+		id: "actions",
+		name: "Actions",
+		description: "Call-to-actions, buttons, and links",
+	},
+	{
+		id: "settings",
+		name: "Settings",
+		description: "Configuration and behavior options",
+	},
+	{
+		id: "appearance",
+		name: "Appearance",
+		description: "Visual styles and templates",
+	},
+	{
+		id: "geo-seo",
+		name: "GEO & SEO",
+		description: "Geographic targeting and search engine optimization",
+	},
+	{
+		id: "categories-tags",
+		name: "Categories & Tags",
+		description: "Taxonomy and content classification",
+	},
+	{
+		id: "basic",
+		name: "Basic",
+		description: "Basic or essential fields",
+	},
+	{
+		id: "social",
+		name: "Social",
+		description: "Social media related fields",
+	},
+];
+
 export type PropertyType =
 	| "String"
 	| "LongString"
@@ -208,16 +263,19 @@ export type PropertyType =
 	| "ContentReference"
 	| "ContentArea"
 	| "Url"
+	| "LinkItem"
 	| "LinkItemCollection"
 	| "PageReference"
 	| "ImageReference"
 	| "VideoReference"
 	| "SelectOne"
 	| "SelectMany"
+	| "Guid"
 	// Legacy types for backwards compatibility
 	| "text"
 	| "textarea"
 	| "richtext"
+	| "link"
 	| "reference"
 	| "address"
 	| "outline"
@@ -236,10 +294,14 @@ export type Property = {
 	order?: number;
 	description?: string;
 	defaultValue?: any;
+	/** Controls how String type properties are rendered - input (default) or textarea */
+	displayAs?: "input" | "textarea";
 	/** when type is reference this points to a collection like 'users' */
 	of?: string;
 	/** For reference types - allowed content types */
 	allowedTypes?: string[];
+	/** For reference types - restricted/excluded content types */
+	restrictedTypes?: string[];
 	/** For selection types */
 	options?: { label: string; value: string }[];
 	/** Validation rules */
@@ -262,11 +324,45 @@ export type MediaType = "Image" | "Video" | "Audio" | "Documents" | "Archives" |
 
 export type CompositionDisplayAs = "Section" | "Element" | "FormElement";
 
-export type ContentType = {
+export type MappingTransformationType =
+	| "direct"          // Direct 1:1 mapping
+	| "concat"          // Concatenate multiple fields
+	| "default";        // Use default value if source is empty
+
+export type PropertyMapping = {
+	id: string;
+	sourcePropertyId: string;       // Property ID from source
+	targetPropertyId: string;       // Property ID from target
+	transformation: MappingTransformationType;
+	transformationConfig?: {
+		// For concat
+		separator?: string;
+		sourcePropertyIds?: string[];
+
+		// For default
+		defaultValue?: any;
+	};
+	required?: boolean;
+	description?: string;
+};
+
+export type ContentTypeMapping = {
 	id: string;
 	name: string;
 	displayName?: string;
-	baseType: "Page" | "Experience" | "Media" | "Product" | "Block";
+	description?: string;
+	sourceContentTypeId: string;    // Content type being mapped FROM
+	targetContentTypeId: string;    // Content type being mapped TO
+	propertyMappings: PropertyMapping[];
+	createdAt: string;
+	modifiedAt?: string;
+};
+
+export type ContentType = {
+	id: string;
+	name: string;
+	displayName: string;
+	baseType: "Page" | "Experience" | "Media" | "Product" | "Block" | "Section";
 	mediaType?: MediaType;
 	description?: string;
 	guid?: string;
@@ -275,10 +371,29 @@ export type ContentType = {
 	isAvailable?: boolean;
 	availableForComposition?: boolean;
 	compositionDisplayAs?: CompositionDisplayAs[];
+	// AvailableContentTypesAttribute (parent-side control)
+	availableContentTypes?: {
+		availability?: "All" | "None"; // Default behavior: All means all types allowed, None means no types allowed
+		include?: string[]; // Explicitly allow ONLY these child types (overrides availability)
+		exclude?: string[]; // Explicitly disallow these child types from otherwise allowed types
+	};
+	// Child-side control (IncludeOn/ExcludeOn on the attribute)
+	includeOn?: string[]; // This type can ONLY be created under these parent types
+	excludeOn?: string[]; // This type CANNOT be created under these parent types
 	properties: Property[];
 	variantDimensions?: VariantDimension[];
 	modifiedAt?: string;
 	modifiedBy?: string;
+	// CMP-specific optional fields (for unified CMP/CMS content types)
+	source?: "cmp" | "cms"; // Track origin system
+	apiIdentifier?: string; // CMP: External API identifier for programmatic access
+	version?: string; // CMP: Version tracking (e.g., "_v1")
+	defaultLocale?: string; // CMP: Default language locale (e.g., "en-US")
+	modelType?: "component" | "content"; // CMP: Classification as component or content type
+	coverImage?: string; // CMP: Cover image URL for visual representation
+	isActive?: boolean; // CMP: Active/inactive status
+	// Content type mappings
+	mappings?: ContentTypeMapping[]; // Mappings defined for this content type
 };
 
 export const initialContentTypes: ContentType[] = [
@@ -315,45 +430,76 @@ export const initialContentTypes: ContentType[] = [
 		modifiedAt: "2024-01-10T14:20:00Z",
 		modifiedBy: "Bob Smith",
 		properties: [
+			// Content group
 			{ id: "mainOutline", name: "Main", displayName: "Main Content", type: "outline", groupName: "Content", order: 1 },
-			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "seo", groupName: "SEO", order: 1 },
+
+			// GEO & SEO group
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
+
+			// Categories & Tags group
+			{ id: "categories", name: "Categories", displayName: "Categories", type: "SelectMany", groupName: "Categories & Tags", order: 1, description: "Page categories" },
+			{ id: "tags", name: "Tags", displayName: "Tags", type: "SelectMany", groupName: "Categories & Tags", order: 2, description: "Page tags" },
 		],
 	},
 	{
 		id: "ct-blog-post",
 		name: "Blog Post",
+		displayName: "Blog Post",
 		baseType: "Page",
 		description: "A standard blog/article page",
+		availableContentTypes: { availability: "None" }, // Blog posts don't allow any children
+		includeOn: ["ct-blog-listing"], // Can only be created under Blog Listing pages
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "subtitle", name: "Subtitle", type: "text" },
-			{ id: "body", name: "Body", type: "richtext", required: true },
-			{ id: "author", name: "Author", type: "reference", of: "users", required: true },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
+			{ id: "featuredImage", name: "Featured Image", displayName: "Featured Image", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
+			{ id: "body", name: "Body", displayName: "Body", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
+			{ id: "author", name: "Author", displayName: "Author", type: "ContentReference", allowedTypes: ["ct-author"], required: true, groupName: "Content", order: 5 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
+		],
+	},
+	{
+		id: "ct-blog-listing",
+		name: "Blog Listing",
+		displayName: "Blog Listing",
+		baseType: "Page",
+		description: "A blog listing page that can only contain blog posts",
+		groupName: "Standard",
+		guid: "c3d4e5f6-a7b8-9012-cdef-g34567890123",
+		isAvailable: true,
+		availableContentTypes: { include: ["ct-blog-post"] }, // Only allow blog posts as children
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+		properties: [
+			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
 	{
 		id: "ct-about-page",
 		name: "About Page",
+		displayName: "About Page",
 		baseType: "Page",
 		description: "Company about page",
 		properties: [
-			{ id: "title", name: "Title", type: "text", required: true },
-			{ id: "about", name: "About (Stride)", type: "richtext" },
-			{ id: "history", name: "History", type: "textarea" },
-			{ id: "orgAddress", name: "Org address", type: "address" },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "about", name: "About (Stride)", displayName: "About (Stride)", type: "XhtmlString", groupName: "Content", order: 2 },
+			{ id: "history", name: "History", displayName: "History", type: "LongString", groupName: "Content", order: 3 },
+			{ id: "orgAddress", name: "Org address", displayName: "Organization Address", type: "String", groupName: "Content", order: 4 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 	},
 	{
 		id: "exp-landing-page",
 		name: "Landing Page",
+		displayName: "Landing Page",
 		baseType: "Experience",
 		description: "Landing page experience with main and aside outlines",
 		properties: [
 			{ id: "mainOutline", name: "Main", type: "outline" },
 			{ id: "asideOutline", name: "Aside", type: "outline" },
-			{ id: "seo", name: "SEO", type: "seo" },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
 		],
 		variantDimensions: [
 			{ id: "experiment", name: "A/B Test", values: ["Control", "Variant A", "Variant B"] },
@@ -363,12 +509,13 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-product",
 		name: "Product",
+		displayName: "Product",
 		baseType: "Product",
 		description: "A standard product",
 		properties: [
-			{ id: "name", name: "Name", type: "text", required: true },
-			{ id: "description", name: "Description", type: "text" },
-			{ id: "price", name: "Price", type: "text" },
+			{ id: "name", name: "Name", displayName: "Name", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "description", name: "Description", displayName: "Description", type: "LongString", groupName: "Content", order: 2 },
+			{ id: "price", name: "Price", displayName: "Price", type: "String", groupName: "Content", order: 3 },
 		],
 		variantDimensions: [
 			{ id: "size", name: "Size", values: ["Small", "Medium", "Large", "XL"] },
@@ -378,20 +525,22 @@ export const initialContentTypes: ContentType[] = [
 	{
 		id: "ct-block",
 		name: "Block",
+		displayName: "Block",
 		baseType: "Block",
 		description: "A reusable content block",
-		properties: [{ id: "title", name: "Title", type: "text", required: true }],
+		properties: [{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 }],
 	},
 	{
 		id: "ct-image",
 		name: "Image",
+		displayName: "Image",
 		baseType: "Media",
 		description: "An image asset",
 		properties: [
-			{ id: "imageUrl", name: "Image URL", type: "text", required: true },
-			{ id: "altText", name: "Alt Text", type: "text" },
-			{ id: "width", name: "Width", type: "text" },
-			{ id: "height", name: "Height", type: "text" },
+			{ id: "src", name: "Image URL", displayName: "Image URL", type: "String", required: true, groupName: "Design", order: 1 },
+			{ id: "alt", name: "Alt Text", displayName: "Alt Text", type: "String", groupName: "Design", order: 2 },
+			{ id: "width", name: "Width", displayName: "Width", type: "Int", groupName: "Design", order: 1 },
+			{ id: "height", name: "Height", displayName: "Height", type: "Int", groupName: "Design", order: 2 },
 		],
 		variantDimensions: [
 			{ id: "size", name: "Size", values: ["Original", "Large (1920px)", "Medium (800px)", "Thumbnail (200px)"] },
@@ -400,43 +549,206 @@ export const initialContentTypes: ContentType[] = [
 		],
 	},
 	{
+		id: "ct-image-block",
+		name: "Image",
+		displayName: "Image",
+		baseType: "Block",
+		description: "An image block for page layouts",
+		properties: [
+			{
+				id: "image",
+				name: "Image",
+				displayName: "Image",
+				type: "ImageReference",
+				required: true,
+				groupName: "Content",
+				order: 1
+			},
+			{
+				id: "width",
+				name: "Width Override",
+				displayName: "Width Override",
+				type: "String",
+				groupName: "Design",
+				order: 2,
+				description: "Override width (e.g., '100%', '400px', 'auto')",
+				defaultValue: "auto"
+			},
+			{
+				id: "height",
+				name: "Height Override",
+				displayName: "Height Override",
+				type: "String",
+				groupName: "Design",
+				order: 3,
+				description: "Override height (e.g., '300px', 'auto')",
+				defaultValue: "auto"
+			}
+		]
+	},
+	{
 		id: "ct-heading",
 		name: "Heading",
+		displayName: "Heading",
 		baseType: "Block",
 		description: "A heading block",
-		properties: [{ id: "text", name: "Text", type: "text", required: true }],
+		properties: [
+			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+			{
+				id: "level",
+				name: "Level",
+				displayName: "Heading Level",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "H1 (Largest)", value: "h1" },
+					{ label: "H2", value: "h2" },
+					{ label: "H3", value: "h3" },
+					{ label: "H4", value: "h4" },
+					{ label: "H5", value: "h5" },
+					{ label: "H6 (Smallest)", value: "h6" }
+				],
+				defaultValue: "h2"
+			},
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Visual Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Default", value: "default" },
+					{ label: "Prominent", value: "prominent" },
+					{ label: "Subtle", value: "subtle" },
+					{ label: "Red Accent", value: "accent-red" },
+					{ label: "Blue Accent", value: "accent-blue" }
+				],
+				defaultValue: "default"
+			}
+		],
 	},
 	{
 		id: "ct-text",
 		name: "Text",
+		displayName: "Text",
 		baseType: "Block",
 		description: "A text block",
-		properties: [{ id: "text", name: "Text", type: "text", required: true }],
+		properties: [
+			{ id: "text", name: "Text", displayName: "Text", type: "String", required: true, groupName: "Content", order: 1 },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Visual Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Default", value: "default" },
+					{ label: "Prominent", value: "prominent" },
+					{ label: "Subtle", value: "subtle" }
+				],
+				defaultValue: "default"
+			}
+		],
 	},
 	{
 		id: "ct-rich-text",
 		name: "Rich Text",
+		displayName: "Rich Text",
 		baseType: "Block",
 		description: "A rich text block supporting simple markup",
-		properties: [{ id: "richtext", name: "Rich Text", type: "richtext", required: true }],
+		properties: [{ id: "richtext", name: "Rich Text", displayName: "Rich Text", type: "XhtmlString", required: true, groupName: "Content", order: 1 }],
 	},
 	{
 		id: "ct-button",
 		name: "Button",
+		displayName: "Button",
 		baseType: "Block",
 		description: "A button block",
-		properties: [{ id: "label", name: "Label", type: "text", required: true }],
+		properties: [
+			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "url", name: "URL", displayName: "URL", type: "Url", groupName: "Content", order: 2 },
+			{
+				id: "template",
+				name: "Template",
+				displayName: "Button Style",
+				type: "SelectOne",
+				groupName: "Appearance",
+				options: [
+					{ label: "Primary", value: "primary" },
+					{ label: "Secondary", value: "secondary" },
+					{ label: "Subtle", value: "subtle" }
+				],
+				defaultValue: "primary"
+			}
+		],
+	},
+	{
+		id: "ct-author",
+		name: "Author",
+		displayName: "Author",
+		baseType: "Block",
+		description: "An author block for blog posts and articles",
+		properties: [
+			{
+				id: "name",
+				name: "Name",
+				displayName: "Name",
+				type: "String",
+				required: true,
+				groupName: "Content",
+				order: 1,
+				description: "Author's full name"
+			},
+			{
+				id: "bio",
+				name: "Bio",
+				displayName: "Bio",
+				type: "LongString",
+				groupName: "Content",
+				order: 2,
+				description: "Author biography or description",
+				displayAs: "textarea"
+			},
+			{
+				id: "image",
+				name: "Image",
+				displayName: "Profile Image",
+				type: "ImageReference",
+				groupName: "Content",
+				order: 3,
+				description: "Author profile photo"
+			},
+			{
+				id: "email",
+				name: "Email",
+				displayName: "Email",
+				type: "String",
+				groupName: "Content",
+				order: 4,
+				description: "Author's email address"
+			},
+			{
+				id: "website",
+				name: "Website",
+				displayName: "Website",
+				type: "Url",
+				groupName: "Content",
+				order: 5,
+				description: "Author's website or portfolio URL"
+			}
+		],
 	},
 	{
 		id: "ct-input",
 		name: "Input",
+		displayName: "Input",
 		baseType: "Block",
 		description: "An input block",
 		properties: [
-			{ id: "label", name: "Label", type: "text", required: true },
-			{ id: "placeholder", name: "Placeholder", type: "text" },
-			{ id: "tooltip", name: "Tooltip", type: "text" },
-			{ id: "required", name: "Required", type: "checkbox" },
+			{ id: "label", name: "Label", displayName: "Label", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "placeholder", name: "Placeholder", displayName: "Placeholder", type: "String", groupName: "Content", order: 2 },
+			{ id: "tooltip", name: "Tooltip", displayName: "Tooltip", type: "String", groupName: "Content", order: 3 },
+			{ id: "required", name: "Required", displayName: "Required", type: "Boolean", groupName: "Settings", order: 1 },
 		],
 	},
 	{
@@ -445,7 +757,7 @@ export const initialContentTypes: ContentType[] = [
 		displayName: "SEO Block",
 		baseType: "Block",
 		description: "SEO metadata block for pages and content",
-		groupName: "SEO",
+		groupName: "GEO & SEO",
 		isAvailable: true,
 		properties: [
 			{ id: "title", name: "Title", displayName: "Page Title", type: "String", groupName: "Basic", order: 1, description: "The page title shown in browser tabs and search results", validation: { maxLength: 60 } },
@@ -459,6 +771,129 @@ export const initialContentTypes: ContentType[] = [
 			{ id: "twitterDescription", name: "TwitterDescription", displayName: "Twitter Description", type: "LongString", groupName: "Social", order: 5 },
 			{ id: "twitterImage", name: "TwitterImage", displayName: "Twitter Image", type: "ImageReference", groupName: "Social", order: 6 },
 		],
+	},
+	// CMP Content Models (migrated to unified repository)
+	{
+		id: "cm-blog-post",
+		name: "blog_post",
+		displayName: "Blog Post",
+		baseType: "Page",
+		description: "A standard blog post with title, author, content, and metadata",
+		properties: [
+			{ id: "field-bp-title", name: "title", displayName: "Title", type: "String", required: true, cultureSpecific: true, description: "The main title of the blog post", groupName: "Content", order: 1 },
+			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Name of the blog post author", groupName: "Content", order: 2 },
+			{ id: "field-bp-publish-date", name: "publish_date", displayName: "Publish Date", type: "DateTime", required: true, description: "When the post should be published", groupName: "Content", order: 1 },
+			{ id: "field-bp-excerpt", name: "excerpt", displayName: "Excerpt", type: "LongString", cultureSpecific: true, description: "Short summary for previews and SEO", groupName: "Content", order: 3 },
+			{ id: "field-bp-content", name: "content", displayName: "Content", type: "XhtmlString", required: true, cultureSpecific: true, description: "The main blog post content", groupName: "Content", order: 4 },
+			{ id: "field-bp-featured-image", name: "featured_image", displayName: "Featured Image", type: "ImageReference", description: "Main image for the blog post", groupName: "Design", order: 1 },
+			{ id: "field-bp-tags", name: "tags", displayName: "Tags", type: "String", description: "Tags for categorizing the post", groupName: "GEO & SEO", order: 1 },
+			{ id: "field-bp-seo-keywords", name: "seo_keywords", displayName: "SEO Keywords", type: "String", cultureSpecific: true, description: "Keywords for search engine optimization", groupName: "GEO & SEO", order: 2 },
+		],
+		modifiedAt: new Date("2024-03-20T10:00:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "blog_post",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "content",
+		isActive: true,
+	},
+	{
+		id: "cm-article",
+		name: "article",
+		displayName: "Article",
+		baseType: "Page",
+		description: "Long-form editorial content with sections and rich media",
+		properties: [
+			{ id: "field-art-headline", name: "headline", displayName: "Headline", type: "String", required: true, cultureSpecific: true, description: "Main article headline", groupName: "Content", order: 1 },
+			{ id: "field-art-subheadline", name: "subheadline", displayName: "Subheadline", type: "String", cultureSpecific: true, description: "Supporting headline text", groupName: "Content", order: 2 },
+			{ id: "field-art-byline", name: "byline", displayName: "Byline", type: "String", required: true, description: "Author and publication information", groupName: "Content", order: 3 },
+			{ id: "field-art-body", name: "body", displayName: "Body", type: "XhtmlString", required: true, cultureSpecific: true, description: "Main article content", groupName: "Content", order: 4 },
+			{ id: "field-art-hero-image", name: "hero_image", displayName: "Hero Image", type: "ImageReference", description: "Large header image", groupName: "Design", order: 1 },
+			{ id: "field-art-related-articles", name: "related_articles", displayName: "Related Articles", type: "ContentReference", description: "Links to related content", groupName: "Content", order: 1 },
+		],
+		modifiedAt: new Date("2024-03-20T10:30:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "article",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "content",
+		isActive: true,
+	},
+	{
+		id: "cm-banner",
+		name: "banner",
+		displayName: "Banner",
+		baseType: "Block",
+		description: "Promotional banner for campaigns and announcements",
+		properties: [
+			{ id: "field-ban-message", name: "message", displayName: "Message", type: "String", required: true, cultureSpecific: true, description: "Banner message text", groupName: "Content", order: 1 },
+			{ id: "field-ban-cta-text", name: "cta_text", displayName: "CTA Text", type: "String", cultureSpecific: true, description: "Call-to-action button text", groupName: "Content", order: 2 },
+			{ id: "field-ban-cta-link", name: "cta_link", displayName: "CTA Link", type: "Url", description: "Call-to-action destination URL", groupName: "Content", order: 3 },
+			{ id: "field-ban-background-image", name: "background_image", displayName: "Background Image", type: "ImageReference", description: "Optional background image", groupName: "Design", order: 1 },
+			{ id: "field-ban-dismissible", name: "dismissible", displayName: "Dismissible", type: "Boolean", description: "Allow users to dismiss the banner", groupName: "Settings", order: 1 },
+			{ id: "field-ban-display-duration", name: "display_duration", displayName: "Display Duration", type: "Int", description: "How long to show banner (in days)", groupName: "Settings", order: 2 },
+		],
+		modifiedAt: new Date("2024-03-20T11:00:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "banner",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "component",
+		isActive: true,
+	},
+	{
+		id: "cm-hero-component",
+		name: "hero_component",
+		displayName: "Hero Component",
+		baseType: "Block",
+		description: "Large hero section with image, headline, and call-to-action",
+		properties: [
+			{ id: "field-hero-headline", name: "headline", displayName: "Headline", type: "String", required: true, cultureSpecific: true, description: "Main hero headline", groupName: "Content", order: 1 },
+			{ id: "field-hero-subheadline", name: "subheadline", displayName: "Subheadline", type: "String", cultureSpecific: true, description: "Supporting text below headline", groupName: "Content", order: 2 },
+			{ id: "field-hero-description", name: "description", displayName: "Description", type: "LongString", cultureSpecific: true, description: "Detailed description text", groupName: "Content", order: 3 },
+			{ id: "field-hero-background", name: "background_image", displayName: "Background Image", type: "ImageReference", required: true, description: "Large background image", groupName: "Design", order: 1 },
+			{ id: "field-hero-primary-cta", name: "primary_cta_text", displayName: "Primary CTA Text", type: "String", cultureSpecific: true, description: "Primary button text", groupName: "Actions", order: 1 },
+			{ id: "field-hero-primary-link", name: "primary_cta_link", displayName: "Primary CTA Link", type: "Url", description: "Primary button destination", groupName: "Actions", order: 2 },
+			{ id: "field-hero-secondary-cta", name: "secondary_cta_text", displayName: "Secondary CTA Text", type: "String", cultureSpecific: true, description: "Secondary button text", groupName: "Actions", order: 3 },
+			{ id: "field-hero-secondary-link", name: "secondary_cta_link", displayName: "Secondary CTA Link", type: "Url", description: "Secondary button destination", groupName: "Actions", order: 4 },
+		],
+		modifiedAt: new Date("2024-03-20T11:30:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "hero_component",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "component",
+		isActive: true,
+	},
+	{
+		id: "cm-email",
+		name: "email",
+		displayName: "Email",
+		baseType: "Media",
+		description: "Email template for marketing campaigns",
+		properties: [
+			{ id: "field-email-subject", name: "subject_line", displayName: "Subject Line", type: "String", required: true, cultureSpecific: true, description: "Email subject line", groupName: "Content", order: 1 },
+			{ id: "field-email-preheader", name: "preheader", displayName: "Preheader Text", type: "String", cultureSpecific: true, description: "Preview text shown in inbox", groupName: "Content", order: 2 },
+			{ id: "field-email-from-name", name: "from_name", displayName: "From Name", type: "String", required: true, description: "Sender name", groupName: "Settings", order: 1 },
+			{ id: "field-email-from-address", name: "from_address", displayName: "From Address", type: "String", required: true, description: "Sender email address", groupName: "Settings", order: 2 },
+			{ id: "field-email-body", name: "body", displayName: "Email Body", type: "XhtmlString", required: true, cultureSpecific: true, description: "Main email content (HTML)", groupName: "Content", order: 3 },
+			{ id: "field-email-cta", name: "cta_text", displayName: "CTA Text", type: "String", cultureSpecific: true, description: "Call-to-action button text", groupName: "Actions", order: 1 },
+			{ id: "field-email-cta-link", name: "cta_link", displayName: "CTA Link", type: "Url", description: "Call-to-action destination", groupName: "Actions", order: 2 },
+			{ id: "field-email-footer", name: "footer_text", displayName: "Footer Text", type: "LongString", cultureSpecific: true, description: "Email footer content", groupName: "Content", order: 4 },
+			{ id: "field-email-unsubscribe", name: "unsubscribe_link", displayName: "Unsubscribe Link", type: "Url", required: true, description: "Unsubscribe page URL", groupName: "Settings", order: 3 },
+		],
+		modifiedAt: new Date("2024-03-20T12:00:00Z").toISOString(),
+		modifiedBy: "System",
+		source: "cmp",
+		apiIdentifier: "email",
+		version: "_v1",
+		defaultLocale: "en-US",
+		modelType: "content",
+		isActive: true,
 	},
 ];
 
@@ -525,6 +960,72 @@ export type Page = {
 	tags?: string[];
 	/** When set, used by getAllContentItems instead of getPageTagsAndCategories for this page */
 	categories?: string[];
+	/** CMP connection metadata - tracks connection to CMP content instance */
+	cmpConnection?: {
+		instanceId: string; // ID of connected CMP content instance
+		modelId: string; // CMP model/content type ID
+		mappingId?: string; // Optional: specific mapping to use
+		syncStatus: "synced" | "out-of-sync" | "manual-override";
+		lastSyncedAt?: string;
+		syncMode: "auto" | "manual"; // Auto-sync on CMP changes or manual only
+	};
+	/** CMP Task association - tracks which task this page belongs to */
+	cmpTaskMetadata?: {
+		taskId: string; // ID of the CMP task (from URL /cmp/task/[id])
+		taskName: string; // Display name of the task
+		addedAt: string; // ISO timestamp when page was added to task
+		addedVia: "created" | "manual"; // How it was added: created via "Add to Application" or manually added
+	};
+};
+
+export type CmpTask = {
+	id: string;
+	title: string;
+	reference: string;
+	status: string;
+};
+
+export const initialCmpTasks: CmpTask[] = [
+	{
+		id: "1",
+		title: "Ironman Miami triathlon 2026 Sponsor Package task",
+		reference: "TSK-2702",
+		status: "Not Started",
+	},
+	{
+		id: "2",
+		title: "Content Rec",
+		reference: "TSK-2695",
+		status: "In Progress",
+	},
+	{
+		id: "3",
+		title: "Hotel Brochure",
+		reference: "TSK-2691",
+		status: "At Risk",
+	},
+	{
+		id: "4",
+		title: "SC content testing",
+		reference: "TSK-2689",
+		status: "Overdue",
+	},
+	{
+		id: "5",
+		title: "STRIDE Blog Launch",
+		reference: "TSK-2710",
+		status: "In Progress",
+	},
+];
+
+export type Application = {
+	id: string;
+	name: string;
+	appId: string;
+	url?: string;
+	startPageId?: string;
+	modifiedAt?: string;
+	modifiedBy?: string;
 };
 
 export const initialPages: Page[] = [
@@ -983,8 +1484,10 @@ export const initialPages: Page[] = [
 		parentId: null,
 		status: "Published",
 		lastModified: "2023-10-24",
-		contentTypeId: "ct-page",
+		contentTypeId: "ct-blog-listing",
 		data: {
+			title: "Blog",
+			subtitle: "Latest running tips and gear reviews",
 			seo: {
 				en: {
 					original: {
@@ -1411,6 +1914,7 @@ export const initialPages: Page[] = [
 													{ id: "ele-landing-hero-badge" },
 													{ id: "ele-landing-hero-sub" },
 													{ id: "ele-landing-hero-heading" },
+													{ id: "ele-landing-hero-broken-image" },
 												],
 											},
 										],
@@ -1762,16 +2266,24 @@ export const initialPages: Page[] = [
 									},
 								},
 							},
+							"ele-landing-hero-broken-image": {
+								type: "ct-image-block",
+								properties: {
+									image: { value: "https://example.com/missing-image-404.jpg" },
+								},
+							},
 							"ele-landing-hero-cta-primary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Register for your bib" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-hero-cta-secondary": {
 								type: "ct-button",
 								properties: {
 									label: { value: "Learn More" },
+									url: { value: "/about" },
 								},
 							},
 							"ele-landing-hero-stat-1-heading": {
@@ -2070,6 +2582,7 @@ export const initialPages: Page[] = [
 								type: "ct-button",
 								properties: {
 									label: { value: "Join Now" },
+									url: { value: "/register" },
 								},
 							},
 							"ele-landing-challenges-heading": {
@@ -4164,10 +4677,9 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-31-img": {
-						type: "ct-image",
+						type: "ct-image-block",
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling1/400/300" },
-							alt: { value: "Cycle Computer Pro" },
+							image: { value: "https://picsum.photos/seed/cycling1/400/300" },
 						},
 					},
 					"ele-prod-31-heading": {
@@ -4242,11 +4754,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-32-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling3/400/300" },
-							alt: { value: "HR Monitor Band" },
+
+							image: { value: "https://picsum.photos/seed/cycling3/400/300" },
+
 						},
+
 					},
 					"ele-prod-32-heading": {
 						type: "ct-heading",
@@ -4320,11 +4836,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-33-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling2/400/300" },
-							alt: { value: "Smart Bike Trainer" },
+
+							image: { value: "https://picsum.photos/seed/cycling2/400/300" },
+
 						},
+
 					},
 					"ele-prod-33-heading": {
 						type: "ct-heading",
@@ -4398,11 +4918,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-34-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling4/400/300" },
-							alt: { value: "Cadence Sensor" },
+
+							image: { value: "https://picsum.photos/seed/cycling4/400/300" },
+
 						},
+
 					},
 					"ele-prod-34-heading": {
 						type: "ct-heading",
@@ -4474,11 +4998,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-35-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling8/400/300" },
-							alt: { value: "Power Meter" },
+
+							image: { value: "https://picsum.photos/seed/cycling8/400/300" },
+
 						},
+
 					},
 					"ele-prod-35-heading": {
 						type: "ct-heading",
@@ -4552,11 +5080,15 @@ export const initialPages: Page[] = [
 				],
 				elements: {
 					"ele-prod-36-img": {
-						type: "ct-image",
+
+						type: "ct-image-block",
+
 						properties: {
-							src: { value: "https://picsum.photos/seed/cycling9/400/300" },
-							alt: { value: "Speed Sensor" },
+
+							image: { value: "https://picsum.photos/seed/cycling9/400/300" },
+
 						},
+
 					},
 					"ele-prod-36-heading": {
 						type: "ct-heading",
@@ -4606,6 +5138,7 @@ export interface UnifiedContentItem {
 	lastModified: string;
 	tags: string[];      // array of tag slugs
 	categories: string[]; // array of category slugs
+	hasConnection?: boolean; // true if page has an active content connection
 }
 
 const reportNames = [
@@ -5051,6 +5584,7 @@ export const getAllContentItems = (pages: Page[] = initialPages): UnifiedContent
 			lastModified: formattedDate,
 			tags,
 			categories,
+			hasConnection: !!p.cmpConnection,
 		};
 	});
 	return [...pageItems, ...initialOtherContent];
@@ -5073,7 +5607,7 @@ export const siteConfig = {
 	},
 };
 
-// Initial Tags
+// Initial Tags - cleaned: removed 8 orphaned tags and updated usage counts to match actual content usage
 export const initialTags = [
 	{
 		id: 'tag-1',
@@ -5081,7 +5615,7 @@ export const initialTags = [
 		slug: 'spring-reset',
 		visibility: 'private' as const,
 		modifiedBy: 'Tien Le',
-		usage: 85,
+		usage: 2,
 		lastModified: 'Jan 11, 2025',
 	},
 	{
@@ -5090,17 +5624,8 @@ export const initialTags = [
 		slug: 'summer-shred',
 		visibility: 'private' as const,
 		modifiedBy: 'Sofia Kim',
-		usage: 90,
+		usage: 1,
 		lastModified: 'Feb 15, 2025',
-	},
-	{
-		id: 'tag-3',
-		name: 'Beach Body',
-		slug: 'beach-body',
-		visibility: 'public' as const,
-		modifiedBy: 'Amir Patel',
-		usage: 78,
-		lastModified: 'Mar 1, 2025',
 	},
 	{
 		id: 'tag-4',
@@ -5108,71 +5633,8 @@ export const initialTags = [
 		slug: 'outdoor-training',
 		visibility: 'private' as const,
 		modifiedBy: 'Lara Chen',
-		usage: 88,
+		usage: 4,
 		lastModified: 'Mar 20, 2025',
-	},
-	{
-		id: 'tag-5',
-		name: 'Back to Fitness',
-		slug: 'back-to-fitness',
-		visibility: 'public' as const,
-		modifiedBy: 'Raj Singh',
-		usage: 83,
-		lastModified: 'Apr 5, 2025',
-	},
-	{
-		id: 'tag-6',
-		name: 'Fall Focus',
-		slug: 'fall-focus',
-		visibility: 'public' as const,
-		modifiedBy: 'Emma Brown',
-		usage: 95,
-		lastModified: 'Apr 22, 2025',
-	},
-	{
-		id: 'tag-7',
-		name: 'Routine Reboot',
-		slug: 'routine-reboot',
-		visibility: 'private' as const,
-		modifiedBy: 'David Lee',
-		usage: 80,
-		lastModified: 'May 10, 2025',
-	},
-	{
-		id: 'tag-8',
-		name: 'Holiday Hustle',
-		slug: 'holiday-hustle',
-		visibility: 'public' as const,
-		modifiedBy: 'Nina Roberts',
-		usage: 89,
-		lastModified: 'May 30, 2025',
-	},
-	{
-		id: 'tag-9',
-		name: 'New Year Reset',
-		slug: 'new-year-reset',
-		visibility: 'private' as const,
-		modifiedBy: 'Tom Green',
-		usage: 92,
-		lastModified: 'Jun 15, 2025',
-	},
-	{
-		id: 'tag-10',
-		name: 'Resolution Challenge',
-		slug: 'resolution-challenge',
-		visibility: 'public' as const,
-		modifiedBy: 'Hannah White',
-		usage: 87,
-		lastModified: 'Jul 1, 2025',
-	},
-	{
-		id: 'tag-11',
-		name: 'Festive Fitness',
-		slug: 'festive-fitness',
-		visibility: 'private' as const,
-		modifiedBy: 'Jake Wilson',
-		usage: 91,
-		lastModified: 'Jul 20, 2025',
 	},
 	{
 		id: 'tag-12',
@@ -5189,7 +5651,7 @@ export const initialTags = [
 		slug: 'cycling-performance',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 12,
+		usage: 9,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5198,7 +5660,7 @@ export const initialTags = [
 		slug: 'exercise-routine',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 20,
+		usage: 5,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5207,7 +5669,7 @@ export const initialTags = [
 		slug: 'cardio-workout',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 18,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5216,7 +5678,7 @@ export const initialTags = [
 		slug: 'mountain-biking',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 10,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5225,7 +5687,7 @@ export const initialTags = [
 		slug: 'road-cycling',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 14,
+		usage: 7,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5234,7 +5696,7 @@ export const initialTags = [
 		slug: 'indoor-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 16,
+		usage: 2,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5243,7 +5705,7 @@ export const initialTags = [
 		slug: 'fitness-tracking',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 22,
+		usage: 18,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5252,7 +5714,7 @@ export const initialTags = [
 		slug: 'endurance-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 13,
+		usage: 3,
 		lastModified: 'Jan 28, 2026',
 	},
 	{
@@ -5261,7 +5723,7 @@ export const initialTags = [
 		slug: 'sprint-training',
 		visibility: 'public' as const,
 		modifiedBy: 'Current User',
-		usage: 11,
+		usage: 1,
 		lastModified: 'Jan 28, 2026',
 	},
 ];
@@ -5378,3 +5840,80 @@ export const initialCategories = [
 		isExpanded: false,
 	},
 ];
+
+export const initialApplications: Application[] = [
+	{
+		id: "app-stride",
+		name: "Stride",
+		appId: "1234",
+		url: "www",
+		startPageId: "page-site-home",
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+	},
+	{
+		id: "app-stride-mobile",
+		name: "Stride Mobile",
+		appId: "5678",
+		url: "mobile.stride.com",
+		startPageId: "page-site-home",
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+	},
+];
+
+// Helper functions for content type restrictions
+export function getContentType(contentTypeId: string): ContentType | undefined {
+	return initialContentTypes.find(ct => ct.id === contentTypeId);
+}
+
+export function canCreateChildType(
+	parentContentTypeId: string,
+	childContentTypeId: string
+): boolean {
+	const parentType = getContentType(parentContentTypeId);
+	const childType = getContentType(childContentTypeId);
+
+	// Check parent-side restrictions (AvailableContentTypesAttribute)
+	if (parentType?.availableContentTypes) {
+		const { availability, include, exclude } = parentType.availableContentTypes;
+
+		// If availability is explicitly set to None, no children allowed
+		if (availability === "None") {
+			return false;
+		}
+
+		// If include is set, ONLY those types are allowed
+		if (include && include.length > 0) {
+			if (!include.includes(childContentTypeId)) {
+				return false;
+			}
+		}
+
+		// If exclude is set, those types are NOT allowed
+		if (exclude && exclude.length > 0) {
+			if (exclude.includes(childContentTypeId)) {
+				return false;
+			}
+		}
+
+		// If availability is "All" (or undefined), and no include/exclude, all types allowed
+	}
+
+	// Check child-side restrictions (IncludeOn/ExcludeOn)
+	// IncludeOn: This child can ONLY be created under these parent types
+	if (childType?.includeOn && childType.includeOn.length > 0) {
+		if (!childType.includeOn.includes(parentContentTypeId)) {
+			return false;
+		}
+	}
+
+	// ExcludeOn: This child CANNOT be created under these parent types
+	if (childType?.excludeOn && childType.excludeOn.length > 0) {
+		if (childType.excludeOn.includes(parentContentTypeId)) {
+			return false;
+		}
+	}
+
+	return true;
+}

@@ -1,16 +1,20 @@
 "use client";
+import { useEffect } from "react";
 import Template from "./components/template";
 import "./globals.css";
+import Script from "next/script";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
+import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
+import {OpalGenerationProvider} from "@/app/context/OpalGenerationContext";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
 import {webhooks as initialWebhooks} from "@/app/cms/settings/webhooks/mockData";
-import {mockNotifications} from "@/app/opal/notifications/mockData";
 import {useSecretCode} from "@/app/hooks/useSecretCode";
 import {SnowEffect} from "@/app/components/effects/SnowEffect";
 import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
+import {MigrationRunner} from "@/app/components/MigrationRunner";
 import {
 	IconChartBar,
 	IconDashboard,
@@ -23,15 +27,42 @@ import {
 	IconPuzzle,
 	IconFolders,
 	IconBuildingStore,
+	IconSettingsSearch,
 } from "@tabler/icons-react";
+
+// CMP custom icons
+import CMPCreateIcon from "@/app/cmp/assets/plus-16.svg";
+import CMPHomeIcon from "@/app/cmp/assets/home.svg";
+import CMPPlanIcon from "@/app/cmp/assets/plan.svg";
+import CMPDashboardIcon from "@/app/cmp/assets/dashboard.svg";
+import CMPResourceManagementIcon from "@/app/cmp/assets/resource-management.svg";
+import CMPIdeaLabIcon from "@/app/cmp/assets/sparkles 16.svg";
+import CMPLibraryIcon from "@/app/cmp/assets/library.svg";
+import CMPMarketplaceIcon from "@/app/cmp/assets/marketplace.svg";
+import CMPWorkRequestIcon from "@/app/cmp/assets/workrequest.svg";
 
 export default function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	useEffect(() => {
+		if (typeof window === "undefined" || !window.location.hash.includes("figmacapture=")) {
+			return;
+		}
+
+		if (document.querySelector("script[data-figma-capture-script]")) {
+			return;
+		}
+
+		const script = document.createElement("script");
+		script.src = "https://mcp.figma.com/mcp/html-to-design/capture.js";
+		script.async = true;
+		script.setAttribute("data-figma-capture-script", "true");
+		document.head.appendChild(script);
+	}, []);
+
 	const path = usePathname() ?? "";
-	const hasUnreadNotifications = mockNotifications.some((n) => n.status === "unread");
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
@@ -103,41 +134,31 @@ export default function RootLayout({
 				url: "/cms/settings",
 				icon: <IconSettings />,
 				children: [
-					{label: "Taxonomy"},
-					{label: "Categories", url: "/cms/settings/categories"},
-					{label: "Tags", url: "/cms/settings/tags"},
-					{label: "Configure"},
-					{
-						label: "Applications",
-						url: "/cms/settings/applications",
-						children: {
-							title: "Stride",
-							children: [
-								{
-									label: "Settings",
-									url: "/cms/settings/applications/mosey-bank/settings",
-								},
-								{label: "Advanced"},
-								{
-									label: "Hostnames",
-									url: "/cms/settings/applications/mosey-bank/hostnames",
-								},
-							],
-						},
-					},
-					{label: "Blueprints", url: "/cms/settings/blueprints"},
+					// 1. AI & Automation (moved to top - prioritized)
+					{label: "AI & Automation"},
+					{label: "Opal", url: "/cms/settings/opal-actions"},
+
+					// 2. Content (NEW GROUP - combines content-related settings)
+					{label: "Content"},
 					{
 						label: "Content Types",
 						url: "/cms/settings/content-types",
 						children: currentContentType
 							? {
-									title: currentContentType.displayName || currentContentType.name,
-									description: currentContentType.baseType === "Page" ? "Page Type" :
-										currentContentType.baseType === "Block" ? "Block Type" :
-										currentContentType.baseType === "Experience" ? "Experience Type" :
-										currentContentType.baseType === "Media" ? "Media Type" :
-										currentContentType.baseType === "Product" ? "Product Type" :
-										currentContentType.baseType,
+									title:
+										currentContentType.displayName || currentContentType.name,
+									description:
+										currentContentType.baseType === "Page"
+											? "Page Type"
+											: currentContentType.baseType === "Block"
+												? "Block Type"
+												: currentContentType.baseType === "Experience"
+													? "Experience Type"
+													: currentContentType.baseType === "Media"
+														? "Media Type"
+														: currentContentType.baseType === "Product"
+															? "Product Type"
+															: currentContentType.baseType,
 									children: [
 										{label: "Define"},
 										{
@@ -174,14 +195,45 @@ export default function RootLayout({
 											url: `/cms/settings/content-types/${contentTypeId}/settings`,
 										},
 									],
-							  }
+								}
 							: undefined,
 					},
+					{label: "Blueprints", url: "/cms/settings/blueprints"},
 					{label: "Forms Settings", url: "/cms/settings/forms-settings"},
+					{label: "Property Groups", url: "/cms/settings/edit-tabs"},
+
+					// 3. Taxonomy (moved to third position)
+					{label: "Taxonomy"},
+					{label: "Categories", url: "/cms/settings/categories"},
+					{label: "Tags", url: "/cms/settings/tags"},
+
+					// 4. Configure (merged with old Config section)
+					{label: "Configure"},
+					{
+						label: "Applications",
+						url: "/cms/settings/applications",
+						children: {
+							title: "Stride",
+							children: [
+								{
+									label: "Settings",
+									url: "/cms/settings/applications/mosey-bank/settings",
+								},
+								{label: "Advanced"},
+								{
+									label: "Hostnames",
+									url: "/cms/settings/applications/mosey-bank/hostnames",
+								},
+							],
+						},
+					},
 					{label: "Access Rights", url: "/cms/settings/access-rights"},
 					{label: "API Clients", url: "/cms/settings/api-clients"},
 					{label: "API Keys", url: "/cms/settings/api-keys"},
 					{label: "Set Access Rights", url: "/cms/settings/set-access-rights"},
+					{label: "Languages", url: "/cms/settings/languages"},
+
+					// 5. Data & Sync Management (unchanged)
 					{label: "Data & Sync Management"},
 					{label: "GraphiQL", url: "/cms/settings/graphiql"},
 					{label: "Scheduled Jobs", url: "/cms/settings/scheduled-jobs"},
@@ -205,15 +257,16 @@ export default function RootLayout({
 								: [],
 						},
 					},
-					{label: "Config"},
-					{label: "Languages", url: "/cms/settings/languages"},
-					{label: "Edit Tabs", url: "/cms/settings/edit-tabs"},
+
+					// 6. Tools (unchanged)
 					{label: "Tools"},
 					{label: "Change Log", url: "/cms/settings/change-log"},
 					{label: "Convert Pages", url: "/cms/settings/convert-pages"},
 					{label: "Export Data", url: "/cms/settings/export-data"},
 					{label: "Import Data", url: "/cms/settings/import-data"},
 					{label: "Search Configuration", url: "/cms/settings/search-configuration"},
+
+					// 7. Add-ons (unchanged)
 					{label: "Add-ons"},
 					{label: "BVN/GETA 404 Handler", url: "/cms/settings/bvn"},
 				],
@@ -228,7 +281,7 @@ export default function RootLayout({
 				label: "Search Management",
 				url: "/cms/search/search-analytics",
 				highlight: "/cms/search",
-				icon: <IconSearch />,
+				icon: <IconSettingsSearch />,
 				children: [
 					{label: "Health & Monitoring"},
 					{
@@ -294,7 +347,7 @@ export default function RootLayout({
 					{
 						label: "Pinned Results",
 						description:
-							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn't enough.",
+							"Curated search results that push chosen pages to the top for specific queries. They help highlight important content and improve results when normal ranking isn’t enough.",
 						url: "/cms/search/pinned-results",
 					},
 					{
@@ -312,6 +365,13 @@ export default function RootLayout({
 						label: "Autocomplete Phrases",
 						description: "Manage phrases for autocomplete suggestions.",
 						url: "/cms/search/autocomplete-phrases",
+					},
+
+					{label: "Developer"},
+					{
+						label: "Development Account Management",
+						description: "Request and manage developer instance access.",
+						url: "/cms/search/development-account-management",
 					},
 				],
 			},
@@ -374,21 +434,28 @@ export default function RootLayout({
 		],
 		opal: [
 			{
-				label: "Chat",
+				label: "Chats",
 				url: "/opal",
 				highlight: "/opal",
-				icon: <img src="/nav_icons/comments.svg" alt="Chat" width={20} height={20} />,
+				icon: <img src="/nav_icons/comments.svg" alt="Chats" width={20} height={20} />,
 				exact: true,
 				customLayout: true,
 			},
 			{
-				label: "Prompt Library",
-				url: "/opal/prompt-library",
-				highlight: "/opal/prompt-library",
+				label: "Artifacts",
+				url: "/opal/artifacts",
+				highlight: "/opal/artifacts",
+				icon: <CMPLibraryIcon />,
+				hidePageHeader: true,
+			},
+			{
+				label: "Context",
+				url: "/opal/instructions",
+				highlight: "/opal/instructions",
 				icon: (
 					<img
-						src="/nav_icons/grid-round-2-plus.svg"
-						alt="Prompt Library"
+						src="/nav_icons/folder-bookmark.svg"
+						alt="Context"
 						width={20}
 						height={20}
 					/>
@@ -398,15 +465,7 @@ export default function RootLayout({
 				label: "Inbox",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
-				badge: hasUnreadNotifications,
-				icon: (
-					<img
-						src="/nav_icons/inbox.svg"
-						alt="Inbox"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/inbox.svg" alt="Inbox" width={20} height={20} />,
 				customLayout: true,
 			},
 			{
@@ -420,12 +479,6 @@ export default function RootLayout({
 			},
 			{label: "Configurations"},
 			{
-				label: "Instructions",
-				url: "/opal/instructions",
-				highlight: "/opal/instructions",
-				icon: <img src="/nav_icons/book.svg" alt="Instructions" width={20} height={20} />,
-			},
-			{
 				label: "Agents",
 				url: "/opal/agents",
 				highlight: "/opal/agents",
@@ -433,31 +486,114 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Tools",
-				url: "/opal/tools",
-				highlight: "/opal/tools",
-				icon: (
-					<img
-						src="/nav_icons/screwdriver-wrench.svg"
-						alt="Tools"
-						width={20}
-						height={20}
-					/>
-				),
+				label: "Connectors",
+				url: "/opal/connectors",
+				highlight: "/opal/connectors",
+				icon: <img src="/nav_icons/grid-2-plus.svg" alt="Connectors" width={20} height={20} />,
+				hidePageHeader: true,
 			},
 			{
 				label: "Settings",
 				url: "/opal/settings",
 				highlight: "/opal/settings",
-				customLayout: true,
-				icon: (
-					<img
-						src="/nav_icons/gear.svg"
-						alt="Settings"
-						width={20}
-						height={20}
-					/>
-				),
+				icon: <img src="/nav_icons/gear.svg" alt="Settings" width={20} height={20} />,
+			},
+		],
+		cmp: [
+			{
+				label: "Create",
+				icon: <CMPCreateIcon />,
+				isMenuTrigger: true,
+				menuOptions: [
+					{label: "Campaign", url: "/cmp/create/campaign"},
+					{label: "Task", url: "/cmp/create/task"},
+					{label: "Hypothesis", url: "/cmp/create/hypothesis"},
+					{label: "Event", url: "/cmp/create/event"},
+					{label: "Milestone", url: "/cmp/create/milestone"},
+					{label: "Work Request", url: "/cmp/create/work-request"},
+					{label: "Pitch Request", url: "/cmp/create/pitch-request"},
+				],
+			},
+			{
+				label: "Home",
+				url: "/cmp/dashboard",
+				highlight: "/cmp/dashboard",
+				icon: <CMPHomeIcon />,
+			},
+			{
+				label: "Plan",
+				url: "/cmp/plan-view",
+				highlight: "/cmp/plan-view",
+				icon: <CMPPlanIcon />,
+			},
+			{
+				label: "Library",
+				url: "/cmp/library",
+				highlight: "/cmp/library",
+				icon: <CMPLibraryIcon />,
+			},
+			{
+				label: "Stock Images",
+				url: "/cmp/stock-images",
+				highlight: "/cmp/stock-images",
+				icon: <CMPMarketplaceIcon />,
+			},
+			{
+				label: "Resource Management",
+				url: "/cmp/resource-management",
+				highlight: "/cmp/resource-management",
+				icon: <CMPResourceManagementIcon />,
+			},
+			{
+				label: "Idea Lab",
+				url: "/cmp/idea-lab",
+				highlight: "/cmp/idea-lab",
+				icon: <CMPIdeaLabIcon />,
+			},
+			{
+				label: "Analytics",
+				url: "/cmp/reports",
+				highlight: "/cmp/reports",
+				icon: <CMPDashboardIcon />,
+			},
+			{
+				label: "Requests",
+				url: "/cmp/work-request",
+				highlight: "/cmp/work-request",
+				icon: <CMPWorkRequestIcon />,
+			},
+			{
+				label: "Settings",
+				highlight: "cmp/settings",
+				url: "/cmp/settings",
+				icon: <IconSettings />,
+				hidePageHeader: true,
+				children: [
+					{label: "Stefan Svebeck (Admin)", url: "/cmp/settings/profile"},
+					{label: "Organization", url: "/cmp/settings/organization"},
+					{label: "Users & Teams", url: "/cmp/settings/users-teams", separator: true},
+					{label: "AI", url: "/cmp/settings/ai", separator: true},
+					{label: "Assets", url: "/cmp/settings/assets"},
+					{label: "Fields", url: "/cmp/settings/fields"},
+					{label: "Integrations", url: "/cmp/settings/integrations"},
+					{label: "Routing Rules", url: "/cmp/settings/routing-rules"},
+					{label: "Strategy", url: "/cmp/settings/strategy"},
+					{label: "Templates", url: "/cmp/settings/content-models"},
+					{label: "Workflows", url: "/cmp/settings/workflows", separator: true},
+					{label: "Reports", url: "/cmp/settings/reports"},
+					{label: "Activity Log", url: "/cmp/settings/activity-log"},
+					{label: "Recycle Bin", url: "/cmp/settings/recycle-bin", separator: true},
+					{label: "Marketo", url: "/cmp/settings/marketo"},
+					{label: "Eloqua", url: "/cmp/settings/eloqua"},
+					{label: "Salesforce", url: "/cmp/settings/salesforce"},
+					{label: "Apps & Webhooks", url: "/cmp/settings/apps-webhooks"},
+					{
+						label: "Brand Compliance",
+						url: "/cmp/settings/brand-compliance",
+						separator: true,
+					},
+					{label: "Social Accounts", url: "/cmp/settings/social-accounts"},
+				],
 			},
 		],
 	};
@@ -475,11 +611,17 @@ export default function RootLayout({
 				/>
 			</head>
 			<body suppressHydrationWarning>
+				<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />
 				<ThemeProvider>
-					<HydrationErrorSuppressor />
-					{menu ? <Template structure={menu}>{children}</Template> : children}
-					{activeEffect === "snow" && <SnowEffect />}
-					{activeEffect === "newyear" && <NewYearEffect />}
+					<ProofreadingProvider>
+						<OpalGenerationProvider>
+							<HydrationErrorSuppressor />
+							<MigrationRunner />
+							{menu ? <Template structure={menu}>{children}</Template> : children}
+							{activeEffect === "snow" && <SnowEffect />}
+							{activeEffect === "newyear" && <NewYearEffect />}
+						</OpalGenerationProvider>
+					</ProofreadingProvider>
 				</ThemeProvider>
 			</body>
 		</html>

@@ -1,0 +1,38 @@
+## CMP Idea Lab Page DOM Structure
+## URL: /cloud/ideation?country_code=US
+## Scraped: Feb 26, 2026
+
+### Header
+Title: "Idea Lab"
+Subtitle: "Research topics and competitor keywords to help build your content strategy."
+Action: "Download As" dropdown (top-right)
+
+### Search Section
+Radio group: ○ Domain ● Topic (Topic selected by default)
+Country selector: "United States" dropdown (top-right)
+Search input: "Enter Topic/Domain to Explore" with search icon
+
+### Section 1: Recommended For You
+Badge: 🔥 "RECOMMENDED FOR YOU"
+Heading: "Keywords with the Greatest Opportunity"
+Checkbox: "Show hidden" (top-right)
+Empty state: link "Enter your targeted keywords" + "to see our tailored recommendations."
+
+### Section 2: Keyword Rank Analysis
+Heading: "Keyword Rank Analysis"
+Description: "What keywords do you and your competitors rank for in organic search? Enter competitive domains below to find out."
+5x domain input fields separated by "vs" icons
+"Analyze" button (blue, primary)
+Empty state: "It looks like you don't have any competitor sites saved. Start by entering some domain names above to see new keyword opportunities."
+
+### Section 3: Targeted Keywords
+Heading: "Your Program's Targeted Keywords"
+Action link: "Manage Keywords" (blue)
+
+### Visual Details
+- Clean, content-focused layout
+- Sections separated by horizontal dividers
+- Radio buttons use Optiaxiom styling (filled blue circle)
+- Search input is full-width with search icon
+- Domain inputs are inline with "vs" separators between them
+- Primary actions use blue accent color

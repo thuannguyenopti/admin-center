@@ -6,6 +6,7 @@ import {Button} from "@/app/components/Button";
 import Link from "next/link";
 import {Input} from "./components/Input";
 import {IconUser} from "@tabler/icons-react";
+import Image from "next/image";
 
 export default function Home() {
 	return (
@@ -14,16 +15,33 @@ export default function Home() {
 			bg="bg.accent.subtle"
 			style={{
 				height: "100vh",
-				backgroundImage: "url('/opal.png')",
-				backgroundSize: "1000px",
-				backgroundRepeat: "no-repeat",
-				backgroundPosition: "-200px -150px",
+				position: "relative",
+				overflow: "hidden",
 			}}
 			alignItems="stretch"
 		>
+			<Box
+				aria-hidden="true"
+				style={{
+					position: "absolute",
+					left: "-200px",
+					top: "-150px",
+					width: "1000px",
+					height: "1000px",
+					pointerEvents: "none",
+				}}
+			>
+				<Image
+					src="/opal.png"
+					alt=""
+					fill
+					sizes="1000px"
+					style={{objectFit: "contain"}}
+				/>
+			</Box>
 			<Card
 				border="0"
-				style={{width: "416px"}}
+				style={{width: "416px", position: "relative", zIndex: 1}}
 				p="40"
 				shadow="lg"
 			>

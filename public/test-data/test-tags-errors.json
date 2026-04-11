@@ -1,0 +1,22 @@
+[
+  {
+    "name": "",
+    "slug": "missing-name",
+    "visibility": "public"
+  },
+  {
+    "name": "Beginner Friendly",
+    "slug": "beginner-friendly",
+    "visibility": "public"
+  },
+  {
+    "name": "A",
+    "slug": "short-name",
+    "visibility": "public"
+  },
+  {
+    "name": "Valid Tag",
+    "slug": "valid-tag",
+    "visibility": "private"
+  }
+]

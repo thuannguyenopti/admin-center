@@ -34,13 +34,14 @@ import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms} from "@/app/db/initialData";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import {getSelectValueInOptions} from "@/utils/selectValue";
+import EmptyList from "@/app/components/EmptyList";
 
 export default function OptimizeSearchPage() {
 	const router = useRouter();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [algorithms, setAlgorithms] = usePersistentState("algorithms", initialAlgorithms) as [
 		Algorithm[],
-		(val: Algorithm[]) => void
+		(val: Algorithm[]) => void,
 	];
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [newAlgorithmName, setNewAlgorithmName] = useState("");
@@ -100,6 +101,67 @@ export default function OptimizeSearchPage() {
 		);
 	}, [searchQuery, algorithms]);
 
+	if (algorithms.length === 0) {
+		return (
+			<Box>
+				<EmptyList
+					heading="No algorithms yet"
+					body="Create search algorithms to control ranking, boosting, and filtering of search results."
+				>
+					<Button
+						icon={<IconPlus size={16} />}
+						appearance="primary"
+						onClick={() => setIsCreateDialogOpen(true)}
+					>
+						Create Algorithm
+					</Button>
+				</EmptyList>
+
+				<AbstractDialog
+					title="Create Algorithm"
+					description="Add a new search algorithm to the list."
+					open={isCreateDialogOpen}
+					setOpen={setIsCreateDialogOpen}
+					footerPrimaryText="Create"
+					footerPrimaryAction={handleCreateAlgorithm}
+					footerAppearance="primary"
+				>
+					<Flex flexDirection="column" gap="16">
+						<Field label="Name" required>
+							<Input
+								placeholder="e.g. Seasonal Boost"
+								value={newAlgorithmName}
+								onChange={(e) => setNewAlgorithmName(e.target.value)}
+							/>
+						</Field>
+						<Field label="Type" required>
+							<Select
+								value={getSelectValueInOptions(
+									newAlgorithmType,
+									[
+										{label: "Search", value: "Search"},
+										{label: "Custom", value: "Custom"},
+									],
+									"Search"
+								)}
+								onValueChange={(val) =>
+									setNewAlgorithmType(val as "Search" | "Custom")
+								}
+								options={[
+									{label: "Search", value: "Search"},
+									{label: "Custom", value: "Custom"},
+								]}
+							>
+								<SelectTrigger>{newAlgorithmType}</SelectTrigger>
+								<SelectContent />
+							</Select>
+						</Field>
+					</Flex>
+				</AbstractDialog>
+			</Box>
+		);
+	}
+
 	return (
 		<Box>
 			<Flex
@@ -112,7 +174,6 @@ export default function OptimizeSearchPage() {
 				<Input
 					addonBefore={<IconSearch size={16} />}
 					placeholder="Search algorithms..."
-					style={{width: "320px"}}
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
 				/>
@@ -218,24 +279,15 @@ export default function OptimizeSearchPage() {
 				footerPrimaryAction={handleCreateAlgorithm}
 				footerAppearance="primary"
 			>
-				<Flex
-					flexDirection="column"
-					gap="16"
-				>
-					<Field
-						label="Name"
-						required
-					>
+				<Flex flexDirection="column" gap="16">
+					<Field label="Name" required>
 						<Input
 							placeholder="e.g. Seasonal Boost"
 							value={newAlgorithmName}
 							onChange={(e) => setNewAlgorithmName(e.target.value)}
 						/>
 					</Field>
-					<Field
-						label="Type"
-						required
-					>
+					<Field label="Type" required>
 						<Select
 							value={getSelectValueInOptions(
 								newAlgorithmType,

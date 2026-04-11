@@ -2,6 +2,12 @@
 
 This guide provides step-by-step instructions for installing the axiom-play project on a new machine using VS Code or Cursor IDE.
 
+## Design System References
+
+- Main Axiom Play design-system guide: [app/OPTIAXIOM_DESIGN_SYSTEM.md](./app/OPTIAXIOM_DESIGN_SYSTEM.md)
+- Shared data-viz palette guidance: [app/DATA_VISUALIZATION_COLORS.md](./app/DATA_VISUALIZATION_COLORS.md)
+- Live data-viz reference page: `/data-viz-colors`
+
 ## Account Requirements
 
 Before starting the installation, ensure you have the following accounts set up when needed:

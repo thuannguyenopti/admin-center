@@ -30,6 +30,7 @@ import usePersistentState from "@/app/usePersistentState";
 import PinnedResultDialog from "../../components/PinnedResultDialog";
 import {Table, Tr, Td, Th} from "@/app/components/Table";
 import Link from "next/link";
+import EmptyList from "@/app/components/EmptyList";
 
 const allData: ZeroResultQuery[] = zeroResultQueries;
 
@@ -156,7 +157,6 @@ export default function ZeroResultPage() {
 					<Input
 						addonBefore={<IconSearch size={16} />}
 						placeholder="Search queries..."
-						style={{width: "320px"}}
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
@@ -181,72 +181,79 @@ export default function ZeroResultPage() {
 				</Button>
 			</Flex>
 
-			<Table>
-				<thead>
-					<Tr>
-						<Th>Query</Th>
-						<Th>Frequency</Th>
-						<Th>Last Seen</Th>
-						<Th>Algorithm</Th>
-						<Th></Th>
-					</Tr>
-				</thead>
-				<tbody>
-					{filteredData.map((row, i) => (
-						<Tr key={i}>
-							<Td type="header">{row.query}</Td>
-							<Td>{row.frequency} times</Td>
-							<Td>{row.lastSeen}</Td>
-							<Td type="raw">
-								<Link
-									href={`/cms/search/algorithms/${
-										algorithms.find((a) => a.name === row.algorithm)?.id
-									}/optimizations`}
-								>
-									<Item
-										icon={<IconReportSearch size={16} />}
-										title={row.algorithm}
-									/>
-								</Link>
-							</Td>
-							<Td type="button">
-								<Menu
-									options={[
-										{
-											addon: <IconRocket size={16} />,
-											label: "Add Pinned Result",
-											execute: () => {
-												const algoName = row.algorithm;
-												const query = row.query;
-												const algo = algorithms.find(
-													(a) => a.name === algoName
-												);
-
-												if (algo) {
-													setTargetAlgorithm(algo);
-													setCreatePinnedResultInitialData({
-														query,
-														destination: "",
-													});
-													setIsCreateDialogOpen(true);
-												}
-											},
-										},
-									]}
-								>
-									<MenuTrigger
-										icon={<IconDots />}
-										aria-label="add ele"
-										appearance="subtle"
-										size="sm"
-									/>
-									<MenuContent />
-								</Menu>
-							</Td>
+			{filteredData.length === 0 ? (
+				<EmptyList
+					heading="No results found"
+					body="No zero-result queries match your current filters. Try adjusting the time range or search terms."
+				/>
+			) : (
+				<Table>
+					<thead>
+						<Tr>
+							<Th>Query</Th>
+							<Th>Frequency</Th>
+							<Th>Last Seen</Th>
+							<Th>Algorithm</Th>
+							<Th></Th>
 						</Tr>
-					))}
-				</tbody>
-			</Table>
+					</thead>
+					<tbody>
+						{filteredData.map((row, i) => (
+							<Tr key={i}>
+								<Td type="header">{row.query}</Td>
+								<Td>{row.frequency} times</Td>
+								<Td>{row.lastSeen}</Td>
+								<Td type="raw">
+									<Link
+										href={`/cms/search/algorithms/${
+											algorithms.find((a) => a.name === row.algorithm)?.id
+										}/optimizations`}
+									>
+										<Item
+											icon={<IconReportSearch size={16} />}
+											title={row.algorithm}
+										/>
+									</Link>
+								</Td>
+								<Td type="button">
+									<Menu
+										options={[
+											{
+												addon: <IconRocket size={16} />,
+												label: "Add Pinned Result",
+												execute: () => {
+													const algoName = row.algorithm;
+													const query = row.query;
+													const algo = algorithms.find(
+														(a) => a.name === algoName
+													);
+
+													if (algo) {
+														setTargetAlgorithm(algo);
+														setCreatePinnedResultInitialData({
+															query,
+															destination: "",
+														});
+														setIsCreateDialogOpen(true);
+													}
+												},
+											},
+										]}
+									>
+										<MenuTrigger
+											icon={<IconDots />}
+											aria-label="add ele"
+											appearance="subtle"
+											size="sm"
+										/>
+										<MenuContent />
+									</Menu>
+								</Td>
+							</Tr>
+						))}
+					</tbody>
+				</Table>
+			)}
 
 			<PinnedResultDialog
 				open={isCreateDialogOpen}
