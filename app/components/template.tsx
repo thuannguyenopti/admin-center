@@ -670,11 +670,11 @@ export default function Template(props: any) {
 		<LayoutProvider>
 			<BrandToneProvider>
 				<PreflightProvider>
-					<OpalContextProvider navigationStructure={props.structure}>
-						<ExperimentResultsProvider>
+					<ExperimentResultsProvider>
+						<OpalContextProvider navigationStructure={props.structure}>
 							<TemplateWrapper {...props} />
-						</ExperimentResultsProvider>
-					</OpalContextProvider>
+						</OpalContextProvider>
+					</ExperimentResultsProvider>
 				</PreflightProvider>
 			</BrandToneProvider>
 		</LayoutProvider>
