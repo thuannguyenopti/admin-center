@@ -601,10 +601,10 @@ export function useOpalState({
         });
 
         // Apply the changes to the page if we have the callback
-        if (data.outlines && onPageUpdate) {
+        if ((data as any).outlines && onPageUpdate) {
           console.log('[Opal Iteration] Applying changes to page');
           onPageUpdate({
-            outlines: data.outlines,
+            outlines: (data as any).outlines,
             variationId: 'original',
           });
         } else {
