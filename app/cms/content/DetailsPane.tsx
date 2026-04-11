@@ -7,7 +7,7 @@ import { ContentItem } from "./page";
 import { useDetailsMetadata } from "./useDetailsMetadata";
 import MultiSelectDetailsPane from "./MultiSelectDetailsPane";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useGlobalTags } from "../hooks/useGlobalTags";
 import { useGlobalCategories } from "../hooks/useGlobalCategories";
 import type { Tag } from "../settings/tags/types";
@@ -27,6 +27,7 @@ interface DetailsPaneProps {
   onCategoriesChange?: (contentId: string, categories: string[]) => void;
   onCategoriesChangeBatch?: (updates: Array<{ id: string; categories: string[] }>) => void;
   onClose: () => void;
+  onBatchEditModeChange?: (mode: { tags: boolean; categories: boolean }) => void;
 }
 
 const getIconForType = (type: ContentItem["baseType"], size: number = 16) => {
@@ -57,6 +58,7 @@ export default function DetailsPane({
   onCategoriesChange,
   onCategoriesChangeBatch,
   onClose,
+  onBatchEditModeChange,
 }: DetailsPaneProps) {
   // Show multi-select view when 2+ items selected
   if (selectedIds && selectedIds.size > 1 && allContent) {
@@ -73,6 +75,7 @@ export default function DetailsPane({
         onCategoriesChange={onCategoriesChange}
         onCategoriesChangeBatch={onCategoriesChangeBatch}
         onClose={onClose}
+        onBatchEditModeChange={onBatchEditModeChange}
       />
     );
   }
@@ -145,7 +148,11 @@ export default function DetailsPane({
   const hiddenCategoriesCount = categories.length - CATEGORIES_INITIAL_VISIBLE;
 
   const handleRemoveTag = (slugToRemove: string) => {
-    setTags(tags.filter((slug) => slug !== slugToRemove));
+    const next = tags.filter((slug) => slug !== slugToRemove);
+    setTags(next);
+    if (onTagsChange && content?.id) {
+      onTagsChange(content.id, next);
+    }
   };
 
   const handleAddTag = (value: string) => {
@@ -157,7 +164,11 @@ export default function DetailsPane({
       return;
     }
     if (!isSlug && !tagExists(value)) addGlobalTag(value);
-    setTags([...tags, slug]);
+    const next = [...tags, slug];
+    setTags(next);
+    if (onTagsChange && content?.id) {
+      onTagsChange(content.id, next);
+    }
     setNewTag("");
   };
 
@@ -169,7 +180,7 @@ export default function DetailsPane({
       .replace(/[^a-z0-9-]/g, "");
 
   const handleSuggestTags = async () => {
-    if (!content?.name || globalTags.length === 0) return;
+    if (!content?.name) return;
     setSuggestLoading(true);
     setSuggestError(null);
     setSuggestEmpty(false);
@@ -180,15 +191,18 @@ export default function DetailsPane({
         name: content.name,
         baseType: content.baseType,
       });
+      const payload: any = {
+        itemName: content.name,
+        contentTypeId: content.contentTypeId,
+        imageUrl,
+      };
+      if (globalTags.length > 0) {
+        payload.tagTaxonomy = globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug }));
+      }
       const res = await fetch("/api/tags/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          itemName: content.name,
-          contentTypeId: content.contentTypeId,
-          tagTaxonomy: globalTags.map((t: Tag) => ({ name: t.name, slug: t.slug })),
-          imageUrl,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -229,7 +243,11 @@ export default function DetailsPane({
   };
 
   const handleRemoveCategory = (slugToRemove: string) => {
-    setCategories(categories.filter((slug) => slug !== slugToRemove));
+    const next = categories.filter((slug) => slug !== slugToRemove);
+    setCategories(next);
+    if (onCategoriesChange && content?.id) {
+      onCategoriesChange(content.id, next);
+    }
   };
 
   const handleAddCategory = (value: string) => {
@@ -241,27 +259,34 @@ export default function DetailsPane({
       return;
     }
     if (!isSlug && !categoryExists(value)) addGlobalCategory(value);
-    setCategories([...categories, slug]);
+    const next = [...categories, slug];
+    setCategories(next);
+    if (onCategoriesChange && content?.id) {
+      onCategoriesChange(content.id, next);
+    }
     setNewCategory("");
   };
 
   const handleSuggestCategories = async () => {
-    if (!content?.name || !globalCategoriesFull?.length) return;
+    if (!content?.name) return;
     setSuggestCategoriesLoading(true);
     setSuggestCategoryError(null);
     setSuggestCategoryEmpty(false);
     setSuggestedCategorySlugs([]);
     try {
-      const categoryTaxonomy = globalCategoriesFull.map((c: { id: string; name: string; slug: string; parentId: string | null }) => ({
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        parentId: c.parentId ?? null,
-      }));
+      const payload: any = { itemName: content.name };
+      if (globalCategoriesFull.length > 0) {
+        payload.categoryTaxonomy = globalCategoriesFull.map((c: { id: string; name: string; slug: string; parentId: string | null }) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          parentId: c.parentId ?? null,
+        }));
+      }
       const res = await fetch("/api/categories/suggest-for-item", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemName: content.name, categoryTaxonomy }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -293,19 +318,7 @@ export default function DetailsPane({
     setSuggestedCategorySlugs([]);
   };
 
-  // Persist tag changes (debounced) for single item
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!onTagsChange || !content?.id) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      onTagsChange(content.id, tags);
-      debounceRef.current = null;
-    }, 400);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [tags, content?.id, onTagsChange]);
+  // Tag changes are persisted immediately when user edits tags (not on selection changes)
 
   // Filter global tags by input (by name)
   const filteredTags = globalTags.filter(
@@ -350,19 +363,7 @@ export default function DetailsPane({
     });
   }
 
-  // Persist category changes (debounced) for single item
-  const categoriesDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!onCategoriesChange || !content?.id) return;
-    if (categoriesDebounceRef.current) clearTimeout(categoriesDebounceRef.current);
-    categoriesDebounceRef.current = setTimeout(() => {
-      onCategoriesChange(content.id, categories);
-      categoriesDebounceRef.current = null;
-    }, 400);
-    return () => {
-      if (categoriesDebounceRef.current) clearTimeout(categoriesDebounceRef.current);
-    };
-  }, [categories, content?.id, onCategoriesChange]);
+  // Category changes are persisted immediately when user edits categories
 
   return (
     <Box
@@ -564,7 +565,7 @@ export default function DetailsPane({
                               e.preventDefault();
                               handleSuggestTags();
                             }}
-                            disabled={suggestLoading || globalTags.length === 0}
+                            disabled={suggestLoading}
                             loading={suggestLoading}
                             aria-label="Suggest tags with Opal"
                           />
@@ -786,7 +787,7 @@ export default function DetailsPane({
                               e.preventDefault();
                               handleSuggestCategories();
                             }}
-                            disabled={suggestCategoriesLoading || globalCategories.length === 0}
+                            disabled={suggestCategoriesLoading}
                             loading={suggestCategoriesLoading}
                             aria-label="Suggest categories with Opal"
                           />

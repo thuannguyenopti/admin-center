@@ -2,7 +2,7 @@
 
 import { Box, Button } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconXmark, IconBars, IconCirclePlus } from "@optimizely/axiom-icons";
+import { IconXmark, IconBars, IconCirclePlus } from "@/app/lib/axiom-icons";
 import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
 import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
@@ -12,7 +12,7 @@ import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
 
 type OpalHeaderProps = {
     onClose?: () => void;
-    onNewChat: () => void;
+    onNewChat?: () => void;
     mode?: 'docked' | 'popped-out';
     isHistoryVisible?: boolean;
     onToggleHistory: () => void;
@@ -49,12 +49,10 @@ export function OpalHeader({
             alignItems="center"
             justifyContent="space-between"
             style={{
-                padding: '16px 24px',
+                padding: '0 24px',
                 width: '100%',
                 gap: '12px',
-                borderBottom: '1px solid var(--opal-border-secondary)',
-                backgroundColor: 'var(--opal-bg-primary)',
-                minHeight: '56px',
+                height: '64px',
                 zIndex: 10,
                 position: sticky ? 'sticky' : 'relative',
                 top: sticky ? 0 : undefined,
@@ -80,24 +78,26 @@ export function OpalHeader({
                     <IconBars size={20} />
                 </Button>
 
-                <Button
-                    appearance="subtle"
-                    size="md"
-                    aria-label="New chat"
-                    onClick={onNewChat}
-                    style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '6px',
-                        padding: 0,
-                        minWidth: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <IconCirclePlus size={20} />
-                </Button>
+                {onNewChat && (
+                    <Button
+                        appearance="subtle"
+                        size="md"
+                        aria-label="New chat"
+                        onClick={onNewChat}
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '6px',
+                            padding: 0,
+                            minWidth: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <IconCirclePlus size={20} />
+                    </Button>
+                )}
 
                 <div ref={menuRef} style={{ position: 'relative' }}>
                     <Box
@@ -199,42 +199,42 @@ export function OpalHeader({
             </Box>
             {showWindowControls ? (
                 <Box display="flex" alignItems="center" gap="8">
-                <Button
-                    appearance="subtle"
-                    size="md"
-                    aria-label="Maximize"
-                    onClick={onToggleMode}
-                    style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '6px',
-                        padding: 0,
-                        minWidth: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <IconMaximize style={{ width: '14px', height: '14px' }} />
-                </Button>
-                <Button
-                    appearance="subtle"
-                    size="md"
-                    aria-label="Close"
-                    onClick={onClose}
-                    style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '6px',
-                        padding: 0,
-                        minWidth: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <IconXmark size={20} />
-                </Button>
+                    <Button
+                        appearance="subtle"
+                        size="md"
+                        aria-label="Maximize"
+                        onClick={onToggleMode}
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '6px',
+                            padding: 0,
+                            minWidth: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <IconMaximize style={{ width: '14px', height: '14px' }} />
+                    </Button>
+                    <Button
+                        appearance="subtle"
+                        size="md"
+                        aria-label="Close"
+                        onClick={onClose}
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '6px',
+                            padding: 0,
+                            minWidth: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <IconXmark size={20} />
+                    </Button>
                 </Box>
             ) : (
                 <Box />

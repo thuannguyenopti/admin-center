@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Multi-Turn Agent Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /*
+      Colors matched to Axiom design tokens:
+      fg.default        #2E3442
+      fg.secondary      #4F576E
+      fg.tertiary       #66708C
+      fg.accent         #0037FF
+      fg.accent.strong  #002ACC
+      bg.default        #FFFFFF
+      bg.secondary      #F5F6FA
+      border.secondary  #DADFEB
+    */
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #f9fafc;
+      color: #2E3442;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 16px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header svg { color: #66708C; flex-shrink: 0; }
+
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2E3442;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #66708C;
+      margin-top: -4px;
+    }
+
+    /* ── DIVIDER ── */
+    hr { display: none; }
+
+    /* ── STEP (card) ── */
+    .step {
+      background: #ffffff;
+      border: 1px solid #dadfeb;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 0;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-weight: 600;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #f5f6fa;
+      color: #66708c;
+    }
+
+    .step-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #2E3442;
+    }
+
+    .step-body { padding-left: 32px; }
+
+    .step-body > p {
+      font-size: 12.5px;
+      color: #4F576E;
+      margin-bottom: 8px;
+    }
+
+    /* ── LISTS ── */
+    ul.tip-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 8px;
+    }
+
+    ul.tip-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12.5px;
+      color: #4F576E;
+    }
+
+    ul.tip-list li .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #66708c;
+      margin-top: 7px;
+      flex-shrink: 0;
+    }
+
+    ul.tip-list li strong { color: #2E3442; }
+
+    /* ── CALLOUT ── */
+    .callout {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: #F5F6FA;
+      border: 1px solid #DADFEB;
+      border-radius: 6px;
+      padding: 9px 11px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #4F576E;
+    }
+
+    .callout .icon { flex-shrink: 0; }
+
+    /* ── CODE HIGHLIGHTS ── */
+    code {
+      font-family: ui-monospace, 'Menlo', monospace;
+      font-size: 11.5px;
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    code.var  { background: #FEF9C3; color: #854d0e; }
+    code.inst { background: #EFF6FF; color: #1d4ed8; }
+    code.tool { background: #F5F6FA; color: #2E3442; border: 1px solid #DADFEB; }
+    code.handle { background: #EDEFFE; color: #002ACC; }
+
+    /* ── TOKEN GRID ── */
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .token-card {
+      background: #F5F6FA;
+      border: 1px solid #DADFEB;
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .token-card .tier {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .token-card.low  .tier { color: #0d9488; }
+    .token-card.med  .tier { color: #d97706; }
+    .token-card.high .tier { color: #dc2626; }
+
+    .token-card .range {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2E3442;
+      font-family: ui-monospace, monospace;
+      margin-bottom: 4px;
+    }
+
+    .token-card .desc {
+      font-size: 10.5px;
+      color: #66708C;
+      line-height: 1.4;
+    }
+
+    .token-card .usecase {
+      margin-top: 7px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .token-card.low  .usecase { background: #ECFDF5; color: #065f46; }
+    .token-card.med  .usecase { background: #FFFBEB; color: #92400e; }
+    .token-card.high .usecase { background: #FEF2F2; color: #991b1b; }
+
+
+    /* ── CONTEXTUAL HIGHLIGHT ── */
+    .step:hover:not(.active) {
+      background: #faf9ff;
+      border-color: #c4b5fd;
+    }
+
+    .step.active {
+      background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+      border-color: #c4b5fd;
+      box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.08);
+    }
+
+    .step.active .step-num {
+      background: #7c3aed;
+      color: #fff;
+    }
+
+    /* ── BACK NAV ── */
+    .back-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 400;
+      color: #66708C;
+      cursor: pointer;
+      margin-bottom: 14px;
+      width: fit-content;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .back-nav:hover { color: #2E3442; }
+    .back-nav svg { flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+    <h1>Multi-Turn Agent Guide</h1>
+  </div>
+  <p class="subtitle">6 steps to build your first conversational agent.</p>
+
+  <!-- STEP 1 -->
+  <div class="step" id="step-1">
+    <div class="step-header">
+      <div class="step-num">01</div>
+      <span class="step-title">Enable Multi-Turn</span>
+    </div>
+    <div class="step-body">
+      <p>Toggle <strong>Support multi-turn conversation</strong> on. Your agent gains memory across the full conversation.</p>
+      <div class="callout">
+        <span class="icon">↳</span>
+        <span>Multi-turn memory is currently only supported in chat, not in workflows.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- STEP 2 -->
+  <div class="step" id="step-2">
+    <div class="step-header">
+      <div class="step-num">02</div>
+      <span class="step-title">Write Your Prompt Template</span>
+    </div>
+    <div class="step-body">
+      <p>The main task instruction for every run. Structure it so the model steps through your task clearly.</p>
+      <ul class="tip-list">
+        <li><span class="dot"></span><span><code class="var">[[variable]]</code> for dynamic inputs</span></li>
+        <li><span class="dot"></span><span><code class="inst">{ Instruction }</code> for explicit directives</span></li>
+        <li><span class="dot"></span><span><code class="tool">`tool`</code> to reference a specific tool</span></li>
+        <li><span class="dot"></span><span>Include example turns pulled from real usage</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- STEP 3 -->
+  <div class="step" id="step-3">
+    <div class="step-header">
+      <div class="step-num">03</div>
+      <span class="step-title">Set the System Prompt</span>
+    </div>
+    <div class="step-body">
+      <p>Permanent persona — applies before every turn, invisible to the user.</p>
+      <ul class="tip-list">
+        <li><span class="dot"></span><span><strong>Persona</strong> — name, voice, tone</span></li>
+        <li><span class="dot"></span><span><strong>Standing rules</strong> — constraints that never change</span></li>
+      </ul>
+      <div class="callout">
+        <span class="icon">↳</span>
+        <span>Keep it tight. A focused system prompt beats a long one every time.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- STEP 4 -->
+  <div class="step" id="step-4">
+    <div class="step-header">
+      <div class="step-num">04</div>
+      <span class="step-title">Dial In Memory Limit</span>
+    </div>
+    <div class="step-body">
+      <p>How many turns the agent retains. Start at 10 and increase only if needed.</p>
+      <div class="token-grid">
+        <div class="token-card low">
+          <div class="tier">Low</div>
+          <div class="range">5–10</div>
+          <div class="desc">Simple tasks, stateless queries and lookups.</div>
+          <span class="usecase">Q&amp;A · Calc</span>
+        </div>
+        <div class="token-card med">
+          <div class="tier">Medium</div>
+          <div class="range">10–20</div>
+          <div class="desc">Multi-step reasoning, 1–2 knowledge bases.</div>
+          <span class="usecase">Research</span>
+        </div>
+        <div class="token-card high">
+          <div class="tier">High</div>
+          <div class="range">20–50</div>
+          <div class="desc">Full history, deep iterative refinement.</div>
+          <span class="usecase">Exploration</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- STEP 5 -->
+  <div class="step" id="step-5">
+    <div class="step-header">
+      <div class="step-num">05</div>
+      <span class="step-title">Craft the First Message</span>
+    </div>
+    <div class="step-body">
+      <p>What users see when they call your agent with <code class="handle">@handle</code>. Set clear expectations upfront.</p>
+      <div class="callout">
+        <span class="icon">↳</span>
+        <span>Your first message is your agent's handshake. Make it feel like a product, not a chatbot.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- STEP 6 -->
+  <div class="step" id="step-6">
+    <div class="step-header">
+      <div class="step-num">06</div>
+      <span class="step-title">Save, Test &amp; Iterate</span>
+    </div>
+    <div class="step-body">
+      <p>Hit <strong>Save</strong>, run a <strong>Test Run</strong>, then publish. The best agents compound over time.</p>
+      <ul class="tip-list">
+        <li><span class="dot"></span><span>Watch real conversations in Logs</span></li>
+        <li><span class="dot"></span><span>Pull quality examples to refine your prompt</span></li>
+        <li><span class="dot"></span><span>Increase memory limit only if reasoning degrades</span></li>
+      </ul>
+    </div>
+  </div>
+
+
+  <script>
+    // Page → guide: highlight the relevant step
+    window.addEventListener('message', function(e) {
+      if (!e.data || e.data.type !== 'highlightStep') return;
+      var step = e.data.step;
+      document.querySelectorAll('.step').forEach(function(el) {
+        el.classList.remove('active');
+      });
+      if (step) {
+        var target = document.getElementById('step-' + step);
+        if (target) {
+          target.classList.add('active');
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    });
+
+    // Guide → page: clicking a step highlights it and navigates to that field
+    document.querySelectorAll('.step[id]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        // Immediately apply active state
+        document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+        el.classList.add('active');
+        var id = el.id; // e.g. "step-2"
+        var num = parseInt(id.replace('step-', ''), 10);
+        window.parent.postMessage({ type: 'focusStep', step: num }, '*');
+      });
+    });
+  </script>
+</body>
+</html>

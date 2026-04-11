@@ -12,6 +12,7 @@ interface TagRowProps {
   onToggleSelection: (id: string) => void;
   onEdit: (tag: Tag) => void;
   onDelete: (tag: Tag) => void;
+  isNewlyImported?: boolean;
 }
 
 export function TagRow({
@@ -20,6 +21,7 @@ export function TagRow({
   onToggleSelection,
   onEdit,
   onDelete,
+  isNewlyImported = false,
 }: TagRowProps) {
   const router = useRouter();
 
@@ -32,7 +34,7 @@ export function TagRow({
 
   return (
     <Tr
-      className={isSelected ? 'bg-[var(--ax-colors-bg-accent-subtle)]' : ''}
+      className={`${isSelected ? 'bg-[var(--ax-colors-bg-accent-subtle)]' : ''} ${isNewlyImported ? 'newly-imported' : ''}`}
     >
       <Td type="raw">
         <div className="flex items-center">

@@ -3,22 +3,26 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
-    const imageUrlRaw = getProperty(properties, "imageUrl", "Image URL");
-    const imageUrl = typeof imageUrlRaw === "string" ? imageUrlRaw.trim() : imageUrlRaw;
-    const imageAlt = getProperty(properties, "altText", "Alt Text");
-    const imageWidth = getProperty(properties, "width", "Width");
-    const imageHeight = getProperty(properties, "height", "Height");
+export const ImageBlock = React.memo(function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+    // Read from ImageReference property
+    const imageUrl = getProperty(properties, "image", "Image");
+
+    // Read optional layout overrides
+    const widthOverride = getProperty(properties, "width", "Width Override") || "auto";
+    const heightOverride = getProperty(properties, "height", "Height Override") || "auto";
+
+    // Parse URL
+    const imageUrlStr = typeof imageUrl === "string" ? imageUrl.trim() : imageUrl;
 
     return (
         <div className="mb-4">
-            {imageUrl ? (
+            {imageUrlStr ? (
                 <img
-                    src={imageUrl}
-                    alt={imageAlt || "Image"}
+                    src={imageUrlStr}
+                    alt=""
                     style={{
-                        width: imageWidth === "auto" ? "100%" : imageWidth,
-                        height: imageHeight === "auto" ? "auto" : imageHeight,
+                        width: widthOverride === "auto" ? "100%" : widthOverride,
+                        height: heightOverride === "auto" ? "auto" : heightOverride,
                         borderRadius: "10px",
                         objectFit: "cover",
                     }}
@@ -30,4 +34,4 @@ export function ImageBlock({ properties, hasBgImage }: { properties: any, hasBgI
             )}
         </div>
     );
-}
+});

@@ -1,188 +1,208 @@
 "use client";
 
-import { Box, Heading, Text, Button } from "@optiaxiom/react";
-import { IconBrowser, IconPen, IconFile, IconUserGroup, IconChartLine, IconImage } from "@optimizely/axiom-icons";
-import { IconChevronRight } from "@tabler/icons-react";
-import { useOpalState } from "@/app/hooks/useOpalState";
-import { useOpalHistory } from "@/app/hooks/useOpalHistory";
-import { useOpalContext } from "../context/OpalContext";
-import { OpalChatView } from "../components/Opal/OpalChatView";
+import { Box } from "@optiaxiom/react";
+import { Button } from "@/app/components/Button";
+import { IconAgent } from "@optimizely/axiom-icons";
+import dynamic from "next/dynamic";
+import { useOpalContext } from "@/app/context/OpalContext";
+import { OpalInput } from "@/app/components/Opal/OpalInput";
+import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
+import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
+import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 
-const opal_primary = "#7C3AED";
+const OpalChatView = dynamic(
+  () => import("@/app/components/Opal/OpalChatView").then((mod) => mod.OpalChatView)
+);
+const OpalLanding = dynamic(
+  () => import("@/app/components/Opal/OpalLanding").then((mod) => mod.OpalLanding)
+);
 
 export default function OpalPage() {
-    const opalContext = useOpalContext();
-    const { activeChat } = opalContext.history;
-    const {
-        messages,
-        inputValue,
-        isLoading,
-        error,
-        setInputValue,
-        sendMessage,
-        enableAI,
-        setEnableAI,
-        updateMessage,
-        editPrompt,
-        regenerate,
-    } = opalContext.chatState;
+  const opalContext = useOpalContext();
+  const {
+    messages,
+    inputValue,
+    isLoading,
+    error,
+    setInputValue,
+    sendMessage,
+    regenerate,
+    switchVersion,
+    addMessage,
+  } = opalContext.chatState;
+  const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
 
-    const cards = [
-        {
-            icon: <Box style={{ color: opal_primary }}><IconBrowser size={24} /></Box>,
-            title: "Optimize webpage",
-            description: "Refine the page Event - Triathlon NYC to meet the business goal.",
-            prompt: "Please optimize [Page Name/URL] to improve its conversion rate by focusing on [Device Type] users and targeting [Key Metric]."
-        },
-        {
-            icon: <Box style={{ color: opal_primary }}><IconPen size={24} /></Box>,
-            title: "Plan campaign",
-            description: "Brainstorm and map out your next campaign with Opal.",
-            prompt: "Generate a comprehensive digital marketing campaign plan for [Product/Service] targeting [Target Audience] with a budget of [Budget Amount] over [Duration]."
-        },
-        {
-            icon: <Box style={{ color: opal_primary }}><IconFile size={24} /></Box>,
-            title: "Create landing page",
-            description: "Turn your design into a high-converting landing page with structure.",
-            prompt: "Create a high-converting landing page structure for [Campaign Topic] including a hero section, [Key Features], and a strong CTA for [Desired Action]."
-        },
-        {
-            icon: <Box style={{ color: opal_primary }}><IconUserGroup size={24} /></Box>,
-            title: "Find the right audience",
-            description: "Identify high-performing audience segments based on past experiments.",
-            prompt: "Analyze our recent performance data from [Time Period] to identify the top 3 high-performing audience segments for [Product Category]."
-        },
-        {
-            icon: <Box style={{ color: opal_primary }}><IconChartLine size={24} /></Box>,
-            title: "Analyze page performance",
-            description: "Analyze traffic and bounce rate for the Home page.",
-            prompt: "Conduct a deep-dive analysis of [Page Name] performance, specifically investigating why the bounce rate is high for [Traffic Source]."
-        },
-        {
-            icon: <Box style={{ color: opal_primary }}><IconImage size={24} /></Box>,
-            title: "Repurpose your assets",
-            description: "Find existing assets you can reuse —and put them to work faster.",
-            prompt: "Suggest 5 creative ways to repurpose our current [Asset Type, e.g., Video] content for [Social Platform] to increase engagement with [Audience]."
-        }
-    ];
+  const {
+    agentSession,
+    setAgentSession,
+    lastEndedSession,
+    isResuming,
+    triggerResumeHighlight,
+    agentBarElement,
+    sortedAgents,
+    handleSelectAgent,
+    handleSendMessage,
+    handleSuggestionClick,
+    showAgents,
+    setShowAgents,
+    showAllAgents,
+    setShowAllAgents,
+    collapsedSessionIds,
+    handleExpandSession,
+    opalDisclosureIds,
+    opalClosedIds,
+    collapsingOpalEndId,
+    highlightedOpalEndId,
+    handleOpenOpalRange,
+    handleCloseOpalRange,
+  } = useAgentChatMode({
+    messages, inputValue, setInputValue, sendMessage, addMessage,
+    onCollapseComplete: () => {
+      (document.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
+    },
+    onResumeNoComplete: () => {
+      (document.querySelector('textarea') as HTMLTextAreaElement | null)?.focus();
+    },
+  });
 
-    const handleCardClick = (prompt: string) => {
-        setInputValue(prompt);
-        // Scroll to input if needed or just focus it
-        const textarea = document.querySelector('textarea');
-        if (textarea) textarea.focus();
-    };
+  const hasMessages = messages.length > 0;
 
-    const landingHeader = (
-        <Box textAlign="center" mb="24" mt="64">
-            <Heading level="2" fontSize="4xl" color="fg.default" fontWeight="600" style={{ letterSpacing: '-0.02em' }}>What are we working on today?</Heading>
-        </Box>
-    );
-
-    const emptyState = (
-        <Box w="full" px="32" py="48" display="flex" flexDirection="column" alignItems="center">
-            <Box
-                display="grid"
-                style={{
-                    gridTemplateColumns: "repeat(3, 272px)",
-                    gap: "24px",
-                    justifyContent: "center"
-                }}
-                w="full"
-                mb="48"
-            >
-                {cards.map((card, index) => (
-                    <Box
-                        key={index}
-                        p="12"
-                        bg="bg.default"
-                        rounded="xl"
-                        border="1"
-                        borderColor="border.tertiary"
-                        display="flex"
-                        flexDirection="column"
-                        gap="12"
-                        w="full"
-                        style={{
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                            position: 'relative'
-                        }}
-                        onClick={() => handleCardClick(card.prompt)}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--opal-accent-purple)';
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.08)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = 'var(--axiom-border-tertiary, #e5e7eb)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-                        }}
-                    >
-                        <Box style={{ position: 'absolute', top: '24px', right: '24px' }}>
-                            {card.icon}
-                        </Box>
-                        <Box mt="32">
-                            <Heading level="4" fontSize="lg" fontWeight="600" mb="4">{card.title}</Heading>
-                            <Text color="fg.secondary" fontSize="md" style={{ lineHeight: '1.5' }}>{card.description}</Text>
-                        </Box>
-                    </Box>
-                ))}
-            </Box>
-
-            <Box w="full" style={{ maxWidth: "864px" }} display="flex" justifyContent="flex-end">
-                <Button appearance="subtle" style={{ color: 'fg.secondary', minWidth: 'max-content' }}>
-                    <Box display="flex" alignItems="center" gap="4" style={{ whiteSpace: 'nowrap', minWidth: 'max-content' }}>
-                        See more <IconChevronRight size={16} />
-                    </Box>
-                </Button>
-            </Box>
-        </Box>
-    );
-
+  // Once a conversation starts, hand off to the full chat view
+  if (hasMessages) {
     return (
-        <Box
-            className="opal-landing-page"
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            h="full"
-            w="full"
-            style={{
-                backgroundColor: 'var(--opal-bg-page)',
-                overflow: 'hidden',
-                minHeight: 0, // Added minHeight: 0
-            }}
-        >
-            <OpalChatView
-                variant="home"
-                messages={messages}
-                inputValue={inputValue}
-                isLoading={isLoading}
-                error={error}
-                setInputValue={setInputValue}
-                onSend={sendMessage}
-                onSuggestionClick={sendMessage}
-
-                onToggleHistory={opalContext.history.toggleHistory}
-                onNewChat={opalContext.history.createNewChat}
-                isHistoryVisible={opalContext.history.isHistoryVisible}
-                groupedHistory={opalContext.history.groupedHistory}
-                activeChat={opalContext.history.activeChat}
-                searchQuery={opalContext.history.searchQuery}
-                onSearchChange={opalContext.history.setSearchQuery}
-                onDeleteChat={opalContext.history.deleteChat}
-                onSelectChat={opalContext.history.selectChat}
-
-                landingHeader={landingHeader}
-                emptyState={emptyState}
-                enableAI={enableAI}
-                onEnableAIChange={setEnableAI}
-                onMessageEdit={(id, content) => editPrompt(id, content)}
-                onRegenerate={(id) => regenerate(id)}
-            />
-        </Box>
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        h="full"
+        w="full"
+        style={{ backgroundColor: 'var(--opal-bg-page)', overflow: 'hidden', minHeight: 0 }}
+      >
+        {modalElement}
+        <OpalChatView
+          variant="home"
+          messages={messages}
+          inputValue={inputValue}
+          isLoading={isLoading}
+          error={error}
+          setInputValue={setInputValue}
+          onSend={handleSendMessage}
+          onSuggestionClick={sendMessage}
+          onToggleHistory={opalContext.history.toggleHistory}
+          onNewChat={opalContext.history.createNewChat}
+          isHistoryVisible={opalContext.history.isHistoryVisible}
+          groupedHistory={opalContext.history.groupedHistory}
+          activeChat={opalContext.history.activeChat}
+          searchQuery={opalContext.history.searchQuery}
+          onSearchChange={opalContext.history.setSearchQuery}
+          onDeleteChat={opalContext.history.deleteChat}
+          onSelectChat={opalContext.history.selectChat}
+          onMessageEdit={() => {}}
+          onRegenerate={regenerate}
+          onMessageVersionChange={switchVersion}
+          agentBar={agentBarElement}
+          collapsedSessionIds={collapsedSessionIds}
+          onExpandSession={handleExpandSession}
+          opalDisclosureIds={opalDisclosureIds}
+          opalClosedIds={opalClosedIds}
+          collapsingOpalEndId={collapsingOpalEndId}
+          highlightedOpalEndId={highlightedOpalEndId}
+          onOpenOpalRange={handleOpenOpalRange}
+          onCloseOpalRange={handleCloseOpalRange}
+          mentionableAgents={sortedAgents}
+          onMentionSelect={handleSelectAgent}
+          activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
+          disabled={isResuming}
+          onSubmitBlocked={triggerResumeHighlight}
+          contextualActionCard={atlassianActionCard}
+        />
+      </Box>
     );
+  }
+
+  // Landing state
+  return (
+    <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
+      {modalElement}
+      <OpalLanding
+        topSlot={
+          <Box
+            style={{
+              position: "relative",
+              zIndex: 1,
+              width: "100%",
+              maxWidth: "768px",
+              marginBottom: "16px",
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              flexWrap: "wrap",
+              gap: "8px",
+              flexShrink: 0,
+            }}
+          >
+            <Button
+              appearance="default-opal"
+              size="md"
+              onClick={() => { setShowAgents(!showAgents); setShowAllAgents(false); }}
+              icon={<IconAgent />}
+              style={{ borderRadius: "9999px" }}
+            >
+              View Agents
+            </Button>
+            {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
+              <Button
+                key={agent.handle}
+                appearance="default-opal"
+                size="md"
+                icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
+                style={{ borderRadius: "9999px" }}
+                onClick={() => {
+                  handleSelectAgent(agent);
+                  // Skip prompt if this is the resume flow — handleResumeNo will set it
+                  const isResume = lastEndedSession?.agent.id === agent.id;
+                  if (!isResume) {
+                    const prompt = AGENT_PROMPTS[agent.id];
+                    if (prompt) setInputValue(prompt);
+                  }
+                  setShowAgents(false);
+                  setShowAllAgents(false);
+                }}
+              >
+                {agent.name}
+              </Button>
+            ))}
+            {showAgents && !showAllAgents && FEATURED_AGENTS.length > 3 && (
+              <Button
+                appearance="default-opal"
+                size="md"
+                style={{ borderRadius: "9999px" }}
+                onClick={() => setShowAllAgents(true)}
+              >
+                More agents
+              </Button>
+            )}
+          </Box>
+        }
+        inputSlot={
+          <OpalInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSendMessage}
+            disabled={isResuming}
+            isLoading={isLoading}
+            error={error}
+            variant="home"
+            agentBar={agentBarElement}
+            mentionableAgents={sortedAgents}
+            onMentionSelect={handleSelectAgent}
+            onSubmitBlocked={triggerResumeHighlight}
+          />
+        }
+        contextualActionCard={atlassianActionCard}
+        onSuggestionClick={handleSuggestionClick}
+      />
+    </Box>
+  );
 }

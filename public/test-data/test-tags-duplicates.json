@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Beginner Friendly",
+    "slug": "beginner-friendly",
+    "visibility": "public"
+  },
+  {
+    "name": "Advanced Techniques",
+    "slug": "advanced-techniques",
+    "visibility": "public"
+  },
+  {
+    "name": "Duplicate Advanced",
+    "slug": "advanced-techniques",
+    "visibility": "private"
+  },
+  {
+    "name": "Nutrition Tips",
+    "slug": "nutrition-tips",
+    "visibility": "public"
+  }
+]

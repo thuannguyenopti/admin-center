@@ -3,7 +3,7 @@
 import React from "react";
 import { getProperty } from "./utils";
 
-export function InputBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
+export const InputBlock = React.memo(function InputBlock({ properties, hasBgImage }: { properties: any, hasBgImage?: boolean }) {
     const tooltip = getProperty(properties, "tooltip", "Tooltip");
     const label = getProperty(properties, "label", "Label");
     const placeholder = getProperty(properties, "placeholder", "Placeholder");
@@ -29,4 +29,4 @@ export function InputBlock({ properties, hasBgImage }: { properties: any, hasBgI
             />
         </div>
     );
-}
+});

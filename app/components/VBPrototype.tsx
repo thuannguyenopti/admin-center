@@ -1,9 +1,9 @@
 "use client"; // --- SEO Block Types (from initialData) ---
 
-import type {SEOBlock} from "@/app/db/initialData";
+import type {SEOBlock, ContentType} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip} from "@optiaxiom/react";
-import React, {useEffect, useRef, useState} from "react";
+import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip, Spinner, Field, Select, SelectTrigger, SelectContent} from "@optiaxiom/react";
+import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
 	IconArrowBarBoth,
@@ -19,10 +19,15 @@ import {
 
 import {EleMap} from "./vb/Ele";
 import ElementEditor from "./vb/ElementEditor";
+import StyleEditor from "./vb/StyleEditor";
 import PreviewCanvas from "./vb/PreviewCanvas";
+import PropertyBasedPreview from "./vb/PropertyBasedPreview";
 import RightToolbar, {RightToolbarTool} from "./RightToolbar";
 import CMSToolbar from "./CMSToolbar";
 import {PreviewSettings} from "./vb/PreviewSettings";
+import VersionHistory from "./vb/versionHistory/VersionHistory";
+import {useBrandTone} from "./ai/BrandToneProvider";
+import {usePreflightContext} from "./ai/PreflightContext";
 
 import {getExtensionById} from "@/app/extensions/registry";
 
@@ -30,15 +35,18 @@ import styles from "./VBPrototype.module.css";
 import PropertiesPanel, {
 	PageProperties,
 	PropertySection,
-	navigationItems,
 } from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
+import ConnectionStatus from "./ConnectionStatus";
 // @ts-ignore
 import usePersistentState from "@/app/usePersistentState";
 import AbstractDialog from "@/app/components/AbstractDialog";
 import {Input} from "@/app/components/Input";
+import type {useVersionHistory} from "@/app/hooks/useVersionHistory";
 import DragHandle from "@/app/components/DragHandle";
+import {getCompatibleInstances} from "@/app/lib/contentConnection";
+import {initialContentTypes} from "@/app/db/initialData";
 
 /** -----------------------------
  * Types + helpers (normalize / prune)
@@ -115,7 +123,7 @@ const normalizePage = (input: any): NormalizeResult => {
 							: p.label.toLowerCase().includes("label")
 								? "label"
 								: p.label.toLowerCase().includes("image")
-									? "imageUrl"
+									? "src"
 									: p.label.toLowerCase().replace(/\s+/g, "");
 					properties[key] = {value: p.value};
 				});
@@ -175,6 +183,7 @@ type OutlineType = {
 	title: string;
 	tree: any[];
 	elements: EleMap;
+	sectionType?: string;
 };
 
 const isOutlineArray = (v: any): v is OutlineType[] => {
@@ -198,6 +207,14 @@ type PageInput = {
 	variationId?: string;
 	contentTypeId?: string;
 	id?: string;
+	cmpConnection?: {
+		instanceId: string;
+		modelId: string;
+		mappingId?: string;
+		syncStatus: "synced" | "out-of-sync" | "manual-override";
+		lastSyncedAt?: string;
+		syncMode: "auto" | "manual";
+	};
 };
 
 /** -----------------------------
@@ -228,6 +245,7 @@ type OutlineView = "list" | "tree";
 
 export default function VBPrototype({
 	initialData,
+	contentType,
 	onSave,
 	onPublish,
 	pageName,
@@ -240,8 +258,21 @@ export default function VBPrototype({
 	onTrash,
 	onRenamePage,
 	onViewOnWebsite,
+	versionHistory,
+	onRestoreVersion,
+	isOpalGenerating,
+	hasPendingGeneration,
+	onConnectContent,
+	onSyncContent,
+	onDisconnectContent,
+	hasConnection,
+	boundPropertyIds,
+	onAddToTask,
+	onRemoveFromTask,
+	currentTaskId,
 }: {
 	initialData?: PageInput;
+	contentType?: ContentType | null;
 	onSave?: (page: PageInput) => void;
 	onPublish?: () => void;
 	onTrash?: () => void;
@@ -262,6 +293,18 @@ export default function VBPrototype({
 	onDeleteVariation?: (id: string) => void;
 	onRenameVariation?: (id: string, newName: string) => void;
 	onRenamePage?: (newName: string) => void;
+	versionHistory?: ReturnType<typeof useVersionHistory>;
+	onRestoreVersion?: (version: any) => void;
+	isOpalGenerating?: boolean;
+	hasPendingGeneration?: boolean;
+	onConnectContent?: () => void;
+	onSyncContent?: () => void;
+	onDisconnectContent?: () => void;
+	hasConnection?: boolean;
+	boundPropertyIds?: Set<string>;
+	onAddToTask?: (taskId: string, taskName: string) => void;
+	onRemoveFromTask?: () => void;
+	currentTaskId?: string | null;
 }) {
 	// ✅ Fix TS mismatch: keep this consistently string|null everywhere
 	const [dragging, setDragging] = useState<string | null>(null);
@@ -271,11 +314,22 @@ export default function VBPrototype({
 	const [isDeleteVariationDialogOpen, setIsDeleteVariationDialogOpen] = useState(false);
 	const [isRenameVariationDialogOpen, setIsRenameVariationDialogOpen] = useState(false);
 	const [isTrashDialogOpen, setIsTrashDialogOpen] = useState(false);
+	const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState(false);
 	const [newVariationName, setNewVariationName] = useState("");
 	const [renameVariationName, setRenameVariationName] = useState("");
 
 	const [isRenamePageDialogOpen, setIsRenamePageDialogOpen] = useState(false);
 	const [newPageName, setNewPageName] = useState("");
+
+	// Load persistent state for CMP connection
+	const [cmpContentInstances] = usePersistentState("cmpContentInstances", []);
+	const [persistentContentTypes] = usePersistentState("contentTypes", initialContentTypes);
+
+	// Brand Tone integration - provide setCurrentEle to BrandToneProvider
+	const brandTone = useBrandTone();
+
+	// Preflight Audit integration - provide scroll function to PreflightContext
+	const {registerScrollFunction: registerPreflightScroll} = usePreflightContext();
 
 	const handleCreateVariation = () => {
 		if (newVariationName && onAddVariation) {
@@ -366,6 +420,18 @@ export default function VBPrototype({
 		return [{label: "Original", value: "original"}, ...mapped];
 	}, [variations]);
 
+	// Get compatible instances count for toolbar
+	const compatibleInstancesCount = React.useMemo(() => {
+		if (!initialData?.contentTypeId || !onConnectContent) return 0;
+
+		return getCompatibleInstances(
+			{contentTypeId: initialData.contentTypeId} as any,
+			cmpContentInstances,
+			persistentContentTypes,
+			[]
+		).length;
+	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
+
 	const [preview, setPreview] = useState<PreviewSettings>({
 		mode: "responsive",
 		width: 1100,
@@ -376,10 +442,7 @@ export default function VBPrototype({
 		setPreview((p) => ({...p, ...patch}));
 	};
 
-	const defaultProps: PageProperties = {
-		campaignMode: "no",
-		someOtherSetting: "setting1",
-	};
+	const defaultProps: PageProperties = {};
 
 	const [properties, setProperties] = useState<PageProperties>(() => {
 		return {
@@ -458,6 +521,9 @@ export default function VBPrototype({
 		onSaveRef.current = onSave;
 	}, [onSave]);
 
+	// Track previous outline count to avoid resetting view on content changes
+	const prevOutlineCount = useRef(outlines.length);
+
 	// active outline
 	const [activeOutlineId, setActiveOutlineId] = useState<string | null>(() => {
 		return outlines.length ? outlines[0].id : null;
@@ -466,6 +532,8 @@ export default function VBPrototype({
 	const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
+	const [styleEditorEle, setStyleEditorEle] = useState<string | null>(null);
+	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(null);
 
 	// VIEW STATE
 	const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
@@ -479,26 +547,33 @@ export default function VBPrototype({
 	});
 
 	useEffect(() => {
+		const currentCount = outlines.length;
+		const countChanged = currentCount !== prevOutlineCount.current;
+
 		// Keep active outline valid
-		if (outlines.length === 0) {
+		if (currentCount === 0) {
 			setActiveOutlineId(null);
 			setCurrentEle("none");
 			setCurrentHoverEle("none");
 			setSidebarTab("properties");
 			setOutlineView("list");
+			prevOutlineCount.current = currentCount;
 			return;
 		}
 		if (!activeOutlineId || !outlines.some((o) => o.id === activeOutlineId)) {
 			setActiveOutlineId(outlines[0].id);
 		}
 
-		// Enforce tabs/view by outline count
-		if (outlines.length === 1) {
-			if (sidebarTab === "outlines") setSidebarTab("outline");
-			setOutlineView("tree");
-		} else {
-			// multi
-			if (sidebarTab === "outline") setSidebarTab("outlines");
+		// Only enforce tabs/view when outline COUNT changes, not when content changes
+		if (countChanged) {
+			if (currentCount === 1) {
+				if (sidebarTab === "outlines") setSidebarTab("outline");
+				setOutlineView("tree");
+			} else {
+				// multi
+				if (sidebarTab === "outline") setSidebarTab("outlines");
+			}
+			prevOutlineCount.current = currentCount;
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [outlines]);
@@ -506,7 +581,7 @@ export default function VBPrototype({
 	const isZero = outlines.length === 0; // View 4
 	const isSingle = outlines.length === 1; // View 3
 	const isMulti = outlines.length > 1; // View 1/2
-	const isEditingElement = currentEle !== "none";
+	const isEditingElement = currentEle !== "none" || styleEditorEle !== null;
 
 	const activeOutline = activeOutlineId
 		? (outlines.find((o) => o.id === activeOutlineId) ?? null)
@@ -556,8 +631,10 @@ export default function VBPrototype({
 		return null;
 	};
 
-	const setCurrentEleSmart = (value: React.SetStateAction<string>) => {
+	const setCurrentEleSmart = useCallback((value: React.SetStateAction<string>) => {
 		const eleId = typeof value === "function" ? value(currentEle) : value;
+
+		console.log("[VBPrototype] setCurrentEleSmart called with:", eleId);
 
 		setCurrentEle(eleId);
 
@@ -572,9 +649,22 @@ export default function VBPrototype({
 
 		const owner = findOutlineIdForElement(eleId);
 		if (owner && owner !== activeOutlineId) {
+			console.log("[VBPrototype] Switching to outline:", owner);
 			setActiveOutlineId(owner);
 		}
-	};
+	}, [currentEle, isMulti, activeOutlineId, findOutlineIdForElement]);
+
+	// Wire up Brand Tone provider with scroll-to functionality
+	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Brand Tone");
+		brandTone.registerScrollFunction(setCurrentEleSmart);
+	}, [brandTone, setCurrentEleSmart]);
+
+	// Wire up Preflight Audit context with scroll-to functionality
+	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Preflight Audit");
+		registerPreflightScroll(setCurrentEleSmart);
+	}, [registerPreflightScroll, setCurrentEleSmart]);
 
 	const addSectionToEndOfActiveOutline = () => {
 		setData((prev) => {
@@ -631,26 +721,89 @@ export default function VBPrototype({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [activeRightTool, setActiveRightTool] = usePersistentState("active-right-tool", null);
 
-	const onInputChange = (value: any, keyOrIndex: string | number) => {
-		if (currentEle !== "none" && currentEle in theEles) {
-			setTheEles((prev) => {
-				const ele = prev[currentEle];
-				const properties = {...(ele.properties || {})};
+	const onInputChange = useCallback((value: any, keyOrIndex: string | number) => {
+		if (currentEle === "none") return;
 
-				if (typeof keyOrIndex === "string") {
-					properties[keyOrIndex] = {...properties[keyOrIndex], value};
-				}
+		setTheEles((prev) => {
+			// Check if currentEle exists in the previous state
+			if (!prev[currentEle]) return prev;
 
-				return {
-					...prev,
-					[currentEle]: {
-						...ele,
-						properties,
-					},
-				};
-			});
-		}
-	};
+			const ele = prev[currentEle];
+			const properties = {...(ele.properties || {})};
+
+			if (typeof keyOrIndex === "string") {
+				properties[keyOrIndex] = {...properties[keyOrIndex], value};
+			}
+
+			return {
+				...prev,
+				[currentEle]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [currentEle, setTheEles]);
+
+	// Style editor handlers
+	const onOpenStyleEditorFromOutline = useCallback((elementId: string) => {
+		setStyleEditorEle(elementId);
+		setStyleEditorSource("outline");
+		setCurrentEle(elementId);
+		setCurrentHoverEle("none");
+	}, []);
+
+	const onOpenStyleEditorFromElementEditor = useCallback(() => {
+		if (currentEle === "none") return;
+		setStyleEditorEle(currentEle);
+		setStyleEditorSource("elementEditor");
+	}, [currentEle]);
+
+	const onStyleChange = useCallback((templateId: string) => {
+		if (!styleEditorEle) return;
+
+		setTheEles((prev) => {
+			if (!prev[styleEditorEle]) return prev;
+
+			const ele = prev[styleEditorEle];
+			const properties = {...(ele.properties || {})};
+
+			properties.template = {value: templateId};
+
+			return {
+				...prev,
+				[styleEditorEle]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [styleEditorEle, setTheEles]);
+
+	// Update element by ID (for Brand Tone suggestions)
+	const onUpdateElementById = useCallback((elementId: string, propertyKey: string, value: string) => {
+		console.log("[VBPrototype] Updating element:", elementId, propertyKey, value);
+
+		setTheEles((prev) => {
+			if (!prev[elementId]) {
+				console.warn("[VBPrototype] Element not found:", elementId);
+				return prev;
+			}
+
+			const ele = prev[elementId];
+			const properties = {...(ele.properties || {})};
+
+			properties[propertyKey] = {...properties[propertyKey], value};
+
+			return {
+				...prev,
+				[elementId]: {
+					...ele,
+					properties,
+				},
+			};
+		});
+	}, [setTheEles]);
 
 	// Header actions (Generate only in Categories & Tags + plus-menu)
 	const showGenerateInHeader =
@@ -709,11 +862,11 @@ export default function VBPrototype({
 								setEditingSectionId(null);
 							},
 						},
-						{
-							addon: <IconCopy size={16} />,
-							label: "Duplicate",
-							execute: duplicateActiveOutline,
-						},
+						...(onConnectContent ? [{
+							addon: <IconPlus size={16} />,
+							label: hasConnection ? "Change connected content..." : "Connect content...",
+							execute: onConnectContent,
+						}] : []),
 					]}
 				>
 					<MenuTrigger
@@ -1210,6 +1363,7 @@ export default function VBPrototype({
 						pageStatus={pageStatus}
 						onPublish={onPublish}
 						onViewOnWebsite={onViewOnWebsite}
+						onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 						contentTypeIcon={<IconFile size={16} />}
 						preview={preview}
 						onPreviewChange={onPreviewChange}
@@ -1221,6 +1375,16 @@ export default function VBPrototype({
 							setNewPageName(pageName || "");
 							setIsRenamePageDialogOpen(true);
 						}}
+						pageElements={{}}
+						onUpdateElement={onUpdateElementById}
+						onConnectContent={onConnectContent}
+						onSyncContent={onSyncContent}
+						onDisconnectContent={onDisconnectContent}
+						hasConnection={hasConnection}
+						compatibleInstancesCount={compatibleInstancesCount}
+						onAddToTask={onAddToTask}
+						onRemoveFromTask={onRemoveFromTask}
+						currentTaskId={currentTaskId}
 					/>
 
 					{/* LEFT SIDEBAR (Properties only) */}
@@ -1229,7 +1393,7 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
+						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative", height: "100%"}}
 					>
 						<DragHandle position="right" minWidth={180} maxWidth={600} />
 
@@ -1244,6 +1408,8 @@ export default function VBPrototype({
 									onChange={setPropertiesPatch}
 									pageName={pageName ?? undefined}
 									pageId={initialData?.id}
+									contentTypeId={contentType?.id}
+									boundPropertyIds={boundPropertyIds}
 									onRegisterGenerateTrigger={(fn) => {
 										generateTriggerRef.current = fn;
 									}}
@@ -1258,16 +1424,25 @@ export default function VBPrototype({
 						className="p-6 pr-0 pt-0 gap-2 flex items-stretch z-10 min-h-0 flex-1"
 						style={{height: "100%", overflow: "hidden"}}
 					>
-						<PreviewCanvas
-							outlines={outlines as any} // will be []
-							theEles={{}} // no active outline
-							currentEle={currentEle}
-							currentHoverEle={currentHoverEle}
-							setCurrentEle={setCurrentEleSmart}
-							setCurrentHoverEle={setCurrentHoverEle}
-							setOutlines={setOutlines as any}
-							preview={preview}
-						/>
+						{/* Check if this is a property-based page (has data but no outlines) */}
+						{outlines.length === 0 && contentType?.id && Object.keys(properties).length > 0 ? (
+							<PropertyBasedPreview
+								contentTypeId={contentType.id}
+								properties={properties}
+								preview={preview}
+							/>
+						) : (
+							<PreviewCanvas
+								outlines={outlines as any}
+								theEles={{}} // no active outline
+								currentEle={currentEle}
+								currentHoverEle={currentHoverEle}
+								setCurrentEle={setCurrentEleSmart}
+								setCurrentHoverEle={setCurrentHoverEle}
+								setOutlines={setOutlines as any}
+								preview={preview}
+							/>
+						)}
 						<Box borderL="1" borderColor="border.tertiary">
 							<RightToolbar
 								activeTool={activeRightTool}
@@ -1320,6 +1495,7 @@ export default function VBPrototype({
 					pageStatus={pageStatus}
 					onPublish={onPublish}
 					onViewOnWebsite={onViewOnWebsite}
+					onShowVersionHistory={() => setIsVersionHistoryOpen(true)}
 					contentTypeIcon={<IconFile size={16} />}
 					preview={preview}
 					onPreviewChange={onPreviewChange}
@@ -1334,6 +1510,16 @@ export default function VBPrototype({
 						setNewPageName(pageName || "");
 						setIsRenamePageDialogOpen(true);
 					}}
+					pageElements={theEles}
+					onUpdateElement={onUpdateElementById}
+					onConnectContent={onConnectContent}
+					onSyncContent={onSyncContent}
+					onDisconnectContent={onDisconnectContent}
+					hasConnection={hasConnection}
+					compatibleInstancesCount={compatibleInstancesCount}
+					onAddToTask={onAddToTask}
+					onRemoveFromTask={onRemoveFromTask}
+					currentTaskId={currentTaskId}
 				/>
 
 				{/* LEFT SIDEBAR */}
@@ -1471,6 +1657,7 @@ export default function VBPrototype({
 														setSidebarTab("properties");
 														setEditingSectionId(id);
 													}}
+													onOpenStyleEditor={onOpenStyleEditorFromOutline}
 												/>
 											) : null}
 										</div>
@@ -1531,13 +1718,7 @@ export default function VBPrototype({
 												</div>
 												<div className="flex items-center gap-2">
 													<Heading level="4">
-														{activePropertiesSection === "menu"
-															? "Properties"
-															: navigationItems.find(
-																	(item) =>
-																		item.id ===
-																		activePropertiesSection
-																)?.label || "Properties"}
+														Properties
 													</Heading>
 													<div className="flex-1" />
 												</div>
@@ -1562,11 +1743,46 @@ export default function VBPrototype({
 													<Heading level="4" mb="16">
 														Section Properties
 													</Heading>
-													<Text fontSize="sm" color="fg.secondary">
-														Editing properties for section:{" "}
-														{editingSectionId}
-													</Text>
-													{/* Add section specific fields here later */}
+													{(() => {
+														const currentSectionType = activeOutline?.sectionType || "content";
+														const sectionTypeOptions = [
+															{ label: "Hero", value: "hero" },
+															{ label: "Features", value: "features" },
+															{ label: "Benefits", value: "benefits" },
+															{ label: "Testimonials", value: "testimonials" },
+															{ label: "Pricing", value: "pricing" },
+															{ label: "Call to Action", value: "cta" },
+															{ label: "FAQ", value: "faq" },
+															{ label: "Content", value: "content" },
+														];
+
+														return (
+															<Box>
+																<Field label="Section Type">
+																	<Select
+																		value={currentSectionType}
+																		options={sectionTypeOptions}
+																		onValueChange={(value: string) => {
+																			// Update section type in active outline
+																			setOutlines((prev) =>
+																				prev.map((outline) =>
+																					outline.id === activeOutlineId
+																						? {...outline, sectionType: value}
+																						: outline
+																				)
+																			);
+																		}}
+																	>
+																		<SelectTrigger />
+																		<SelectContent />
+																	</Select>
+																</Field>
+																<Text fontSize="sm" color="fg.secondary" mt="8">
+																	Section ID: {editingSectionId}
+																</Text>
+															</Box>
+														);
+													})()}
 												</Box>
 											) : (
 												<PropertiesPanel
@@ -1576,6 +1792,8 @@ export default function VBPrototype({
 													onSectionChange={setActivePropertiesSection}
 													pageName={pageName ?? undefined}
 													pageId={initialData?.id}
+													contentTypeId={contentType?.id}
+													boundPropertyIds={boundPropertyIds}
 													onRegisterGenerateTrigger={(fn) => {
 														generateTriggerRef.current = fn;
 													}}
@@ -1585,24 +1803,52 @@ export default function VBPrototype({
 										</div>
 									</div>
 
-									{/* PANE 4: Element Editor */}
+									{/* PANE 4: Element Editor or Style Editor */}
 									<div className="min-w-[25%] w-[25%] h-full">
 										<div className="h-full overflow-y-auto">
-											<ElementEditor
-												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={
-													currentEle !== "none"
-														? theEles[currentEle]?.type || ""
-														: ""
-												}
-												currentEle={currentEle}
-												properties={theEles[currentEle]?.properties}
-												onBack={() => {
-													setCurrentEle("none");
-													setCurrentHoverEle("none");
-												}}
-												onInputChange={onInputChange}
-											/>
+											{styleEditorEle && theEles[styleEditorEle] ? (
+												<StyleEditor
+													outlineTitle={
+														styleEditorSource === "elementEditor"
+															? (theEles[styleEditorEle]?.type || "Element")
+															: (activeOutline?.title || "Outline")
+													}
+													elementType={theEles[styleEditorEle]?.type || ""}
+													currentEle={styleEditorEle}
+													properties={theEles[styleEditorEle]?.properties}
+													onBack={() => {
+														setStyleEditorEle(null);
+														setStyleEditorSource(null);
+														// Only clear currentEle if coming from outline
+														if (styleEditorSource === "outline") {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+														}
+													}}
+													onStyleChange={onStyleChange}
+												/>
+											) : (
+												<ElementEditor
+													outlineTitle={activeOutline?.title || "Outline"}
+													elementType={
+														currentEle !== "none"
+															? theEles[currentEle]?.type || ""
+															: ""
+													}
+													currentEle={currentEle}
+													properties={theEles[currentEle]?.properties}
+													onBack={() => {
+														setCurrentEle("none");
+														setCurrentHoverEle("none");
+													}}
+													onInputChange={onInputChange}
+													onOpenStyleEditor={
+														currentEle !== "none"
+															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+												/>
+											)}
 										</div>
 									</div>
 								</div>
@@ -1649,6 +1895,7 @@ export default function VBPrototype({
 													setSidebarTab("properties");
 													setEditingSectionId(id);
 												}}
+												onOpenStyleEditor={onOpenStyleEditorFromOutline}
 											/>
 										</div>
 									</div>
@@ -1707,18 +1954,9 @@ export default function VBPrototype({
 												</div>
 												<div className="flex items-center gap-2">
 													<Heading level="4">
-														{activePropertiesSection === "menu"
-															? "Properties"
-															: navigationItems.find(
-																	(item) =>
-																		item.id ===
-																		activePropertiesSection
-																)?.label || "Properties"}
+														Properties
 													</Heading>
 													<div className="flex-1" />
-													<div className="flex items-center gap-1">
-														{HeaderActions}
-													</div>
 												</div>
 											</div>
 										)}
@@ -1747,40 +1985,81 @@ export default function VBPrototype({
 													{/* Add section specific fields here later */}
 												</Box>
 											) : (
-												<PropertiesPanel
-													value={properties}
-													onChange={setPropertiesPatch}
-													activeSection={activePropertiesSection}
-													onSectionChange={setActivePropertiesSection}
-													pageName={pageName ?? undefined}
-													pageId={initialData?.id}
-													onRegisterGenerateTrigger={(fn) => {
-														generateTriggerRef.current = fn;
-													}}
-													onGenerateLoadingChange={setGenerateLoading}
-												/>
+												<>
+													{hasConnection && initialData?.cmpConnection && (
+														<ConnectionStatus
+															instanceId={initialData.cmpConnection.instanceId}
+															syncStatus={initialData.cmpConnection.syncStatus}
+															lastSyncedAt={initialData.cmpConnection.lastSyncedAt}
+															onSync={onSyncContent}
+															onDisconnect={onDisconnectContent}
+														/>
+													)}
+													<PropertiesPanel
+														value={properties}
+														onChange={setPropertiesPatch}
+														activeSection={activePropertiesSection}
+														onSectionChange={setActivePropertiesSection}
+														pageName={pageName ?? undefined}
+														pageId={initialData?.id}
+														contentTypeId={contentType?.id}
+														boundPropertyIds={boundPropertyIds}
+														onRegisterGenerateTrigger={(fn) => {
+															generateTriggerRef.current = fn;
+														}}
+														onGenerateLoadingChange={setGenerateLoading}
+													/>
+												</>
 											)}
 										</div>
 									</div>
 
-									{/* PANE 3: Element Editor */}
+									{/* PANE 3: Element Editor or Style Editor */}
 									<div className="min-w-[33.333%] w-[33.333%] h-full">
 										<div className="h-full overflow-y-auto">
-											<ElementEditor
-												outlineTitle={activeOutline?.title || "Outline"}
-												elementType={
-													currentEle !== "none"
-														? theEles[currentEle]?.type || ""
-														: ""
-												}
-												currentEle={currentEle}
-												properties={theEles[currentEle]?.properties}
-												onBack={() => {
-													setCurrentEle("none");
-													setCurrentHoverEle("none");
-												}}
-												onInputChange={onInputChange}
-											/>
+											{styleEditorEle && theEles[styleEditorEle] ? (
+												<StyleEditor
+													outlineTitle={
+														styleEditorSource === "elementEditor"
+															? (theEles[styleEditorEle]?.type || "Element")
+															: (activeOutline?.title || "Outline")
+													}
+													elementType={theEles[styleEditorEle]?.type || ""}
+													currentEle={styleEditorEle}
+													properties={theEles[styleEditorEle]?.properties}
+													onBack={() => {
+														setStyleEditorEle(null);
+														setStyleEditorSource(null);
+														// Only clear currentEle if coming from outline
+														if (styleEditorSource === "outline") {
+															setCurrentEle("none");
+															setCurrentHoverEle("none");
+														}
+													}}
+													onStyleChange={onStyleChange}
+												/>
+											) : (
+												<ElementEditor
+													outlineTitle={activeOutline?.title || "Outline"}
+													elementType={
+														currentEle !== "none"
+															? theEles[currentEle]?.type || ""
+															: ""
+													}
+													currentEle={currentEle}
+													properties={theEles[currentEle]?.properties}
+													onBack={() => {
+														setCurrentEle("none");
+														setCurrentHoverEle("none");
+													}}
+													onInputChange={onInputChange}
+													onOpenStyleEditor={
+														currentEle !== "none"
+															? onOpenStyleEditorFromElementEditor
+															: undefined
+													}
+												/>
+											)}
 										</div>
 									</div>
 								</div>
@@ -1973,6 +2252,58 @@ export default function VBPrototype({
 			>
 				<Text>This action will unpublish the page and move it to the trash.</Text>
 			</AbstractDialog>
+
+			{isVersionHistoryOpen && (
+				<VersionHistory
+					variations={variations}
+					pageOutlines={outlines}
+					onClose={() => setIsVersionHistoryOpen(false)}
+					initialPreviewMode={preview.mode === "fixed" || preview.mode === "scale" ? "fixed" : "responsive"}
+					versionHistory={versionHistory}
+					pageId={pageId}
+					onRestore={onRestoreVersion}
+				/>
+			)}
+
+			{/* Opal Generation Overlay */}
+			{(isOpalGenerating || hasPendingGeneration) && (
+				<Box
+					style={{
+						position: "absolute",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						background: "rgba(255, 255, 255, 0.7)",
+						backdropFilter: "blur(8px)",
+						zIndex: 9999,
+						pointerEvents: "all",
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+					}}
+				>
+					<Box
+						display="flex"
+						flexDirection="column"
+						alignItems="center"
+						gap="16"
+						p="32"
+						bg="bg.default"
+						rounded="lg"
+						shadow="lg"
+						style={{border: "1px solid var(--ax-colors-border-default)"}}
+					>
+						<Spinner size="lg" />
+						<Text fontSize="lg" fontWeight="500">
+							Opal is generating your page...
+						</Text>
+						<Text fontSize="sm" color="fg.secondary">
+							Please wait while we create your content
+						</Text>
+					</Box>
+				</Box>
+			)}
 		</div>
 	);
 }

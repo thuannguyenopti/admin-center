@@ -2,13 +2,14 @@
 
 import { Box } from "@optiaxiom/react";
 import { OpalChat } from "./OpalChat";
-import { OpalInput } from "./OpalInput";
+import { OpalInput, MentionableAgent } from "./OpalInput";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { ReactNode } from "react";
 import { OpalHeader } from "./OpalHeader";
 import { OpalHistorySidebar } from "./OpalHistorySidebar";
 import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
+
 
 type OpalChatViewProps = {
     messages: ChatMessage[];
@@ -37,6 +38,24 @@ type OpalChatViewProps = {
     onEnableAIChange?: (enabled: boolean) => void;
     onMessageEdit?: (id: string, newContent: string) => void;
     onRegenerate?: (id: string) => void;
+    onMessageVersionChange?: (id: string, versionIndex: number, content: string) => void;
+    agentBar?: ReactNode;
+    collapsedSessionIds?: Set<string>;
+    onExpandSession?: (sessionStartId: string) => void;
+    opalDisclosureIds?: Set<string>;
+    opalClosedIds?: Set<string>;
+    collapsingOpalEndId?: string | null;
+    highlightedOpalEndId?: string | null;
+    onOpenOpalRange?: (agentEndId: string) => void;
+    onCloseOpalRange?: (agentEndId: string) => void;
+    mentionableAgents?: MentionableAgent[];
+    onMentionSelect?: (agent: MentionableAgent) => void;
+    activeAgentCtx?: { emoji: string; name: string } | null;
+    /** Disables the input independently of isLoading (e.g. during resume flow). */
+    disabled?: boolean;
+    /** Called when the user tries to submit while blocked (e.g. resume flow). */
+    onSubmitBlocked?: () => void;
+    contextualActionCard?: ReactNode;
 };
 
 export function OpalChatView({
@@ -62,7 +81,23 @@ export function OpalChatView({
     enableAI,
     onEnableAIChange,
     onMessageEdit,
-    onRegenerate
+    onRegenerate,
+    onMessageVersionChange,
+    agentBar,
+    collapsedSessionIds,
+    onExpandSession,
+    opalDisclosureIds,
+    opalClosedIds,
+    collapsingOpalEndId,
+    highlightedOpalEndId,
+    onOpenOpalRange,
+    onCloseOpalRange,
+    mentionableAgents,
+    onMentionSelect,
+    activeAgentCtx,
+    disabled,
+    onSubmitBlocked,
+    contextualActionCard,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
 
@@ -81,13 +116,6 @@ export function OpalChatView({
                     isVisible={!!isHistoryVisible}
                 />
                 <Box display="flex" flexDirection="column" h="full" style={{ flex: 1, minWidth: 0 }}>
-                    <Box style={{ flexShrink: 0, width: '100%' }}>
-                        <OpalHeader
-                            onToggleHistory={onToggleHistory || (() => { })}
-                            onNewChat={onNewChat || (() => { })}
-                            sticky
-                        />
-                    </Box>
                     <Box
                         display="flex"
                         flexDirection="column"
@@ -100,12 +128,15 @@ export function OpalChatView({
                             variant="home"
                             value={inputValue}
                             onChange={setInputValue}
-                            onSend={() => onSend(inputValue)}
-                            disabled={isLoading}
+                            onSend={(content) => onSend(content ?? inputValue)}
+                            disabled={isLoading || !!disabled}
                             isLoading={isLoading}
                             error={error}
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
+                            mentionableAgents={mentionableAgents}
+                            onMentionSelect={onMentionSelect}
+                            onSubmitBlocked={onSubmitBlocked}
                         />
                         {emptyState}
                     </Box>
@@ -150,8 +181,7 @@ export function OpalChatView({
                     <Box style={{ flexShrink: 0, width: '100%' }}>
                         <OpalHeader
                             onToggleHistory={onToggleHistory || (() => { })}
-                            onNewChat={onNewChat || (() => { })}
-                            sticky
+                            onNewChat={onNewChat}
                         />
                     </Box>
                 )}
@@ -172,10 +202,20 @@ export function OpalChatView({
                     <OpalChat
                         messages={messages}
                         onSuggestionClick={onSuggestionClick}
+                        onRegenerate={onRegenerate}
+                        onVersionChange={onMessageVersionChange}
                         hideSuggestions={!!emptyState}
                         variant={variant}
-                        onMessageEdit={onMessageEdit}
-                        onRegenerate={onRegenerate}
+                        collapsedSessionIds={collapsedSessionIds}
+                        onExpandSession={onExpandSession}
+                        opalDisclosureIds={opalDisclosureIds}
+                        opalClosedIds={opalClosedIds}
+                        collapsingOpalEndId={collapsingOpalEndId}
+                        highlightedOpalEndId={highlightedOpalEndId}
+                        onOpenOpalRange={onOpenOpalRange}
+                        onCloseOpalRange={onCloseOpalRange}
+                        activeAgentCtx={activeAgentCtx}
+                        contextualActionCard={contextualActionCard}
                     />
                 </Box>
 
@@ -188,17 +228,31 @@ export function OpalChatView({
                         width: '100%'
                     }}
                 >
-                    <OpalInput
-                        variant={variant}
-                        value={inputValue}
-                        onChange={setInputValue}
-                        onSend={() => onSend(inputValue)}
-                        disabled={isLoading}
-                        isLoading={isLoading}
-                        error={error}
-                        enableAI={enableAI}
-                        onEnableAIChange={onEnableAIChange}
-                    />
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        gap="16"
+                        style={{
+                            width: '100%',
+                            maxWidth: variant === 'home' ? '800px' : 'none',
+                        }}
+                    >
+                        <OpalInput
+                            variant={variant}
+                            value={inputValue}
+                            onChange={setInputValue}
+                            onSend={(content) => onSend(content ?? inputValue)}
+                            disabled={isLoading || !!disabled}
+                            isLoading={isLoading}
+                            error={error}
+                            enableAI={enableAI}
+                            onEnableAIChange={onEnableAIChange}
+                            agentBar={agentBar}
+                            mentionableAgents={mentionableAgents}
+                            onMentionSelect={onMentionSelect}
+                            onSubmitBlocked={onSubmitBlocked}
+                        />
+                    </Box>
                 </Box>
             </Box>
             <OpalLoaderDevPanel />

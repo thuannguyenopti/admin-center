@@ -10,6 +10,7 @@ import {
   IconRowInsertTop,
   IconRowInsertBottom,
   IconSquare,
+  IconPalette,
 } from "@tabler/icons-react";
 
 const Section: React.FC<{
@@ -22,7 +23,8 @@ const Section: React.FC<{
   removeSection: any;
   onDragStart: any;
   onEditProperties?: () => void;
-}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties }) => {
+  onOpenStyleEditor?: () => void;
+}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties, onOpenStyleEditor }) => {
   if (section.label) {
     return (
       <div className="p-0.5 pl-6 -mr-0.5">
@@ -55,6 +57,13 @@ const Section: React.FC<{
                     label: "Properties",
                     execute: () => {
                       onEditProperties?.();
+                    },
+                  },
+                  {
+                    addon: <IconPalette size={16} />,
+                    label: "Style",
+                    execute: () => {
+                      onOpenStyleEditor?.();
                     },
                   },
                   {
@@ -126,6 +135,13 @@ const Section: React.FC<{
                 label: "Properties",
                 execute: () => {
                   onEditProperties?.();
+                },
+              },
+              {
+                addon: <IconPalette size={16} />,
+                label: "Style",
+                execute: () => {
+                  onOpenStyleEditor?.();
                 },
               },
               {

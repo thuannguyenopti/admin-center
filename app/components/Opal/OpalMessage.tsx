@@ -4,10 +4,12 @@ import { Box } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import Image from "next/image";
+import { getAdaptiveBlockComponent } from "../ai/AdaptiveBlockRegistry";
+import "../ai/blocks"; // Auto-register all blocks
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
-import { IconCopy, IconPen, IconArrowsRotate, IconThumbsUp, IconThumbsDown } from "@optimizely/axiom-icons";
+import { IconCopy, IconPen, IconArrowsRotate, IconThumbsUp, IconThumbsDown } from "@/app/lib/axiom-icons";
 import { useState, useEffect, useRef } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 import { OpalLoader } from "@/app/opal/components/OpalLoader";
@@ -21,6 +23,9 @@ type OpalMessageProps = {
   message: ChatMessage;
   onEdit?: (id: string, newContent: string) => void;
   onRegenerate?: (id: string) => void;
+  onVersionChange?: (id: string, versionIndex: number, content: string) => void;
+  agentContext?: { emoji: string; name: string } | null;
+  showOpalHeader?: boolean;
 };
 
 // Helper component for action buttons
@@ -75,7 +80,17 @@ const MarkdownContent = ({ content }: { content: string }) => {
             ),
           strong: ({ node, ...props }) => <strong style={{ fontWeight: 600 }} {...props} />,
           em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-          a: ({ node, ...props }) => <a style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }} target="_blank" rel="noopener noreferrer" {...props} />,
+          a: ({ node, href, ...props }) => {
+            const isInternal = typeof href === 'string' && href.startsWith('/');
+            return (
+              <a
+                href={href}
+                style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }}
+                {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+                {...props}
+              />
+            );
+          },
         }}
       >
         {content}
@@ -176,7 +191,7 @@ function DevLoadingState({ sequence }: { sequence: LoaderSequenceOption }) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps) {
+export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, agentContext, showOpalHeader }: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
@@ -224,6 +239,18 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
     setEditValue(message.content);
   };
 
+  // Render agent conversation event markers
+  if (message.role === 'event') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0', paddingLeft: 8, justifyContent: 'flex-start' }}>
+        {message.eventType !== 'agent-end' && (
+          <span style={{ fontSize: 14 }}>{message.agentEmoji}</span>
+        )}
+        <span style={{ fontSize: 12, color: '#4f576e', fontFamily: 'Inter, sans-serif' }}>{message.content}</span>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{ width: '100%', display: 'flex', flexDirection: 'column', marginBottom: '16px' }}
@@ -231,6 +258,20 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
       onMouseLeave={() => setIsHovered(false)}
       className="group"
     >
+      {/* Agent or Opal name header for assistant messages */}
+      {!isUser && agentContext && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
+          <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>{agentContext.name}</span>
+        </div>
+      )}
+      {!isUser && showOpalHeader && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
+          <img src="/opal.png" alt="Opal" width={16} height={16} style={{ borderRadius: 4 }} />
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>Opal</span>
+        </div>
+      )}
+
       <Box
         display="flex"
         flexDirection="column"
@@ -321,7 +362,7 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
                   <DevLoadingState key={`${message.id}-${sequence}`} sequence={sequence} />
                 ) : (
                   <Box display="flex" alignItems="center" gap="12" py="4">
-                    <OpalLoaderV5 size={16} color="currentColor" />
+                    <OpalLoaderV5 size={16} color="#7C3AED" />
                     <Text
                       style={{
                         ...opalTypography.body,
@@ -345,6 +386,34 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
                   >
                     {message.content}
                   </Text>
+                ) : message.messageType && message.metadata ? (
+                  (() => {
+                    const BlockComponent = getAdaptiveBlockComponent(message.messageType);
+                    if (BlockComponent) {
+                      return (
+                        <>
+                          {message.content && (
+                            <Text
+                              fontSize="sm"
+                              style={{
+                                margin: 0,
+                                marginBottom: '12px',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                              }}
+                            >
+                              {message.content}
+                            </Text>
+                          )}
+                          <BlockComponent
+                            metadata={{ ...message.metadata, blockType: message.messageType }}
+                            messageId={message.id}
+                          />
+                        </>
+                      );
+                    }
+                    return <MarkdownContent content={message.content} />;
+                  })()
                 ) : (
                   <MarkdownContent content={message.content} />
                 )
@@ -385,7 +454,10 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
               marginRight: isUser ? '32px' : '0',
               opacity: isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
-              marginTop: isUser ? '4px' : '-8px', // Negative margin for Opal to pull up against markdown spacing
+              marginTop: isUser ? '4px' : (message.messageType && message.metadata) ? '8px' : '-8px',
+              width: '100%',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             }}
           >
             {isUser ? (
@@ -395,12 +467,71 @@ export function OpalMessage({ message, onEdit, onRegenerate }: OpalMessageProps)
                 <ActionButton icon={IconCopy} tooltip="Copy" onClick={handleCopy} />
               </>
             ) : (
-              // Assistant Actions: Regenerate, Copy, Like, Dislike
+              // Assistant Actions: left group + version nav far right
               <>
-                <ActionButton icon={IconArrowsRotate} tooltip="Regenerate" onClick={() => onRegenerate?.(message.id)} />
-                <ActionButton icon={IconCopy} tooltip="Copy" onClick={handleCopy} />
-                <ActionButton icon={IconThumbsUp} tooltip="Helpful" onClick={() => console.log('Like clicked')} />
-                <ActionButton icon={IconThumbsDown} tooltip="Not helpful" onClick={() => console.log('Dislike clicked')} />
+                {/* Left group */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '4px 6px',
+                      color: 'var(--opal-text-tertiary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      borderRadius: '4px',
+                      fontSize: '13px',
+                      transition: 'color 0.2s, background-color 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = 'var(--opal-text-body)';
+                      e.currentTarget.style.backgroundColor = 'var(--opal-bg-sidebar)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'var(--opal-text-tertiary)';
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    <IconPen size={14} />
+                    Edit in Canvas
+                  </button>
+                  <ActionButton icon={IconArrowsRotate} tooltip="Regenerate" onClick={() => onRegenerate?.(message.id)} />
+                  <ActionButton icon={IconCopy} tooltip="Copy" onClick={handleCopy} />
+                  <ActionButton icon={IconThumbsUp} tooltip="Helpful" onClick={() => console.log('Like clicked')} />
+                  <ActionButton icon={IconThumbsDown} tooltip="Not helpful" onClick={() => console.log('Dislike clicked')} />
+                </div>
+
+                {/* Version navigator — far right, shown once there are multiple versions */}
+                {message.versions && message.versions.length > 1 && (() => {
+                  const total = message.versions.length;
+                  const current = (message.currentVersionIndex ?? total - 1) + 1;
+                  const canPrev = current > 1;
+                  const canNext = current < total;
+                  const navigate = (delta: number) => {
+                    const nextIdx = (message.currentVersionIndex ?? total - 1) + delta;
+                    const nextContent = message.versions![nextIdx];
+                    onVersionChange?.(message.id, nextIdx, nextContent);
+                  };
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <button onClick={() => navigate(-1)} disabled={!canPrev} style={{
+                        background: 'transparent', border: 'none', cursor: canPrev ? 'pointer' : 'default',
+                        padding: '4px', borderRadius: '4px', color: 'var(--opal-text-tertiary)',
+                        opacity: canPrev ? 1 : 0.35, fontSize: '14px', lineHeight: 1,
+                      }}>‹</button>
+                      <span style={{ fontSize: '12px', color: 'var(--opal-text-tertiary)', userSelect: 'none', minWidth: '28px', textAlign: 'center' }}>
+                        {current}/{total}
+                      </span>
+                      <button onClick={() => navigate(1)} disabled={!canNext} style={{
+                        background: 'transparent', border: 'none', cursor: canNext ? 'pointer' : 'default',
+                        padding: '4px', borderRadius: '4px', color: 'var(--opal-text-tertiary)',
+                        opacity: canNext ? 1 : 0.35, fontSize: '14px', lineHeight: 1,
+                      }}>›</button>
+                    </div>
+                  );
+                })()}
               </>
             )}
           </Box>
