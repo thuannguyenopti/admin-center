@@ -461,7 +461,7 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 						bg="bg.default"
 						h="full"
 						overflow="auto"
-						style={{width: "384px", minWidth: "384px"}}
+						style={{width: "fit-content", minWidth: "384px", maxWidth: "760px", flexShrink: 0}}
 					>
 						{asideContent}
 					</Box>
