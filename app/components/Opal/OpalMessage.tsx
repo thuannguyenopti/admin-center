@@ -689,6 +689,7 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
             </Box>
           )}
         </Box>
+        )}
 
         {/* Quick Actions Row */}
         {!isLoading && !isEditing && (
@@ -782,8 +783,6 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
               </>
             )}
           </Box>
-        )}
-      </Box>
         )}
       </Box>
     </div>
