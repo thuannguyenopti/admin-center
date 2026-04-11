@@ -17,7 +17,7 @@ import {
 } from "@optiaxiom/react";
 import {Button} from "./Button";
 import {Text} from "./Text";
-import React, {useEffect, useState, Suspense} from "react";
+import React, {useEffect, useState, useMemo, Suspense} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
@@ -53,7 +53,26 @@ function TemplateContent({
 }>) {
 	const {asideContent, titleActions, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth, setCodePanelControls} = useLayout();
 	const opalContext = useOpalContext();
+	// Stable slice — deps use primitive values (not object/array refs) so this memo
+	// only recomputes when the actual content changes, even though OpalContextProvider
+	// recreates its context value on every render (because navigationStructure is a new
+	// array ref on each render from layout.tsx).
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const stableOpalCtx = useMemo(() => ({
+		currentPage: opalContext.currentPage,
+		availableFeatures: opalContext.availableFeatures,
+		opalCapabilities: opalContext.opalCapabilities,
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}), [
+		opalContext.currentPage?.path,
+		opalContext.currentPage?.productArea,
+		opalContext.currentPage?.pageName,
+		opalContext.currentPage?.pageDescription,
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		JSON.stringify(opalContext.availableFeatures),
+	]);
 	const router = useRouter();
+	const onOpalNavigate = React.useCallback((p: string) => { router.push(p); }, [router]);
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
@@ -104,10 +123,8 @@ function TemplateContent({
 		removeMessage,
 	} = useOpalState({
 		activeChatId: activeChat,
-		opalContext,
-		onNavigate: (path) => {
-			router.push(path);
-		},
+		opalContext: stableOpalCtx,
+		onNavigate: onOpalNavigate,
 	});
 
 	useEffect(() => {
@@ -134,36 +151,51 @@ function TemplateContent({
 		closeOpal();
 	};
 
-	// Provide Opal panel controls through LayoutContext
+	// Mutable ref holding latest versions of all Opal controls so the effect below
+	// can register stable wrapper functions without re-running on every render.
+	const opalControlsRef = React.useRef({
+		openOpal, toggleOpal, closeOpal, createNewChat, clearHistory,
+		addMessage, updateMessage, removeMessage, setInputValue, sendMessage,
+		setInputDisabled, setPendingOpalPrompt, setOpalContextChip,
+	});
+	opalControlsRef.current = {
+		openOpal, toggleOpal, closeOpal, createNewChat, clearHistory,
+		addMessage, updateMessage, removeMessage, setInputValue, sendMessage,
+		setInputDisabled, setPendingOpalPrompt, setOpalContextChip,
+	};
+
+	// Provide Opal panel controls through LayoutContext.
+	// Stable wrapper functions delegate to the ref so this effect only runs once
+	// (on mount / when setOpalPanelControls identity changes) — not on every render.
 	useEffect(() => {
 		setOpalPanelControls({
-			openPanel: openOpal,
-			togglePanel: toggleOpal,
-			closePanel: closeOpal,
-			createNewChat,
-			clearHistory,
-			addMessage,
-			updateMessage,
-			removeMessage,
-			setInputValue,
-			sendMessage,
-			setInputDisabled,
+			openPanel: () => opalControlsRef.current.openOpal(),
+			togglePanel: () => opalControlsRef.current.toggleOpal(),
+			closePanel: () => opalControlsRef.current.closeOpal(),
+			createNewChat: () => opalControlsRef.current.createNewChat(),
+			clearHistory: () => opalControlsRef.current.clearHistory(),
+			addMessage: (msg) => opalControlsRef.current.addMessage(msg),
+			updateMessage: (id, updates) => opalControlsRef.current.updateMessage(id, updates),
+			removeMessage: (id) => opalControlsRef.current.removeMessage(id),
+			setInputValue: (v) => opalControlsRef.current.setInputValue(v),
+			sendMessage: (content) => opalControlsRef.current.sendMessage(content),
+			setInputDisabled: (disabled) => opalControlsRef.current.setInputDisabled(disabled),
 			launchPrompt: (prompt: string) => {
 				const trimmed = prompt.trim();
 				if (!trimmed) return;
-
-				const chatId = createNewChat();
-				openOpal();
-				setPendingOpalPrompt({chatId, prompt: trimmed});
+				const chatId = opalControlsRef.current.createNewChat();
+				opalControlsRef.current.openOpal();
+				opalControlsRef.current.setPendingOpalPrompt({chatId, prompt: trimmed});
 			},
 			launchWithContext: (label: string, content: string) => {
-				createNewChat();
-				openOpal();
-				setOpalContextChip({ label, content });
+				opalControlsRef.current.createNewChat();
+				opalControlsRef.current.openOpal();
+				opalControlsRef.current.setOpalContextChip({ label, content });
 			},
 		});
 		return () => setOpalPanelControls(null);
-	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, createNewChat, clearHistory, addMessage, updateMessage, removeMessage, setInputValue, sendMessage, setInputDisabled]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [setOpalPanelControls]);
 
 	// Provide Code panel controls through LayoutContext
 	useEffect(() => {
