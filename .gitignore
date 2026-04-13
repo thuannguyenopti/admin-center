@@ -47,3 +47,8 @@ yarn.lock
 
 # code viewer source bundle (auto-generated during build)
 /public/source-bundle.json
+.envrc
+.claude/
+.cursor/
+.vscode/
+logs/*.log*

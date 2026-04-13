@@ -5,7 +5,6 @@ import {Text} from "./Text";
 import {useRouter, usePathname} from "next/navigation";
 import {
 	IconSearch,
-	IconBell,
 	IconHelp,
 	IconUser,
 	IconSunFilled,
@@ -35,6 +34,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
+import NotificationDropdown from "./NotificationDropdown";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -236,26 +236,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</Box>
 				</Button>
 				<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
-				<Box style={{position: "relative"}}>
-					<Button
-						appearance="subtle"
-						size="md"
-						icon={<IconBell size={20} />}
-						aria-label="Notifications"
-					/>
-					<Box
-						style={{
-							position: "absolute",
-							top: "4px",
-							right: "4px",
-							height: "8px",
-							width: "8px",
-							border: "1.5px solid #FFFFFF",
-						}}
-						bg="bg.error"
-						rounded="full"
-					/>
-				</Box>
+				<NotificationDropdown />
 				<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
 				<Button
 					appearance="subtle"

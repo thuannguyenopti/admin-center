@@ -3,18 +3,18 @@ import { recommendationAssets } from "./constants";
 import { getAssetMatch } from "./utils";
 
 export const suggestedAssetSeed: AssetItem[] = [
-	{ id: "a1", label: "JPG", match: getAssetMatch({ id: "a1", label: "JPG", selected: true }), src: recommendationAssets.panel01, title: "Open water runners", preview: "image", selected: true },
-	{ id: "a2", label: "JPG", match: getAssetMatch({ id: "a2", label: "JPG" }), src: recommendationAssets.panel02, title: "Swimmer in surf", preview: "image" },
-	{ id: "a3", label: "JPG", match: getAssetMatch({ id: "a3", label: "JPG" }), src: recommendationAssets.panel03, title: "Cyclist in desert", preview: "image" },
-	{ id: "a4", label: "JPG", match: getAssetMatch({ id: "a4", label: "JPG" }), src: recommendationAssets.panel04, title: "Swimming pack", preview: "image" },
-	{ id: "a5", label: "JPG", match: getAssetMatch({ id: "a5", label: "JPG", tooltip: true }), src: recommendationAssets.panel05, title: "Sports cover art", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
-	{ id: "a6", label: "JPG", match: getAssetMatch({ id: "a6", label: "JPG", selected: true }), src: recommendationAssets.panel06, title: "Cyclists on road", preview: "image", selected: true },
-	{ id: "a7", label: "PDF", match: getAssetMatch({ id: "a7", label: "PDF" }), src: recommendationAssets.search07Thumb, title: "Vespa brochure", preview: "pdf", previewSrc: recommendationAssets.search07Image },
-	{ id: "a8", label: "MP4", match: getAssetMatch({ id: "a8", label: "MP4" }), src: recommendationAssets.panel07, title: "Time trial cyclist", preview: "image" },
-	{ id: "a9", label: "MP4", match: getAssetMatch({ id: "a9", label: "MP4" }), src: recommendationAssets.panel08, title: "Runner in red", preview: "image" },
-	{ id: "a10", label: "MP4", match: getAssetMatch({ id: "a10", label: "MP4" }), src: recommendationAssets.search08Image, title: "Runner on course", preview: "image" },
-	{ id: "a11", label: "MP4", match: getAssetMatch({ id: "a11", label: "MP4", selected: true }), src: recommendationAssets.search12Image, title: "Triathlon finish", preview: "image", selected: true },
-	{ id: "a12", label: "MP4", match: getAssetMatch({ id: "a12", label: "MP4" }), src: recommendationAssets.search15Image, title: "Cyclist in tunnel", preview: "image" },
+	{ id: "a1", label: "JPG", match: getAssetMatch({ id: "a1", label: "JPG", selected: true }), src: recommendationAssets.panel01, title: "STRIDE_triathlon_open_water_start_2026", preview: "image", selected: true },
+	{ id: "a2", label: "JPG", match: getAssetMatch({ id: "a2", label: "JPG" }), src: recommendationAssets.panel02, title: "STRIDE_ocean_swim_sprint_action", preview: "image" },
+	{ id: "a3", label: "JPG", match: getAssetMatch({ id: "a3", label: "JPG" }), src: recommendationAssets.panel03, title: "STRIDE_desert_road_cycling_landscape", preview: "image" },
+	{ id: "a4", label: "JPG", match: getAssetMatch({ id: "a4", label: "JPG" }), src: recommendationAssets.panel04, title: "STRIDE_swim_pack_aerial_view", preview: "image" },
+	{ id: "a5", label: "JPG", match: getAssetMatch({ id: "a5", label: "JPG", tooltip: true }), src: recommendationAssets.panel05, title: "STRIDE_sports_magazine_cover_art", preview: "image", tooltip: "highly relevant to fitness, cycling and health in general" },
+	{ id: "a6", label: "JPG", match: getAssetMatch({ id: "a6", label: "JPG", selected: true }), src: recommendationAssets.panel06, title: "STRIDE_peloton_road_cycling_event", preview: "image", selected: true },
+	{ id: "a7", label: "PDF", match: getAssetMatch({ id: "a7", label: "PDF" }), src: recommendationAssets.search07Thumb, title: "2026_sponsor_package_brochure_v2", preview: "pdf", previewSrc: recommendationAssets.search07Image },
+	{ id: "a8", label: "MP4", match: getAssetMatch({ id: "a8", label: "MP4" }), src: recommendationAssets.panel07, title: "STRIDE_time_trial_athlete_closeup", preview: "image" },
+	{ id: "a9", label: "MP4", match: getAssetMatch({ id: "a9", label: "MP4" }), src: recommendationAssets.panel08, title: "STRIDE_marathon_runner_red_kit", preview: "image" },
+	{ id: "a10", label: "MP4", match: getAssetMatch({ id: "a10", label: "MP4" }), src: recommendationAssets.search08Image, title: "STRIDE_race_day_cyclist_aero_position", preview: "image" },
+	{ id: "a11", label: "MP4", match: getAssetMatch({ id: "a11", label: "MP4", selected: true }), src: recommendationAssets.search12Image, title: "STRIDE_triathlon_finish_line_crowd", preview: "image", selected: true },
+	{ id: "a12", label: "MP4", match: getAssetMatch({ id: "a12", label: "MP4" }), src: recommendationAssets.search15Image, title: "STRIDE_cyclist_coral_jersey_portrait", preview: "image" },
 ];
 
 export const suggestedAssets: AssetItem[] = suggestedAssetSeed;
@@ -348,6 +348,27 @@ export const workflowTemplates: WorkflowTemplate[] = [
 			},
 			{ id: "webinar-5", title: "5. Speaker Assets", date: "Sep 9" },
 			{ id: "webinar-6", title: "6. Launch", date: "Sep 12" },
+		],
+	},
+	{
+		id: "blog-cms",
+		icon: "tag",
+		name: "Blog Post to CMS",
+		subtitle: "Write, review, and publish a blog post",
+		steps: [
+			{ id: "blog-1", title: "1. Draft", date: "Apr 21" },
+			{
+				id: "blog-2",
+				title: "2. Editorial Review",
+				expanded: true,
+				assignee: "Mary Anne",
+				description: "Review draft for tone, accuracy, and SEO",
+				checklist: ["Check headline and subheadings", "Verify facts and links", "Optimize for SEO keywords"],
+				badgeLabel: "Not Started",
+				showCalendarAction: true,
+			},
+			{ id: "blog-3", title: "3. Add Images & Media", date: "Apr 25" },
+			{ id: "blog-4", title: "4. Publish to CMS", date: "Apr 28" },
 		],
 	},
 ];
