@@ -71,7 +71,7 @@ import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
 import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
-import { initialCmpTasks, type CmpTask } from "@/app/db/initialData";
+import { initialCmpTasks, type CmpTask } from "@/app/db/cmpInitialData";
 
 interface CMSToolbarProps {
 	pageName?: string;

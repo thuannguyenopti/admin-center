@@ -5,6 +5,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconChevronDown, IconChevronRight, IconDots, IconEye, IconPlus } from "@tabler/icons-react";
 import type { WorkflowTemplate } from "../../types";
+import type { TaskWorkflowState } from "../../workflowTypes";
 import { WorkflowAvatarGroup } from "./WorkflowAvatarGroup";
 import { WorkflowStepItem } from "./WorkflowStepItem";
 import { WorkflowTab } from "./WorkflowTab";
@@ -15,21 +16,29 @@ type WorkflowSidebarProps = {
 	filteredTemplates: WorkflowTemplate[];
 	isMenuOpen: boolean;
 	onRequestWorkflowChange: (workflowId: string) => void;
+	onSetStepAssignee: (stepId: string, userId: string | undefined) => void;
+	onToggleChecklistItem: (stepId: string, checklistItemId: string) => void;
 	onToggleWorkflowMenu: () => void;
 	onWorkflowSearchChange: (value: string) => void;
 	searchValue: string;
-	workflow: WorkflowTemplate;
+	workflowState: TaskWorkflowState;
+	workflowTemplateName: string;
 };
 
 export function WorkflowSidebar({
 	filteredTemplates,
 	isMenuOpen,
 	onRequestWorkflowChange,
+	onSetStepAssignee,
+	onToggleChecklistItem,
 	onToggleWorkflowMenu,
 	onWorkflowSearchChange,
 	searchValue,
-	workflow,
+	workflowState,
+	workflowTemplateName,
 }: WorkflowSidebarProps) {
+	const isStarter = workflowState.workflowTemplateId === "starter";
+
 	return (
 		<Box bg="bg.default" display="flex" flexDirection="column" style={{ padding: "14px 16px 18px", position: "relative" }}>
 			<Box display="flex" flexDirection="column" style={{ gap: 18 }}>
@@ -91,16 +100,16 @@ export function WorkflowSidebar({
 					onClick={onToggleWorkflowMenu}
 					size="sm"
 					style={{
-						background: workflow.id === "starter" ? "var(--ax-colors-bg-secondary)" : "transparent",
+						background: isStarter ? "var(--ax-colors-bg-secondary)" : "transparent",
 						borderRadius: 8,
 						height: 32,
 						justifyContent: "flex-start",
-						padding: workflow.id === "starter" ? "0 16px" : 0,
+						padding: isStarter ? "0 16px" : 0,
 					}}
 				>
 					<Box alignItems="center" display="flex" gap="8">
 						<Text color="fg.default" style={{ fontSize: 16, lineHeight: "24px", maxWidth: "none" }}>
-							{workflow.name}
+							{workflowTemplateName}
 						</Text>
 						<IconChevronDown color="var(--ax-colors-fg-secondary)" size={16} />
 					</Box>
@@ -118,8 +127,13 @@ export function WorkflowSidebar({
 			)}
 
 			<Box display="flex" flexDirection="column">
-				{workflow.steps.map((step) => (
-					<WorkflowStepItem key={step.id} step={step} />
+				{workflowState.steps.map((step) => (
+					<WorkflowStepItem
+						key={step.id}
+						onSetAssignee={onSetStepAssignee}
+						onToggleChecklistItem={onToggleChecklistItem}
+						step={step}
+					/>
 				))}
 			</Box>
 

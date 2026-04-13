@@ -7,6 +7,8 @@ import type { ContentType, Page } from "@/app/db/initialData";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import { initialContentInstances } from "@/app/db/cmpInitialData";
 import type { AssetItem, Scene, SearchAssetItem, TaskArticle, TaskTab } from "./types";
+import type { TaskWorkflowState } from "./workflowTypes";
+import { resolveTaskWorkflow } from "./utils/workflowState";
 import { getBriefAssetMatch, getPlainTextFromHtml, getSearchAssetMatch } from "./utils";
 
 type UseCmpTaskComputedDataArgs = {
@@ -22,7 +24,7 @@ type UseCmpTaskComputedDataArgs = {
 	scene: Scene;
 	selectedPanelAssetIds: string[];
 	selectedSearchAssetIds: string[];
-	selectedWorkflowId: string | null;
+	taskWorkflows: Record<string, TaskWorkflowState>;
 	taskArticles: TaskArticle[];
 	taskAssets: AssetItem[];
 	workflowSearch: string;
@@ -41,7 +43,7 @@ export function useCmpTaskComputedData({
 	scene,
 	selectedPanelAssetIds,
 	selectedSearchAssetIds,
-	selectedWorkflowId,
+	taskWorkflows,
 	taskArticles,
 	taskAssets,
 	workflowSearch,
@@ -63,8 +65,12 @@ export function useCmpTaskComputedData({
 	const deferredWorkflowSearch = useDeferredValue(workflowSearch);
 	const deferredPerspectives = useDeferredValue(perspectives);
 	const deferredExclude = useDeferredValue(exclude);
-	const activeWorkflowId = selectedWorkflowId ?? (scene === "content-empty" ? "starter" : "newsletter");
-	const activeWorkflow = workflowTemplates.find((template) => template.id === activeWorkflowId) ?? workflowTemplates[0];
+	const taskWorkflowState = useMemo(
+		() => resolveTaskWorkflow(currentTaskId, taskWorkflows, scene),
+		[currentTaskId, taskWorkflows, scene],
+	);
+	const activeWorkflowId = taskWorkflowState.workflowTemplateId;
+	const activeWorkflowTemplate = workflowTemplates.find((template) => template.id === activeWorkflowId) ?? workflowTemplates[0];
 
 	const rankedSearchAssets = useMemo(
 		() =>
@@ -136,8 +142,9 @@ export function useCmpTaskComputedData({
 
 	return {
 		activeTab,
-		activeWorkflow,
 		activeWorkflowId,
+		activeWorkflowTemplate,
+		taskWorkflowState,
 		filteredWorkflowTemplates,
 		hasTaskContent,
 		panelAssetsWithSelection,

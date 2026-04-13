@@ -63,6 +63,20 @@ Content #1: Getting Started with Running
 • Target Audience: Fitness beginners and casual runners.
 • Distribution Channels: Company blog, social media, and email newsletter.
 • Social Channels: Instagram, Twitter, and Facebook.`,
+	"6": `Objective:
+Publish a comprehensive blog post on post-run recovery and nutrition for the STRIDE blog.
+
+Blog Post Strategy:
+Create an informative, SEO-optimized blog post that positions Stride as a trusted resource for runners at all levels:
+
+Content #1: Recovery & Nutrition Guide
+• Title: The Runner's Guide to Recovery — What to Eat, When to Rest
+• Asset Type: Blog Post
+• Brief: Write an in-depth guide covering post-run nutrition (protein timing, hydration, anti-inflammatory foods), active recovery techniques, and rest-day planning. Include practical meal ideas and a sample weekly recovery schedule.
+• Target Audience: Intermediate runners and Stride community members looking to improve performance through better recovery habits.
+• Distribution Channels: Stride blog, email newsletter, and CMS website.
+• Social Channels: Instagram, Facebook.
+• SEO Keywords: running recovery, post-run nutrition, runner's diet, active recovery for runners.`,
 };
 
 export const richTextContentStyles = `
