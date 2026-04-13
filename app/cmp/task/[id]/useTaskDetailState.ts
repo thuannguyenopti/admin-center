@@ -218,10 +218,18 @@ export function useTaskDetailState(taskId: string) {
 		});
 	};
 	const toggleStepDoneForTask = (stepId: string) => {
+		const step = computed.taskWorkflowState.steps.find((s) => s.id === stepId);
+		const stepName = step?.title?.replace(/^\d+\.\s*/, "") ?? "Step";
+		const wasDone = step?.done ?? false;
 		state.setTaskWorkflows((prev) => {
 			const current = prev[taskId] ?? computed.taskWorkflowState;
 			return { ...prev, [taskId]: toggleStepDone(current, stepId) };
 		});
+		if (wasDone) {
+			toaster.create(`"${stepName}" marked incomplete`, { intent: "neutral" });
+		} else {
+			toaster.create(`"${stepName}" completed`, { intent: "success" });
+		}
 	};
 	const toggleStepExpandedForTask = (stepId: string) => {
 		state.setTaskWorkflows((prev) => {
@@ -235,15 +243,18 @@ export function useTaskDetailState(taskId: string) {
 			return { ...prev, [taskId]: markAllStepsDone(current) };
 		});
 		state.setPublishConfirmOpen(true);
+		toaster.create("All steps completed", { intent: "success" });
 	};
 	const undoTaskComplete = () => {
 		state.setTaskWorkflows((prev) => {
 			const current = prev[taskId] ?? computed.taskWorkflowState;
 			return { ...prev, [taskId]: markAllStepsUndone(current) };
 		});
+		toaster.create("Task completion undone", { intent: "neutral" });
 	};
 	const confirmPublish = () => {
 		state.setPublishConfirmOpen(false);
+		toaster.create("Content published successfully", { intent: "success" });
 	};
 	const cancelPublishConfirm = () => {
 		state.setPublishConfirmOpen(false);
