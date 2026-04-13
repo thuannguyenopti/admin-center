@@ -12,7 +12,7 @@ import {
 	Separator,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconBrowser, IconFileText } from "@tabler/icons-react";
+import { IconAlertTriangle, IconBrowser, IconFileText } from "@tabler/icons-react";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { Page } from "@/app/db/initialData";
 import type { PublishingChannel } from "../../types";
@@ -36,7 +36,17 @@ function getInstanceName(instance: ContentInstance): string {
 export function PublishConfirmDialog({ channels, contentInstances, onCancel, onConfirm, open, pages }: PublishConfirmDialogProps) {
 	const hasInstances = contentInstances.length > 0;
 	const hasPages = pages.length > 0;
-	const hasChannels = channels.length > 0;
+	const channelsWithContent = channels.filter((ch) => ch.selectedContentIds.length > 0);
+	const hasChannelsWithContent = channelsWithContent.length > 0;
+
+	// Check if any CMS pages are NOT assigned to a CMS channel
+	const cmsChannelPageIds = new Set(
+		channels
+			.filter((ch) => ch.channelTypeId === "cms-12")
+			.flatMap((ch) => ch.selectedContentIds),
+	);
+	const unpublishedPages = pages.filter((page) => !cmsChannelPageIds.has(page.id));
+	const hasUnpublishedPages = unpublishedPages.length > 0;
 
 	return (
 		<>
@@ -72,14 +82,10 @@ export function PublishConfirmDialog({ channels, contentInstances, onCancel, onC
 					</AlertDialogHeader>
 					<AlertDialogBody style={{ padding: "0 24px 16px" }}>
 						<Box display="flex" flexDirection="column" gap="16">
-							<Text color="fg.secondary" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>
-								The following content will be published upon task completion:
-							</Text>
-
 							{hasInstances && (
 								<Box display="flex" flexDirection="column" gap="8">
 									<Text color="fg.default" style={{ fontSize: 13, fontWeight: 600, lineHeight: "18px", maxWidth: "none" }}>
-										CMP Library
+										Save to CMP Library
 									</Text>
 									{contentInstances.map((instance) => (
 										<Box key={instance.id} alignItems="center" display="flex" gap="8" style={{ paddingLeft: 8 }}>
@@ -92,29 +98,13 @@ export function PublishConfirmDialog({ channels, contentInstances, onCancel, onC
 								</Box>
 							)}
 
-							{hasPages && (
-								<Box display="flex" flexDirection="column" gap="8">
-									<Text color="fg.default" style={{ fontSize: 13, fontWeight: 600, lineHeight: "18px", maxWidth: "none" }}>
-										CMS
-									</Text>
-									{pages.map((page) => (
-										<Box key={page.id} alignItems="center" display="flex" gap="8" style={{ paddingLeft: 8 }}>
-											<IconBrowser color="var(--ax-colors-fg-secondary)" size={14} />
-											<Text color="fg.default" style={{ fontSize: 13, lineHeight: "18px", maxWidth: "none" }}>
-												{page.name}
-											</Text>
-										</Box>
-									))}
-								</Box>
-							)}
-
-							{hasChannels && (
+							{hasChannelsWithContent && (
 								<>
-									<Separator />
+									{hasInstances && <Separator />}
 									<Text color="fg.default" style={{ fontSize: 13, fontWeight: 600, lineHeight: "18px", maxWidth: "none" }}>
-										Publishing Channels
+										Publish to Channels
 									</Text>
-									{channels.map((channel) => {
+									{channelsWithContent.map((channel) => {
 										const def = getChannelDef(channel.channelTypeId);
 										if (!def) return null;
 										return (
@@ -134,7 +124,29 @@ export function PublishConfirmDialog({ channels, contentInstances, onCancel, onC
 								</>
 							)}
 
-							{!hasInstances && !hasPages && !hasChannels && (
+							{hasUnpublishedPages && (
+								<>
+									{(hasInstances || hasChannelsWithContent) && <Separator />}
+									<Box alignItems="start" display="flex" gap="8" p="12" rounded="sm" style={{ backgroundColor: "var(--ax-colors-bg-warning-subtle)" }}>
+										<IconAlertTriangle color="var(--ax-colors-fg-warning)" size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+										<Box display="flex" flexDirection="column" gap="4">
+											<Text color="fg.default" style={{ fontSize: 13, fontWeight: 500, lineHeight: "18px", maxWidth: "none" }}>
+												{unpublishedPages.length === 1 ? "1 CMS page" : `${unpublishedPages.length} CMS pages`} not assigned to a publishing channel
+											</Text>
+											{unpublishedPages.map((page) => (
+												<Text key={page.id} color="fg.secondary" style={{ fontSize: 13, lineHeight: "18px", maxWidth: "none" }}>
+													{page.name}
+												</Text>
+											))}
+											<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>
+												Add a CMS channel in the Publishing tab to publish these pages.
+											</Text>
+										</Box>
+									</Box>
+								</>
+							)}
+
+							{!hasInstances && !hasPages && !hasChannelsWithContent && (
 								<Text color="fg.tertiary" style={{ fontSize: 14, lineHeight: "20px", maxWidth: "none" }}>
 									No content to publish. The task will be marked as complete.
 								</Text>
