@@ -3,14 +3,31 @@
 import { Avatar, Box } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { IconCalendar, IconCheck, IconChevronRight } from "@tabler/icons-react";
-import type { WorkflowStep } from "../../types";
+import { initialUsers } from "@/app/db/initialData";
+import type { TaskWorkflowStep } from "../../workflowTypes";
 import { DashedCircle } from "../shared/DashedCircle";
 import { WorkflowExpandedStep } from "./WorkflowExpandedStep";
 
-export function WorkflowStepItem({ step }: { step: WorkflowStep }) {
+type WorkflowStepItemProps = {
+	onSetAssignee: (stepId: string, userId: string | undefined) => void;
+	onToggleChecklistItem: (stepId: string, checklistItemId: string) => void;
+	step: TaskWorkflowStep;
+};
+
+export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, step }: WorkflowStepItemProps) {
 	if (step.expanded) {
-		return <WorkflowExpandedStep step={step} />;
+		return (
+			<WorkflowExpandedStep
+				onSetAssignee={onSetAssignee}
+				onToggleChecklistItem={onToggleChecklistItem}
+				step={step}
+			/>
+		);
 	}
+
+	const assignee = step.assigneeUserId
+		? initialUsers.find((u) => u.id === step.assigneeUserId)
+		: undefined;
 
 	return (
 		<Box
@@ -53,19 +70,9 @@ export function WorkflowStepItem({ step }: { step: WorkflowStep }) {
 						<IconCalendar size={12} />
 					</DashedCircle>
 				)}
-				<Avatar size="xs" src="/avatars/aamr-fakhry.png" style={{ height: 20, width: 20 }} />
-				<Box
-					alignItems="center"
-					bg="bg.secondary"
-					display="flex"
-					justifyContent="center"
-					rounded="full"
-					style={{ height: 20, width: 20 }}
-				>
-					<Text fontSize="xs" style={{ fontSize: 10, lineHeight: "14px" }}>
-						WM
-					</Text>
-				</Box>
+				{assignee && (
+					<Avatar name={assignee.name} size="xs" src={assignee.avatar} style={{ height: 20, width: 20 }} />
+				)}
 			</Box>
 		</Box>
 	);
