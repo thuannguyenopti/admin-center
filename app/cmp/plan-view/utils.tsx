@@ -9,19 +9,19 @@ export const parseDate = (dateStr: string): Date | null => {
 export const getStatusColor = (status: string): string => {
 	switch (status) {
 		case "On Track":
-			return "#10b981";
+			return "var(--ax-colors-fg-success)";
 		case "In Progress":
-			return "#3b82f6";
+			return "var(--ax-colors-fg-information)";
 		case "At Risk":
-			return "#f59e0b";
+			return "var(--ax-colors-fg-warning)";
 		case "Overdue":
-			return "#ef4444";
+			return "var(--ax-colors-fg-error)";
 		case "Completed":
-			return "#8b5cf6";
+			return "var(--ax-colors-fg-accent)";
 		case "Not Started":
-			return "#9ca3af";
+			return "var(--ax-colors-fg-tertiary)";
 		default:
-			return "#9ca3af";
+			return "var(--ax-colors-fg-tertiary)";
 	}
 };
 
