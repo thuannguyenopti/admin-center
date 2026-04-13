@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const projectRoot = '/Users/david.steinberg/Documents/axiom-play';
+const projectRoot = process.cwd();
 const inputDir = path.join(projectRoot, 'app/cmp/coda/Image-Gen-Editing');
 const outputFile = path.join(inputDir, 'README.md');
 
