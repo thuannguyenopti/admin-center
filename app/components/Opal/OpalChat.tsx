@@ -5,7 +5,7 @@ import { Text } from "../Text";
 import { OpalMessage } from "./OpalMessage";
 import { OpalSuggestions } from "./OpalSuggestions";
 import { ChatMessage } from "@/app/hooks/useOpalState";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 import { useOpalContext } from "@/app/context/OpalContext";
 
@@ -13,6 +13,8 @@ type OpalChatProps = {
   messages: ChatMessage[];
   onSuggestionClick: (suggestion: string) => void;
   onSubmitPrompt?: (message: string) => void;
+  streamingMode?: "collapsed" | "expanded";
+  threadKey?: string | null;
   isLoading?: boolean;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
@@ -31,8 +33,9 @@ type OpalChatProps = {
   contextualActionCard?: React.ReactNode;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [streamingExpandedByThreadKey, setStreamingExpandedByThreadKey] = useState<Record<string, boolean>>({});
   let opalContext;
   try {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -51,6 +54,9 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, isLoadin
       chatEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages, contextualActionCard]);
+
+  const resolvedThreadKey = threadKey ?? "default";
+  const isThreadStreamingExpanded = streamingExpandedByThreadKey[resolvedThreadKey] ?? true;
 
   // Compute per-message rendering context (agent header, opal header, collapsed)
   const augmented = useMemo(() => {
@@ -320,6 +326,11 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, isLoadin
                   onVersionChange={onVersionChange}
                   onSuggestionClick={onSuggestionClick}
                   onSubmitPrompt={onSubmitPrompt}
+                  streamingMode={streamingMode}
+                  isStreamingExpanded={isThreadStreamingExpanded}
+                  onStreamingExpandedChange={(open) =>
+                    setStreamingExpandedByThreadKey((prev) => ({ ...prev, [resolvedThreadKey]: open }))
+                  }
                   isOpalLoading={isLoading}
                 />
                 {collapsedOpal && (
@@ -353,6 +364,11 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, isLoadin
                             showOpalHeader={m.role === 'assistant'}
                             onRegenerate={onRegenerate}
                             onVersionChange={onVersionChange}
+                            streamingMode={streamingMode}
+                            isStreamingExpanded={isThreadStreamingExpanded}
+                            onStreamingExpandedChange={(open) =>
+                              setStreamingExpandedByThreadKey((prev) => ({ ...prev, [resolvedThreadKey]: open }))
+                            }
                           />
                         ))}
                       </Box>

@@ -2,9 +2,13 @@
 
 import { Box, Button } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconXmark, IconBars, IconCirclePlus } from "@/app/lib/axiom-icons";
-import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
-import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
+import {
+    IconXmark,
+    IconBars,
+    IconCirclePlus,
+    IconChevronDown,
+    IconArrowsMaximize,
+} from "@/app/lib/axiom-icons";
 import { opalTypography } from "@/app/styles/opalTypography";
 import { useEffect, useRef, useState } from "react";
 import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
@@ -122,7 +126,7 @@ export function OpalHeader({
                                 background: '#7C3AED', display: 'inline-block', marginLeft: '-4px',
                             }} />
                         )}
-                        <IconDropdown style={{ width: '10px', height: '5px' }} />
+                        <IconChevronDown size={12} />
                     </Box>
 
                     {menuOpen && (
@@ -215,7 +219,7 @@ export function OpalHeader({
                             justifyContent: 'center',
                         }}
                     >
-                        <IconMaximize style={{ width: '14px', height: '14px' }} />
+                        <IconArrowsMaximize size={14} />
                     </Button>
                     <Button
                         appearance="subtle"

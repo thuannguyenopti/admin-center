@@ -19,6 +19,7 @@ type OpalChatViewProps = {
     setInputValue: (value: string) => void;
     onSend: (content: string) => void;
     onSuggestionClick: (suggestion: string) => void;
+    streamingMode?: 'collapsed' | 'expanded';
 
     // History props
     onToggleHistory?: () => void;
@@ -66,6 +67,7 @@ export function OpalChatView({
     setInputValue,
     onSend,
     onSuggestionClick,
+    streamingMode = 'collapsed',
     onToggleHistory,
     onNewChat,
     isHistoryVisible,
@@ -202,6 +204,8 @@ export function OpalChatView({
                     <OpalChat
                         messages={messages}
                         onSuggestionClick={onSuggestionClick}
+                        streamingMode={streamingMode}
+                        threadKey={activeChat}
                         onRegenerate={onRegenerate}
                         onVersionChange={onMessageVersionChange}
                         hideSuggestions={!!emptyState}
