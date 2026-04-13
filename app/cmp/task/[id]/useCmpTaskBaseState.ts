@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { initialTaskAssets, searchAssets, suggestedAssets } from "./mockData";
 import { initialBriefContent, perspectiveSeeds, taskBriefContents } from "./constants";
 import type { AssetItem, PublishingChannel, Scene, TaskArticle } from "./types";
+import type { TaskWorkflowState } from "./workflowTypes";
 import { formatInitialBriefHtml } from "./utils";
 
 export function useCmpTaskBaseState(taskId: string) {
@@ -64,7 +65,10 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [briefContent, setBriefContent] = useState(taskBriefHtml);
 	const [draftBriefContent, setDraftBriefContent] = useState(taskBriefHtml);
 	const [searchReturnScene, setSearchReturnScene] = useState<Scene>("brief-edit");
-	const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
+	const [taskWorkflows, setTaskWorkflows] = usePersistentState("cmpTaskWorkflows", {} as Record<string, TaskWorkflowState>) as [
+		Record<string, TaskWorkflowState>,
+		React.Dispatch<React.SetStateAction<Record<string, TaskWorkflowState>>>,
+	];
 	const [workflowMenuOpen, setWorkflowMenuOpen] = useState(false);
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
@@ -96,7 +100,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		selectedPanelAssetIds,
 		selectedSearchAssetIds,
 		selectedTaskAssetId,
-		selectedWorkflowId,
+		taskWorkflows,
 		setBriefContent,
 		setContentInstances,
 		setDraftBriefContent,
@@ -119,7 +123,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		setSelectedPanelAssetIds,
 		setSelectedSearchAssetIds,
 		setSelectedTaskAssetId,
-		setSelectedWorkflowId,
+		setTaskWorkflows,
 		setSuggestedPanelOpen,
 		setTaskArticles,
 		setTaskAssets,

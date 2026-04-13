@@ -1,10 +1,10 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { CmpOpalAssetRecommendation } from "./CmpOpalAssetRecommendation";
+import { TaskDetailView } from "./TaskDetailView";
 
 export default function TaskDetailPage() {
 	const params = useParams();
 	const taskId = params.id as string;
-	return <CmpOpalAssetRecommendation taskId={taskId} />;
+	return <TaskDetailView taskId={taskId} />;
 }

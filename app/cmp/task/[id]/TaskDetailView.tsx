@@ -13,20 +13,23 @@ import { TaskCanvas } from "./components/shared/TaskCanvas";
 import { PublishingPage } from "./components/publishing/PublishingPage";
 import { WorkflowChangeModal } from "./components/workflow/WorkflowChangeModal";
 import { WorkflowSidebar } from "./components/workflow/WorkflowSidebar";
-import { useCmpOpalAssetRecommendationState } from "./useCmpOpalAssetRecommendationState";
+import { useTaskDetailState } from "./useTaskDetailState";
 
-export function CmpOpalAssetRecommendation({ taskId }: { taskId: string }) {
-	const state = useCmpOpalAssetRecommendationState(taskId);
+export function TaskDetailView({ taskId }: { taskId: string }) {
+	const state = useTaskDetailState(taskId);
 
 	const workflowSidebar = (
 		<WorkflowSidebar
 			filteredTemplates={state.filteredWorkflowTemplates}
 			isMenuOpen={state.workflowMenuOpen}
 			onRequestWorkflowChange={state.handleWorkflowSelect}
+			onSetStepAssignee={state.setStepAssigneeForTask}
+			onToggleChecklistItem={state.toggleChecklistItemForTask}
 			onToggleWorkflowMenu={state.toggleWorkflowMenu}
 			onWorkflowSearchChange={state.setWorkflowSearch}
 			searchValue={state.workflowSearch}
-			workflow={state.activeWorkflow}
+			workflowState={state.taskWorkflowState}
+			workflowTemplateName={state.activeWorkflowTemplate.name}
 		/>
 	);
 
