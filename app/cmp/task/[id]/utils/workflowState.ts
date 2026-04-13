@@ -84,3 +84,50 @@ export function setStepAssignee(
 		),
 	};
 }
+
+/** Return a new TaskWorkflowState with a step's done flag toggled. */
+export function toggleStepDone(
+	state: TaskWorkflowState,
+	stepId: string,
+): TaskWorkflowState {
+	return {
+		...state,
+		steps: state.steps.map((step) =>
+			step.id !== stepId ? step : { ...step, done: !step.done },
+		),
+	};
+}
+
+/** Return a new TaskWorkflowState with a step's expanded flag toggled (accordion: only one open at a time). */
+export function toggleStepExpanded(
+	state: TaskWorkflowState,
+	stepId: string,
+): TaskWorkflowState {
+	return {
+		...state,
+		steps: state.steps.map((step) => ({
+			...step,
+			expanded: step.id === stepId ? !step.expanded : false,
+		})),
+	};
+}
+
+/** Return a new TaskWorkflowState with all steps marked done. */
+export function markAllStepsDone(
+	state: TaskWorkflowState,
+): TaskWorkflowState {
+	return {
+		...state,
+		steps: state.steps.map((step) => ({ ...step, done: true })),
+	};
+}
+
+/** Return a new TaskWorkflowState with all steps marked not done. */
+export function markAllStepsUndone(
+	state: TaskWorkflowState,
+): TaskWorkflowState {
+	return {
+		...state,
+		steps: state.steps.map((step) => ({ ...step, done: false })),
+	};
+}

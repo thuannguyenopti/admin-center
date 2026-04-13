@@ -2,6 +2,7 @@
 
 import { Box } from "@optiaxiom/react";
 import TargetContentTypeDialog from "@/app/components/TargetContentTypeDialog";
+import { useEffect, useRef } from "react";
 import { PreviewPage } from "./components/assets/PreviewPage";
 import { SearchPage } from "./components/assets/SearchPage";
 import { SuggestedAssetsPanel } from "./components/assets/SuggestedAssetsPanel";
@@ -9,8 +10,9 @@ import { BriefEditPage } from "./components/brief/BriefEditPage";
 import { BriefPage } from "./components/brief/BriefPage";
 import { ContentEmptyPage } from "./components/content/ContentEmptyPage";
 import { ContentFilledPage } from "./components/content/ContentFilledPage";
-import { TaskCanvas } from "./components/shared/TaskCanvas";
+import { PublishConfirmDialog } from "./components/publishing/PublishConfirmDialog";
 import { PublishingPage } from "./components/publishing/PublishingPage";
+import { TaskCanvas } from "./components/shared/TaskCanvas";
 import { WorkflowChangeModal } from "./components/workflow/WorkflowChangeModal";
 import { WorkflowSidebar } from "./components/workflow/WorkflowSidebar";
 import { useTaskDetailState } from "./useTaskDetailState";
@@ -18,16 +20,32 @@ import { useTaskDetailState } from "./useTaskDetailState";
 export function TaskDetailView({ taskId }: { taskId: string }) {
 	const state = useTaskDetailState(taskId);
 
+	const prevAllDone = useRef(false);
+	useEffect(() => {
+		if (state.isAllWorkflowDone && !prevAllDone.current) {
+			state.setPublishConfirmOpen(true);
+		}
+		prevAllDone.current = state.isAllWorkflowDone;
+	}, [state.isAllWorkflowDone, state.setPublishConfirmOpen]);
+
 	const workflowSidebar = (
 		<WorkflowSidebar
 			filteredTemplates={state.filteredWorkflowTemplates}
+			isAllDone={state.isAllWorkflowDone}
 			isMenuOpen={state.workflowMenuOpen}
+			onMarkComplete={state.markTaskComplete}
 			onRequestWorkflowChange={state.handleWorkflowSelect}
 			onSetStepAssignee={state.setStepAssigneeForTask}
 			onToggleChecklistItem={state.toggleChecklistItemForTask}
+			onToggleStepDone={state.toggleStepDoneForTask}
+			onToggleStepExpanded={state.toggleStepExpandedForTask}
 			onToggleWorkflowMenu={state.toggleWorkflowMenu}
+			onUndoComplete={state.undoTaskComplete}
 			onWorkflowSearchChange={state.setWorkflowSearch}
+			progressPercent={state.workflowProgressPercent}
 			searchValue={state.workflowSearch}
+			statusIntent={state.workflowStatusIntent}
+			statusLabel={state.workflowStatusLabel}
 			workflowState={state.taskWorkflowState}
 			workflowTemplateName={state.activeWorkflowTemplate.name}
 		/>
@@ -200,6 +218,15 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 					open={state.isTargetSelectionOpen}
 				/>
 			)}
+
+			<PublishConfirmDialog
+				channels={state.publishingChannels}
+				contentInstances={state.taskContentInstances}
+				onCancel={state.cancelPublishConfirm}
+				onConfirm={state.confirmPublish}
+				open={state.publishConfirmOpen}
+				pages={state.taskPages}
+			/>
 		</Box>
 	);
 }
