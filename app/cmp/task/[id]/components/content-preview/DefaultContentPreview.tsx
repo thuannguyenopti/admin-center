@@ -16,15 +16,24 @@ const getImageName = (url: string) => {
 				? window.location.origin
 				: "http://localhost";
 		const urlObj = new URL(url, base);
-		const pathname = urlObj.pathname;
-		const parts = pathname.split("/");
-		const filename = parts[parts.length - 1];
-		return filename || "Image";
+		const parts = urlObj.pathname.split("/").filter(Boolean);
+		// Walk backwards to find a segment that isn't purely numeric (skip dimension segments like "800", "600")
+		for (let i = parts.length - 1; i >= 0; i--) {
+			const segment = parts[i];
+			if (segment && !/^\d+$/.test(segment)) {
+				return segment;
+			}
+		}
+		return parts[parts.length - 1] || "Image";
 	} catch {
-		const parts = url.split("/");
-		const lastPart = parts[parts.length - 1] || "";
-		const clean = lastPart.split("#")[0].split("?")[0];
-		return clean || "Image";
+		const parts = url.split("/").filter(Boolean);
+		for (let i = parts.length - 1; i >= 0; i--) {
+			const segment = (parts[i] || "").split("#")[0].split("?")[0];
+			if (segment && !/^\d+$/.test(segment)) {
+				return segment;
+			}
+		}
+		return "Image";
 	}
 };
 

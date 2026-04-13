@@ -781,7 +781,7 @@ export const initialContentTypes: ContentType[] = [
 		description: "A standard blog post with title, author, content, and metadata",
 		properties: [
 			{ id: "field-bp-title", name: "title", displayName: "Title", type: "String", required: true, cultureSpecific: true, description: "The main title of the blog post", groupName: "Content", order: 1 },
-			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Name of the blog post author", groupName: "Content", order: 2 },
+			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Author name", groupName: "Content", order: 2 },
 			{ id: "field-bp-publish-date", name: "publish_date", displayName: "Publish Date", type: "DateTime", required: true, description: "When the post should be published", groupName: "Content", order: 1 },
 			{ id: "field-bp-excerpt", name: "excerpt", displayName: "Excerpt", type: "LongString", cultureSpecific: true, description: "Short summary for previews and SEO", groupName: "Content", order: 3 },
 			{ id: "field-bp-content", name: "content", displayName: "Content", type: "XhtmlString", required: true, cultureSpecific: true, description: "The main blog post content", groupName: "Content", order: 4 },
@@ -797,6 +797,24 @@ export const initialContentTypes: ContentType[] = [
 		defaultLocale: "en-US",
 		modelType: "content",
 		isActive: true,
+		mappings: [
+			{
+				id: "mapping-cmp-blog-to-cms-blog",
+				name: "blog_post_to_cms_blog_post",
+				displayName: "Blog Post → CMS Blog Post",
+				description: "Maps CMP blog post fields to CMS Blog Post page type",
+				sourceContentTypeId: "cm-blog-post",
+				targetContentTypeId: "ct-blog-post",
+				propertyMappings: [
+					{ id: "pm-bp-title", sourcePropertyId: "field-bp-title", targetPropertyId: "title", transformation: "direct", required: true, description: "Title → Title" },
+					{ id: "pm-bp-excerpt", sourcePropertyId: "field-bp-excerpt", targetPropertyId: "subtitle", transformation: "direct", description: "Excerpt → Subtitle" },
+					{ id: "pm-bp-featured-image", sourcePropertyId: "field-bp-featured-image", targetPropertyId: "featuredImage", transformation: "direct", description: "Featured Image → Featured Image" },
+					{ id: "pm-bp-content", sourcePropertyId: "field-bp-content", targetPropertyId: "body", transformation: "direct", required: true, description: "Content → Body" },
+					{ id: "pm-bp-author", sourcePropertyId: "field-bp-author", targetPropertyId: "author", transformation: "direct", required: true, description: "Author → Author" },
+				],
+				createdAt: "2024-03-20T10:00:00Z",
+			},
+		],
 	},
 	{
 		id: "cm-article",
@@ -977,46 +995,6 @@ export type Page = {
 		addedVia: "created" | "manual"; // How it was added: created via "Add to Application" or manually added
 	};
 };
-
-export type CmpTask = {
-	id: string;
-	title: string;
-	reference: string;
-	status: string;
-};
-
-export const initialCmpTasks: CmpTask[] = [
-	{
-		id: "1",
-		title: "Ironman Miami triathlon 2026 Sponsor Package task",
-		reference: "TSK-2702",
-		status: "Not Started",
-	},
-	{
-		id: "2",
-		title: "Content Rec",
-		reference: "TSK-2695",
-		status: "In Progress",
-	},
-	{
-		id: "3",
-		title: "Hotel Brochure",
-		reference: "TSK-2691",
-		status: "At Risk",
-	},
-	{
-		id: "4",
-		title: "SC content testing",
-		reference: "TSK-2689",
-		status: "Overdue",
-	},
-	{
-		id: "5",
-		title: "STRIDE Blog Launch",
-		reference: "TSK-2710",
-		status: "In Progress",
-	},
-];
 
 export type Application = {
 	id: string;
