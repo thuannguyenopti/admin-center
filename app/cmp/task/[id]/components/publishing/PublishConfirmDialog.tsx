@@ -12,7 +12,7 @@ import {
 	Separator,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconAlertTriangle, IconBrowser, IconFileText } from "@tabler/icons-react";
+import { IconAlertTriangle, IconFileText } from "@tabler/icons-react";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
 import type { Page } from "@/app/db/initialData";
 import type { PublishingChannel } from "../../types";

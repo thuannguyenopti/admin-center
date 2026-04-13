@@ -36,10 +36,14 @@ export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, onToggl
 	return (
 		<Box
 			alignItems="center"
+			aria-expanded={false}
 			display="flex"
 			justifyContent="space-between"
 			onClick={() => onToggleExpanded(step.id)}
+			onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onToggleExpanded(step.id); } }}
+			role="button"
 			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", cursor: "pointer", padding: "14px 0" }}
+			tabIndex={0}
 		>
 			<Box alignItems="center" display="flex" gap="12">
 				<IconChevronRight color="var(--ax-colors-fg-secondary)" size={16} />
@@ -50,8 +54,11 @@ export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, onToggl
 						display="flex"
 						justifyContent="center"
 						onClick={(e) => { e.stopPropagation(); onToggleDone(step.id); }}
+						onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onToggleDone(step.id); } }}
+						role="button"
 						rounded="full"
 						style={{ cursor: "pointer", height: 24, width: 24 }}
+						tabIndex={0}
 					>
 						<IconCheck color="var(--ax-colors-fg-success-strong)" size={14} />
 					</Box>

@@ -781,7 +781,7 @@ export const initialContentTypes: ContentType[] = [
 		description: "A standard blog post with title, author, content, and metadata",
 		properties: [
 			{ id: "field-bp-title", name: "title", displayName: "Title", type: "String", required: true, cultureSpecific: true, description: "The main title of the blog post", groupName: "Content", order: 1 },
-			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Name of the blog post author", groupName: "Content", order: 2 },
+			{ id: "field-bp-author", name: "author", displayName: "Author", type: "String", required: true, description: "Author name", groupName: "Content", order: 2 },
 			{ id: "field-bp-publish-date", name: "publish_date", displayName: "Publish Date", type: "DateTime", required: true, description: "When the post should be published", groupName: "Content", order: 1 },
 			{ id: "field-bp-excerpt", name: "excerpt", displayName: "Excerpt", type: "LongString", cultureSpecific: true, description: "Short summary for previews and SEO", groupName: "Content", order: 3 },
 			{ id: "field-bp-content", name: "content", displayName: "Content", type: "XhtmlString", required: true, cultureSpecific: true, description: "The main blog post content", groupName: "Content", order: 4 },
