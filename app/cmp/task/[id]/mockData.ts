@@ -350,4 +350,25 @@ export const workflowTemplates: WorkflowTemplate[] = [
 			{ id: "webinar-6", title: "6. Launch", date: "Sep 12" },
 		],
 	},
+	{
+		id: "blog-cms",
+		icon: "tag",
+		name: "Blog Post to CMS",
+		subtitle: "Write, review, and publish a blog post",
+		steps: [
+			{ id: "blog-1", title: "1. Draft", date: "Apr 21" },
+			{
+				id: "blog-2",
+				title: "2. Editorial Review",
+				expanded: true,
+				assignee: "Mary Anne",
+				description: "Review draft for tone, accuracy, and SEO",
+				checklist: ["Check headline and subheadings", "Verify facts and links", "Optimize for SEO keywords"],
+				badgeLabel: "Not Started",
+				showCalendarAction: true,
+			},
+			{ id: "blog-3", title: "3. Add Images & Media", date: "Apr 25" },
+			{ id: "blog-4", title: "4. Publish to CMS", date: "Apr 28" },
+		],
+	},
 ];

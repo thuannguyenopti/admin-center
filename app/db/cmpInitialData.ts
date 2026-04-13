@@ -1,3 +1,49 @@
+export type CmpTask = {
+	id: string;
+	title: string;
+	reference: string;
+	status: string;
+};
+
+export const initialCmpTasks: CmpTask[] = [
+	{
+		id: "1",
+		title: "Ironman Miami triathlon 2026 Sponsor Package task",
+		reference: "TSK-2702",
+		status: "Not Started",
+	},
+	{
+		id: "2",
+		title: "Content Rec",
+		reference: "TSK-2695",
+		status: "In Progress",
+	},
+	{
+		id: "3",
+		title: "Hotel Brochure",
+		reference: "TSK-2691",
+		status: "At Risk",
+	},
+	{
+		id: "4",
+		title: "SC content testing",
+		reference: "TSK-2689",
+		status: "Overdue",
+	},
+	{
+		id: "5",
+		title: "STRIDE Blog Launch",
+		reference: "TSK-2710",
+		status: "In Progress",
+	},
+	{
+		id: "6",
+		title: "STRIDE Blog — Recovery & Nutrition Guide",
+		reference: "TSK-2715",
+		status: "Not Started",
+	},
+];
+
 export type CmpContentModel = {
 	id: string;
 	name: string;
