@@ -738,22 +738,6 @@ export const initialContentInstances: ContentInstance[] = [
 		}
 	},
 	{
-		id: "ci-article-1",
-		modelId: "cm-article",
-		modelDisplayName: "Article",
-		createdAt: "2024-03-22T09:00:00Z",
-		taskId: "1",
-		fields: {
-			headline: "The Science of Running Form",
-			subheadline: "How biomechanics can improve your performance",
-			byline: "Dr. Carol Williams, Sports Scientist",
-			body: "<p>Understanding proper running form is crucial for injury prevention...</p>",
-			hero_image: "https://picsum.photos/seed/running-form-science/800/600",
-			tags: ["Running", "Biomechanics", "Fitness", "Science", "Training"],
-			related_articles: ["ci-blog-1", "ci-blog-2"]
-		}
-	},
-	{
 		id: "ci-article-sponsor",
 		modelId: "cm-article",
 		modelDisplayName: "Article",
