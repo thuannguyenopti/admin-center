@@ -1,11 +1,10 @@
 "use client";
 
 import { toaster } from "@optiaxiom/react";
-import type { ContentInstance } from "@/app/db/cmpInitialData";
+import { type ContentInstance, initialCmpTasks } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { createPageFromInstance } from "@/app/lib/contentConnection";
 import { useCallback, useEffect } from "react";
-import { initialCmpTasks } from "@/app/db/initialData";
 import { workflowTemplates } from "./mockData";
 import type { AssetItem, Scene } from "./types";
 import { useCmpTaskBaseState } from "./useCmpTaskBaseState";

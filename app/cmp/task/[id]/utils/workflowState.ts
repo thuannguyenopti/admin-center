@@ -31,6 +31,11 @@ export function createTaskWorkflowFromTemplate(template: WorkflowTemplate): Task
 	};
 }
 
+/** Per-task default workflow assignments (overrides the generic fallback). */
+const defaultWorkflowByTask: Record<string, string> = {
+	"6": "blog-cms",
+};
+
 /** Get the workflow state for a task, or derive one from the default template. */
 export function resolveTaskWorkflow(
 	taskId: string,
@@ -40,7 +45,8 @@ export function resolveTaskWorkflow(
 	const existing = workflowMap[taskId];
 	if (existing) return existing;
 
-	const defaultId = scene === "content-empty" ? "starter" : "newsletter";
+	const taskDefault = defaultWorkflowByTask[taskId];
+	const defaultId = taskDefault ?? (scene === "content-empty" ? "starter" : "newsletter");
 	const template = workflowTemplates.find((t) => t.id === defaultId) ?? workflowTemplates[0];
 	return createTaskWorkflowFromTemplate(template);
 }
