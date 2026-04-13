@@ -2,7 +2,6 @@ import { Box, SearchInput, Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import {
 	IconFilter,
-	IconChevronDown,
 	IconChevronRight,
 	IconDots,
 	IconUserPlus,
