@@ -67,7 +67,7 @@ export function WorkflowExpandedStep({ onSetAssignee, onToggleChecklistItem, ste
 						onToggle={() => onToggleChecklistItem(step.id, item.id)}
 					/>
 				))}
-				<Badge intent="neutral" style={{ fontSize: 12, height: 22, width: "fit-content" }}>
+				<Badge intent="neutral" w="fit">
 					{step.badgeLabel ?? "Not Started"}
 				</Badge>
 				<Box alignItems="center" display="flex" gap="8" pt="4">
