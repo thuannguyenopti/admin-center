@@ -10,8 +10,13 @@ import { workflowTemplates } from "./mockData";
 import type { AssetItem, Scene } from "./types";
 import { useCmpTaskBaseState } from "./useCmpTaskBaseState";
 import { useCmpTaskComputedData } from "./useCmpTaskComputedData";
+import {
+	createTaskWorkflowFromTemplate,
+	toggleChecklistItem,
+	setStepAssignee,
+} from "./utils/workflowState";
 
-export function useCmpOpalAssetRecommendationState(taskId: string) {
+export function useTaskDetailState(taskId: string) {
 	const currentTaskName = initialCmpTasks.find((t) => t.id === taskId)?.title ?? "Unknown Task";
 	const state = useCmpTaskBaseState(taskId);
 	const computed = useCmpTaskComputedData({
@@ -27,7 +32,7 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 		scene: state.scene,
 		selectedPanelAssetIds: state.selectedPanelAssetIds,
 		selectedSearchAssetIds: state.selectedSearchAssetIds,
-		selectedWorkflowId: state.selectedWorkflowId,
+		taskWorkflows: state.taskWorkflows,
 		taskArticles: state.taskArticles,
 		taskAssets: state.taskAssets,
 		workflowSearch: state.workflowSearch,
@@ -184,12 +189,30 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 	};
 	const applyWorkflowChange = () => {
 		if (state.pendingWorkflowId) {
-			state.setSelectedWorkflowId(state.pendingWorkflowId);
+			const template = workflowTemplates.find((t) => t.id === state.pendingWorkflowId);
+			if (template) {
+				state.setTaskWorkflows((prev) => ({
+					...prev,
+					[taskId]: createTaskWorkflowFromTemplate(template),
+				}));
+			}
 		}
 
 		state.setWorkflowDialogOpen(false);
 		state.setPendingWorkflowId(null);
 		state.setWorkflowSearch("");
+	};
+	const toggleChecklistItemForTask = (stepId: string, checklistItemId: string) => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: toggleChecklistItem(current, stepId, checklistItemId) };
+		});
+	};
+	const setStepAssigneeForTask = (stepId: string, userId: string | undefined) => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: setStepAssignee(current, stepId, userId) };
+		});
 	};
 	const addAssetsToTask = (assetsToAdd: AssetItem[]) => {
 		if (assetsToAdd.length === 0) {
@@ -325,6 +348,8 @@ export function useCmpOpalAssetRecommendationState(taskId: string) {
 		pendingWorkflowName:
 			workflowTemplates.find((template) => template.id === state.pendingWorkflowId)?.name ?? "workflow",
 		saveBriefEdit,
+		setStepAssigneeForTask,
+		toggleChecklistItemForTask,
 		togglePanelAssetSelection,
 		toggleSearchAssetSelection,
 		toggleWorkflowMenu: () => state.setWorkflowMenuOpen((open) => !open),
