@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Text as AxiomText } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText } from "@optiaxiom/react";
 import {
   IconPen,
   IconArrowsRotate,
@@ -180,9 +180,6 @@ function OpalProcessingStepCard({
             display="flex"
             flexDirection="column"
             gap="12"
-            style={{
-              borderTop: `1px solid ${OPAL_STEP_DIVIDER}`,
-            }}
           >
             <Text fontSize="sm" color="fg.secondary" style={{ margin: 0, lineHeight: 1.65 }}>
               {OPAL_ACTIVE_STEP_BODY}
@@ -235,6 +232,9 @@ type OpalMessageProps = {
   message: ChatMessage;
   onSuggestionClick?: (suggestion: string) => void;
   onSubmitPrompt?: (message: string) => void;
+  streamingMode?: "collapsed" | "expanded";
+  isStreamingExpanded?: boolean;
+  onStreamingExpandedChange?: (open: boolean) => void;
   isOpalLoading?: boolean;
   onEdit?: (id: string, newContent: string) => void;
   onRegenerate?: (id: string) => void;
@@ -416,7 +416,20 @@ function isExperimentCreationPayload(
   );
 }
 
-export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpalLoading, onEdit, onRegenerate, onVersionChange, agentContext, showOpalHeader }: OpalMessageProps) {
+export function OpalMessage({
+  message,
+  onSuggestionClick,
+  onSubmitPrompt,
+  streamingMode = "collapsed",
+  isStreamingExpanded = true,
+  onStreamingExpandedChange,
+  isOpalLoading,
+  onEdit,
+  onRegenerate,
+  onVersionChange,
+  agentContext,
+  showOpalHeader,
+}: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
@@ -427,6 +440,8 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
   const isExperimentSummary =
     message.type === 'experiment_summary' && message.payload != null;
   const isExperimentCreation = isExperimentCreationPayload(message);
+  const isFullWidthSpecialBlock =
+    isExperimentCreation || isExperimentSummary || Boolean(message.messageType && message.metadata);
 
   const bubbleMaxWidth = isExperimentSummary || isExperimentCreation ? '100%' : '80%';
 
@@ -445,6 +460,11 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
     navigator.clipboard.writeText(message.content);
     // Could add toast here
   };
+
+  const currentStreamingLabel =
+    message.loadingSteps?.[
+      Math.min(message.loadingStepIndex ?? 0, Math.max((message.loadingSteps?.length ?? 1) - 1, 0))
+    ] ?? "Working...";
 
   const handleSave = () => {
     const trimmedValue = editValue.trim();
@@ -604,7 +624,50 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
               </Box>
             ) : (
               isLoading ? (
-                devMode ? (
+                isProcessingStepsLoading && streamingMode === "expanded" ? (
+                  <Disclosure open={isStreamingExpanded} onOpenChange={onStreamingExpandedChange} w="full">
+                    <DisclosureTrigger chevronPosition="end">
+                      <Box
+                        display="inline-flex"
+                        alignItems="center"
+                        gap="12"
+                        style={{ width: "fit-content", maxWidth: "100%" }}
+                      >
+                        <OpalLoaderV5 size={16} color="#7C3AED" />
+                        <Text
+                          style={{
+                            ...opalTypography.body,
+                            color: 'fg.tertiary',
+                            margin: 0,
+                          }}
+                        >
+                          {currentStreamingLabel}
+                        </Text>
+                      </Box>
+                    </DisclosureTrigger>
+                    <DisclosureContent pt="12">
+                      <Box display="flex" flexDirection="column" gap="8" w="full">
+                        {(message.loadingSteps ?? []).map((stepLabel, index) => {
+                          const stepIndex = message.loadingStepIndex ?? 0;
+                          const state: OpalProcessingStepState =
+                            index < stepIndex
+                              ? "done"
+                              : index === stepIndex
+                                ? "active"
+                                : "pending";
+
+                          return (
+                            <OpalProcessingStepCard
+                              key={`${message.id}-${stepLabel}-${index}`}
+                              stepLabel={stepLabel}
+                              state={state}
+                            />
+                          );
+                        })}
+                      </Box>
+                    </DisclosureContent>
+                  </Disclosure>
+                ) : devMode ? (
                   <DevLoadingState key={`${message.id}-${sequence}`} sequence={sequence} />
                 ) : (
                   <Box display="flex" alignItems="center" gap="12" py="4">
@@ -691,7 +754,7 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
         )}
 
         {/* Quick Actions Row */}
-        {!isLoading && !isEditing && (
+        {!isLoading && !isEditing && !isExperimentCreation && !isExperimentSummary && (
           <Box
             display="flex"
             gap="8"
@@ -701,7 +764,7 @@ export function OpalMessage({ message, onSuggestionClick, onSubmitPrompt, isOpal
               marginRight: isUser ? '32px' : '0',
               opacity: isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
-              marginTop: isUser ? '4px' : (message.messageType && message.metadata) ? '8px' : '-8px',
+              marginTop: isUser ? '4px' : isFullWidthSpecialBlock ? '16px' : '-8px',
               width: '100%',
               justifyContent: 'space-between',
               alignItems: 'center',

@@ -10,6 +10,7 @@ import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem, OpalMode } from "@/app/hooks/useOpalHistory";
 import { useLayout } from "@/app/context/LayoutContext";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
+import { usePathname } from "next/navigation";
 
 type OpalPanelProps = {
   isOpen: boolean;
@@ -66,9 +67,11 @@ export function OpalPanel({
   onContextChipRemove,
 }: OpalPanelProps) {
   const { setOpalPanelWidth } = useLayout();
+  const pathname = usePathname();
   const [customWidth, setCustomWidth] = useState<number | null>(null);
   const [isResizing, setIsResizing] = useState(false);
   const { actionCard: atlassianActionCard, modalElement } = useAtlassianConnectorSuggestion(inputValue);
+  const streamingMode = pathname?.startsWith("/web-experimentation") ? "expanded" : "collapsed";
 
   const handleSend = (content?: string) => {
     const msg = content ?? inputValue;
@@ -203,6 +206,8 @@ export function OpalPanel({
           messages={messages}
           onSuggestionClick={handleSuggestionClick}
           onSubmitPrompt={sendMessage}
+          streamingMode={streamingMode}
+          threadKey={activeChat}
           onRegenerate={regenerate}
           contextChip={contextChip}
           contextualActionCard={atlassianActionCard}
