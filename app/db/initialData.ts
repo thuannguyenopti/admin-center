@@ -797,6 +797,24 @@ export const initialContentTypes: ContentType[] = [
 		defaultLocale: "en-US",
 		modelType: "content",
 		isActive: true,
+		mappings: [
+			{
+				id: "mapping-cmp-blog-to-cms-blog",
+				name: "blog_post_to_cms_blog_post",
+				displayName: "Blog Post → CMS Blog Post",
+				description: "Maps CMP blog post fields to CMS Blog Post page type",
+				sourceContentTypeId: "cm-blog-post",
+				targetContentTypeId: "ct-blog-post",
+				propertyMappings: [
+					{ id: "pm-bp-title", sourcePropertyId: "field-bp-title", targetPropertyId: "title", transformation: "direct", required: true, description: "Title → Title" },
+					{ id: "pm-bp-excerpt", sourcePropertyId: "field-bp-excerpt", targetPropertyId: "subtitle", transformation: "direct", description: "Excerpt → Subtitle" },
+					{ id: "pm-bp-featured-image", sourcePropertyId: "field-bp-featured-image", targetPropertyId: "featuredImage", transformation: "direct", description: "Featured Image → Featured Image" },
+					{ id: "pm-bp-content", sourcePropertyId: "field-bp-content", targetPropertyId: "body", transformation: "direct", required: true, description: "Content → Body" },
+					{ id: "pm-bp-author", sourcePropertyId: "field-bp-author", targetPropertyId: "author", transformation: "direct", required: true, description: "Author → Author" },
+				],
+				createdAt: "2024-03-20T10:00:00Z",
+			},
+		],
 	},
 	{
 		id: "cm-article",
