@@ -3,7 +3,7 @@
 import { Avatar, Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconCalendar, IconChevronDown, IconDots, IconPlus, IconX } from "@tabler/icons-react";
+import { IconCalendar, IconCheck, IconChevronDown, IconDots, IconPlus, IconX } from "@tabler/icons-react";
 import { initialUsers } from "@/app/db/initialData";
 import type { TaskWorkflowStep } from "../../workflowTypes";
 import { DashedCircle } from "../shared/DashedCircle";
@@ -12,10 +12,12 @@ import { ChecklistItem } from "./ChecklistItem";
 type WorkflowExpandedStepProps = {
 	onSetAssignee: (stepId: string, userId: string | undefined) => void;
 	onToggleChecklistItem: (stepId: string, checklistItemId: string) => void;
+	onToggleDone: (stepId: string) => void;
+	onToggleExpanded: (stepId: string) => void;
 	step: TaskWorkflowStep;
 };
 
-export function WorkflowExpandedStep({ onSetAssignee, onToggleChecklistItem, step }: WorkflowExpandedStepProps) {
+export function WorkflowExpandedStep({ onSetAssignee, onToggleChecklistItem, onToggleDone, onToggleExpanded, step }: WorkflowExpandedStepProps) {
 	const assignee = step.assigneeUserId
 		? initialUsers.find((u) => u.id === step.assigneeUserId)
 		: undefined;
@@ -27,10 +29,30 @@ export function WorkflowExpandedStep({ onSetAssignee, onToggleChecklistItem, ste
 			flexDirection="column"
 			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", gap: 16, padding: "14px 0" }}
 		>
-			<Box alignItems="center" display="flex" justifyContent="space-between">
+			<Box
+				alignItems="center"
+				display="flex"
+				justifyContent="space-between"
+				onClick={() => onToggleExpanded(step.id)}
+				style={{ cursor: "pointer" }}
+			>
 				<Box alignItems="center" display="flex" gap="12">
 					<IconChevronDown color="var(--ax-colors-fg-secondary)" size={16} />
-					<DashedCircle />
+					{step.done ? (
+						<Box
+							alignItems="center"
+							bg="bg.success.light"
+							display="flex"
+							justifyContent="center"
+							onClick={(e) => { e.stopPropagation(); onToggleDone(step.id); }}
+							rounded="full"
+							style={{ cursor: "pointer", height: 24, width: 24 }}
+						>
+							<IconCheck color="var(--ax-colors-fg-success-strong)" size={14} />
+						</Box>
+					) : (
+						<DashedCircle onClick={() => onToggleDone(step.id)} />
+					)}
 					<Text color="fg.default" style={{ fontSize: 15, fontWeight: 500, lineHeight: "22px", maxWidth: "none" }}>
 						{step.title}
 					</Text>

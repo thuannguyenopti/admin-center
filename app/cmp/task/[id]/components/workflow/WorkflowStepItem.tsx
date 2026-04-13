@@ -11,15 +11,19 @@ import { WorkflowExpandedStep } from "./WorkflowExpandedStep";
 type WorkflowStepItemProps = {
 	onSetAssignee: (stepId: string, userId: string | undefined) => void;
 	onToggleChecklistItem: (stepId: string, checklistItemId: string) => void;
+	onToggleDone: (stepId: string) => void;
+	onToggleExpanded: (stepId: string) => void;
 	step: TaskWorkflowStep;
 };
 
-export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, step }: WorkflowStepItemProps) {
+export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, onToggleDone, onToggleExpanded, step }: WorkflowStepItemProps) {
 	if (step.expanded) {
 		return (
 			<WorkflowExpandedStep
 				onSetAssignee={onSetAssignee}
 				onToggleChecklistItem={onToggleChecklistItem}
+				onToggleDone={onToggleDone}
+				onToggleExpanded={onToggleExpanded}
 				step={step}
 			/>
 		);
@@ -34,7 +38,8 @@ export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, step }:
 			alignItems="center"
 			display="flex"
 			justifyContent="space-between"
-			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", padding: "14px 0" }}
+			onClick={() => onToggleExpanded(step.id)}
+			style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", cursor: "pointer", padding: "14px 0" }}
 		>
 			<Box alignItems="center" display="flex" gap="12">
 				<IconChevronRight color="var(--ax-colors-fg-secondary)" size={16} />
@@ -44,13 +49,14 @@ export function WorkflowStepItem({ onSetAssignee, onToggleChecklistItem, step }:
 						bg="bg.success.light"
 						display="flex"
 						justifyContent="center"
+						onClick={(e) => { e.stopPropagation(); onToggleDone(step.id); }}
 						rounded="full"
-						style={{ height: 24, width: 24 }}
+						style={{ cursor: "pointer", height: 24, width: 24 }}
 					>
 						<IconCheck color="var(--ax-colors-fg-success-strong)" size={14} />
 					</Box>
 				) : (
-					<DashedCircle />
+					<DashedCircle onClick={() => onToggleDone(step.id)} />
 				)}
 				<Text color="fg.default" style={{ fontSize: 15, fontWeight: 500, lineHeight: "22px", maxWidth: "none" }}>
 					{step.title}
