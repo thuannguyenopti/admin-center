@@ -2,9 +2,8 @@ import type { Scene, WorkflowTemplate } from "../types";
 import type { ChecklistEntry, TaskWorkflowState, TaskWorkflowStep } from "../workflowTypes";
 import { workflowTemplates } from "../mockData";
 
-let idCounter = 0;
-function nextId(): string {
-	return `cl-${Date.now()}-${++idCounter}`;
+function checklistId(stepId: string, index: number): string {
+	return `${stepId}-cl-${index}`;
 }
 
 /** Deep-copy a WorkflowTemplate into a mutable TaskWorkflowState. */
@@ -20,8 +19,8 @@ export function createTaskWorkflowFromTemplate(template: WorkflowTemplate): Task
 			expanded: step.expanded,
 			assigneeUserId: undefined,
 			description: step.description,
-			checklist: (step.checklist ?? []).map((label): ChecklistEntry => ({
-				id: nextId(),
+			checklist: (step.checklist ?? []).map((label, index): ChecklistEntry => ({
+				id: checklistId(step.id, index),
 				label,
 				checked: false,
 			})),

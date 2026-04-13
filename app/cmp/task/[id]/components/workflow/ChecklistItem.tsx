@@ -32,7 +32,7 @@ export function ChecklistItem({ checked, label, onToggle }: ChecklistItemProps) 
 					width: 16,
 				}}
 			>
-				{checked && <IconCheck color="white" size={10} />}
+				{checked && <IconCheck color="var(--ax-colors-fg-on-accent)" size={10} />}
 			</Box>
 			<Text
 				color={checked ? "fg.tertiary" : "fg.default"}
