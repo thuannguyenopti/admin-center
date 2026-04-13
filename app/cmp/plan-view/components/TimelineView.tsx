@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Box, Badge, Button } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
@@ -7,19 +6,12 @@ import type { PlanItem } from "../types";
 
 type TimelineViewProps = {
 	data: PlanItem[];
+	expandedGroups: string[];
+	toggleGroup: (id: string) => void;
 };
 
-export function TimelineView({ data }: TimelineViewProps) {
-	const [expandedGroups, setExpandedGroups] = useState<string[]>(() =>
-		data.filter((d) => d.isGroup && d.badge).map((d) => d.id),
-	);
+export function TimelineView({ data, expandedGroups, toggleGroup }: TimelineViewProps) {
 	const today = new Date();
-
-	const toggleGroup = (id: string) => {
-		setExpandedGroups((prev) =>
-			prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id],
-		);
-	};
 
 	const dates = data
 		.map((item) => [parseDate(item.startDate), parseDate(item.endDate)])
@@ -149,7 +141,7 @@ export function TimelineView({ data }: TimelineViewProps) {
 							top: 0,
 							bottom: 0,
 							width: "2px",
-							backgroundColor: "#ef4444",
+							backgroundColor: "var(--ax-colors-fg-error)",
 							zIndex: 10,
 							pointerEvents: "none",
 						}}

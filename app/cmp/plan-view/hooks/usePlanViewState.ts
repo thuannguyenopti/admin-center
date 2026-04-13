@@ -26,10 +26,10 @@ function deriveWorkflowInfo(
 }
 
 export function usePlanViewState() {
-	const [taskWorkflows] = usePersistentState(
+	const [taskWorkflows, , isHydrated] = usePersistentState(
 		"cmpTaskWorkflows",
 		{} as Record<string, TaskWorkflowState>,
-	);
+	) as [Record<string, TaskWorkflowState>, unknown, boolean];
 
 	const [searchQuery, setSearchQuery] = useState("");
 	const [page, setPage] = useState(1);
@@ -60,7 +60,9 @@ export function usePlanViewState() {
 		}));
 
 		const taskItems: PlanItem[] = initialCmpTasks.map((t) => {
-			const { currentStep, currentStepName } = deriveWorkflowInfo(t.id, taskWorkflows);
+			const { currentStep, currentStepName } = isHydrated
+				? deriveWorkflowInfo(t.id, taskWorkflows)
+				: { currentStep: null, currentStepName: null };
 			const parentCampaignTitle = t.parentCampaignId
 				? initialCmpCampaigns.find((c) => c.id === t.parentCampaignId)?.title ?? null
 				: null;
@@ -88,7 +90,7 @@ export function usePlanViewState() {
 			return dateB - dateA;
 		});
 		return all;
-	}, [taskWorkflows]);
+	}, [taskWorkflows, isHydrated]);
 
 	const filteredItems = useMemo(() => {
 		if (!searchQuery.trim()) return planItems;
@@ -101,9 +103,22 @@ export function usePlanViewState() {
 		);
 	}, [planItems, searchQuery]);
 
-	const totalItems = filteredItems.length;
+	const visibleItems = useMemo(() => {
+		if (!showHierarchy) return filteredItems;
+		return filteredItems.filter((item) => {
+			if (item.isGroup) return true;
+			if (!item.parentCampaign) return true;
+			const parentCampaign = filteredItems.find(
+				(fi) => fi.isGroup && fi.title === item.parentCampaign,
+			);
+			if (!parentCampaign) return true;
+			return expandedGroups.includes(parentCampaign.id);
+		});
+	}, [filteredItems, showHierarchy, expandedGroups]);
+
+	const totalItems = visibleItems.length;
 	const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-	const paginatedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+	const paginatedItems = visibleItems.slice((page - 1) * pageSize, page * pageSize);
 
 	useEffect(() => {
 		setPage(1);
@@ -129,7 +144,7 @@ export function usePlanViewState() {
 		setShowHierarchy,
 		expandedGroups,
 		toggleGroup,
-		allItems: filteredItems,
+		allItems: visibleItems,
 		paginatedItems,
 	};
 }

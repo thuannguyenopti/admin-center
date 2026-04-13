@@ -75,7 +75,7 @@ export function PlanViewPage() {
 
 				{state.activeView === "timeline" && (
 					<Box style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
-						<TimelineView data={state.allItems} />
+						<TimelineView data={state.allItems} expandedGroups={state.expandedGroups} toggleGroup={state.toggleGroup} />
 					</Box>
 				)}
 
