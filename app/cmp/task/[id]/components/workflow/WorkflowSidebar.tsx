@@ -61,7 +61,7 @@ export function WorkflowSidebar({
 				</Box>
 
 				<Box alignItems="center" display="flex" style={{ gap: 18 }}>
-					<Badge intent="information" style={{ fontSize: 12, height: 22, padding: "0 8px" }}>
+					<Badge intent="information">
 						In Progress
 					</Badge>
 					<InlineDate label="Started • May 11" />
