@@ -1,8 +1,7 @@
 "use client";
 
-import { Box } from "@optiaxiom/react";
+import { Checkbox } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { IconCheck } from "@tabler/icons-react";
 
 type ChecklistItemProps = {
 	checked: boolean;
@@ -12,28 +11,7 @@ type ChecklistItemProps = {
 
 export function ChecklistItem({ checked, label, onToggle }: ChecklistItemProps) {
 	return (
-		<Box
-			alignItems="center"
-			display="flex"
-			gap="10"
-			onClick={onToggle}
-			style={{ cursor: "pointer" }}
-		>
-			<Box
-				alignItems="center"
-				display="flex"
-				justifyContent="center"
-				style={{
-					background: checked ? "var(--ax-colors-bg-accent)" : "transparent",
-					border: checked ? "none" : "1px solid var(--ax-colors-border-control)",
-					borderRadius: 2,
-					flexShrink: 0,
-					height: 16,
-					width: 16,
-				}}
-			>
-				{checked && <IconCheck color="var(--ax-colors-fg-on-accent)" size={10} />}
-			</Box>
+		<Checkbox checked={checked} onCheckedChange={onToggle}>
 			<Text
 				color={checked ? "fg.tertiary" : "fg.default"}
 				style={{
@@ -45,6 +23,6 @@ export function ChecklistItem({ checked, label, onToggle }: ChecklistItemProps) 
 			>
 				{label}
 			</Text>
-		</Box>
+		</Checkbox>
 	);
 }

@@ -72,6 +72,13 @@ export function useCmpTaskComputedData({
 	const activeWorkflowId = taskWorkflowState.workflowTemplateId;
 	const activeWorkflowTemplate = workflowTemplates.find((template) => template.id === activeWorkflowId) ?? workflowTemplates[0];
 
+	const workflowDoneCount = taskWorkflowState.steps.filter((s) => s.done).length;
+	const workflowTotalSteps = taskWorkflowState.steps.length;
+	const workflowProgressPercent = workflowTotalSteps > 0 ? (workflowDoneCount / workflowTotalSteps) * 100 : 0;
+	const isAllWorkflowDone = workflowDoneCount === workflowTotalSteps && workflowTotalSteps > 0;
+	const workflowStatusLabel = workflowDoneCount === 0 ? "Not Started" : isAllWorkflowDone ? "Completed" : "In Progress";
+	const workflowStatusIntent: "neutral" | "information" | "success" = workflowDoneCount === 0 ? "neutral" : isAllWorkflowDone ? "success" : "information";
+
 	const rankedSearchAssets = useMemo(
 		() =>
 			searchAssets
@@ -144,6 +151,7 @@ export function useCmpTaskComputedData({
 		activeTab,
 		activeWorkflowId,
 		activeWorkflowTemplate,
+		isAllWorkflowDone,
 		taskWorkflowState,
 		filteredWorkflowTemplates,
 		hasTaskContent,
@@ -152,5 +160,10 @@ export function useCmpTaskComputedData({
 		targetDialogAvailableTargets,
 		taskContentInstances,
 		taskPages,
+		workflowDoneCount,
+		workflowProgressPercent,
+		workflowStatusIntent,
+		workflowStatusLabel,
+		workflowTotalSteps,
 	};
 }

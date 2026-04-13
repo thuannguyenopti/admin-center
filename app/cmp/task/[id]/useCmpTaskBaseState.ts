@@ -74,6 +74,7 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
 	const [publishingChannels, setPublishingChannels] = useState<PublishingChannel[]>([]);
+	const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
 
 	return {
 		applications,
@@ -87,6 +88,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		pages,
 		pendingWorkflowId,
 		perspectives,
+		publishConfirmOpen,
 		publishingChannels,
 		previewCurrentEle,
 		previewHoverEle,
@@ -110,6 +112,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		setPages,
 		setPendingWorkflowId,
 		setPerspectives,
+		setPublishConfirmOpen,
 		setPublishingChannels,
 		setPreviewCurrentEle,
 		setPreviewHoverEle,

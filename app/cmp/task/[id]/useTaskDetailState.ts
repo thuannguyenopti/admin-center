@@ -4,14 +4,19 @@ import { toaster } from "@optiaxiom/react";
 import { type ContentInstance, initialCmpTasks } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { createPageFromInstance } from "@/app/lib/contentConnection";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type { TaskWorkflowState } from "./workflowTypes";
 import { workflowTemplates } from "./mockData";
 import type { AssetItem, Scene } from "./types";
 import { useCmpTaskBaseState } from "./useCmpTaskBaseState";
 import { useCmpTaskComputedData } from "./useCmpTaskComputedData";
 import {
 	createTaskWorkflowFromTemplate,
+	markAllStepsDone,
+	markAllStepsUndone,
 	toggleChecklistItem,
+	toggleStepDone,
+	toggleStepExpanded,
 	setStepAssignee,
 } from "./utils/workflowState";
 
@@ -213,6 +218,68 @@ export function useTaskDetailState(taskId: string) {
 			return { ...prev, [taskId]: setStepAssignee(current, stepId, userId) };
 		});
 	};
+	// Snapshot of workflow state before dialog-triggering action, so we can restore on cancel
+	const preDialogWorkflowRef = useRef<TaskWorkflowState | null>(null);
+
+	const toggleStepDoneForTask = (stepId: string) => {
+		const step = computed.taskWorkflowState.steps.find((s) => s.id === stepId);
+		const stepName = step?.title?.replace(/^\d+\.\s*/, "") ?? "Step";
+		const wasDone = step?.done ?? false;
+
+		// If completing the last remaining step, save snapshot so cancel can revert
+		if (!wasDone) {
+			const remainingUndone = computed.taskWorkflowState.steps.filter((s) => !s.done && s.id !== stepId);
+			if (remainingUndone.length === 0) {
+				preDialogWorkflowRef.current = computed.taskWorkflowState;
+			}
+		}
+
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: toggleStepDone(current, stepId) };
+		});
+		if (wasDone) {
+			toaster.create(`"${stepName}" marked incomplete`, { intent: "neutral" });
+		} else {
+			toaster.create(`"${stepName}" completed`, { intent: "success" });
+		}
+	};
+	const toggleStepExpandedForTask = (stepId: string) => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: toggleStepExpanded(current, stepId) };
+		});
+	};
+	const markTaskComplete = () => {
+		preDialogWorkflowRef.current = computed.taskWorkflowState;
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: markAllStepsDone(current) };
+		});
+		state.setPublishConfirmOpen(true);
+		toaster.create("All steps completed", { intent: "success" });
+	};
+	const undoTaskComplete = () => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: markAllStepsUndone(current) };
+		});
+		toaster.create("Task completion undone", { intent: "neutral" });
+	};
+	const confirmPublish = () => {
+		preDialogWorkflowRef.current = null;
+		state.setPublishConfirmOpen(false);
+		toaster.create("Content published successfully", { intent: "success" });
+	};
+	const cancelPublishConfirm = () => {
+		// Restore workflow state to before the action that triggered the dialog
+		if (preDialogWorkflowRef.current) {
+			const snapshot = preDialogWorkflowRef.current;
+			state.setTaskWorkflows((prev) => ({ ...prev, [taskId]: snapshot }));
+			preDialogWorkflowRef.current = null;
+		}
+		state.setPublishConfirmOpen(false);
+	};
 	const addAssetsToTask = (assetsToAdd: AssetItem[]) => {
 		if (assetsToAdd.length === 0) {
 			return;
@@ -347,11 +414,17 @@ export function useTaskDetailState(taskId: string) {
 		pendingWorkflowName:
 			workflowTemplates.find((template) => template.id === state.pendingWorkflowId)?.name ?? "workflow",
 		saveBriefEdit,
+		cancelPublishConfirm,
+		confirmPublish,
+		markTaskComplete,
 		setStepAssigneeForTask,
 		toggleChecklistItemForTask,
 		togglePanelAssetSelection,
 		toggleSearchAssetSelection,
+		toggleStepDoneForTask,
+		toggleStepExpandedForTask,
 		toggleWorkflowMenu: () => state.setWorkflowMenuOpen((open) => !open),
+		undoTaskComplete,
 		updatePerspective,
 	};
 }
