@@ -1,7 +1,7 @@
-import {ReactNode, isValidElement} from "react";
-import {Badge, Box, Avatar, Tooltip} from "@optiaxiom/react";
-import {Text} from "./Text";
-import {Button} from "./Button";
+import { ReactNode, isValidElement } from "react";
+import { Badge, Box, Avatar, Tooltip } from "@optiaxiom/react";
+import { Text } from "./Text";
+import { Button } from "./Button";
 import {
 	IconDots as IconMenu,
 	IconInfoCircle,
@@ -38,11 +38,12 @@ export const Table = ({
 	);
 };
 
-import {useRouter} from "next/navigation";
+import { useRouter } from "next/navigation";
 export const Tr = ({
 	children,
 	url,
 	onClick,
+	suppressActiveStyle,
 	style,
 	className,
 	...props
@@ -50,6 +51,8 @@ export const Tr = ({
 	children: ReactNode;
 	url?: string;
 	onClick?: () => void;
+	/** When set, row stays hoverable/clickable but skips the pressed (:active) background */
+	suppressActiveStyle?: boolean;
 	style?: React.CSSProperties;
 	className?: string;
 	[key: string]: any;
@@ -59,13 +62,32 @@ export const Tr = ({
 		router.push(`${href}`);
 	};
 
+	const interactive = Boolean(url || onClick);
+	const handleActivate = () => {
+		if (url) rowClick(url);
+		else onClick?.();
+	};
+
 	return (
 		<tr
-			onClick={url ? () => rowClick(url) : onClick ? onClick : undefined}
+			onClick={interactive ? handleActivate : undefined}
+			role={interactive ? "button" : undefined}
+			tabIndex={interactive ? 0 : undefined}
+			onKeyDown={
+				interactive
+					? (e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								handleActivate();
+							}
+						}
+					: undefined
+			}
 			className={
-				"relative" +
-				(url || onClick
-					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]"
+				"relative transition-colors duration-150" +
+				(interactive
+					? " cursor-pointer hover:bg-[var(--ax-colors-bg-default-hovered)]" +
+						(!suppressActiveStyle ? " active:bg-[var(--ax-colors-bg-default-pressed)]" : "")
 					: "") +
 				(className ? ` ${className}` : "")
 			}
@@ -140,7 +162,7 @@ export const Td = ({
 	className,
 }: {
 	children?: ReactNode;
-	type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw";
+	type?: "header" | "badge" | "avatar" | "button" | "numeric" | "raw" | "date";
 	description?: string;
 	data?: any;
 	width?: string | number;
@@ -183,12 +205,12 @@ export const Td = ({
 				</>
 			)}
 			{type === "badge" && (
-				<Box style={{height: "20px", marginTop: "-4px"}}>
+				<Box style={{ height: "20px", marginTop: "-4px" }}>
 					<Badge intent={data}>{children}</Badge>
 				</Box>
 			)}
 			{type === "avatar" && (
-				<Box style={{height: "20px", marginTop: "-6px"}}>
+				<Box style={{ height: "20px", marginTop: "-6px" }}>
 					<Tooltip content={children}>
 						<Avatar src={data} size="md" name={children as string} />
 					</Tooltip>
@@ -200,7 +222,7 @@ export const Td = ({
 					display="flex"
 					alignItems="center"
 					justifyContent="end"
-					style={{height: "20px"}}
+					style={{ height: "20px" }}
 				>
 					{children ? (
 						children
@@ -218,6 +240,11 @@ export const Td = ({
 			{type === "numeric" && (
 				<Text color="fg.default" textAlign="end">
 					{children}
+				</Text>
+			)}
+			{type === "date" && (
+				<Text asChild color="fg.default" fontWeight="500">
+					<span>{children}</span>
 				</Text>
 			)}
 			{type === "raw" && children}

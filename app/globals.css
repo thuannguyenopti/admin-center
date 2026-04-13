@@ -311,6 +311,15 @@ body[data-modal-open] .main-scroll-area {
 	background: #cacfdc;
 }
 
+/* Hide scrollbar while keeping scroll (e.g. Opportunities carousel) */
+.scrollbar-hide {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+
 [data-theme="dark"] ::-webkit-scrollbar-track,
 html.dark ::-webkit-scrollbar-track,
 body.dark ::-webkit-scrollbar-track {

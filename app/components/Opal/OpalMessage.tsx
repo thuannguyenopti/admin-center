@@ -1,15 +1,35 @@
 "use client";
 
-import { Box } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText } from "@optiaxiom/react";
+import {
+  IconPen,
+  IconArrowsRotate,
+  IconCopy,
+  IconDownload,
+  IconThumbsUp,
+  IconThumbsDown,
+  IconSparkles,
+} from "@optimizely/axiom-icons";
+import {
+  IconCheck,
+  IconChevronDown,
+  IconChevronRight,
+  IconFileText,
+  IconTools,
+} from "@tabler/icons-react";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
+import { ExperimentSummaryBlock } from "./ExperimentSummaryBlock";
+import { ExperimentCreationAgentBlock } from "./ExperimentCreationAgentBlock";
+import type { ExperimentCreationAgentPayload } from "./experimentCreationAgentTypes";
+import type { ExperimentSummaryPayload } from "@/app/web-experimentation/optimizations/[id]/results/types";
+import { Button } from "../Button";
 import Image from "next/image";
 import { getAdaptiveBlockComponent } from "../ai/AdaptiveBlockRegistry";
 import "../ai/blocks"; // Auto-register all blocks
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
-import { IconCopy, IconPen, IconArrowsRotate, IconThumbsUp, IconThumbsDown } from "@/app/lib/axiom-icons";
 import { useState, useEffect, useRef } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 import { OpalLoader } from "@/app/opal/components/OpalLoader";
@@ -19,8 +39,203 @@ import { OpalLoaderV4 } from "@/app/opal/components/OpalLoaderV4";
 import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
 import type { LoaderSequenceOption } from "@/app/opal/components/useLoaderDev";
 
+/** Borders / strokes — Opal greys (no product blue accent). */
+const OPAL_STEP_BORDER = "var(--opal-border-secondary)";
+const OPAL_STEP_DIVIDER = "var(--opal-border-secondary)";
+/** Fixed Opal purple for processing UI (see --opal-processing-brand in opalStyles). */
+const OPAL_ICON_BRAND = "var(--opal-processing-brand)";
+const OPAL_WORKING_LABEL = "var(--opal-processing-brand)";
+/** Sparkle chip — same family, slightly softer. */
+const OPAL_CHIP_SPARKLE = "var(--opal-processing-brand-muted)";
+/** Secondary iconography + chevrons. */
+const OPAL_ICON_MUTED = "var(--opal-neutral-600)";
+
+/** Placeholder body for the expanded active step (matches accordion detail treatment in design). */
+const OPAL_ACTIVE_STEP_BODY =
+  "Next, I'll continue processing this step in the background. Opal will pull signals from your experiment context, summarize results, and surface the next steps in the pipeline.";
+
+type OpalProcessingStepState = "done" | "active" | "pending";
+
+function OpalProcessingStepCard({
+  stepLabel,
+  state,
+}: {
+  stepLabel: string;
+  state: OpalProcessingStepState;
+}) {
+  const isActive = state === "active";
+  const isDone = state === "done";
+  const pending = state === "pending";
+
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      w="full"
+      style={{
+        borderRadius: 10,
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: OPAL_STEP_BORDER,
+        overflow: "hidden",
+        backgroundColor: "transparent",
+      }}
+    >
+      <Box
+        display="flex"
+        flexDirection="row"
+        alignItems="center"
+        justifyContent="space-between"
+        gap="10"
+        px="12"
+        py="12"
+        style={{ minWidth: 0 }}
+      >
+        <Box display="flex" flexDirection="row" alignItems="center" gap="12" style={{ minWidth: 0, flex: 1 }}>
+          <Box
+            style={{
+              width: 24,
+              height: 24,
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {isDone ? (
+              <Box
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  backgroundColor: OPAL_ICON_BRAND,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <IconCheck size={12} stroke={3} color="white" aria-hidden />
+              </Box>
+            ) : isActive ? (
+              <Box
+                className="opal-loading-spinner"
+                role="status"
+                aria-label="Loading"
+                style={{
+                  width: 20,
+                  height: 20,
+                  flexShrink: 0,
+                  border: "2px solid rgba(124, 92, 255, 0.22)",
+                  borderTopColor: "var(--opal-processing-brand)",
+                  borderRadius: "50%",
+                  animation: "spin 0.85s linear infinite",
+                }}
+              />
+            ) : (
+              <Box
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  backgroundColor: "var(--opal-border-secondary)",
+                  opacity: 0.75,
+                }}
+              />
+            )}
+          </Box>
+          <Text
+            fontSize="sm"
+            fontWeight="500"
+            color={pending ? "fg.tertiary" : "fg.default"}
+            style={{
+              margin: 0,
+              lineHeight: 1.4,
+              opacity: pending ? 0.55 : 1,
+              ...(isActive ? { color: OPAL_ICON_BRAND } : {}),
+            }}
+          >
+            {stepLabel}
+          </Text>
+        </Box>
+        <Box
+          className="opal-processing-step-chevron"
+          data-expanded={isActive ? "true" : "false"}
+          alignItems="center"
+          aria-hidden
+        >
+          <IconChevronRight size={18} stroke={2} color={OPAL_ICON_MUTED} />
+        </Box>
+      </Box>
+      <Box
+        className="opal-processing-step-expand"
+        data-expanded={isActive ? "true" : "false"}
+        w="full"
+      >
+        <Box className="opal-processing-step-expand__inner" w="full">
+          <Box
+            className="opal-processing-step-expand__content"
+            px="12"
+            pb="16"
+            pt="0"
+            display="flex"
+            flexDirection="column"
+            gap="12"
+          >
+            <Text fontSize="sm" color="fg.secondary" style={{ margin: 0, lineHeight: 1.65 }}>
+              {OPAL_ACTIVE_STEP_BODY}
+            </Text>
+            <Box display="flex" flexWrap="wrap" gap="8" alignItems="center">
+              {(
+                [
+                  {
+                    label: "Stride Business Context",
+                    icon: <IconFileText size={14} stroke={1.5} color={OPAL_ICON_MUTED} />,
+                  },
+                  {
+                    label: "@experiment_summary",
+                    icon: <IconSparkles size={14} color={OPAL_CHIP_SPARKLE} />,
+                  },
+                  {
+                    label: "search_optimizely_docs",
+                    icon: <IconTools size={14} stroke={1.5} color={OPAL_ICON_MUTED} />,
+                  },
+                ] as const
+              ).map((chip) => (
+                <Box
+                  key={chip.label}
+                  display="inline-flex"
+                  alignItems="center"
+                  gap="6"
+                  px="10"
+                  py="4"
+                  rounded="md"
+                  style={{
+                    backgroundColor: "transparent",
+                    border: `1px solid ${OPAL_STEP_BORDER}`,
+                  }}
+                >
+                  <Box style={{ display: "flex", flexShrink: 0 }}>{chip.icon}</Box>
+                  <AxiomText fontSize="xs" color="fg.secondary" style={{ margin: 0, lineHeight: 1.45 }}>
+                    {chip.label}
+                  </AxiomText>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
 type OpalMessageProps = {
   message: ChatMessage;
+  onSuggestionClick?: (suggestion: string) => void;
+  onSubmitPrompt?: (message: string) => void;
+  streamingMode?: "collapsed" | "expanded";
+  isStreamingExpanded?: boolean;
+  onStreamingExpandedChange?: (open: boolean) => void;
+  isOpalLoading?: boolean;
   onEdit?: (id: string, newContent: string) => void;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
@@ -191,15 +406,48 @@ function DevLoadingState({ sequence }: { sequence: LoaderSequenceOption }) {
 
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, agentContext, showOpalHeader }: OpalMessageProps) {
+function isExperimentCreationPayload(
+  message: ChatMessage,
+): message is ChatMessage & { type: 'experiment_creation_agent'; payload: ExperimentCreationAgentPayload } {
+  return (
+    message.type === 'experiment_creation_agent' &&
+    message.payload != null &&
+    'intro' in message.payload
+  );
+}
+
+export function OpalMessage({
+  message,
+  onSuggestionClick,
+  onSubmitPrompt,
+  streamingMode = "collapsed",
+  isStreamingExpanded = true,
+  onStreamingExpandedChange,
+  isOpalLoading,
+  onEdit,
+  onRegenerate,
+  onVersionChange,
+  agentContext,
+  showOpalHeader,
+}: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(message.content);
   const isSavingRef = useRef(false);
   const { enabled: devMode, sequence } = useLoaderDev();
-
   const isUser = message.role === 'user';
   const isLoading = message.isLoading;
+  const isExperimentSummary =
+    message.type === 'experiment_summary' && message.payload != null;
+  const isExperimentCreation = isExperimentCreationPayload(message);
+  const isFullWidthSpecialBlock =
+    isExperimentCreation || isExperimentSummary || Boolean(message.messageType && message.metadata);
+
+  const bubbleMaxWidth = isExperimentSummary || isExperimentCreation ? '100%' : '80%';
+
+  /** No outer chat “card” around Working… + step list — only nested step cards show borders. */
+  const isProcessingStepsLoading =
+    isLoading && (message.loadingSteps?.length ?? 0) > 0;
 
   // Sync editValue with message.content when message updates (but not while editing or saving)
   useEffect(() => {
@@ -212,6 +460,11 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
     navigator.clipboard.writeText(message.content);
     // Could add toast here
   };
+
+  const currentStreamingLabel =
+    message.loadingSteps?.[
+      Math.min(message.loadingStepIndex ?? 0, Math.max((message.loadingSteps?.length ?? 1) - 1, 0))
+    ] ?? "Working...";
 
   const handleSave = () => {
     const trimmedValue = editValue.trim();
@@ -280,6 +533,19 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
           alignItems: isUser ? "flex-end" : "flex-start",
         }}
       >
+        {/* Experiment blocks are full-width, rendered outside the normal bubble */}
+        {!isLoading && isExperimentCreation && message.payload ? (
+          <ExperimentCreationAgentBlock
+            payload={message.payload}
+            onSubmitPrompt={onSubmitPrompt ?? (() => {})}
+            disabled={isOpalLoading === true}
+          />
+        ) : !isLoading && isExperimentSummary && message.payload ? (
+          <ExperimentSummaryBlock
+            payload={message.payload as ExperimentSummaryPayload}
+            onSuggestionClick={onSuggestionClick}
+          />
+        ) : (
         <Box
           display="flex"
           flexDirection="row"
@@ -358,7 +624,50 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
               </Box>
             ) : (
               isLoading ? (
-                devMode ? (
+                isProcessingStepsLoading && streamingMode === "expanded" ? (
+                  <Disclosure open={isStreamingExpanded} onOpenChange={onStreamingExpandedChange} w="full">
+                    <DisclosureTrigger chevronPosition="end">
+                      <Box
+                        display="inline-flex"
+                        alignItems="center"
+                        gap="12"
+                        style={{ width: "fit-content", maxWidth: "100%" }}
+                      >
+                        <OpalLoaderV5 size={16} color="#7C3AED" />
+                        <Text
+                          style={{
+                            ...opalTypography.body,
+                            color: 'fg.tertiary',
+                            margin: 0,
+                          }}
+                        >
+                          {currentStreamingLabel}
+                        </Text>
+                      </Box>
+                    </DisclosureTrigger>
+                    <DisclosureContent pt="12">
+                      <Box display="flex" flexDirection="column" gap="8" w="full">
+                        {(message.loadingSteps ?? []).map((stepLabel, index) => {
+                          const stepIndex = message.loadingStepIndex ?? 0;
+                          const state: OpalProcessingStepState =
+                            index < stepIndex
+                              ? "done"
+                              : index === stepIndex
+                                ? "active"
+                                : "pending";
+
+                          return (
+                            <OpalProcessingStepCard
+                              key={`${message.id}-${stepLabel}-${index}`}
+                              stepLabel={stepLabel}
+                              state={state}
+                            />
+                          );
+                        })}
+                      </Box>
+                    </DisclosureContent>
+                  </Disclosure>
+                ) : devMode ? (
                   <DevLoadingState key={`${message.id}-${sequence}`} sequence={sequence} />
                 ) : (
                   <Box display="flex" alignItems="center" gap="12" py="4">
@@ -442,9 +751,10 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
             </Box>
           )}
         </Box>
+        )}
 
         {/* Quick Actions Row */}
-        {!isLoading && !isEditing && (
+        {!isLoading && !isEditing && !isExperimentCreation && !isExperimentSummary && (
           <Box
             display="flex"
             gap="8"
@@ -454,7 +764,7 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
               marginRight: isUser ? '32px' : '0',
               opacity: isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
-              marginTop: isUser ? '4px' : (message.messageType && message.metadata) ? '8px' : '-8px',
+              marginTop: isUser ? '4px' : isFullWidthSpecialBlock ? '16px' : '-8px',
               width: '100%',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -547,7 +857,7 @@ function formatTimestamp(timestamp: number): string {
 
   if (diff < 60000) return 'Just now';
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
 
-  const date = new Date(timestamp);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return new Date(timestamp).toLocaleDateString();
 }

@@ -13,10 +13,11 @@ import {
 	Menu,
 	MenuTrigger,
 	MenuContent,
+	Tooltip,
 } from "@optiaxiom/react";
 import {Button} from "./Button";
 import {Text} from "./Text";
-import React, {useEffect, useState, Suspense} from "react";
+import React, {useEffect, useState, useMemo, Suspense} from "react";
 
 import {useRouter, usePathname} from "next/navigation";
 import VT from "./VT";
@@ -25,6 +26,9 @@ import {LayoutProvider, useLayout} from "../context/LayoutContext";
 import {OpalContextProvider, useOpalContext} from "../context/OpalContext";
 import {BrandToneProvider} from "../components/ai/BrandToneProvider";
 import {PreflightProvider} from "../components/ai/PreflightContext";
+import {OpalPanelActionsProvider} from "../context/OpalPanelActionsContext";
+import {OpalVariationBuildProvider} from "../context/OpalVariationBuildContext";
+import {ExperimentResultsProvider} from "../context/ExperimentResultsContext";
 import {IconChevronLeft, IconChevronRight} from "@tabler/icons-react";
 import usePersistentState from "@/app/usePersistentState";
 import {FilterPanelProvider} from "../cms/content/context/FilterPanelContext";
@@ -47,9 +51,28 @@ function TemplateContent({
 	children: React.ReactNode;
 	structure: any;
 }>) {
-	const {asideContent, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth, setCodePanelControls} = useLayout();
+	const {asideContent, titleActions, footerContent, hidePageHeader, setOpalPanelControls, opalPanelWidth, setCodePanelControls} = useLayout();
 	const opalContext = useOpalContext();
+	// Stable slice — deps use primitive values (not object/array refs) so this memo
+	// only recomputes when the actual content changes, even though OpalContextProvider
+	// recreates its context value on every render (because navigationStructure is a new
+	// array ref on each render from layout.tsx).
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const stableOpalCtx = useMemo(() => ({
+		currentPage: opalContext.currentPage,
+		availableFeatures: opalContext.availableFeatures,
+		opalCapabilities: opalContext.opalCapabilities,
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}), [
+		opalContext.currentPage?.path,
+		opalContext.currentPage?.productArea,
+		opalContext.currentPage?.pageName,
+		opalContext.currentPage?.pageDescription,
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		JSON.stringify(opalContext.availableFeatures),
+	]);
 	const router = useRouter();
+	const onOpalNavigate = React.useCallback((p: string) => { router.push(p); }, [router]);
 	const path = usePathname();
 	const [isExpanded, setIsExpanded, isHydrated] = usePersistentState("sidebarExpanded", false);
 	const [mounted, setMounted] = useState(false);
@@ -89,6 +112,7 @@ function TemplateContent({
 		togglePanel: toggleOpal,
 		closePanel: closeOpal,
 		openPanel: openOpal,
+		showExperimentCreationAgent,
 		setInputValue,
 		clearHistory,
 		setInputDisabled,
@@ -97,7 +121,11 @@ function TemplateContent({
 		addMessage,
 		updateMessage,
 		removeMessage,
-	} = useOpalState({activeChatId: activeChat, opalContext});
+	} = useOpalState({
+		activeChatId: activeChat,
+		opalContext: stableOpalCtx,
+		onNavigate: onOpalNavigate,
+	});
 
 	useEffect(() => {
 		if (!pendingOpalPrompt || isLoading) return;
@@ -123,36 +151,51 @@ function TemplateContent({
 		closeOpal();
 	};
 
-	// Provide Opal panel controls through LayoutContext
+	// Mutable ref holding latest versions of all Opal controls so the effect below
+	// can register stable wrapper functions without re-running on every render.
+	const opalControlsRef = React.useRef({
+		openOpal, toggleOpal, closeOpal, createNewChat, clearHistory,
+		addMessage, updateMessage, removeMessage, setInputValue, sendMessage,
+		setInputDisabled, setPendingOpalPrompt, setOpalContextChip,
+	});
+	opalControlsRef.current = {
+		openOpal, toggleOpal, closeOpal, createNewChat, clearHistory,
+		addMessage, updateMessage, removeMessage, setInputValue, sendMessage,
+		setInputDisabled, setPendingOpalPrompt, setOpalContextChip,
+	};
+
+	// Provide Opal panel controls through LayoutContext.
+	// Stable wrapper functions delegate to the ref so this effect only runs once
+	// (on mount / when setOpalPanelControls identity changes) — not on every render.
 	useEffect(() => {
 		setOpalPanelControls({
-			openPanel: openOpal,
-			togglePanel: toggleOpal,
-			closePanel: closeOpal,
-			createNewChat,
-			clearHistory,
-			addMessage,
-			updateMessage,
-			removeMessage,
-			setInputValue,
-			sendMessage,
-			setInputDisabled,
+			openPanel: () => opalControlsRef.current.openOpal(),
+			togglePanel: () => opalControlsRef.current.toggleOpal(),
+			closePanel: () => opalControlsRef.current.closeOpal(),
+			createNewChat: () => opalControlsRef.current.createNewChat(),
+			clearHistory: () => opalControlsRef.current.clearHistory(),
+			addMessage: (msg) => opalControlsRef.current.addMessage(msg),
+			updateMessage: (id, updates) => opalControlsRef.current.updateMessage(id, updates),
+			removeMessage: (id) => opalControlsRef.current.removeMessage(id),
+			setInputValue: (v) => opalControlsRef.current.setInputValue(v),
+			sendMessage: (content) => opalControlsRef.current.sendMessage(content),
+			setInputDisabled: (disabled) => opalControlsRef.current.setInputDisabled(disabled),
 			launchPrompt: (prompt: string) => {
 				const trimmed = prompt.trim();
 				if (!trimmed) return;
-
-				const chatId = createNewChat();
-				openOpal();
-				setPendingOpalPrompt({chatId, prompt: trimmed});
+				const chatId = opalControlsRef.current.createNewChat();
+				opalControlsRef.current.openOpal();
+				opalControlsRef.current.setPendingOpalPrompt({chatId, prompt: trimmed});
 			},
 			launchWithContext: (label: string, content: string) => {
-				createNewChat();
-				openOpal();
-				setOpalContextChip({ label, content });
+				opalControlsRef.current.createNewChat();
+				opalControlsRef.current.openOpal();
+				opalControlsRef.current.setOpalContextChip({ label, content });
 			},
 		});
 		return () => setOpalPanelControls(null);
-	}, [setOpalPanelControls, openOpal, toggleOpal, closeOpal, createNewChat, clearHistory, addMessage, updateMessage, removeMessage, setInputValue, sendMessage, setInputDisabled]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [setOpalPanelControls]);
 
 	// Provide Code panel controls through LayoutContext
 	useEffect(() => {
@@ -169,8 +212,14 @@ function TemplateContent({
 		return () => setCodePanelControls(null);
 	}, [setCodePanelControls, isCodePanelOpen]);
 
-	const menuClick = (url: string) => {
+	const menuClick = (url: string, e?: React.MouseEvent) => {
+		e?.stopPropagation();
 		router.push(`${url}`);
+	};
+
+	const toggleSidebar = (e?: React.MouseEvent) => {
+		e?.stopPropagation();
+		setIsExpanded((prev: boolean) => !prev);
 	};
 
 	const menuItems = Array.isArray(structure) ? structure : [];
@@ -192,7 +241,7 @@ function TemplateContent({
 		.sort((a: any, b: any) => b.url.length - a.url.length)[0];
 
 	const heading = lvl4?.label || lvl3?.label || lvl2?.label;
-	const desc = lvl4?.description || lvl3?.description || lvl2?.description;
+	const desc = lvl4?.description || lvl3?.description || lvl2?.description || highlight1?.description;
 	const isContentManager = path.includes("/cms/content");
 	const showVT =
 		routeHighlight?.children?.length > 1 ||
@@ -201,9 +250,9 @@ function TemplateContent({
 	const showSecondarySidebar = !isOpalStudio && (isContentManager || showVT);
 	const {contentSubNavExpanded} = useContentManagerLayout();
 	// When Content Manager sub-nav is collapsed, reserve 56px; when expanded, 224px. Other secondary sidebars (VT) use 224px.
-const secondarySidebarWidth = isContentManager ? (contentSubNavExpanded ? 224 : 56) : 224;
-const customLayout = routeHighlight?.customLayout || isCmpTaskDetail || isOpalStudio;
-const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
+	const secondarySidebarWidth = isContentManager ? (contentSubNavExpanded ? 224 : 56) : 224;
+	const customLayout = routeHighlight?.customLayout || isCmpTaskDetail || isOpalStudio;
+	const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	// Primary sidebar width: 56px collapsed, 224px expanded
 	const primarySidebarWidth = isOpalStudio ? 0 : isExpanded ? 224 : 56;
@@ -214,13 +263,43 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
 
+	// Experiment Results: hide "Optimizations" heading and push content up to where it was
+	const isExperimentResultsPage =
+		path.includes("/web-experimentation/optimizations") && path.includes("/results");
+	// Experiment detail (Variations): full-bleed layout with its own title and sidebar
+	const isOptimizationDetailPage = /^\/web-experimentation\/optimizations\/[^/]+$/.test(path);
+	// Visual Editor: dedicated full-viewport surface (no app shell chrome)
+	const isOptimizationVisualEditorPage =
+		/^\/web-experimentation\/optimizations\/[^/]+\/visual-editor/.test(path);
+	// List ↔ detail ↔ results change padding and overflow; skip the shell slide so navigation feels instant
+	const instantOptimizationsLayout = path.startsWith("/web-experimentation/optimizations");
+	const shellTransition = instantOptimizationsLayout ? "none" : ".7s cubic-bezier(0, 1, 0, 1)";
+
 	if (!isHydrated || !mounted) {
 		return <Box style={{height: "100vh"}} bg="bg.page" />;
 	}
 
 	if (isWorkflowBuilder) {
 		return (
-			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
+			<Box style={{ height: "100vh", width: "100vw" }} bg="bg.default">
+				{children}
+			</Box>
+		);
+	}
+
+	if (isOptimizationVisualEditorPage) {
+		return (
+			<Box
+				style={{
+					height: "100dvh",
+					width: "100vw",
+					maxHeight: "100dvh",
+					overflow: "hidden",
+					display: "flex",
+					flexDirection: "column",
+				}}
+				bg="bg.default"
+			>
 				{children}
 			</Box>
 		);
@@ -228,6 +307,12 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	const sidebarColWidth = isOpalStudio ? 0 : primarySidebarWidth;
 	return (
+		<OpalPanelActionsProvider
+			openPanel={openOpal}
+			sendMessage={sendMessage}
+			openExperimentCreationAgent={showExperimentCreationAgent}
+		>
+			<OpalVariationBuildProvider addMessage={addMessage} updateMessage={updateMessage}>
 		<Box
 			className="grid grid-rows-[auto_1fr] h-screen"
 			style={{ gridTemplateColumns: `${sidebarColWidth}px 1fr`, transition: "grid-template-columns 0.2s ease-out" }}
@@ -237,91 +322,140 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 			{!isOpalStudio ? (
 				<Box display="flex" z="10" style={{minHeight: 0}}>
 					<Sidebar className="h-full z-10 relative" expanded={isExpanded}>
-						<Nav>
-							<NavBody>
-								{menuItems.map((menuItem: any) => {
-									if (menuItem.isMenuTrigger) {
-										return (
-											<React.Fragment key={menuItem.label}>
-												<Menu
-													options={menuItem.menuOptions.map((opt: any) => ({
-														label: opt.label,
-														execute: () => menuClick(opt.url),
-													}))}
-												>
-													<MenuTrigger asChild>
-														<NavItem
-															aria-label={menuItem.label}
-															icon={menuItem.icon}
-															className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
-														>
-															{menuItem.label}
-														</NavItem>
-													</MenuTrigger>
-													<MenuContent />
-												</Menu>
-												<Box className="h-2" />
-											</React.Fragment>
-										);
-									}
-
-									if (menuItem.url) {
-										return (
-											<NavItem
-												onClick={() => menuClick(menuItem.url)}
-												active={
-													routeHighlight?.label === menuItem.label ||
-													(menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight))
-												}
-												key={menuItem.label}
-												aria-label={menuItem.label}
-												icon={menuItem.icon}
-											>
-												{menuItem.label}
-											</NavItem>
-										);
-									}
-
-									return (
-										<Box
-											key={menuItem.label}
-											px="16"
-											py="8"
-											mt="4"
-											borderT="1"
-											borderColor="border.tertiary"
-										>
-											{isExpanded && (
-												<Text fontSize="sm" color="fg.tertiary" mt="2">
-													{menuItem.label}
-												</Text>
-											)}
-										</Box>
-									);
-								})}
-							</NavBody>
-							<NavFooter>
-								<NavList>
-									<Button
-										aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
-										icon={
-											!isExpanded ? (
-												<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
-											) : (
-												<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
-											)
+						<Box
+							onClick={toggleSidebar}
+							style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+						>
+							<Nav>
+								<NavBody>
+									{menuItems.map((menuItem: any) => {
+										if (menuItem.isMenuTrigger) {
+											return (
+												<React.Fragment key={menuItem.label}>
+													<Menu
+														options={menuItem.menuOptions.map((opt: any) => ({
+															label: opt.label,
+															execute: () => menuClick(opt.url),
+														}))}
+													>
+														<MenuTrigger asChild>
+															<NavItem
+																aria-label={menuItem.label}
+																icon={menuItem.icon}
+																className="[&_svg]:w-6 [&_svg]:h-6 [&_svg]:overflow-visible"
+															>
+																{menuItem.label}
+															</NavItem>
+														</MenuTrigger>
+														<MenuContent />
+													</Menu>
+													<Box className="h-2" />
+												</React.Fragment>
+											);
 										}
-										onClick={() => setIsExpanded(!isExpanded)}
-										appearance="subtle"
-									/>
-								</NavList>
-							</NavFooter>
-						</Nav>
+
+										if (!menuItem.url) {
+											return (
+												<Box
+													key={menuItem.label}
+													px="16"
+													py="8"
+													mt="4"
+													borderT="1"
+													borderColor="border.tertiary"
+													onClick={(e: React.MouseEvent) => e.stopPropagation()}
+												>
+													{isExpanded && (
+														<Text fontSize="sm" color="fg.tertiary" mt="2">
+															{menuItem.label}
+														</Text>
+													)}
+												</Box>
+											);
+										}
+
+										const isActive =
+											routeHighlight?.label === menuItem.label ||
+											(menuItem.exact ? path === menuItem.highlight : path.includes(menuItem.highlight));
+
+										const icon =
+											menuItem.label === "Notifications" &&
+												!path.startsWith("/opal/notifications") ? (
+												<Box style={{ position: "relative" }}>
+													{menuItem.icon}
+													<Box
+														style={{
+															position: "absolute",
+															top: "-2px",
+															right: "-2px",
+															height: "8px",
+															width: "8px",
+															border: "1.5px solid #FFFFFF",
+														}}
+														bg="bg.error"
+														rounded="full"
+													/>
+												</Box>
+											) : (
+												menuItem.icon
+											);
+
+										const itemClick = (e: React.MouseEvent) => menuClick(menuItem.url, e);
+
+										// Expanded: plain NavItem with label
+										if (isExpanded) {
+											return (
+												<NavItem
+													key={menuItem.label}
+													onClick={itemClick}
+													active={isActive}
+													aria-label={menuItem.label}
+													icon={icon}
+												>
+													{menuItem.label}
+												</NavItem>
+											);
+										}
+
+										// Collapsed: NavItem wrapped in Tooltip so label shows on hover
+										return (
+											<Tooltip key={menuItem.label} content={menuItem.label} side="right">
+												<NavItem
+													onClick={itemClick}
+													active={isActive}
+													aria-label={menuItem.label}
+													icon={icon}
+												>
+													{menuItem.label}
+												</NavItem>
+											</Tooltip>
+										);
+									})}
+								</NavBody>
+								<NavFooter>
+									<NavList>
+										<Button
+											aria-label={!isExpanded ? "Expand sidebar" : "Collapse sidebar"}
+											icon={
+												!isExpanded ? (
+													<IconChevronRight size={16} color="var(--ax-colors-fg-secondary)" />
+												) : (
+													<IconChevronLeft size={16} color="var(--ax-colors-fg-secondary)" />
+												)
+											}
+											onClick={toggleSidebar}
+											appearance="subtle"
+										/>
+									</NavList>
+								</NavFooter>
+							</Nav>
+						</Box>
 					</Sidebar>
 					<Box
 						style={{
 							marginLeft: -secondarySidebarWidth,
 							transform: showSecondarySidebar ? `translateX(${secondarySidebarWidth}px)` : "translateX(0px)",
+							transition: shellTransition,
 							overflowX: "hidden",
 							overflowY: isContentManager ? "hidden" : undefined,
 							minHeight: isContentManager ? 0 : undefined,
@@ -352,7 +486,7 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 										className="flex w-[500%]"
 										style={{
 											transform: `translateX(-${224 * (lvl4 ? 2 : lvl3 ? 1 : 0)}px)`,
-											transition: ".7s cubic-bezier(0, 1, 0, 1)",
+											transition: shellTransition,
 											minHeight: "100%",
 											overflowX: "hidden",
 										}}
@@ -402,6 +536,7 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 					className="min-w-0 relative main-scroll-area"
 					overflow={customLayout ? "hidden" : "auto"}
 					h="full"
+					style={{ minHeight: 0 }}
 				>
 					{customLayout ? (
 						children
@@ -415,42 +550,55 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 									? "translateX(0px)"
 									: `translateX(-${secondarySidebarWidth}px)`,
 								transition: "margin 0.2s ease-out, width 0.2s ease-out, transform 0.2s ease-out",
+								...(isOptimizationDetailPage
+									? { minHeight: 0, height: "100%" }
+									: {}),
 							}}
 							color="fg.default"
-							overflow="auto"
-							px="32"
-							py="24"
-					pb={footerContent ? "80" : "24"}
+							overflow={isOptimizationDetailPage ? "hidden" : "auto"}
+							px={isOptimizationDetailPage ? "0" : "32"}
+							py={isOptimizationDetailPage ? "0" : "24"}
+							pb={footerContent ? "80" : "24"}
+							display={isOptimizationDetailPage ? "flex" : undefined}
+							flexDirection={isOptimizationDetailPage ? "column" : undefined}
+							h={isOptimizationDetailPage ? "full" : undefined}
 						>
-							<>
-								{!shouldHidePageHeader && (
-									<Box w="full" className="min-w-0" overflow="hidden">
-										<Heading level="3" mb="16" truncate>
-											{heading || routeHighlight?.label}
-										</Heading>
-										{desc && (
-											<Text
-												mb="24"
-												color="fg.secondary"
-												display="block"
-												w="full"
-												style={{width: "100%", maxWidth: "none"}}
-											>
-												{desc}
-											</Text>
-										)}
+							{isExperimentResultsPage || isOptimizationDetailPage ? (
+								children
+							) : (
+								<>
+									{!shouldHidePageHeader && (
+										<Box w="full" className="min-w-0" overflow="hidden">
+											<Box display="flex" justifyContent="space-between" alignItems="center" w="full" mb="16">
+												<Heading level="3" truncate>
+													{heading || routeHighlight?.label}
+												</Heading>
+												{titleActions}
+											</Box>
+											{desc && (
+												<Text
+													mb="24"
+													color="fg.secondary"
+													display="block"
+													w="full"
+													style={{width: "100%", maxWidth: "none"}}
+												>
+													{desc}
+												</Text>
+											)}
+										</Box>
+									)}
+									<Box
+										mt={!shouldHidePageHeader && desc ? "0" : !shouldHidePageHeader ? "24" : "0"}
+										z="10"
+										className="relative"
+										w="full"
+										style={{width: "100%", maxWidth: "none"}}
+									>
+										{children}
 									</Box>
-								)}
-								<Box
-									mt={!shouldHidePageHeader && desc ? "0" : !shouldHidePageHeader ? "24" : "0"}
-									z="10"
-									className="relative"
-									w="full"
-									style={{width: "100%", maxWidth: "none"}}
-								>
-									{children}
-								</Box>
-							</>
+								</>
+							)}
 						</Box>
 					)}
 				</Box>
@@ -467,28 +615,28 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 					</Box>
 				)}
 			</Box>
-		{footerContent && (
-			<Box
-				style={{
-					position: "fixed",
-					bottom: 0,
-					left: `${footerLeftOffset}px`,
-					right: `${opalPanelWidth}px`,
-					transition: "left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)"
-				}}
-				borderT="1"
-				borderL="1"
-				borderColor="border.secondary"
-				bg="bg.default"
-				px="32"
-				py="16"
-				display="flex"
-				justifyContent="end"
-				z="20"
-			>
-				{footerContent}
-			</Box>
-		)}
+			{footerContent && (
+				<Box
+					style={{
+						position: "fixed",
+						bottom: 0,
+						left: `${footerLeftOffset}px`,
+						right: `${opalPanelWidth}px`,
+						transition: "left 0.2s ease-out, right 0.3s cubic-bezier(0, 1, 0, 1)"
+					}}
+					borderT="1"
+					borderL="1"
+					borderColor="border.secondary"
+					bg="bg.default"
+					px="32"
+					py="16"
+					display="flex"
+					justifyContent="end"
+					z="20"
+				>
+					{footerContent}
+				</Box>
+			)}
 			<OpalPanel
 				isOpen={isOpalOpen}
 				onClose={closeOpalWithRouteAwareness}
@@ -496,10 +644,10 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 				inputValue={inputValue}
 				isLoading={isLoading}
 				error={error}
-			isInputDisabled={isInputDisabled}
+				isInputDisabled={isInputDisabled}
 				setInputValue={setInputValue}
 				sendMessage={sendMessage}
-			regenerate={regenerate}
+				regenerate={regenerate}
 				groupedHistory={groupedHistory}
 				activeChat={activeChat}
 				searchQuery={searchQuery}
@@ -511,9 +659,9 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 				createNewChat={createNewChat}
 				deleteChat={deleteChat}
 				selectChat={selectChat}
-			contextChip={opalContextChip?.label ?? null}
-			contextContent={opalContextChip?.content ?? null}
-			onContextChipRemove={() => setOpalContextChip(null)}
+				contextChip={opalContextChip?.label ?? null}
+				contextContent={opalContextChip?.content ?? null}
+				onContextChipRemove={() => setOpalContextChip(null)}
 			/>
 			<CodePanel
 				isOpen={isCodePanelOpen}
@@ -521,6 +669,8 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 				target={codePanelTarget}
 			/>
 		</Box>
+			</OpalVariationBuildProvider>
+		</OpalPanelActionsProvider>
 	);
 }
 
@@ -552,9 +702,11 @@ export default function Template(props: any) {
 		<LayoutProvider>
 			<BrandToneProvider>
 				<PreflightProvider>
-					<OpalContextProvider navigationStructure={props.structure}>
-						<TemplateWrapper {...props} />
-					</OpalContextProvider>
+					<ExperimentResultsProvider>
+						<OpalContextProvider navigationStructure={props.structure}>
+							<TemplateWrapper {...props} />
+						</OpalContextProvider>
+					</ExperimentResultsProvider>
 				</PreflightProvider>
 			</BrandToneProvider>
 		</LayoutProvider>

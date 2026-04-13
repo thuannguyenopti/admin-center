@@ -1,7 +1,7 @@
 "use client";
 
-import {createContext, useContext, useState, useEffect, ReactNode} from "react";
-import type {ChatMessage} from "@/app/hooks/useOpalState";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import type { ChatMessage } from "@/app/hooks/useOpalState";
 
 type OpalPanelControls = {
 	openPanel: () => void;
@@ -28,6 +28,8 @@ type CodePanelControls = {
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	titleActions: ReactNode | null;
+	setTitleActions: (content: ReactNode | null) => void;
 	footerContent: ReactNode | null;
 	setFooterContent: (content: ReactNode | null) => void;
 	hidePageHeader: boolean;
@@ -42,8 +44,9 @@ type LayoutContextType = {
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
-export function LayoutProvider({children}: {children: ReactNode}) {
+export function LayoutProvider({ children }: { children: ReactNode }) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [titleActions, setTitleActions] = useState<ReactNode | null>(null);
 	const [footerContent, setFooterContent] = useState<ReactNode | null>(null);
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
@@ -51,7 +54,7 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth, codePanelControls, setCodePanelControls}}>
+		<LayoutContext.Provider value={{ asideContent, setAsideContent, titleActions, setTitleActions, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth, codePanelControls, setCodePanelControls }}>
 			{children}
 		</LayoutContext.Provider>
 	);
@@ -75,8 +78,8 @@ export function useLayout() {
  * </Aside>
  * ```
  */
-export function Aside({children}: {children: ReactNode}) {
-	const {setAsideContent} = useLayout();
+export function Aside({ children }: { children: ReactNode }) {
+	const { setAsideContent } = useLayout();
 
 	useEffect(() => {
 		setAsideContent(children);
@@ -101,8 +104,8 @@ export function Aside({children}: {children: ReactNode}) {
  * </Footer>
  * ```
  */
-export function Footer({children}: {children: ReactNode}) {
-	const {setFooterContent} = useLayout();
+export function Footer({ children }: { children: ReactNode }) {
+	const { setFooterContent } = useLayout();
 
 	useEffect(() => {
 		setFooterContent(children);
