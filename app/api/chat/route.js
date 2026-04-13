@@ -72,16 +72,35 @@ INSTRUCTIONS:
 
 export async function POST(request) {
   try {
-    if (!openai) {
-      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
-    }
-
     const body = await request.json();
     const userMessage = body.userMessage;
     const context = body.context;
+    const experimentContext = body.experimentContext;
 
     if (typeof userMessage !== 'string' || userMessage.trim() === '') {
       return Response.json({ error: 'Invalid userMessage' }, { status: 400 });
+    }
+
+    // Experiment results summary: return structured steps + summary without calling OpenAI
+    if (
+      experimentContext?.optimizationId &&
+      experimentContext?.requestSummary
+    ) {
+      try {
+        const { getExperimentSummary } = await import('./experimentSummary');
+        const { steps, summary } = getExperimentSummary(experimentContext.optimizationId);
+        return Response.json({ steps, summary });
+      } catch (summaryError) {
+        console.error('Experiment summary failed:', summaryError);
+        return Response.json(
+          { error: summaryError?.message || 'Failed to generate experiment summary' },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (!openai) {
+      return Response.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
 
     // Build dynamic system prompt with context

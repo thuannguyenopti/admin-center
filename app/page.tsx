@@ -1,14 +1,19 @@
 "use client";
 
-import {Box, Card, Checkbox, Field, Heading, Text} from "@optiaxiom/react";
-import {Flex} from "./components/Flex";
-import {Button} from "@/app/components/Button";
+import { useState, useEffect } from "react";
+import { Box, Card, Checkbox, Field, Heading, Text } from "@optiaxiom/react";
+import { Flex } from "./components/Flex";
+import { Button } from "@/app/components/Button";
 import Link from "next/link";
-import {Input} from "./components/Input";
-import {IconUser} from "@tabler/icons-react";
+import { Input } from "./components/Input";
+import { IconUser } from "@tabler/icons-react";
 import Image from "next/image";
 
 export default function Home() {
+	// Defer form fields until after mount to avoid Radix ID hydration mismatch
+	const [mounted, setMounted] = useState(false);
+	useEffect(() => setMounted(true), []);
+
 	return (
 		<Flex
 			p="64"
@@ -41,7 +46,7 @@ export default function Home() {
 			</Box>
 			<Card
 				border="0"
-				style={{width: "416px", position: "relative", zIndex: 1}}
+				style={{ width: "416px", position: "relative", zIndex: 1 }}
 				p="40"
 				shadow="lg"
 			>
@@ -92,24 +97,36 @@ export default function Home() {
 					>
 						Switch user
 					</Button>
-					<Field
-						label="Password"
-						mt="24"
-						w="full"
-					>
-						<Input
-							placeholder="password"
-							type="password"
-						/>
-					</Field>
-					<Field
-						mt="8"
-						w="full"
-					>
-						<Checkbox>Keep me signed in</Checkbox>
-					</Field>
+					{mounted ? (
+						<>
+							<Field
+								label="Password"
+								mt="24"
+								w="full"
+							>
+								<Input
+									placeholder="password"
+									type="password"
+								/>
+							</Field>
+							<Field
+								mt="8"
+								w="full"
+							>
+								<Checkbox>Keep me signed in</Checkbox>
+							</Field>
+						</>
+					) : (
+						<Box mt="24" w="full" display="flex" flexDirection="column" gap="8" style={{ minHeight: 96 }}>
+							<Box w="full" h="40" bg="bg.secondary" rounded="sm" />
+							<Box w="full" display="flex" alignItems="center" gap="8" mt="8">
+								<Box w="20" h="20" bg="bg.secondary" rounded="sm" style={{ flexShrink: 0 }} />
+								<Text fontSize="md" color="fg.secondary">Keep me signed in</Text>
+							</Box>
+						</Box>
+					)}
 					<Link
-						style={{display: "block", width: "100%"}}
+						style={{ display: "block", width: "100%" }}
 						href="/cms/dashboard"
 					>
 						<Button

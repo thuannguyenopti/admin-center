@@ -62,6 +62,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	};
 
 	const getCurrentProduct = () => {
+		if (pathname.startsWith("/web-experimentation")) return "Web Experimentation";
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/cmp")) return "CMP";
 		if (pathname.startsWith("/graph")) return "Graph";
@@ -134,6 +135,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						{
 							label: "Content Management System",
 							execute: () => router.push("/cms/dashboard"),
+						},
+						{
+							label: "Web Experimentation",
+							execute: () => router.push("/web-experimentation"),
 						},
 						{
 							label: "Content Marketing Platform",
