@@ -4,7 +4,8 @@ import { toaster } from "@optiaxiom/react";
 import { type ContentInstance, initialCmpTasks } from "@/app/db/cmpInitialData";
 import type { ContentType } from "@/app/db/initialData";
 import { createPageFromInstance } from "@/app/lib/contentConnection";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import type { TaskWorkflowState } from "./workflowTypes";
 import { workflowTemplates } from "./mockData";
 import type { AssetItem, Scene } from "./types";
 import { useCmpTaskBaseState } from "./useCmpTaskBaseState";
@@ -217,10 +218,22 @@ export function useTaskDetailState(taskId: string) {
 			return { ...prev, [taskId]: setStepAssignee(current, stepId, userId) };
 		});
 	};
+	// Snapshot of workflow state before dialog-triggering action, so we can restore on cancel
+	const preDialogWorkflowRef = useRef<TaskWorkflowState | null>(null);
+
 	const toggleStepDoneForTask = (stepId: string) => {
 		const step = computed.taskWorkflowState.steps.find((s) => s.id === stepId);
 		const stepName = step?.title?.replace(/^\d+\.\s*/, "") ?? "Step";
 		const wasDone = step?.done ?? false;
+
+		// If completing the last remaining step, save snapshot so cancel can revert
+		if (!wasDone) {
+			const remainingUndone = computed.taskWorkflowState.steps.filter((s) => !s.done && s.id !== stepId);
+			if (remainingUndone.length === 0) {
+				preDialogWorkflowRef.current = computed.taskWorkflowState;
+			}
+		}
+
 		state.setTaskWorkflows((prev) => {
 			const current = prev[taskId] ?? computed.taskWorkflowState;
 			return { ...prev, [taskId]: toggleStepDone(current, stepId) };
@@ -238,6 +251,7 @@ export function useTaskDetailState(taskId: string) {
 		});
 	};
 	const markTaskComplete = () => {
+		preDialogWorkflowRef.current = computed.taskWorkflowState;
 		state.setTaskWorkflows((prev) => {
 			const current = prev[taskId] ?? computed.taskWorkflowState;
 			return { ...prev, [taskId]: markAllStepsDone(current) };
@@ -253,10 +267,17 @@ export function useTaskDetailState(taskId: string) {
 		toaster.create("Task completion undone", { intent: "neutral" });
 	};
 	const confirmPublish = () => {
+		preDialogWorkflowRef.current = null;
 		state.setPublishConfirmOpen(false);
 		toaster.create("Content published successfully", { intent: "success" });
 	};
 	const cancelPublishConfirm = () => {
+		// Restore workflow state to before the action that triggered the dialog
+		if (preDialogWorkflowRef.current) {
+			const snapshot = preDialogWorkflowRef.current;
+			state.setTaskWorkflows((prev) => ({ ...prev, [taskId]: snapshot }));
+			preDialogWorkflowRef.current = null;
+		}
 		state.setPublishConfirmOpen(false);
 	};
 	const addAssetsToTask = (assetsToAdd: AssetItem[]) => {
