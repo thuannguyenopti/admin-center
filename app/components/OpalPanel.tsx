@@ -202,6 +202,7 @@ export function OpalPanel({
         <OpalChat
           messages={messages}
           onSuggestionClick={handleSuggestionClick}
+          onSubmitPrompt={sendMessage}
           onRegenerate={regenerate}
           contextChip={contextChip}
           contextualActionCard={atlassianActionCard}
