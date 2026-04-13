@@ -11,7 +11,11 @@ import { useCmpTaskBaseState } from "./useCmpTaskBaseState";
 import { useCmpTaskComputedData } from "./useCmpTaskComputedData";
 import {
 	createTaskWorkflowFromTemplate,
+	markAllStepsDone,
+	markAllStepsUndone,
 	toggleChecklistItem,
+	toggleStepDone,
+	toggleStepExpanded,
 	setStepAssignee,
 } from "./utils/workflowState";
 
@@ -213,6 +217,37 @@ export function useTaskDetailState(taskId: string) {
 			return { ...prev, [taskId]: setStepAssignee(current, stepId, userId) };
 		});
 	};
+	const toggleStepDoneForTask = (stepId: string) => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: toggleStepDone(current, stepId) };
+		});
+	};
+	const toggleStepExpandedForTask = (stepId: string) => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: toggleStepExpanded(current, stepId) };
+		});
+	};
+	const markTaskComplete = () => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: markAllStepsDone(current) };
+		});
+		state.setPublishConfirmOpen(true);
+	};
+	const undoTaskComplete = () => {
+		state.setTaskWorkflows((prev) => {
+			const current = prev[taskId] ?? computed.taskWorkflowState;
+			return { ...prev, [taskId]: markAllStepsUndone(current) };
+		});
+	};
+	const confirmPublish = () => {
+		state.setPublishConfirmOpen(false);
+	};
+	const cancelPublishConfirm = () => {
+		state.setPublishConfirmOpen(false);
+	};
 	const addAssetsToTask = (assetsToAdd: AssetItem[]) => {
 		if (assetsToAdd.length === 0) {
 			return;
@@ -347,11 +382,17 @@ export function useTaskDetailState(taskId: string) {
 		pendingWorkflowName:
 			workflowTemplates.find((template) => template.id === state.pendingWorkflowId)?.name ?? "workflow",
 		saveBriefEdit,
+		cancelPublishConfirm,
+		confirmPublish,
+		markTaskComplete,
 		setStepAssigneeForTask,
 		toggleChecklistItemForTask,
 		togglePanelAssetSelection,
 		toggleSearchAssetSelection,
+		toggleStepDoneForTask,
+		toggleStepExpandedForTask,
 		toggleWorkflowMenu: () => state.setWorkflowMenuOpen((open) => !open),
+		undoTaskComplete,
 		updatePerspective,
 	};
 }

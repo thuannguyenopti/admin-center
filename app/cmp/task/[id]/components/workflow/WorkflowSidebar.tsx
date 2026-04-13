@@ -14,26 +14,42 @@ import { WorkflowTemplateMenu } from "./WorkflowTemplateMenu";
 
 type WorkflowSidebarProps = {
 	filteredTemplates: WorkflowTemplate[];
+	isAllDone: boolean;
 	isMenuOpen: boolean;
+	onMarkComplete: () => void;
 	onRequestWorkflowChange: (workflowId: string) => void;
 	onSetStepAssignee: (stepId: string, userId: string | undefined) => void;
 	onToggleChecklistItem: (stepId: string, checklistItemId: string) => void;
+	onToggleStepDone: (stepId: string) => void;
+	onToggleStepExpanded: (stepId: string) => void;
 	onToggleWorkflowMenu: () => void;
+	onUndoComplete: () => void;
 	onWorkflowSearchChange: (value: string) => void;
+	progressPercent: number;
 	searchValue: string;
+	statusIntent: "neutral" | "information" | "success";
+	statusLabel: string;
 	workflowState: TaskWorkflowState;
 	workflowTemplateName: string;
 };
 
 export function WorkflowSidebar({
 	filteredTemplates,
+	isAllDone,
 	isMenuOpen,
+	onMarkComplete,
 	onRequestWorkflowChange,
 	onSetStepAssignee,
 	onToggleChecklistItem,
+	onToggleStepDone,
+	onToggleStepExpanded,
 	onToggleWorkflowMenu,
+	onUndoComplete,
 	onWorkflowSearchChange,
+	progressPercent,
 	searchValue,
+	statusIntent,
+	statusLabel,
 	workflowState,
 	workflowTemplateName,
 }: WorkflowSidebarProps) {
@@ -53,23 +69,31 @@ export function WorkflowSidebar({
 						</Box>
 					</Box>
 					<Box alignItems="center" display="flex" gap="8">
-						<Button appearance="default" size="sm" style={{ borderRadius: 6, height: 28, padding: "0 10px" }}>
-							Mark Complete
+						<Button
+							appearance={isAllDone ? "subtle" : "default"}
+							onClick={isAllDone ? onUndoComplete : onMarkComplete}
+							size="sm"
+							style={{ borderRadius: 6, height: 28, padding: "0 10px" }}
+						>
+							{isAllDone ? "Undo Complete" : "Mark Complete"}
 						</Button>
 						<Button appearance="subtle" aria-label="More" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 					</Box>
 				</Box>
 
 				<Box alignItems="center" display="flex" style={{ gap: 18 }}>
-					<Badge intent="information">
-						In Progress
+					<Badge intent={statusIntent}>
+						{statusLabel}
 					</Badge>
 					<InlineDate label="Started • May 11" />
 					<InlineDate label="Due • Jun 28" />
 				</Box>
 
 				<Box bg="bg.tertiary" rounded="full" style={{ height: 6, overflow: "hidden" }}>
-					<Box bg="bg.accent" style={{ height: "100%", width: "70%" }} />
+					<Box
+						bg={isAllDone ? "bg.success" : "bg.accent"}
+						style={{ height: "100%", transition: "width 0.3s ease", width: `${progressPercent}%` }}
+					/>
 				</Box>
 			</Box>
 
@@ -132,6 +156,8 @@ export function WorkflowSidebar({
 						key={step.id}
 						onSetAssignee={onSetStepAssignee}
 						onToggleChecklistItem={onToggleChecklistItem}
+						onToggleDone={onToggleStepDone}
+						onToggleExpanded={onToggleStepExpanded}
 						step={step}
 					/>
 				))}
