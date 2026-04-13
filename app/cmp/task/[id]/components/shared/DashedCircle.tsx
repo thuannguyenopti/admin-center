@@ -9,19 +9,31 @@ type DashedCircleProps = {
 };
 
 export function DashedCircle({ children, onClick }: DashedCircleProps) {
+	const handleClick = onClick
+		? (e: React.MouseEvent) => {
+				e.stopPropagation();
+				onClick();
+			}
+		: undefined;
+
+	const handleKeyDown = onClick
+		? (e: React.KeyboardEvent) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					e.stopPropagation();
+					onClick();
+				}
+			}
+		: undefined;
+
 	return (
 		<Box
 			alignItems="center"
 			display="flex"
 			justifyContent="center"
-			onClick={
-				onClick
-					? (e) => {
-							e.stopPropagation();
-							onClick();
-						}
-					: undefined
-			}
+			onClick={handleClick}
+			onKeyDown={handleKeyDown}
+			role={onClick ? "button" : undefined}
 			rounded="full"
 			style={{
 				border: "1px dashed var(--ax-colors-border-default)",
@@ -29,6 +41,7 @@ export function DashedCircle({ children, onClick }: DashedCircleProps) {
 				height: 24,
 				width: 24,
 			}}
+			tabIndex={onClick ? 0 : undefined}
 		>
 			{children}
 		</Box>
