@@ -21,6 +21,7 @@ export type ContentItem = {
 type ChannelCardProps = {
 	channelDef: ChannelDefinition;
 	contentItems: ContentItem[];
+	isPublished?: boolean;
 	onEdit: () => void;
 	onRemove: () => void;
 };
@@ -77,7 +78,7 @@ function PagePreviewThumbnail({ page }: { page: Page }) {
 	);
 }
 
-export function ChannelCard({ channelDef, contentItems, onEdit, onRemove }: ChannelCardProps) {
+export function ChannelCard({ channelDef, contentItems, isPublished = false, onEdit, onRemove }: ChannelCardProps) {
 	return (
 		<Card>
 			<CardHeader
@@ -126,9 +127,18 @@ export function ChannelCard({ channelDef, contentItems, onEdit, onRemove }: Chan
 				<Separator />
 
 				{/* Footer */}
-				<Text fontSize="xs" color="fg.tertiary">
-					TO BE PUBLISHED: Upon task completion
-				</Text>
+				<Box display="flex" alignItems="center" gap="8">
+					{isPublished ? (
+						<Badge intent="success">Published</Badge>
+					) : (
+						<>
+							<Badge intent="neutral">Pending</Badge>
+							<Text fontSize="xs" color="fg.tertiary">
+								Will publish upon task completion
+							</Text>
+						</>
+					)}
+				</Box>
 			</Box>
 		</Card>
 	);

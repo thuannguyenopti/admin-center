@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Outline } from "@/app/components/vb/PreviewCanvas";
 import type { AssetItem, TaskArticle, TaskTab } from "../../types";
+import { buildPageSlug } from "@/app/site/resolveSlug";
 
 import { PageHeader } from "../shared/PageHeader";
 import { AddContentButtonLabel, buildAddContentMenuOptions } from "./buildAddContentMenuOptions";
@@ -125,7 +126,7 @@ export function ContentFilledPage({
 		openPageEditor: (pageId) => router.push(`/cms/edit/${pageId}`),
 		pages,
 		reviewPage: (page) => {
-			const slug = page.slug || page.name.toLowerCase().replace(/\s+/g, "-");
+			const slug = buildPageSlug(page, pages);
 			window.open(`/site/${slug}`, "_blank");
 		},
 		selectedArticle,

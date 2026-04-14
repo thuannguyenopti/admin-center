@@ -123,12 +123,30 @@ export const MediaImageRenderer: React.FC<MediaImageRendererProps> = ({
 					: "http://localhost";
 			const urlObj = new URL(url, base);
 			const pathname = urlObj.pathname;
-			const parts = pathname.split("/");
+			const parts = pathname.split("/").filter(Boolean);
+
+			// Handle picsum.photos URLs with /seed/{name}/{width}/{height} pattern
+			if (urlObj.hostname.includes("picsum.photos") && parts.includes("seed")) {
+				const seedIndex = parts.indexOf("seed");
+				if (seedIndex >= 0 && seedIndex + 1 < parts.length) {
+					return parts[seedIndex + 1];
+				}
+			}
+
 			const filename = parts[parts.length - 1];
 			return filename || "Image";
 		} catch {
 			// Fallback for malformed URLs
-			const parts = url.split("/");
+			const parts = url.split("/").filter(Boolean);
+
+			// Handle picsum.photos pattern in fallback
+			if (url.includes("picsum.photos") && url.includes("/seed/")) {
+				const seedIndex = parts.indexOf("seed");
+				if (seedIndex >= 0 && seedIndex + 1 < parts.length) {
+					return parts[seedIndex + 1];
+				}
+			}
+
 			const lastPart = parts[parts.length - 1] || "";
 			const clean = lastPart.split("#")[0].split("?")[0];
 			return clean || "Image";

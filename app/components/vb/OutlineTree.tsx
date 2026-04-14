@@ -36,7 +36,16 @@ function getImageNameFromUrl(url: string): string {
 	try {
 		const urlObj = new URL(url);
 		const pathname = urlObj.pathname;
-		const parts = pathname.split('/');
+		const parts = pathname.split('/').filter(Boolean);
+
+		// Handle picsum.photos URLs with /seed/{name}/{width}/{height} pattern
+		if (urlObj.hostname.includes("picsum.photos") && parts.includes("seed")) {
+			const seedIndex = parts.indexOf("seed");
+			if (seedIndex >= 0 && seedIndex + 1 < parts.length) {
+				return parts[seedIndex + 1];
+			}
+		}
+
 		return parts[parts.length - 1] || "Image";
 	} catch {
 		return "Image";

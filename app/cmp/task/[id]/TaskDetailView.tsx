@@ -20,13 +20,13 @@ import { useTaskDetailState } from "./useTaskDetailState";
 export function TaskDetailView({ taskId }: { taskId: string }) {
 	const state = useTaskDetailState(taskId);
 
-	const prevAllDone = useRef(false);
+	const prevAllDone = useRef(state.isAllWorkflowDone);
 	useEffect(() => {
-		if (state.isAllWorkflowDone && !prevAllDone.current) {
+		if (state.isAllWorkflowDone && !prevAllDone.current && !state.isTaskPublished) {
 			state.setPublishConfirmOpen(true);
 		}
 		prevAllDone.current = state.isAllWorkflowDone;
-	}, [state.isAllWorkflowDone, state.setPublishConfirmOpen]);
+	}, [state.isAllWorkflowDone, state.isTaskPublished, state.setPublishConfirmOpen]);
 
 	const workflowSidebar = (
 		<WorkflowSidebar
@@ -190,6 +190,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 							activeTab={state.activeTab}
 							channels={state.publishingChannels}
 							contentInstances={state.taskContentInstances}
+							isPublished={state.isTaskPublished}
 							onAddChannel={state.addPublishingChannel}
 							onEditChannel={state.updateChannelContent}
 							onRemoveChannel={state.removePublishingChannel}
