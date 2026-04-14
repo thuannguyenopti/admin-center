@@ -271,6 +271,17 @@ export function useTaskDetailState(taskId: string) {
 		preDialogWorkflowRef.current = null;
 		state.setPublishConfirmOpen(false);
 		state.setPublishedTasks((prev) => [...prev.filter((id) => id !== taskId), taskId]);
+
+		// Publish all task pages to CMS by setting their status to "Published"
+		const taskPageIds = new Set(computed.taskPages.map((p) => p.id));
+		state.setPages((prev) =>
+			prev.map((page) =>
+				taskPageIds.has(page.id) && page.status !== "Published"
+					? { ...page, status: "Published" as const }
+					: page
+			)
+		);
+
 		toaster.create("Content published successfully", { intent: "success" });
 	};
 	const cancelPublishConfirm = () => {

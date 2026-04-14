@@ -60,6 +60,7 @@ export function getContentItemMenuOptions({
 	taskPages,
 }: GetContentItemMenuOptionsArgs) {
 	if (selectedPage) {
+		const isPublished = selectedPage.status === "Published";
 		return [
 			{
 				label: "Edit in CMS",
@@ -68,9 +69,10 @@ export function getContentItemMenuOptions({
 				execute: () => openPageEditor(selectedPage.id),
 			},
 			{
-				label: "Review",
+				label: "View on Website",
 				addon: <IconEye size={16} />,
-				description: "View page on website",
+				description: isPublished ? "Open page in new tab" : "Page must be published first",
+				disabled: !isPublished,
 				execute: () => reviewPage(selectedPage),
 			},
 			{
