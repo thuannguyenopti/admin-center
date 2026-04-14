@@ -537,12 +537,12 @@ export default function PreviewCanvas({
 			border="1"
 			borderColor="border.tertiary"
 			style={{
-				background: "#F3F4F6",
+				background: "var(--ax-colors-bg-tertiary)",
 				height: "100%",
 				minHeight: 0,
 				overflow: "hidden",
 				zIndex: 50,
-				boxShadow: "0 20px 70px 0px rgba(0,0,0,0.15), 0 1px 1px 0 rgba(0,0,0,0.1)",
+				boxShadow: "inset 0 0 40px rgba(0,0,0,0.1), 0 20px 70px 0px rgba(0,0,0,0.05), 0 1px 1px 0 rgba(0,0,0,0.01)",
 			}}
 		>
 			<PreviewWrapper
