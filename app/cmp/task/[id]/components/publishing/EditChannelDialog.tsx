@@ -24,6 +24,7 @@ type EditChannelDialogProps = {
 	channelDef: ChannelDefinition;
 	allContent: ContentItem[];
 	selectedIds: string[];
+	isPublished?: boolean;
 	onSave: (contentIds: string[]) => void;
 };
 
@@ -33,6 +34,7 @@ export function EditChannelDialog({
 	channelDef,
 	allContent,
 	selectedIds,
+	isPublished = false,
 	onSave,
 }: EditChannelDialogProps) {
 	const [localSelected, setLocalSelected] = useState<Set<string>>(new Set(selectedIds));
@@ -101,8 +103,8 @@ export function EditChannelDialog({
 						<Separator />
 
 						<Box display="flex" alignItems="center" justifyContent="space-between">
-							<Text fontSize="xs" color="fg.tertiary">
-								TO BE PUBLISHED: Upon task completion
+							<Text fontSize="xs" color={isPublished ? "fg.success" : "fg.tertiary"}>
+								{isPublished ? "PUBLISHED" : "TO BE PUBLISHED: Upon task completion"}
 							</Text>
 							<Text fontSize="sm" fontWeight="600">
 								{localSelected.size} assets selected
