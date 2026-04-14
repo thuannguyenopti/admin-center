@@ -83,6 +83,13 @@ export function useCmpTaskBaseState(taskId: string) {
 	];
 	const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
 
+	// Migrate old array format to new record format
+	useEffect(() => {
+		if (Array.isArray(publishingChannels)) {
+			setPublishingChannels({});
+		}
+	}, [publishingChannels, setPublishingChannels]);
+
 	return {
 		applications,
 		briefContent,

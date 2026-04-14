@@ -264,6 +264,17 @@ export function useTaskDetailState(taskId: string) {
 			const current = prev[taskId] ?? computed.taskWorkflowState;
 			return { ...prev, [taskId]: markAllStepsUndone(current) };
 		});
+
+		// Revert published pages back to Draft status
+		const taskPageIds = new Set(computed.taskPages.map((p) => p.id));
+		state.setPages((prev) =>
+			prev.map((page) =>
+				taskPageIds.has(page.id) && page.status === "Published"
+					? { ...page, status: "Draft" as const }
+					: page
+			)
+		);
+
 		state.setPublishedTasks((prev) => prev.filter((id) => id !== taskId));
 		toaster.create("Task completion undone", { intent: "neutral" });
 	};
