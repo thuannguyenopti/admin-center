@@ -1165,7 +1165,7 @@ export const initialPages: Page[] = [
 	{
 		id: "page-site-about",
 		name: "About Us",
-		parentId: null,
+		parentId: "page-site-home",
 		status: "Draft",
 		lastModified: "2023-10-26",
 		contentTypeId: "ct-page",
@@ -1290,7 +1290,7 @@ export const initialPages: Page[] = [
 	{
 		id: "page-site-contact",
 		name: "Contact",
-		parentId: null,
+		parentId: "page-site-home",
 		status: "Published",
 		lastModified: "2023-10-25",
 		contentTypeId: "ct-page",
@@ -1459,7 +1459,7 @@ export const initialPages: Page[] = [
 	{
 		id: "page-site-blog",
 		name: "Blog",
-		parentId: null,
+		parentId: "page-site-home",
 		status: "Published",
 		lastModified: "2023-10-24",
 		contentTypeId: "ct-blog-listing",
@@ -1582,7 +1582,7 @@ export const initialPages: Page[] = [
 	{
 		id: "page-site-products",
 		name: "Products",
-		parentId: null,
+		parentId: "page-site-home",
 		status: "Published",
 		lastModified: "2023-10-23",
 		contentTypeId: "ct-page",
