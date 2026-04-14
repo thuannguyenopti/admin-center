@@ -3,7 +3,7 @@
 import { Box, Text, Button } from "@optiaxiom/react";
 import type { Connector } from "../data/connectors";
 import { ConnectorAvatar } from "./ConnectorAvatar";
-import { requiresUserLevelAuth } from "../lib/connectorAuth";
+import { requiresDeferredUserConnect, usesDirectUserConnect } from "../lib/connectorAuth";
 
 interface ConnectorTileProps {
     connector: Connector;
@@ -14,7 +14,7 @@ interface ConnectorTileProps {
 }
 
 export function ConnectorTile({ connector, isConnected = false, isConfigured = false, onDetails, onConfigure }: ConnectorTileProps) {
-    const showsConnectAction = requiresUserLevelAuth(connector) && isConfigured;
+    const showsConnectAction = usesDirectUserConnect(connector) || (requiresDeferredUserConnect(connector) && isConfigured);
 
     return (
         <Box

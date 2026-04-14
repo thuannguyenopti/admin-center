@@ -22,4 +22,8 @@ export const CONNECTORS = [
     ...OTHER_CONNECTORS,
 ]
     .filter(c => !HIDDEN_IDS.has(c.id))
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => {
+        if (a.id === "custom-mcp") return 1;
+        if (b.id === "custom-mcp") return -1;
+        return a.name.localeCompare(b.name);
+    });

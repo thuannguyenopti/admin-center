@@ -40,7 +40,7 @@ import { ConfigureStepperPanel } from "./components/ConfigureStepperPanel";
 import { AddAuthProviderModal, type AuthProviderDraft } from "./components/AddAuthProviderModal";
 import { RegisterRemoteMcpProviderModal, type RemoteMcpProviderDraft } from "./components/RegisterRemoteMcpProviderModal";
 import { CONNECTORS, type Connector } from "./data/connectors";
-import { requiresUserLevelAuth } from "./lib/connectorAuth";
+import { requiresDeferredUserConnect, usesDirectUserConnect } from "./lib/connectorAuth";
 
 const STORAGE_KEY = "opal_connected_connectors";
 const TAB_VALUES = ["connectors", "tools", "registries", "auth-providers"] as const;
@@ -91,12 +91,11 @@ export default function ToolsPage() {
     const [ocpConnector, setOcpConnector] = useState<Connector | null>(null);
     const [ocpModalOpen, setOcpModalOpen] = useState(false);
 
-    // Stepper panel state
     const [stepperPanelConnector, setStepperPanelConnector] = useState<Connector | null>(null);
 
-    // Feedback toggles
-    const [ocpAsModal, setOcpAsModal] = useState(false);
-    const [stepperInPanel, setStepperInPanel] = useState(false);
+    // Feedback toggle
+    const [ocpAsPanel, setOcpAsPanel] = useState(false);
+    const [userView, setUserView] = useState(false);
 
     // Modal state — which connector (if any) and which screen to open to
     const [modalOpen, setModalOpen] = useState(false);
@@ -145,8 +144,24 @@ export default function ToolsPage() {
         toaster.create("Connector disconnected", { intent: "information" });
     };
 
+    const handleDirectUserConnect = (connector: Connector) => {
+        handleConnectorAdded({
+            id: connector.id,
+            name: connector.name,
+            category: connector.category,
+            type: connector.type,
+            status: "connected",
+            managedBy: "User",
+            toolCount: connector.tools.length,
+            access: "All users",
+            addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+            toolIds: connector.tools.map(tool => tool.id),
+        });
+        toaster.create(`${connector.name} successfully connected`, { intent: "success" });
+    };
+
     const openConfigure = (connector: Connector) => {
-        if (stepperInPanel) {
+        if (ocpAsPanel) {
             setStepperPanelConnector(connector);
             return;
         }
@@ -163,14 +178,9 @@ export default function ToolsPage() {
 
     const openOCP = (connector: Connector) => {
         setOcpConnector(connector);
-        if (ocpAsModal) setOcpModalOpen(true);
+        if (!ocpAsPanel) setOcpModalOpen(true);
     };
-    const openAddConnector = () => {
-        const mcpConnector = CONNECTORS.find(c => c.id === "custom-mcp");
-        if (mcpConnector) {
-            openConfigure(mcpConnector);
-        }
-    };
+    const openAddRemoteMcpConnector = () => setRegisterRemoteMcpOpen(true);
     const openAddAuthProvider = () => setAddAuthProviderOpen(true);
     const openRegisterRemoteMcp = () => setRegisterRemoteMcpOpen(true);
     const connectedIds = connectedConnectors.filter(c => c.status === "connected").map(c => c.id);
@@ -222,7 +232,11 @@ export default function ToolsPage() {
                     (connectorStatusFilter === "Not connected" && !isConnected);
                 return matchesSearch && matchesCategory && matchesStatus;
             })
-            .sort((a, b) => a.name.localeCompare(b.name));
+            .sort((a, b) => {
+                if (a.id === "custom-mcp") return 1;
+                if (b.id === "custom-mcp") return -1;
+                return a.name.localeCompare(b.name);
+            });
     }, [search, categoryFilter, connectorStatusFilter, connectedIds]);
 
     // Filtered auth providers table
@@ -342,11 +356,12 @@ export default function ToolsPage() {
                 onDisconnect={handleDisconnect}
                 existingConnectors={connectedConnectors}
                 connectedIds={connectedIds}
+                isUserView={userView}
                 initialConnector={modalInitialConnector}
                 initialScreen={modalInitialScreen}
                 initialStep={modalInitialStep}
                 initialToolsDisclosureOpen={modalInitialToolsDisclosureOpen}
-                onConfigureInPanel={stepperInPanel ? (c) => setStepperPanelConnector(c) : undefined}
+                onConfigureInPanel={ocpAsPanel ? (c) => setStepperPanelConnector(c) : undefined}
             />
             <RegisterRemoteMcpProviderModal
                 open={registerRemoteMcpOpen}
@@ -361,7 +376,7 @@ export default function ToolsPage() {
             />
 
             {/* OCP config modal (feedback: toggle 1) */}
-            {ocpAsModal && ocpConnector && (
+            {!ocpAsPanel && ocpConnector && (
                 <OCPConfigModal
                     connector={ocpConnector}
                     isInstalled={connectedIds.includes(ocpConnector.id)}
@@ -373,7 +388,7 @@ export default function ToolsPage() {
             )}
 
             {/* OCP config side panel (feedback: toggle 1 off) */}
-            {!ocpAsModal && ocpConnector && (
+            {ocpAsPanel && ocpConnector && (
                 <OCPConfigPanel
                     connector={ocpConnector}
                     isInstalled={connectedIds.includes(ocpConnector.id)}
@@ -384,7 +399,7 @@ export default function ToolsPage() {
             )}
 
             {/* Configure stepper panel (feedback: toggle 2 on) */}
-            {stepperInPanel && stepperPanelConnector && (
+            {ocpAsPanel && stepperPanelConnector && (
                 <ConfigureStepperPanel
                     connector={stepperPanelConnector}
                     onClose={() => setStepperPanelConnector(null)}
@@ -393,7 +408,7 @@ export default function ToolsPage() {
             )}
 
             <Box display="flex" flexDirection="column" gap="24">
-                {/* ── Page header + feedback toggles ───────────────────────── */}
+                {/* ── Page header + feedback toggle ───────────────────────── */}
                 <Box display="flex" alignItems="center" justifyContent="space-between" gap="16">
                     <Box display="flex" flexDirection="column" gap="8">
                         <Heading level="1" fontSize="2xl">Connectors</Heading>
@@ -416,12 +431,12 @@ export default function ToolsPage() {
                             Feedback
                         </Text>
                         <Box display="flex" alignItems="center" gap="8">
-                            <Switch checked={ocpAsModal} onCheckedChange={setOcpAsModal} />
-                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>OCP as Modal</Text>
+                            <Switch checked={ocpAsPanel} onCheckedChange={setOcpAsPanel} />
+                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>OCP as Panel</Text>
                         </Box>
                         <Box display="flex" alignItems="center" gap="8">
-                            <Switch checked={stepperInPanel} onCheckedChange={setStepperInPanel} />
-                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>Setup as Panel</Text>
+                            <Switch checked={userView} onCheckedChange={setUserView} />
+                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>User view</Text>
                         </Box>
                     </Box>
                 </Box>
@@ -478,22 +493,14 @@ export default function ToolsPage() {
                                 </DropdownMenu>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button appearance="primary" style={{ marginLeft: "auto" }} icon={<IconChevronDown />} iconPosition="end">
+                                        <Button appearance="primary" style={{ marginLeft: "auto" }} icon={<IconPlus />}>
                                             Add Connector
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" style={{ minWidth: 260 }}>
-                                        <DropdownMenuItem onClick={openAddConnector}>
-                                            <IconPlus size={14} />
-                                            Connector
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={openAddAuthProvider}>
-                                            <IconShieldCheck size={14} />
-                                            Authentication Provider
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={openRegisterRemoteMcp}>
+                                        <DropdownMenuItem onClick={openAddRemoteMcpConnector}>
                                             <IconScrewdriverWrench size={14} />
-                                            Remote MCP Auth Provider
+                                            Remote MCP Connector
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -518,6 +525,8 @@ export default function ToolsPage() {
                                             key={connector.id}
                                             connector={connector}
                                             isConnected={connectedIds.includes(connector.id)}
+                                            isConfigured={configuredIds.includes(connector.id)}
+                                            isUserView={userView}
                                             onConnect={() => {
                                                 if (connector.usesOCP) {
                                                     openOCP(connector);
@@ -529,7 +538,12 @@ export default function ToolsPage() {
                                                     return;
                                                 }
 
-                                                if (requiresUserLevelAuth(connector) && configuredIds.includes(connector.id)) {
+                                                if (usesDirectUserConnect(connector)) {
+                                                    handleDirectUserConnect(connector);
+                                                    return;
+                                                }
+
+                                                if (requiresDeferredUserConnect(connector) && configuredIds.includes(connector.id)) {
                                                     openDetails(connector);
                                                     return;
                                                 }
@@ -719,14 +733,21 @@ export default function ToolsPage() {
 function ConnectorCard({
     connector,
     isConnected,
+    isConfigured,
+    isUserView,
     onConnect,
     onDetails,
 }: {
     connector: Connector;
     isConnected: boolean;
+    isConfigured: boolean;
+    isUserView: boolean;
     onConnect: () => void;
     onDetails: () => void;
 }) {
+    const showsConnectAction = usesDirectUserConnect(connector) || (requiresDeferredUserConnect(connector) && isConfigured);
+    const canShowUserAction = !isUserView || isConnected || usesDirectUserConnect(connector);
+
     return (
         <Box
             border="1"
@@ -755,13 +776,15 @@ function ConnectorCard({
                 <Text fontWeight="500" style={{ flex: 1 }}>
                     {connector.name}
                 </Text>
-                <Button
-                    appearance="subtle"
-                    size="md"
-                    icon={connector.usesOCP ? <IconGear /> : isConnected ? <IconGear /> : <IconPlus />}
-                    onClick={e => { e.stopPropagation(); onConnect(); }}
-                    aria-label={connector.usesOCP ? "Configure" : isConnected ? "Configure" : "Connect"}
-                />
+                {canShowUserAction ? (
+                    <Button
+                        appearance="subtle"
+                        size="md"
+                        icon={isConnected ? <IconGear /> : <IconPlus />}
+                        onClick={e => { e.stopPropagation(); onConnect(); }}
+                        aria-label={isConnected ? "Configure" : showsConnectAction ? "Connect" : "Configure"}
+                    />
+                ) : null}
             </Box>
 
             {/* Description */}
