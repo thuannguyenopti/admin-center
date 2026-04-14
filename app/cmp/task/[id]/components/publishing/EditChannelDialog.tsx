@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+	Badge,
 	Box,
 	Button,
 	Checkbox,
@@ -103,9 +104,18 @@ export function EditChannelDialog({
 						<Separator />
 
 						<Box display="flex" alignItems="center" justifyContent="space-between">
-							<Text fontSize="xs" color={isPublished ? "fg.success" : "fg.tertiary"}>
-								{isPublished ? "PUBLISHED" : "TO BE PUBLISHED: Upon task completion"}
-							</Text>
+							<Box display="flex" alignItems="center" gap="8">
+								{isPublished ? (
+									<Badge intent="success">Published</Badge>
+								) : (
+									<>
+										<Badge intent="neutral">Pending</Badge>
+										<Text fontSize="xs" color="fg.tertiary">
+											Will publish upon task completion
+										</Text>
+									</>
+								)}
+							</Box>
 							<Text fontSize="sm" fontWeight="600">
 								{localSelected.size} assets selected
 							</Text>
