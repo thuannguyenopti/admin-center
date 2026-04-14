@@ -512,8 +512,8 @@ export default function AgentsPage() {
                         <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/setup"); }}>
                             <Box mt="2" color="fg.default"><IconAgent /></Box>
                             <Box>
-                                <Text fontWeight="500" fontSize="md">Specialized Agent</Text>
-                                <Text fontSize="sm" color="fg.secondary">Purpose-built to autonomously perform specific tasks creatively within guidelines...</Text>
+                                <Text fontWeight="500" fontSize="md">Build with Opal</Text>
+                                <Text fontSize="sm" color="fg.secondary">Start with Opal in chat, use action cards to shape the brief, and then refine the draft.</Text>
                             </Box>
                         </Box>
                         <Box p="12" display="flex" flexDirection="row" gap="12" alignItems="start" cursor="pointer" className="hover:bg-[var(--ax-colors-bg-default-hovered)] rounded-md" onClick={() => { setAddAgentOpen(false); router.push("/opal/agents/workflow"); }}>

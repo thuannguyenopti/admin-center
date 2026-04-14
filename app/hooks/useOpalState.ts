@@ -12,16 +12,8 @@ export type ChatMessage = {
   isLoading?: boolean;
   versions?: string[];
   currentVersionIndex?: number;
-  messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete';
-  metadata?: {
-    checklist?: Array<{
-      label: string;
-      status: 'pending' | 'running' | 'completed' | 'failed';
-    }>;
-    auditResult?: any; // Will be typed as PreflightAuditResult when imported
-    loading?: boolean;
-    loadingMessage?: string;
-  };
+  messageType?: string;
+  metadata?: any;
   // Agent conversation fields
   eventType?: 'agent-start' | 'agent-end';
   agentEmoji?: string;

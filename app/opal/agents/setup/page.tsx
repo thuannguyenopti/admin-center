@@ -81,6 +81,7 @@ import { AgentAssistantPanel, evaluateStep1, type CheckerResult } from "./compon
 import { EnhancePopover } from "./components/EnhancePopover";
 import { SelectionTooltip } from "./components/SelectionTooltip";
 import { ResizableDetailsTray } from "./components/ResizableDetailsTray";
+import { BuildWithOpalPage } from "./components/BuildWithOpalPage";
 
 const VersionHistory = dynamic(
     () => import("./components/VersionHistory").then((mod) => mod.VersionHistory),
@@ -460,6 +461,12 @@ function SpecializedAgentSetupContent() {
     }, []);
 
     const mode = searchParams.get("mode") || "create"; // 'create' or 'edit'
+    const selectedAgentId = searchParams.get("id");
+
+    if (mode === "create" && !selectedAgentId) {
+        return <BuildWithOpalPage />;
+    }
+
     const shouldDefaultGuideOpen = shouldAutoOpenAssistant || mode === "create";
     const defaultGuidePanelView: "assistant" | "guide" = "assistant";
     const activeTab = isMounted ? (searchParams.get("tab") || "setup") : "setup";
