@@ -23,6 +23,7 @@ import { ConnectorAvatar } from "./ConnectorAvatar";
 import { ModalStepper } from "./ModalStepper";
 import { type Connector, type ToolAction } from "../data/connectors";
 import type { ConnectedConnector } from "./AddConnectorModal";
+import { requiresDeferredUserConnect } from "../lib/connectorAuth";
 
 // ── Selection card ─────────────────────────────────────────────────────────────
 
@@ -104,14 +105,20 @@ export function ConfigureStepperPanel({ connector, onClose, onSave }: ConfigureS
             name: connector.name,
             category: connector.category,
             type: connector.type,
-            status: "connected",
+            status: requiresDeferredUserConnect(connector) ? "configured" : "connected",
             managedBy: managedBy === "user" ? "User" : "Admin",
             toolCount: selectedTools.length,
             access: access === "all" ? "All users" : "Select teams",
             addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+            toolIds: selectedTools,
         };
         onSave(connectedConnector);
-        toaster.create(`${connector.name} successfully connected`, { intent: "success" });
+        toaster.create(
+            requiresDeferredUserConnect(connector)
+                ? `${connector.name} setup saved. Users can connect from the connector details modal.`
+                : `${connector.name} successfully connected`,
+            { intent: "success" }
+        );
         onClose();
     };
 

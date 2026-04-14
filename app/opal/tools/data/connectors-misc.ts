@@ -169,13 +169,18 @@ export const PRODUCTIVITY_CONNECTORS: Connector[] = [
 export const OTHER_CONNECTORS: Connector[] = [
     {
         id: "figma", name: "Figma", category: "Content",
-        description: "Read Figma files, components, and design assets.",
-        about: "The Figma REST API lets agents retrieve file structure, component metadata, design tokens, and export assets.",
+        description: "Inspect designs, read tokens, map code, and write back to Figma with MCP tools.",
+        about: "The Figma MCP server gives agents direct design-to-code and code-to-design workflows across Figma Design and FigJam files. It can read design context, inspect variables and metadata, take screenshots, search design systems, manage Code Connect mappings, generate diagrams, create new files, and write changes back to the canvas with use_figma.",
         type: "auth_provider", authType: "OAuth 2.0", initials: "Fg", color: "#F24E1E", textColor: "#ffffff",
         tools: [
-            { id: "figma_get_file", name: "files_get", description: "Returns the document tree and metadata for a Figma file.", action: "Read" },
-            { id: "figma_get_components", name: "components_get", description: "Returns a list of published components in a file.", action: "Read" },
-            { id: "figma_export_images", name: "images_export", description: "Exports images for specified node IDs.", action: "Read" },
+            { id: "figma_get_design_context", name: "get_design_context", description: "Returns design context for a selected frame or layer so agents can generate implementation code.", action: "Read" },
+            { id: "figma_get_variable_defs", name: "get_variable_defs", description: "Lists variables and styles used in the current Figma selection, including color, spacing, and typography tokens.", action: "Read" },
+            { id: "figma_get_screenshot", name: "get_screenshot", description: "Captures a screenshot of the selected design or FigJam content to preserve layout fidelity.", action: "Read" },
+            { id: "figma_search_design_system", name: "search_design_system", description: "Searches connected design libraries for reusable components, variables, and styles.", action: "Read" },
+            { id: "figma_get_code_connect_map", name: "get_code_connect_map", description: "Retrieves Code Connect mappings between Figma nodes and code components in the codebase.", action: "Read" },
+            { id: "figma_use_figma", name: "use_figma", description: "Creates, edits, or inspects Figma canvas objects such as frames, components, variables, and styles.", action: "Update" },
+            { id: "figma_generate_diagram", name: "generate_diagram", description: "Generates editable FigJam diagrams from Mermaid syntax using the Figma MCP server.", action: "Create" },
+            { id: "figma_create_new_file", name: "create_new_file", description: "Creates a new blank Figma Design or FigJam file in the authenticated user's drafts.", action: "Create" },
         ],
     },
     {
