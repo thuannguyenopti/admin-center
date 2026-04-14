@@ -3,16 +3,18 @@
 import { Box, Text, Button } from "@optiaxiom/react";
 import type { Connector } from "../data/connectors";
 import { ConnectorAvatar } from "./ConnectorAvatar";
+import { requiresUserLevelAuth } from "../lib/connectorAuth";
 
 interface ConnectorTileProps {
     connector: Connector;
     isConnected?: boolean;
+    isConfigured?: boolean;
     onDetails: (connector: Connector) => void;
     onConfigure: (connector: Connector) => void;
 }
 
-export function ConnectorTile({ connector, isConnected = false, onDetails, onConfigure }: ConnectorTileProps) {
-    const usesDirectConnect = connector.category === "Google Workspace" || connector.category === "Microsoft 365";
+export function ConnectorTile({ connector, isConnected = false, isConfigured = false, onDetails, onConfigure }: ConnectorTileProps) {
+    const showsConnectAction = requiresUserLevelAuth(connector) && isConfigured;
 
     return (
         <Box
@@ -95,7 +97,7 @@ export function ConnectorTile({ connector, isConnected = false, onDetails, onCon
                     onClick={() => onConfigure(connector)}
                     style={{ flex: 1 }}
                 >
-                    {usesDirectConnect ? "Connect" : "Configure"}
+                    {showsConnectAction ? "Connect" : "Configure"}
                 </Button>
             </Box>
         </Box>

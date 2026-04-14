@@ -28,6 +28,7 @@ import { ConnectorTile } from "./ConnectorTile";
 import { ConnectorAvatar } from "./ConnectorAvatar";
 import { ModalStepper } from "./ModalStepper";
 import { CONNECTORS, type Connector, type ToolAction } from "../data/connectors";
+import { requiresUserLevelAuth } from "../lib/connectorAuth";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -38,11 +39,12 @@ export interface ConnectedConnector {
     name: string;
     category: string;
     type: "auth_provider" | "mcp";
-    status: "connected";
+    status: "configured" | "connected";
     managedBy: "User" | "Admin";
     toolCount: number;
     access: "All users" | "Select teams";
     addedOn: string;
+    toolIds: string[];
 }
 
 interface AddConnectorModalProps {
@@ -50,17 +52,13 @@ interface AddConnectorModalProps {
     onOpenChange: (open: boolean) => void;
     onConnectorAdded: (connector: ConnectedConnector) => void;
     onDisconnect: (id: string) => void;
+    existingConnectors?: ConnectedConnector[];
     connectedIds?: string[];
     initialConnector?: Connector | null;
     initialScreen?: Screen;
     initialStep?: 0 | 1 | 2;
     initialToolsDisclosureOpen?: boolean;
     onConfigureInPanel?: (connector: Connector) => void;
-}
-
-function isUserLevelConnector(connector: Connector) {
-    if (connector.id === "google-analytics") return false;
-    return connector.category === "Google Workspace" || connector.category === "Microsoft 365";
 }
 
 const actionIcon: Record<ToolAction, React.ReactNode> = {
@@ -110,6 +108,7 @@ export function AddConnectorModal({
     onOpenChange,
     onConnectorAdded,
     onDisconnect,
+    existingConnectors = [],
     connectedIds = [],
     initialConnector = null,
     initialScreen = "browse",
@@ -129,6 +128,15 @@ export function AddConnectorModal({
     const [detailPage, setDetailPage] = useState(1);
     const [detailToolsDisclosureOpen, setDetailToolsDisclosureOpen] = useState(initialToolsDisclosureOpen);
 
+    const getExistingConnector = (connector: Connector | null) => {
+        if (!connector) return null;
+        return existingConnectors.find(item => item.id === connector.id) ?? null;
+    };
+
+    const getDefaultToolIds = (connector: Connector) => {
+        return getExistingConnector(connector)?.toolIds ?? connector.tools.map(t => t.id);
+    };
+
     const TOOLS_PER_PAGE = 10;
 
     // Sync initial state when modal opens with new context
@@ -139,7 +147,7 @@ export function AddConnectorModal({
             setStep(initialStep);
             setDetailToolsDisclosureOpen(initialToolsDisclosureOpen);
             if (initialConnector) {
-                setSelectedTools(initialConnector.tools.map(t => t.id));
+                setSelectedTools(getDefaultToolIds(initialConnector));
             }
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -173,34 +181,38 @@ export function AddConnectorModal({
     const saveConnector = (
         connector: Connector,
         options?: {
+            status?: ConnectedConnector["status"];
+            successMessage?: string;
             managedBy?: ConnectedConnector["managedBy"];
             access?: ConnectedConnector["access"];
             toolIds?: string[];
         }
     ) => {
-        const nextTools = options?.toolIds ?? connector.tools.map(t => t.id);
+        const existingConnector = getExistingConnector(connector);
+        const nextTools = options?.toolIds ?? existingConnector?.toolIds ?? connector.tools.map(t => t.id);
         const connectedConnector: ConnectedConnector = {
             id: connector.id,
             name: connector.name,
             category: connector.category,
             type: connector.type,
-            status: "connected",
-            managedBy: options?.managedBy ?? (managedBy === "user" ? "User" : "Admin"),
+            status: options?.status ?? "connected",
+            managedBy: options?.managedBy ?? existingConnector?.managedBy ?? (managedBy === "user" ? "User" : "Admin"),
             toolCount: nextTools.length,
-            access: options?.access ?? (access === "all" ? "All users" : "Select teams"),
+            access: options?.access ?? existingConnector?.access ?? (access === "all" ? "All users" : "Select teams"),
             addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+            toolIds: nextTools,
         };
         onConnectorAdded(connectedConnector);
-        toaster.create(`${connector.name} successfully connected`, { intent: "success" });
+        toaster.create(options?.successMessage ?? `${connector.name} successfully connected`, { intent: "success" });
         handleOpenChange(false);
     };
 
     const handleConfigure = (c: Connector) => {
-        if (isUserLevelConnector(c)) {
+        const existingConnector = getExistingConnector(c);
+
+        if (requiresUserLevelAuth(c) && existingConnector?.status === "configured") {
             saveConnector(c, {
-                managedBy: "User",
-                access: "All users",
-                toolIds: c.tools.map(t => t.id),
+                status: "connected",
             });
             return;
         }
@@ -213,22 +225,33 @@ export function AddConnectorModal({
 
         setSelected(c);
         setStep(0);
-        setSelectedTools(c.tools.map(t => t.id)); // default all enabled
+        setSelectedTools(getDefaultToolIds(c));
         setScreen("configure");
     };
 
     const handleSave = () => {
         if (!selected) return;
-        saveConnector(selected, { toolIds: selectedTools });
+        const existingConnector = getExistingConnector(selected);
+        const shouldDeferConnection = requiresUserLevelAuth(selected) && existingConnector?.status !== "connected";
+
+        saveConnector(selected, {
+            status: shouldDeferConnection ? "configured" : "connected",
+            successMessage: shouldDeferConnection
+                ? `${selected.name} setup saved. Users can connect from the connector details modal.`
+                : undefined,
+            toolIds: selectedTools,
+        });
     };
 
     // ── Filtered connectors for browse ────────────────────────────────────────
     const filteredConnectors = useMemo(() => {
         if (!browseSearch.trim()) return CONNECTORS;
         const q = browseSearch.toLowerCase();
-        return CONNECTORS.filter(
-            c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
-        );
+        return CONNECTORS
+            .filter(
+                c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
+            )
+            .sort((a, b) => a.name.localeCompare(b.name));
     }, [browseSearch]);
 
     // ── Filtered tools for configure step 2 ──────────────────────────────────
@@ -254,6 +277,7 @@ export function AddConnectorModal({
     };
 
     const isSelectedConnected = selected ? connectedIds.includes(selected.id) : false;
+    const isSelectedConfigured = selected ? getExistingConnector(selected)?.status === "configured" : false;
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -303,6 +327,7 @@ export function AddConnectorModal({
                                         key={c.id}
                                         connector={c}
                                         isConnected={connectedIds.includes(c.id)}
+                                        isConfigured={existingConnectors.some(item => item.id === c.id && item.status === "configured")}
                                         onDetails={handleDetails}
                                         onConfigure={handleConfigure}
                                     />
@@ -469,7 +494,7 @@ export function AddConnectorModal({
                                 </Button>
                             ) : (
                                 <Button appearance="primary" onClick={() => handleConfigure(selected)}>
-                                    {isUserLevelConnector(selected) ? "Connect" : "Configure"}
+                                    {requiresUserLevelAuth(selected) && isSelectedConfigured ? "Connect" : "Configure"}
                                 </Button>
                             )}
                         </Box>

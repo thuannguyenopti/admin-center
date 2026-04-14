@@ -40,6 +40,7 @@ import { ConfigureStepperPanel } from "./components/ConfigureStepperPanel";
 import { AddAuthProviderModal, type AuthProviderDraft } from "./components/AddAuthProviderModal";
 import { RegisterRemoteMcpProviderModal, type RemoteMcpProviderDraft } from "./components/RegisterRemoteMcpProviderModal";
 import { CONNECTORS, type Connector } from "./data/connectors";
+import { requiresUserLevelAuth } from "./lib/connectorAuth";
 
 const STORAGE_KEY = "opal_connected_connectors";
 const TAB_VALUES = ["connectors", "tools", "registries", "auth-providers"] as const;
@@ -164,13 +165,16 @@ export default function ToolsPage() {
         setOcpConnector(connector);
         if (ocpAsModal) setOcpModalOpen(true);
     };
+    const openAddConnector = () => {
+        const mcpConnector = CONNECTORS.find(c => c.id === "custom-mcp");
+        if (mcpConnector) {
+            openConfigure(mcpConnector);
+        }
+    };
     const openAddAuthProvider = () => setAddAuthProviderOpen(true);
     const openRegisterRemoteMcp = () => setRegisterRemoteMcpOpen(true);
-    const isUserLevelConnector = (connector: Connector) =>
-        connector.id !== "google-analytics" &&
-        (connector.category === "Google Workspace" || connector.category === "Microsoft 365");
-
-    const connectedIds = connectedConnectors.map(c => c.id);
+    const connectedIds = connectedConnectors.filter(c => c.status === "connected").map(c => c.id);
+    const configuredIds = connectedConnectors.filter(c => c.status === "configured").map(c => c.id);
 
     const renderConnectorStatusOption = (status: string) => {
         if (status === "All") {
@@ -205,18 +209,20 @@ export default function ToolsPage() {
 
     // Filtered connector tiles
     const filteredTiles = useMemo(() => {
-        return CONNECTORS.filter(c => {
-            const matchesSearch = !search.trim() ||
-                c.name.toLowerCase().includes(search.toLowerCase()) ||
-                c.category.toLowerCase().includes(search.toLowerCase()) ||
-                c.description.toLowerCase().includes(search.toLowerCase());
-            const matchesCategory = categoryFilter === "All" || c.category === categoryFilter;
-            const isConnected = connectedIds.includes(c.id);
-            const matchesStatus = connectorStatusFilter === "All" ||
-                (connectorStatusFilter === "Connected" && isConnected) ||
-                (connectorStatusFilter === "Not connected" && !isConnected);
-            return matchesSearch && matchesCategory && matchesStatus;
-        });
+        return CONNECTORS
+            .filter(c => {
+                const matchesSearch = !search.trim() ||
+                    c.name.toLowerCase().includes(search.toLowerCase()) ||
+                    c.category.toLowerCase().includes(search.toLowerCase()) ||
+                    c.description.toLowerCase().includes(search.toLowerCase());
+                const matchesCategory = categoryFilter === "All" || c.category === categoryFilter;
+                const isConnected = connectedIds.includes(c.id);
+                const matchesStatus = connectorStatusFilter === "All" ||
+                    (connectorStatusFilter === "Connected" && isConnected) ||
+                    (connectorStatusFilter === "Not connected" && !isConnected);
+                return matchesSearch && matchesCategory && matchesStatus;
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
     }, [search, categoryFilter, connectorStatusFilter, connectedIds]);
 
     // Filtered auth providers table
@@ -334,6 +340,7 @@ export default function ToolsPage() {
                 onOpenChange={setModalOpen}
                 onConnectorAdded={handleConnectorAdded}
                 onDisconnect={handleDisconnect}
+                existingConnectors={connectedConnectors}
                 connectedIds={connectedIds}
                 initialConnector={modalInitialConnector}
                 initialScreen={modalInitialScreen}
@@ -360,7 +367,7 @@ export default function ToolsPage() {
                     isInstalled={connectedIds.includes(ocpConnector.id)}
                     open={ocpModalOpen}
                     onOpenChange={(open) => { setOcpModalOpen(open); if (!open) setOcpConnector(null); }}
-                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) })}
+                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), toolIds: ocpConnector.tools.map(tool => tool.id) })}
                     onUninstall={() => handleDisconnect(ocpConnector.id)}
                 />
             )}
@@ -371,7 +378,7 @@ export default function ToolsPage() {
                     connector={ocpConnector}
                     isInstalled={connectedIds.includes(ocpConnector.id)}
                     onClose={() => setOcpConnector(null)}
-                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) })}
+                    onInstall={() => handleConnectorAdded({ id: ocpConnector.id, name: ocpConnector.name, category: ocpConnector.category, type: ocpConnector.type, status: "connected", managedBy: "Admin", toolCount: ocpConnector.tools.length, access: "All users", addedOn: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), toolIds: ocpConnector.tools.map(tool => tool.id) })}
                     onUninstall={() => handleDisconnect(ocpConnector.id)}
                 />
             )}
@@ -469,17 +476,27 @@ export default function ToolsPage() {
                                         ))}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
-                                <Box display="flex" alignItems="center" style={{ marginLeft: "auto" }}>
-                                    <Button
-                                        appearance="primary"
-                                        onClick={() => {
-                                            const mcpConnector = CONNECTORS.find(c => c.id === "custom-mcp")!;
-                                            openConfigure(mcpConnector);
-                                        }}
-                                    >
-                                        Add Connector
-                                    </Button>
-                                </Box>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button appearance="primary" style={{ marginLeft: "auto" }} icon={<IconChevronDown />} iconPosition="end">
+                                            Add Connector
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" style={{ minWidth: 260 }}>
+                                        <DropdownMenuItem onClick={openAddConnector}>
+                                            <IconPlus size={14} />
+                                            Connector
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={openAddAuthProvider}>
+                                            <IconShieldCheck size={14} />
+                                            Authentication Provider
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={openRegisterRemoteMcp}>
+                                            <IconScrewdriverWrench size={14} />
+                                            Remote MCP Auth Provider
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </Box>
 
                             {/* Tile grid */}
@@ -512,7 +529,7 @@ export default function ToolsPage() {
                                                     return;
                                                 }
 
-                                                if (isUserLevelConnector(connector)) {
+                                                if (requiresUserLevelAuth(connector) && configuredIds.includes(connector.id)) {
                                                     openDetails(connector);
                                                     return;
                                                 }
