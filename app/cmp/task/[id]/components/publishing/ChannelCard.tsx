@@ -127,9 +127,18 @@ export function ChannelCard({ channelDef, contentItems, isPublished = false, onE
 				<Separator />
 
 				{/* Footer */}
-				<Text fontSize="xs" color={isPublished ? "fg.success" : "fg.tertiary"}>
-					{isPublished ? "PUBLISHED" : "TO BE PUBLISHED: Upon task completion"}
-				</Text>
+				<Box display="flex" alignItems="center" gap="8">
+					{isPublished ? (
+						<Badge intent="success">Published</Badge>
+					) : (
+						<>
+							<Badge intent="neutral">Pending</Badge>
+							<Text fontSize="xs" color="fg.tertiary">
+								Will publish upon task completion
+							</Text>
+						</>
+					)}
+				</Box>
 			</Box>
 		</Card>
 	);
