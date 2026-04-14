@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
+    Alert,
     Box,
     Text,
     Button,
@@ -28,7 +29,7 @@ import { ConnectorTile } from "./ConnectorTile";
 import { ConnectorAvatar } from "./ConnectorAvatar";
 import { ModalStepper } from "./ModalStepper";
 import { CONNECTORS, type Connector, type ToolAction } from "../data/connectors";
-import { requiresUserLevelAuth } from "../lib/connectorAuth";
+import { requiresDeferredUserConnect, usesDirectUserConnect } from "../lib/connectorAuth";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ interface AddConnectorModalProps {
     onDisconnect: (id: string) => void;
     existingConnectors?: ConnectedConnector[];
     connectedIds?: string[];
+    isUserView?: boolean;
     initialConnector?: Connector | null;
     initialScreen?: Screen;
     initialStep?: 0 | 1 | 2;
@@ -110,6 +112,7 @@ export function AddConnectorModal({
     onDisconnect,
     existingConnectors = [],
     connectedIds = [],
+    isUserView = false,
     initialConnector = null,
     initialScreen = "browse",
     initialStep = 0,
@@ -210,7 +213,16 @@ export function AddConnectorModal({
     const handleConfigure = (c: Connector) => {
         const existingConnector = getExistingConnector(c);
 
-        if (requiresUserLevelAuth(c) && existingConnector?.status === "configured") {
+        if (usesDirectUserConnect(c)) {
+            saveConnector(c, {
+                managedBy: "User",
+                access: "All users",
+                toolIds: c.tools.map(t => t.id),
+            });
+            return;
+        }
+
+        if (requiresDeferredUserConnect(c) && existingConnector?.status === "configured") {
             saveConnector(c, {
                 status: "connected",
             });
@@ -232,7 +244,7 @@ export function AddConnectorModal({
     const handleSave = () => {
         if (!selected) return;
         const existingConnector = getExistingConnector(selected);
-        const shouldDeferConnection = requiresUserLevelAuth(selected) && existingConnector?.status !== "connected";
+        const shouldDeferConnection = requiresDeferredUserConnect(selected) && existingConnector?.status !== "connected";
 
         saveConnector(selected, {
             status: shouldDeferConnection ? "configured" : "connected",
@@ -251,7 +263,11 @@ export function AddConnectorModal({
             .filter(
                 c => c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.description.toLowerCase().includes(q)
             )
-            .sort((a, b) => a.name.localeCompare(b.name));
+            .sort((a, b) => {
+                if (a.id === "custom-mcp") return 1;
+                if (b.id === "custom-mcp") return -1;
+                return a.name.localeCompare(b.name);
+            });
     }, [browseSearch]);
 
     // ── Filtered tools for configure step 2 ──────────────────────────────────
@@ -278,6 +294,7 @@ export function AddConnectorModal({
 
     const isSelectedConnected = selected ? connectedIds.includes(selected.id) : false;
     const isSelectedConfigured = selected ? getExistingConnector(selected)?.status === "configured" : false;
+    const isSelectedDirectConnect = selected ? usesDirectUserConnect(selected) : false;
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -477,26 +494,36 @@ export function AddConnectorModal({
                         <Box
                             p="16"
                             display="flex"
-                            justifyContent="flex-end"
-                            gap="8"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            gap="16"
                             style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", flexShrink: 0 }}
                         >
-                            <Button appearance="subtle" onClick={() => handleOpenChange(false)}>Cancel</Button>
-                            {isSelectedConnected ? (
-                                <Button
-                                    appearance="inverse"
-                                    onClick={() => {
-                                        onDisconnect(selected.id);
-                                        handleOpenChange(false);
-                                    }}
-                                >
-                                    Disconnect
-                                </Button>
-                            ) : (
-                                <Button appearance="primary" onClick={() => handleConfigure(selected)}>
-                                    {requiresUserLevelAuth(selected) && isSelectedConfigured ? "Connect" : "Configure"}
-                                </Button>
-                            )}
+                            <Box display="flex" justifyContent="center" flex="1">
+                                {isUserView && !isSelectedConnected && !isSelectedDirectConnect ? (
+                                    <Alert intent="information" style={{ width: "100%" }}>
+                                        Contact your Opal Admin for access.
+                                    </Alert>
+                                ) : null}
+                            </Box>
+                            <Box display="flex" justifyContent="flex-end" gap="8" style={{ flexShrink: 0 }}>
+                                <Button appearance="subtle" onClick={() => handleOpenChange(false)}>Cancel</Button>
+                                {isSelectedConnected ? (
+                                    <Button
+                                        appearance="inverse"
+                                        onClick={() => {
+                                            onDisconnect(selected.id);
+                                            handleOpenChange(false);
+                                        }}
+                                    >
+                                        Disconnect
+                                    </Button>
+                                ) : (
+                                    <Button appearance="primary" onClick={() => handleConfigure(selected)} disabled={isUserView && !isSelectedDirectConnect}>
+                                        {(usesDirectUserConnect(selected) || (requiresDeferredUserConnect(selected) && isSelectedConfigured)) ? "Connect" : "Configure"}
+                                    </Button>
+                                )}
+                            </Box>
                         </Box>
                     </Box>
                 )}
