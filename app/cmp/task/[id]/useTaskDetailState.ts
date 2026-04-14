@@ -264,11 +264,13 @@ export function useTaskDetailState(taskId: string) {
 			const current = prev[taskId] ?? computed.taskWorkflowState;
 			return { ...prev, [taskId]: markAllStepsUndone(current) };
 		});
+		state.setPublishedTasks((prev) => prev.filter((id) => id !== taskId));
 		toaster.create("Task completion undone", { intent: "neutral" });
 	};
 	const confirmPublish = () => {
 		preDialogWorkflowRef.current = null;
 		state.setPublishConfirmOpen(false);
+		state.setPublishedTasks((prev) => [...prev.filter((id) => id !== taskId), taskId]);
 		toaster.create("Content published successfully", { intent: "success" });
 	};
 	const cancelPublishConfirm = () => {
@@ -360,22 +362,38 @@ export function useTaskDetailState(taskId: string) {
 		const allContentIds = channelTypeId === "cms-12"
 			? computed.taskPages.map((p) => p.id)
 			: computed.taskContentInstances.map((i) => i.id);
-		state.setPublishingChannels((current) => [
-			...current,
-			{
-				id: `ch-${Date.now()}`,
-				channelTypeId,
-				selectedContentIds: allContentIds,
-			},
-		]);
+		state.setPublishingChannels((current) => {
+			const taskChannels = current[taskId] ?? [];
+			return {
+				...current,
+				[taskId]: [
+					...taskChannels,
+					{
+						id: `ch-${Date.now()}`,
+						channelTypeId,
+						selectedContentIds: allContentIds,
+					},
+				],
+			};
+		});
 	};
 	const removePublishingChannel = (channelId: string) => {
-		state.setPublishingChannels((current) => current.filter((ch) => ch.id !== channelId));
+		state.setPublishingChannels((current) => {
+			const taskChannels = current[taskId] ?? [];
+			return {
+				...current,
+				[taskId]: taskChannels.filter((ch) => ch.id !== channelId),
+			};
+		});
 	};
 	const updateChannelContent = (channelId: string, contentIds: string[]) => {
-		state.setPublishingChannels((current) =>
-			current.map((ch) => (ch.id === channelId ? { ...ch, selectedContentIds: contentIds } : ch)),
-		);
+		state.setPublishingChannels((current) => {
+			const taskChannels = current[taskId] ?? [];
+			return {
+				...current,
+				[taskId]: taskChannels.map((ch) => (ch.id === channelId ? { ...ch, selectedContentIds: contentIds } : ch)),
+			};
+		});
 	};
 
 	return {

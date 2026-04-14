@@ -16,6 +16,7 @@ type PublishingPageProps = {
 	activeTab: TaskTab;
 	channels: PublishingChannel[];
 	contentInstances: ContentInstance[];
+	isPublished?: boolean;
 	onAddChannel: (channelTypeId: string) => void;
 	onEditChannel: (channelId: string, contentIds: string[]) => void;
 	onRemoveChannel: (channelId: string) => void;
@@ -52,6 +53,7 @@ export function PublishingPage({
 	activeTab,
 	channels,
 	contentInstances,
+	isPublished = false,
 	onAddChannel,
 	onEditChannel,
 	onRemoveChannel,
@@ -162,6 +164,7 @@ export function PublishingPage({
 									key={channel.id}
 									channelDef={def}
 									contentItems={items}
+									isPublished={isPublished}
 									onEdit={() => setEditingChannelId(channel.id)}
 									onRemove={() => onRemoveChannel(channel.id)}
 								/>
@@ -179,6 +182,7 @@ export function PublishingPage({
 					channelDef={editingChannelDef}
 					allContent={getContentForChannel(editingChannel.channelTypeId)}
 					selectedIds={editingChannel.selectedContentIds}
+					isPublished={isPublished}
 					onSave={(ids) => onEditChannel(editingChannel.id, ids)}
 				/>
 			)}
