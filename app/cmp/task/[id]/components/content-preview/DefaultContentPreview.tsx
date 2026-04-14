@@ -17,6 +17,15 @@ const getImageName = (url: string) => {
 				: "http://localhost";
 		const urlObj = new URL(url, base);
 		const parts = urlObj.pathname.split("/").filter(Boolean);
+
+		// Handle picsum.photos URLs with /seed/{name}/{width}/{height} pattern
+		if (urlObj.hostname.includes("picsum.photos") && parts.includes("seed")) {
+			const seedIndex = parts.indexOf("seed");
+			if (seedIndex >= 0 && seedIndex + 1 < parts.length) {
+				return parts[seedIndex + 1];
+			}
+		}
+
 		// Walk backwards to find a segment that isn't purely numeric (skip dimension segments like "800", "600")
 		for (let i = parts.length - 1; i >= 0; i--) {
 			const segment = parts[i];
@@ -27,6 +36,15 @@ const getImageName = (url: string) => {
 		return parts[parts.length - 1] || "Image";
 	} catch {
 		const parts = url.split("/").filter(Boolean);
+
+		// Handle picsum.photos pattern in fallback
+		if (url.includes("picsum.photos") && url.includes("/seed/")) {
+			const seedIndex = parts.indexOf("seed");
+			if (seedIndex >= 0 && seedIndex + 1 < parts.length) {
+				return parts[seedIndex + 1];
+			}
+		}
+
 		for (let i = parts.length - 1; i >= 0; i--) {
 			const segment = (parts[i] || "").split("#")[0].split("?")[0];
 			if (segment && !/^\d+$/.test(segment)) {
