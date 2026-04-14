@@ -73,8 +73,22 @@ export function useCmpTaskBaseState(taskId: string) {
 	const [workflowSearch, setWorkflowSearch] = useState("");
 	const [pendingWorkflowId, setPendingWorkflowId] = useState<string | null>(null);
 	const [workflowDialogOpen, setWorkflowDialogOpen] = useState(false);
-	const [publishingChannels, setPublishingChannels] = useState<PublishingChannel[]>([]);
+	const [publishingChannels, setPublishingChannels] = usePersistentState("cmpPublishingChannels", {} as Record<string, PublishingChannel[]>) as [
+		Record<string, PublishingChannel[]>,
+		React.Dispatch<React.SetStateAction<Record<string, PublishingChannel[]>>>,
+	];
+	const [publishedTasks, setPublishedTasks] = usePersistentState("cmpPublishedTasks", [] as string[]) as [
+		string[],
+		React.Dispatch<React.SetStateAction<string[]>>,
+	];
 	const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+
+	// Migrate old array format to new record format
+	useEffect(() => {
+		if (Array.isArray(publishingChannels)) {
+			setPublishingChannels({});
+		}
+	}, [publishingChannels, setPublishingChannels]);
 
 	return {
 		applications,
@@ -85,11 +99,12 @@ export function useCmpTaskBaseState(taskId: string) {
 		exclude,
 		instanceToAdd,
 		isTargetSelectionOpen,
+		isTaskPublished: publishedTasks.includes(taskId),
 		pages,
 		pendingWorkflowId,
 		perspectives,
 		publishConfirmOpen,
-		publishingChannels,
+		publishingChannels: publishingChannels[taskId] ?? [],
 		previewCurrentEle,
 		previewHoverEle,
 		previewOutlines,
@@ -102,6 +117,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		selectedPanelAssetIds,
 		selectedSearchAssetIds,
 		selectedTaskAssetId,
+		taskId,
 		taskWorkflows,
 		setBriefContent,
 		setContentInstances,
@@ -114,6 +130,7 @@ export function useCmpTaskBaseState(taskId: string) {
 		setPerspectives,
 		setPublishConfirmOpen,
 		setPublishingChannels,
+		setPublishedTasks,
 		setPreviewCurrentEle,
 		setPreviewHoverEle,
 		setPreviewOutlines,
