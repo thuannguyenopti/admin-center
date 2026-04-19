@@ -111,7 +111,7 @@ export default function ContentModelsPage() {
 	}, [cmpContentModels, search, showInactive, secondaryTab, sortBy]);
 
 	const handleCreateClick = () => {
-		router.push("/cmp/settings/content-models/new");
+		router.push("/cmp/settings/templates/new");
 	};
 
 
@@ -146,10 +146,18 @@ export default function ContentModelsPage() {
 				</TabsList>
 
 				<TabsContent value="form">
-					<Box py="40" textAlign="center">
-						<Text fontSize="md" color="fg.secondary">
-							Form templates coming soon
-						</Text>
+					<Box mt="16">
+						<Box display="flex" alignItems="center" gap="8" mb="16">
+							<Box flex="1" />
+							<Button appearance="primary" onClick={() => router.push("/cmp/settings/templates/form")}>
+								Add New
+							</Button>
+						</Box>
+						<Box py="40" textAlign="center">
+							<Text fontSize="md" color="fg.secondary">
+								No form templates yet
+							</Text>
+						</Box>
 					</Box>
 				</TabsContent>
 
@@ -231,7 +239,7 @@ export default function ContentModelsPage() {
 												{filteredContentModels.map((model: ContentType) => (
 													<Tr
 														key={model.id}
-														url={`/cmp/settings/content-models/${model.id}`}
+														url={`/cmp/settings/templates/${model.id}`}
 													>
 														<Td type="header">{model.displayName}</Td>
 														<Td>
@@ -317,7 +325,7 @@ export default function ContentModelsPage() {
 											{filteredContentModels.map((model: ContentType) => (
 												<Tr
 													key={model.id}
-													url={`/cmp/settings/content-models/${model.id}`}
+													url={`/cmp/settings/templates/${model.id}`}
 												>
 													<Td type="header">{model.displayName}</Td>
 													<Td>
@@ -394,7 +402,7 @@ export default function ContentModelsPage() {
 											{filteredContentModels.map((model: ContentType) => (
 												<Tr
 													key={model.id}
-													url={`/cmp/settings/content-models/${model.id}`}
+													url={`/cmp/settings/templates/${model.id}`}
 												>
 													<Td type="header">{model.displayName}</Td>
 													<Td>

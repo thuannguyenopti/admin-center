@@ -181,12 +181,13 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	// Check if we're on the Workflow Builder page
 	const isWorkflowBuilder = path.startsWith("/opal/agents/workflow");
+	const isFormBuilder = path.startsWith("/cmp/settings/templates/form");
 
 	if (!isHydrated || !mounted) {
 		return <Box style={{height: "100vh"}} bg="bg.page" />;
 	}
 
-	if (isWorkflowBuilder) {
+	if (isWorkflowBuilder || isFormBuilder) {
 		return (
 			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
 				{children}

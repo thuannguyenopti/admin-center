@@ -311,7 +311,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								group: settingsGroups.main,
 								label: "Templates",
 								addon: <IconTemplate size={16} />,
-								execute: () => router.push("/cmp/settings/content-models"),
+								execute: () => router.push("/cmp/settings/templates"),
 							},
 							{
 								group: settingsGroups.main,

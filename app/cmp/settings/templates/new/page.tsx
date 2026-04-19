@@ -215,7 +215,7 @@ export default function NewContentModelPage() {
 		};
 
 		setContentTypes([...contentTypes, newContentModel]);
-		router.push("/cmp/settings/content-models");
+		router.push("/cmp/settings/templates");
 	};
 
 	const handleTitleClick = () => {
@@ -246,7 +246,7 @@ export default function NewContentModelPage() {
 				<Breadcrumb
 					mb="16"
 					items={[
-						{ href: "/cmp/settings/content-models", label: "Templates" },
+						{ href: "/cmp/settings/templates", label: "Templates" },
 						{ label: "New Content Model" },
 					]}
 				/>

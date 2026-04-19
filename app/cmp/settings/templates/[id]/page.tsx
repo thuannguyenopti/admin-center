@@ -158,7 +158,7 @@ export default function ContentModelDetailPage() {
 
 	const handleDone = () => {
 		handleSave();
-		router.push("/cmp/settings/content-models");
+		router.push("/cmp/settings/templates");
 	};
 
 	if (!contentModel) {
@@ -175,7 +175,7 @@ export default function ContentModelDetailPage() {
 					<Text fontSize="md" color="fg.secondary">
 						Content model not found
 					</Text>
-					<Button appearance="default" onClick={() => router.push("/cmp/settings/content-models")}>
+					<Button appearance="default" onClick={() => router.push("/cmp/settings/templates")}>
 						Back to Templates
 					</Button>
 				</Box>
@@ -189,7 +189,7 @@ export default function ContentModelDetailPage() {
 				<Breadcrumb
 					mb="16"
 					items={[
-						{ href: "/cmp/settings/content-models", label: "Templates" },
+						{ href: "/cmp/settings/templates", label: "Templates" },
 						{ label: contentModel.displayName || contentModel.name },
 					]}
 				/>

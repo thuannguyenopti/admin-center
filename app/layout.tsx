@@ -546,7 +546,7 @@ export default function RootLayout({
 					{label: "Integrations", url: "/cmp/settings/integrations"},
 					{label: "Routing Rules", url: "/cmp/settings/routing-rules"},
 					{label: "Strategy", url: "/cmp/settings/strategy"},
-					{label: "Templates", url: "/cmp/settings/content-models"},
+					{label: "Templates", url: "/cmp/settings/templates"},
 					{label: "Workflows", url: "/cmp/settings/workflows", separator: true},
 					{label: "Reports", url: "/cmp/settings/reports"},
 					{label: "Activity Log", url: "/cmp/settings/activity-log"},
