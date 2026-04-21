@@ -4,6 +4,7 @@ import { Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconChevronDown, IconChevronRight, IconDots, IconEye, IconPlus } from "@tabler/icons-react";
+import { useEffect, useRef } from "react";
 import type { WorkflowTemplate } from "../../types";
 import type { TaskWorkflowState } from "../../workflowTypes";
 import { WorkflowAvatarGroup } from "./WorkflowAvatarGroup";
@@ -54,6 +55,26 @@ export function WorkflowSidebar({
 	workflowTemplateName,
 }: WorkflowSidebarProps) {
 	const isStarter = workflowState.workflowTemplateId === "starter";
+	const menuButtonRef = useRef<HTMLButtonElement>(null);
+	const menuRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!isMenuOpen) return;
+
+		function handleClickOutside(event: MouseEvent) {
+			if (
+				menuRef.current &&
+				menuButtonRef.current &&
+				!menuRef.current.contains(event.target as Node) &&
+				!menuButtonRef.current.contains(event.target as Node)
+			) {
+				onToggleWorkflowMenu();
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [isMenuOpen, onToggleWorkflowMenu]);
 
 	return (
 		<Box bg="bg.default" display="flex" flexDirection="column" style={{ padding: "14px 16px 18px", position: "relative" }}>
@@ -119,25 +140,27 @@ export function WorkflowSidebar({
 				justifyContent="space-between"
 				style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)", padding: "14px 0" }}
 			>
-				<Button
-					appearance="subtle"
-					onClick={onToggleWorkflowMenu}
-					size="sm"
-					style={{
-						background: isStarter ? "var(--ax-colors-bg-secondary)" : "transparent",
-						borderRadius: 8,
-						height: 32,
-						justifyContent: "flex-start",
-						padding: isStarter ? "0 16px" : 0,
-					}}
-				>
-					<Box alignItems="center" display="flex" gap="8">
-						<Text color="fg.default" style={{ fontSize: 16, lineHeight: "24px", maxWidth: "none" }}>
-							{workflowTemplateName}
-						</Text>
-						<IconChevronDown color="var(--ax-colors-fg-secondary)" size={16} />
-					</Box>
-				</Button>
+				<div ref={menuButtonRef}>
+					<Button
+						appearance="subtle"
+						onClick={onToggleWorkflowMenu}
+						size="sm"
+						style={{
+							background: isStarter ? "var(--ax-colors-bg-secondary)" : "transparent",
+							borderRadius: 8,
+							height: 32,
+							justifyContent: "flex-start",
+							padding: isStarter ? "0 16px" : 0,
+						}}
+					>
+						<Box alignItems="center" display="flex" gap="8">
+							<Text color="fg.default" style={{ fontSize: 16, lineHeight: "24px", maxWidth: "none" }}>
+								{workflowTemplateName}
+							</Text>
+							<IconChevronDown color="var(--ax-colors-fg-secondary)" size={16} />
+						</Box>
+					</Button>
+				</div>
 				<Button appearance="subtle" aria-label="Workflow menu" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 			</Box>
 
@@ -145,6 +168,7 @@ export function WorkflowSidebar({
 				<WorkflowTemplateMenu
 					onSearchChange={onWorkflowSearchChange}
 					onSelect={onRequestWorkflowChange}
+					ref={menuRef}
 					searchValue={searchValue}
 					templates={filteredTemplates}
 				/>
