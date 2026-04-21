@@ -55,7 +55,7 @@ export function WorkflowSidebar({
 	workflowTemplateName,
 }: WorkflowSidebarProps) {
 	const isStarter = workflowState.workflowTemplateId === "starter";
-	const menuButtonRef = useRef<HTMLButtonElement>(null);
+	const menuButtonRef = useRef<HTMLDivElement>(null);
 	const menuRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
