@@ -105,16 +105,47 @@ export function useTaskDetailState(taskId: string) {
 				return;
 			}
 
+			const newPageId = result.page!.id;
+
 			state.setPages((current) => [...current, result.page!]);
-			state.setSelectedPageId(result.page!.id);
+			state.setSelectedPageId(newPageId);
 			state.setSelectedContentInstanceId(null);
 			state.setSelectedTaskAssetId(null);
 			state.setSelectedArticleId(null);
 			toaster.create(`Page "${result.page!.name}" created successfully`, { intent: "success" });
 			state.setIsTargetSelectionOpen(false);
 			state.setInstanceToAdd(null);
+
+			// Auto-add CMS channel if not already present
+			state.setPublishingChannels((current) => {
+				const taskChannels = current[taskId] ?? [];
+				const hasCmsChannel = taskChannels.some((ch) => ch.channelTypeId === "cms-12");
+
+				if (hasCmsChannel) {
+					// Channel exists - add new page to it
+					return {
+						...current,
+						[taskId]: taskChannels.map((ch) => (ch.channelTypeId === "cms-12" ? { ...ch, selectedContentIds: [...ch.selectedContentIds, newPageId] } : ch)),
+					};
+				}
+
+				// No CMS channel exists - create it with all task pages
+				const allTaskPageIds = state.pages.filter((page) => page.cmpTaskMetadata?.taskId === taskId).map((p) => p.id);
+
+				return {
+					...current,
+					[taskId]: [
+						...taskChannels,
+						{
+							id: `ch-${Date.now()}`,
+							channelTypeId: "cms-12",
+							selectedContentIds: [...allTaskPageIds, newPageId],
+						},
+					],
+				};
+			});
 		},
-		[state.contentTypes, state.pages, state.setIsTargetSelectionOpen, state.setInstanceToAdd, state.setPages, state.setSelectedArticleId, state.setSelectedContentInstanceId, state.setSelectedPageId, state.setSelectedTaskAssetId],
+		[currentTaskName, state.contentTypes, state.pages, state.setIsTargetSelectionOpen, state.setInstanceToAdd, state.setPages, state.setPublishingChannels, state.setSelectedArticleId, state.setSelectedContentInstanceId, state.setSelectedPageId, state.setSelectedTaskAssetId, taskId],
 	);
 	const handleAddToApplication = useCallback(
 		(instance: ContentInstance) => {

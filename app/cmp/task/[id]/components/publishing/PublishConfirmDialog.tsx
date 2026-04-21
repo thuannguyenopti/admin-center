@@ -14,12 +14,15 @@ import {
 import { Text } from "@/app/components/Text";
 import { IconAlertTriangle, IconFileText } from "@tabler/icons-react";
 import type { ContentInstance } from "@/app/db/cmpInitialData";
-import type { Page } from "@/app/db/initialData";
+import type { Application, Page } from "@/app/db/initialData";
 import type { PublishingChannel } from "../../types";
 import { getChannelDef } from "./channelDefinitions";
 import { ChannelIcon } from "./ChannelIcon";
+import { getApplicationNamesForPages } from "@/app/lib/pageApplicationUtils";
+import { useMemo } from "react";
 
 type PublishConfirmDialogProps = {
+	applications: Application[];
 	channels: PublishingChannel[];
 	contentInstances: ContentInstance[];
 	onCancel: () => void;
@@ -33,10 +36,22 @@ function getInstanceName(instance: ContentInstance): string {
 	return f.headline || f.title || f.subject_line || f.message || f.name || instance.modelDisplayName;
 }
 
-export function PublishConfirmDialog({ channels, contentInstances, onCancel, onConfirm, open, pages }: PublishConfirmDialogProps) {
+export function PublishConfirmDialog({ applications, channels, contentInstances, onCancel, onConfirm, open, pages }: PublishConfirmDialogProps) {
 	const hasInstances = contentInstances.length > 0;
 	const hasPages = pages.length > 0;
-	const channelsWithContent = channels.filter((ch) => ch.selectedContentIds.length > 0);
+
+	// Enhance CMS channels with application names
+	const channelsWithAppInfo = useMemo(() => {
+		return channels.map((channel) => {
+			if (channel.channelTypeId !== "cms-12") {
+				return { ...channel, appNames: [] };
+			}
+			const appNames = getApplicationNamesForPages(channel.selectedContentIds, pages, applications);
+			return { ...channel, appNames };
+		});
+	}, [channels, pages, applications]);
+
+	const channelsWithContent = channelsWithAppInfo.filter((ch) => ch.selectedContentIds.length > 0);
 	const hasChannelsWithContent = channelsWithContent.length > 0;
 
 	// Check if any CMS pages are NOT assigned to a CMS channel
@@ -107,12 +122,17 @@ export function PublishConfirmDialog({ channels, contentInstances, onCancel, onC
 									{channelsWithContent.map((channel) => {
 										const def = getChannelDef(channel.channelTypeId);
 										if (!def) return null;
+
+										// For CMS channels, append application names if available
+										const displayName =
+											channel.channelTypeId === "cms-12" && channel.appNames.length > 0 ? `${def.name} - ${channel.appNames.join(", ")}` : def.name;
+
 										return (
 											<Box key={channel.id} display="flex" flexDirection="column" gap="4" style={{ paddingLeft: 8 }}>
 												<Box alignItems="center" display="flex" gap="8">
 													<ChannelIcon icon={def.icon} size={14} />
 													<Text color="fg.default" style={{ fontSize: 13, fontWeight: 500, lineHeight: "18px", maxWidth: "none" }}>
-														{def.name}
+														{displayName}
 													</Text>
 													<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>
 														({channel.selectedContentIds.length} items)
