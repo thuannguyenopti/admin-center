@@ -4,6 +4,7 @@ import { Box } from "@optiaxiom/react";
 import { Input } from "@/app/components/Input";
 import { Text } from "@/app/components/Text";
 import { IconSearch } from "@tabler/icons-react";
+import { forwardRef } from "react";
 import type { WorkflowTemplate } from "../../types";
 import { WorkflowTemplateIcon } from "./WorkflowTemplateIcon";
 
@@ -14,29 +15,26 @@ type WorkflowTemplateMenuProps = {
 	searchValue: string;
 };
 
-export function WorkflowTemplateMenu({
-	templates,
-	onSearchChange,
-	onSelect,
-	searchValue,
-}: WorkflowTemplateMenuProps) {
-	return (
-		<Box
-			bg="bg.default"
-			border="1"
-			borderColor="border.default"
-			rounded="lg"
-			style={{
-				boxShadow: "0 12px 32px rgba(22, 34, 51, 0.18)",
-				left: 16,
-				maxHeight: 560,
-				overflow: "hidden",
-				position: "absolute",
-				right: 16,
-				top: 164,
-				zIndex: 30,
-			}}
-		>
+export const WorkflowTemplateMenu = forwardRef<HTMLDivElement, WorkflowTemplateMenuProps>(
+	function WorkflowTemplateMenu({ templates, onSearchChange, onSelect, searchValue }, ref) {
+		return (
+			<Box
+				bg="bg.default"
+				border="1"
+				borderColor="border.default"
+				ref={ref}
+				rounded="lg"
+				style={{
+					boxShadow: "0 12px 32px rgba(22, 34, 51, 0.18)",
+					left: 16,
+					maxHeight: 560,
+					overflow: "hidden",
+					position: "absolute",
+					right: 16,
+					top: 164,
+					zIndex: 30,
+				}}
+			>
 			<Box display="flex" flexDirection="column" style={{ gap: 8, padding: 8 }}>
 				<Input
 					addonBefore={<IconSearch size={16} />}
@@ -83,4 +81,5 @@ export function WorkflowTemplateMenu({
 			</Box>
 		</Box>
 	);
-}
+},
+);

@@ -4,6 +4,7 @@ import { Badge, Box } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconChevronDown, IconChevronRight, IconDots, IconEye, IconPlus } from "@tabler/icons-react";
+import { useEffect, useRef } from "react";
 import type { WorkflowTemplate } from "../../types";
 import type { TaskWorkflowState } from "../../workflowTypes";
 import { WorkflowAvatarGroup } from "./WorkflowAvatarGroup";
@@ -54,6 +55,26 @@ export function WorkflowSidebar({
 	workflowTemplateName,
 }: WorkflowSidebarProps) {
 	const isStarter = workflowState.workflowTemplateId === "starter";
+	const menuButtonRef = useRef<HTMLButtonElement>(null);
+	const menuRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		if (!isMenuOpen) return;
+
+		function handleClickOutside(event: MouseEvent) {
+			if (
+				menuRef.current &&
+				menuButtonRef.current &&
+				!menuRef.current.contains(event.target as Node) &&
+				!menuButtonRef.current.contains(event.target as Node)
+			) {
+				onToggleWorkflowMenu();
+			}
+		}
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, [isMenuOpen, onToggleWorkflowMenu]);
 
 	return (
 		<Box bg="bg.default" display="flex" flexDirection="column" style={{ padding: "14px 16px 18px", position: "relative" }}>
@@ -122,6 +143,7 @@ export function WorkflowSidebar({
 				<Button
 					appearance="subtle"
 					onClick={onToggleWorkflowMenu}
+					ref={menuButtonRef}
 					size="sm"
 					style={{
 						background: isStarter ? "var(--ax-colors-bg-secondary)" : "transparent",
@@ -145,6 +167,7 @@ export function WorkflowSidebar({
 				<WorkflowTemplateMenu
 					onSearchChange={onWorkflowSearchChange}
 					onSelect={onRequestWorkflowChange}
+					ref={menuRef}
 					searchValue={searchValue}
 					templates={filteredTemplates}
 				/>
