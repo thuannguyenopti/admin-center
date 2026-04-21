@@ -221,6 +221,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 			)}
 
 			<PublishConfirmDialog
+				applications={state.applications}
 				channels={state.publishingChannels}
 				contentInstances={state.taskContentInstances}
 				onCancel={state.cancelPublishConfirm}
