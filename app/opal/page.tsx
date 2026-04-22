@@ -9,7 +9,7 @@ import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
@@ -101,7 +101,11 @@ export default function OpalPage() {
   });
 
   const [editorOpen, setEditorOpen] = useState(false);
-  const [landingPageReady, setLandingPageReady] = useState(false);
+  const [landingPageReady, setLandingPageReady] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('canvas') === '1';
+  });
+  const isFirstMount = useRef(true);
 
   // ── Deep-link: ?canvas=1 opens the editor directly on page load ──────────
   useEffect(() => {
@@ -181,7 +185,12 @@ export default function OpalPage() {
   }, [handleLandingPageTrigger, handleSendMessage, setInputValue]);
 
   // Reset canvas state when chat is cleared (e.g. "New chat")
+  // Skip initial mount — messages start empty but landingPageReady may be true from deep link
   useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
     if (messages.length === 0) {
       setLandingPageReady(false);
       setEditorOpen(false);

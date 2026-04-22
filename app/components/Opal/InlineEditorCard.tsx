@@ -6,12 +6,19 @@ import { Button } from "../Button";
 import {
   IconCode,
   IconPen,
+  IconArrowsMaximize,
   IconArrowsRotate,
   IconCopy,
   IconDownload,
   IconThumbsUp,
   IconThumbsDown,
 } from "@optimizely/axiom-icons";
+
+// Matches the Figma "Island - contents" radial gradient thumb
+const THUMB_GRADIENT =
+  "radial-gradient(ellipse at 20% 20%, rgba(245,243,255,1) 5%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)";
+
+const BORDER_T = "1px solid var(--ax-colors-border-tertiary)";
 
 type InlineEditorCardProps = {
   filename: string;
@@ -24,49 +31,82 @@ type InlineEditorCardProps = {
 export function InlineEditorCard({ filename, description, onOpen, selected, onRegenerate }: InlineEditorCardProps) {
   return (
     <Box display="flex" flexDirection="column" gap="8" style={{ minWidth: "66.667%", width: "fit-content", maxWidth: "100%" }}>
-      {/* Artifact card — no expand button; clicking the card opens the canvas */}
+      {/* Artifact card — matches IslandContentTile design */}
       <Box
         display="flex"
         alignItems="center"
-        gap="12"
-        px="16"
-        py="12"
-        rounded="xl"
-        onClick={onOpen}
+        gap="8"
+        p="16"
         style={{
-          cursor: "pointer",
           border: selected
             ? "1.5px solid var(--ax-colors-border-accent)"
-            : "1px solid var(--ax-colors-border-secondary)",
+            : BORDER_T,
+          borderRadius: 12,
+          overflow: "hidden",
+          cursor: "pointer",
           background: selected
             ? "var(--ax-colors-bg-accent-subtle)"
             : "var(--ax-colors-bg-default)",
-          transition: "border 0.2s ease, background 0.2s ease, box-shadow 0.2s ease",
-          boxShadow: selected ? "0 0 0 3px var(--ax-colors-bg-accent-subtle)" : "none",
         }}
+        onClick={onOpen}
       >
-        {/* Icon thumbnail */}
+        {/* Icon thumb with gradient */}
         <Box
           display="flex"
           alignItems="center"
           justifyContent="center"
-          bg="bg.accent.subtle"
-          rounded="lg"
-          style={{ width: 40, height: 40, flexShrink: 0 }}
+          style={{
+            padding: "8px 12px",
+            borderRadius: 6,
+            background: THUMB_GRADIENT,
+            flexShrink: 0,
+            color: "#080736",
+          }}
         >
-          <IconCode size={18} style={{ color: "var(--ax-colors-fg-accent)" }} />
+          <IconCode size={20} />
         </Box>
 
         {/* Text */}
-        <Box flex="1" display="flex" flexDirection="column" gap="2">
-          <Text fontSize="sm" fontWeight="600" color="fg.default">
+        <Box display="flex" flexDirection="column" style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            fontWeight="600"
+            style={{
+              fontSize: 14,
+              lineHeight: "24px",
+              letterSpacing: "-0.154px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {filename}
           </Text>
           {description && (
-            <Text fontSize="xs" color="fg.tertiary">
+            <Text
+              color="fg.secondary"
+              style={{
+                fontSize: 14,
+                lineHeight: 1.6,
+                letterSpacing: "-0.21px",
+                overflow: "hidden",
+                display: "-webkit-box",
+                WebkitBoxOrient: "vertical",
+                WebkitLineClamp: 2,
+              }}
+            >
               {description}
             </Text>
           )}
+        </Box>
+
+        {/* Expand button */}
+        <Box style={{ display: "inline-flex", flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+          <Button
+            appearance="subtle"
+            size="sm"
+            icon={<IconArrowsMaximize size={14} />}
+            aria-label="Open in canvas"
+          />
         </Box>
       </Box>
 
