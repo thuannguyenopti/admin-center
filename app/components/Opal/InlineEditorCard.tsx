@@ -76,6 +76,7 @@ export function InlineEditorCard({ filename, description, onOpen, selected, onRe
           appearance="subtle"
           size="sm"
           onClick={onOpen}
+          disabled={selected}
           icon={<IconPen size={13} />}
         >
           Edit in Canvas
