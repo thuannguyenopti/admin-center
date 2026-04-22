@@ -56,7 +56,13 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
   }, [messages, contextualActionCard]);
 
   const resolvedThreadKey = threadKey ?? "default";
-  const isThreadStreamingExpanded = streamingExpandedByThreadKey[resolvedThreadKey] ?? true;
+  const isThreadStreamingExpanded = streamingExpandedByThreadKey[resolvedThreadKey] ?? false;
+
+  // When a contextualActionCard is present, suppress the action bar on the last
+  // assistant message so there's only one consolidated row (in the card itself).
+  const lastAssistantId = contextualActionCard
+    ? [...messages].reverse().find(m => m.role === 'assistant' && !m.isLoading)?.id
+    : undefined;
 
   // Compute per-message rendering context (agent header, opal header, collapsed)
   const augmented = useMemo(() => {
@@ -332,6 +338,7 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                     setStreamingExpandedByThreadKey((prev) => ({ ...prev, [resolvedThreadKey]: open }))
                   }
                   isOpalLoading={isLoading}
+                  hideActionBar={!!lastAssistantId && message.id === lastAssistantId}
                 />
                 {collapsedOpal && (
                   <Disclosure

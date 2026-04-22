@@ -5,6 +5,28 @@ const nextConfig: NextConfig = {
   compress: true,
   output: "standalone",
   transpilePackages: ["@optiaxiom/react", "@optimizely/axiom-icons"],
+  // These packages are client-only (editor/collab libs) but get incorrectly traced
+  // as server-side dependencies through app/api/source-code/route.ts → CodeMirrorEditor.tsx.
+  // Marking them as serverExternalPackages prevents Turbopack from trying to bundle
+  // them in the App Route / server context.
+  serverExternalPackages: [
+    "@codemirror/state",
+    "@codemirror/view",
+    "@codemirror/commands",
+    "@codemirror/lang-html",
+    "@codemirror/lang-markdown",
+    "@codemirror/lang-javascript",
+    "@codemirror/lang-python",
+    "@codemirror/theme-one-dark",
+    "y-codemirror.next",
+    "yjs",
+    "@tiptap/react",
+    "@tiptap/starter-kit",
+    "@tiptap/extension-code-block-lowlight",
+    "@tiptap/extension-collaboration",
+    "@tiptap/extension-placeholder",
+    "lowlight",
+  ],
   experimental: {
     optimizePackageImports: ["@optiaxiom/react", "@tabler/icons-react"],
   },
