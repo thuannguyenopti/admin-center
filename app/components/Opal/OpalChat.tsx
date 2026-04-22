@@ -56,7 +56,7 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
   }, [messages, contextualActionCard]);
 
   const resolvedThreadKey = threadKey ?? "default";
-  const isThreadStreamingExpanded = streamingExpandedByThreadKey[resolvedThreadKey] ?? true;
+  const isThreadStreamingExpanded = streamingExpandedByThreadKey[resolvedThreadKey] ?? false;
 
   // Compute per-message rendering context (agent header, opal header, collapsed)
   const augmented = useMemo(() => {
