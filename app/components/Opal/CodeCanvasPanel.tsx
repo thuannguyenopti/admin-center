@@ -23,7 +23,7 @@ import {
   IconFileLines,
   IconFile,
 } from "@optimizely/axiom-icons";
-import { useState, useCallback } from "react";
+import { useState, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useCollabDoc } from "./editor/useCollabDoc";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -49,6 +49,9 @@ type CodeCanvasPanelProps = {
   artifactTitle?: string;
   artifactStatus?: string;
   artifactVersion?: string;
+  /** When set, renders this node filling the editor card instead of source/WYSIWYG panels.
+   *  Also hides the source/preview toggle buttons and the status bar. */
+  contentNode?: ReactNode;
 };
 
 // ── Example landing page HTML ─────────────────────────────────────────────────
@@ -235,6 +238,7 @@ export function CodeCanvasPanel({
   artifactTitle,
   artifactStatus,
   artifactVersion,
+  contentNode,
 }: CodeCanvasPanelProps) {
   const collabDoc = useCollabDoc(EXAMPLE_HTML);
   const [mode, setMode] = useState<CanvasMode>("preview");
@@ -294,18 +298,20 @@ export function CodeCanvasPanel({
           </>
         )}
 
-        <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-          <Tooltip content="Source code" delayDuration={400}>
-            <span>
-              <ToggleButton size="sm" appearance="subtle" pressed={mode === "source"} onPressedChange={() => handleSetMode("source")} icon={<IconCode size={15} />} aria-label="Source" />
-            </span>
-          </Tooltip>
-          <Tooltip content="Preview" delayDuration={400}>
-            <span>
-              <ToggleButton size="sm" appearance="subtle" pressed={mode === "preview"} onPressedChange={() => handleSetMode("preview")} icon={<IconEye size={15} />} aria-label="Preview" />
-            </span>
-          </Tooltip>
-        </Box>
+        {!contentNode && (
+          <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+            <Tooltip content="Source code" delayDuration={400}>
+              <span>
+                <ToggleButton size="sm" appearance="subtle" pressed={mode === "source"} onPressedChange={() => handleSetMode("source")} icon={<IconCode size={15} />} aria-label="Source" />
+              </span>
+            </Tooltip>
+            <Tooltip content="Preview" delayDuration={400}>
+              <span>
+                <ToggleButton size="sm" appearance="subtle" pressed={mode === "preview"} onPressedChange={() => handleSetMode("preview")} icon={<IconEye size={15} />} aria-label="Preview" />
+              </span>
+            </Tooltip>
+          </Box>
+        )}
 
         <Box style={{ flex: 1 }} />
 
@@ -389,38 +395,48 @@ export function CodeCanvasPanel({
           bg="bg.default"
           style={{ flex: 1, minHeight: 0, borderRadius: 10, boxShadow: "0 1px 8px rgba(0,0,0,0.08), 0 0 0 1px var(--ax-colors-border-secondary)", overflow: "hidden", position: "relative" }}
         >
-          {/* Source — always mounted to keep Yjs state alive */}
-          <Box
-            style={{
-              position: "absolute", inset: 0,
-              visibility: mode === "source" ? "visible" : "hidden",
-              pointerEvents: mode === "source" ? "auto" : "none",
-            }}
-          >
-            <CodeMirrorEditor collabDoc={collabDoc} language="html" darkMode={false} />
-          </Box>
-
-          {/* Preview (WYSIWYG + formatting toolbar + avatars) */}
-          {mode === "preview" && (
+          {contentNode ? (
             <Box style={{ position: "absolute", inset: 0 }}>
-              <WysiwygPanel key={previewHtml} initialHtml={previewHtml} />
+              {contentNode}
             </Box>
+          ) : (
+            <>
+              {/* Source — always mounted to keep Yjs state alive */}
+              <Box
+                style={{
+                  position: "absolute", inset: 0,
+                  visibility: mode === "source" ? "visible" : "hidden",
+                  pointerEvents: mode === "source" ? "auto" : "none",
+                }}
+              >
+                <CodeMirrorEditor collabDoc={collabDoc} language="html" darkMode={false} />
+              </Box>
+
+              {/* Preview (WYSIWYG + formatting toolbar + avatars) */}
+              {mode === "preview" && (
+                <Box style={{ position: "absolute", inset: 0 }}>
+                  <WysiwygPanel key={previewHtml} initialHtml={previewHtml} />
+                </Box>
+              )}
+            </>
           )}
         </Box>
       </Box>
 
-      {/* ── Status bar ── */}
-      <Box
-        display="flex"
-        alignItems="center"
-        px="20"
-        py="6"
-        style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-secondary)" }}
-      >
-        <Text fontSize="xs" color="fg.tertiary" style={{ fontFamily: "var(--ax-fonts-mono, monospace)" }}>{filename}</Text>
-        <Box style={{ flex: 1 }} />
-        <Text fontSize="xs" color="fg.tertiary">HTML · UTF-8</Text>
-      </Box>
+      {/* ── Status bar — hidden when contentNode is provided ── */}
+      {!contentNode && (
+        <Box
+          display="flex"
+          alignItems="center"
+          px="20"
+          py="6"
+          style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-secondary)" }}
+        >
+          <Text fontSize="xs" color="fg.tertiary" style={{ fontFamily: "var(--ax-fonts-mono, monospace)" }}>{filename}</Text>
+          <Box style={{ flex: 1 }} />
+          <Text fontSize="xs" color="fg.tertiary">HTML · UTF-8</Text>
+        </Box>
+      )}
     </Box>
   );
 }
