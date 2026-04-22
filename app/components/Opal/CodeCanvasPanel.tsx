@@ -326,7 +326,7 @@ export function CodeCanvasPanel({
             options={[
               {
                 label: "Copy link",
-                icon: <IconCopy size={14} />,
+                addon: <IconCopy size={14} />,
                 execute: () => {
                   navigator.clipboard.writeText(window.location.href).catch(() => {});
                   toaster.create("Link copied to clipboard", { intent: "success" });
@@ -334,31 +334,31 @@ export function CodeCanvasPanel({
               },
               {
                 label: "Microsoft Word (.docx)",
-                icon: <IconDownload size={14} />,
+                addon: <IconDownload size={14} />,
                 group: { label: "Download as" },
                 execute: () => {},
               },
               {
                 label: "PDF Document (.pdf)",
-                icon: <IconDownload size={14} />,
+                addon: <IconDownload size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
               {
                 label: "Plain Text (.txt)",
-                icon: <IconDownload size={14} />,
+                addon: <IconDownload size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
               {
                 label: "Rich Text Format (.rtf)",
-                icon: <IconDownload size={14} />,
+                addon: <IconDownload size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
               {
                 label: "Markdown (.md)",
-                icon: <IconDownload size={14} />,
+                addon: <IconDownload size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
