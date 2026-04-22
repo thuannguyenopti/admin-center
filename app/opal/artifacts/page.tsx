@@ -276,8 +276,8 @@ const typeBadgeLabel: Record<ArtifactType, string> = {
     Report: "Report",
 };
 
-// IDs of pinned artifacts (those with imageUrl, max 6)
-const PINNED_IDS = artifacts.filter((a) => a.imageUrl).map((a) => a.id).slice(0, 6);
+// Default pinned IDs (seeded from artifacts that have a preview image)
+const DEFAULT_PINNED_IDS = new Set(artifacts.filter((a) => a.imageUrl).map((a) => a.id).slice(0, 6));
 
 const statusIntent = {
     Ready: "success",
@@ -288,6 +288,30 @@ const statusIntent = {
 const allCreators = [...new Set(artifacts.map((a) => a.createdBy.name))];
 const allSourceTypes: Array<"All" | ArtifactSourceType> = ["All", "chat", "agent", "workflow"];
 const allTypes: Array<"All" | ArtifactType> = ["All", "Document", "Image", "Code", "Presentation", "Spreadsheet", "Report"];
+
+// ─── Pin toggle cell ─────────────────────────────────────────────────────────
+
+function PinCell({ pinned, onToggle }: { pinned: boolean; onToggle: () => void }) {
+    const [hovered, setHovered] = useState(false);
+    const visible = pinned || hovered;
+    return (
+        <Box
+            style={{ width: 32, display: "flex", alignItems: "center", justifyContent: "center" }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        >
+            <Tooltip content={pinned ? "Unpin" : "Pin"} delayDuration={300}>
+                <span style={{ display: "inline-flex", opacity: visible ? 1 : 0, transition: "opacity 0.15s", cursor: "pointer" }}>
+                    <IconThumbtack
+                        size={14}
+                        color={pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)"}
+                    />
+                </span>
+            </Tooltip>
+        </Box>
+    );
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -435,11 +459,21 @@ function SpreadsheetThumbnail() {
 function ArtifactPreviewCard({
     artifact,
     onOpen,
+    pinned,
+    onTogglePin,
 }: {
     artifact: Artifact;
     onOpen: (a: Artifact) => void;
+    pinned: boolean;
+    onTogglePin: (id: string) => void;
 }) {
     const [hovered, setHovered] = useState(false);
+
+    const btnStyle: React.CSSProperties = {
+        background: "rgba(255,255,255,0.92)",
+        borderColor: "var(--ax-colors-border-tertiary)",
+        height: 26, width: 26, padding: 0,
+    };
 
     return (
         <Box
@@ -450,13 +484,15 @@ function ArtifactPreviewCard({
             flexDirection="column"
             overflow="hidden"
             rounded="xl"
-            style={{ cursor: "pointer", height: 180, transition: "box-shadow 0.15s", boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.10)" : "none" }}
+            style={{ height: 180, transition: "box-shadow 0.15s", boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.10)" : "none" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            onClick={() => onOpen(artifact)}
         >
-            {/* Preview area — photo for Image/Presentation, content thumbnail otherwise */}
-            <Box style={{ flex: 1, overflow: "hidden", position: "relative", minHeight: 0 }}>
+            {/* Clickable preview area */}
+            <Box
+                style={{ flex: 1, overflow: "hidden", position: "relative", minHeight: 0, cursor: "pointer" }}
+                onClick={() => onOpen(artifact)}
+            >
                 {artifact.type === "Image" || artifact.type === "Presentation" ? (
                     <img
                         alt={artifact.name}
@@ -470,19 +506,45 @@ function ArtifactPreviewCard({
                 ) : (
                     <DocThumbnail />
                 )}
-                {hovered && (
-                    <Box style={{ position: "absolute", right: 10, top: 10 }}>
-                        <Button
-                            appearance="default"
-                            size="sm"
-                            aria-label="Open"
-                            style={{ background: "rgba(255,255,255,0.94)", borderColor: "var(--ax-colors-border-tertiary)", height: 26, width: 26, padding: 0 }}
-                            onClick={(e) => { e.stopPropagation(); onOpen(artifact); }}
-                            icon={<IconArrowsMaximize size={13} />}
-                        />
+
+                {/* Top-right: ellipsis menu — always mounted, shown on hover via opacity */}
+                <Box
+                    style={{ position: "absolute", right: 8, top: 8, opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none", transition: "opacity 0.15s" }}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button appearance="default" size="sm" aria-label="Options" style={btnStyle} icon={<IconEllipsisSolid size={14} />} />
+                        </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onOpen(artifact)}>
+                                    <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
+                                </DropdownMenuItem>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>
+                                        <Box display="flex" alignItems="center" gap="8"><IconDownload size={14} />Download as</Box>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuSubContent>
+                                        {["Markdown (.md)", "PDF (.pdf)", "Word (.docx)", "Plain text (.txt)"].map((fmt) => (
+                                            <DropdownMenuItem key={fmt}>{fmt}</DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuSubContent>
+                                </DropdownMenuSub>
+                                <DropdownMenuItem>
+                                    <Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onTogglePin(artifact.id)}>
+                                    <Box display="flex" alignItems="center" gap="8"><IconThumbtack size={14} />{pinned ? "Unpin" : "Pin"}</Box>
+                                </DropdownMenuItem>
+                                <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+                                <DropdownMenuItem style={{ color: "var(--ax-colors-fg-danger)" }}>
+                                    <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </Box>
-                )}
             </Box>
+
             {/* Footer */}
             <Box
                 display="flex"
@@ -491,13 +553,33 @@ function ArtifactPreviewCard({
                 px="10"
                 py="8"
                 style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
+                onClick={(e) => e.stopPropagation()}
             >
-                <Badge intent="information" style={{ alignSelf: "flex-start" }}>
-                    {typeBadgeLabel[artifact.type]}
-                </Badge>
+                {/* Badge row + pin toggle */}
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Badge intent="information">{typeBadgeLabel[artifact.type]}</Badge>
+                    <Tooltip content={pinned ? "Unpin" : "Pin"} delayDuration={300}>
+                        <span style={{ display: "inline-flex" }}>
+                            <Button
+                                appearance="subtle"
+                                size="sm"
+                                aria-label={pinned ? "Unpin" : "Pin"}
+                                style={{
+                                    height: 20, width: 20, padding: 0,
+                                    color: pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)",
+                                    opacity: hovered || pinned ? 1 : 0,
+                                    transition: "opacity 0.15s",
+                                }}
+                                onClick={() => onTogglePin(artifact.id)}
+                                icon={<IconThumbtack size={12} />}
+                            />
+                        </span>
+                    </Tooltip>
+                </Box>
+                {/* Title row */}
                 <Box display="flex" alignItems="center" gap="4" style={{ minWidth: 0 }}>
                     <Box color="fg.tertiary" style={{ lineHeight: 0, flexShrink: 0 }}>{typeIcon[artifact.type]}</Box>
-                    <Text fontSize="sm" fontWeight="500" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <Text fontSize="sm" fontWeight="500" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
                         {artifact.name}
                     </Text>
                 </Box>
@@ -509,9 +591,13 @@ function ArtifactPreviewCard({
 function CanvasArtifactCard({
     artifact,
     onOpen,
+    pinned,
+    onTogglePin,
 }: {
     artifact: Artifact;
     onOpen: (a: Artifact) => void;
+    pinned: boolean;
+    onTogglePin: (id: string) => void;
 }) {
     const [hovered, setHovered] = useState(false);
     const icon = typeIcon[artifact.type];
@@ -553,6 +639,42 @@ function CanvasArtifactCard({
                     {artifact.description}
                 </Text>
             </Box>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        appearance="subtle"
+                        size="sm"
+                        icon={<IconEllipsisSolid size={16} />}
+                        aria-label="Options"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpen(artifact); }}>
+                        <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
+                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Box display="flex" alignItems="center" gap="8"><IconDownload size={14} />Download as</Box>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                            {["Markdown (.md)", "PDF (.pdf)", "Word (.docx)", "Plain text (.txt)"].map((fmt) => (
+                                <DropdownMenuItem key={fmt}>{fmt}</DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                        <Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTogglePin(artifact.id); }}>
+                        <Box display="flex" alignItems="center" gap="8"><IconThumbtack size={14} />{pinned ? "Unpin" : "Pin"}</Box>
+                    </DropdownMenuItem>
+                    <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-danger)" }} onClick={(e) => e.stopPropagation()}>
+                        <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </Box>
     );
 }
@@ -570,6 +692,15 @@ export default function ArtifactsPage() {
     const [sortDir, setSortDir] = useState<SortDir>("desc");
     const [deleteTarget, setDeleteTarget] = useState<Artifact | null>(null);
     const [openArtifact, setOpenArtifact] = useState<Artifact | null>(null);
+    const [pinnedIds, setPinnedIds] = useState<Set<string>>(DEFAULT_PINNED_IDS);
+
+    function togglePin(id: string) {
+        setPinnedIds((prev) => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    }
 
     function handleSort(key: SortKey) {
         if (sortKey === key) {
@@ -601,8 +732,11 @@ export default function ArtifactsPage() {
             });
     }, [search, typeFilter, creatorFilter, sourceFilter, sortKey, sortDir]);
 
-    const pinnedArtifacts = filtered.filter((a) => PINNED_IDS.includes(a.id));
-    const recentlyUpdated = filtered.filter((a) => !PINNED_IDS.includes(a.id));
+    const pinnedArtifacts = filtered.filter((a) => pinnedIds.has(a.id));
+    const recentlyUpdated = filtered.filter((a) => !pinnedIds.has(a.id));
+
+    // List view: pinned items float to the top, then rest in sort order
+    const filteredForList = [...pinnedArtifacts, ...recentlyUpdated];
 
     const viewerArtifact: ArtifactViewerArtifact | null = openArtifact
         ? {
@@ -784,12 +918,14 @@ export default function ArtifactsPage() {
                 )}
 
                 {/* ── LIST VIEW ── */}
-                {viewMode === "list" && filtered.length > 0 && (
+                {viewMode === "list" && filteredForList.length > 0 && (
                     <Table>
                         <thead>
                             <Tr>
-                                <Th>Type</Th>
+                                {/* Pin column — narrow */}
+                                <Th style={{ width: 32, paddingRight: 0 }}></Th>
                                 <SortHeader label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} />
+                                <Th>Type</Th>
                                 <Th>Source</Th>
                                 <Th>Created by</Th>
                                 <SortHeader label="Created" sortKey="created" current={sortKey} dir={sortDir} onSort={handleSort} />
@@ -800,14 +936,15 @@ export default function ArtifactsPage() {
                             </Tr>
                         </thead>
                         <tbody>
-                            {filtered.map((artifact) => (
+                            {filteredForList.map((artifact) => (
                                 <Tr
                                     key={artifact.id}
                                     style={{ cursor: "pointer" }}
                                     onClick={() => setOpenArtifact(artifact)}
                                 >
-                                    <Td>
-                                        <Box color="fg.secondary">{typeIcon[artifact.type]}</Box>
+                                    {/* Pin toggle */}
+                                    <Td style={{ width: 32, paddingRight: 0 }}>
+                                        <PinCell pinned={pinnedIds.has(artifact.id)} onToggle={() => togglePin(artifact.id)} />
                                     </Td>
                                     <Td>
                                         <Text fontWeight="500">{artifact.name}</Text>
@@ -816,6 +953,13 @@ export default function ArtifactsPage() {
                                                 {artifact.description}
                                             </Text>
                                         )}
+                                    </Td>
+                                    {/* Type — icon + label */}
+                                    <Td>
+                                        <Box display="flex" alignItems="center" gap="6" color="fg.secondary">
+                                            {typeIcon[artifact.type]}
+                                            <Text fontSize="sm">{artifact.type}</Text>
+                                        </Box>
                                     </Td>
                                     <Td>
                                         <Box
@@ -899,6 +1043,12 @@ export default function ArtifactsPage() {
                                                         Rename
                                                     </Box>
                                                 </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); togglePin(artifact.id); }}>
+                                                    <Box display="flex" alignItems="center" gap="8">
+                                                        <IconThumbtack size={14} />
+                                                        {pinnedIds.has(artifact.id) ? "Unpin" : "Pin"}
+                                                    </Box>
+                                                </DropdownMenuItem>
                                                 <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
                                                 <DropdownMenuItem
                                                     style={{ color: "var(--ax-colors-fg-danger)" }}
@@ -926,7 +1076,7 @@ export default function ArtifactsPage() {
                             <Box display="flex" flexDirection="column" gap="12">
                                 <Box display="flex" alignItems="center" gap="6">
                                     <Box color="fg.tertiary" style={{ lineHeight: 0 }}><IconThumbtack size={13} /></Box>
-                                    <Text fontSize="sm" fontWeight="600" color="fg.secondary">Pinned</Text>
+                                    <Text fontSize="md" fontWeight="600" color="fg.secondary">Pinned</Text>
                                 </Box>
                                 <Box
                                     display="grid"
@@ -934,7 +1084,7 @@ export default function ArtifactsPage() {
                                     style={{ gridTemplateColumns: "repeat(6, 1fr)" }}
                                 >
                                     {pinnedArtifacts.map((a) => (
-                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} />
+                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} />
                                     ))}
                                 </Box>
                             </Box>
@@ -943,14 +1093,14 @@ export default function ArtifactsPage() {
                         {/* Recently Updated section */}
                         {recentlyUpdated.length > 0 && (
                             <Box display="flex" flexDirection="column" gap="12">
-                                <Text fontSize="sm" fontWeight="600" color="fg.secondary">Recently Updated</Text>
+                                <Text fontSize="md" fontWeight="600" color="fg.secondary">Recently Updated</Text>
                                 <Box
                                     display="grid"
                                     gap="10"
                                     style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
                                 >
                                     {recentlyUpdated.map((a) => (
-                                        <CanvasArtifactCard key={a.id} artifact={a} onOpen={setOpenArtifact} />
+                                        <CanvasArtifactCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} />
                                     ))}
                                 </Box>
                             </Box>
