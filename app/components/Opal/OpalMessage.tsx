@@ -241,6 +241,8 @@ type OpalMessageProps = {
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
   agentContext?: { emoji: string; name: string } | null;
   showOpalHeader?: boolean;
+  /** Hides the quick-actions bar (used when a contextualActionCard below already provides consolidated actions) */
+  hideActionBar?: boolean;
 };
 
 // Helper component for action buttons
@@ -429,6 +431,7 @@ export function OpalMessage({
   onVersionChange,
   agentContext,
   showOpalHeader,
+  hideActionBar,
 }: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -754,7 +757,7 @@ export function OpalMessage({
         )}
 
         {/* Quick Actions Row */}
-        {!isLoading && !isEditing && !isExperimentCreation && !isExperimentSummary && (
+        {!isLoading && !isEditing && !isExperimentCreation && !isExperimentSummary && !hideActionBar && (
           <Box
             display="flex"
             gap="8"

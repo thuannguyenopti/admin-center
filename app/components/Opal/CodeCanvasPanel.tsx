@@ -18,6 +18,10 @@ import {
   IconListOl,
   IconQuoteRight,
   IconLink,
+  IconFileWord,
+  IconFilePdf,
+  IconFileLines,
+  IconFile,
 } from "@optimizely/axiom-icons";
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
@@ -326,7 +330,7 @@ export function CodeCanvasPanel({
             options={[
               {
                 label: "Copy link",
-                addon: <IconCopy size={14} />,
+                addon: <IconLink size={14} />,
                 execute: () => {
                   navigator.clipboard.writeText(window.location.href).catch(() => {});
                   toaster.create("Link copied to clipboard", { intent: "success" });
@@ -334,31 +338,31 @@ export function CodeCanvasPanel({
               },
               {
                 label: "Microsoft Word (.docx)",
-                addon: <IconDownload size={14} />,
+                addon: <IconFileWord size={14} />,
                 group: { label: "Download as" },
                 execute: () => {},
               },
               {
                 label: "PDF Document (.pdf)",
-                addon: <IconDownload size={14} />,
+                addon: <IconFilePdf size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
               {
                 label: "Plain Text (.txt)",
-                addon: <IconDownload size={14} />,
+                addon: <IconFileLines size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
               {
                 label: "Rich Text Format (.rtf)",
-                addon: <IconDownload size={14} />,
+                addon: <IconFile size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },
               {
                 label: "Markdown (.md)",
-                addon: <IconDownload size={14} />,
+                addon: <IconFileLines size={14} />,
                 group: { label: "Download as", hidden: true },
                 execute: () => {},
               },

@@ -9,7 +9,7 @@ import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
@@ -103,6 +103,31 @@ export default function OpalPage() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [landingPageReady, setLandingPageReady] = useState(false);
 
+  // ── Deep-link: ?canvas=1 opens the editor directly on page load ──────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('canvas') === '1') {
+      addMessage({ role: 'user', content: LANDING_PAGE_PREFILL });
+      addMessage({ role: 'assistant', content: MOCK_LANDING_RESPONSE });
+      setLandingPageReady(true);
+      // 500ms beat so the tile is visible before the canvas slides in
+      setTimeout(() => setEditorOpen(true), 500);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount only
+
+  // ── Keep URL in sync with canvas open/closed state ────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (editorOpen) {
+      params.set('canvas', '1');
+    } else {
+      params.delete('canvas');
+    }
+    const qs = params.toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+  }, [editorOpen]);
+
   // Landing page trigger — runs loader/streaming sequence, shows tile on completion
   const handleLandingPageTrigger = useCallback(async (userPrompt: string) => {
 
@@ -132,7 +157,7 @@ export default function OpalPage() {
     // Tile appears immediately after streaming ends
     setLandingPageReady(true);
     // Short beat so the user sees the tile, then canvas opens
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 850));
     setEditorOpen(true);
   }, [addMessage, updateMessage]);
 
@@ -155,12 +180,24 @@ export default function OpalPage() {
     handleSendMessage(text ?? "");
   }, [handleLandingPageTrigger, handleSendMessage, setInputValue]);
 
+  // Reset canvas state when chat is cleared (e.g. "New chat")
+  useEffect(() => {
+    if (messages.length === 0) {
+      setLandingPageReady(false);
+      setEditorOpen(false);
+    }
+  }, [messages.length]);
+
   const inlineEditorCard = landingPageReady ? (
     <InlineEditorCard
       filename="landing-page.html"
       description="HTML landing page · ready to edit"
       onOpen={() => setEditorOpen(true)}
       selected={editorOpen}
+      onRegenerate={() => {
+        const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+        if (lastAssistant) regenerate(lastAssistant.id);
+      }}
     />
   ) : null;
 
