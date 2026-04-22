@@ -5,7 +5,8 @@ import { Text } from "../Text";
 import { Button } from "../Button";
 import {
   IconCode,
-  IconArrowsMaximize,
+  IconPen,
+  IconArrowsRotate,
   IconCopy,
   IconDownload,
   IconThumbsUp,
@@ -17,12 +18,13 @@ type InlineEditorCardProps = {
   description?: string;
   onOpen: () => void;
   selected?: boolean;
+  onRegenerate?: () => void;
 };
 
-export function InlineEditorCard({ filename, description, onOpen, selected }: InlineEditorCardProps) {
+export function InlineEditorCard({ filename, description, onOpen, selected, onRegenerate }: InlineEditorCardProps) {
   return (
     <Box display="flex" flexDirection="column" gap="8" style={{ minWidth: "66.667%", width: "fit-content", maxWidth: "100%" }}>
-      {/* Artifact card */}
+      {/* Artifact card — no expand button; clicking the card opens the canvas */}
       <Box
         display="flex"
         alignItems="center"
@@ -66,40 +68,20 @@ export function InlineEditorCard({ filename, description, onOpen, selected }: In
             </Text>
           )}
         </Box>
+      </Box>
 
-        {/* Expand button */}
+      {/* Consolidated quick-actions row */}
+      <Box display="flex" alignItems="center" gap="4">
         <Button
           appearance="subtle"
           size="sm"
-          icon={<IconArrowsMaximize size={14} />}
           onClick={onOpen}
-          aria-label="Open in editor"
-        />
-      </Box>
-
-      {/* Quick actions */}
-      <Box display="flex" alignItems="center" gap="4">
-        {!selected && (
-          <>
-            <Button
-              appearance="subtle"
-              size="sm"
-              onClick={onOpen}
-              icon={<IconArrowsMaximize size={13} />}
-            >
-              Open in editor
-            </Button>
-            <Box
-              style={{
-                width: 1,
-                height: 14,
-                background: "var(--ax-colors-border-secondary)",
-                margin: "0 2px",
-                flexShrink: 0,
-              }}
-            />
-          </>
-        )}
+          icon={<IconPen size={13} />}
+        >
+          Edit in Canvas
+        </Button>
+        <Box style={{ width: 1, height: 14, background: "var(--ax-colors-border-secondary)", margin: "0 2px", flexShrink: 0 }} />
+        <Button appearance="subtle" size="sm" icon={<IconArrowsRotate size={13} />} aria-label="Regenerate" onClick={onRegenerate} />
         <Button appearance="subtle" size="sm" icon={<IconCopy size={13} />} aria-label="Copy" />
         <Button appearance="subtle" size="sm" icon={<IconDownload size={13} />} aria-label="Download" />
         <Box style={{ flex: 1 }} />
