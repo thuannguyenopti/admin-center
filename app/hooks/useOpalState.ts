@@ -26,6 +26,16 @@ const EXPERIMENT_CREATION_STEPS = [
 
 const EXPERIMENT_CREATION_STEP_MS = 1150;
 
+// Generic loading steps shown for all regular prompts
+const GENERIC_LOADING_STEPS = [
+  'Reading your message…',
+  'Searching knowledge base…',
+  'Analyzing context…',
+  'Generating response…',
+  'Finalizing…',
+];
+const GENERIC_STEP_MS = 700;
+
 export type ChatMessage = {
   id: string;
   role: 'user' | 'assistant' | 'event';
@@ -400,21 +410,20 @@ export function useOpalState({
 
     const summaryStepLabels = [...EXPERIMENT_SUMMARY_STEP_LABELS];
 
-    // Add loading message; show steps when this is an experiment summary request
+    // Add loading message with steps for every prompt
     const loadingMessage = addMessage({
       role: 'assistant',
       content: '',
       isLoading: true,
-      ...(isSummarizeRequest && {
-        loadingSteps: summaryStepLabels,
-        loadingStepIndex: 0,
-      }),
-      ...(isExperimentCreationRun && {
-        loadingSteps: [...EXPERIMENT_CREATION_STEPS],
-        loadingStepIndex: 0,
-      }),
+      loadingSteps: isSummarizeRequest
+        ? summaryStepLabels
+        : isExperimentCreationRun
+        ? [...EXPERIMENT_CREATION_STEPS]
+        : GENERIC_LOADING_STEPS,
+      loadingStepIndex: 0,
     });
 
+    let genericStepCancelled = false;
     try {
       if (isExperimentCreationRun) {
         for (let i = 0; i < EXPERIMENT_CREATION_STEPS.length; i++) {
@@ -475,6 +484,18 @@ export function useOpalState({
         updateMessage(loadingMessage.id, {
           loadingStepIndex: summaryStepLabels.length,
         });
+      }
+
+      // For regular prompts (not summarize, not experiment creation), run the generic
+      // step animation concurrently while the API call is in progress.
+      if (!isSummarizeRequest && !isExperimentCreationRun) {
+        (async () => {
+          for (let i = 1; i < GENERIC_LOADING_STEPS.length; i++) {
+            await delay(GENERIC_STEP_MS);
+            if (genericStepCancelled) return;
+            updateMessage(loadingMessage.id, { loadingStepIndex: i });
+          }
+        })();
       }
 
       // Check if we're iterating on a generated page
@@ -634,8 +655,10 @@ export function useOpalState({
         err instanceof Error && err.message === 'Failed to get response from Opal'
           ? err.message
           : 'Failed to send message. Please try again.';
+      genericStepCancelled = true;
       handleChatError(message, loadingMessage.id);
     } finally {
+      genericStepCancelled = true;
       setIsLoading(false);
     }
   }, [isLoading, addMessage, updateMessage, handleChatError, opalContext, optimizationId, onNavigate, activePageId, onPageUpdate, onMessageSent, getCurrentPageData]);
