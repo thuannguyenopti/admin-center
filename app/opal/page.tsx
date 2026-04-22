@@ -10,8 +10,14 @@ import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback } from "react";
-import { CodeCanvasPanel } from "@/app/components/Opal/CodeCanvasPanel";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
+
+// Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
+// browser-only and must not be included in the SSR bundle.
+const CodeCanvasPanel = dynamic(
+  () => import("@/app/components/Opal/CodeCanvasPanel").then((mod) => mod.CodeCanvasPanel),
+  { ssr: false }
+);
 
 const OpalChatView = dynamic(
   () => import("@/app/components/Opal/OpalChatView").then((mod) => mod.OpalChatView)
