@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useMemo, useState} from "react";
+import React, {useMemo, useState, useEffect, useRef} from "react";
 import {Box, Button, Text} from "@optiaxiom/react";
 import {IconPlus} from "@tabler/icons-react";
 
@@ -179,6 +179,10 @@ export default function OutlineTree({
 	type InternalDropPosition = {colId: string; position: number} | null;
 	const [internalDrop, setInternalDrop] = useState<InternalDropPosition>(null);
 
+	// Track newly added section for scrolling
+	const [newSectionId, setNewSectionId] = useState<string | null>(null);
+	const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
 	const isInternalEleDrag = (id: string | null) => {
 		if (!id) return false;
 		if (id === ASSET_DRAG_ID) return false;
@@ -221,11 +225,13 @@ export default function OutlineTree({
 
 	// addSection: if 'at' is null/undefined, append; otherwise insert at index 'at'
 	const addSection = (at: number | null | undefined = null) => {
+		const t = Date.now();
+		const newId = "section-" + t;
+
 		setData((prev) => {
 			const mk = () => {
-				const t = Date.now();
 				return {
-					id: "section-" + t,
+					id: newId,
 					open: true,
 					children: [
 						{
@@ -245,6 +251,9 @@ export default function OutlineTree({
 			if (at === null || at === undefined) return [...prev, mk()];
 			return [...prev.slice(0, at), mk(), ...prev.slice(at)];
 		});
+
+		// Set the new section ID to trigger scroll
+		setNewSectionId(newId);
 	};
 
 	const addCol = (e: any, section: number, row: number, at: any) => {
@@ -491,6 +500,16 @@ export default function OutlineTree({
 		});
 	};
 
+	// Scroll to newly added section
+	useEffect(() => {
+		if (newSectionId && sectionRefs.current[newSectionId]) {
+			const element = sectionRefs.current[newSectionId];
+			element?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			// Clear the new section ID after scrolling
+			setNewSectionId(null);
+		}
+	}, [newSectionId, data]); // Include data to ensure DOM is updated
+
 	const insertImageIntoTree = (
 		colId: string,
 		position: number,
@@ -548,6 +567,11 @@ export default function OutlineTree({
 					return (
 						<div
 							key={sindex}
+							ref={(el) => {
+								if (el && section.id) {
+									sectionRefs.current[section.id] = el;
+								}
+							}}
 							onDragOver={(e) => {
 								// allow dropping section BEFORE this section
 								if (dragging && isSectionId(dragging)) onDragHover(e, section.id);
