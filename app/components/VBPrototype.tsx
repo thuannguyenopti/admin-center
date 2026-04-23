@@ -534,6 +534,12 @@ export default function VBPrototype({
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 	const [styleEditorEle, setStyleEditorEle] = useState<string | null>(null);
 	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(null);
+	const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(null);
+
+	// Wrapper to trigger scroll when section is added
+	const handleSectionAdded = useCallback((sectionId: string) => {
+		setScrollToSectionId(sectionId);
+	}, []);
 
 	// VIEW STATE
 	const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
@@ -667,10 +673,12 @@ export default function VBPrototype({
 	}, [registerPreflightScroll, setCurrentEleSmart]);
 
 	const addSectionToEndOfActiveOutline = () => {
+		const t = Date.now();
+		const newSectionId = "section-" + t;
+
 		setData((prev) => {
-			const t = Date.now();
 			const mkSection = () => ({
-				id: "section-" + t,
+				id: newSectionId,
 				open: true,
 				children: [
 					{
@@ -689,6 +697,9 @@ export default function VBPrototype({
 
 			return [...(prev ?? []), mkSection()];
 		});
+
+		// Trigger scroll to new section
+		handleSectionAdded(newSectionId);
 	};
 
 	const addRandomBlockToEndOfActiveOutline = () => {
@@ -1441,6 +1452,8 @@ export default function VBPrototype({
 								setCurrentHoverEle={setCurrentHoverEle}
 								setOutlines={setOutlines as any}
 								preview={preview}
+								scrollToSectionId={scrollToSectionId}
+								onScrollComplete={() => setScrollToSectionId(null)}
 							/>
 						)}
 						<Box borderL="1" borderColor="border.tertiary">
@@ -1658,6 +1671,7 @@ export default function VBPrototype({
 														setEditingSectionId(id);
 													}}
 													onOpenStyleEditor={onOpenStyleEditorFromOutline}
+													onSectionAdded={handleSectionAdded}
 												/>
 											) : null}
 										</div>
@@ -1896,6 +1910,7 @@ export default function VBPrototype({
 													setEditingSectionId(id);
 												}}
 												onOpenStyleEditor={onOpenStyleEditorFromOutline}
+												onSectionAdded={handleSectionAdded}
 											/>
 										</div>
 									</div>
@@ -2082,6 +2097,8 @@ export default function VBPrototype({
 						setCurrentHoverEle={setCurrentHoverEle}
 						setOutlines={setOutlines as any}
 						preview={preview}
+						scrollToSectionId={scrollToSectionId}
+						onScrollComplete={() => setScrollToSectionId(null)}
 					/>
 
 					{(() => {
