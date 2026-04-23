@@ -506,11 +506,35 @@ export default function OutlineTree({
 			// Use requestAnimationFrame to ensure DOM is fully rendered
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
-					// Try using data attribute query as fallback
 					const element = sectionRefs.current[newSectionId] ||
 						document.querySelector(`[data-section-id="${newSectionId}"]`);
+
 					if (element) {
-						element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						// Find the scrollable parent (the one with overflow-y-auto)
+						let scrollParent: HTMLElement | null = element.parentElement;
+						while (scrollParent) {
+							const style = window.getComputedStyle(scrollParent);
+							if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+								break;
+							}
+							scrollParent = scrollParent.parentElement;
+						}
+
+						if (scrollParent) {
+							// Calculate the relative position within the scroll container
+							const elementRect = element.getBoundingClientRect();
+							const scrollParentRect = scrollParent.getBoundingClientRect();
+							const scrollTop = scrollParent.scrollTop;
+							const relativeTop = elementRect.top - scrollParentRect.top + scrollTop;
+
+							scrollParent.scrollTo({
+								top: relativeTop - 50, // 50px offset from top
+								behavior: 'smooth'
+							});
+						} else {
+							// Fallback to scrollIntoView
+							element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						}
 					}
 					// Clear the new section ID after scrolling
 					setNewSectionId(null);
