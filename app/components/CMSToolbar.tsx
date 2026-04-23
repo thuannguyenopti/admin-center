@@ -917,9 +917,9 @@ export default function CMSToolbar({
 						<DropdownMenuLabel>Page</DropdownMenuLabel>
 						{onViewOnWebsite && (
 							<DropdownMenuItem onSelect={onViewOnWebsite}>
-								<Box display="flex" alignItems="center" gap="8">
+								<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+									<Text>View on website</Text>
 									<IconExternalLink size={16} />
-									View on website
 								</Box>
 							</DropdownMenuItem>
 						)}
