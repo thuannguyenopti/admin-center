@@ -38,6 +38,7 @@ import {
 	IconSend,
 	IconSend2,
 	IconSendOff,
+	IconWorld,
 	IconWorldOff,
 	IconWorldBolt,
 	IconWorldCheck,
@@ -918,7 +919,10 @@ export default function CMSToolbar({
 						{onViewOnWebsite && (
 							<DropdownMenuItem onSelect={onViewOnWebsite}>
 								<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
-									<Text>View on website</Text>
+									<Box display="flex" alignItems="center" gap="8">
+										<IconWorld size={16} />
+										<Text>View on website</Text>
+									</Box>
 									<IconExternalLink size={16} />
 								</Box>
 							</DropdownMenuItem>
