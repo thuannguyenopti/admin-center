@@ -65,6 +65,7 @@ interface OutlineProps {
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 	onEditProperties?: (id: string) => void;
 	onOpenStyleEditor?: (elementId: string) => void;
+	onSectionAdded?: (sectionId: string) => void;
 
 	data: any[];
 }
@@ -130,6 +131,7 @@ export default function OutlineTree({
 	dragging,
 	onEditProperties,
 	onOpenStyleEditor,
+	onSectionAdded,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -251,6 +253,9 @@ export default function OutlineTree({
 			if (at === null || at === undefined) return [...prev, mk()];
 			return [...prev.slice(0, at), mk(), ...prev.slice(at)];
 		});
+
+		// Notify parent that a section was added
+		onSectionAdded?.(newId);
 	};
 
 	const addCol = (e: any, section: number, row: number, at: any) => {
@@ -501,7 +506,7 @@ export default function OutlineTree({
 	useEffect(() => {
 		if (data.length > prevDataLengthRef.current && outlineContainerRef.current) {
 			// A section was added, scroll down
-			setTimeout(() => {
+			requestAnimationFrame(() => {
 				if (!outlineContainerRef.current) return;
 
 				// Find the scrollable parent
@@ -518,7 +523,7 @@ export default function OutlineTree({
 					}
 					el = el.parentElement;
 				}
-			}, 100);
+			});
 		}
 		prevDataLengthRef.current = data.length;
 	}, [data.length]);

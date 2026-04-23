@@ -68,6 +68,8 @@ export default function PreviewCanvas({
 	setCurrentHoverEle,
 	setOutlines,
 	preview,
+	scrollToSectionId,
+	onScrollComplete,
 }: {
 	outlines: Outline[];
 	theEles: EleMap;
@@ -77,12 +79,44 @@ export default function PreviewCanvas({
 	setCurrentHoverEle: (value: React.SetStateAction<string>) => void;
 	setOutlines: React.Dispatch<React.SetStateAction<Outline[]>>;
 	preview: PreviewSettings;
+	scrollToSectionId?: string | null;
+	onScrollComplete?: () => void;
 }) {
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 	const [dropPosition, setDropPosition] = useState<DropPosition>(null);
 
 	// ✅ This MUST be the scroll container div inside PreviewWrapper
 	const scrollRef = useRef<HTMLDivElement | null>(null);
+
+	// Auto-scroll preview when a section is added in the outline
+	useEffect(() => {
+		if (scrollToSectionId && scrollRef.current) {
+			// Wait for DOM to update with new section
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const sectionElement = document.querySelector(`[data-preview-section-id="${scrollToSectionId}"]`);
+
+					if (sectionElement && scrollRef.current) {
+						// Get the section's position relative to the scroll container
+						const scrollContainer = scrollRef.current;
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const sectionRect = sectionElement.getBoundingClientRect();
+
+						// Calculate how much to scroll
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (sectionRect.top - containerRect.top) - 100; // 100px offset from top
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+						// Clear the scroll trigger
+						onScrollComplete?.();
+					}
+				});
+			});
+		}
+	}, [scrollToSectionId, onScrollComplete]);
 
 	// "tablet/mobile" breakpoint
 	const MOBILE_BP = 1024;
@@ -273,6 +307,7 @@ export default function PreviewCanvas({
 			return (
 				<section
 					key={section.id ?? sindex}
+					data-preview-section-id={section.id}
 					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses}`}
 					style={
 						hasBgImage
