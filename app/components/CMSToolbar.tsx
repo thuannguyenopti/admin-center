@@ -785,28 +785,22 @@ export default function CMSToolbar({
 				{/* Publish Button with Menu */}
 				<Menu
 					options={[
-						...(onViewOnWebsite
+						...(pageStatus === "Changed" || pageStatus === "Draft"
 							? [
 									{
-										label: "View on website",
-										addon: <IconWorld size={16} />,
-										execute: onViewOnWebsite,
-										group: {label: "view", hidden: true, separator: true},
+										label: "Publish now",
+										addon: <IconWorldCheck size={16} />,
+										execute: onPublish,
+										group: {label: "publish", hidden: true, separator: true},
+									},
+									{
+										label: "Schedule publish",
+										addon: <IconCalendarCheck size={16} />,
+										execute: () => {},
+										group: {label: "publish", hidden: true, separator: true},
 									},
 								]
 							: []),
-						{
-							label: "Publish now",
-							addon: <IconWorldCheck size={16} />,
-							execute: onPublish,
-							group: {label: "publish", hidden: true, separator: true},
-						},
-						{
-							label: "Schedule publish",
-							addon: <IconCalendarCheck size={16} />,
-							execute: () => {},
-							group: {label: "publish", hidden: true, separator: true},
-						},
 						{
 							label: "Unpublish",
 							addon: <IconWorldX size={16} />,
@@ -926,6 +920,14 @@ export default function CMSToolbar({
 
 						{/* Page Actions */}
 						<DropdownMenuLabel>Page</DropdownMenuLabel>
+						{onViewOnWebsite && (
+							<DropdownMenuItem onSelect={onViewOnWebsite}>
+								<Box display="flex" alignItems="center" gap="8">
+									<IconWorld size={16} />
+									View on website
+								</Box>
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem onSelect={onRenamePage}>
 							<Box display="flex" alignItems="center" gap="8">
 								<IconPencil size={16} />
