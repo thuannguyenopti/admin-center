@@ -38,7 +38,6 @@ import {
 	IconSend,
 	IconSend2,
 	IconSendOff,
-	IconWorld,
 	IconWorldOff,
 	IconWorldBolt,
 	IconWorldCheck,
@@ -56,6 +55,7 @@ import {
 	IconSparkles,
 	IconChecklist,
 	IconCheck,
+	IconExternalLink,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -918,7 +918,7 @@ export default function CMSToolbar({
 						{onViewOnWebsite && (
 							<DropdownMenuItem onSelect={onViewOnWebsite}>
 								<Box display="flex" alignItems="center" gap="8">
-									<IconWorld size={16} />
+									<IconExternalLink size={16} />
 									View on website
 								</Box>
 							</DropdownMenuItem>
