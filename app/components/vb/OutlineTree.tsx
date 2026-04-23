@@ -179,9 +179,9 @@ export default function OutlineTree({
 	type InternalDropPosition = {colId: string; position: number} | null;
 	const [internalDrop, setInternalDrop] = useState<InternalDropPosition>(null);
 
-	// Track newly added section for scrolling
-	const [newSectionId, setNewSectionId] = useState<string | null>(null);
-	const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+	// Track data length for auto-scroll
+	const prevDataLengthRef = useRef(data.length);
+	const outlineContainerRef = useRef<HTMLDivElement>(null);
 
 	const isInternalEleDrag = (id: string | null) => {
 		if (!id) return false;
@@ -251,9 +251,6 @@ export default function OutlineTree({
 			if (at === null || at === undefined) return [...prev, mk()];
 			return [...prev.slice(0, at), mk(), ...prev.slice(at)];
 		});
-
-		// Set the new section ID to trigger scroll
-		setNewSectionId(newId);
 	};
 
 	const addCol = (e: any, section: number, row: number, at: any) => {
@@ -500,48 +497,31 @@ export default function OutlineTree({
 		});
 	};
 
-	// Scroll to newly added section
+	// Auto-scroll when sections are added
 	useEffect(() => {
-		if (newSectionId) {
-			// Use requestAnimationFrame to ensure DOM is fully rendered
-			requestAnimationFrame(() => {
-				requestAnimationFrame(() => {
-					const element = sectionRefs.current[newSectionId] ||
-						document.querySelector(`[data-section-id="${newSectionId}"]`);
+		if (data.length > prevDataLengthRef.current && outlineContainerRef.current) {
+			// A section was added, scroll down
+			setTimeout(() => {
+				if (!outlineContainerRef.current) return;
 
-					if (element) {
-						// Find the scrollable parent (the one with overflow-y-auto)
-						let scrollParent: HTMLElement | null = element.parentElement;
-						while (scrollParent) {
-							const style = window.getComputedStyle(scrollParent);
-							if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-								break;
-							}
-							scrollParent = scrollParent.parentElement;
-						}
-
-						if (scrollParent) {
-							// Calculate the relative position within the scroll container
-							const elementRect = element.getBoundingClientRect();
-							const scrollParentRect = scrollParent.getBoundingClientRect();
-							const scrollTop = scrollParent.scrollTop;
-							const relativeTop = elementRect.top - scrollParentRect.top + scrollTop;
-
-							scrollParent.scrollTo({
-								top: relativeTop - 50, // 50px offset from top
-								behavior: 'smooth'
-							});
-						} else {
-							// Fallback to scrollIntoView
-							element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-						}
+				// Find the scrollable parent
+				let el: HTMLElement | null = outlineContainerRef.current.parentElement;
+				while (el) {
+					const overflow = window.getComputedStyle(el).overflowY;
+					if (overflow === 'auto' || overflow === 'scroll') {
+						// Found it - scroll to bottom smoothly
+						el.scrollTo({
+							top: el.scrollHeight,
+							behavior: 'smooth'
+						});
+						break;
 					}
-					// Clear the new section ID after scrolling
-					setNewSectionId(null);
-				});
-			});
+					el = el.parentElement;
+				}
+			}, 100);
 		}
-	}, [newSectionId]);
+		prevDataLengthRef.current = data.length;
+	}, [data.length]);
 
 	const insertImageIntoTree = (
 		colId: string,
@@ -584,6 +564,7 @@ export default function OutlineTree({
 
 	return (
 		<div
+			ref={outlineContainerRef}
 			className="relative min-h-[300px] pr-3"
 			onDragLeave={(e) => {
 				if (e.currentTarget === e.target) clearAssetDnD();
@@ -601,11 +582,6 @@ export default function OutlineTree({
 						<div
 							key={sindex}
 							data-section-id={section.id}
-							ref={(el) => {
-								if (el && section.id) {
-									sectionRefs.current[section.id] = el;
-								}
-							}}
 							onDragOver={(e) => {
 								// allow dropping section BEFORE this section
 								if (dragging && isSectionId(dragging)) onDragHover(e, section.id);
