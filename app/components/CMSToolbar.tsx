@@ -811,11 +811,6 @@ export default function CMSToolbar({
 							addon: <IconCalendarX size={16} />,
 							execute: () => {},
 						},
-						{
-							label: "Publish settings",
-							addon: <IconSettings size={16} />,
-							execute: () => {},
-						},
 					]}
 				>
 					<MenuTrigger asChild>
