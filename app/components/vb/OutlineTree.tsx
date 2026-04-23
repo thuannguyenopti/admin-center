@@ -502,13 +502,22 @@ export default function OutlineTree({
 
 	// Scroll to newly added section
 	useEffect(() => {
-		if (newSectionId && sectionRefs.current[newSectionId]) {
-			const element = sectionRefs.current[newSectionId];
-			element?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-			// Clear the new section ID after scrolling
-			setNewSectionId(null);
+		if (newSectionId) {
+			// Use requestAnimationFrame to ensure DOM is fully rendered
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					// Try using data attribute query as fallback
+					const element = sectionRefs.current[newSectionId] ||
+						document.querySelector(`[data-section-id="${newSectionId}"]`);
+					if (element) {
+						element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+					}
+					// Clear the new section ID after scrolling
+					setNewSectionId(null);
+				});
+			});
 		}
-	}, [newSectionId, data]); // Include data to ensure DOM is updated
+	}, [newSectionId]);
 
 	const insertImageIntoTree = (
 		colId: string,
@@ -567,6 +576,7 @@ export default function OutlineTree({
 					return (
 						<div
 							key={sindex}
+							data-section-id={section.id}
 							ref={(el) => {
 								if (el && section.id) {
 									sectionRefs.current[section.id] = el;
