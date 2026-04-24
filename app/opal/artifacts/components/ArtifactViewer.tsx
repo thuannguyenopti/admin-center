@@ -18,9 +18,7 @@ import {
     IconCopy,
     IconDownload,
     IconArrowsMaximize,
-    IconSparkles,
     IconAgent,
-    IconCodeBranch,
     IconChevronDown,
     IconCircleCheck,
     IconFile,
@@ -671,8 +669,21 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
 
                 {/* Title + badge + version */}
                 <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
-                    <Box color="fg.secondary" display="flex" alignItems="center" style={{ flexShrink: 0 }}>
-                        {isWorkflow ? <IconCodeBranch size={15} /> : <IconSparkles size={15} />}
+                    {/* Type icon — same gradient thumbnail treatment as the canvas tile */}
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: 6,
+                            background: THUMB_GRADIENT,
+                            flexShrink: 0,
+                            color: "#080736",
+                        }}
+                    >
+                        {TYPE_ICON[artifact.type] ?? <IconFile size={14} />}
                     </Box>
                     <Text fontSize="sm" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
                         {artifact.name}
