@@ -1,39 +1,35 @@
 "use client";
 
 import {
-    Avatar,
     Box,
     Text,
     Button,
     Badge,
+    Avatar,
     Tooltip,
+    Disclosure,
+    DisclosureContent,
+    DisclosureTrigger,
 } from "@optiaxiom/react";
 import {
+    IconXmark,
+    IconArrowLeft,
+    IconArrowRight,
     IconCopy,
     IconDownload,
     IconArrowsMaximize,
+    IconSparkles,
     IconAgent,
-    IconChevronDown,
-    IconChevronRight,
+    IconCodeBranch,
     IconFile,
     IconImage,
     IconCode,
     IconPresentationScreen,
     IconFileSpreadsheet,
     IconChartColumn,
-    IconCheck,
-    IconLightbulb,
-    IconLink,
-    IconFileLines,
-    IconBolt,
 } from "@optimizely/axiom-icons";
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { CodeCanvasPanel } from "@/app/components/Opal/CodeCanvasPanel";
-import { OpalChat } from "@/app/components/Opal/OpalChat";
-import { OpalInput } from "@/app/components/Opal/OpalInput";
-import { OpalHeader } from "@/app/components/Opal/OpalHeader";
-import type { ChatMessage } from "@/app/hooks/useOpalState";
 
 const BORDER_S = "1px solid var(--ax-colors-border-secondary)";
 const BORDER_T = "1px solid var(--ax-colors-border-tertiary)";
@@ -51,45 +47,30 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
     Report:       <IconChartColumn size={20} />,
 };
 
-const TYPE_EXT: Record<string, string> = {
-    Document:     "doc",
-    Image:        "png",
-    Code:         "html",
-    Presentation: "pptx",
-    Spreadsheet:  "xlsx",
-    Report:       "pdf",
-};
-
 /** Figma "Island - contents" card — used as the canvas tile in chat */
 function IslandContentTile({
     name,
     type,
     description,
     onExpand,
-    selected,
 }: {
     name: string;
     type: string;
     description?: string;
     onExpand?: () => void;
-    selected?: boolean;
 }) {
     return (
         <Box
+            bg="bg.default"
             display="flex"
             alignItems="center"
             gap="8"
             p="16"
             style={{
-                border: selected
-                    ? "1.5px solid var(--ax-colors-border-accent)"
-                    : BORDER_T,
+                border: BORDER_T,
                 borderRadius: 12,
                 overflow: "hidden",
                 cursor: "default",
-                background: selected
-                    ? "var(--ax-colors-bg-accent-subtle)"
-                    : "var(--ax-colors-bg-default)",
             }}
         >
             {/* Icon thumb with gradient */}
@@ -173,45 +154,104 @@ export type ArtifactViewerArtifact = {
     imageUrl?: string;
 };
 
-// ─── Mock thread — typed as real ChatMessage so OpalChat renders them natively ──
+type ChatMessage = {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+    timestamp: string;
+};
 
-const NOW = Date.now();
-const MOCK_THREAD: ChatMessage[] = [
-    { id: "m1", role: "user",      content: "Can you write a Q2 email campaign targeting enterprise customers who haven't renewed yet?", timestamp: NOW - 120_000 },
-    { id: "m2", role: "assistant", content: "Sure! I'll draft a compelling renewal campaign. Let me tailor the tone and offer structure for enterprise accounts.", timestamp: NOW - 110_000 },
-    { id: "m3", role: "user",      content: "Focus on the ROI angle and include a limited-time discount offer.", timestamp: NOW - 100_000 },
-    { id: "m4", role: "assistant", content: "Got it — here's the artifact I generated based on your brief. I've highlighted the ROI benefits in the opening and included a 15% renewal discount valid for 14 days.", timestamp: NOW - 90_000 },
+// ─── Mock chat thread ────────────────────────────────────────────────────────
+
+const mockChatMessages: ChatMessage[] = [
+    {
+        id: "1",
+        role: "user",
+        content: "Can you write a Q2 email campaign targeting enterprise customers who haven't renewed yet?",
+        timestamp: "10:24 AM",
+    },
+    {
+        id: "2",
+        role: "assistant",
+        content: "Sure! I'll draft a compelling renewal campaign. Let me tailor the tone and offer structure for enterprise accounts.",
+        timestamp: "10:24 AM",
+    },
+    {
+        id: "3",
+        role: "user",
+        content: "Focus on the ROI angle and include a limited-time discount offer.",
+        timestamp: "10:25 AM",
+    },
+    {
+        id: "4",
+        role: "assistant",
+        content: "Got it — here's the artifact I generated based on your brief. I've highlighted the ROI benefits in the opening and included a 15% renewal discount valid for 14 days.",
+        timestamp: "10:26 AM",
+    },
 ];
 
 // ─── Agent Execution Log ─────────────────────────────────────────────────────
 
-function ExecutionSection({ label, children }: { label: string; children: React.ReactNode }) {
-    const [open, setOpen] = useState(false);
+function ExecutionSection({
+    label,
+    children,
+    open,
+    onOpenChange,
+}: {
+    label: string;
+    children: React.ReactNode;
+    open: boolean;
+    onOpenChange: (v: boolean) => void;
+}) {
     return (
-        <Box style={{ borderBottom: BORDER_S }}>
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                px="16"
-                py="12"
-                style={{ cursor: "pointer" }}
-                onClick={() => setOpen((v) => !v)}
-            >
-                <Text fontSize="sm" fontWeight="500">{label}</Text>
-                {open ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
+        <Disclosure open={open} onOpenChange={onOpenChange}>
+            <Box style={{ borderBottom: BORDER_S }}>
+                <DisclosureTrigger
+                    chevronPosition="end"
+                    fontWeight="400"
+                    fontSize="sm"
+                    px="16"
+                    py="12"
+                >
+                    {label}
+                </DisclosureTrigger>
+                <DisclosureContent>
+                    <Box px="16" pb="12">
+                        {children}
+                    </Box>
+                </DisclosureContent>
             </Box>
-            {open && (
-                <Box px="16" pb="12">
-                    {children}
-                </Box>
-            )}
-        </Box>
+        </Disclosure>
     );
 }
 
+const EXEC_SECTIONS = [
+    "Input Variables",
+    "Output",
+    "Execution Memory",
+    "Output Quality Score",
+    "Guardrail Status",
+] as const;
+type ExecSectionKey = typeof EXEC_SECTIONS[number];
+
 function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
-    const [allExpanded, setAllExpanded] = useState(false);
+    const [sectionOpen, setSectionOpen] = useState<Record<ExecSectionKey, boolean>>({
+        "Input Variables": false,
+        "Output": false,
+        "Execution Memory": false,
+        "Output Quality Score": false,
+        "Guardrail Status": false,
+    });
+
+    const allExpanded = EXEC_SECTIONS.every((s) => sectionOpen[s]);
+
+    const toggleAll = () => {
+        const next = !allExpanded;
+        setSectionOpen(Object.fromEntries(EXEC_SECTIONS.map((s) => [s, next])) as Record<ExecSectionKey, boolean>);
+    };
+
+    const toggleSection = (key: ExecSectionKey) =>
+        setSectionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
 
     return (
         <Box display="flex" flexDirection="column" h="full" style={{ overflowY: "auto" }}>
@@ -262,14 +302,9 @@ function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
                 ))}
             </Box>
 
-            {/* Summary card */}
+            {/* Metadata table — bordered card */}
             <Box px="16" py="12">
-                <Box
-                    border="1"
-                    borderColor="border.secondary"
-                    rounded="xl"
-                    overflow="hidden"
-                >
+                <Box border="1" borderColor="border.secondary" rounded="sm" style={{ overflow: "hidden" }}>
                     {[
                         { label: "Agent Name", value: `${artifact.sourceName} v1.2` },
                         { label: "Execution ID", value: "exec_4f2a9c81", copyable: true },
@@ -315,29 +350,49 @@ function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
             </Box>
 
             {/* Expand all */}
-            <Box px="16" pb="8">
-                <Button appearance="subtle" size="sm" onClick={() => setAllExpanded((v) => !v)}>
+            <Box px="16" pb="8" style={{ borderBottom: BORDER_S }}>
+                <Button appearance="subtle" size="sm" onClick={toggleAll}>
                     {allExpanded ? "Collapse all" : "Expand all"}
                 </Button>
             </Box>
 
             {/* Collapsible sections */}
             <Box style={{ borderTop: BORDER_S }}>
-                <ExecutionSection label="Input Variables">
+                <ExecutionSection
+                    label="Input Variables"
+                    open={sectionOpen["Input Variables"]}
+                    onOpenChange={() => toggleSection("Input Variables")}
+                >
                     <Text fontSize="sm" color="fg.secondary">
                         target_segment: enterprise_renewal, offer: 15_pct_discount, tone: professional
                     </Text>
                 </ExecutionSection>
-                <ExecutionSection label="Output">
+                <ExecutionSection
+                    label="Output"
+                    open={sectionOpen["Output"]}
+                    onOpenChange={() => toggleSection("Output")}
+                >
                     <Text fontSize="sm" color="fg.secondary">Generated artifact: {artifact.name}</Text>
                 </ExecutionSection>
-                <ExecutionSection label="Execution Memory">
+                <ExecutionSection
+                    label="Execution Memory"
+                    open={sectionOpen["Execution Memory"]}
+                    onOpenChange={() => toggleSection("Execution Memory")}
+                >
                     <Text fontSize="sm" color="fg.secondary">3 memory entries used · 2 retrieved from long-term store</Text>
                 </ExecutionSection>
-                <ExecutionSection label="Output Quality Score">
+                <ExecutionSection
+                    label="Output Quality Score"
+                    open={sectionOpen["Output Quality Score"]}
+                    onOpenChange={() => toggleSection("Output Quality Score")}
+                >
                     <Text fontSize="sm" color="fg.secondary">Coherence: 96 · Relevance: 94 · Tone alignment: 95</Text>
                 </ExecutionSection>
-                <ExecutionSection label="Guardrail Status">
+                <ExecutionSection
+                    label="Guardrail Status"
+                    open={sectionOpen["Guardrail Status"]}
+                    onOpenChange={() => toggleSection("Guardrail Status")}
+                >
                     <Text fontSize="sm" color="fg.secondary">All 4 guardrails passed · No policy violations detected</Text>
                 </ExecutionSection>
             </Box>
@@ -361,608 +416,256 @@ function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
     );
 }
 
-// ─── Chat Panel — uses the real OpalChat component ───────────────────────────
+// ─── Chat Panel ───────────────────────────────────────────────────────────────
 
 function ChatPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
-    const [inputValue, setInputValue] = useState("");
+    return (
+        <Box display="flex" flexDirection="column" h="full">
+            {/* Header */}
+            <Box
+                display="flex"
+                alignItems="center"
+                gap="8"
+                px="16"
+                py="12"
+                style={{ borderBottom: BORDER_S, flexShrink: 0 }}
+            >
+                <img src="/opal-orb.png" alt="" width={20} height={20} style={{ display: "block", flexShrink: 0 }} />
+                <Text fontSize="sm" fontWeight="600" style={{ flex: 1 }}>{artifact.sourceName}</Text>
+                <Button appearance="subtle" size="sm">New Chat</Button>
+            </Box>
 
-    const contextualCard = (
-        <Box display="flex" flexDirection="column" gap="12">
-            <IslandContentTile
-                name={artifact.name}
-                type={artifact.type}
-                description={`${artifact.type} · ${artifact.created}`}
-                selected
-            />
-            <Box display="flex" flexDirection="column" gap="6">
-                <Text fontSize="xs" color="fg.secondary" fontWeight="500">Sources</Text>
-                <Box display="flex" flexWrap="wrap" gap="6">
+            {/* Messages */}
+            <Box
+                display="flex"
+                flexDirection="column"
+                gap="16"
+                p="16"
+                style={{ flex: 1, overflowY: "auto" }}
+            >
+                {mockChatMessages.map((msg) => (
+                    <Box key={msg.id} display="flex" flexDirection="column" gap="4">
+                        <Box display="flex" alignItems="center" gap="8">
+                            {msg.role === "user" ? (
+                                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" />
+                            ) : (
+                                <img src="/opal-orb.png" alt="Opal" width={20} height={20} style={{ borderRadius: "50%" }} />
+                            )}
+                            <Text fontSize="xs" color="fg.tertiary">{msg.timestamp}</Text>
+                        </Box>
+                        <Box
+                            bg={msg.role === "user" ? "bg.page" : "bg.default"}
+                            border="1"
+                            borderColor="border.tertiary"
+                            p="12"
+                            rounded="lg"
+                            style={{ marginLeft: 28 }}
+                        >
+                            <Text fontSize="sm">{msg.content}</Text>
+                        </Box>
+                    </Box>
+                ))}
+
+                {/* Artifact canvas tile — Figma "Island - contents" style */}
+                <Box style={{ marginLeft: 28 }}>
+                    <IslandContentTile
+                        name={artifact.name}
+                        type={artifact.type}
+                        description={`${artifact.type} · ${artifact.created}`}
+                    />
+                </Box>
+
+                {/* Sources */}
+                <Box display="flex" flexDirection="column" gap="6" style={{ marginLeft: 28 }}>
+                    <Text fontSize="xs" color="fg.secondary" fontWeight="500">Sources</Text>
                     {["Brand guidelines", "Q1 campaign brief", "Customer data"].map((s) => (
                         <Box
                             key={s}
+                            display="flex"
+                            alignItems="center"
+                            gap="6"
                             px="10"
-                            py="4"
+                            py="6"
                             bg="bg.page"
-                            style={{ border: BORDER_T, borderRadius: 6 }}
+                            border="1"
+                            borderColor="border.tertiary"
+                            rounded="md"
                         >
                             <Text fontSize="xs" color="fg.secondary">{s}</Text>
                         </Box>
                     ))}
                 </Box>
             </Box>
-        </Box>
-    );
 
-    return (
-        <Box display="flex" flexDirection="column" h="full" style={{ background: "var(--opal-bg-page, var(--ax-colors-bg-default))" }}>
-            {/* Header — matches OpalChatView canvas sidebar */}
-            <Box style={{ flexShrink: 0 }}>
-                <OpalHeader
-                    onToggleHistory={() => {}}
-                    onNewChat={() => {}}
-                />
-            </Box>
-
-            {/* Messages — same OpalChat used in the main canvas sidebar */}
-            <Box display="flex" flexDirection="column" style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-            <OpalChat
-                messages={MOCK_THREAD}
-                onSuggestionClick={() => {}}
-                hideSuggestions
-                variant="assistant"
-                contextualActionCard={contextualCard}
-            />
-            </Box>
-
-            {/* Input — matches OpalChatView canvas sidebar exactly */}
-            <Box style={{ flexShrink: 0, padding: "12px" }}>
-                <OpalInput
-                    variant="assistant"
-                    value={inputValue}
-                    onChange={setInputValue}
-                    onSend={() => setInputValue("")}
-                    isLoading={false}
-                    disabled={false}
-                />
-            </Box>
-        </Box>
-    );
-}
-
-// ─── Custom content panels ────────────────────────────────────────────────────
-
-function ImageViewerPanel({ src }: { src?: string }) {
-    return (
-        <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            style={{ background: "#1a1a1a", height: "100%" }}
-        >
-            <img
-                src={src ?? "/cmp/assets/recommendation/search-04-image.jpg"}
-                alt=""
-                style={{ maxWidth: "90%", maxHeight: "90%", objectFit: "contain" }}
-            />
-        </Box>
-    );
-}
-
-function DashboardPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
-    const competitors = [
-        { name: "AlphaCloud",  share: "34%", content: "45 posts", seo: 82, threat: "High",   threatIntent: "danger"  as const },
-        { name: "CoreMetrics", share: "21%", content: "28 posts", seo: 71, threat: "Medium", threatIntent: "warning" as const },
-        { name: "FlowStack",   share: "18%", content: "19 posts", seo: 65, threat: "Low",    threatIntent: "neutral" as const },
-        { name: "Databridge",  share: "12%", content: "22 posts", seo: 60, threat: "Low",    threatIntent: "neutral" as const },
-    ];
-
-    const gaps = [
-        {
-            icon: <IconLightbulb size={16} />,
-            title: "Pricing page clarity",
-            body: "AlphaCloud leads with interactive calculator. Opportunity: add ROI estimator.",
-            badge: "Gap",
-            intent: "warning" as const,
-        },
-        {
-            icon: <IconLink size={16} />,
-            title: "Integration depth",
-            body: "You lead with 48 native integrations vs competitor avg of 31.",
-            badge: "Advantage",
-            intent: "success" as const,
-        },
-        {
-            icon: <IconFileLines size={16} />,
-            title: "Case study volume",
-            body: "Competitors average 24 case studies. You have 8. Priority: publish 4/month.",
-            badge: "Priority",
-            intent: "danger" as const,
-        },
-    ];
-
-    const cols = ["Company", "Market share", "Monthly content", "SEO score", "Threat"];
-
-    return (
-        <Box style={{ overflowY: "auto", height: "100%", padding: "24px 32px", background: "var(--ax-colors-bg-secondary)" }}>
-            {/* Header */}
-            <Box display="flex" flexDirection="column" gap="4" mb="24">
-                <Text fontSize="xl" fontWeight="700">{artifact.name}</Text>
-                <Text color="fg.secondary" fontSize="sm">Competitor analysis · 5 companies · as of Mar 25, 2026</Text>
-            </Box>
-
-            {/* KPI cards */}
-            <Box style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "12px" }}>
-                {[
-                    { value: "5",        label: "Competitors tracked",        color: undefined },
-                    { value: "−12%",     label: "Market share gap vs leader", color: "var(--ax-colors-fg-danger)" },
-                    { value: "3.2×",     label: "Content velocity vs avg",    color: "var(--ax-colors-fg-success)" },
-                    { value: "78 / 100", label: "Opportunity score",          color: undefined },
-                ].map((kpi) => (
-                    <Box
-                        key={kpi.label}
-                        bg="bg.default"
-                        border="1"
-                        borderColor="border.secondary"
-                        rounded="xl"
-                        p="16"
-                        display="flex"
-                        flexDirection="column"
-                        gap="4"
-                    >
-                        <Text fontSize="2xl" fontWeight="700" style={{ color: kpi.color ?? "var(--ax-colors-fg-default)" }}>
-                            {kpi.value}
-                        </Text>
-                        <Text fontSize="xs" color="fg.secondary">{kpi.label}</Text>
-                    </Box>
-                ))}
-            </Box>
-
-            {/* Competitor table */}
-            <Text fontSize="sm" fontWeight="600" mt="24" mb="12" style={{ display: "block" }}>Competitive positioning</Text>
-            <Box bg="bg.default" border="1" borderColor="border.secondary" rounded="xl" overflow="hidden">
-                {/* Header row */}
+            {/* Input */}
+            <Box p="12" style={{ borderTop: BORDER_S }}>
                 <Box
-                    display="flex"
-                    bg="bg.secondary"
-                    style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)" }}
-                >
-                    {cols.map((h) => (
-                        <Box key={h} style={{ flex: h === "Company" ? 2 : 1, padding: "10px 16px" }}>
-                            <Text fontSize="xs" fontWeight="600" color="fg.secondary">{h}</Text>
-                        </Box>
-                    ))}
-                </Box>
-                {/* Your brand */}
-                <Box
+                    bg="bg.page"
+                    border="1"
+                    borderColor="border.secondary"
+                    rounded="lg"
+                    p="10"
                     display="flex"
                     alignItems="center"
-                    bg="bg.accent.subtle"
-                    style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}
+                    gap="8"
                 >
-                    <Box style={{ flex: 2, padding: "10px 16px" }}>
-                        <Text fontSize="sm" fontWeight="600" color="fg.accent">Your brand</Text>
-                    </Box>
-                    {["15%", "38 posts", "78"].map((v) => (
-                        <Box key={v} style={{ flex: 1, padding: "10px 16px" }}>
-                            <Text fontSize="sm">{v}</Text>
-                        </Box>
-                    ))}
-                    <Box style={{ flex: 1, padding: "10px 16px" }}>
-                        <Text fontSize="sm" color="fg.tertiary">—</Text>
-                    </Box>
+                    <img src="/opal-orb.png" alt="" width={16} height={16} />
+                    <Text fontSize="sm" color="fg.tertiary" style={{ flex: 1 }}>Ask Opal anything…</Text>
                 </Box>
-                {/* Competitor rows */}
-                {competitors.map((c, i) => (
-                    <Box
-                        key={c.name}
-                        display="flex"
-                        alignItems="center"
-                        style={{ borderBottom: i < competitors.length - 1 ? "1px solid var(--ax-colors-border-tertiary)" : undefined }}
-                    >
-                        <Box style={{ flex: 2, padding: "10px 16px" }}>
-                            <Text fontSize="sm">{c.name}</Text>
-                        </Box>
-                        {[c.share, c.content, String(c.seo)].map((v) => (
-                            <Box key={v} style={{ flex: 1, padding: "10px 16px" }}>
-                                <Text fontSize="sm">{v}</Text>
-                            </Box>
-                        ))}
-                        <Box style={{ flex: 1, padding: "10px 16px" }}>
-                            <Badge intent={c.threatIntent}>{c.threat}</Badge>
-                        </Box>
-                    </Box>
-                ))}
+            </Box>
+        </Box>
+    );
+}
+
+// ─── Canvas Panel ─────────────────────────────────────────────────────────────
+
+function CanvasPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
+    return (
+        <Box display="flex" flexDirection="column" h="full" bg="bg.page">
+            {/* Toolbar */}
+            <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                px="16"
+                py="10"
+                bg="bg.default"
+                style={{ borderBottom: BORDER_S, flexShrink: 0 }}
+            >
+                <Box display="flex" alignItems="center" gap="4">
+                    <Tooltip content="Undo" delayDuration={300}>
+                        <span style={{ display: "inline-flex" }}>
+                            <Button appearance="subtle" size="sm" aria-label="Undo">
+                                <IconArrowLeft size={14} />
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    <Tooltip content="Redo" delayDuration={300}>
+                        <span style={{ display: "inline-flex" }}>
+                            <Button appearance="subtle" size="sm" aria-label="Redo">
+                                <IconArrowRight size={14} />
+                            </Button>
+                        </span>
+                    </Tooltip>
+                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                    <Tooltip content="Copy" delayDuration={300}>
+                        <span style={{ display: "inline-flex" }}>
+                            <Button appearance="subtle" size="sm" icon={<IconCopy size={14} />} aria-label="Copy" />
+                        </span>
+                    </Tooltip>
+                    <Tooltip content="Download" delayDuration={300}>
+                        <span style={{ display: "inline-flex" }}>
+                            <Button appearance="subtle" size="sm" icon={<IconDownload size={14} />} aria-label="Download" />
+                        </span>
+                    </Tooltip>
+                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                    <Button appearance="subtle" size="sm">Add to</Button>
+                </Box>
             </Box>
 
-            {/* Feature & content gaps */}
-            <Text fontSize="sm" fontWeight="600" mt="24" mb="12" style={{ display: "block" }}>Feature &amp; content gaps</Text>
-            <Box style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px" }}>
-                {gaps.map((g) => (
+            {/* Canvas content — collab editor style */}
+            <Box
+                p="32"
+                style={{ flex: 1, overflowY: "auto", background: "var(--ax-colors-bg-page)" }}
+            >
+                <Box style={{ maxWidth: 720, width: "100%", margin: "0 auto" }} display="flex" flexDirection="column" gap="16">
+
+                    {/* Island header tile — consistent with IslandContentTile */}
                     <Box
-                        key={g.title}
                         bg="bg.default"
-                        border="1"
-                        borderColor="border.secondary"
-                        rounded="xl"
-                        p="16"
                         display="flex"
-                        flexDirection="column"
-                        gap="8"
+                        alignItems="center"
+                        gap="12"
+                        p="20"
+                        style={{ border: BORDER_T, borderRadius: 12 }}
                     >
                         <Box
                             display="flex"
                             alignItems="center"
                             justifyContent="center"
-                            rounded="md"
                             style={{
-                                width: 32,
-                                height: 32,
+                                padding: "10px 14px",
+                                borderRadius: 8,
                                 background: THUMB_GRADIENT,
+                                flexShrink: 0,
                                 color: "#080736",
-                                lineHeight: 0,
                             }}
                         >
-                            {g.icon}
+                            {TYPE_ICON[artifact.type] ?? <IconFile size={20} />}
                         </Box>
-                        <Box display="flex" flexDirection="column" gap="4">
-                            <Text fontSize="sm" fontWeight="600">{g.title}</Text>
-                            <Text fontSize="xs" color="fg.secondary">{g.body}</Text>
+                        <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1 }}>
+                            <Text fontWeight="600" style={{ fontSize: 16, lineHeight: "24px", letterSpacing: "-0.2px" }}>
+                                {artifact.name}
+                            </Text>
+                            <Text color="fg.tertiary" fontSize="sm">
+                                {artifact.type} · {artifact.created}{artifact.version ? ` · v${artifact.version}` : ""}
+                            </Text>
                         </Box>
-                        <Badge intent={g.intent} style={{ alignSelf: "flex-start" }}>{g.badge}</Badge>
                     </Box>
-                ))}
-            </Box>
-        </Box>
-    );
-}
 
-function PresentationPanel() {
-    const slideStyle: React.CSSProperties = {
-        maxWidth: 640,
-        margin: "0 auto",
-        background: "var(--ax-colors-bg-default)",
-        borderRadius: 12,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
-        aspectRatio: "16/9",
-        overflow: "hidden",
-        position: "relative",
-        width: "100%",
-    };
+                    {/* Document body */}
+                    <Box
+                        bg="bg.default"
+                        display="flex"
+                        flexDirection="column"
+                        gap="16"
+                        p="32"
+                        style={{ border: BORDER_T, borderRadius: 12 }}
+                    >
+                        <Text style={{ lineHeight: "1.7" }}>
+                            Dear valued customer, as we head into Q2 we want to acknowledge the partnership we&apos;ve built
+                            together over the past year. Your investment in our platform has driven measurable results — and
+                            we&apos;re confident the next chapter will deliver even more.
+                        </Text>
+                        <Text style={{ lineHeight: "1.7" }}>
+                            To show our appreciation, we&apos;re extending an exclusive renewal offer:{" "}
+                            <strong>15% off your enterprise subscription</strong> when you renew within the next 14 days.
+                            This is our way of saying thank you for being part of the journey.
+                        </Text>
+                        <Text style={{ lineHeight: "1.7" }}>
+                            Ready to continue building momentum? Your account team is standing by to walk you through
+                            everything that&apos;s new — and everything that&apos;s coming.
+                        </Text>
 
-    return (
-        <Box
-            display="flex"
-            flexDirection="column"
-            style={{ overflow: "auto", height: "100%", background: "var(--ax-colors-bg-secondary)", paddingTop: 32, paddingBottom: 32, gap: 16 }}
-        >
-            {/* Slide 1 — Title */}
-            <Box style={slideStyle}>
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="center"
-                    flexDirection="column"
-                    style={{
-                        height: "100%",
-                        gap: 12,
-                        background: "linear-gradient(135deg,#6d28d9 0%,#4338ca 100%)",
-                        padding: 32,
-                    }}
-                >
-                    <Text fontSize="xl" fontWeight="700" style={{ color: "white", textAlign: "center" }}>Q1 Sales Review</Text>
-                    <Text fontSize="sm" style={{ color: "white", textAlign: "center", opacity: 0.85 }}>Exec Readout · Pipeline &amp; ARR Highlights · Q1 2026</Text>
-                    <Box style={{ width: 40, height: 2, background: "rgba(255,255,255,0.3)" }} />
-                    <Text fontSize="xs" style={{ color: "white", opacity: 0.7 }}>Stride · Confidential</Text>
-                </Box>
-            </Box>
-
-            {/* Slide 2 — ARR */}
-            <Box style={slideStyle}>
-                <Box style={{ padding: 32, height: "100%", overflowY: "hidden" }}>
-                    <Text fontSize="lg" fontWeight="700" mb="16" style={{ display: "block" }}>ARR Performance</Text>
-                    <Box style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 16 }}>
-                        {[
-                            { value: "$4.2M", label: "ARR", sub: "vs $3.8M target", delta: "+10.5%", positive: true },
-                            { value: "$1.1M", label: "New ARR", sub: "Q1 target $0.9M", delta: "+22%", positive: true },
-                            { value: "$0.3M", label: "Churn", sub: "vs $0.4M budget", delta: "−25%", positive: true },
-                        ].map((m) => (
-                            <Box key={m.label} bg="bg.secondary" rounded="lg" p="16">
-                                <Text fontSize="xl" fontWeight="700" style={{ display: "block" }}>{m.value}</Text>
-                                <Text fontSize="xs" color="fg.secondary" style={{ display: "block" }}>{m.label}</Text>
-                                <Text fontSize="xs" color="fg.secondary" style={{ display: "block" }}>{m.sub}</Text>
-                                <Text fontSize="xs" style={{ color: "var(--ax-colors-fg-success)", display: "block", marginTop: 4 }}>{m.delta}</Text>
-                            </Box>
-                        ))}
-                    </Box>
-                    <Text fontSize="xs" fontWeight="600" color="fg.secondary" mb="8" style={{ display: "block" }}>Top performing segments</Text>
-                    {[
-                        { name: "Enterprise", pct: 58 },
-                        { name: "Mid-market", pct: 30 },
-                        { name: "SMB",        pct: 12 },
-                    ].map((s) => (
-                        <Box key={s.name} display="flex" alignItems="center" gap="8" mb="4">
-                            <Text fontSize="xs" style={{ minWidth: 80 }}>{s.name}</Text>
-                            <Box style={{ flex: 1, height: 6, background: "var(--ax-colors-bg-secondary)", borderRadius: 3, overflow: "hidden" }}>
-                                <Box style={{ width: `${s.pct}%`, height: "100%", background: "var(--ax-colors-fg-accent)", borderRadius: 3 }} />
-                            </Box>
-                            <Text fontSize="xs" color="fg.secondary" style={{ minWidth: 28, textAlign: "right" }}>{s.pct}%</Text>
-                        </Box>
-                    ))}
-                </Box>
-            </Box>
-
-            {/* Slide 3 — Pipeline */}
-            <Box style={slideStyle}>
-                <Box style={{ padding: 32, height: "100%", overflowY: "hidden" }}>
-                    <Text fontSize="lg" fontWeight="700" mb="16" style={{ display: "block" }}>Pipeline Snapshot</Text>
-                    <Box style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-                        <Box display="flex" flexDirection="column" gap="8">
+                        {/* Metadata fields */}
+                        <Box
+                            mt="8"
+                            p="16"
+                            style={{ background: "var(--ax-colors-bg-page)", border: BORDER_T, borderRadius: 8 }}
+                            display="flex"
+                            flexDirection="column"
+                            gap="8"
+                        >
                             {[
-                                { stage: "Prospecting",  count: 142, pct: 100 },
-                                { stage: "Qualification", count: 87,  pct: 61 },
-                                { stage: "Proposal",     count: 44,  pct: 31 },
-                                { stage: "Negotiation",  count: 18,  pct: 13 },
-                            ].map((s) => (
-                                <Box key={s.stage}>
-                                    <Box display="flex" justifyContent="space-between" mb="4">
-                                        <Text fontSize="xs">{s.stage}</Text>
-                                        <Text fontSize="xs" color="fg.secondary">{s.count}</Text>
-                                    </Box>
-                                    <Box style={{ height: 6, background: "var(--ax-colors-bg-secondary)", borderRadius: 3, overflow: "hidden" }}>
-                                        <Box style={{ width: `${s.pct}%`, height: "100%", background: "var(--ax-colors-fg-accent)", borderRadius: 3 }} />
-                                    </Box>
+                                { label: "Author", value: artifact.createdBy.name },
+                                { label: "Meta Title", value: `${artifact.name} | Optimizely` },
+                                { label: "Meta Description", value: "Exclusive Q2 enterprise renewal offer — 15% off for 14 days." },
+                                { label: "URL Slug", value: "q2-enterprise-renewal-campaign" },
+                            ].map((field) => (
+                                <Box key={field.label} display="flex" alignItems="start" gap="16">
+                                    <Text
+                                        fontSize="xs"
+                                        color="fg.tertiary"
+                                        style={{ minWidth: 130, flexShrink: 0, paddingTop: 2 }}
+                                    >
+                                        {field.label}
+                                    </Text>
+                                    <Text fontSize="sm" color="fg.secondary">{field.value}</Text>
                                 </Box>
                             ))}
                         </Box>
-                        <Box display="flex" flexDirection="column" gap="16">
-                            <Box>
-                                <Text fontSize="2xl" fontWeight="700" color="fg.accent" style={{ display: "block" }}>24%</Text>
-                                <Text fontSize="xs" color="fg.secondary">Win rate</Text>
-                            </Box>
-                            <Box>
-                                <Text fontSize="2xl" fontWeight="700" style={{ display: "block" }}>3.1×</Text>
-                                <Text fontSize="xs" color="fg.secondary">Pipeline coverage</Text>
-                            </Box>
-                        </Box>
                     </Box>
                 </Box>
             </Box>
         </Box>
     );
 }
-
-type ContentType = "Blog" | "Social" | "Email";
-type CalItem = { id: string; title: string; type: ContentType };
-type CalRow  = { week: string; days: CalItem[][] };
-
-const TYPE_CYCLE: ContentType[] = ["Blog", "Social", "Email"];
-const TYPE_STYLES: Record<ContentType, { bg: string; color: string; dot: string }> = {
-    Blog:   { bg: "var(--ax-colors-bg-accent-subtle)",  color: "var(--ax-colors-fg-accent)",    dot: "var(--ax-colors-fg-accent)" },
-    Social: { bg: "rgba(16,185,129,0.12)",              color: "#059669",                        dot: "#059669" },
-    Email:  { bg: "var(--ax-colors-bg-secondary)",      color: "var(--ax-colors-fg-secondary)",  dot: "var(--ax-colors-fg-tertiary)" },
-};
-
-const INITIAL_ROWS: CalRow[] = [
-    { week: "Apr 7–11",  days: [
-        [{ id:"a1", title:"Product launch post",     type:"Blog"   }],
-        [{ id:"a2", title:"Renewal email",            type:"Email"  }],
-        [{ id:"a3", title:"LinkedIn carousel",        type:"Social" }],
-        [],
-        [],
-    ]},
-    { week: "Apr 14–18", days: [
-        [{ id:"b1", title:"Feature spotlight",        type:"Blog"   }],
-        [],
-        [],
-        [{ id:"b2", title:"Twitter thread",           type:"Social" }],
-        [{ id:"b3", title:"Nurture email #3",         type:"Email"  }],
-    ]},
-    { week: "Apr 21–25", days: [
-        [{ id:"c1", title:"Case study: AlphaCloud",   type:"Blog"   }],
-        [{ id:"c2", title:"Newsletter #12",           type:"Email"  }],
-        [],
-        [{ id:"c3", title:"Instagram reel",           type:"Social" }],
-        [],
-    ]},
-    { week: "Apr 28–30+", days: [
-        [{ id:"d1", title:"Q2 preview post",          type:"Blog"   }],
-        [{ id:"d2", title:"Re-engagement email",      type:"Email"  }],
-        [],
-        [],
-        [],
-    ]},
-];
-
-let _uid = 100;
-function uid() { return `item-${++_uid}`; }
-
-function SpreadsheetPanel() {
-    const [rows, setRows] = useState<CalRow[]>(INITIAL_ROWS);
-    const [editing, setEditing] = useState<{ ri: number; di: number; ii: number } | null>(null);
-    const [hovered, setHovered] = useState<{ ri: number; di: number } | null>(null);
-
-    function updateTitle(ri: number, di: number, ii: number, val: string) {
-        setRows(prev => prev.map((r, ri2) => ri2 !== ri ? r : {
-            ...r, days: r.days.map((day, di2) => di2 !== di ? day : day.map((item, ii2) =>
-                ii2 !== ii ? item : { ...item, title: val }
-            ))
-        }));
-    }
-
-    function cycleType(ri: number, di: number, ii: number) {
-        setRows(prev => prev.map((r, ri2) => ri2 !== ri ? r : {
-            ...r, days: r.days.map((day, di2) => di2 !== di ? day : day.map((item, ii2) => {
-                if (ii2 !== ii) return item;
-                const next = TYPE_CYCLE[(TYPE_CYCLE.indexOf(item.type) + 1) % TYPE_CYCLE.length];
-                return { ...item, type: next };
-            }))
-        }));
-    }
-
-    function addItem(ri: number, di: number) {
-        const id = uid();
-        setRows(prev => prev.map((r, ri2) => ri2 !== ri ? r : {
-            ...r, days: r.days.map((day, di2) => di2 !== di ? day : [...day, { id, title: "New item", type: "Blog" as ContentType }])
-        }));
-        // immediately open for editing
-        setEditing({ ri, di, ii: rows[ri].days[di].length });
-    }
-
-    function deleteItem(ri: number, di: number, ii: number) {
-        setRows(prev => prev.map((r, ri2) => ri2 !== ri ? r : {
-            ...r, days: r.days.map((day, di2) => di2 !== di ? day : day.filter((_, ii2) => ii2 !== ii))
-        }));
-    }
-
-    const headerCellStyle: React.CSSProperties = { padding: "10px 16px", textAlign: "left", whiteSpace: "nowrap", userSelect: "none" };
-    const cellStyle: React.CSSProperties = { padding: "8px 12px", verticalAlign: "top", position: "relative", minWidth: 130, minHeight: 56 };
-
-    return (
-        <Box style={{ overflow: "auto", height: "100%", background: "var(--ax-colors-bg-secondary)", padding: 0, display: "flex", flexDirection: "column" }}>
-            {/* Header bar */}
-            <Box
-                bg="bg.default"
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                style={{ borderBottom: "1px solid var(--ax-colors-border-secondary)", padding: "12px 20px", flexShrink: 0 }}
-            >
-                <Text fontSize="md" fontWeight="600">Content Calendar — April 2026</Text>
-                <Text fontSize="sm" color="fg.tertiary">
-                    {rows.reduce((s, r) => s + r.days.reduce((ss, d) => ss + d.length, 0), 0)} items · 4 channels
-                </Text>
-            </Box>
-
-            {/* Table */}
-            <Box style={{ overflowX: "auto", flex: 1 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
-                    <colgroup>
-                        <col style={{ width: 90 }} />
-                        <col /><col /><col /><col /><col />
-                    </colgroup>
-                    <thead>
-                        <tr style={{ background: "var(--ax-colors-bg-secondary)", position: "sticky", top: 0, zIndex: 1 }}>
-                            {["Week", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((h) => (
-                                <th key={h} style={headerCellStyle}>
-                                    <Text fontSize="sm" fontWeight="600" color="fg.secondary">{h}</Text>
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map((row, ri) => (
-                            <tr key={row.week} style={{ borderTop: "1px solid var(--ax-colors-border-tertiary)", background: "var(--ax-colors-bg-default)" }}>
-                                <td style={{ ...cellStyle, minWidth: 90 }}>
-                                    <Text fontSize="sm" fontWeight="600" color="fg.secondary">{row.week}</Text>
-                                </td>
-                                {row.days.map((items, di) => {
-                                    const isHov = hovered?.ri === ri && hovered?.di === di;
-                                    return (
-                                        <td
-                                            key={di}
-                                            style={cellStyle}
-                                            onMouseEnter={() => setHovered({ ri, di })}
-                                            onMouseLeave={() => setHovered(null)}
-                                        >
-                                            {items.map((item, ii) => {
-                                                const s = TYPE_STYLES[item.type];
-                                                const isEd = editing?.ri === ri && editing?.di === di && editing?.ii === ii;
-                                                return (
-                                                    <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                                                        {/* Type dot — click to cycle */}
-                                                        <span
-                                                            title={`Type: ${item.type} (click to change)`}
-                                                            onClick={(e) => { e.stopPropagation(); cycleType(ri, di, ii); }}
-                                                            style={{ width: 7, height: 7, borderRadius: "50%", background: s.dot, flexShrink: 0, cursor: "pointer", marginTop: 1 }}
-                                                        />
-                                                        {/* Pill / inline input */}
-                                                        {isEd ? (
-                                                            <input
-                                                                autoFocus
-                                                                defaultValue={item.title}
-                                                                onBlur={(e) => { updateTitle(ri, di, ii, e.target.value || item.title); setEditing(null); }}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                                                                    if (e.key === "Escape") setEditing(null);
-                                                                }}
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                style={{
-                                                                    flex: 1, fontSize: 13, border: "1px solid var(--ax-colors-border-accent)",
-                                                                    borderRadius: 5, padding: "2px 7px", outline: "none",
-                                                                    background: s.bg, color: s.color, fontFamily: "inherit",
-                                                                    minWidth: 0,
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <span
-                                                                onClick={() => setEditing({ ri, di, ii })}
-                                                                style={{
-                                                                    flex: 1, fontSize: 13, borderRadius: 5, padding: "3px 7px",
-                                                                    background: s.bg, color: s.color, cursor: "text",
-                                                                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                                                                    border: "1px solid transparent",
-                                                                }}
-                                                            >
-                                                                {item.title}
-                                                            </span>
-                                                        )}
-                                                        {/* Delete × */}
-                                                        {isHov && !isEd && (
-                                                            <span
-                                                                onClick={(e) => { e.stopPropagation(); deleteItem(ri, di, ii); }}
-                                                                title="Remove"
-                                                                style={{ fontSize: 10, color: "var(--ax-colors-fg-tertiary)", cursor: "pointer", lineHeight: 1, flexShrink: 0, padding: "0 2px" }}
-                                                            >×</span>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                            {/* Add + button — shown on hover */}
-                                            {isHov && (
-                                                <div
-                                                    onClick={() => addItem(ri, di)}
-                                                    title="Add item"
-                                                    style={{
-                                                        display: "inline-flex", alignItems: "center", gap: 3,
-                                                        fontSize: 10, color: "var(--ax-colors-fg-tertiary)",
-                                                        cursor: "pointer", marginTop: 2, padding: "2px 4px",
-                                                        borderRadius: 4, userSelect: "none",
-                                                    }}
-                                                    onMouseEnter={e => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
-                                                    onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
-                                                >
-                                                    <span style={{ fontSize: 13, lineHeight: 1 }}>+</span> Add
-                                                </div>
-                                            )}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </Box>
-        </Box>
-    );
-}
-
-function getArtifactContentNode(artifact: ArtifactViewerArtifact): ReactNode | undefined {
-    if (artifact.type === "Image")        return <ImageViewerPanel src={artifact.imageUrl} />;
-    if (artifact.type === "Report")       return <DashboardPanel artifact={artifact} />;
-    if (artifact.type === "Presentation") return <PresentationPanel />;
-    if (artifact.type === "Spreadsheet")  return <SpreadsheetPanel />;
-    return undefined; // Document, Code → use default WYSIWYG/CodeMirror
-}
-
-// ─── Canvas Panel is CodeCanvasPanel ─────────────────────────────────────────
-// (see app/components/Opal/CodeCanvasPanel.tsx — same TipTap editor experience)
 
 // ─── Main ArtifactViewer ──────────────────────────────────────────────────────
 
 type ArtifactViewerProps = {
     artifact: ArtifactViewerArtifact;
     onClose: () => void;
-    /** "preview" = full-width content only. "with-panel" = content + chat/execution log on right. */
     openMode?: "preview" | "with-panel";
 };
 
@@ -990,22 +693,44 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
                 background: "var(--ax-colors-bg-default)",
             }}
         >
+            {/* Top bar */}
+            <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+                px="20"
+                py="12"
+                bg="bg.default"
+                style={{ borderBottom: BORDER_S, flexShrink: 0, zIndex: 1 }}
+            >
+                <Box display="flex" alignItems="center" gap="10">
+                    <Box color="fg.secondary" display="flex" alignItems="center">
+                        {isWorkflow ? <IconCodeBranch size={16} /> : <IconSparkles size={16} />}
+                    </Box>
+                    <Text fontSize="sm" fontWeight="600">{artifact.name}</Text>
+                    <Badge intent={artifact.status === "Ready" ? "success" : artifact.status === "Failed" ? "danger" : "information"}>
+                        {artifact.status}
+                    </Badge>
+                    {artifact.version && (
+                        <Text fontSize="xs" color="fg.tertiary">v{artifact.version}</Text>
+                    )}
+                </Box>
+                <Box display="flex" alignItems="center" gap="4">
+                    <Button appearance="subtle" size="sm" icon={<IconDownload size={14} />} aria-label="Download" />
+                    <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close" onClick={onClose} />
+                </Box>
+            </Box>
+
+            {/* Split panels */}
             <Box display="flex" style={{ flex: 1, overflow: "hidden" }}>
-                {/* Content canvas — full width when preview-only, flex-1 when panel visible */}
-                <Box style={{ flex: "1 1 0", overflow: "hidden" }}>
-                    <CodeCanvasPanel
-                        onClose={onClose}
-                        filename={`${artifact.name.toLowerCase().replace(/\s+/g, "-")}.${artifact.type === "Code" ? "html" : "doc"}`}
-                        artifactTitle={artifact.name}
-                        artifactStatus={artifact.status}
-                        artifactVersion={artifact.version}
-                        contentNode={getArtifactContentNode(artifact)}
-                    />
+                {/* Left: Canvas */}
+                <Box style={{ flex: "1 1 0", overflow: "hidden", borderRight: showPanel ? BORDER_S : undefined }}>
+                    <CanvasPanel artifact={artifact} />
                 </Box>
 
-                {/* Right panel — only when opened via source link */}
+                {/* Right: Context panel — only shown when opened via source */}
                 {showPanel && (
-                    <Box style={{ width: 400, flexShrink: 0, overflow: "hidden", borderLeft: BORDER_S }}>
+                    <Box style={{ width: 400, flexShrink: 0, overflow: "hidden" }}>
                         {isWorkflow ? (
                             <AgentExecutionLog artifact={artifact} />
                         ) : (
