@@ -13,14 +13,16 @@ import {
 } from "@optiaxiom/react";
 import {
     IconXmark,
-    IconArrowLeft,
-    IconArrowRight,
+    IconArrowRotateLeft,
+    IconArrowRotateRight,
     IconCopy,
     IconDownload,
     IconArrowsMaximize,
     IconSparkles,
     IconAgent,
     IconCodeBranch,
+    IconChevronDown,
+    IconCircleCheck,
     IconFile,
     IconImage,
     IconCode,
@@ -522,47 +524,6 @@ function ChatPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
 function CanvasPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
     return (
         <Box display="flex" flexDirection="column" h="full" bg="bg.page">
-            {/* Toolbar */}
-            <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="space-between"
-                px="16"
-                py="10"
-                bg="bg.default"
-                style={{ borderBottom: BORDER_S, flexShrink: 0 }}
-            >
-                <Box display="flex" alignItems="center" gap="4">
-                    <Tooltip content="Undo" delayDuration={300}>
-                        <span style={{ display: "inline-flex" }}>
-                            <Button appearance="subtle" size="sm" aria-label="Undo">
-                                <IconArrowLeft size={14} />
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Tooltip content="Redo" delayDuration={300}>
-                        <span style={{ display: "inline-flex" }}>
-                            <Button appearance="subtle" size="sm" aria-label="Redo">
-                                <IconArrowRight size={14} />
-                            </Button>
-                        </span>
-                    </Tooltip>
-                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
-                    <Tooltip content="Copy" delayDuration={300}>
-                        <span style={{ display: "inline-flex" }}>
-                            <Button appearance="subtle" size="sm" icon={<IconCopy size={14} />} aria-label="Copy" />
-                        </span>
-                    </Tooltip>
-                    <Tooltip content="Download" delayDuration={300}>
-                        <span style={{ display: "inline-flex" }}>
-                            <Button appearance="subtle" size="sm" icon={<IconDownload size={14} />} aria-label="Download" />
-                        </span>
-                    </Tooltip>
-                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
-                    <Button appearance="subtle" size="sm">Add to</Button>
-                </Box>
-            </Box>
-
             {/* Canvas content — collab editor style */}
             <Box
                 p="32"
@@ -693,31 +654,79 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
                 background: "var(--ax-colors-bg-default)",
             }}
         >
-            {/* Top bar */}
+            {/* Unified toolbar — single 48px row matching opal canvas style */}
             <Box
                 display="flex"
                 alignItems="center"
-                justifyContent="space-between"
-                px="20"
-                py="12"
+                gap="4"
+                px="12"
                 bg="bg.default"
-                style={{ borderBottom: BORDER_S, flexShrink: 0, zIndex: 1 }}
+                style={{ flexShrink: 0, borderBottom: BORDER_S, height: 48, overflow: "hidden", zIndex: 1 }}
             >
-                <Box display="flex" alignItems="center" gap="10">
-                    <Box color="fg.secondary" display="flex" alignItems="center">
-                        {isWorkflow ? <IconCodeBranch size={16} /> : <IconSparkles size={16} />}
+                {/* Close */}
+                <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close" onClick={onClose} />
+
+                {/* Divider */}
+                <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
+
+                {/* Title + badge + version */}
+                <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
+                    <Box color="fg.secondary" display="flex" alignItems="center" style={{ flexShrink: 0 }}>
+                        {isWorkflow ? <IconCodeBranch size={15} /> : <IconSparkles size={15} />}
                     </Box>
-                    <Text fontSize="sm" fontWeight="600">{artifact.name}</Text>
+                    <Text fontSize="sm" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
+                        {artifact.name}
+                    </Text>
                     <Badge intent={artifact.status === "Ready" ? "success" : artifact.status === "Failed" ? "danger" : "information"}>
                         {artifact.status}
                     </Badge>
                     {artifact.version && (
-                        <Text fontSize="xs" color="fg.tertiary">v{artifact.version}</Text>
+                        <Text fontSize="xs" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
                     )}
                 </Box>
-                <Box display="flex" alignItems="center" gap="4">
-                    <Button appearance="subtle" size="sm" icon={<IconDownload size={14} />} aria-label="Download" />
-                    <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close" onClick={onClose} />
+
+                {/* Spacer */}
+                <Box style={{ flex: 1 }} />
+
+                {/* Right cluster */}
+                <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+                    {/* Saved indicator */}
+                    <Box display="flex" alignItems="center" gap="4">
+                        <IconCircleCheck size={15} color="var(--ax-colors-fg-success)" />
+                        <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Change saved.</Text>
+                    </Box>
+
+                    {/* Undo / Redo / Copy / Download */}
+                    <Box display="flex" alignItems="center" gap="4">
+                        <Tooltip content="Undo" delayDuration={300}>
+                            <span style={{ display: "inline-flex" }}>
+                                <Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" />
+                            </span>
+                        </Tooltip>
+                        <Tooltip content="Redo" delayDuration={300}>
+                            <span style={{ display: "inline-flex" }}>
+                                <Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" />
+                            </span>
+                        </Tooltip>
+                        <Tooltip content="Copy" delayDuration={300}>
+                            <span style={{ display: "inline-flex" }}>
+                                <Button appearance="subtle" size="sm" icon={<IconCopy size={15} />} aria-label="Copy" />
+                            </span>
+                        </Tooltip>
+                        <Tooltip content="Download" delayDuration={300}>
+                            <span style={{ display: "inline-flex" }}>
+                                <Button appearance="subtle" size="sm" icon={<IconDownload size={15} />} aria-label="Download" />
+                            </span>
+                        </Tooltip>
+                    </Box>
+
+                    {/* Divider */}
+                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+
+                    {/* Add to */}
+                    <Button appearance="primary" size="sm" icon={<IconChevronDown size={13} />} iconPosition="end">
+                        Add to
+                    </Button>
                 </Box>
             </Box>
 
