@@ -669,30 +669,14 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
 
                 {/* Title + badge + version */}
                 <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
-                    {/* Type icon — same gradient thumbnail treatment as the canvas tile */}
-                    <Box
-                        display="flex"
-                        alignItems="center"
-                        justifyContent="center"
-                        style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 6,
-                            background: THUMB_GRADIENT,
-                            flexShrink: 0,
-                            color: "#080736",
-                        }}
-                    >
-                        {TYPE_ICON[artifact.type] ?? <IconFile size={14} />}
-                    </Box>
-                    <Text fontSize="sm" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
+                    <Text fontSize="md" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
                         {artifact.name}
                     </Text>
                     <Badge intent={artifact.status === "Ready" ? "success" : artifact.status === "Failed" ? "danger" : "information"}>
                         {artifact.status}
                     </Badge>
                     {artifact.version && (
-                        <Text fontSize="xs" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
+                        <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
                     )}
                 </Box>
 
