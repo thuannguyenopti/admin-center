@@ -317,7 +317,7 @@ function PinCell({ pinned, onToggle }: { pinned: boolean; onToggle: () => void }
                     transition: "opacity 0.15s",
                 }}>
                     <IconThumbtack
-                        size={14}
+                        size={16}
                         color={pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)"}
                     />
                 </span>
@@ -982,7 +982,7 @@ export default function ArtifactsPage() {
                                     <Td>
                                         <Box display="flex" alignItems="center" gap="6" color="fg.secondary">
                                             {typeIcon[artifact.type]}
-                                            <Text fontSize="sm">{artifact.type}</Text>
+                                            <Text fontSize="md">{artifact.type}</Text>
                                         </Box>
                                     </Td>
                                     <Td>
