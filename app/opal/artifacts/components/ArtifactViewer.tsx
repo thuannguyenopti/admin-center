@@ -584,7 +584,7 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
                             {artifact.status}
                         </Badge>
                         {artifact.version && (
-                            <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
+                            <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
                         )}
                     </Box>
 
