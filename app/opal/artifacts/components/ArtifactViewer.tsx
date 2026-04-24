@@ -262,48 +262,56 @@ function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
                 ))}
             </Box>
 
-            {/* Metadata table */}
-            <Box display="flex" flexDirection="column" px="16" py="12">
-                {[
-                    { label: "Agent Name", value: `${artifact.sourceName} v1.2` },
-                    { label: "Execution ID", value: "exec_4f2a9c81", copyable: true },
-                    { label: "Execution Started", value: artifact.created },
-                    { label: "Duration", value: "1m 24s" },
-                    { label: "Executed By", value: artifact.createdBy.name, avatar: artifact.createdBy.avatar },
-                    { label: "Output Quality Score", value: "95%", badge: "Passed", badgeIntent: "success" as const },
-                    { label: "Guardrail Status", value: "", badge: "Passed", badgeIntent: "success" as const },
-                    { label: "Credits", value: "20" },
-                ].map((row) => (
-                    <Box
-                        key={row.label}
-                        display="flex"
-                        alignItems="center"
-                        py="8"
-                        gap="8"
-                        style={{ borderBottom: BORDER_T }}
-                    >
-                        <Text fontSize="sm" color="fg.secondary" style={{ minWidth: 160, flexShrink: 0 }}>
-                            {row.label}
-                        </Text>
-                        <Box display="flex" alignItems="center" gap="6" style={{ flex: 1 }}>
-                            {row.avatar && <Avatar name={row.value} src={row.avatar} size="sm" />}
-                            {row.value && <Text fontSize="sm" fontWeight="500">{row.value}</Text>}
-                            {row.badge && <Badge intent={row.badgeIntent}>{row.badge}</Badge>}
-                            {row.copyable && (
-                                <Tooltip content="Copy ID" delayDuration={300}>
-                                    <span style={{ display: "inline-flex" }}>
-                                        <Button
-                                            appearance="subtle"
-                                            size="sm"
-                                            icon={<IconCopy size={12} />}
-                                            aria-label="Copy execution ID"
-                                        />
-                                    </span>
-                                </Tooltip>
-                            )}
+            {/* Summary card */}
+            <Box px="16" py="12">
+                <Box
+                    border="1"
+                    borderColor="border.secondary"
+                    rounded="xl"
+                    overflow="hidden"
+                >
+                    {[
+                        { label: "Agent Name", value: `${artifact.sourceName} v1.2` },
+                        { label: "Execution ID", value: "exec_4f2a9c81", copyable: true },
+                        { label: "Execution Started", value: artifact.created },
+                        { label: "Duration", value: "1m 24s" },
+                        { label: "Executed By", value: artifact.createdBy.name, avatar: artifact.createdBy.avatar },
+                        { label: "Output Quality Score", value: "95%", badge: "Passed", badgeIntent: "success" as const },
+                        { label: "Guardrail Status", value: "", badge: "Passed", badgeIntent: "success" as const },
+                        { label: "Credits", value: "20" },
+                    ].map((row, i, arr) => (
+                        <Box
+                            key={row.label}
+                            display="flex"
+                            alignItems="center"
+                            px="12"
+                            py="8"
+                            gap="8"
+                            style={{ borderBottom: i < arr.length - 1 ? BORDER_T : undefined }}
+                        >
+                            <Text fontSize="sm" color="fg.secondary" style={{ minWidth: 148, flexShrink: 0 }}>
+                                {row.label}
+                            </Text>
+                            <Box display="flex" alignItems="center" gap="6" style={{ flex: 1 }}>
+                                {row.avatar && <Avatar name={row.value} src={row.avatar} size="sm" />}
+                                {row.value && <Text fontSize="sm" fontWeight="500">{row.value}</Text>}
+                                {row.badge && <Badge intent={row.badgeIntent}>{row.badge}</Badge>}
+                                {row.copyable && (
+                                    <Tooltip content="Copy ID" delayDuration={300}>
+                                        <span style={{ display: "inline-flex" }}>
+                                            <Button
+                                                appearance="subtle"
+                                                size="sm"
+                                                icon={<IconCopy size={12} />}
+                                                aria-label="Copy execution ID"
+                                            />
+                                        </span>
+                                    </Tooltip>
+                                )}
+                            </Box>
                         </Box>
-                    </Box>
-                ))}
+                    ))}
+                </Box>
             </Box>
 
             {/* Expand all */}
@@ -954,9 +962,11 @@ function getArtifactContentNode(artifact: ArtifactViewerArtifact): ReactNode | u
 type ArtifactViewerProps = {
     artifact: ArtifactViewerArtifact;
     onClose: () => void;
+    /** "preview" = full-width content only. "with-panel" = content + chat/execution log on right. */
+    openMode?: "preview" | "with-panel";
 };
 
-export function ArtifactViewer({ artifact, onClose }: ArtifactViewerProps) {
+export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: ArtifactViewerProps) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -967,6 +977,7 @@ export function ArtifactViewer({ artifact, onClose }: ArtifactViewerProps) {
     if (!mounted) return null;
 
     const isWorkflow = artifact.sourceType === "workflow" || artifact.sourceType === "agent";
+    const showPanel = openMode === "with-panel";
 
     const panel = (
         <Box
@@ -979,11 +990,8 @@ export function ArtifactViewer({ artifact, onClose }: ArtifactViewerProps) {
                 background: "var(--ax-colors-bg-default)",
             }}
         >
-            {/* No top header — title/status/version live in the CodeCanvasPanel toolbar */}
-
-            {/* Split panels */}
             <Box display="flex" style={{ flex: 1, overflow: "hidden" }}>
-                {/* Left: real CodeCanvasPanel — title + status shown in its toolbar */}
+                {/* Content canvas — full width when preview-only, flex-1 when panel visible */}
                 <Box style={{ flex: "1 1 0", overflow: "hidden" }}>
                     <CodeCanvasPanel
                         onClose={onClose}
@@ -995,14 +1003,16 @@ export function ArtifactViewer({ artifact, onClose }: ArtifactViewerProps) {
                     />
                 </Box>
 
-                {/* Right: Context panel */}
-                <Box style={{ width: 400, flexShrink: 0, overflow: "hidden" }}>
-                    {isWorkflow ? (
-                        <AgentExecutionLog artifact={artifact} />
-                    ) : (
-                        <ChatPanel artifact={artifact} />
-                    )}
-                </Box>
+                {/* Right panel — only when opened via source link */}
+                {showPanel && (
+                    <Box style={{ width: 400, flexShrink: 0, overflow: "hidden", borderLeft: BORDER_S }}>
+                        {isWorkflow ? (
+                            <AgentExecutionLog artifact={artifact} />
+                        ) : (
+                            <ChatPanel artifact={artifact} />
+                        )}
+                    </Box>
+                )}
             </Box>
         </Box>
     );

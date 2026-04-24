@@ -692,6 +692,16 @@ export default function ArtifactsPage() {
     const [sortDir, setSortDir] = useState<SortDir>("desc");
     const [deleteTarget, setDeleteTarget] = useState<Artifact | null>(null);
     const [openArtifact, setOpenArtifact] = useState<Artifact | null>(null);
+    const [openMode, setOpenMode] = useState<"preview" | "with-panel">("preview");
+
+    function openPreview(artifact: Artifact) {
+        openPreview(artifact);
+        setOpenMode("preview");
+    }
+    function openWithPanel(artifact: Artifact) {
+        openPreview(artifact);
+        setOpenMode("with-panel");
+    }
     const [pinnedIds, setPinnedIds] = useState<Set<string>>(DEFAULT_PINNED_IDS);
 
     function togglePin(id: string) {
@@ -761,6 +771,7 @@ export default function ArtifactsPage() {
                 <ArtifactViewer
                     artifact={viewerArtifact}
                     onClose={() => setOpenArtifact(null)}
+                    openMode={openMode}
                 />
             )}
 
@@ -940,7 +951,7 @@ export default function ArtifactsPage() {
                                 <Tr
                                     key={artifact.id}
                                     style={{ cursor: "pointer" }}
-                                    onClick={() => setOpenArtifact(artifact)}
+                                    onClick={() => openPreview(artifact)}
                                 >
                                     {/* Pin toggle */}
                                     <Td style={{ width: 32, paddingRight: 0 }}>
@@ -970,7 +981,7 @@ export default function ArtifactsPage() {
                                             style={{ cursor: "pointer" }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (artifact.source.link) window.open(artifact.source.link, "_self");
+                                                openWithPanel(artifact);
                                             }}
                                         >
                                             {artifact.source.type === "workflow" ? (
@@ -1018,7 +1029,7 @@ export default function ArtifactsPage() {
                                                 />
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setOpenArtifact(artifact); }}>
+                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openPreview(artifact); }}>
                                                     <Box display="flex" alignItems="center" gap="8">
                                                         <IconArrowsMaximize size={14} />
                                                         Open
