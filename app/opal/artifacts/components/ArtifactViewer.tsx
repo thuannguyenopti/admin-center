@@ -94,9 +94,9 @@ function IslandContentTile({
             {/* Text */}
             <Box display="flex" flexDirection="column" style={{ flex: 1, minWidth: 0 }}>
                 <Text
+                    fontSize="md"
                     fontWeight="600"
                     style={{
-                        fontSize: 14,
                         lineHeight: "24px",
                         letterSpacing: "-0.154px",
                         overflow: "hidden",
@@ -108,9 +108,9 @@ function IslandContentTile({
                 </Text>
                 {description && (
                     <Text
+                        fontSize="md"
                         color="fg.secondary"
                         style={{
-                            fontSize: 14,
                             lineHeight: 1.6,
                             letterSpacing: "-0.21px",
                             overflow: "hidden",
@@ -459,7 +459,7 @@ function CanvasPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
                             {TYPE_ICON[artifact.type] ?? <IconFile size={20} />}
                         </Box>
                         <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1 }}>
-                            <Text fontWeight="600" style={{ fontSize: 16, lineHeight: "24px", letterSpacing: "-0.2px" }}>
+                            <Text fontSize="lg" fontWeight="600" style={{ lineHeight: "24px", letterSpacing: "-0.2px" }}>
                                 {artifact.name}
                             </Text>
                             <Text color="fg.tertiary" fontSize="sm">
@@ -509,7 +509,7 @@ function CanvasPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
                             ].map((field) => (
                                 <Box key={field.label} display="flex" alignItems="start" gap="16">
                                     <Text
-                                        fontSize="xs"
+                                        fontSize="sm"
                                         color="fg.tertiary"
                                         style={{ minWidth: 130, flexShrink: 0, paddingTop: 2 }}
                                     >
