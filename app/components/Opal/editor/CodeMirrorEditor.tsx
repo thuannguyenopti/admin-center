@@ -11,6 +11,8 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { yCollab } from "y-codemirror.next";
 import type { CollabDoc } from "./useCollabDoc";
+import { createBlameExtensions, setBlameData } from "./blame-cm-extension";
+import type { BlameSegment } from "./blame-engine";
 
 export type CodeMirrorLanguage = "markdown" | "html" | "javascript" | "python";
 
@@ -35,12 +37,14 @@ type CodeMirrorEditorProps = {
   collabDoc: CollabDoc;
   language?: CodeMirrorLanguage;
   darkMode?: boolean;
+  blameSegments?: BlameSegment[];
 };
 
 export function CodeMirrorEditor({
   collabDoc,
   language = "markdown",
   darkMode = true,
+  blameSegments,
 }: CodeMirrorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -57,11 +61,10 @@ export function CodeMirrorEditor({
       LANGUAGE_EXTS[language],
       yCollab(collabDoc.ytext, null as any),
       EditorView.lineWrapping,
+      ...createBlameExtensions(),
       ...(darkMode ? [oneDark] : []),
     ];
 
-    // Seed initial doc from ytext so the editor isn't blank on first mount.
-    // yCollab keeps subsequent edits in sync — providing doc here is safe.
     const state = EditorState.create({ doc: collabDoc.ytext.toString(), extensions });
     const view = new EditorView({ state, parent: containerRef.current });
     viewRef.current = view;
@@ -70,17 +73,20 @@ export function CodeMirrorEditor({
       view.destroy();
       viewRef.current = null;
     };
-    // Re-create when language or dark mode changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, darkMode]);
+
+  // Push blame segments into the editor whenever they change
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({ effects: setBlameData.of(blameSegments ?? []) });
+  }, [blameSegments]);
 
   return (
     <>
       <style>{CM_STYLES}</style>
-      <div
-        ref={containerRef}
-        style={{ height: "100%", minHeight: 0, overflow: "hidden" }}
-      />
+      <div ref={containerRef} style={{ height: "100%", minHeight: 0, overflow: "hidden" }} />
     </>
   );
 }
