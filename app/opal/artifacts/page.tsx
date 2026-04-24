@@ -398,8 +398,8 @@ function ReportThumbnail() {
             <Box style={{ display: "flex", gap: 6 }}>
                 {kpis.map((k) => (
                     <Box key={k.l} bg="bg.default" border="1" borderColor="border.tertiary" rounded="md" style={{ flex: 1, padding: "5px 7px" }}>
-                        <Text fontSize="xs" fontWeight="700" style={{ fontSize: 11, lineHeight: 1.2 }}>{k.v}</Text>
-                        <Text color="fg.tertiary" style={{ fontSize: 9, lineHeight: 1.3 }}>{k.l}</Text>
+                        <Text fontSize="sm" fontWeight="700">{k.v}</Text>
+                        <Text fontSize="sm" color="fg.tertiary">{k.l}</Text>
                     </Box>
                 ))}
             </Box>
@@ -408,17 +408,17 @@ function ReportThumbnail() {
                 <Box bg="bg.secondary" style={{ display: "flex", padding: "3px 7px", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
                     {["Company", "Share", "SEO", "Threat"].map((h) => (
                         <Box key={h} style={{ flex: h === "Company" ? 2 : 1 }}>
-                            <Text color="fg.tertiary" style={{ fontSize: 8, fontWeight: 600 }}>{h}</Text>
+                            <Text fontSize="sm" color="fg.tertiary" fontWeight="600">{h}</Text>
                         </Box>
                     ))}
                 </Box>
                 {rows.map((r, i) => (
                     <Box key={r.name} style={{ display: "flex", alignItems: "center", padding: "3px 7px", borderTop: i > 0 ? "1px solid var(--ax-colors-border-tertiary)" : undefined }}>
-                        <Box style={{ flex: 2 }}><Text style={{ fontSize: 8 }}>{r.name}</Text></Box>
-                        <Box style={{ flex: 1 }}><Text style={{ fontSize: 8 }}>{r.share}</Text></Box>
-                        <Box style={{ flex: 1 }}><Text style={{ fontSize: 8 }}>{r.seo}</Text></Box>
+                        <Box style={{ flex: 2 }}><Text fontSize="sm">{r.name}</Text></Box>
+                        <Box style={{ flex: 1 }}><Text fontSize="sm">{r.share}</Text></Box>
+                        <Box style={{ flex: 1 }}><Text fontSize="sm">{r.seo}</Text></Box>
                         <Box style={{ flex: 1 }}>
-                            <Badge intent={r.intent} style={{ fontSize: 7, padding: "1px 4px", height: "auto" }}>{r.t}</Badge>
+                            <Badge intent={r.intent}>{r.t}</Badge>
                         </Box>
                     </Box>
                 ))}
@@ -447,7 +447,7 @@ function SpreadsheetThumbnail() {
             <Box style={{ display: "flex", background: "var(--ax-colors-bg-secondary)", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                 {headers.map((h) => (
                     <Box key={h} style={{ flex: h === "Title" ? 2 : 1, padding: "4px 6px", borderRight: "1px solid var(--ax-colors-border-tertiary)" }}>
-                        <Text style={{ fontSize: 8, fontWeight: 600, color: "var(--ax-colors-fg-secondary)" }}>{h}</Text>
+                        <Text fontSize="sm" fontWeight="600" color="fg.secondary">{h}</Text>
                     </Box>
                 ))}
             </Box>
@@ -456,7 +456,7 @@ function SpreadsheetThumbnail() {
                 <Box key={i} style={{ display: "flex", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
                     {row.map((cell, j) => (
                         <Box key={j} style={{ flex: j === 1 ? 2 : 1, padding: "4px 6px", borderRight: "1px solid var(--ax-colors-border-tertiary)" }}>
-                            <Text style={{ fontSize: 8, color: j === 3 ? statusColor[cell] ?? "inherit" : "var(--ax-colors-fg-default)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", display: "block" }}>
+                            <Text fontSize="sm" style={{ color: j === 3 ? statusColor[cell] ?? "inherit" : "var(--ax-colors-fg-default)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", display: "block" }}>
                                 {cell}
                             </Text>
                         </Box>
@@ -973,7 +973,7 @@ export default function ArtifactsPage() {
                                     <Td>
                                         <Text fontWeight="500">{artifact.name}</Text>
                                         {artifact.description && (
-                                            <Text fontSize="xs" color="fg.tertiary" style={{ marginTop: 2 }}>
+                                            <Text fontSize="sm" color="fg.tertiary" style={{ marginTop: 2 }}>
                                                 {artifact.description}
                                             </Text>
                                         )}
