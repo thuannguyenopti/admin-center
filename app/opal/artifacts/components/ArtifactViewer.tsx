@@ -11,6 +11,8 @@ import {
     DisclosureContent,
     DisclosureTrigger,
 } from "@optiaxiom/react";
+import { OpalChatView } from "@/app/components/Opal/OpalChatView";
+import type { ChatMessage as OpalChatMessage } from "@/app/hooks/useOpalState";
 import {
     IconXmark,
     IconArrowRotateLeft,
@@ -153,42 +155,6 @@ export type ArtifactViewerArtifact = {
     version?: string;
     imageUrl?: string;
 };
-
-type ChatMessage = {
-    id: string;
-    role: "user" | "assistant";
-    content: string;
-    timestamp: string;
-};
-
-// ─── Mock chat thread ────────────────────────────────────────────────────────
-
-const mockChatMessages: ChatMessage[] = [
-    {
-        id: "1",
-        role: "user",
-        content: "Can you write a Q2 email campaign targeting enterprise customers who haven't renewed yet?",
-        timestamp: "10:24 AM",
-    },
-    {
-        id: "2",
-        role: "assistant",
-        content: "Sure! I'll draft a compelling renewal campaign. Let me tailor the tone and offer structure for enterprise accounts.",
-        timestamp: "10:24 AM",
-    },
-    {
-        id: "3",
-        role: "user",
-        content: "Focus on the ROI angle and include a limited-time discount offer.",
-        timestamp: "10:25 AM",
-    },
-    {
-        id: "4",
-        role: "assistant",
-        content: "Got it — here's the artifact I generated based on your brief. I've highlighted the ROI benefits in the opening and included a 15% renewal discount valid for 14 days.",
-        timestamp: "10:26 AM",
-    },
-];
 
 // ─── Agent Execution Log ─────────────────────────────────────────────────────
 
@@ -418,102 +384,41 @@ function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
 
 // ─── Chat Panel ───────────────────────────────────────────────────────────────
 
+const SEED_MESSAGES: OpalChatMessage[] = [
+    { id: "1", role: "user", content: "Can you write a Q2 email campaign targeting enterprise customers who haven't renewed yet?", timestamp: Date.now() - 120000 },
+    { id: "2", role: "assistant", content: "Sure! I'll draft a compelling renewal campaign. Let me tailor the tone and offer structure for enterprise accounts.", timestamp: Date.now() - 119000 },
+    { id: "3", role: "user", content: "Focus on the ROI angle and include a limited-time discount offer.", timestamp: Date.now() - 60000 },
+    { id: "4", role: "assistant", content: "Got it — here's the artifact I generated based on your brief. I've highlighted the ROI benefits in the opening and included a 15% renewal discount valid for 14 days.", timestamp: Date.now() - 55000 },
+];
+
 function ChatPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
+    const [messages, setMessages] = useState<OpalChatMessage[]>(SEED_MESSAGES);
+    const [inputValue, setInputValue] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSend = (content: string) => {
+        if (!content.trim()) return;
+        const userMsg: OpalChatMessage = { id: Date.now().toString(), role: "user", content, timestamp: Date.now() };
+        setMessages((prev) => [...prev, userMsg]);
+        setInputValue("");
+        setIsLoading(true);
+        setTimeout(() => {
+            const reply: OpalChatMessage = { id: (Date.now() + 1).toString(), role: "assistant", content: `I've noted your feedback on "${artifact.name}". Let me update the artifact accordingly.`, timestamp: Date.now() };
+            setMessages((prev) => [...prev, reply]);
+            setIsLoading(false);
+        }, 1200);
+    };
+
     return (
-        <Box display="flex" flexDirection="column" h="full">
-            {/* Header */}
-            <Box
-                display="flex"
-                alignItems="center"
-                gap="8"
-                px="16"
-                py="12"
-                style={{ borderBottom: BORDER_S, flexShrink: 0 }}
-            >
-                <img src="/opal-orb.png" alt="" width={20} height={20} style={{ display: "block", flexShrink: 0 }} />
-                <Text fontSize="sm" fontWeight="600" style={{ flex: 1 }}>{artifact.sourceName}</Text>
-                <Button appearance="subtle" size="sm">New Chat</Button>
-            </Box>
-
-            {/* Messages */}
-            <Box
-                display="flex"
-                flexDirection="column"
-                gap="16"
-                p="16"
-                style={{ flex: 1, overflowY: "auto" }}
-            >
-                {mockChatMessages.map((msg) => (
-                    <Box key={msg.id} display="flex" flexDirection="column" gap="4">
-                        <Box display="flex" alignItems="center" gap="8">
-                            {msg.role === "user" ? (
-                                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" />
-                            ) : (
-                                <img src="/opal-orb.png" alt="Opal" width={20} height={20} style={{ borderRadius: "50%" }} />
-                            )}
-                            <Text fontSize="xs" color="fg.tertiary">{msg.timestamp}</Text>
-                        </Box>
-                        <Box
-                            bg={msg.role === "user" ? "bg.page" : "bg.default"}
-                            border="1"
-                            borderColor="border.tertiary"
-                            p="12"
-                            rounded="lg"
-                            style={{ marginLeft: 28 }}
-                        >
-                            <Text fontSize="sm">{msg.content}</Text>
-                        </Box>
-                    </Box>
-                ))}
-
-                {/* Artifact canvas tile — Figma "Island - contents" style */}
-                <Box style={{ marginLeft: 28 }}>
-                    <IslandContentTile
-                        name={artifact.name}
-                        type={artifact.type}
-                        description={`${artifact.type} · ${artifact.created}`}
-                    />
-                </Box>
-
-                {/* Sources */}
-                <Box display="flex" flexDirection="column" gap="6" style={{ marginLeft: 28 }}>
-                    <Text fontSize="xs" color="fg.secondary" fontWeight="500">Sources</Text>
-                    {["Brand guidelines", "Q1 campaign brief", "Customer data"].map((s) => (
-                        <Box
-                            key={s}
-                            display="flex"
-                            alignItems="center"
-                            gap="6"
-                            px="10"
-                            py="6"
-                            bg="bg.page"
-                            border="1"
-                            borderColor="border.tertiary"
-                            rounded="md"
-                        >
-                            <Text fontSize="xs" color="fg.secondary">{s}</Text>
-                        </Box>
-                    ))}
-                </Box>
-            </Box>
-
-            {/* Input */}
-            <Box p="12" style={{ borderTop: BORDER_S }}>
-                <Box
-                    bg="bg.page"
-                    border="1"
-                    borderColor="border.secondary"
-                    rounded="lg"
-                    p="10"
-                    display="flex"
-                    alignItems="center"
-                    gap="8"
-                >
-                    <img src="/opal-orb.png" alt="" width={16} height={16} />
-                    <Text fontSize="sm" color="fg.tertiary" style={{ flex: 1 }}>Ask Opal anything…</Text>
-                </Box>
-            </Box>
-        </Box>
+        <OpalChatView
+            messages={messages}
+            inputValue={inputValue}
+            isLoading={isLoading}
+            setInputValue={setInputValue}
+            onSend={handleSend}
+            onSuggestionClick={handleSend}
+            variant="assistant"
+        />
     );
 }
 
@@ -648,101 +553,101 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
                 inset: 0,
                 zIndex: 1000,
                 display: "flex",
-                flexDirection: "column",
                 background: "var(--ax-colors-bg-default)",
             }}
         >
-            {/* Unified toolbar — single 48px row matching opal canvas style */}
-            <Box
-                display="flex"
-                alignItems="center"
-                gap="4"
-                px="12"
-                bg="bg.default"
-                style={{ flexShrink: 0, borderBottom: BORDER_S, height: 48, overflow: "hidden", zIndex: 1 }}
-            >
-                {/* Close */}
-                <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close" onClick={onClose} />
+            {/* Left: canvas column — toolbar + canvas content */}
+            <Box style={{ flex: "1 1 0", overflow: "hidden", display: "flex", flexDirection: "column", borderRight: showPanel ? BORDER_S : undefined }}>
 
-                {/* Divider */}
-                <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
-
-                {/* Title + badge + version */}
-                <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
-                    <Text fontSize="md" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
-                        {artifact.name}
-                    </Text>
-                    <Badge intent={artifact.status === "Ready" ? "success" : artifact.status === "Failed" ? "danger" : "information"}>
-                        {artifact.status}
-                    </Badge>
-                    {artifact.version && (
-                        <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
-                    )}
-                </Box>
-
-                {/* Spacer */}
-                <Box style={{ flex: 1 }} />
-
-                {/* Right cluster */}
-                <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-                    {/* Saved indicator */}
-                    <Box display="flex" alignItems="center" gap="4">
-                        <IconCircleCheck size={15} color="var(--ax-colors-fg-success)" />
-                        <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Change saved.</Text>
-                    </Box>
-
-                    {/* Undo / Redo / Copy / Download */}
-                    <Box display="flex" alignItems="center" gap="4">
-                        <Tooltip content="Undo" delayDuration={300}>
-                            <span style={{ display: "inline-flex" }}>
-                                <Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" />
-                            </span>
-                        </Tooltip>
-                        <Tooltip content="Redo" delayDuration={300}>
-                            <span style={{ display: "inline-flex" }}>
-                                <Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" />
-                            </span>
-                        </Tooltip>
-                        <Tooltip content="Copy" delayDuration={300}>
-                            <span style={{ display: "inline-flex" }}>
-                                <Button appearance="subtle" size="sm" icon={<IconCopy size={15} />} aria-label="Copy" />
-                            </span>
-                        </Tooltip>
-                        <Tooltip content="Download" delayDuration={300}>
-                            <span style={{ display: "inline-flex" }}>
-                                <Button appearance="subtle" size="sm" icon={<IconDownload size={15} />} aria-label="Download" />
-                            </span>
-                        </Tooltip>
-                    </Box>
+                {/* Unified toolbar — scoped to the canvas column only */}
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap="4"
+                    px="12"
+                    bg="bg.default"
+                    style={{ flexShrink: 0, borderBottom: BORDER_S, height: 48, overflow: "hidden", zIndex: 1 }}
+                >
+                    {/* Close */}
+                    <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close" onClick={onClose} />
 
                     {/* Divider */}
-                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
 
-                    {/* Add to */}
-                    <Button appearance="primary" size="sm" icon={<IconChevronDown size={13} />} iconPosition="end">
-                        Add to
-                    </Button>
-                </Box>
-            </Box>
-
-            {/* Split panels */}
-            <Box display="flex" style={{ flex: 1, overflow: "hidden" }}>
-                {/* Left: Canvas */}
-                <Box style={{ flex: "1 1 0", overflow: "hidden", borderRight: showPanel ? BORDER_S : undefined }}>
-                    <CanvasPanel artifact={artifact} />
-                </Box>
-
-                {/* Right: Context panel — only shown when opened via source */}
-                {showPanel && (
-                    <Box style={{ width: 400, flexShrink: 0, overflow: "hidden" }}>
-                        {isWorkflow ? (
-                            <AgentExecutionLog artifact={artifact} />
-                        ) : (
-                            <ChatPanel artifact={artifact} />
+                    {/* Title + badge + version */}
+                    <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
+                        <Text fontSize="md" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
+                            {artifact.name}
+                        </Text>
+                        <Badge intent={artifact.status === "Ready" ? "success" : artifact.status === "Failed" ? "danger" : "information"}>
+                            {artifact.status}
+                        </Badge>
+                        {artifact.version && (
+                            <Text fontSize="md" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
                         )}
                     </Box>
-                )}
+
+                    {/* Spacer */}
+                    <Box style={{ flex: 1 }} />
+
+                    {/* Right cluster */}
+                    <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+                        {/* Saved indicator */}
+                        <Box display="flex" alignItems="center" gap="4">
+                            <IconCircleCheck size={15} color="var(--ax-colors-fg-success)" />
+                            <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Change saved.</Text>
+                        </Box>
+
+                        {/* Undo / Redo / Copy / Download */}
+                        <Box display="flex" alignItems="center" gap="4">
+                            <Tooltip content="Undo" delayDuration={300}>
+                                <span style={{ display: "inline-flex" }}>
+                                    <Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" />
+                                </span>
+                            </Tooltip>
+                            <Tooltip content="Redo" delayDuration={300}>
+                                <span style={{ display: "inline-flex" }}>
+                                    <Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" />
+                                </span>
+                            </Tooltip>
+                            <Tooltip content="Copy" delayDuration={300}>
+                                <span style={{ display: "inline-flex" }}>
+                                    <Button appearance="subtle" size="sm" icon={<IconCopy size={15} />} aria-label="Copy" />
+                                </span>
+                            </Tooltip>
+                            <Tooltip content="Download" delayDuration={300}>
+                                <span style={{ display: "inline-flex" }}>
+                                    <Button appearance="subtle" size="sm" icon={<IconDownload size={15} />} aria-label="Download" />
+                                </span>
+                            </Tooltip>
+                        </Box>
+
+                        {/* Divider */}
+                        <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+
+                        {/* Add to */}
+                        <Button appearance="primary" size="sm" icon={<IconChevronDown size={13} />} iconPosition="end">
+                            Add to
+                        </Button>
+                    </Box>
+                </Box>
+
+                {/* Canvas content */}
+                <Box style={{ flex: 1, overflow: "hidden" }}>
+                    <CanvasPanel artifact={artifact} />
+                </Box>
             </Box>
+
+            {/* Right: context panel — only shown when opened via source */}
+            {showPanel && (
+                <Box style={{ width: 400, flexShrink: 0, overflow: "hidden" }}>
+                    {isWorkflow ? (
+                        <AgentExecutionLog artifact={artifact} />
+                    ) : (
+                        <ChatPanel artifact={artifact} />
+                    )}
+                </Box>
+            )}
         </Box>
     );
 
