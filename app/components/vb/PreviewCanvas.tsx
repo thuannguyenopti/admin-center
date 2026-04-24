@@ -75,6 +75,18 @@ export default function PreviewCanvas({
 	setCurrentSection,
 	setCurrentHoverSection,
 	onSectionClick,
+	currentRow,
+	currentHoverRow,
+	setCurrentRow,
+	setCurrentHoverRow,
+	currentColumn,
+	currentHoverColumn,
+	setCurrentColumn,
+	setCurrentHoverColumn,
+	scrollToRowId,
+	scrollToColumnId,
+	onRowScrollComplete,
+	onColumnScrollComplete,
 }: {
 	outlines: Outline[];
 	theEles: EleMap;
@@ -91,6 +103,18 @@ export default function PreviewCanvas({
 	setCurrentSection?: (value: string | null) => void;
 	setCurrentHoverSection?: (value: string | null) => void;
 	onSectionClick?: (sectionId: string) => void;
+	currentRow?: string | null;
+	currentHoverRow?: string | null;
+	setCurrentRow?: (value: string | null) => void;
+	setCurrentHoverRow?: (value: string | null) => void;
+	currentColumn?: string | null;
+	currentHoverColumn?: string | null;
+	setCurrentColumn?: (value: string | null) => void;
+	setCurrentHoverColumn?: (value: string | null) => void;
+	scrollToRowId?: string | null;
+	scrollToColumnId?: string | null;
+	onRowScrollComplete?: () => void;
+	onColumnScrollComplete?: () => void;
 }) {
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 	const [dropPosition, setDropPosition] = useState<DropPosition>(null);
@@ -137,6 +161,72 @@ export default function PreviewCanvas({
 			});
 		}
 	}, [scrollToSectionId, onScrollComplete]);
+
+	// Auto-scroll preview when a row is clicked in outline
+	useEffect(() => {
+		if (scrollToRowId && scrollRef.current) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						onRowScrollComplete?.();
+						return;
+					}
+
+					const rowElement = scrollContainer.querySelector(
+						`[data-row-id="${scrollToRowId}"]`
+					) as HTMLElement | null;
+
+					if (rowElement) {
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const rowRect = rowElement.getBoundingClientRect();
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (rowRect.top - containerRect.top) - 100;
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					onRowScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToRowId, onRowScrollComplete]);
+
+	// Auto-scroll preview when a column is clicked in outline
+	useEffect(() => {
+		if (scrollToColumnId && scrollRef.current) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						onColumnScrollComplete?.();
+						return;
+					}
+
+					const columnElement = scrollContainer.querySelector(
+						`[data-column-id="${scrollToColumnId}"]`
+					) as HTMLElement | null;
+
+					if (columnElement) {
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const columnRect = columnElement.getBoundingClientRect();
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (columnRect.top - containerRect.top) - 100;
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					onColumnScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToColumnId, onColumnScrollComplete]);
 
 	// "tablet/mobile" breakpoint
 	const MOBILE_BP = 1024;
@@ -375,9 +465,39 @@ export default function PreviewCanvas({
 					>
 						{(section.children || []).map((row: any, rIndex: number) => (
 							<section
-								className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"}`}
+								className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"} relative`}
 								key={row.id ?? rIndex}
+								data-row-id={row.id}
+								onClick={(e) => {
+									// Only trigger if not clicking an element or column
+									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
+									    !(e.target as HTMLElement).closest('[data-column-id]')) {
+										e.stopPropagation();
+										setCurrentRow?.(row.id);
+										setCurrentSection?.(null);
+									}
+								}}
+								onMouseEnter={(e) => {
+									// Only trigger if not hovering an element or column
+									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
+									    !(e.target as HTMLElement).closest('[data-column-id]')) {
+										setCurrentHoverRow?.(row.id);
+									}
+								}}
+								onMouseLeave={() => {
+									setCurrentHoverRow?.(null);
+								}}
 							>
+								{/* Blue border overlay for row hover/selection */}
+								{(currentHoverRow === row.id || currentRow === row.id) && (
+									<div
+										className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+										style={{
+											opacity: currentRow === row.id ? 1 : 0.5,
+											zIndex: 4,
+										}}
+									/>
+								)}
 								{(row.children || []).map((col: any, cIndex: number) => {
 									const colChildren = col.elements || col.children || [];
 									const isActiveDropCol =
@@ -389,6 +509,25 @@ export default function PreviewCanvas({
 									return (
 										<div
 											key={col.id ?? cIndex}
+											data-column-id={col.id}
+											onClick={(e) => {
+												// Only trigger if not clicking an element
+												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+													e.stopPropagation();
+													setCurrentColumn?.(col.id);
+													setCurrentRow?.(null);
+													setCurrentSection?.(null);
+												}
+											}}
+											onMouseEnter={(e) => {
+												// Only trigger if not hovering an element
+												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+													setCurrentHoverColumn?.(col.id);
+												}
+											}}
+											onMouseLeave={() => {
+												setCurrentHoverColumn?.(null);
+											}}
 											onDragOver={(e) => {
 												e.preventDefault();
 												e.stopPropagation();
@@ -430,8 +569,18 @@ export default function PreviewCanvas({
 													setDropPosition(null);
 												}
 											}}
-											className={dragOverColumn === col.id ? "relative" : ""}
+											className="relative"
 										>
+											{/* Blue border overlay for column hover/selection */}
+											{(currentHoverColumn === col.id || currentColumn === col.id) && (
+												<div
+													className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+													style={{
+														opacity: currentColumn === col.id ? 1 : 0.5,
+														zIndex: 3,
+													}}
+												/>
+											)}
 											{/* list */}
 											{colChildren.map((element: any, eleIndex: number) => {
 												const ele = outline.elements[element.id];
@@ -464,6 +613,8 @@ export default function PreviewCanvas({
 																	setCurrentEle(element.id);
 																	setCurrentHoverEle("none");
 																	setCurrentSection?.(null);
+																	setCurrentRow?.(null);
+																	setCurrentColumn?.(null);
 																}}
 																style={{
 																	visibility:

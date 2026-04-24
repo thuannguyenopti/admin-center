@@ -25,7 +25,9 @@ const Section: React.FC<{
   onEditProperties?: () => void;
   onOpenStyleEditor?: () => void;
   isSelected?: boolean;
-}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties, onOpenStyleEditor, isSelected }) => {
+  onHoverChange?: (sectionId: string | null) => void;
+  onScrollToPreview?: (sectionId: string) => void;
+}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties, onOpenStyleEditor, isSelected, onHoverChange, onScrollToPreview }) => {
   if (section.label) {
     return (
       <div className="p-0.5 pl-6 -mr-0.5">
@@ -34,6 +36,9 @@ const Section: React.FC<{
             className="group hover:border-[#838DA4] h-10 border-[#CACFDC] border cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-2 pl-3 active:bg-[#0037FF10]"
             style={{ backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : 'white' }}
             onDragStart={onDragStart}
+            onClick={() => onScrollToPreview?.(section.id)}
+            onMouseEnter={() => onHoverChange?.(section.id)}
+            onMouseLeave={() => onHoverChange?.(null)}
             draggable
           >
             <div className="flex gap-2 items-center w-full group-hover:w-[calc(100%-24px)]">
@@ -99,12 +104,14 @@ const Section: React.FC<{
         className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
         style={{ backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined }}
         onDragStart={onDragStart}
-        onClick={() => setOpen(section.id, !section.open)}
+        onClick={() => onScrollToPreview?.(section.id)}
+        onMouseEnter={() => onHoverChange?.(section.id)}
+        onMouseLeave={() => onHoverChange?.(null)}
         draggable
       >
         <div className="flex gap-1 items-center">
           <svg
-            className="chevron"
+            className="chevron cursor-pointer"
             width="12"
             height="12"
             viewBox="0 0 12 12"
@@ -112,6 +119,10 @@ const Section: React.FC<{
             xmlns="http://www.w3.org/2000/svg"
             style={{
               transform: section.open ? "rotate(0deg)" : "rotate(-90deg)",
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(section.id, !section.open);
             }}
           >
             <path

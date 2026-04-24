@@ -69,6 +69,14 @@ interface OutlineProps {
 	scrollToSectionId?: string | null;
 	onScrollComplete?: () => void;
 	currentSection?: string | null;
+	setCurrentHoverSection?: (sectionId: string | null) => void;
+	currentRow?: string | null;
+	setCurrentHoverRow?: (rowId: string | null) => void;
+	currentColumn?: string | null;
+	setCurrentHoverColumn?: (colId: string | null) => void;
+	onScrollToSection?: (sectionId: string) => void;
+	onScrollToRow?: (rowId: string) => void;
+	onScrollToColumn?: (colId: string) => void;
 
 	data: any[];
 }
@@ -138,6 +146,14 @@ export default function OutlineTree({
 	scrollToSectionId,
 	onScrollComplete,
 	currentSection,
+	setCurrentHoverSection,
+	currentRow,
+	setCurrentHoverRow,
+	currentColumn,
+	setCurrentHoverColumn,
+	onScrollToSection,
+	onScrollToRow,
+	onScrollToColumn,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -656,6 +672,8 @@ export default function OutlineTree({
 								addSectionAfter={() => addSection(sindex + 1)}
 								addRow={(e: any) => addRow(e, sindex, null)}
 								isSelected={currentSection === section.id}
+								onHoverChange={setCurrentHoverSection}
+								onScrollToPreview={onScrollToSection}
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
@@ -684,6 +702,9 @@ export default function OutlineTree({
 												onDragStart={(e: any) => onDragStart(e, row.id)}
 												removeRow={() => removeRow(row.id)}
 												addCol={(e: any) => addCol(e, sindex, rIndex, null)}
+												isSelected={currentRow === row.id}
+												onHoverChange={setCurrentHoverRow}
+												onScrollToPreview={onScrollToRow}
 											>
 												{(row.children ?? []).map(
 													(col: any, cIndex: number) => {
@@ -726,6 +747,9 @@ export default function OutlineTree({
 																		)
 																	}
 																	elementOptions={elementOptions}
+																	isSelected={currentColumn === col.id}
+																	onHoverChange={setCurrentHoverColumn}
+																	onScrollToPreview={onScrollToColumn}
 																>
 																	<div
 																		className={

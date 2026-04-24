@@ -538,6 +538,12 @@ export default function VBPrototype({
 	const [currentSection, setCurrentSection] = useState<string | null>(null);
 	const [currentHoverSection, setCurrentHoverSection] = useState<string | null>(null);
 	const [scrollToOutlineSectionId, setScrollToOutlineSectionId] = useState<string | null>(null);
+	const [currentRow, setCurrentRow] = useState<string | null>(null);
+	const [currentHoverRow, setCurrentHoverRow] = useState<string | null>(null);
+	const [currentColumn, setCurrentColumn] = useState<string | null>(null);
+	const [currentHoverColumn, setCurrentHoverColumn] = useState<string | null>(null);
+	const [scrollToRowId, setScrollToRowId] = useState<string | null>(null);
+	const [scrollToColumnId, setScrollToColumnId] = useState<string | null>(null);
 
 	// Wrapper to trigger scroll when section is added
 	const handleSectionAdded = useCallback((sectionId: string) => {
@@ -1471,6 +1477,18 @@ export default function VBPrototype({
 									// Trigger outline scroll
 									setScrollToOutlineSectionId(sectionId);
 								}}
+								currentRow={currentRow}
+								currentHoverRow={currentHoverRow}
+								setCurrentRow={setCurrentRow}
+								setCurrentHoverRow={setCurrentHoverRow}
+								currentColumn={currentColumn}
+								currentHoverColumn={currentHoverColumn}
+								setCurrentColumn={setCurrentColumn}
+								setCurrentHoverColumn={setCurrentHoverColumn}
+								scrollToRowId={scrollToRowId}
+								scrollToColumnId={scrollToColumnId}
+								onRowScrollComplete={() => setScrollToRowId(null)}
+								onColumnScrollComplete={() => setScrollToColumnId(null)}
 							/>
 						)}
 						<Box borderL="1" borderColor="border.tertiary">
@@ -1692,6 +1710,14 @@ export default function VBPrototype({
 													scrollToSectionId={scrollToOutlineSectionId}
 													onScrollComplete={() => setScrollToOutlineSectionId(null)}
 													currentSection={currentSection}
+													setCurrentHoverSection={setCurrentHoverSection}
+													currentRow={currentRow}
+													setCurrentHoverRow={setCurrentHoverRow}
+													currentColumn={currentColumn}
+													setCurrentHoverColumn={setCurrentHoverColumn}
+													onScrollToSection={setScrollToSectionId}
+													onScrollToRow={setScrollToRowId}
+													onScrollToColumn={setScrollToColumnId}
 												/>
 											) : null}
 										</div>
@@ -1934,6 +1960,14 @@ export default function VBPrototype({
 												scrollToSectionId={scrollToOutlineSectionId}
 												onScrollComplete={() => setScrollToOutlineSectionId(null)}
 												currentSection={currentSection}
+												setCurrentHoverSection={setCurrentHoverSection}
+												currentRow={currentRow}
+												setCurrentHoverRow={setCurrentHoverRow}
+												currentColumn={currentColumn}
+												setCurrentHoverColumn={setCurrentHoverColumn}
+												onScrollToSection={setScrollToSectionId}
+												onScrollToRow={setScrollToRowId}
+												onScrollToColumn={setScrollToColumnId}
 											/>
 										</div>
 									</div>
@@ -2136,6 +2170,18 @@ export default function VBPrototype({
 							// Trigger outline scroll
 							setScrollToOutlineSectionId(sectionId);
 						}}
+						currentRow={currentRow}
+						currentHoverRow={currentHoverRow}
+						setCurrentRow={setCurrentRow}
+						setCurrentHoverRow={setCurrentHoverRow}
+						currentColumn={currentColumn}
+						currentHoverColumn={currentHoverColumn}
+						setCurrentColumn={setCurrentColumn}
+						setCurrentHoverColumn={setCurrentHoverColumn}
+						scrollToRowId={scrollToRowId}
+						scrollToColumnId={scrollToColumnId}
+						onRowScrollComplete={() => setScrollToRowId(null)}
+						onColumnScrollComplete={() => setScrollToColumnId(null)}
 					/>
 
 					{(() => {
