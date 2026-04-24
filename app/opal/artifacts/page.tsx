@@ -695,11 +695,11 @@ export default function ArtifactsPage() {
     const [openMode, setOpenMode] = useState<"preview" | "with-panel">("preview");
 
     function openPreview(artifact: Artifact) {
-        openPreview(artifact);
+        setOpenArtifact(artifact);
         setOpenMode("preview");
     }
     function openWithPanel(artifact: Artifact) {
-        openPreview(artifact);
+        setOpenArtifact(artifact);
         setOpenMode("with-panel");
     }
     const [pinnedIds, setPinnedIds] = useState<Set<string>>(DEFAULT_PINNED_IDS);
