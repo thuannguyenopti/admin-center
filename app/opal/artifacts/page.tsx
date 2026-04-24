@@ -296,13 +296,26 @@ function PinCell({ pinned, onToggle }: { pinned: boolean; onToggle: () => void }
     const visible = pinned || hovered;
     return (
         <Box
-            style={{ width: 32, display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{
+                width: 32,
+                height: "100%",
+                minHeight: 40,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+            }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
         >
             <Tooltip content={pinned ? "Unpin" : "Pin"} delayDuration={300}>
-                <span style={{ display: "inline-flex", opacity: visible ? 1 : 0, transition: "opacity 0.15s", cursor: "pointer" }}>
+                <span style={{
+                    display: "inline-flex",
+                    opacity: visible ? 1 : 0,
+                    pointerEvents: visible ? "auto" : "none",
+                    transition: "opacity 0.15s",
+                }}>
                     <IconThumbtack
                         size={14}
                         color={pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)"}
@@ -954,7 +967,7 @@ export default function ArtifactsPage() {
                                     onClick={() => openPreview(artifact)}
                                 >
                                     {/* Pin toggle */}
-                                    <Td style={{ width: 32, paddingRight: 0 }}>
+                                    <Td style={{ width: 32, paddingRight: 0, verticalAlign: "middle" }}>
                                         <PinCell pinned={pinnedIds.has(artifact.id)} onToggle={() => togglePin(artifact.id)} />
                                     </Td>
                                     <Td>
