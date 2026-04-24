@@ -483,7 +483,7 @@ function ArtifactPreviewCard({
     const [hovered, setHovered] = useState(false);
 
     const btnStyle: React.CSSProperties = {
-        background: "rgba(255,255,255,0.92)",
+        background: "var(--ax-colors-bg-default)",
         borderColor: "var(--ax-colors-border-tertiary)",
         height: 26, width: 26, padding: 0,
     };
@@ -497,7 +497,7 @@ function ArtifactPreviewCard({
             flexDirection="column"
             overflow="hidden"
             rounded="xl"
-            style={{ height: 180, transition: "box-shadow 0.15s", boxShadow: hovered ? "0 2px 12px rgba(0,0,0,0.10)" : "none" }}
+            style={{ height: 180 }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
@@ -625,7 +625,7 @@ function CanvasArtifactCard({
             px="16"
             py="12"
             rounded="xl"
-            style={{ cursor: "pointer", transition: "border-color 0.15s, box-shadow 0.15s", boxShadow: hovered ? "0 1px 6px rgba(0,0,0,0.07)" : "none" }}
+            style={{ cursor: "pointer", transition: "border-color 0.15s" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => onOpen(artifact)}
@@ -642,7 +642,7 @@ function CanvasArtifactCard({
                     flexShrink: 0,
                 }}
             >
-                <Box style={{ color: "#080736" }}>{icon}</Box>
+                <Box style={{ color: "var(--ax-colors-fg-default)" }}>{icon}</Box>
             </Box>
             <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
                 <Text fontSize="sm" fontWeight="600" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
