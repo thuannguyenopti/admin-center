@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useMemo, useState} from "react";
+import React, {useMemo, useState, useEffect, useRef} from "react";
 import {Box, Button, Text} from "@optiaxiom/react";
 import {IconPlus} from "@tabler/icons-react";
 
@@ -65,6 +65,7 @@ interface OutlineProps {
 	setTheEles: React.Dispatch<React.SetStateAction<EleMap>>;
 	onEditProperties?: (id: string) => void;
 	onOpenStyleEditor?: (elementId: string) => void;
+	onSectionAdded?: (sectionId: string) => void;
 
 	data: any[];
 }
@@ -130,6 +131,7 @@ export default function OutlineTree({
 	dragging,
 	onEditProperties,
 	onOpenStyleEditor,
+	onSectionAdded,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -179,6 +181,12 @@ export default function OutlineTree({
 	type InternalDropPosition = {colId: string; position: number} | null;
 	const [internalDrop, setInternalDrop] = useState<InternalDropPosition>(null);
 
+	// Track section IDs for auto-scroll
+	const prevSectionIdsRef = useRef<string[]>(
+		data.map((section: any) => section?.id).filter(Boolean)
+	);
+	const outlineContainerRef = useRef<HTMLDivElement>(null);
+
 	const isInternalEleDrag = (id: string | null) => {
 		if (!id) return false;
 		if (id === ASSET_DRAG_ID) return false;
@@ -221,11 +229,13 @@ export default function OutlineTree({
 
 	// addSection: if 'at' is null/undefined, append; otherwise insert at index 'at'
 	const addSection = (at: number | null | undefined = null) => {
+		const t = Date.now();
+		const newId = "section-" + t;
+
 		setData((prev) => {
 			const mk = () => {
-				const t = Date.now();
 				return {
-					id: "section-" + t,
+					id: newId,
 					open: true,
 					children: [
 						{
@@ -245,6 +255,9 @@ export default function OutlineTree({
 			if (at === null || at === undefined) return [...prev, mk()];
 			return [...prev.slice(0, at), mk(), ...prev.slice(at)];
 		});
+
+		// Notify parent that a section was added
+		onSectionAdded?.(newId);
 	};
 
 	const addCol = (e: any, section: number, row: number, at: any) => {
@@ -491,6 +504,41 @@ export default function OutlineTree({
 		});
 	};
 
+	// Auto-scroll the specific newly added section into view
+	useEffect(() => {
+		const currentSectionIds = data.map((section: any) => section?.id).filter(Boolean);
+		const previousSectionIds = prevSectionIdsRef.current;
+		const addedSectionIds = currentSectionIds.filter((id: string) => !previousSectionIds.includes(id));
+
+		// Only scroll if exactly one section was added (not removed, not switched outlines)
+		if (
+			outlineContainerRef.current &&
+			addedSectionIds.length === 1 &&
+			currentSectionIds.length === previousSectionIds.length + 1
+		) {
+			const addedSectionId = addedSectionIds[0];
+			requestAnimationFrame(() => {
+				if (!outlineContainerRef.current) return;
+
+				// Find the newly added section element
+				const addedSectionEl = Array.from(
+					outlineContainerRef.current.querySelectorAll("[data-section-id]")
+				).find(
+					(el) => el.getAttribute("data-section-id") === addedSectionId
+				) as HTMLElement | undefined;
+
+				if (addedSectionEl) {
+					addedSectionEl.scrollIntoView({
+						behavior: "smooth",
+						block: "nearest",
+					});
+				}
+			});
+		}
+
+		prevSectionIdsRef.current = currentSectionIds;
+	}, [data]);
+
 	const insertImageIntoTree = (
 		colId: string,
 		position: number,
@@ -532,6 +580,7 @@ export default function OutlineTree({
 
 	return (
 		<div
+			ref={outlineContainerRef}
 			className="relative min-h-[300px] pr-3"
 			onDragLeave={(e) => {
 				if (e.currentTarget === e.target) clearAssetDnD();
@@ -548,6 +597,7 @@ export default function OutlineTree({
 					return (
 						<div
 							key={sindex}
+							data-section-id={section.id}
 							onDragOver={(e) => {
 								// allow dropping section BEFORE this section
 								if (dragging && isSectionId(dragging)) onDragHover(e, section.id);

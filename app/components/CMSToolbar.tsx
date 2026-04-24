@@ -56,6 +56,7 @@ import {
 	IconSparkles,
 	IconChecklist,
 	IconCheck,
+	IconExternalLink,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
 import {group} from "console";
@@ -785,28 +786,22 @@ export default function CMSToolbar({
 				{/* Publish Button with Menu */}
 				<Menu
 					options={[
-						...(onViewOnWebsite
+						...(pageStatus === "Changed" || pageStatus === "Draft"
 							? [
 									{
-										label: "View on website",
-										addon: <IconWorld size={16} />,
-										execute: onViewOnWebsite,
-										group: {label: "view", hidden: true, separator: true},
+										label: "Publish now",
+										addon: <IconWorldCheck size={16} />,
+										execute: onPublish,
+										group: {label: "publish", hidden: true, separator: true},
+									},
+									{
+										label: "Schedule publish",
+										addon: <IconCalendarCheck size={16} />,
+										execute: () => {},
+										group: {label: "publish", hidden: true, separator: true},
 									},
 								]
 							: []),
-						{
-							label: "Publish now",
-							addon: <IconWorldCheck size={16} />,
-							execute: onPublish,
-							group: {label: "publish", hidden: true, separator: true},
-						},
-						{
-							label: "Schedule publish",
-							addon: <IconCalendarCheck size={16} />,
-							execute: () => {},
-							group: {label: "publish", hidden: true, separator: true},
-						},
 						{
 							label: "Unpublish",
 							addon: <IconWorldX size={16} />,
@@ -815,11 +810,6 @@ export default function CMSToolbar({
 						{
 							label: "Schedule Unpublish",
 							addon: <IconCalendarX size={16} />,
-							execute: () => {},
-						},
-						{
-							label: "Publish settings",
-							addon: <IconSettings size={16} />,
 							execute: () => {},
 						},
 					]}
@@ -926,6 +916,17 @@ export default function CMSToolbar({
 
 						{/* Page Actions */}
 						<DropdownMenuLabel>Page</DropdownMenuLabel>
+						{onViewOnWebsite && (
+							<DropdownMenuItem onSelect={onViewOnWebsite}>
+								<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+									<Box display="flex" alignItems="center" gap="8">
+										<IconWorld size={16} />
+										<Text>View on website</Text>
+									</Box>
+									<IconExternalLink size={16} />
+								</Box>
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem onSelect={onRenamePage}>
 							<Box display="flex" alignItems="center" gap="8">
 								<IconPencil size={16} />
