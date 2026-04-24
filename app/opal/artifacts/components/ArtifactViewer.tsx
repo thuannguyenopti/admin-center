@@ -80,12 +80,12 @@ function IslandContentTile({
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
+                rounded="sm"
                 style={{
                     padding: "8px 12px",
-                    borderRadius: 6,
                     background: THUMB_GRADIENT,
                     flexShrink: 0,
-                    color: "#080736",
+                    color: "var(--ax-colors-fg-default)",
                 }}
             >
                 {TYPE_ICON[type] ?? <IconFile size={20} />}
@@ -235,7 +235,8 @@ function AgentExecutionLog({ artifact }: { artifact: ArtifactViewerArtifact }) {
                     alignItems="center"
                     justifyContent="center"
                     rounded="md"
-                    style={{ width: 32, height: 32, background: "#ede9fe", flexShrink: 0 }}
+                    bg="bg.accent.subtle"
+                    style={{ width: 32, height: 32, flexShrink: 0 }}
                 >
                     <IconAgent size={16} color="var(--ax-colors-fg-accent)" />
                 </Box>
@@ -447,12 +448,12 @@ function CanvasPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
                             display="flex"
                             alignItems="center"
                             justifyContent="center"
+                            rounded="md"
                             style={{
                                 padding: "10px 14px",
-                                borderRadius: 8,
                                 background: THUMB_GRADIENT,
                                 flexShrink: 0,
-                                color: "#080736",
+                                color: "var(--ax-colors-fg-default)",
                             }}
                         >
                             {TYPE_ICON[artifact.type] ?? <IconFile size={20} />}
