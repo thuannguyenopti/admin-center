@@ -66,6 +66,8 @@ interface OutlineProps {
 	onEditProperties?: (id: string) => void;
 	onOpenStyleEditor?: (elementId: string) => void;
 	onSectionAdded?: (sectionId: string) => void;
+	scrollToSectionId?: string | null;
+	onScrollComplete?: () => void;
 
 	data: any[];
 }
@@ -132,6 +134,8 @@ export default function OutlineTree({
 	onEditProperties,
 	onOpenStyleEditor,
 	onSectionAdded,
+	scrollToSectionId,
+	onScrollComplete,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -538,6 +542,33 @@ export default function OutlineTree({
 
 		prevSectionIdsRef.current = currentSectionIds;
 	}, [data]);
+
+	// Scroll to section when clicked in preview
+	useEffect(() => {
+		if (!scrollToSectionId || !outlineContainerRef.current) {
+			return;
+		}
+
+		requestAnimationFrame(() => {
+			if (!outlineContainerRef.current) {
+				onScrollComplete?.();
+				return;
+			}
+
+			const sectionElement = outlineContainerRef.current.querySelector(
+				`[data-section-id="${scrollToSectionId}"]`
+			) as HTMLElement | null;
+
+			if (sectionElement) {
+				sectionElement.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
+			}
+
+			onScrollComplete?.();
+		});
+	}, [scrollToSectionId, onScrollComplete]);
 
 	const insertImageIntoTree = (
 		colId: string,

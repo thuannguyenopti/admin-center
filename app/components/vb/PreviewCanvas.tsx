@@ -70,6 +70,11 @@ export default function PreviewCanvas({
 	preview,
 	scrollToSectionId,
 	onScrollComplete,
+	currentSection,
+	currentHoverSection,
+	setCurrentSection,
+	setCurrentHoverSection,
+	onSectionClick,
 }: {
 	outlines: Outline[];
 	theEles: EleMap;
@@ -81,6 +86,11 @@ export default function PreviewCanvas({
 	preview: PreviewSettings;
 	scrollToSectionId?: string | null;
 	onScrollComplete?: () => void;
+	currentSection?: string | null;
+	currentHoverSection?: string | null;
+	setCurrentSection?: (value: string | null) => void;
+	setCurrentHoverSection?: (value: string | null) => void;
+	onSectionClick?: (sectionId: string) => void;
 }) {
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 	const [dropPosition, setDropPosition] = useState<DropPosition>(null);
@@ -318,7 +328,24 @@ export default function PreviewCanvas({
 				<section
 					key={section.id ?? sindex}
 					data-preview-section-id={section.id}
-					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses}`}
+					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses} relative`}
+					onClick={(e) => {
+						// Only trigger if not clicking an element
+						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+							e.stopPropagation();
+							setCurrentSection?.(section.id);
+							onSectionClick?.(section.id);
+						}
+					}}
+					onMouseEnter={(e) => {
+						// Only trigger if not hovering an element
+						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+							setCurrentHoverSection?.(section.id);
+						}
+					}}
+					onMouseLeave={() => {
+						setCurrentHoverSection?.(null);
+					}}
 					style={
 						hasBgImage
 							? {
@@ -329,6 +356,16 @@ export default function PreviewCanvas({
 							: {}
 					}
 				>
+					{/* Blue border overlay for hover/selection */}
+					{(currentHoverSection === section.id || currentSection === section.id) && (
+						<div
+							className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+							style={{
+								opacity: currentSection === section.id ? 1 : 0.5,
+								zIndex: 5,
+							}}
+						/>
+					)}
 					<div
 						className={
 							hasBgImage
@@ -426,6 +463,7 @@ export default function PreviewCanvas({
 																	e.stopPropagation();
 																	setCurrentEle(element.id);
 																	setCurrentHoverEle("none");
+																	setCurrentSection?.(null);
 																}}
 																style={{
 																	visibility:
