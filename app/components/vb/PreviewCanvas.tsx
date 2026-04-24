@@ -94,11 +94,20 @@ export default function PreviewCanvas({
 			// Wait for DOM to update with new section
 			requestAnimationFrame(() => {
 				requestAnimationFrame(() => {
-					const sectionElement = document.querySelector(`[data-preview-section-id="${scrollToSectionId}"]`);
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						// Clear trigger even if container is gone
+						onScrollComplete?.();
+						return;
+					}
 
-					if (sectionElement && scrollRef.current) {
+					// Scope the query to this scroll container
+					const sectionElement = scrollContainer.querySelector(
+						`[data-preview-section-id="${scrollToSectionId}"]`
+					) as HTMLElement | null;
+
+					if (sectionElement) {
 						// Get the section's position relative to the scroll container
-						const scrollContainer = scrollRef.current;
 						const containerRect = scrollContainer.getBoundingClientRect();
 						const sectionRect = sectionElement.getBoundingClientRect();
 
@@ -110,9 +119,10 @@ export default function PreviewCanvas({
 							top: targetScroll,
 							behavior: 'smooth'
 						});
-						// Clear the scroll trigger
-						onScrollComplete?.();
 					}
+
+					// Always clear the scroll trigger (even if element not found)
+					onScrollComplete?.();
 				});
 			});
 		}

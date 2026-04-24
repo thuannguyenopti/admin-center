@@ -181,8 +181,10 @@ export default function OutlineTree({
 	type InternalDropPosition = {colId: string; position: number} | null;
 	const [internalDrop, setInternalDrop] = useState<InternalDropPosition>(null);
 
-	// Track data length for auto-scroll
-	const prevDataLengthRef = useRef(data.length);
+	// Track section IDs for auto-scroll
+	const prevSectionIdsRef = useRef<string[]>(
+		data.map((section: any) => section?.id).filter(Boolean)
+	);
 	const outlineContainerRef = useRef<HTMLDivElement>(null);
 
 	const isInternalEleDrag = (id: string | null) => {
@@ -502,31 +504,40 @@ export default function OutlineTree({
 		});
 	};
 
-	// Auto-scroll when sections are added
+	// Auto-scroll the specific newly added section into view
 	useEffect(() => {
-		if (data.length > prevDataLengthRef.current && outlineContainerRef.current) {
-			// A section was added, scroll down
+		const currentSectionIds = data.map((section: any) => section?.id).filter(Boolean);
+		const previousSectionIds = prevSectionIdsRef.current;
+		const addedSectionIds = currentSectionIds.filter((id: string) => !previousSectionIds.includes(id));
+
+		// Only scroll if exactly one section was added (not removed, not switched outlines)
+		if (
+			outlineContainerRef.current &&
+			addedSectionIds.length === 1 &&
+			currentSectionIds.length === previousSectionIds.length + 1
+		) {
+			const addedSectionId = addedSectionIds[0];
 			requestAnimationFrame(() => {
 				if (!outlineContainerRef.current) return;
 
-				// Find the scrollable parent
-				let el: HTMLElement | null = outlineContainerRef.current.parentElement;
-				while (el) {
-					const overflow = window.getComputedStyle(el).overflowY;
-					if (overflow === 'auto' || overflow === 'scroll') {
-						// Found it - scroll to bottom smoothly
-						el.scrollTo({
-							top: el.scrollHeight,
-							behavior: 'smooth'
-						});
-						break;
-					}
-					el = el.parentElement;
+				// Find the newly added section element
+				const addedSectionEl = Array.from(
+					outlineContainerRef.current.querySelectorAll("[data-section-id]")
+				).find(
+					(el) => el.getAttribute("data-section-id") === addedSectionId
+				) as HTMLElement | undefined;
+
+				if (addedSectionEl) {
+					addedSectionEl.scrollIntoView({
+						behavior: "smooth",
+						block: "nearest",
+					});
 				}
 			});
 		}
-		prevDataLengthRef.current = data.length;
-	}, [data.length]);
+
+		prevSectionIdsRef.current = currentSectionIds;
+	}, [data]);
 
 	const insertImageIntoTree = (
 		colId: string,
