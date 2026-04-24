@@ -24,13 +24,15 @@ const Section: React.FC<{
   onDragStart: any;
   onEditProperties?: () => void;
   onOpenStyleEditor?: () => void;
-}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties, onOpenStyleEditor }) => {
+  isSelected?: boolean;
+}> = ({ addSection, addSectionAfter, setOpen, section, children, addRow, removeSection, onDragStart, onEditProperties, onOpenStyleEditor, isSelected }) => {
   if (section.label) {
     return (
       <div className="p-0.5 pl-6 -mr-0.5">
         <div>
           <div
-            className="group hover:border-[#838DA4] h-10 border-[#CACFDC] border bg-white cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-2 pl-3 active:bg-[#0037FF10]"
+            className="group hover:border-[#838DA4] h-10 border-[#CACFDC] border cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-2 pl-3 active:bg-[#0037FF10]"
+            style={{ backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : 'white' }}
             onDragStart={onDragStart}
             draggable
           >
@@ -95,6 +97,7 @@ const Section: React.FC<{
     <div className="p-1 py-0 -mr-[24px]">
       <div
         className="group p-1 cursor-pointer rounded-[4px] hover:bg-[#091E4208] flex gap-1 items-center w-full justify-between pr-5 active:bg-[#0037FF10]"
+        style={{ backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined }}
         onDragStart={onDragStart}
         onClick={() => setOpen(section.id, !section.open)}
         draggable
@@ -176,7 +179,7 @@ const Section: React.FC<{
           </Menu>
         </div>
       </div>
-      <div style={{ display: section.open ? "block" : "none" }}>{children}</div>
+      <div style={{ display: section.open ? "block" : "none", backgroundColor: isSelected ? 'var(--ax-colors-bg-accent-subtle)' : undefined }}>{children}</div>
     </div>
   );
 };

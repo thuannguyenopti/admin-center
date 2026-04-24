@@ -68,6 +68,7 @@ interface OutlineProps {
 	onSectionAdded?: (sectionId: string) => void;
 	scrollToSectionId?: string | null;
 	onScrollComplete?: () => void;
+	currentSection?: string | null;
 
 	data: any[];
 }
@@ -136,6 +137,7 @@ export default function OutlineTree({
 	onSectionAdded,
 	scrollToSectionId,
 	onScrollComplete,
+	currentSection,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -653,6 +655,7 @@ export default function OutlineTree({
 								// Add Section After
 								addSectionAfter={() => addSection(sindex + 1)}
 								addRow={(e: any) => addRow(e, sindex, null)}
+								isSelected={currentSection === section.id}
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
