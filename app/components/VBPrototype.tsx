@@ -1691,6 +1691,7 @@ export default function VBPrototype({
 													onSectionAdded={handleSectionAdded}
 													scrollToSectionId={scrollToOutlineSectionId}
 													onScrollComplete={() => setScrollToOutlineSectionId(null)}
+													currentSection={currentSection}
 												/>
 											) : null}
 										</div>
@@ -1932,6 +1933,7 @@ export default function VBPrototype({
 												onSectionAdded={handleSectionAdded}
 												scrollToSectionId={scrollToOutlineSectionId}
 												onScrollComplete={() => setScrollToOutlineSectionId(null)}
+												currentSection={currentSection}
 											/>
 										</div>
 									</div>
