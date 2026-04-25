@@ -49,7 +49,7 @@ import {
     IconChartColumn,
     IconPresentationScreen,
     IconFileSpreadsheet,
-    IconSearch,
+    IconComments,
     IconInboxFull,
     IconThumbtack,
     IconUsers,
@@ -133,7 +133,7 @@ const artifacts: Artifact[] = [
         id: "4",
         name: "SEO Audit Summary",
         type: "Document",
-        source: { name: "Audit my SEO performance", type: "agent", link: "/opal/agents/setup?id=4" },
+        source: { name: "Audit my SEO performance", type: "chat", link: "/opal/chat/4" },
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
         created: "Mar 20, 2026",
         createdRaw: 1742428800,
@@ -205,7 +205,7 @@ const artifacts: Artifact[] = [
         id: "9",
         name: "Meeting Notes — Product Sync",
         type: "Document",
-        source: { name: "Meeting Synthesizer", type: "agent", link: "/opal/agents/setup?id=9" },
+        source: { name: "Summarize my meeting notes", type: "chat", link: "/opal/chat/9" },
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
         created: "Mar 8, 2026",
         createdRaw: 1741392000,
@@ -317,7 +317,7 @@ function PinCell({ pinned, onToggle }: { pinned: boolean; onToggle: () => void }
                     transition: "opacity 0.15s",
                 }}>
                     <IconThumbtack
-                        size={14}
+                        size={16}
                         color={pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)"}
                     />
                 </span>
@@ -327,6 +327,56 @@ function PinCell({ pinned, onToggle }: { pinned: boolean; onToggle: () => void }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
+
+function SourceCell({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Artifact) => void }) {
+    const [hovered, setHovered] = useState(false);
+    return (
+        <Box
+            display="flex"
+            flexDirection="column"
+            gap="2"
+            color="fg.secondary"
+            style={{ cursor: "pointer" }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={(e) => { e.stopPropagation(); onOpen(artifact); }}
+        >
+            <Box display="flex" alignItems="center" gap="6">
+                {artifact.source.type === "workflow" ? (
+                    <IconCodeBranch size={16} />
+                ) : artifact.source.type === "chat" ? (
+                    <IconComments size={16} />
+                ) : (
+                    <IconAgent size={16} />
+                )}
+                <Text fontSize="md" style={artifact.source.type !== "chat" ? { textDecorationLine: "underline", textDecorationColor: "var(--ax-colors-border-secondary)" } : undefined}>
+                    {artifact.source.type === "chat" ? "Chat" : artifact.source.name}
+                </Text>
+                {artifact.source.type !== "chat" && (
+                    <Box style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }}>
+                        <IconArrowUpRightFromSquare size={11} />
+                    </Box>
+                )}
+            </Box>
+            {artifact.source.type === "chat" && (
+                <Box display="flex" alignItems="center">
+                    <Box style={{
+                        width: 16,
+                        height: 10,
+                        borderLeft: "1px solid var(--ax-colors-border-secondary)",
+                        borderBottom: "1px solid var(--ax-colors-border-secondary)",
+                        borderBottomLeftRadius: 3,
+                        flexShrink: 0,
+                        marginRight: 6,
+                    }} />
+                    <Text fontSize="sm" color="fg.tertiary" style={{ textDecorationLine: "underline", textDecorationColor: "var(--ax-colors-border-secondary)" }}>
+                        {artifact.source.name}
+                    </Text>
+                </Box>
+            )}
+        </Box>
+    );
+}
 
 function SortHeader({
     label,
@@ -890,7 +940,7 @@ export default function ArtifactsPage() {
                                 {allSourceTypes.map((s) => (
                                     <DropdownMenuItem key={s} onClick={() => setSourceFilter(s)}>
                                         <Box display="flex" alignItems="center" gap="8">
-                                            {s === "chat" && <IconSearch size={14} />}
+                                            {s === "chat" && <IconComments size={14} />}
                                             {s === "agent" && <IconAgent size={14} />}
                                             {s === "workflow" && <IconCodeBranch size={14} />}
                                             {s === "All" ? "All sources" : s.charAt(0).toUpperCase() + s.slice(1)}
@@ -982,34 +1032,10 @@ export default function ArtifactsPage() {
                                     <Td>
                                         <Box display="flex" alignItems="center" gap="6" color="fg.secondary">
                                             {typeIcon[artifact.type]}
-                                            <Text fontSize="sm">{artifact.type}</Text>
+                                            <Text fontSize="md">{artifact.type}</Text>
                                         </Box>
                                     </Td>
-                                    <Td>
-                                        <Box
-                                            display="flex"
-                                            alignItems="center"
-                                            gap="6"
-                                            color="fg.secondary"
-                                            style={{ cursor: "pointer" }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openWithPanel(artifact);
-                                            }}
-                                        >
-                                            {artifact.source.type === "workflow" ? (
-                                                <IconCodeBranch size={13} />
-                                            ) : artifact.source.type === "chat" ? (
-                                                <IconSearch size={13} />
-                                            ) : (
-                                                <IconAgent size={13} />
-                                            )}
-                                            <Text fontSize="sm" style={{ textDecoration: "underline", textDecorationColor: "var(--ax-colors-border-secondary)" }}>
-                                                {artifact.source.name}
-                                            </Text>
-                                            <IconArrowUpRightFromSquare size={11} />
-                                        </Box>
-                                    </Td>
+                                    <Td><SourceCell artifact={artifact} onOpen={openWithPanel} /></Td>
                                     <Td>
                                         <Box display="flex" alignItems="center" gap="8">
                                             <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" />
