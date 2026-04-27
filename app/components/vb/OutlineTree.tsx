@@ -576,7 +576,11 @@ export default function OutlineTree({
 
 	// Scroll to section when clicked in preview
 	useEffect(() => {
-		if (!scrollToSectionId || !outlineContainerRef.current) {
+		if (!scrollToSectionId) {
+			return;
+		}
+		if (!outlineContainerRef.current) {
+			onScrollComplete?.();
 			return;
 		}
 
