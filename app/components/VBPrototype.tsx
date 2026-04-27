@@ -1504,10 +1504,38 @@ export default function VBPrototype({
 								currentHoverRow={currentHoverRow}
 								setCurrentRow={setCurrentRow}
 								setCurrentHoverRow={setCurrentHoverRow}
+								onRowClick={(rowId) => {
+									setCurrentEle("none");
+									setCurrentHoverEle("none");
+
+									// Switch to tree view if multi-outline
+									if (isMulti) {
+										setSidebarTab("outlines");
+										setOutlineView("tree");
+									} else {
+										setSidebarTab("outline");
+									}
+
+									setTimeout(() => setScrollToRowId(rowId), 350);
+								}}
 								currentColumn={currentColumn}
 								currentHoverColumn={currentHoverColumn}
 								setCurrentColumn={setCurrentColumn}
 								setCurrentHoverColumn={setCurrentHoverColumn}
+								onColumnClick={(columnId) => {
+									setCurrentEle("none");
+									setCurrentHoverEle("none");
+
+									// Switch to tree view if multi-outline
+									if (isMulti) {
+										setSidebarTab("outlines");
+										setOutlineView("tree");
+									} else {
+										setSidebarTab("outline");
+									}
+
+									setTimeout(() => setScrollToColumnId(columnId), 350);
+								}}
 								scrollToRowId={scrollToRowId}
 								scrollToColumnId={scrollToColumnId}
 								onRowScrollComplete={() => setScrollToRowId(null)}
@@ -2226,10 +2254,38 @@ export default function VBPrototype({
 						currentHoverRow={currentHoverRow}
 						setCurrentRow={setCurrentRow}
 						setCurrentHoverRow={setCurrentHoverRow}
+						onRowClick={(rowId) => {
+							setCurrentEle("none");
+							setCurrentHoverEle("none");
+
+							// Switch to tree view if multi-outline
+							if (isMulti) {
+								setSidebarTab("outlines");
+								setOutlineView("tree");
+							} else {
+								setSidebarTab("outline");
+							}
+
+							setTimeout(() => setScrollToRowId(rowId), 350);
+						}}
 						currentColumn={currentColumn}
 						currentHoverColumn={currentHoverColumn}
 						setCurrentColumn={setCurrentColumn}
 						setCurrentHoverColumn={setCurrentHoverColumn}
+						onColumnClick={(columnId) => {
+							setCurrentEle("none");
+							setCurrentHoverEle("none");
+
+							// Switch to tree view if multi-outline
+							if (isMulti) {
+								setSidebarTab("outlines");
+								setOutlineView("tree");
+							} else {
+								setSidebarTab("outline");
+							}
+
+							setTimeout(() => setScrollToColumnId(columnId), 350);
+						}}
 						scrollToRowId={scrollToRowId}
 						scrollToColumnId={scrollToColumnId}
 						onRowScrollComplete={() => setScrollToRowId(null)}
