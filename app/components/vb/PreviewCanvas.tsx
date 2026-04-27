@@ -70,6 +70,25 @@ export default function PreviewCanvas({
 	preview,
 	scrollToSectionId,
 	onScrollComplete,
+	currentSection,
+	currentHoverSection,
+	setCurrentSection,
+	setCurrentHoverSection,
+	onSectionClick,
+	currentRow,
+	currentHoverRow,
+	setCurrentRow,
+	setCurrentHoverRow,
+	onRowClick,
+	currentColumn,
+	currentHoverColumn,
+	setCurrentColumn,
+	setCurrentHoverColumn,
+	onColumnClick,
+	scrollToRowId,
+	scrollToColumnId,
+	onRowScrollComplete,
+	onColumnScrollComplete,
 }: {
 	outlines: Outline[];
 	theEles: EleMap;
@@ -81,6 +100,25 @@ export default function PreviewCanvas({
 	preview: PreviewSettings;
 	scrollToSectionId?: string | null;
 	onScrollComplete?: () => void;
+	currentSection?: string | null;
+	currentHoverSection?: string | null;
+	setCurrentSection?: (value: string | null) => void;
+	setCurrentHoverSection?: (value: string | null) => void;
+	onSectionClick?: (sectionId: string) => void;
+	currentRow?: string | null;
+	currentHoverRow?: string | null;
+	setCurrentRow?: (value: string | null) => void;
+	setCurrentHoverRow?: (value: string | null) => void;
+	onRowClick?: (rowId: string) => void;
+	currentColumn?: string | null;
+	currentHoverColumn?: string | null;
+	setCurrentColumn?: (value: string | null) => void;
+	setCurrentHoverColumn?: (value: string | null) => void;
+	onColumnClick?: (columnId: string) => void;
+	scrollToRowId?: string | null;
+	scrollToColumnId?: string | null;
+	onRowScrollComplete?: () => void;
+	onColumnScrollComplete?: () => void;
 }) {
 	const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 	const [dropPosition, setDropPosition] = useState<DropPosition>(null);
@@ -127,6 +165,72 @@ export default function PreviewCanvas({
 			});
 		}
 	}, [scrollToSectionId, onScrollComplete]);
+
+	// Auto-scroll preview when a row is clicked in outline
+	useEffect(() => {
+		if (scrollToRowId && scrollRef.current) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						onRowScrollComplete?.();
+						return;
+					}
+
+					const rowElement = scrollContainer.querySelector(
+						`[data-row-id="${scrollToRowId}"]`
+					) as HTMLElement | null;
+
+					if (rowElement) {
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const rowRect = rowElement.getBoundingClientRect();
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (rowRect.top - containerRect.top) - 100;
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					onRowScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToRowId, onRowScrollComplete]);
+
+	// Auto-scroll preview when a column is clicked in outline
+	useEffect(() => {
+		if (scrollToColumnId && scrollRef.current) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					const scrollContainer = scrollRef.current;
+					if (!scrollContainer) {
+						onColumnScrollComplete?.();
+						return;
+					}
+
+					const columnElement = scrollContainer.querySelector(
+						`[data-column-id="${scrollToColumnId}"]`
+					) as HTMLElement | null;
+
+					if (columnElement) {
+						const containerRect = scrollContainer.getBoundingClientRect();
+						const columnRect = columnElement.getBoundingClientRect();
+						const scrollTop = scrollContainer.scrollTop;
+						const targetScroll = scrollTop + (columnRect.top - containerRect.top) - 100;
+
+						scrollContainer.scrollTo({
+							top: targetScroll,
+							behavior: 'smooth'
+						});
+					}
+
+					onColumnScrollComplete?.();
+				});
+			});
+		}
+	}, [scrollToColumnId, onColumnScrollComplete]);
 
 	// "tablet/mobile" breakpoint
 	const MOBILE_BP = 1024;
@@ -318,7 +422,27 @@ export default function PreviewCanvas({
 				<section
 					key={section.id ?? sindex}
 					data-preview-section-id={section.id}
-					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses}`}
+					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses} relative`}
+					onClick={(e) => {
+						// Only trigger if not clicking an element
+						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+							e.stopPropagation();
+							setCurrentSection?.(section.id);
+							onSectionClick?.(section.id);
+						}
+					}}
+					onMouseEnter={(e) => {
+						// Only trigger if not hovering an element
+						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+							setCurrentHoverSection?.(section.id);
+							// Clear higher-priority hovers
+							setCurrentHoverRow?.(null);
+							setCurrentHoverColumn?.(null);
+						}
+					}}
+					onMouseLeave={() => {
+						setCurrentHoverSection?.(null);
+					}}
 					style={
 						hasBgImage
 							? {
@@ -329,6 +453,16 @@ export default function PreviewCanvas({
 							: {}
 					}
 				>
+					{/* Blue border overlay for hover/selection */}
+					{(currentHoverSection === section.id || currentSection === section.id) && (
+						<div
+							className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+							style={{
+								opacity: currentSection === section.id ? 1 : 0.5,
+								zIndex: 5,
+							}}
+						/>
+					)}
 					<div
 						className={
 							hasBgImage
@@ -338,9 +472,44 @@ export default function PreviewCanvas({
 					>
 						{(section.children || []).map((row: any, rIndex: number) => (
 							<section
-								className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"}`}
+								className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"} relative`}
 								key={row.id ?? rIndex}
+								data-row-id={row.id}
+								onClick={(e) => {
+									// Only trigger if not clicking an element or column
+									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
+									    !(e.target as HTMLElement).closest('[data-column-id]')) {
+										e.stopPropagation();
+										setCurrentRow?.(row.id);
+										setCurrentSection?.(null);
+										onRowClick?.(row.id);
+									}
+								}}
+								onMouseEnter={(e) => {
+									// Only trigger if not hovering an element or column
+									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
+									    !(e.target as HTMLElement).closest('[data-column-id]')) {
+										setCurrentHoverRow?.(row.id);
+										// Clear lower-priority hovers
+										setCurrentHoverSection?.(null);
+										// Clear higher-priority hovers
+										setCurrentHoverColumn?.(null);
+									}
+								}}
+								onMouseLeave={() => {
+									setCurrentHoverRow?.(null);
+								}}
 							>
+								{/* Blue border overlay for row hover/selection */}
+								{(currentHoverRow === row.id || currentRow === row.id) && (
+									<div
+										className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+										style={{
+											opacity: currentRow === row.id ? 1 : 0.5,
+											zIndex: 4,
+										}}
+									/>
+								)}
 								{(row.children || []).map((col: any, cIndex: number) => {
 									const colChildren = col.elements || col.children || [];
 									const isActiveDropCol =
@@ -352,6 +521,29 @@ export default function PreviewCanvas({
 									return (
 										<div
 											key={col.id ?? cIndex}
+											data-column-id={col.id}
+											onClick={(e) => {
+												// Only trigger if not clicking an element
+												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+													e.stopPropagation();
+													setCurrentColumn?.(col.id);
+													setCurrentRow?.(null);
+													setCurrentSection?.(null);
+													onColumnClick?.(col.id);
+												}
+											}}
+											onMouseEnter={(e) => {
+												// Only trigger if not hovering an element
+												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
+													setCurrentHoverColumn?.(col.id);
+													// Clear lower-priority hovers
+													setCurrentHoverSection?.(null);
+													setCurrentHoverRow?.(null);
+												}
+											}}
+											onMouseLeave={() => {
+												setCurrentHoverColumn?.(null);
+											}}
 											onDragOver={(e) => {
 												e.preventDefault();
 												e.stopPropagation();
@@ -393,8 +585,18 @@ export default function PreviewCanvas({
 													setDropPosition(null);
 												}
 											}}
-											className={dragOverColumn === col.id ? "relative" : ""}
+											className="relative"
 										>
+											{/* Blue border overlay for column hover/selection */}
+											{(currentHoverColumn === col.id || currentColumn === col.id) && (
+												<div
+													className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+													style={{
+														opacity: currentColumn === col.id ? 1 : 0.5,
+														zIndex: 3,
+													}}
+												/>
+											)}
 											{/* list */}
 											{colChildren.map((element: any, eleIndex: number) => {
 												const ele = outline.elements[element.id];
@@ -419,6 +621,17 @@ export default function PreviewCanvas({
 														<div
 															className="relative group"
 															data-element-id={element.id}
+															onMouseEnter={(e) => {
+																e.stopPropagation();
+																setCurrentHoverEle(element.id);
+																// Clear lower-priority hovers
+																setCurrentHoverSection?.(null);
+																setCurrentHoverRow?.(null);
+																setCurrentHoverColumn?.(null);
+															}}
+															onMouseLeave={() => {
+																setCurrentHoverEle("none");
+															}}
 														>
 															{/* selection outline */}
 															<div
@@ -426,6 +639,9 @@ export default function PreviewCanvas({
 																	e.stopPropagation();
 																	setCurrentEle(element.id);
 																	setCurrentHoverEle("none");
+																	setCurrentSection?.(null);
+																	setCurrentRow?.(null);
+																	setCurrentColumn?.(null);
 																}}
 																style={{
 																	visibility:

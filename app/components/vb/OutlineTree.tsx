@@ -66,6 +66,18 @@ interface OutlineProps {
 	onEditProperties?: (id: string) => void;
 	onOpenStyleEditor?: (elementId: string) => void;
 	onSectionAdded?: (sectionId: string) => void;
+	scrollToSectionId?: string | null;
+	onScrollComplete?: () => void;
+	currentSection?: string | null;
+	setCurrentHoverSection?: (sectionId: string | null) => void;
+	currentRow?: string | null;
+	setCurrentHoverRow?: (rowId: string | null) => void;
+	currentColumn?: string | null;
+	setCurrentHoverColumn?: (colId: string | null) => void;
+	onScrollToSection?: (sectionId: string, outlineId: string) => void;
+	onScrollToRow?: (rowId: string) => void;
+	onScrollToColumn?: (colId: string) => void;
+	outlineId?: string;
 
 	data: any[];
 }
@@ -132,8 +144,31 @@ export default function OutlineTree({
 	onEditProperties,
 	onOpenStyleEditor,
 	onSectionAdded,
+	scrollToSectionId,
+	onScrollComplete,
+	currentSection,
+	setCurrentHoverSection,
+	currentRow,
+	setCurrentHoverRow,
+	currentColumn,
+	setCurrentHoverColumn,
+	onScrollToSection,
+	onScrollToRow,
+	onScrollToColumn,
+	outlineId,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
+
+	// Wrapper for setCurrentHoverEle that also clears lower-priority hovers
+	const setCurrentHoverEleWithClear = (value: React.SetStateAction<string>) => {
+		setCurrentHoverEle(value);
+		// When hovering an element, clear section/row/column hovers
+		if (value !== "none") {
+			setCurrentHoverSection?.(null);
+			setCurrentHoverRow?.(null);
+			setCurrentHoverColumn?.(null);
+		}
+	};
 
 	// Support both old seeded ids (sec-*) and new ids (section-*)
 	const isSectionId = (id: string) => id.startsWith("section-") || id.startsWith("sec-");
@@ -539,6 +574,37 @@ export default function OutlineTree({
 		prevSectionIdsRef.current = currentSectionIds;
 	}, [data]);
 
+	// Scroll to section when clicked in preview
+	useEffect(() => {
+		if (!scrollToSectionId) {
+			return;
+		}
+		if (!outlineContainerRef.current) {
+			onScrollComplete?.();
+			return;
+		}
+
+		requestAnimationFrame(() => {
+			if (!outlineContainerRef.current) {
+				onScrollComplete?.();
+				return;
+			}
+
+			const sectionElement = outlineContainerRef.current.querySelector(
+				`[data-section-id="${scrollToSectionId}"]`
+			) as HTMLElement | null;
+
+			if (sectionElement) {
+				sectionElement.scrollIntoView({
+					behavior: "smooth",
+					block: "nearest",
+				});
+			}
+
+			onScrollComplete?.();
+		});
+	}, [scrollToSectionId, onScrollComplete]);
+
 	const insertImageIntoTree = (
 		colId: string,
 		position: number,
@@ -622,6 +688,9 @@ export default function OutlineTree({
 								// Add Section After
 								addSectionAfter={() => addSection(sindex + 1)}
 								addRow={(e: any) => addRow(e, sindex, null)}
+								isSelected={currentSection === section.id}
+								onHoverChange={setCurrentHoverSection}
+								onScrollToPreview={(sectionId) => onScrollToSection?.(sectionId, outlineId!)}
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
@@ -650,6 +719,9 @@ export default function OutlineTree({
 												onDragStart={(e: any) => onDragStart(e, row.id)}
 												removeRow={() => removeRow(row.id)}
 												addCol={(e: any) => addCol(e, sindex, rIndex, null)}
+												isSelected={currentRow === row.id}
+												onHoverChange={setCurrentHoverRow}
+												onScrollToPreview={onScrollToRow}
 											>
 												{(row.children ?? []).map(
 													(col: any, cIndex: number) => {
@@ -692,6 +764,9 @@ export default function OutlineTree({
 																		)
 																	}
 																	elementOptions={elementOptions}
+																	isSelected={currentColumn === col.id}
+																	onHoverChange={setCurrentHoverColumn}
+																	onScrollToPreview={onScrollToColumn}
 																>
 																	<div
 																		className={
@@ -1102,7 +1177,7 @@ export default function OutlineTree({
 																									setCurrentEle
 																								}
 																								setCurrentHoverEle={
-																									setCurrentHoverEle
+																									setCurrentHoverEleWithClear
 																								}
 																								onOpenStyleEditor={
 																									onOpenStyleEditor
