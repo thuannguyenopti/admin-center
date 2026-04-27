@@ -544,6 +544,7 @@ export default function VBPrototype({
 	const [currentHoverColumn, setCurrentHoverColumn] = useState<string | null>(null);
 	const [scrollToRowId, setScrollToRowId] = useState<string | null>(null);
 	const [scrollToColumnId, setScrollToColumnId] = useState<string | null>(null);
+	const [scrollToPreviewSectionId, setScrollToPreviewSectionId] = useState<string | null>(null);
 
 	// Wrapper to trigger scroll when section is added
 	const handleSectionAdded = useCallback((sectionId: string) => {
@@ -646,10 +647,18 @@ export default function VBPrototype({
 		return null;
 	};
 
+	const findOutlineIdForSection = (sectionId: string) => {
+		for (const o of outlines) {
+			const sections = o.tree ?? [];
+			if (sections.some((s: any) => s.id === sectionId)) {
+				return o.id;
+			}
+		}
+		return null;
+	};
+
 	const setCurrentEleSmart = useCallback((value: React.SetStateAction<string>) => {
 		const eleId = typeof value === "function" ? value(currentEle) : value;
-
-		console.log("[VBPrototype] setCurrentEleSmart called with:", eleId);
 
 		setCurrentEle(eleId);
 
@@ -664,20 +673,17 @@ export default function VBPrototype({
 
 		const owner = findOutlineIdForElement(eleId);
 		if (owner && owner !== activeOutlineId) {
-			console.log("[VBPrototype] Switching to outline:", owner);
 			setActiveOutlineId(owner);
 		}
 	}, [currentEle, isMulti, activeOutlineId, findOutlineIdForElement]);
 
 	// Wire up Brand Tone provider with scroll-to functionality
 	useEffect(() => {
-		console.log("[VBPrototype] Registering scroll function with Brand Tone");
 		brandTone.registerScrollFunction(setCurrentEleSmart);
 	}, [brandTone, setCurrentEleSmart]);
 
 	// Wire up Preflight Audit context with scroll-to functionality
 	useEffect(() => {
-		console.log("[VBPrototype] Registering scroll function with Preflight Audit");
 		registerPreflightScroll(setCurrentEleSmart);
 	}, [registerPreflightScroll, setCurrentEleSmart]);
 
@@ -1468,14 +1474,31 @@ export default function VBPrototype({
 								setCurrentSection={setCurrentSection}
 								setCurrentHoverSection={setCurrentHoverSection}
 								onSectionClick={(sectionId) => {
-									// Clear element selection
+									// Find which outline this section belongs to
+									const ownerOutlineId = findOutlineIdForSection(sectionId);
+
+									// Clear element and section selection
 									setCurrentEle("none");
-									// Switch to outline view if in element editor
-									if (sidebarTab === "properties") {
+									setCurrentHoverEle("none");
+									setEditingSectionId(null);
+									setStyleEditorEle(null);
+
+									// Switch to the outline if needed
+									if (ownerOutlineId && ownerOutlineId !== activeOutlineId) {
+										setActiveOutlineId(ownerOutlineId);
+									}
+
+									// If multi-outline, switch to tree view
+									if (isMulti) {
+										setSidebarTab("outlines");
+										setOutlineView("tree");
+									} else {
+										// Single outline mode - switch to outline view
 										setSidebarTab("outline");
 									}
-									// Trigger outline scroll
-									setScrollToOutlineSectionId(sectionId);
+
+									// Trigger scroll after transition completes
+									setTimeout(() => setScrollToOutlineSectionId(sectionId), 350);
 								}}
 								currentRow={currentRow}
 								currentHoverRow={currentHoverRow}
@@ -1715,9 +1738,15 @@ export default function VBPrototype({
 													setCurrentHoverRow={setCurrentHoverRow}
 													currentColumn={currentColumn}
 													setCurrentHoverColumn={setCurrentHoverColumn}
-													onScrollToSection={setScrollToSectionId}
+													onScrollToSection={(sectionId, outlineId) => {
+														if (outlineId !== activeOutlineId) {
+															setActiveOutlineId(outlineId);
+														}
+														setScrollToSectionId(sectionId);
+													}}
 													onScrollToRow={setScrollToRowId}
 													onScrollToColumn={setScrollToColumnId}
+													outlineId={activeOutline?.id}
 												/>
 											) : null}
 										</div>
@@ -1965,9 +1994,15 @@ export default function VBPrototype({
 												setCurrentHoverRow={setCurrentHoverRow}
 												currentColumn={currentColumn}
 												setCurrentHoverColumn={setCurrentHoverColumn}
-												onScrollToSection={setScrollToSectionId}
+												onScrollToSection={(sectionId, outlineId) => {
+													if (outlineId !== activeOutlineId) {
+														setActiveOutlineId(outlineId);
+													}
+													setScrollToSectionId(sectionId);
+												}}
 												onScrollToRow={setScrollToRowId}
 												onScrollToColumn={setScrollToColumnId}
+												outlineId={activeOutline?.id}
 											/>
 										</div>
 									</div>
@@ -2161,14 +2196,31 @@ export default function VBPrototype({
 						setCurrentSection={setCurrentSection}
 						setCurrentHoverSection={setCurrentHoverSection}
 						onSectionClick={(sectionId) => {
-							// Clear element selection
+							// Find which outline this section belongs to
+							const ownerOutlineId = findOutlineIdForSection(sectionId);
+
+							// Clear element and section selection
 							setCurrentEle("none");
-							// Switch to outline view if in element editor
-							if (sidebarTab === "properties") {
+							setCurrentHoverEle("none");
+							setEditingSectionId(null);
+							setStyleEditorEle(null);
+
+							// Switch to the outline if needed
+							if (ownerOutlineId && ownerOutlineId !== activeOutlineId) {
+								setActiveOutlineId(ownerOutlineId);
+							}
+
+							// If multi-outline, switch to tree view
+							if (isMulti) {
+								setSidebarTab("outlines");
+								setOutlineView("tree");
+							} else {
+								// Single outline mode - switch to outline view
 								setSidebarTab("outline");
 							}
-							// Trigger outline scroll
-							setScrollToOutlineSectionId(sectionId);
+
+							// Trigger scroll after transition completes
+							setTimeout(() => setScrollToOutlineSectionId(sectionId), 350);
 						}}
 						currentRow={currentRow}
 						currentHoverRow={currentHoverRow}

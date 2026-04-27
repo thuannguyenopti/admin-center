@@ -74,9 +74,10 @@ interface OutlineProps {
 	setCurrentHoverRow?: (rowId: string | null) => void;
 	currentColumn?: string | null;
 	setCurrentHoverColumn?: (colId: string | null) => void;
-	onScrollToSection?: (sectionId: string) => void;
+	onScrollToSection?: (sectionId: string, outlineId: string) => void;
 	onScrollToRow?: (rowId: string) => void;
 	onScrollToColumn?: (colId: string) => void;
+	outlineId?: string;
 
 	data: any[];
 }
@@ -154,6 +155,7 @@ export default function OutlineTree({
 	onScrollToSection,
 	onScrollToRow,
 	onScrollToColumn,
+	outlineId,
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
@@ -673,7 +675,7 @@ export default function OutlineTree({
 								addRow={(e: any) => addRow(e, sindex, null)}
 								isSelected={currentSection === section.id}
 								onHoverChange={setCurrentHoverSection}
-								onScrollToPreview={onScrollToSection}
+								onScrollToPreview={(sectionId) => onScrollToSection?.(sectionId, outlineId!)}
 							>
 								{(section.children ?? []).map((row: any, rIndex: number) => {
 									const showRowBarAbove =
