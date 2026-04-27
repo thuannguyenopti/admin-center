@@ -159,6 +159,17 @@ export default function OutlineTree({
 }: OutlineProps) {
 	const ASSET_DRAG_ID = "__asset:image__";
 
+	// Wrapper for setCurrentHoverEle that also clears lower-priority hovers
+	const setCurrentHoverEleWithClear = (value: React.SetStateAction<string>) => {
+		setCurrentHoverEle(value);
+		// When hovering an element, clear section/row/column hovers
+		if (value !== "none") {
+			setCurrentHoverSection?.(null);
+			setCurrentHoverRow?.(null);
+			setCurrentHoverColumn?.(null);
+		}
+	};
+
 	// Support both old seeded ids (sec-*) and new ids (section-*)
 	const isSectionId = (id: string) => id.startsWith("section-") || id.startsWith("sec-");
 	const isRowId = (id: string) => id.startsWith("row-");
@@ -1162,7 +1173,7 @@ export default function OutlineTree({
 																									setCurrentEle
 																								}
 																								setCurrentHoverEle={
-																									setCurrentHoverEle
+																									setCurrentHoverEleWithClear
 																								}
 																								onOpenStyleEditor={
 																									onOpenStyleEditor

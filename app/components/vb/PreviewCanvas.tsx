@@ -79,10 +79,12 @@ export default function PreviewCanvas({
 	currentHoverRow,
 	setCurrentRow,
 	setCurrentHoverRow,
+	onRowClick,
 	currentColumn,
 	currentHoverColumn,
 	setCurrentColumn,
 	setCurrentHoverColumn,
+	onColumnClick,
 	scrollToRowId,
 	scrollToColumnId,
 	onRowScrollComplete,
@@ -107,10 +109,12 @@ export default function PreviewCanvas({
 	currentHoverRow?: string | null;
 	setCurrentRow?: (value: string | null) => void;
 	setCurrentHoverRow?: (value: string | null) => void;
+	onRowClick?: (rowId: string) => void;
 	currentColumn?: string | null;
 	currentHoverColumn?: string | null;
 	setCurrentColumn?: (value: string | null) => void;
 	setCurrentHoverColumn?: (value: string | null) => void;
+	onColumnClick?: (columnId: string) => void;
 	scrollToRowId?: string | null;
 	scrollToColumnId?: string | null;
 	onRowScrollComplete?: () => void;
@@ -431,6 +435,9 @@ export default function PreviewCanvas({
 						// Only trigger if not hovering an element
 						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
 							setCurrentHoverSection?.(section.id);
+							// Clear higher-priority hovers
+							setCurrentHoverRow?.(null);
+							setCurrentHoverColumn?.(null);
 						}
 					}}
 					onMouseLeave={() => {
@@ -475,6 +482,7 @@ export default function PreviewCanvas({
 										e.stopPropagation();
 										setCurrentRow?.(row.id);
 										setCurrentSection?.(null);
+										onRowClick?.(row.id);
 									}
 								}}
 								onMouseEnter={(e) => {
@@ -482,6 +490,10 @@ export default function PreviewCanvas({
 									if (!(e.target as HTMLElement).closest('[data-element-id]') &&
 									    !(e.target as HTMLElement).closest('[data-column-id]')) {
 										setCurrentHoverRow?.(row.id);
+										// Clear lower-priority hovers
+										setCurrentHoverSection?.(null);
+										// Clear higher-priority hovers
+										setCurrentHoverColumn?.(null);
 									}
 								}}
 								onMouseLeave={() => {
@@ -517,12 +529,16 @@ export default function PreviewCanvas({
 													setCurrentColumn?.(col.id);
 													setCurrentRow?.(null);
 													setCurrentSection?.(null);
+													onColumnClick?.(col.id);
 												}
 											}}
 											onMouseEnter={(e) => {
 												// Only trigger if not hovering an element
 												if (!(e.target as HTMLElement).closest('[data-element-id]')) {
 													setCurrentHoverColumn?.(col.id);
+													// Clear lower-priority hovers
+													setCurrentHoverSection?.(null);
+													setCurrentHoverRow?.(null);
 												}
 											}}
 											onMouseLeave={() => {
@@ -605,6 +621,17 @@ export default function PreviewCanvas({
 														<div
 															className="relative group"
 															data-element-id={element.id}
+															onMouseEnter={(e) => {
+																e.stopPropagation();
+																setCurrentHoverEle(element.id);
+																// Clear lower-priority hovers
+																setCurrentHoverSection?.(null);
+																setCurrentHoverRow?.(null);
+																setCurrentHoverColumn?.(null);
+															}}
+															onMouseLeave={() => {
+																setCurrentHoverEle("none");
+															}}
 														>
 															{/* selection outline */}
 															<div
