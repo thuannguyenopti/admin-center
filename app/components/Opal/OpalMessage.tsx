@@ -42,7 +42,7 @@ const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: (
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: '4px',
+      borderRadius: '6px',
       transition: 'color 0.2s, background-color 0.2s',
     }}
     onMouseEnter={(e) => {
@@ -293,10 +293,10 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
           <Box
             style={{
               maxWidth: isUser ? '85%' : '100%',
-              backgroundColor: isUser ? '#F3F4F6' : 'transparent',
-              color: isUser ? 'var(--opal-text-user)' : 'var(--opal-text-body)',
-              borderRadius: isEditing ? '12px' : (isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px'),
-              padding: isEditing ? '8px' : (isUser ? '12px 16px' : '4px 8px'),
+              backgroundColor: isUser ? '#e9edf5' : 'transparent',
+              color: isUser ? '#080736' : 'var(--opal-text-body)',
+              borderRadius: isEditing ? '12px' : '8px',
+              padding: isEditing ? '8px' : (isUser ? '8px 16px' : '4px 8px'),
               position: 'relative',
               width: isEditing ? '100%' : 'auto',
             }}
@@ -429,7 +429,7 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
                 borderRadius: '50%',
                 overflow: 'hidden',
                 flexShrink: 0,
-                marginTop: '4px'
+                marginTop: '10px',
               }}
             >
               <Image
@@ -471,32 +471,6 @@ export function OpalMessage({ message, onEdit, onRegenerate, onVersionChange, ag
               <>
                 {/* Left group */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <button
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: '4px 6px',
-                      color: 'var(--opal-text-tertiary)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      borderRadius: '4px',
-                      fontSize: '13px',
-                      transition: 'color 0.2s, background-color 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = 'var(--opal-text-body)';
-                      e.currentTarget.style.backgroundColor = 'var(--opal-bg-sidebar)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = 'var(--opal-text-tertiary)';
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
-                  >
-                    <IconPen size={14} />
-                    Edit in Canvas
-                  </button>
                   <ActionButton icon={IconArrowsRotate} tooltip="Regenerate" onClick={() => onRegenerate?.(message.id)} />
                   <ActionButton icon={IconCopy} tooltip="Copy" onClick={handleCopy} />
                   <ActionButton icon={IconThumbsUp} tooltip="Helpful" onClick={() => console.log('Like clicked')} />

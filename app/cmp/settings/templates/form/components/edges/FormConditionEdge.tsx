@@ -1,8 +1,6 @@
 "use client";
 
 import { BaseEdge, EdgeLabelRenderer, getSmoothStepPath, type EdgeProps } from "@xyflow/react";
-import { Box } from "@optiaxiom/react";
-import { Text } from "@/app/components/Text";
 
 export function FormConditionEdge({
 	sourceX,
@@ -14,7 +12,10 @@ export function FormConditionEdge({
 	style = {},
 	markerEnd,
 	label,
+	data,
 }: EdgeProps) {
+	const isHighlighted = (data as any)?.isHighlighted;
+
 	const [edgePath, labelX, labelY] = getSmoothStepPath({
 		sourceX,
 		sourceY,
@@ -27,7 +28,7 @@ export function FormConditionEdge({
 	return (
 		<>
 			<BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-			{label && (
+			{label && isHighlighted && (
 				<EdgeLabelRenderer>
 					<div
 						style={{
@@ -37,11 +38,26 @@ export function FormConditionEdge({
 						}}
 						className="nodrag nopan"
 					>
-						<Box bg="bg.default" px="4" rounded="sm" border="1" borderColor="border.accent">
-							<Text fontSize="xs" fontWeight="700" color="fg.accent">
+						<div
+							style={{
+								background: "var(--ax-colors-bg-accent)",
+								borderRadius: 999,
+								padding: "4px 12px",
+								boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+							}}
+						>
+							<span
+								style={{
+									color: "#fff",
+									fontSize: "11px",
+									fontWeight: 700,
+									letterSpacing: "0.06em",
+									textTransform: "uppercase",
+								}}
+							>
 								{label as string}
-							</Text>
-						</Box>
+							</span>
+						</div>
 					</div>
 				</EdgeLabelRenderer>
 			)}

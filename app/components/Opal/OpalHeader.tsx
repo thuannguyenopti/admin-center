@@ -50,34 +50,17 @@ export function OpalHeader({
             justifyContent="space-between"
             style={{
                 padding: '0 24px',
+                paddingBottom: '8px',
                 width: '100%',
                 gap: '12px',
-                height: '64px',
+                height: '57px',
                 zIndex: 10,
                 position: sticky ? 'sticky' : 'relative',
                 top: sticky ? 0 : undefined,
+                borderBottom: '1px solid #e9edf5',
             }}
         >
             <Box display="flex" alignItems="center" gap="12">
-                <Button
-                    appearance="subtle"
-                    size="md"
-                    aria-label="Toggle history"
-                    onClick={onToggleHistory}
-                    style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '6px',
-                        padding: 0,
-                        minWidth: 'auto',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
-                    <IconBars size={20} />
-                </Button>
-
                 {onNewChat && (
                     <Button
                         appearance="subtle"

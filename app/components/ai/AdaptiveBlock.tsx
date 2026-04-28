@@ -17,6 +17,8 @@ export type AdaptiveBlockProps = {
   imagery?: React.ReactNode;
   maxHeight?: string;
   scrollable?: boolean;
+  style?: React.CSSProperties;
+  borderColor?: string;
 };
 
 /**
@@ -34,15 +36,18 @@ export const AdaptiveBlock: React.FC<AdaptiveBlockProps> = ({
   imagery,
   maxHeight,
   scrollable = false,
+  style,
+  borderColor = "border.default",
 }) => {
   return (
     <Box
       bg="bg.default"
       border="1"
-      borderColor="border.default"
+      borderColor={borderColor as any}
       rounded="md"
       overflow="hidden"
       shadow="sm"
+      style={style}
     >
       {/* Header Section */}
       {(title || subtitle || icon) && (

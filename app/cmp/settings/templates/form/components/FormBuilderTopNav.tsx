@@ -9,6 +9,8 @@ import {
 	IconDots,
 	IconArrowBackUp,
 	IconArrowForwardUp,
+	IconAlertTriangle,
+	IconSparkles,
 } from "@tabler/icons-react";
 
 interface FormBuilderTopNavProps {
@@ -16,11 +18,15 @@ interface FormBuilderTopNavProps {
 	isLibraryOpen: boolean;
 	canUndo: boolean;
 	canRedo: boolean;
+	conflictCount: number;
 	onToggleLibrary: () => void;
 	onTitleChange: (title: string) => void;
 	onUndo: () => void;
 	onRedo: () => void;
 	onSave: () => void;
+	onViewIssues: () => void;
+	onShowPreview: () => void;
+	onOptimize: () => void;
 	onClose: () => void;
 }
 
@@ -29,11 +35,15 @@ export function FormBuilderTopNav({
 	isLibraryOpen,
 	canUndo,
 	canRedo,
+	conflictCount,
 	onToggleLibrary,
 	onTitleChange,
 	onUndo,
 	onRedo,
 	onSave,
+	onViewIssues,
+	onShowPreview,
+	onOptimize,
 	onClose,
 }: FormBuilderTopNavProps) {
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -90,9 +100,8 @@ export function FormBuilderTopNav({
 				)}
 			</Box>
 
-			{/* Right: undo/redo + actions */}
+			{/* Right: undo/redo + conflict indicator + actions */}
 			<Box display="flex" alignItems="center" gap="8">
-				{/* Undo */}
 				<Button
 					appearance="subtle"
 					icon={<IconArrowBackUp size={18} />}
@@ -101,7 +110,6 @@ export function FormBuilderTopNav({
 					title="Undo (⌘Z)"
 					disabled={!canUndo}
 				/>
-				{/* Redo */}
 				<Button
 					appearance="subtle"
 					icon={<IconArrowForwardUp size={18} />}
@@ -113,15 +121,40 @@ export function FormBuilderTopNav({
 
 				<Box style={{ width: 1, height: 24, background: "var(--ax-colors-border-tertiary)" }} />
 
+				{/* Non-disruptive conflict indicator */}
+				{conflictCount > 0 && (
+					<button
+						onClick={onViewIssues}
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 6,
+							padding: "5px 10px",
+							borderRadius: 6,
+							border: "1px solid #fde047",
+							background: "#fefce8",
+							cursor: "pointer",
+							fontSize: 13,
+							fontWeight: 500,
+							color: "#854d0e",
+							whiteSpace: "nowrap",
+						}}
+					>
+						<IconAlertTriangle size={14} color="#ca8a04" />
+						{conflictCount} issue{conflictCount === 1 ? "" : "s"} found
+					</button>
+				)}
+
 				<Button appearance="default" onClick={onClose}>
 					Close
 				</Button>
-				<Button appearance="default">Show Preview</Button>
+				<Button appearance="default" onClick={onShowPreview}>Show Preview</Button>
 				<Button appearance="primary" onClick={onSave}>
 					Save
 				</Button>
 				<Menu
 					options={[
+						{ label: "Optimize form", addon: <IconSparkles size={16} />, execute: onOptimize },
 						{ label: "Duplicate",       execute: () => {} },
 						{ label: "Export",          execute: () => {} },
 						{ label: "Delete template", execute: () => {} },

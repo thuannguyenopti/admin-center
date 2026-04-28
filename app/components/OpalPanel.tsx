@@ -21,6 +21,8 @@ type OpalPanelProps = {
   setInputValue: (value: string) => void;
   sendMessage: (content: string) => void;
   regenerate?: (id: string) => void;
+  topOffset?: number;
+  inline?: boolean;
 
   groupedHistory: { [key: string]: ChatHistoryItem[] };
   activeChat: string | null;
@@ -46,6 +48,8 @@ export function OpalPanel({
   setInputValue,
   sendMessage,
   regenerate,
+  topOffset = 57,
+  inline = false,
   groupedHistory,
   activeChat,
   searchQuery,
@@ -123,24 +127,44 @@ export function OpalPanel({
 
   if (!isOpen) return null;
 
-  return (
-    <Box
-      className="opal-panel"
-      style={{
+  // In inline mode the panel is a flex sibling (no fixed positioning) so
+  // it naturally pushes the adjacent form-builder content left without any
+  // z-index / containing-block tricks.
+  const panelStyle: React.CSSProperties = inline
+    ? {
+        width: `${totalWidth}px`,
+        height: '100%',
+        flexShrink: 0,
+        backgroundColor: 'var(--opal-bg-primary)',
+        borderLeft: '1px solid var(--opal-border-primary)',
+        boxShadow: '-6px 6px 25px -4px rgba(12, 16, 29, 0.08)',
+        display: 'flex',
+        flexDirection: 'row',
+        overflowX: 'visible',
+        overflowY: 'hidden',
+        transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
+      }
+    : {
         position: 'fixed',
-        top: '57px',
+        top: `${topOffset}px`,
         right: 0,
         bottom: 0,
         width: `${totalWidth}px`,
         backgroundColor: 'var(--opal-bg-primary)',
         borderLeft: '1px solid var(--opal-border-primary)',
+        boxShadow: '-6px 6px 25px -4px rgba(12, 16, 29, 0.08)',
         zIndex: 50,
         display: 'flex',
         flexDirection: 'row',
         overflowX: 'visible',
         overflowY: 'hidden',
         transition: 'width 0.3s cubic-bezier(0, 1, 0, 1)',
-      }}
+      };
+
+  return (
+    <Box
+      className="opal-panel"
+      style={panelStyle}
     >
       {/* Grab Handle - only in docked mode */}
       {mode === 'docked' && (
@@ -154,7 +178,7 @@ export function OpalPanel({
             width: '10px',
             height: '52px',
             backgroundColor: 'var(--opal-bg-primary)',
-            border: '1px solid var(--opal-border-secondary)',
+            border: '1px solid #e9edf5',
             borderRadius: '4px',
             cursor: isResizing ? 'ew-resize' : 'ew-resize',
             zIndex: 100,

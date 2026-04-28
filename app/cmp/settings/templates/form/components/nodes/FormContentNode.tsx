@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Box } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, Position, NodeToolbar, type NodeProps } from "@xyflow/react";
+import { IconPlus } from "@tabler/icons-react";
+import { NodeAddMenu } from "../NodeAddMenu";
+import { FieldPickerInline } from "../FieldPickerModal";
 
 const handleStyle = {
 	background: "var(--ax-colors-border-accent)",
@@ -13,37 +17,86 @@ const handleStyle = {
 
 export function FormContentNode({ data, selected }: NodeProps) {
 	const d = data as any;
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [showFields, setShowFields] = useState(false);
+	const [plusHovered, setPlusHovered] = useState(false);
+
+	useEffect(() => { if (!selected) { setIsMenuOpen(false); setShowFields(false); } }, [selected]);
+
 	return (
-		<Box
-			bg="bg.default"
-			rounded="md"
-			px="12"
-			py="10"
-			display="flex"
-			alignItems="center"
-			gap="10"
-			style={{
-				minWidth: "280px",
-				border: d.isHighlighted
-					? "2px solid var(--ax-colors-border-warning)"
-					: selected
-					? "1.5px solid var(--ax-colors-border-accent)"
-					: "1px solid var(--ax-colors-border-tertiary)",
-				boxShadow: d.isHighlighted
-					? "0 0 0 3px var(--ax-colors-bg-warning-subtle, #fefce8)"
-					: "none",
-				cursor: "pointer",
-				position: "relative",
-			}}
-		>
-			<Handle type="target" position={Position.Top} style={handleStyle} />
-			<Box color="fg.tertiary" style={{ flexShrink: 0 }}>
-				{d.icon}
+		<>
+			<NodeToolbar position={Position.Bottom} isVisible={selected} align="center" offset={8}>
+				<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+					<button
+						className="nodrag nopan"
+						onClick={(e) => { e.stopPropagation(); setIsMenuOpen((v) => { if (v) { setShowFields(false); } return !v; }); }}
+						onMouseEnter={() => setPlusHovered(true)}
+						onMouseLeave={() => setPlusHovered(false)}
+						style={{
+							width: 28,
+							height: 28,
+							borderRadius: 6,
+							border: isMenuOpen || plusHovered ? "none" : "1px solid var(--ax-colors-border-default)",
+							background: isMenuOpen || plusHovered ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-default)",
+							cursor: "pointer",
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							padding: 0,
+						}}
+					>
+						<IconPlus size={14} color={isMenuOpen || plusHovered ? "#fff" : "var(--ax-colors-fg-secondary)"} />
+					</button>
+					{isMenuOpen && (showFields ? (
+						<FieldPickerInline
+							onBack={() => setShowFields(false)}
+							onSelect={(field) => { d.onAddNodeBelow?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
+						/>
+					) : (
+						<NodeAddMenu
+							suggestedFields={d.menuSuggestedFields ?? []}
+							disableSection={!!d.parentId}
+							onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
+							onAddSection={() => { d.onAddNodeBelow?.("section"); setIsMenuOpen(false); }}
+							onOpenFieldPicker={() => setShowFields(true)}
+							onAddSuggestedField={(id) => { d.onAddNodeBelow?.("field", id); setIsMenuOpen(false); }}
+							onClose={() => setIsMenuOpen(false)}
+						/>
+					))}
+				</div>
+			</NodeToolbar>
+
+			<Box
+				bg="bg.default"
+				rounded="md"
+				px="12"
+				py="10"
+				display="flex"
+				alignItems="center"
+				gap="10"
+				style={{
+					minWidth: "280px",
+					border: d.isHighlighted
+						? "2px solid var(--ax-colors-border-warning)"
+						: selected
+						? "1.5px solid var(--ax-colors-border-accent)"
+						: "1px solid var(--ax-colors-border-tertiary)",
+					boxShadow: d.isHighlighted
+						? "0 0 0 3px var(--ax-colors-bg-warning-subtle, #fefce8)"
+						: "none",
+					cursor: "pointer",
+					position: "relative",
+				}}
+			>
+				<Handle type="target" position={Position.Top} style={handleStyle} />
+				<Box color="fg.tertiary" style={{ flexShrink: 0 }}>
+					{d.icon}
+				</Box>
+				<Text fontSize="sm" color="fg.default">
+					{d.label as string}
+				</Text>
+				<Handle type="source" position={Position.Bottom} style={handleStyle} />
 			</Box>
-			<Text fontSize="sm" color="fg.default">
-				{d.label as string}
-			</Text>
-			<Handle type="source" position={Position.Bottom} style={handleStyle} />
-		</Box>
+		</>
 	);
 }

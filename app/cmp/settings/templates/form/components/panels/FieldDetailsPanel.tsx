@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Badge, Switch } from "@optiaxiom/react";
+import { Box, Switch } from "@optiaxiom/react";
 import {
 	DetailsPanel,
 	DetailsPanelBody,
@@ -150,21 +150,33 @@ function ClauseRow({
 	fieldOptions,
 	onChange,
 	onRemove,
-	onToggleChain,
 }: {
 	clause: ConditionClause;
 	isFirst: boolean;
 	fieldOptions: FieldOption[];
 	onChange: (patch: Partial<ConditionClause>) => void;
 	onRemove: () => void;
-	onToggleChain: () => void;
 }) {
+	const selectedField = WORK_REQUEST_FIELDS.find((f) => f.id === clause.fieldId);
+	const dynamicOptions = selectedField?.options ?? (clause.fieldId ? [] : fieldOptions);
 	const op = OPERATORS.find((o) => o.value === clause.operator);
+
 	return (
 		<Box>
 			{!isFirst && (
-				<Box mb="4">
-					<button style={chipBtn()} onClick={onToggleChain}>{clause.chain}</button>
+				<Box display="flex" gap="4" mb="6">
+					<button
+						style={chipBtn(clause.chain === "AND")}
+						onClick={() => onChange({ chain: "AND" })}
+					>
+						AND
+					</button>
+					<button
+						style={chipBtn(clause.chain === "OR")}
+						onClick={() => onChange({ chain: "OR" })}
+					>
+						OR
+					</button>
 				</Box>
 			)}
 			<Box
@@ -176,29 +188,58 @@ function ClauseRow({
 				bg="bg.secondary"
 				style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
 			>
-				<Box display="flex" alignItems="center" gap="6">
-					<Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
-						If value
-					</Text>
-					<select
-						value={clause.operator}
-						onChange={(e) => onChange({ operator: e.target.value, value: "" })}
-						style={sx}
-					>
-						{OPERATORS.map((o) => (
-							<option key={o.value} value={o.value}>{o.label}</option>
-						))}
-					</select>
+				<Box display="flex" alignItems="center" gap="6" style={{ flexWrap: "wrap" }}>
+					{isFirst ? (
+						<>
+							<Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
+								If value
+							</Text>
+							<select
+								value={clause.operator}
+								onChange={(e) => onChange({ operator: e.target.value, value: "" })}
+								style={sx}
+							>
+								{OPERATORS.map((o) => (
+									<option key={o.value} value={o.value}>{o.label}</option>
+								))}
+							</select>
+						</>
+					) : (
+						<>
+							<Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
+								If
+							</Text>
+							<select
+								value={clause.fieldId ?? ""}
+								onChange={(e) => onChange({ fieldId: e.target.value, value: "" })}
+								style={{ ...sx, flex: 1, minWidth: 0 }}
+							>
+								<option value="">Select field…</option>
+								{WORK_REQUEST_FIELDS.map((f) => (
+									<option key={f.id} value={f.id}>{f.name}</option>
+								))}
+							</select>
+							<select
+								value={clause.operator}
+								onChange={(e) => onChange({ operator: e.target.value, value: "" })}
+								style={{ ...sx, flex: 1, minWidth: 0 }}
+							>
+								{OPERATORS.map((o) => (
+									<option key={o.value} value={o.value}>{o.label}</option>
+								))}
+							</select>
+						</>
+					)}
 				</Box>
 				{op?.hasValue && (
-					fieldOptions.length > 0 ? (
+					dynamicOptions.length > 0 ? (
 						<select
 							value={clause.value}
 							onChange={(e) => onChange({ value: e.target.value })}
 							style={sx}
 						>
 							<option value="">Select value…</option>
-							{fieldOptions.map((opt) => (
+							{dynamicOptions.map((opt) => (
 								<option key={opt.value} value={opt.value}>{opt.label}</option>
 							))}
 						</select>
@@ -323,8 +364,6 @@ function ClauseGroup({
 	const remove = (id: string) => onChange(clauses.filter((c) => c.id !== id));
 	const add = (chain: "AND" | "OR") =>
 		onChange([...clauses, { id: `c${Date.now()}`, operator: "equal", value: "", chain }]);
-	const toggleChain = (id: string) =>
-		update(id, { chain: clauses.find((c) => c.id === id)?.chain === "AND" ? "OR" : "AND" });
 
 	return (
 		<Box display="flex" flexDirection="column" gap="6">
@@ -336,7 +375,6 @@ function ClauseGroup({
 					fieldOptions={fieldOptions}
 					onChange={(patch) => update(clause.id, patch)}
 					onRemove={() => remove(clause.id)}
-					onToggleChain={() => toggleChain(clause.id)}
 				/>
 			))}
 			<Box display="flex" gap="8" mt="4">
@@ -540,19 +578,17 @@ function RuleSetSummary({
 	index,
 	fieldOptions,
 	connectedTargetNodes,
-	onEdit,
+	isActive,
 	onRemove,
-	onHighlightNodes,
-	onClearHighlight,
+	onClick,
 }: {
 	logic: NodeConditionLogic;
 	index: number;
 	fieldOptions: FieldOption[];
 	connectedTargetNodes: any[];
-	onEdit: () => void;
-	onRemove: () => void;
-	onHighlightNodes: (ids: string[]) => void;
-	onClearHighlight: () => void;
+	isActive: boolean;
+	onRemove?: () => void;
+	onClick: () => void;
 }) {
 	const opLabel = (op: string) =>
 		OPERATORS.find((o) => o.value === op)?.label ?? op;
@@ -581,22 +617,29 @@ function RuleSetSummary({
 		})
 		.join(" ");
 
-	const thenSummary = logic.thenActions
-		.filter((a) => a.type)
-		.map((a) => `${actionLabel(a.type)}${a.targetId ? ` → ${targetLabel(a.targetId)}` : ""}`)
-		.join(", ");
+	const actionsSummary = (actions: ActionRow[]) =>
+		actions
+			.filter((a) => a.type)
+			.map((a) => `${actionLabel(a.type)}${a.targetId ? ` → ${targetLabel(a.targetId)}` : ""}`)
+			.join(", ");
 
+	const thenSummary = actionsSummary(logic.thenActions);
+	const elseSummary = logic.elseActions ? actionsSummary(logic.elseActions) : null;
 	const hasElseIf = logic.elseIfs.length > 0;
-	const hasElse = logic.elseActions !== null;
-
-	const targetNodeIds = extractTargetNodeIds(logic);
 
 	return (
 		<Box
 			rounded="sm"
-			style={{ border: "1px solid var(--ax-colors-border-default)", overflow: "hidden" }}
-			onMouseEnter={() => targetNodeIds.length > 0 && onHighlightNodes(targetNodeIds)}
-			onMouseLeave={onClearHighlight}
+			style={{
+				border: isActive
+					? "1.5px solid var(--ax-colors-border-accent)"
+					: "1px solid var(--ax-colors-border-default)",
+				overflow: "hidden",
+				cursor: "pointer",
+				boxShadow: isActive ? "0 0 0 3px var(--ax-colors-bg-accent-subtle)" : undefined,
+				transition: "box-shadow 0.15s ease, border-color 0.15s ease",
+			}}
+			onClick={onClick}
 		>
 			{/* Header */}
 			<Box
@@ -611,22 +654,9 @@ function RuleSetSummary({
 				<Text fontSize="xs" fontWeight="600" color="fg.secondary">
 					Rule {index + 1}
 				</Text>
-				<Box display="flex" alignItems="center" gap="8">
+				{onRemove && (
 					<button
-						onClick={onEdit}
-						style={{
-							background: "none",
-							border: "none",
-							cursor: "pointer",
-							fontSize: "12px",
-							color: "var(--ax-colors-fg-accent)",
-							padding: 0,
-						}}
-					>
-						Edit
-					</button>
-					<button
-						onClick={onRemove}
+						onClick={(e) => { e.stopPropagation(); onRemove(); }}
 						style={{
 							background: "none",
 							border: "none",
@@ -640,7 +670,7 @@ function RuleSetSummary({
 					>
 						<IconTrash size={13} />
 					</button>
-				</Box>
+				)}
 			</Box>
 
 			{/* Summary body */}
@@ -665,16 +695,38 @@ function RuleSetSummary({
 					</Box>
 				)}
 
-				{/* ELSE IF / ELSE hints */}
-				{hasElseIf && (
-					<Text fontSize="xs" color="fg.tertiary">
-						+{logic.elseIfs.length} ELSE IF block{logic.elseIfs.length > 1 ? "s" : ""}
-					</Text>
-				)}
-				{hasElse && (
-					<Box display="flex" gap="6" style={{ alignItems: "baseline" }}>
+				{/* ELSE IF summaries */}
+				{hasElseIf && logic.elseIfs.map((ei, i) => {
+					const eiClause = ei.clauses.map((c, j) => {
+						const op = opLabel(c.operator);
+						const val = c.value ? ` "${valLabel(c.value)}"` : "";
+						const chain = j > 0 ? `${c.chain} ` : "";
+						return `${chain}${op}${val}`;
+					}).join(" ");
+					const eiThen = actionsSummary(ei.actions);
+					return (
+						<Box key={ei.id} display="flex" flexDirection="column" gap="4">
+							<Box display="flex" gap="6" style={{ flexWrap: "wrap" as const, alignItems: "baseline" }}>
+								<SectionLabel color="var(--ax-colors-fg-accent)" bg="var(--ax-colors-bg-accent-subtle)">
+									ELSE IF
+								</SectionLabel>
+								<Text fontSize="xs" color="fg.default" style={{ flex: 1 }}>{eiClause || "—"}</Text>
+							</Box>
+							{eiThen && (
+								<Box display="flex" gap="6" style={{ flexWrap: "wrap" as const, alignItems: "baseline" }}>
+									<SectionLabel color="#1a7a4a" bg="#e8f7ef">THEN</SectionLabel>
+									<Text fontSize="xs" color="fg.default" style={{ flex: 1 }}>{eiThen}</Text>
+								</Box>
+							)}
+						</Box>
+					);
+				})}
+
+				{/* ELSE */}
+				{elseSummary && (
+					<Box display="flex" gap="6" style={{ flexWrap: "wrap" as const, alignItems: "baseline" }}>
 						<SectionLabel color="#b45309" bg="#fef3c7">ELSE</SectionLabel>
-						<Text fontSize="xs" color="fg.tertiary">fallback defined</Text>
+						<Text fontSize="xs" color="fg.default" style={{ flex: 1 }}>{elseSummary}</Text>
 					</Box>
 				)}
 			</Box>
@@ -688,31 +740,48 @@ function LogicRulesManager({
 	initialRuleSets,
 	fieldOptions,
 	connectedTargetNodes,
+	isEditMode,
 	onApply,
+	onEnterEdit,
+	onExitEdit,
+	onHighlightRule,
+	onClearHighlight,
 }: {
 	initialRuleSets: NodeConditionLogic[];
 	fieldOptions: FieldOption[];
 	connectedTargetNodes: any[];
+	isEditMode: boolean;
 	onApply: (ruleSets: NodeConditionLogic[]) => void;
+	onEnterEdit: () => void;
+	onExitEdit: () => void;
+	onHighlightRule?: (targets: Array<{ nodeId: string; actionLabel: string }>) => void;
+	onClearHighlight?: () => void;
 }) {
 	const [ruleSets, setRuleSets] = useState<NodeConditionLogic[]>(initialRuleSets);
-	// null = all collapsed (view mode); string id = that rule set is open for editing
-	const [editingId, setEditingId] = useState<string | null>(
-		initialRuleSets.length === 0 ? null : null,
-	);
+	const [editingId, setEditingId] = useState<string | null>(null);
+	const [activeRuleId, setActiveRuleId] = useState<string | null>(null);
 
 	const addRuleSet = () => {
 		const newSet = emptyRuleSet();
 		setRuleSets((rs) => [...rs, newSet]);
 		setEditingId(newSet.id);
+		setActiveRuleId(null);
+		onClearHighlight?.();
+		onEnterEdit();
 	};
 	const removeRuleSet = (id: string) => {
-		setRuleSets((rs) => rs.filter((r) => r.id !== id));
+		const next = ruleSets.filter((r) => r.id !== id);
+		setRuleSets(next);
 		if (editingId === id) setEditingId(null);
+		if (activeRuleId === id) { setActiveRuleId(null); onClearHighlight?.(); }
+		onApply(next);
 	};
 	const clearAll = () => {
 		setRuleSets([]);
 		setEditingId(null);
+		setActiveRuleId(null);
+		onClearHighlight?.();
+		onApply([]);
 	};
 	const updateRuleSet = (id: string, logic: NodeConditionLogic) =>
 		setRuleSets((rs) => rs.map((r) => (r.id === id ? logic : r)));
@@ -720,15 +789,47 @@ function LogicRulesManager({
 	const handleApply = () => {
 		setEditingId(null);
 		onApply(ruleSets);
+		onExitEdit();
+	};
+
+	const handleCardClick = (ruleSet: NodeConditionLogic) => {
+		// View mode only: toggle canvas highlight
+		if (activeRuleId === ruleSet.id) {
+			setActiveRuleId(null);
+			onClearHighlight?.();
+			return;
+		}
+		setActiveRuleId(ruleSet.id);
+
+		const targets: Array<{ nodeId: string; actionLabel: string }> = [];
+		const actionName = (type: string) => ACTIONS.find((a) => a.value === type)?.label ?? type;
+
+		for (const a of ruleSet.thenActions) {
+			if (!a.targetId.startsWith("node:")) continue;
+			targets.push({ nodeId: a.targetId.replace("node:", ""), actionLabel: actionName(a.type) });
+		}
+		for (const ei of ruleSet.elseIfs) {
+			for (const a of ei.actions) {
+				if (!a.targetId.startsWith("node:")) continue;
+				targets.push({ nodeId: a.targetId.replace("node:", ""), actionLabel: actionName(a.type) });
+			}
+		}
+		for (const a of (ruleSet.elseActions ?? [])) {
+			if (!a.targetId.startsWith("node:")) continue;
+			targets.push({ nodeId: a.targetId.replace("node:", ""), actionLabel: actionName(a.type) });
+		}
+
+		if (targets.length > 0) onHighlightRule?.(targets);
+		else onClearHighlight?.();
 	};
 
 	return (
 		<Box display="flex" flexDirection="column" gap="16">
+			{/* Rule cards — expanded in edit mode, summary cards in view mode */}
 			{ruleSets.map((ruleSet, idx) =>
-				editingId === ruleSet.id ? (
-					<Box key={ruleSet.id}>
-						{/* Editor header */}
-						<Box display="flex" alignItems="center" justifyContent="space-between" mb="12">
+				isEditMode ? (
+					<Box key={ruleSet.id} display="flex" flexDirection="column" gap="12">
+						<Box display="flex" alignItems="center" justifyContent="space-between">
 							<Text fontSize="sm" fontWeight="600" color="fg.default">
 								Rule {idx + 1}
 							</Text>
@@ -763,44 +864,170 @@ function LogicRulesManager({
 						index={idx}
 						fieldOptions={fieldOptions}
 						connectedTargetNodes={connectedTargetNodes}
-						onEdit={() => setEditingId(ruleSet.id)}
-						onRemove={() => removeRuleSet(ruleSet.id)}
-						onHighlightNodes={() => {}}
-						onClearHighlight={() => {}}
+						isActive={activeRuleId === ruleSet.id}
+						onRemove={undefined}
+						onClick={() => handleCardClick(ruleSet)}
 					/>
 				),
 			)}
 
-			{/* Bottom actions */}
-			<Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-				<button style={addBtn} onClick={addRuleSet}>
-					<IconPlus size={12} /> Add Rule
-				</button>
-				{ruleSets.length > 0 && (
-					<button
-						onClick={clearAll}
-						style={{
-							background: "none",
-							border: "none",
-							cursor: "pointer",
-							fontSize: "12px",
-							color: "var(--ax-colors-fg-secondary)",
-						}}
-					>
-						Clear All
+			{/* Edit-mode controls only */}
+			{isEditMode ? (
+				<>
+					<Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
+						<button style={addBtn} onClick={addRuleSet}>
+							<IconPlus size={12} /> Add Rule
+						</button>
+						{ruleSets.length > 0 && (
+							<button
+								onClick={clearAll}
+								style={{
+									background: "none",
+									border: "none",
+									cursor: "pointer",
+									fontSize: "12px",
+									color: "var(--ax-colors-fg-secondary)",
+								}}
+							>
+								Clear All
+							</button>
+						)}
+					</Box>
+					{ruleSets.length > 0 && (() => {
+						const first = ruleSets[0];
+						const firstClause = first.ifClauses[0];
+						const op = OPERATORS.find((o) => o.value === firstClause?.operator);
+						const clauseOk = firstClause && (!op?.hasValue || (firstClause.value ?? "").trim() !== "");
+						const firstAction = first.thenActions[0];
+						const actionOk = firstAction && firstAction.type !== "" && firstAction.targetId !== "";
+						const disabled = !clauseOk || !actionOk;
+						return (
+							<Button
+								appearance="primary"
+								onClick={handleApply}
+								disabled={disabled}
+								style={{ width: "100%", justifyContent: "center" }}
+							>
+								Apply Logic
+							</Button>
+						);
+					})()}
+				</>
+			) : (
+				/* View mode: only show Add Rule when no rules exist yet */
+				ruleSets.length === 0 && (
+					<button style={addBtn} onClick={addRuleSet}>
+						<IconPlus size={12} /> Add Rule
 					</button>
-				)}
-			</Box>
+				)
+			)}
+		</Box>
+	);
+}
 
-			{/* Apply — only when something is being edited or there are unsaved sets */}
-			{(editingId !== null || ruleSets.length > 0) && (
-				<Button
-					appearance="primary"
-					onClick={handleApply}
-					style={{ width: "100%" }}
+// ─── FieldPreview ─────────────────────────────────────────────────────────────
+
+const inputStyle: React.CSSProperties = {
+	width: "100%",
+	border: "1px solid var(--ax-colors-border-default)",
+	borderRadius: "6px",
+	padding: "7px 10px",
+	fontSize: "14px",
+	color: "var(--ax-colors-fg-default)",
+	background: "var(--ax-colors-bg-default)",
+	outline: "none",
+	boxSizing: "border-box",
+};
+
+function FieldPreview({ fieldDef, label, required }: { fieldDef: any; label: string; required: boolean }) {
+	const type = fieldDef?.typeLabel ?? "";
+	const options: { value: string; label: string }[] = fieldDef?.options ?? [];
+	const helperText = fieldDef?.description ?? "";
+
+	return (
+		<Box display="flex" flexDirection="column" gap="6">
+			{/* Label */}
+			<Text fontSize="sm" fontWeight="500" color="fg.default" style={{ display: "block" }}>
+				{label}
+				{required && (
+					<span style={{ color: "var(--ax-colors-fg-danger, #e53e3e)", marginLeft: "2px" }}>*</span>
+				)}
+			</Text>
+
+			{/* Input control */}
+			{(type === "Text" || type === "URL" || type === "Number") && (
+				<input
+					style={inputStyle}
+					type={type === "Number" ? "number" : type === "URL" ? "url" : "text"}
+					placeholder={fieldDef?.placeholder ?? ""}
+					readOnly
+				/>
+			)}
+
+			{type === "Long Text" && (
+				<textarea
+					style={{ ...inputStyle, minHeight: "80px", resize: "none" }}
+					placeholder={fieldDef?.placeholder ?? ""}
+					readOnly
+				/>
+			)}
+
+			{type === "Dropdown" && (
+				<select style={inputStyle} disabled>
+					<option value="">{fieldDef?.placeholder ?? "Select an option"}</option>
+					{options.map((o) => (
+						<option key={o.value} value={o.value}>{o.label}</option>
+					))}
+				</select>
+			)}
+
+			{type === "Checkbox" && (
+				<Box display="flex" flexDirection="column" gap="8">
+					{options.length > 0 ? options.map((o) => (
+						<label key={o.value} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default", color: "var(--ax-colors-fg-default)" }}>
+							<input type="checkbox" disabled style={{ width: "16px", height: "16px", flexShrink: 0 }} />
+							{o.label}
+						</label>
+					)) : (
+						<label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default", color: "var(--ax-colors-fg-default)" }}>
+							<input type="checkbox" disabled style={{ width: "16px", height: "16px", flexShrink: 0 }} />
+							Option
+						</label>
+					)}
+				</Box>
+			)}
+
+			{type === "Date" && (
+				<input style={inputStyle} type="date" readOnly />
+			)}
+
+			{type === "File Upload" && (
+				<Box
+					style={{
+						border: "1px dashed var(--ax-colors-border-default)",
+						borderRadius: "6px",
+						padding: "16px",
+						textAlign: "center",
+						color: "var(--ax-colors-fg-tertiary)",
+						fontSize: "13px",
+					}}
 				>
-					Apply Logic
-				</Button>
+					Click to upload or drag and drop
+				</Box>
+			)}
+
+			{type === "Toggle" && (
+				<label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default" }}>
+					<input type="checkbox" disabled style={{ width: "16px", height: "16px" }} />
+					<span style={{ color: "var(--ax-colors-fg-secondary)" }}>Off</span>
+				</label>
+			)}
+
+			{/* Helper text */}
+			{helperText && (
+				<Text fontSize="xs" color="fg.tertiary" style={{ display: "block" }}>
+					{helperText}
+				</Text>
 			)}
 		</Box>
 	);
@@ -811,26 +1038,32 @@ function LogicRulesManager({
 export function FieldDetailsPanel({
 	node,
 	onClose,
-	outgoingConnections,
+	allCanvasNodes,
 	onApplyLogic,
 	onHighlightNodes,
 	onClearHighlight,
+	suggestedFields,
+	onAddSuggestedField,
 }: {
 	node: any;
 	onClose: () => void;
-	outgoingConnections: Array<{ edgeId: string; targetNode: any }>;
+	allCanvasNodes: any[];
 	onApplyLogic: (ruleSets: NodeConditionLogic[]) => void;
-	onHighlightNodes?: (ids: string[]) => void;
+	onHighlightNodes?: (targets: Array<{ nodeId: string; actionLabel: string }>) => void;
 	onClearHighlight?: () => void;
+	suggestedFields?: Array<{ id: string; name: string; icon?: React.ReactNode; typeLabel?: string }>;
+	onAddSuggestedField?: (fieldId: string) => void;
 }) {
+	const [isLogicEditMode, setIsLogicEditMode] = useState(false);
 	const d = node.data as any;
+	const [isRequired, setIsRequired] = useState<boolean>(d.required ?? false);
 	const fieldDef = WORK_REQUEST_FIELDS.find((f) => f.id === d.fieldDefId);
 	const fieldOptions: FieldOption[] = fieldDef?.options ?? [];
-	const connectedTargetNodes = outgoingConnections.map((c) => c.targetNode);
+	const connectedTargetNodes = allCanvasNodes;
 	const initialRuleSets: NodeConditionLogic[] = d.ruleSets ?? [];
 
 	return (
-		<DetailsPanel>
+		<DetailsPanel style={{ borderRadius: 0 }}>
 			<DetailsPanelHeader>
 				<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
 					<Box display="flex" alignItems="center" gap="8">
@@ -868,98 +1101,103 @@ export function FieldDetailsPanel({
 			<DetailsPanelBody>
 				<Box display="flex" flexDirection="column" gap="24" p="16">
 
-					{/* Description */}
-					{fieldDef?.description && (
-						<Box>
-							<Text fontSize="sm" fontWeight="500" color="fg.default" mb="4" style={{ display: "block" }}>
-								Description
-							</Text>
-							<Text fontSize="sm" color="fg.secondary">{fieldDef.description}</Text>
-						</Box>
-					)}
-
-					{/* Type */}
-					{d.typeLabel && (
-						<Box>
-							<Text fontSize="sm" fontWeight="500" color="fg.default" mb="8" style={{ display: "block" }}>
-								Field Type
-							</Text>
-							<Badge intent="neutral">{d.typeLabel}</Badge>
-						</Box>
-					)}
-
-					{/* Required */}
-					{fieldDef && (
-						<Box display="flex" alignItems="center" justifyContent="space-between">
-							<Box>
-								<Text fontSize="sm" fontWeight="500" color="fg.default" style={{ display: "block" }}>
-									Required
-								</Text>
-								<Text fontSize="xs" color="fg.tertiary">
-									Users must fill this field to submit
-								</Text>
-							</Box>
-							<Switch checked={d.required ?? fieldDef?.required ?? false} onCheckedChange={() => {}} />
-						</Box>
-					)}
-
-					{/* Placeholder */}
-					{fieldDef?.placeholder && (
-						<Box>
-							<Text fontSize="sm" fontWeight="500" color="fg.default" mb="4" style={{ display: "block" }}>
-								Placeholder Text
-							</Text>
-							<Text fontSize="sm" color="fg.tertiary" style={{ fontStyle: "italic" }}>
-								{fieldDef.placeholder}
-							</Text>
-						</Box>
-					)}
-
-					{/* Options */}
-					{fieldDef?.options && fieldDef.options.length > 0 && (
-						<Box>
-							<Text fontSize="sm" fontWeight="500" color="fg.default" mb="8" style={{ display: "block" }}>
-								Options
-							</Text>
-							<Box display="flex" flexDirection="column" gap="4">
-								{fieldDef.options.map((opt) => (
-									<Box
-										key={opt.value}
-										px="10"
-										py="6"
-										rounded="sm"
-										bg="bg.secondary"
-										style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
-									>
-										<Text fontSize="sm" color="fg.default">{opt.label}</Text>
-									</Box>
-								))}
-							</Box>
-						</Box>
-					)}
+					{/* Field preview */}
+					<FieldPreview fieldDef={fieldDef} label={d.label} required={isRequired} />
 
 					{/* Divider */}
 					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px" }} />
 
+					{/* Required */}
+					{fieldDef && (
+						<Box display="flex" alignItems="center" justifyContent="space-between">
+							<Text fontSize="sm" fontWeight="500" color="fg.default">
+								Required
+							</Text>
+							<Switch checked={isRequired} onCheckedChange={setIsRequired} />
+						</Box>
+					)}
+
+					{/* Divider + Logic Rules — only for option-based fields */}
+					{(d.typeLabel === "Dropdown" || d.typeLabel === "Checkbox") && <>
+					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px" }} />
+
 					{/* Logic Rules */}
 					<Box>
-						<Text fontSize="sm" fontWeight="600" color="fg.default" mb="16" style={{ display: "block" }}>
-							Logic Rules
-						</Text>
-						{connectedTargetNodes.length === 0 ? (
-							<Text fontSize="sm" color="fg.tertiary">
-								Connect this node to others on the canvas first, then configure logic rules here.
+						<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
+							<Text fontSize="sm" fontWeight="600" color="fg.default">
+								Logic Rules
 							</Text>
-						) : (
-							<LogicRulesManager
-								key={node.id}
-								initialRuleSets={initialRuleSets}
-								fieldOptions={fieldOptions}
-								connectedTargetNodes={connectedTargetNodes}
-								onApply={onApplyLogic}
-							/>
-						)}
+							{!isLogicEditMode && initialRuleSets.length > 0 && (
+								<button
+									onClick={() => setIsLogicEditMode(true)}
+									style={{
+										background: "none",
+										border: "none",
+										cursor: "pointer",
+										fontSize: "12px",
+										color: "var(--ax-colors-fg-accent)",
+										padding: 0,
+									}}
+								>
+									Edit
+								</button>
+							)}
+						</Box>
+						<LogicRulesManager
+							key={node.id}
+							initialRuleSets={initialRuleSets}
+							fieldOptions={fieldOptions}
+							connectedTargetNodes={connectedTargetNodes}
+							isEditMode={isLogicEditMode}
+							onApply={onApplyLogic}
+							onEnterEdit={() => setIsLogicEditMode(true)}
+							onExitEdit={() => setIsLogicEditMode(false)}
+							onHighlightRule={onHighlightNodes}
+							onClearHighlight={onClearHighlight}
+						/>
 					</Box>
+					</>}
+					{/* Suggested next fields */}
+					{suggestedFields && suggestedFields.length > 0 && onAddSuggestedField && (
+						<Box>
+							<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px 16px" }} />
+							<Text fontSize="xs" color="fg.tertiary" style={{ display: "block", marginBottom: "8px" }}>
+								Suggested next fields:
+							</Text>
+							<Box display="flex" flexDirection="row" flexWrap="wrap" gap="8">
+								{suggestedFields.map((field) => (
+									<button
+										key={field.id}
+										onClick={() => onAddSuggestedField(field.id)}
+										style={{
+											padding: "6px 12px",
+											background: "var(--opal-bg-suggest, var(--ax-colors-bg-secondary))",
+											border: "1px solid var(--opal-border-secondary, var(--ax-colors-border-default))",
+											borderRadius: "6px",
+											color: "var(--opal-text-primary, var(--ax-colors-fg-default))",
+											fontSize: "13px",
+											cursor: "pointer",
+											display: "flex",
+											alignItems: "center",
+											gap: "6px",
+											transition: "background 0.15s, border-color 0.15s",
+										}}
+										onMouseEnter={(e) => {
+											e.currentTarget.style.background = "var(--opal-bg-suggest-hover, var(--ax-colors-bg-accent-subtle))";
+											e.currentTarget.style.borderColor = "var(--opal-border-primary, var(--ax-colors-border-accent))";
+										}}
+										onMouseLeave={(e) => {
+											e.currentTarget.style.background = "var(--opal-bg-suggest, var(--ax-colors-bg-secondary))";
+											e.currentTarget.style.borderColor = "var(--opal-border-secondary, var(--ax-colors-border-default))";
+										}}
+									>
+										{field.icon && <span style={{ display: "flex", alignItems: "center", opacity: 0.6 }}>{field.icon}</span>}
+										{field.name}
+									</button>
+								))}
+							</Box>
+						</Box>
+					)}
 				</Box>
 			</DetailsPanelBody>
 		</DetailsPanel>

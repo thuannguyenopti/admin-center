@@ -189,8 +189,46 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 
 	if (isWorkflowBuilder || isFormBuilder) {
 		return (
-			<Box style={{height: "100vh", width: "100vw"}} bg="bg.default">
-				{children}
+			// Flex row: form builder takes remaining width, OpalPanel is an inline sibling.
+			// This avoids any position:fixed z-index / containing-block issues entirely.
+			<Box
+				style={{
+					height: "100vh",
+					width: "100vw",
+					display: "flex",
+					flexDirection: "row",
+					overflow: "hidden",
+				}}
+				bg="bg.default"
+			>
+				<Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+					{children}
+				</Box>
+				<OpalPanel
+					isOpen={isOpalOpen}
+					onClose={closeOpalWithRouteAwareness}
+					messages={messages}
+					inputValue={inputValue}
+					isLoading={isLoading}
+					error={error}
+					isInputDisabled={isInputDisabled}
+					setInputValue={setInputValue}
+					sendMessage={sendMessage}
+					regenerate={regenerate}
+					topOffset={0}
+					inline
+					groupedHistory={groupedHistory}
+					activeChat={activeChat}
+					searchQuery={searchQuery}
+					isHistoryVisible={isHistoryVisible}
+					mode={mode}
+					setSearchQuery={setSearchQuery}
+					toggleHistory={toggleHistory}
+					toggleMode={toggleMode}
+					createNewChat={createNewChat}
+					deleteChat={deleteChat}
+					selectChat={selectChat}
+				/>
 			</Box>
 		);
 	}

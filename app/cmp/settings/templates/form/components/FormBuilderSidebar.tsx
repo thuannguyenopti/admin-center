@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, SearchInput, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
+import { Box, Button, SearchInput, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import {
 	IconGripVertical,
@@ -68,8 +68,10 @@ function SidebarItem({
 
 export function FormBuilderSidebar({
 	onDragStart,
+	onOpenOpal,
 }: {
 	onDragStart: (e: React.DragEvent, item: any) => void;
+	onOpenOpal?: () => void;
 }) {
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -90,13 +92,67 @@ export function FormBuilderSidebar({
 
 	return (
 		<Box
-			style={{ width: "280px", height: "100%" }}
+			style={{ width: "280px", height: "100%", flexShrink: 0 }}
 			borderR="1"
 			borderColor="border.tertiary"
 			display="flex"
 			flexDirection="column"
 			bg="bg.default"
 		>
+			{/* Opal banner */}
+			{onOpenOpal && (
+				<Box
+					style={{
+						backgroundImage: "url('data:image/svg+xml;utf8,<svg viewBox=\\'0 0 221 104\\' xmlns=\\'http://www.w3.org/2000/svg\\' preserveAspectRatio=\\'none\\'><rect x=\\'0\\' y=\\'0\\' height=\\'100%25\\' width=\\'100%25\\' fill=\\'url(%23grad)\\' opacity=\\'1\\'/><defs><radialGradient id=\\'grad\\' gradientUnits=\\'userSpaceOnUse\\' cx=\\'0\\' cy=\\'0\\' r=\\'10\\' gradientTransform=\\'matrix(39.84 15.036 -31.951 36.057 9.7721 19.377)\\'><stop stop-color=\\'rgba(245,243,255,1)\\' offset=\\'0.052495\\'/><stop stop-color=\\'rgba(229,239,255,1)\\' offset=\\'0.61\\'/><stop stop-color=\\'rgba(221,214,254,1)\\' offset=\\'0.85\\'/></radialGradient></defs></svg>')",
+						backgroundSize: "cover",
+						borderRadius: "8px",
+						margin: "8px",
+						padding: "12px 16px",
+						display: "flex",
+						flexDirection: "column",
+						gap: "12px",
+					}}
+				>
+					<p style={{
+						margin: 0,
+						fontSize: "14px",
+						fontWeight: 400,
+						lineHeight: "20px",
+						letterSpacing: "-0.1px",
+						color: "#2e3442",
+						fontFamily: "Inter, sans-serif",
+					}}>
+						Build form with Opal
+					</p>
+					<button
+						onClick={onOpenOpal}
+						style={{
+							display: "inline-flex",
+							alignItems: "center",
+							gap: "4px",
+							padding: "4px 8px",
+							background: "linear-gradient(162.99deg, #392ecf 16.23%, #7740ec 85.41%)",
+							border: "none",
+							borderRadius: "6px",
+							cursor: "pointer",
+							alignSelf: "flex-start",
+						}}
+					>
+						<img src="/opal.png" alt="" width={16} height={16} style={{ borderRadius: "53px", flexShrink: 0 }} />
+						<span style={{
+							fontSize: "12px",
+							fontWeight: 400,
+							lineHeight: "20px",
+							color: "#fff",
+							fontFamily: "Inter, sans-serif",
+							whiteSpace: "nowrap",
+						}}>
+							Build form
+						</span>
+					</button>
+				</Box>
+			)}
+
 			{/* Header */}
 			<Box p="16" borderB="1" borderColor="border.tertiary">
 				{isSearching ? (
@@ -153,9 +209,10 @@ export function FormBuilderSidebar({
 								justifyContent="space-between"
 								className="hover:bg-[var(--ax-colors-bg-default-hovered)]"
 							>
-								<DisclosureTrigger style={{ flex: 1 }}>
+								<DisclosureTrigger style={{ flex: 1, paddingLeft: "8px" }}>
 									<Box
-										p="12"
+										py="12"
+										pr="12"
 										display="flex"
 										alignItems="center"
 										cursor="pointer"

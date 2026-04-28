@@ -21,6 +21,12 @@ type CodePanelControls = {
 	isOpen: boolean;
 };
 
+export type FormBuilderControls = {
+	applyGraph: (nodes: any[], edges: any[]) => void;
+	removeEdge: (edgeId: string) => void;
+	deleteNode: (nodeId: string) => void;
+};
+
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
@@ -34,6 +40,8 @@ type LayoutContextType = {
 	setOpalPanelWidth: (width: number) => void;
 	codePanelControls: CodePanelControls | null;
 	setCodePanelControls: (controls: CodePanelControls | null) => void;
+	formBuilderControls: FormBuilderControls | null;
+	setFormBuilderControls: (controls: FormBuilderControls | null) => void;
 };
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -45,9 +53,10 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 	const [opalPanelControls, setOpalPanelControls] = useState<OpalPanelControls | null>(null);
 	const [opalPanelWidth, setOpalPanelWidth] = useState<number>(0);
 	const [codePanelControls, setCodePanelControls] = useState<CodePanelControls | null>(null);
+	const [formBuilderControls, setFormBuilderControls] = useState<FormBuilderControls | null>(null);
 
 	return (
-		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth, codePanelControls, setCodePanelControls}}>
+		<LayoutContext.Provider value={{asideContent, setAsideContent, footerContent, setFooterContent, hidePageHeader, setHidePageHeader, opalPanelControls, setOpalPanelControls, opalPanelWidth, setOpalPanelWidth, codePanelControls, setCodePanelControls, formBuilderControls, setFormBuilderControls}}>
 			{children}
 		</LayoutContext.Provider>
 	);

@@ -75,17 +75,17 @@
 
 :root {
   /* Background Colors - Using Axiom tokens with fallbacks */
-  --opal-bg-primary: var(--ax-colors-bg-default, #ffffff);
+  --opal-bg-primary: var(--ax-colors-bg-page, #f9fafc);
   --opal-bg-sidebar: var(--ax-colors-bg-page, #f9fafc);
   --opal-bg-suggest: linear-gradient(135deg, #f5f3ff 0%, #e5efff 100%);
   --opal-bg-suggest-hover: linear-gradient(135deg, #ebe7ff 0%, #d9e8ff 100%);
-  --opal-bg-input: var(--ax-colors-bg-default, #ffffff);
+  --opal-bg-input: #ffffff;
   --opal-bg-assistant: var(--ax-colors-bg-secondary, #f3f5f8);
   --opal-bg-user: var(--ax-colors-bg-accent-subtle, #e8f0fe);
   --opal-bg-history-active: var(--ax-colors-bg-secondary, #f3f5f8);
 
   /* Border Colors - Using Axiom tokens */
-  --opal-border-primary: var(--ax-colors-border-default, #d1d5db);
+  --opal-border-primary: var(--ax-colors-border-tertiary, #e9edf5);
   --opal-border-secondary: var(--ax-colors-border-secondary, #e5e7eb);
   --opal-border-input: var(--ax-colors-border-control, #d1d5db);
 

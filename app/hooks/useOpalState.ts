@@ -12,7 +12,7 @@ export type ChatMessage = {
   isLoading?: boolean;
   versions?: string[];
   currentVersionIndex?: number;
-  messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete';
+  messageType?: 'preflight-progress' | 'preflight-results' | 'page-generation-progress' | 'page-generation-complete' | 'form-conflicts' | 'form-optimize' | 'form-generated' | 'form-build-questions';
   metadata?: {
     checklist?: Array<{
       label: string;
@@ -21,6 +21,8 @@ export type ChatMessage = {
     auditResult?: any; // Will be typed as PreflightAuditResult when imported
     loading?: boolean;
     loadingMessage?: string;
+    // Form builder types
+    [key: string]: any;
   };
   // Agent conversation fields
   eventType?: 'agent-start' | 'agent-end';

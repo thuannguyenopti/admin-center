@@ -10,6 +10,7 @@ import {
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { IconGitBranch, IconX, IconPlus } from "@tabler/icons-react";
+import { WORK_REQUEST_FIELDS } from "../../data";
 import type { ConditionClause, ActionRow, ElseIfBlock, FieldOption } from "../../types";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -123,23 +124,32 @@ function ClauseRow({
 	fieldOptions,
 	onChange,
 	onRemove,
-	onToggleChain,
 }: {
 	clause: ConditionClause;
 	isFirst: boolean;
 	fieldOptions: FieldOption[];
 	onChange: (patch: Partial<ConditionClause>) => void;
 	onRemove: () => void;
-	onToggleChain: () => void;
 }) {
+	const selectedField = WORK_REQUEST_FIELDS.find((f) => f.id === clause.fieldId);
+	const dynamicOptions = selectedField?.options ?? (clause.fieldId ? [] : fieldOptions);
 	const op = OPERATORS.find((o) => o.value === clause.operator);
 
 	return (
 		<Box>
 			{!isFirst && (
-				<Box mb="4">
-					<button style={chipBtn()} onClick={onToggleChain}>
-						{clause.chain}
+				<Box display="flex" gap="4" mb="6">
+					<button
+						style={chipBtn(clause.chain === "AND")}
+						onClick={() => onChange({ chain: "AND" })}
+					>
+						AND
+					</button>
+					<button
+						style={chipBtn(clause.chain === "OR")}
+						onClick={() => onChange({ chain: "OR" })}
+					>
+						OR
 					</button>
 				</Box>
 			)}
@@ -152,31 +162,60 @@ function ClauseRow({
 				bg="bg.secondary"
 				style={{ border: "1px solid var(--ax-colors-border-tertiary)" }}
 			>
-				<Box display="flex" alignItems="center" gap="6">
-					<Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
-						If value
-					</Text>
-					<select
-						value={clause.operator}
-						onChange={(e) => onChange({ operator: e.target.value, value: "" })}
-						style={sx}
-					>
-						{OPERATORS.map((o) => (
-							<option key={o.value} value={o.value}>
-								{o.label}
-							</option>
-						))}
-					</select>
+				<Box display="flex" alignItems="center" gap="6" style={{ flexWrap: "wrap" }}>
+					{isFirst ? (
+						<>
+							<Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
+								If value
+							</Text>
+							<select
+								value={clause.operator}
+								onChange={(e) => onChange({ operator: e.target.value, value: "" })}
+								style={sx}
+							>
+								{OPERATORS.map((o) => (
+									<option key={o.value} value={o.value}>{o.label}</option>
+								))}
+							</select>
+						</>
+					) : (
+						<>
+							<Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
+								If
+							</Text>
+							<select
+								value={clause.fieldId ?? ""}
+								onChange={(e) => onChange({ fieldId: e.target.value, value: "" })}
+								style={{ ...sx, flex: 1, minWidth: 0 }}
+							>
+								<option value="">Select field…</option>
+								{WORK_REQUEST_FIELDS.map((f) => (
+									<option key={f.id} value={f.id}>{f.name}</option>
+								))}
+							</select>
+							<select
+								value={clause.operator}
+								onChange={(e) => onChange({ operator: e.target.value, value: "" })}
+								style={{ ...sx, flex: 1, minWidth: 0 }}
+							>
+								{OPERATORS.map((o) => (
+									<option key={o.value} value={o.value}>
+										{o.label}
+									</option>
+								))}
+							</select>
+						</>
+					)}
 				</Box>
-				{op?.hasValue &&
-					(fieldOptions.length > 0 ? (
+				{op?.hasValue && (
+					dynamicOptions.length > 0 ? (
 						<select
 							value={clause.value}
 							onChange={(e) => onChange({ value: e.target.value })}
 							style={sx}
 						>
 							<option value="">Select value…</option>
-							{fieldOptions.map((opt) => (
+							{dynamicOptions.map((opt) => (
 								<option key={opt.value} value={opt.value}>
 									{opt.label}
 								</option>
@@ -189,7 +228,8 @@ function ClauseRow({
 							placeholder="Enter value…"
 							style={sx}
 						/>
-					))}
+					)
+				)}
 				<button
 					onClick={onRemove}
 					style={{
@@ -299,14 +339,7 @@ function ClauseGroup({
 		onUpdate(clauses.map((c) => (c.id === id ? { ...c, ...patch } : c)));
 	const remove = (id: string) => onUpdate(clauses.filter((c) => c.id !== id));
 	const add = (chain: "AND" | "OR") =>
-		onUpdate([
-			...clauses,
-			{ id: `c${Date.now()}`, operator: "equal", value: "", chain },
-		]);
-	const toggleChain = (id: string) =>
-		update(id, {
-			chain: clauses.find((c) => c.id === id)?.chain === "AND" ? "OR" : "AND",
-		});
+		onUpdate([...clauses, { id: `c${Date.now()}`, operator: "equal", value: "", chain }]);
 
 	return (
 		<Box display="flex" flexDirection="column" gap="6">
@@ -318,7 +351,6 @@ function ClauseGroup({
 					fieldOptions={fieldOptions}
 					onChange={(patch) => update(clause.id, patch)}
 					onRemove={() => remove(clause.id)}
-					onToggleChain={() => toggleChain(clause.id)}
 				/>
 			))}
 			<Box display="flex" gap="8" mt="4">
@@ -419,7 +451,7 @@ export function ConditionLogicPanel({
 	);
 
 	return (
-		<DetailsPanel>
+		<DetailsPanel style={{ borderRadius: 0 }}>
 			<DetailsPanelHeader>
 				<Box
 					display="flex"

@@ -424,26 +424,49 @@ export function OpalInput({
             zIndex: 1,
           }}
         >
-        {/* Active Context Chips */}
+        {/* Active Context Chip */}
         {contextChip && (
           <Box display="flex" gap="8" mb="8" flexWrap="wrap">
-            {contextChip && (
-              <Box
-                display="flex"
-                alignItems="center"
-                gap="4"
-                px="8"
-                py="2"
+            <Box
+              display="flex"
+              alignItems="center"
+              gap="4"
+              style={{
+                backgroundColor: '#e9edf5',
+                borderRadius: '6px',
+                padding: '2px 6px',
+                height: '24px',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, color: '#080736' }}>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7zM9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1z" fill="currentColor"/>
+              </svg>
+              <span style={{
+                fontSize: '12px',
+                fontWeight: 400,
+                color: '#2e3442',
+                fontFamily: 'Inter, sans-serif',
+                whiteSpace: 'nowrap',
+                lineHeight: '16px',
+              }}>
+                {contextChip}
+              </span>
+              <button
+                onClick={removeContext}
                 style={{
-                  backgroundColor: 'var(--opal-bg-sidebar)',
-                  borderRadius: '16px',
-                  border: '1px solid var(--opal-border-primary)',
+                  background: 'none',
+                  border: 'none',
+                  padding: '2px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  borderRadius: '4px',
+                  color: '#2e3442',
                 }}
               >
-                <Text fontSize="xs" color="fg.secondary">{contextChip}</Text>
-                <IconXmark size={12} style={{ cursor: 'pointer' }} onClick={removeContext} />
-              </Box>
-            )}
+                <IconXmark size={12} />
+              </button>
+            </Box>
           </Box>
         )}
 

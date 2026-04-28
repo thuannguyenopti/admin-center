@@ -121,6 +121,21 @@ export function useFormBuilderState() {
 		[setNodes, edges, pushSnapshot],
 	);
 
+	const addNodeWithEdge = useCallback(
+		(node: Node, edge: Edge) => {
+			setNodes((nds) => {
+				const nextNodes = nds.concat(node);
+				setEdges((eds) => {
+					const nextEdges = eds.concat(edge);
+					pushSnapshot(nextNodes, nextEdges);
+					return nextEdges;
+				});
+				return nextNodes;
+			});
+		},
+		[setNodes, setEdges, pushSnapshot],
+	);
+
 	const onConnect = useCallback(
 		(connection: Connection, currentNodes: Node[]) => {
 			setEdges((eds) => {
@@ -264,6 +279,7 @@ export function useFormBuilderState() {
 		onNodesChange,
 		onEdgesChange,
 		addNode,
+		addNodeWithEdge,
 		onConnect,
 		updateNodeData,
 		updateEdgesForNode,
