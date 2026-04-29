@@ -123,26 +123,14 @@ export function FormBuilderTopNav({
 
 				{/* Non-disruptive conflict indicator */}
 				{conflictCount > 0 && (
-					<button
+					<Button
+						appearance="subtle"
+						color="fg.warning.strong"
+						icon={<IconAlertTriangle size={14} />}
 						onClick={onViewIssues}
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: 6,
-							padding: "5px 10px",
-							borderRadius: 6,
-							border: "1px solid #fde047",
-							background: "#fefce8",
-							cursor: "pointer",
-							fontSize: 13,
-							fontWeight: 500,
-							color: "#854d0e",
-							whiteSpace: "nowrap",
-						}}
 					>
-						<IconAlertTriangle size={14} color="#ca8a04" />
 						{conflictCount} issue{conflictCount === 1 ? "" : "s"} found
-					</button>
+					</Button>
 				)}
 
 				<Button appearance="default" onClick={onClose}>
