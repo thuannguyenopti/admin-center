@@ -21,6 +21,7 @@ import { FormFieldNode } from "./components/nodes/FormFieldNode";
 import { FormSectionNode, SECTION_HEADER_HEIGHT } from "./components/nodes/FormSectionNode";
 import { FormContentNode } from "./components/nodes/FormContentNode";
 import { FormConditionEdge } from "./components/edges/FormConditionEdge";
+import { FormConflictEdge } from "./components/edges/FormConflictEdge";
 import { FieldDetailsPanel, type NodeConditionLogic } from "./components/panels/FieldDetailsPanel";
 import { ConflictsPanel } from "./components/panels/ConflictsPanel";
 import { FormPreviewPanel } from "./components/panels/FormPreviewPanel";
@@ -184,7 +185,10 @@ export function FormBuilder() {
 		[],
 	);
 
-	const edgeTypes = useMemo(() => ({ formCondition: FormConditionEdge }), []);
+	const edgeTypes = useMemo(
+		() => ({ formCondition: FormConditionEdge, formConflict: FormConflictEdge }),
+		[],
+	);
 
 	// ─── Drag and drop ───────────────────────────────────────────────────────────
 
@@ -444,19 +448,44 @@ export function FormBuilder() {
 		menuSuggestedFields, handleAddNodeBelow, toggleSectionCollapse, duplicateSection, updateNodeData]);
 
 	const patchedEdges = useMemo(() => {
+		// Identify undefined edges: source has 2+ outgoing edges but this one has no label
+		const outgoingCounts = new Map<string, number>();
+		for (const e of edges) outgoingCounts.set(e.source, (outgoingCounts.get(e.source) ?? 0) + 1);
+		const undefinedEdgeIds = new Set(
+			edges
+				.filter((e) => (outgoingCounts.get(e.source) ?? 0) > 1 && !e.label)
+				.map((e) => e.id),
+		);
+
+		// Base: apply persistent warning styling to undefined edges
+		const base = edges.map((edge) => {
+			if (undefinedEdgeIds.has(edge.id)) {
+				return {
+					...edge,
+					type: "formConflict",
+					data: { ...(edge.data ?? {}), conflictSeverity: "warning" },
+					style: { stroke: "#ca8a04", strokeWidth: 2 },
+				};
+			}
+			return edge;
+		});
+
+		// Overlay: conflict panel highlight
 		if (conflictHighlight) {
 			const conflictEdgeIds = new Set(conflictHighlight.edgeIds);
 			const hasEdges = conflictEdgeIds.size > 0;
-			return edges.map((edge) => {
+			return base.map((edge) => {
 				if (hasEdges && conflictEdgeIds.has(edge.id)) {
 					return { ...edge, animated: true, style: { stroke: "#ca8a04", strokeWidth: 2.5 } };
 				}
 				return { ...edge, style: { ...((edge.style as object) ?? {}), opacity: hasEdges ? 0.15 : 1 } };
 			});
 		}
-		if (highlightedTargets.length === 0 || !selectedNodeId) return edges;
+
+		// Overlay: logic highlight from details panel
+		if (highlightedTargets.length === 0 || !selectedNodeId) return base;
 		const targetMap = new Map(highlightedTargets.map((t) => [t.nodeId, t.actionLabel]));
-		return edges.map((edge) => {
+		return base.map((edge) => {
 			if (edge.source === selectedNodeId && targetMap.has(edge.target)) {
 				return {
 					...edge,

@@ -5,7 +5,7 @@ export type ConflictSeverity = "error" | "warning";
 
 export type FormConflict = {
 	id: string;
-	type: "circular_edge" | "orphan_node" | "contradictory_rule";
+	type: "circular_edge" | "orphan_node" | "contradictory_rule" | "undefined_edge";
 	severity: ConflictSeverity;
 	message: string;
 	affectedNodeIds: string[];
@@ -114,10 +114,41 @@ function detectContradictoryRules(nodes: Node[]): FormConflict[] {
 	return conflicts;
 }
 
+function detectUndefinedEdges(nodes: Node[], edges: Edge[]): FormConflict[] {
+	const conflicts: FormConflict[] = [];
+	const outgoingEdges = new Map<string, Edge[]>();
+	for (const edge of edges) {
+		if (!outgoingEdges.has(edge.source)) outgoingEdges.set(edge.source, []);
+		outgoingEdges.get(edge.source)!.push(edge);
+	}
+	for (const [nodeId, outgoing] of outgoingEdges.entries()) {
+		if (outgoing.length <= 1) continue;
+		const undefinedEdges = outgoing.filter((e) => !e.label);
+		if (undefinedEdges.length === 0) continue;
+		const node = nodes.find((n) => n.id === nodeId);
+		const nodeLabel = (node?.data as any)?.label ?? nodeId;
+		for (const edge of undefinedEdges) {
+			const targetNode = nodes.find((n) => n.id === edge.target);
+			const targetLabel = (targetNode?.data as any)?.label ?? edge.target;
+			conflicts.push({
+				id: `undefined-edge-${edge.id}`,
+				type: "undefined_edge",
+				severity: "warning",
+				message: `Connection from "${nodeLabel}" to "${targetLabel}" has no condition defined — when a node has multiple outgoing paths, all connections need logic.`,
+				affectedNodeIds: [nodeId, edge.target],
+				affectedEdgeIds: [edge.id],
+				fix: { type: "remove_edge", edgeId: edge.id },
+			});
+		}
+	}
+	return conflicts;
+}
+
 export function detectFormConflicts(nodes: Node[], edges: Edge[]): FormConflict[] {
 	return [
 		...detectCircularEdges(nodes, edges),
 		...detectOrphanNodes(nodes, edges),
 		...detectContradictoryRules(nodes),
+		...detectUndefinedEdges(nodes, edges),
 	];
 }
