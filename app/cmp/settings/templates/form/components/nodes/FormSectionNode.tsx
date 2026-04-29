@@ -66,7 +66,6 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 					) : (
 						<NodeAddMenu
 							suggestedFields={d.menuSuggestedFields ?? []}
-							disableSection
 							onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
 							onAddSection={() => { d.onAddNodeBelow?.("section"); setIsMenuOpen(false); }}
 							onOpenFieldPicker={() => setShowFields(true)}

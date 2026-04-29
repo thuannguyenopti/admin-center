@@ -316,7 +316,14 @@ export function FormBuilder() {
 		(sourceNodeId: string, type: "text" | "section" | "field", fieldDefId?: string) => {
 			const sourceNode = nodes.find((n) => n.id === sourceNodeId);
 			if (!sourceNode) return;
-			const offsetY = ((sourceNode as any).measured?.height ?? 60) + 80;
+
+			const parentId = (sourceNode as any).parentId as string | undefined;
+			const parentSection = parentId ? nodes.find((n) => n.id === parentId) : undefined;
+
+			// Nodes inside a section stay inside; sections always land at canvas level
+			const inSection = !!parentId && type !== "section";
+			const GAP = inSection ? 12 : 80;
+			const offsetY = ((sourceNode as any).measured?.height ?? 60) + GAP;
 			const newId = getNodeId();
 			let newNode: any;
 
@@ -325,12 +332,18 @@ export function FormBuilder() {
 				newNode = {
 					id: newId, type: "formContent",
 					position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
+					...(inSection ? { parentId } : {}),
 					data: { label: c.name, icon: c.icon },
 				};
 			} else if (type === "section") {
+				// Place below the parent section (if source is inside one) or below source itself
+				const refNode = parentSection ?? sourceNode;
+				const refH = refNode.type === "formSection"
+					? Number(refNode.style?.height ?? 220)
+					: ((refNode as any).measured?.height ?? 60);
 				newNode = {
 					id: newId, type: "formSection",
-					position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
+					position: { x: refNode.position.x, y: refNode.position.y + refH + 80 },
 					style: { width: 480, height: 220, overflow: "visible" },
 					data: { label: "New Section", onToggleCollapse: () => {}, onDuplicate: () => {} },
 				};
@@ -340,6 +353,7 @@ export function FormBuilder() {
 				newNode = {
 					id: newId, type: "formField",
 					position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
+					...(inSection ? { parentId } : {}),
 					data: { label: f.name, typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id },
 				};
 			}
