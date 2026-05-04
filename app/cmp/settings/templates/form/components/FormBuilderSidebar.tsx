@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, SearchInput, Disclosure, DisclosureTrigger, DisclosureContent } from "@optiaxiom/react";
+import { Box, Button, SearchInput, Disclosure, DisclosureTrigger, DisclosureContent, Tooltip } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import {
 	IconGripVertical,
@@ -10,10 +10,12 @@ import {
 	IconX,
 } from "@tabler/icons-react";
 import {
-	WORK_REQUEST_FIELDS,
+	STANDARD_FIELDS,
 	LAYOUT_COMPONENTS,
 	CONTENT_COMPONENTS,
 } from "../data";
+import { CreateFieldModal } from "./CreateFieldModal";
+import type { FormFieldDef } from "../types";
 
 const TEXT_ITEM = { ...CONTENT_COMPONENTS.find((c) => c.id === "paragraph")!, name: "Text" };
 const SECTION_ITEM = LAYOUT_COMPONENTS[0];
@@ -71,19 +73,32 @@ function SidebarItem({
 
 export function FormBuilderSidebar({
 	onDragStart,
+	customFields = [],
+	onCreateField,
 }: {
 	onDragStart: (e: React.DragEvent, item: any) => void;
+	customFields?: FormFieldDef[];
+	onCreateField?: (field: FormFieldDef) => void;
 }) {
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
 
-	const filteredFields = searchQuery
-		? WORK_REQUEST_FIELDS.filter(
+	const filteredStandard = searchQuery
+		? STANDARD_FIELDS.filter(
 				(f) =>
 					f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
 					f.typeLabel.toLowerCase().includes(searchQuery.toLowerCase()),
 		  )
-		: WORK_REQUEST_FIELDS;
+		: STANDARD_FIELDS;
+
+	const filteredCustom = searchQuery
+		? customFields.filter(
+				(f) =>
+					f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					f.typeLabel.toLowerCase().includes(searchQuery.toLowerCase()),
+		  )
+		: customFields;
 
 	return (
 		<Box
@@ -146,8 +161,8 @@ export function FormBuilderSidebar({
 					<SidebarItem item={SECTION_ITEM} onDragStart={onDragStart} />
 				</Box>
 
-				{/* Fields section */}
-				{!searchQuery && <Box borderT="1" borderColor="border.tertiary" />}
+				{/* Standard fields */}
+				<Box borderT="1" borderColor="border.tertiary" />
 				<Disclosure defaultOpen>
 					<Box
 						display="flex"
@@ -157,35 +172,76 @@ export function FormBuilderSidebar({
 					>
 						<DisclosureTrigger style={{ flex: 1, paddingLeft: "8px" }}>
 							<Box py="12" pr="12" display="flex" alignItems="center" cursor="pointer">
-								<Text fontWeight="500">Fields</Text>
+								<Text fontWeight="500">Standard fields</Text>
 							</Box>
 						</DisclosureTrigger>
-						<button
-							onClick={(e) => e.stopPropagation()}
-							style={{
-								background: "none",
-								border: "none",
-								cursor: "pointer",
-								display: "flex",
-								alignItems: "center",
-								color: "var(--ax-colors-fg-tertiary)",
-								padding: "2px 12px 2px 4px",
-								borderRadius: "4px",
-							}}
-							aria-label="Add new field"
-						>
-							<IconPlus size={14} />
-						</button>
 					</Box>
 					<DisclosureContent>
 						<Box display="flex" flexDirection="column" gap="4" pb="8">
-							{filteredFields.map((item: any) => (
+							{filteredStandard.map((item: any) => (
 								<SidebarItem key={item.id} item={item} onDragStart={onDragStart} />
 							))}
 						</Box>
 					</DisclosureContent>
 				</Disclosure>
+
+				{/* Custom fields */}
+				<Box borderT="1" borderColor="border.tertiary" />
+				<Disclosure defaultOpen>
+					<Box
+						display="flex"
+						alignItems="center"
+						justifyContent="space-between"
+						className="hover:bg-[var(--ax-colors-bg-default-hovered)]"
+					>
+						<DisclosureTrigger style={{ flex: 1, paddingLeft: "8px" }}>
+							<Box py="12" pr="12" display="flex" alignItems="center" cursor="pointer">
+								<Text fontWeight="500">Custom fields</Text>
+							</Box>
+						</DisclosureTrigger>
+						<Tooltip content="Create new field">
+							<button
+								onClick={(e) => { e.stopPropagation(); setIsCreateFieldOpen(true); }}
+								style={{
+									background: "none",
+									border: "none",
+									cursor: "pointer",
+									display: "flex",
+									alignItems: "center",
+									color: "var(--ax-colors-fg-tertiary)",
+									padding: "2px 12px 2px 4px",
+									borderRadius: "4px",
+								}}
+								aria-label="Create new field"
+							>
+								<IconPlus size={14} />
+							</button>
+						</Tooltip>
+					</Box>
+					<DisclosureContent>
+						<Box display="flex" flexDirection="column" gap="4" pb="8">
+							{filteredCustom.length === 0 ? (
+								<Box px="16" pb="8">
+									<Text fontSize="xs" color="fg.tertiary">No custom fields yet.</Text>
+								</Box>
+							) : (
+								filteredCustom.map((item: any) => (
+									<SidebarItem key={item.id} item={item} onDragStart={onDragStart} />
+								))
+							)}
+						</Box>
+					</DisclosureContent>
+				</Disclosure>
 			</Box>
+
+			<CreateFieldModal
+				open={isCreateFieldOpen}
+				onSave={(field) => {
+					onCreateField?.(field);
+					setIsCreateFieldOpen(false);
+				}}
+				onCancel={() => setIsCreateFieldOpen(false)}
+			/>
 		</Box>
 	);
 }

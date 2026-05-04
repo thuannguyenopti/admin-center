@@ -30,6 +30,7 @@ import { CreateTemplateModal } from "./components/CreateTemplateModal";
 import type { FormConflict } from "./utils/detectFormConflicts";
 import { toaster } from "@optiaxiom/react";
 import { CONTENT_COMPONENTS, ALL_COMPONENTS, WORK_REQUEST_FIELDS } from "./data";
+import type { FormFieldDef } from "./types";
 import { IconHeading } from "@tabler/icons-react";
 
 const STARTING_NODE_ID = "form-title-start";
@@ -143,6 +144,7 @@ export function FormBuilder() {
 	const [formDescription, setFormDescription] = useState("");
 	const [formApplicableTo, setFormApplicableTo] = useState<string[]>([]);
 	const [isActive, setIsActive] = useState(false);
+	const [customFields, setCustomFields] = useState<FormFieldDef[]>([]);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(true);
 	const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
 	const [isLibraryOpen, setIsLibraryOpen] = useState(true);
@@ -381,6 +383,22 @@ export function FormBuilder() {
 			addNode(newNode as any);
 		},
 		[selectedNode, addNode],
+	);
+
+	const handleCreateCustomField = useCallback(
+		(field: FormFieldDef) => {
+			setCustomFields((prev) => [...prev, field]);
+			const lastNode = [...nodes].sort((a, b) => b.position.y - a.position.y)[0];
+			const y = lastNode ? lastNode.position.y + ((lastNode as any).measured?.height ?? 80) + 80 : 100;
+			const x = lastNode ? lastNode.position.x : 240;
+			addNode({
+				id: getNodeId(),
+				type: "formField",
+				position: { x, y },
+				data: { label: field.name, typeLabel: field.typeLabel, icon: field.icon, required: field.required ?? false, fieldDefId: field.id },
+			} as any);
+		},
+		[nodes, addNode],
 	);
 
 	const handleModalSave = useCallback(
@@ -738,7 +756,11 @@ export function FormBuilder() {
 						/>
 					}
 					sidebar={isLibraryOpen ? (
-						<FormBuilderSidebar onDragStart={onDragStart} />
+						<FormBuilderSidebar
+						onDragStart={onDragStart}
+						customFields={customFields}
+						onCreateField={handleCreateCustomField}
+					/>
 					) : null}
 					detailsPanel={detailsPanel}
 				>
