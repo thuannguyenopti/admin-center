@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Menu, MenuTrigger, MenuContent } from "@optiaxiom/react";
+import { Box, Menu, MenuTrigger, MenuContent, Switch } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import {
@@ -10,7 +10,6 @@ import {
 	IconArrowBackUp,
 	IconArrowForwardUp,
 	IconAlertTriangle,
-	IconSparkles,
 } from "@tabler/icons-react";
 
 interface FormBuilderTopNavProps {
@@ -23,10 +22,12 @@ interface FormBuilderTopNavProps {
 	onTitleChange: (title: string) => void;
 	onUndo: () => void;
 	onRedo: () => void;
+	isActive: boolean;
 	onSave: () => void;
 	onViewIssues: () => void;
 	onShowPreview: () => void;
-	onOptimize: () => void;
+	onToggleActive: () => void;
+	onEditDetails: () => void;
 	onClose: () => void;
 }
 
@@ -40,10 +41,12 @@ export function FormBuilderTopNav({
 	onTitleChange,
 	onUndo,
 	onRedo,
+	isActive,
 	onSave,
 	onViewIssues,
 	onShowPreview,
-	onOptimize,
+	onToggleActive,
+	onEditDetails,
 	onClose,
 }: FormBuilderTopNavProps) {
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -140,9 +143,13 @@ export function FormBuilderTopNav({
 				<Button appearance="primary" onClick={onSave}>
 					Save
 				</Button>
+				<Box display="flex" alignItems="center" gap="8">
+					<Switch checked={isActive} onCheckedChange={onToggleActive} />
+					<Text fontSize="sm" color="fg.secondary">Active</Text>
+				</Box>
 				<Menu
 					options={[
-						{ label: "Optimize form", addon: <IconSparkles size={16} />, execute: onOptimize },
+						{ label: "Edit Details",    execute: onEditDetails },
 						{ label: "Duplicate",       execute: () => {} },
 						{ label: "Export",          execute: () => {} },
 						{ label: "Delete template", execute: () => {} },

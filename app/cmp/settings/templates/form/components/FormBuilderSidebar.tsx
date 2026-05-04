@@ -73,7 +73,6 @@ export function FormBuilderSidebar({
 	onDragStart,
 }: {
 	onDragStart: (e: React.DragEvent, item: any) => void;
-	onOpenOpal?: () => void;
 }) {
 	const [isSearching, setIsSearching] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");

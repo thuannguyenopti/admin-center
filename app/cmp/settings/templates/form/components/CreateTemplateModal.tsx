@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
 	Dialog,
 	DialogContent,
@@ -19,14 +19,24 @@ import { Text } from "@/app/components/Text";
 
 interface CreateTemplateModalProps {
 	open: boolean;
+	title?: string;
+	initialValues?: { templateName: string; description: string; applicableTo: string[] };
 	onSave: (data: { templateName: string; description: string; applicableTo: string[] }) => void;
 	onCancel: () => void;
 }
 
-export function CreateTemplateModal({ open, onSave, onCancel }: CreateTemplateModalProps) {
-	const [templateName, setTemplateName] = useState("");
-	const [description, setDescription] = useState("");
-	const [applicableTo, setApplicableTo] = useState<string[]>([]);
+export function CreateTemplateModal({ open, title = "Create Template", initialValues, onSave, onCancel }: CreateTemplateModalProps) {
+	const [templateName, setTemplateName] = useState(initialValues?.templateName ?? "");
+	const [description, setDescription] = useState(initialValues?.description ?? "");
+	const [applicableTo, setApplicableTo] = useState<string[]>(initialValues?.applicableTo ?? []);
+
+	useEffect(() => {
+		if (!open) return;
+		setTemplateName(initialValues?.templateName ?? "");
+		setDescription(initialValues?.description ?? "");
+		setApplicableTo(initialValues?.applicableTo ?? []);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [open]);
 
 	const isValid = templateName.trim().length > 0 && description.trim().length > 0;
 
@@ -44,7 +54,7 @@ export function CreateTemplateModal({ open, onSave, onCancel }: CreateTemplateMo
 		<Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
 			<DialogContent size="sm">
 				<DialogForm onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-					<DialogHeader>Create Template</DialogHeader>
+					<DialogHeader>{title}</DialogHeader>
 
 					<DialogBody display="flex" flexDirection="column" gap="20">
 						{/* Template name */}

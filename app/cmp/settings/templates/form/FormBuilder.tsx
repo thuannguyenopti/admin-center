@@ -27,8 +27,8 @@ import { ConflictsPanel } from "./components/panels/ConflictsPanel";
 import { FormPreviewPanel } from "./components/panels/FormPreviewPanel";
 import { FormContentPanel } from "./components/panels/FormContentPanel";
 import { CreateTemplateModal } from "./components/CreateTemplateModal";
-import { FormBuilderActionsProvider } from "./context/FormBuilderActionsContext";
 import type { FormConflict } from "./utils/detectFormConflicts";
+import { toaster } from "@optiaxiom/react";
 import { CONTENT_COMPONENTS, ALL_COMPONENTS, WORK_REQUEST_FIELDS } from "./data";
 import { IconHeading } from "@tabler/icons-react";
 
@@ -37,7 +37,6 @@ const STARTING_NODE_ID = "form-title-start";
 import { useFormBuilderState, getNodeId } from "./hooks/useFormBuilderState";
 import { validateFormGraph } from "./utils/validateFormGraph";
 import { detectFormConflicts } from "./utils/detectFormConflicts";
-import { useLayout } from "@/app/context/LayoutContext";
 import type { ValidationWarning } from "./types";
 
 // ─── Validation dialog ────────────────────────────────────────────────────────
@@ -138,11 +137,14 @@ function ValidationDialog({
 
 export function FormBuilder() {
 	const router = useRouter();
-	const { opalPanelControls, setFormBuilderControls } = useLayout();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 	const [formTitle, setFormTitle] = useState("Untitled Form");
+	const [formDescription, setFormDescription] = useState("");
+	const [formApplicableTo, setFormApplicableTo] = useState<string[]>([]);
+	const [isActive, setIsActive] = useState(false);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(true);
+	const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
 	const [isLibraryOpen, setIsLibraryOpen] = useState(true);
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 	const [validationWarnings, setValidationWarnings] = useState<ValidationWarning[] | null>(null);
@@ -305,11 +307,6 @@ export function FormBuilder() {
 		return WORK_REQUEST_FIELDS.filter((f) => !fieldNodeIds.has(f.id)).slice(0, 3);
 	}, [selectedNode, nodes, edges, fieldNodeIds]);
 
-	const menuSuggestedFields = useMemo(() => {
-		if (!selectedNode) return [];
-		return WORK_REQUEST_FIELDS.filter((f) => !fieldNodeIds.has(f.id)).slice(0, 4);
-	}, [selectedNode, fieldNodeIds]);
-
 	// ─── Inline add-below (+ button on nodes) ───────────────────────────────────
 
 	const handleAddNodeBelow = useCallback(
@@ -387,8 +384,10 @@ export function FormBuilder() {
 	);
 
 	const handleModalSave = useCallback(
-		({ templateName }: { templateName: string; description: string; applicableTo: string[] }) => {
+		({ templateName, description, applicableTo }: { templateName: string; description: string; applicableTo: string[] }) => {
 			setFormTitle(templateName);
+			setFormDescription(description);
+			setFormApplicableTo(applicableTo);
 			setIsCreateModalOpen(false);
 			const startingNode = {
 				id: STARTING_NODE_ID,
@@ -406,6 +405,16 @@ export function FormBuilder() {
 			setTimeout(() => reactFlowInstance?.fitView({ padding: 0.4 }), 50);
 		},
 		[setNodes, reactFlowInstance],
+	);
+
+	const handleEditDetailsSave = useCallback(
+		({ templateName, description, applicableTo }: { templateName: string; description: string; applicableTo: string[] }) => {
+			setFormTitle(templateName);
+			setFormDescription(description);
+			setFormApplicableTo(applicableTo);
+			setIsEditDetailsOpen(false);
+		},
+		[],
 	);
 
 	const handleContentNodeLabelChange = useCallback(
@@ -439,7 +448,6 @@ export function FormBuilder() {
 
 		const extra = { isHighlighted, isDimmed, isConflictHighlighted: isHighlighted && !!conflictHighlight };
 		const addCallbacks = {
-			menuSuggestedFields: n.id === selectedNodeId ? menuSuggestedFields : [],
 			onAddNodeBelow: (type: string, fieldDefId?: string) => handleAddNodeBelow(n.id, type as any, fieldDefId),
 		};
 
@@ -459,7 +467,7 @@ export function FormBuilder() {
 			},
 		};
 	}), [nodes, conflictHighlight, highlightedSet, highlightedTargets, selectedNodeId,
-		menuSuggestedFields, handleAddNodeBelow, toggleSectionCollapse, duplicateSection, updateNodeData]);
+		handleAddNodeBelow, toggleSectionCollapse, duplicateSection, updateNodeData]);
 
 	const patchedEdges = useMemo(() => {
 		// Identify undefined edges: source has 2+ outgoing edges but this one has no label
@@ -552,16 +560,6 @@ export function FormBuilder() {
 		setIsConflictsPanelOpen(true);
 	}, []);
 
-	const handleSuggestFixes = useCallback(() => {
-		opalPanelControls?.openPanel();
-		opalPanelControls?.addMessage({
-			role: "assistant",
-			content: `I found ${conflicts.length} issue${conflicts.length === 1 ? "" : "s"} in your form. Here are my suggested fixes.`,
-			messageType: "form-conflicts",
-			metadata: { conflicts },
-		});
-	}, [conflicts, opalPanelControls]);
-
 	// ─── Save ─────────────────────────────────────────────────────────────────────
 
 	const handleSave = useCallback(async () => {
@@ -572,56 +570,6 @@ export function FormBuilder() {
 		}
 		console.log("Form saved", { nodes, edges });
 	}, [nodes, edges]);
-
-	// ─── Optimize ────────────────────────────────────────────────────────────────
-
-	const detectDuplicateFields = useCallback(() => {
-		const fieldNodes = nodes.filter((n) => n.type === "formField");
-		const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
-		const groups: Array<{ fieldIds: string[]; labels: string[] }> = [];
-		const grouped = new Set<string>();
-		for (let i = 0; i < fieldNodes.length; i++) {
-			if (grouped.has(fieldNodes[i].id)) continue;
-			const wordsA = normalize((fieldNodes[i].data as any).label ?? "");
-			const group = [fieldNodes[i]];
-			for (let j = i + 1; j < fieldNodes.length; j++) {
-				if (grouped.has(fieldNodes[j].id)) continue;
-				const wordsB = normalize((fieldNodes[j].data as any).label ?? "");
-				if (wordsA.filter((w) => wordsB.includes(w)).length / Math.max(wordsA.length, wordsB.length, 1) >= 0.7)
-					group.push(fieldNodes[j]);
-			}
-			if (group.length > 1) {
-				group.forEach((n) => grouped.add(n.id));
-				groups.push({ fieldIds: group.map((n) => n.id), labels: group.map((n) => (n.data as any).label ?? n.id) });
-			}
-		}
-		return groups;
-	}, [nodes]);
-
-	const handleOptimize = useCallback(async () => {
-		const duplicates = detectDuplicateFields();
-		const fieldSummary = nodes
-			.filter((n) => n.type === "formField")
-			.sort((a, b) => a.position.y - b.position.y)
-			.map((n) => {
-				const d = n.data as any;
-				return `- ${d.label} (${d.typeLabel ?? "Field"}${d.required ? ", required" : ""})`;
-			})
-			.join("\n");
-		let aiSuggestions: Array<{ id: string; type: string; message: string }> = [];
-		try {
-			const res = await fetch("/api/optimize-form", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ formSummary: fieldSummary }) });
-			if (res.ok) aiSuggestions = (await res.json()).suggestions ?? [];
-		} catch {}
-		opalPanelControls?.openPanel();
-		opalPanelControls?.addMessage({ role: "user", content: "Optimize form" });
-		opalPanelControls?.addMessage({
-			role: "assistant",
-			content: `Here are some suggestions to improve your form (${nodes.filter((n) => n.type === "formField").length} fields).`,
-			messageType: "form-optimize",
-			metadata: { duplicates, suggestions: aiSuggestions },
-		});
-	}, [nodes, detectDuplicateFields, opalPanelControls]);
 
 	// ─── Logic apply ─────────────────────────────────────────────────────────────
 
@@ -746,7 +694,6 @@ export function FormBuilder() {
 						});
 					}}
 					onClearHighlight={() => { setActiveConflictId(null); setIsAllConflictsHighlighted(false); setConflictHighlight(null); }}
-					onSuggestFixes={handleSuggestFixes}
 					onClose={() => { setIsConflictsPanelOpen(false); setConflictHighlight(null); setActiveConflictId(null); setIsAllConflictsHighlighted(false); }}
 				/>
 			);
@@ -754,35 +701,13 @@ export function FormBuilder() {
 		return null;
 	}, [
 		isPreviewOpen, formTitle, selectedNode, nodes, handleApplyLogic, suggestedFields, handleAddSuggestedField,
-		handleContentNodeLabelChange, isConflictsPanelOpen, conflicts, activeConflictId, isAllConflictsHighlighted, handleSuggestFixes,
+		handleContentNodeLabelChange, isConflictsPanelOpen, conflicts, activeConflictId, isAllConflictsHighlighted,
 	]);
-
-	// ─── Opal panel actions ───────────────────────────────────────────────────────
-
-	const formBuilderActions = useMemo(() => ({
-		removeEdge: (edgeId: string) => setEdges((eds) => eds.filter((e) => e.id !== edgeId)),
-		deleteNode: (nodeId: string) => {
-			if (nodeId === STARTING_NODE_ID) return;
-			setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-			setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
-		},
-		applyGraph: (newNodes: any[], newEdges: any[]) => {
-			setNodes(newNodes);
-			setEdges(newEdges);
-			setTimeout(() => reactFlowInstance?.fitView({ padding: 0.4 }), 50);
-		},
-	}), [setEdges, setNodes, reactFlowInstance]);
-
-	useEffect(() => {
-		setFormBuilderControls(formBuilderActions);
-		return () => setFormBuilderControls(null);
-	}, [setFormBuilderControls, formBuilderActions]);
 
 	// ─── Render ───────────────────────────────────────────────────────────────────
 
 	return (
-		<FormBuilderActionsProvider actions={formBuilderActions}>
-			<Box h="full" bg="bg.default">
+		<Box h="full" bg="bg.default">
 				<Layout
 					resizable
 					size="full"
@@ -797,8 +722,15 @@ export function FormBuilder() {
 							onTitleChange={setFormTitle}
 							onUndo={undo}
 							onRedo={redo}
+							isActive={isActive}
 							onSave={handleSave}
-							onOptimize={handleOptimize}
+							onToggleActive={() => {
+							setIsActive((v) => {
+								toaster.create(v ? "Template set to Inactive" : "Template set to Active", { intent: v ? "information" : "success", duration: 4000 });
+								return !v;
+							});
+						}}
+							onEditDetails={() => setIsEditDetailsOpen(true)}
 							conflictCount={conflicts.length}
 							onViewIssues={handleOpenIssues}
 							onShowPreview={() => setIsPreviewOpen(true)}
@@ -806,15 +738,7 @@ export function FormBuilder() {
 						/>
 					}
 					sidebar={isLibraryOpen ? (
-						<FormBuilderSidebar
-							onDragStart={onDragStart}
-							onOpenOpal={() => {
-								opalPanelControls?.openPanel();
-								opalPanelControls?.addMessage({ role: "user", content: "Build a form" });
-								opalPanelControls?.addMessage({ role: "assistant", content: "Sure! A few more details will help me build your form." });
-								opalPanelControls?.addMessage({ role: "assistant", content: "", messageType: "form-build-questions", metadata: { blockType: "form-build-questions" } });
-							}}
-						/>
+						<FormBuilderSidebar onDragStart={onDragStart} />
 					) : null}
 					detailsPanel={detailsPanel}
 				>
@@ -857,6 +781,14 @@ export function FormBuilder() {
 					onCancel={() => router.push("/cmp/settings/templates")}
 				/>
 
+				<CreateTemplateModal
+					open={isEditDetailsOpen}
+					title="Template Details"
+					initialValues={{ templateName: formTitle, description: formDescription, applicableTo: formApplicableTo }}
+					onSave={handleEditDetailsSave}
+					onCancel={() => setIsEditDetailsOpen(false)}
+				/>
+
 				{validationWarnings && (
 					<ValidationDialog
 						warnings={validationWarnings}
@@ -864,7 +796,6 @@ export function FormBuilder() {
 						onCancel={() => setValidationWarnings(null)}
 					/>
 				)}
-			</Box>
-		</FormBuilderActionsProvider>
+		</Box>
 	);
 }

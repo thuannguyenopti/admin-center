@@ -9,7 +9,6 @@ import {
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { IconX, IconAlertTriangle } from "@tabler/icons-react";
-import Image from "next/image";
 import type { FormConflict } from "../../utils/detectFormConflicts";
 
 const SEVERITY_DOT: Record<string, string> = {
@@ -24,7 +23,6 @@ export function ConflictsPanel({
 	onHighlightConflict,
 	onHighlightAll,
 	onClearHighlight,
-	onSuggestFixes,
 	onClose,
 }: {
 	conflicts: FormConflict[];
@@ -33,7 +31,6 @@ export function ConflictsPanel({
 	onHighlightConflict: (conflict: FormConflict) => void;
 	onHighlightAll: () => void;
 	onClearHighlight: () => void;
-	onSuggestFixes: () => void;
 	onClose: () => void;
 }) {
 	const handleCardClick = (conflict: FormConflict) => {
@@ -115,17 +112,6 @@ export function ConflictsPanel({
 					})}
 
 					{/* Divider */}
-					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px -16px 0" }} />
-
-					{/* Suggest fixes */}
-					<Button
-						appearance="default-opal"
-						onClick={onSuggestFixes}
-						icon={<Image src="/opal-orb.png" alt="" width={16} height={16} />}
-						style={{ width: "100%", justifyContent: "center" }}
-					>
-						Suggest fixes
-					</Button>
 				</Box>
 			</DetailsPanelBody>
 		</DetailsPanel>

@@ -100,15 +100,6 @@ export type FormSubmission = {
 	campaignId?: string;
 };
 
-// ─── Opal AI foundation ───────────────────────────────────────────────────────
-
-export type OpalSuggestion = {
-	type: "suggest_rule" | "detect_conflict" | "auto_filter";
-	nodeId?: string;
-	message: string;
-	action?: Partial<ConditionLogic>;
-};
-
 // ─── History snapshot for undo/redo ──────────────────────────────────────────
 
 import type { Node, Edge } from "@xyflow/react";

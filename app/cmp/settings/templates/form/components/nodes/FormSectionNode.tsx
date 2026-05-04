@@ -65,11 +65,9 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						/>
 					) : (
 						<NodeAddMenu
-							suggestedFields={d.menuSuggestedFields ?? []}
 							onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
 							onAddSection={() => { d.onAddNodeBelow?.("section"); setIsMenuOpen(false); }}
 							onOpenFieldPicker={() => setShowFields(true)}
-							onAddSuggestedField={(id) => { d.onAddNodeBelow?.("field", id); setIsMenuOpen(false); }}
 							onClose={() => setIsMenuOpen(false)}
 						/>
 					))}

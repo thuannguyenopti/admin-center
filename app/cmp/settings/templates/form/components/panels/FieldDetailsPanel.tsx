@@ -1171,10 +1171,10 @@ export function FieldDetailsPanel({
 										onClick={() => onAddSuggestedField(field.id)}
 										style={{
 											padding: "6px 12px",
-											background: "var(--opal-bg-suggest, var(--ax-colors-bg-secondary))",
-											border: "1px solid var(--opal-border-secondary, var(--ax-colors-border-default))",
+											background: "var(--ax-colors-bg-secondary)",
+											border: "1px solid var(--ax-colors-border-default)",
 											borderRadius: "6px",
-											color: "var(--opal-text-primary, var(--ax-colors-fg-default))",
+											color: "var(--ax-colors-fg-default)",
 											fontSize: "13px",
 											cursor: "pointer",
 											display: "flex",
@@ -1183,12 +1183,12 @@ export function FieldDetailsPanel({
 											transition: "background 0.15s, border-color 0.15s",
 										}}
 										onMouseEnter={(e) => {
-											e.currentTarget.style.background = "var(--opal-bg-suggest-hover, var(--ax-colors-bg-accent-subtle))";
-											e.currentTarget.style.borderColor = "var(--opal-border-primary, var(--ax-colors-border-accent))";
+											e.currentTarget.style.background = "var(--ax-colors-bg-accent-subtle)";
+											e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)";
 										}}
 										onMouseLeave={(e) => {
-											e.currentTarget.style.background = "var(--opal-bg-suggest, var(--ax-colors-bg-secondary))";
-											e.currentTarget.style.borderColor = "var(--opal-border-secondary, var(--ax-colors-border-default))";
+											e.currentTarget.style.background = "var(--ax-colors-bg-secondary)";
+											e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
 										}}
 									>
 										{field.icon && <span style={{ display: "flex", alignItems: "center", opacity: 0.6 }}>{field.icon}</span>}
