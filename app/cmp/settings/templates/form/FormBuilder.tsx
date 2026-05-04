@@ -726,7 +726,7 @@ export function FormBuilder() {
 							onSave={handleSave}
 							onToggleActive={() => {
 							setIsActive((v) => {
-								toaster.create(v ? "Template set to Inactive" : "Template set to Active", { intent: v ? "information" : "success", duration: 4000 });
+								toaster.create(v ? "Template set to Inactive" : "Template set to Active", { intent: v ? "information" : "success" });
 								return !v;
 							});
 						}}
