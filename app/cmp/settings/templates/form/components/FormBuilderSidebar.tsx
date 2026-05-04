@@ -162,7 +162,7 @@ export function FormBuilderSidebar({
 				</Box>
 
 				{/* Standard fields */}
-				<Box borderT="1" borderColor="border.tertiary" />
+
 				<Disclosure defaultOpen>
 					<Box
 						display="flex"
@@ -186,7 +186,7 @@ export function FormBuilderSidebar({
 				</Disclosure>
 
 				{/* Custom fields */}
-				<Box borderT="1" borderColor="border.tertiary" />
+
 				<Disclosure defaultOpen>
 					<Box
 						display="flex"
