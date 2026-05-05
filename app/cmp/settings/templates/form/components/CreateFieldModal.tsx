@@ -35,6 +35,9 @@ import {
 	IconLetterT,
 	IconAlignLeft,
 	IconVideo,
+	IconEyeOff,
+	IconTrash,
+	IconPlus,
 } from "@tabler/icons-react";
 import type { FormFieldDef } from "../types";
 
@@ -86,6 +89,8 @@ interface CreateFieldModalProps {
 	onCancel: () => void;
 }
 
+type DropdownOption = { id: string; value: string; hidden: boolean };
+
 export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalProps) {
 	const [fieldType, setFieldType] = useState("");
 	const [fieldName, setFieldName] = useState("");
@@ -93,8 +98,21 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 	const [isActive, setIsActive] = useState(true);
 	const [isReadOnly, setIsReadOnly] = useState(false);
 	const [isMandatory, setIsMandatory] = useState(false);
+	const [isMultiSelect, setIsMultiSelect] = useState(false);
+	const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>([
+		{ id: "opt-1", value: "", hidden: false },
+		{ id: "opt-2", value: "", hidden: false },
+	]);
 
+	const isDropdown = fieldType === "dropdown";
+	const isRadioButton = fieldType === "radio-button";
+	const isOptionBased = isDropdown || isRadioButton;
 	const isValid = fieldType.length > 0 && fieldName.trim().length > 0;
+
+	const OPTION_PLACEHOLDERS: Record<string, string> = {
+		"dropdown":     "Dropdown field name",
+		"radio-button": "Radio Button field name",
+	};
 
 	const reset = () => {
 		setFieldType("");
@@ -103,10 +121,20 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 		setIsActive(true);
 		setIsReadOnly(false);
 		setIsMandatory(false);
+		setIsMultiSelect(false);
+		setDropdownOptions([
+			{ id: "opt-1", value: "", hidden: false },
+			{ id: "opt-2", value: "", hidden: false },
+		]);
 	};
 
 	const handleSave = () => {
 		if (!isValid) return;
+		const options = isOptionBased
+			? dropdownOptions
+				.filter((o) => o.value.trim() !== "")
+				.map((o) => ({ label: o.value.trim(), value: o.value.trim().toLowerCase().replace(/\s+/g, "_") }))
+			: undefined;
 		onSave({
 			id: `custom-${Date.now()}`,
 			name: fieldName.trim(),
@@ -115,7 +143,9 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 			icon: TYPE_ICONS[fieldType] ?? <IconLetterT size={16} />,
 			description: helperText.trim() || "",
 			required: isMandatory,
-		});
+			...(options ? { options } : {}),
+			...(isDropdown ? { isMultiSelect } : {}),
+		} as any);
 		reset();
 	};
 
@@ -136,35 +166,114 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 							<Select
 								options={FIELD_TYPES}
 								value={fieldType}
-								onValueChange={setFieldType}
+								onValueChange={(v) => { setFieldType(v); setHelperText(""); }}
 							>
 								<SelectTrigger placeholder="Select a type" />
 								<SelectContent />
 							</Select>
 						</Field>
 
-						{/* Field name */}
-						<Field label="Field name" required>
-							<Input
-								value={fieldName}
-								onValueChange={setFieldName}
-								placeholder="Enter field name"
-							/>
-						</Field>
+						{isOptionBased ? (
+							<>
+								{/* Single/Multi select toggle — dropdown only */}
+								{isDropdown && (
+									<Box display="flex" alignItems="center" gap="8">
+										<Text fontSize="sm" color={!isMultiSelect ? "fg.default" : "fg.tertiary"}>Single-Select</Text>
+										<Switch checked={isMultiSelect} onCheckedChange={setIsMultiSelect} />
+										<Text fontSize="sm" color={isMultiSelect ? "fg.default" : "fg.tertiary"}>Multi-Select</Text>
+									</Box>
+								)}
 
-						{/* Helper text */}
-						<Box display="flex" flexDirection="column" gap="4">
-							<Field label="Helper text">
-								<Textarea
-									value={helperText}
-									onValueChange={(v) => setHelperText(v.slice(0, 1000))}
-									placeholder="Optional helper text shown below the field"
-									rows={3}
-									resize="none"
-								/>
-							</Field>
-							<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
-						</Box>
+								{/* Field name */}
+								<Field label="Field name" required>
+									<Input
+										value={fieldName}
+										onValueChange={setFieldName}
+										placeholder={OPTION_PLACEHOLDERS[fieldType] ?? "Enter field name"}
+									/>
+								</Field>
+
+								{/* Helper text */}
+								<Box display="flex" flexDirection="column" gap="4">
+									<Field label="Helper text">
+										<Textarea
+											value={helperText}
+											onValueChange={(v) => setHelperText(v.slice(0, 1000))}
+											placeholder="Optional helper text shown below the field"
+											rows={3}
+											resize="none"
+										/>
+									</Field>
+									<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+								</Box>
+
+								{/* Options list */}
+								<Box display="flex" flexDirection="column" gap="8">
+									<Box display="flex" flexDirection="column" gap="4">
+										{dropdownOptions.map((opt) => (
+											<Box key={opt.id} display="flex" alignItems="center" gap="8">
+												<Box flex="1">
+													<Input
+														value={opt.value}
+														onValueChange={(v) => setDropdownOptions((prev) => prev.map((o) => o.id === opt.id ? { ...o, value: v } : o))}
+														placeholder="Enter an option"
+													/>
+												</Box>
+												<button
+													type="button"
+													onClick={() => setDropdownOptions((prev) => prev.map((o) => o.id === opt.id ? { ...o, hidden: !o.hidden } : o))}
+													style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", color: opt.hidden ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)" }}
+													aria-label={opt.hidden ? "Show option" : "Hide option"}
+												>
+													<IconEyeOff size={16} />
+												</button>
+												<button
+													type="button"
+													onClick={() => setDropdownOptions((prev) => prev.filter((o) => o.id !== opt.id))}
+													style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", color: "var(--ax-colors-fg-tertiary)" }}
+													aria-label="Delete option"
+												>
+													<IconTrash size={16} />
+												</button>
+											</Box>
+										))}
+									</Box>
+									<button
+										type="button"
+										onClick={() => setDropdownOptions((prev) => [...prev, { id: `opt-${Date.now()}`, value: "", hidden: false }])}
+										style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px", alignSelf: "flex-start" }}
+									>
+										<IconPlus size={14} color="var(--ax-colors-fg-accent)" />
+										<Text fontSize="sm" color="fg.accent">Add option</Text>
+									</button>
+								</Box>
+							</>
+						) : (
+							<>
+								{/* Field name */}
+								<Field label="Field name" required>
+									<Input
+										value={fieldName}
+										onValueChange={setFieldName}
+										placeholder="Enter field name"
+									/>
+								</Field>
+
+								{/* Helper text */}
+								<Box display="flex" flexDirection="column" gap="4">
+									<Field label="Helper text">
+										<Textarea
+											value={helperText}
+											onValueChange={(v) => setHelperText(v.slice(0, 1000))}
+											placeholder="Optional helper text shown below the field"
+											rows={3}
+											resize="none"
+										/>
+									</Field>
+									<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+								</Box>
+							</>
+						)}
 
 						{/* Advanced settings */}
 						<Disclosure>

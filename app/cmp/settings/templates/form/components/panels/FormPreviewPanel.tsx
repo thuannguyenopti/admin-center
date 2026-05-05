@@ -11,9 +11,9 @@ import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { IconX } from "@tabler/icons-react";
 import type { Node } from "@xyflow/react";
-import type { ConditionClause, ActionRow } from "../../types";
+import type { ConditionClause, ActionRow, FormFieldDef } from "../../types";
 import type { NodeConditionLogic } from "./FieldDetailsPanel";
-import { WORK_REQUEST_FIELDS } from "../../data";
+import { STANDARD_FIELDS } from "../../data";
 
 // ─── Logic evaluation ─────────────────────────────────────────────────────────
 
@@ -110,17 +110,19 @@ const input: React.CSSProperties = {
 
 function FieldRenderer({
 	node,
+	allFields,
 	value,
 	onChange,
 }: {
 	node: Node;
+	allFields: FormFieldDef[];
 	value: string;
 	onChange: (v: string) => void;
 }) {
 	const d = node.data as any;
-	const fieldDef = WORK_REQUEST_FIELDS.find((f) => f.id === d.fieldDefId);
+	const fieldDef = allFields.find((f) => f.id === d.fieldDefId);
 	const type = d.typeLabel ?? fieldDef?.typeLabel ?? "";
-	const options = fieldDef?.options ?? [];
+	const options: { value: string; label: string }[] = fieldDef?.options ?? [];
 	const placeholder = fieldDef?.placeholder ?? "";
 	const description = fieldDef?.description;
 
@@ -239,11 +241,14 @@ export function FormPreviewPanel({
 	formTitle,
 	nodes,
 	onClose,
+	customFields = [],
 }: {
 	formTitle: string;
 	nodes: Node[];
 	onClose: () => void;
+	customFields?: FormFieldDef[];
 }) {
+	const allFields = [...STANDARD_FIELDS, ...customFields];
 	const [values, setValues] = useState<Record<string, string>>({});
 
 	const hidden = useMemo(() => computeHidden(nodes, values), [nodes, values]);
@@ -314,6 +319,7 @@ export function FormPreviewPanel({
 												<FieldRenderer
 													key={child.id}
 													node={child}
+													allFields={allFields}
 													value={values[child.id] ?? ""}
 													onChange={(v) => set(child.id, v)}
 												/>
@@ -330,6 +336,7 @@ export function FormPreviewPanel({
 								<FieldRenderer
 									key={node.id}
 									node={node}
+									allFields={allFields}
 									value={values[node.id] ?? ""}
 									onChange={(v) => set(node.id, v)}
 								/>

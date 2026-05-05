@@ -12,6 +12,7 @@ export type FormFieldDef = {
 	required: boolean;
 	placeholder?: string;
 	options?: FieldOption[];
+	isMultiSelect?: boolean;
 };
 
 // ─── Inline logic rule (per-node) ────────────────────────────────────────────

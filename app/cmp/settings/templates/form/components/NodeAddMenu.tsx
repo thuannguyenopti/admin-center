@@ -77,7 +77,7 @@ export function NodeAddMenu({
 	onOpenFieldPicker,
 }: NodeAddMenuProps) {
 	return (
-		<div className="nodrag nopan" style={menuCard} onClick={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>
+		<div className="nodrag nopan nowheel" style={menuCard} onClick={(e) => e.stopPropagation()}>
 			{/* Type buttons */}
 			<div style={{ display: "flex", gap: 6 }}>
 				<TypeButton icon={<IconLetterT size={14} />} label="Text" onClick={onAddText} />

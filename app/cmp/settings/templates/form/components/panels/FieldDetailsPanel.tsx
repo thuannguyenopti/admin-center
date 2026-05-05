@@ -10,7 +10,7 @@ import {
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { IconX, IconPlus, IconTrash } from "@tabler/icons-react";
-import { WORK_REQUEST_FIELDS } from "../../data";
+import { STANDARD_FIELDS } from "../../data";
 import type { ConditionClause, ActionRow, ElseIfBlock, FieldOption } from "../../types";
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
@@ -148,16 +148,18 @@ function ClauseRow({
 	clause,
 	isFirst,
 	fieldOptions,
+	allFields,
 	onChange,
 	onRemove,
 }: {
 	clause: ConditionClause;
 	isFirst: boolean;
 	fieldOptions: FieldOption[];
+	allFields: import("../../types").FormFieldDef[];
 	onChange: (patch: Partial<ConditionClause>) => void;
 	onRemove: () => void;
 }) {
-	const selectedField = WORK_REQUEST_FIELDS.find((f) => f.id === clause.fieldId);
+	const selectedField = allFields.find((f) => f.id === clause.fieldId);
 	const dynamicOptions = selectedField?.options ?? (clause.fieldId ? [] : fieldOptions);
 	const op = OPERATORS.find((o) => o.value === clause.operator);
 
@@ -215,7 +217,7 @@ function ClauseRow({
 								style={{ ...sx, flex: 1, minWidth: 0 }}
 							>
 								<option value="">Select field…</option>
-								{WORK_REQUEST_FIELDS.map((f) => (
+								{allFields.map((f) => (
 									<option key={f.id} value={f.id}>{f.name}</option>
 								))}
 							</select>
@@ -353,10 +355,12 @@ function ActionRowComp({
 function ClauseGroup({
 	clauses,
 	fieldOptions,
+	allFields,
 	onChange,
 }: {
 	clauses: ConditionClause[];
 	fieldOptions: FieldOption[];
+	allFields: import("../../types").FormFieldDef[];
 	onChange: (clauses: ConditionClause[]) => void;
 }) {
 	const update = (id: string, patch: Partial<ConditionClause>) =>
@@ -373,6 +377,7 @@ function ClauseGroup({
 					clause={clause}
 					isFirst={idx === 0}
 					fieldOptions={fieldOptions}
+					allFields={allFields}
 					onChange={(patch) => update(clause.id, patch)}
 					onRemove={() => remove(clause.id)}
 				/>
@@ -429,11 +434,13 @@ function ActionGroup({
 function SingleRuleSet({
 	logic,
 	fieldOptions,
+	allFields,
 	connectedTargetNodes,
 	onChange,
 }: {
 	logic: NodeConditionLogic;
 	fieldOptions: FieldOption[];
+	allFields: import("../../types").FormFieldDef[];
 	connectedTargetNodes: any[];
 	onChange: (logic: NodeConditionLogic) => void;
 }) {
@@ -467,6 +474,7 @@ function SingleRuleSet({
 				<ClauseGroup
 					clauses={logic.ifClauses}
 					fieldOptions={fieldOptions}
+					allFields={allFields}
 					onChange={(ifClauses) => patch({ ifClauses })}
 				/>
 			</Box>
@@ -509,6 +517,7 @@ function SingleRuleSet({
 					<ClauseGroup
 						clauses={ei.clauses}
 						fieldOptions={fieldOptions}
+						allFields={allFields}
 						onChange={(clauses) => updateElseIf(ei.id, { clauses })}
 					/>
 					<Box mt="8">
@@ -739,6 +748,7 @@ function RuleSetSummary({
 function LogicRulesManager({
 	initialRuleSets,
 	fieldOptions,
+	allFields,
 	connectedTargetNodes,
 	isEditMode,
 	onApply,
@@ -749,6 +759,7 @@ function LogicRulesManager({
 }: {
 	initialRuleSets: NodeConditionLogic[];
 	fieldOptions: FieldOption[];
+	allFields: import("../../types").FormFieldDef[];
 	connectedTargetNodes: any[];
 	isEditMode: boolean;
 	onApply: (ruleSets: NodeConditionLogic[]) => void;
@@ -853,6 +864,7 @@ function LogicRulesManager({
 						<SingleRuleSet
 							logic={ruleSet}
 							fieldOptions={fieldOptions}
+							allFields={allFields}
 							connectedTargetNodes={connectedTargetNodes}
 							onChange={(updated) => updateRuleSet(ruleSet.id, updated)}
 						/>
@@ -939,10 +951,23 @@ const inputStyle: React.CSSProperties = {
 	boxSizing: "border-box",
 };
 
-function FieldPreview({ fieldDef, label, required }: { fieldDef: any; label: string; required: boolean }) {
-	const type = fieldDef?.typeLabel ?? "";
+const uploadBox: React.CSSProperties = {
+	border: "1px dashed var(--ax-colors-border-default)",
+	borderRadius: "6px",
+	padding: "16px",
+	textAlign: "center",
+	color: "var(--ax-colors-fg-tertiary)",
+	fontSize: "13px",
+};
+
+function FieldPreview({ fieldDef, label, required, fallbackTypeLabel }: { fieldDef: any; label: string; required: boolean; fallbackTypeLabel?: string }) {
+	const type = fieldDef?.typeLabel ?? fallbackTypeLabel ?? "";
 	const options: { value: string; label: string }[] = fieldDef?.options ?? [];
 	const helperText = fieldDef?.description ?? "";
+	const isMultiSelect = fieldDef?.isMultiSelect ?? false;
+
+	const optionFallback = [{ value: "option", label: "Option" }];
+	const displayOptions = options.length > 0 ? options : optionFallback;
 
 	return (
 		<Box display="flex" flexDirection="column" gap="6">
@@ -954,68 +979,71 @@ function FieldPreview({ fieldDef, label, required }: { fieldDef: any; label: str
 				)}
 			</Text>
 
-			{/* Input control */}
+			{/* Text / URL / Number / Label */}
 			{(type === "Text" || type === "URL" || type === "Number") && (
-				<input
-					style={inputStyle}
-					type={type === "Number" ? "number" : type === "URL" ? "url" : "text"}
-					placeholder={fieldDef?.placeholder ?? ""}
-					readOnly
-				/>
+				<input style={inputStyle} type={type === "Number" ? "number" : type === "URL" ? "url" : "text"} placeholder={fieldDef?.placeholder ?? ""} readOnly />
+			)}
+			{type === "Label" && (
+				<Text fontSize="sm" color="fg.secondary" style={{ display: "block" }}>Label text</Text>
 			)}
 
-			{type === "Long Text" && (
-				<textarea
-					style={{ ...inputStyle, minHeight: "80px", resize: "none" }}
-					placeholder={fieldDef?.placeholder ?? ""}
-					readOnly
-				/>
+			{/* Long text / Text Area / Rich Text */}
+			{(type === "Long Text" || type === "Text Area" || type === "Rich Text") && (
+				<textarea style={{ ...inputStyle, minHeight: "80px", resize: "none" }} placeholder={fieldDef?.placeholder ?? ""} readOnly />
 			)}
 
+			{/* Dropdown */}
 			{type === "Dropdown" && (
-				<select style={inputStyle} disabled>
-					<option value="">{fieldDef?.placeholder ?? "Select an option"}</option>
-					{options.map((o) => (
-						<option key={o.value} value={o.value}>{o.label}</option>
-					))}
-				</select>
+				<>
+					{isMultiSelect && options.length > 0 && (
+						<Text fontSize="xs" color="fg.tertiary" style={{ display: "block" }}>Multi-select</Text>
+					)}
+					<select style={inputStyle} disabled>
+						<option value="">{fieldDef?.placeholder ?? "Select an option"}</option>
+						{options.map((o) => (
+							<option key={o.value} value={o.value}>{o.label}</option>
+						))}
+					</select>
+				</>
 			)}
 
+			{/* Checkbox */}
 			{type === "Checkbox" && (
 				<Box display="flex" flexDirection="column" gap="8">
-					{options.length > 0 ? options.map((o) => (
+					{displayOptions.map((o) => (
 						<label key={o.value} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default", color: "var(--ax-colors-fg-default)" }}>
 							<input type="checkbox" disabled style={{ width: "16px", height: "16px", flexShrink: 0 }} />
 							{o.label}
 						</label>
-					)) : (
-						<label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default", color: "var(--ax-colors-fg-default)" }}>
-							<input type="checkbox" disabled style={{ width: "16px", height: "16px", flexShrink: 0 }} />
-							Option
-						</label>
-					)}
+					))}
 				</Box>
 			)}
 
+			{/* Radio Button */}
+			{type === "Radio Button" && (
+				<Box display="flex" flexDirection="column" gap="8">
+					{displayOptions.map((o) => (
+						<label key={o.value} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default", color: "var(--ax-colors-fg-default)" }}>
+							<input type="radio" disabled style={{ width: "16px", height: "16px", flexShrink: 0 }} />
+							{o.label}
+						</label>
+					))}
+				</Box>
+			)}
+
+			{/* Date */}
 			{type === "Date" && (
 				<input style={inputStyle} type="date" readOnly />
 			)}
 
-			{type === "File Upload" && (
-				<Box
-					style={{
-						border: "1px dashed var(--ax-colors-border-default)",
-						borderRadius: "6px",
-						padding: "16px",
-						textAlign: "center",
-						color: "var(--ax-colors-fg-tertiary)",
-						fontSize: "13px",
-					}}
-				>
-					Click to upload or drag and drop
+			{/* File upload / Image / Video */}
+			{(type === "File Upload" || type === "Image" || type === "Video") && (
+				<Box style={uploadBox}>
+					{type === "Video" ? "Click to upload video" : type === "Image" ? "Click to upload image" : "Click to upload or drag and drop"}
 				</Box>
 			)}
 
+			{/* Toggle */}
 			{type === "Toggle" && (
 				<label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", cursor: "default" }}>
 					<input type="checkbox" disabled style={{ width: "16px", height: "16px" }} />
@@ -1042,8 +1070,7 @@ export function FieldDetailsPanel({
 	onApplyLogic,
 	onHighlightNodes,
 	onClearHighlight,
-	suggestedFields,
-	onAddSuggestedField,
+	customFields = [],
 }: {
 	node: any;
 	onClose: () => void;
@@ -1051,16 +1078,17 @@ export function FieldDetailsPanel({
 	onApplyLogic: (ruleSets: NodeConditionLogic[]) => void;
 	onHighlightNodes?: (targets: Array<{ nodeId: string; actionLabel: string }>) => void;
 	onClearHighlight?: () => void;
-	suggestedFields?: Array<{ id: string; name: string; icon?: React.ReactNode; typeLabel?: string }>;
-	onAddSuggestedField?: (fieldId: string) => void;
+	customFields?: import("../../types").FormFieldDef[];
 }) {
 	const [isLogicEditMode, setIsLogicEditMode] = useState(false);
 	const d = node.data as any;
 	const [isRequired, setIsRequired] = useState<boolean>(d.required ?? false);
-	const fieldDef = WORK_REQUEST_FIELDS.find((f) => f.id === d.fieldDefId);
+	const allFields = [...STANDARD_FIELDS, ...customFields];
+	const fieldDef = allFields.find((f) => f.id === d.fieldDefId);
 	const fieldOptions: FieldOption[] = fieldDef?.options ?? [];
 	const connectedTargetNodes = allCanvasNodes;
 	const initialRuleSets: NodeConditionLogic[] = d.ruleSets ?? [];
+	const OPTION_BASED_TYPES = ["Dropdown", "Checkbox", "Radio Button"];
 
 	return (
 		<DetailsPanel style={{ borderRadius: 0 }}>
@@ -1102,7 +1130,7 @@ export function FieldDetailsPanel({
 				<Box display="flex" flexDirection="column" gap="24" p="16">
 
 					{/* Field preview */}
-					<FieldPreview fieldDef={fieldDef} label={d.label} required={isRequired} />
+					<FieldPreview fieldDef={fieldDef} label={d.label} required={isRequired} fallbackTypeLabel={d.typeLabel} />
 
 					{/* Divider */}
 					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px" }} />
@@ -1117,8 +1145,8 @@ export function FieldDetailsPanel({
 						</Box>
 					)}
 
-					{/* Divider + Logic Rules — only for option-based fields */}
-					{(d.typeLabel === "Dropdown" || d.typeLabel === "Checkbox") && <>
+					{/* Divider + Logic Rules — for option-based fields */}
+					{OPTION_BASED_TYPES.includes(d.typeLabel) && <>
 					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px" }} />
 
 					{/* Logic Rules */}
@@ -1147,6 +1175,7 @@ export function FieldDetailsPanel({
 							key={node.id}
 							initialRuleSets={initialRuleSets}
 							fieldOptions={fieldOptions}
+							allFields={allFields}
 							connectedTargetNodes={connectedTargetNodes}
 							isEditMode={isLogicEditMode}
 							onApply={onApplyLogic}
@@ -1157,47 +1186,6 @@ export function FieldDetailsPanel({
 						/>
 					</Box>
 					</>}
-					{/* Suggested next fields */}
-					{suggestedFields && suggestedFields.length > 0 && onAddSuggestedField && (
-						<Box>
-							<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px 16px" }} />
-							<Text fontSize="xs" color="fg.tertiary" style={{ display: "block", marginBottom: "8px" }}>
-								Suggested next fields:
-							</Text>
-							<Box display="flex" flexDirection="row" flexWrap="wrap" gap="8">
-								{suggestedFields.map((field) => (
-									<button
-										key={field.id}
-										onClick={() => onAddSuggestedField(field.id)}
-										style={{
-											padding: "6px 12px",
-											background: "var(--ax-colors-bg-secondary)",
-											border: "1px solid var(--ax-colors-border-default)",
-											borderRadius: "6px",
-											color: "var(--ax-colors-fg-default)",
-											fontSize: "13px",
-											cursor: "pointer",
-											display: "flex",
-											alignItems: "center",
-											gap: "6px",
-											transition: "background 0.15s, border-color 0.15s",
-										}}
-										onMouseEnter={(e) => {
-											e.currentTarget.style.background = "var(--ax-colors-bg-accent-subtle)";
-											e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)";
-										}}
-										onMouseLeave={(e) => {
-											e.currentTarget.style.background = "var(--ax-colors-bg-secondary)";
-											e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
-										}}
-									>
-										{field.icon && <span style={{ display: "flex", alignItems: "center", opacity: 0.6 }}>{field.icon}</span>}
-										{field.name}
-									</button>
-								))}
-							</Box>
-						</Box>
-					)}
 				</Box>
 			</DetailsPanelBody>
 		</DetailsPanel>

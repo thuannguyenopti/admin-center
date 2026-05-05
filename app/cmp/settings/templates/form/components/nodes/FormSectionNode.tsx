@@ -62,6 +62,8 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						<FieldPickerInline
 							onBack={() => setShowFields(false)}
 							onSelect={(field) => { d.onAddNodeBelow?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
+							customFields={d.customFields}
+							onOpenCreateField={() => { d.onOpenCreateField?.(); setIsMenuOpen(false); setShowFields(false); }}
 						/>
 					) : (
 						<NodeAddMenu

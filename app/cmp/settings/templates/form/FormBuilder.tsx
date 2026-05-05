@@ -27,6 +27,7 @@ import { ConflictsPanel } from "./components/panels/ConflictsPanel";
 import { FormPreviewPanel } from "./components/panels/FormPreviewPanel";
 import { FormContentPanel } from "./components/panels/FormContentPanel";
 import { CreateTemplateModal } from "./components/CreateTemplateModal";
+import { CreateFieldModal } from "./components/CreateFieldModal";
 import type { FormConflict } from "./utils/detectFormConflicts";
 import { toaster } from "@optiaxiom/react";
 import { CONTENT_COMPONENTS, ALL_COMPONENTS, WORK_REQUEST_FIELDS } from "./data";
@@ -145,6 +146,8 @@ export function FormBuilder() {
 	const [formApplicableTo, setFormApplicableTo] = useState<string[]>([]);
 	const [isActive, setIsActive] = useState(false);
 	const [customFields, setCustomFields] = useState<FormFieldDef[]>([]);
+	const [isCanvasCreateFieldOpen, setIsCanvasCreateFieldOpen] = useState(false);
+	const [createFieldSourceNodeId, setCreateFieldSourceNodeId] = useState<string | null>(null);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(true);
 	const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
 	const [isLibraryOpen, setIsLibraryOpen] = useState(true);
@@ -296,19 +299,6 @@ export function FormBuilder() {
 
 	// ─── Suggested next fields ───────────────────────────────────────────────────
 
-	const fieldNodeIds = useMemo(
-		() => new Set(nodes.map((n) => (n.data as any).fieldDefId).filter(Boolean)),
-		[nodes],
-	);
-
-	const suggestedFields = useMemo(() => {
-		if (!selectedNode) return [];
-		if (nodes.filter((n) => n.type === "formField").length < 3) return [];
-		const hasOutgoingEdge = edges.some((e) => e.source === selectedNode.id);
-		if (hasOutgoingEdge) return [];
-		return WORK_REQUEST_FIELDS.filter((f) => !fieldNodeIds.has(f.id)).slice(0, 3);
-	}, [selectedNode, nodes, edges, fieldNodeIds]);
-
 	// ─── Inline add-below (+ button on nodes) ───────────────────────────────────
 
 	const handleAddNodeBelow = useCallback(
@@ -347,7 +337,7 @@ export function FormBuilder() {
 					data: { label: "New Section", onToggleCollapse: () => {}, onDuplicate: () => {} },
 				};
 			} else if (type === "field" && fieldDefId) {
-				const f = WORK_REQUEST_FIELDS.find((fld) => fld.id === fieldDefId);
+				const f = WORK_REQUEST_FIELDS.find((fld) => fld.id === fieldDefId) ?? customFields.find((fld) => fld.id === fieldDefId);
 				if (!f) return;
 				newNode = {
 					id: newId, type: "formField",
@@ -366,39 +356,49 @@ export function FormBuilder() {
 				markerEnd: { type: MarkerType.ArrowClosed },
 			} as any);
 		},
-		[nodes, addNodeWithEdge],
-	);
-
-	const handleAddSuggestedField = useCallback(
-		(fieldId: string) => {
-			if (!selectedNode) return;
-			const fieldDef = WORK_REQUEST_FIELDS.find((f) => f.id === fieldId);
-			if (!fieldDef) return;
-			const newNode = {
-				id: getNodeId(),
-				type: fieldDef.nodeType,
-				position: { x: selectedNode.position.x, y: selectedNode.position.y + 120 },
-				data: { label: fieldDef.name, typeLabel: fieldDef.typeLabel, icon: fieldDef.icon, required: fieldDef.required ?? false, fieldDefId: fieldDef.id },
-			};
-			addNode(newNode as any);
-		},
-		[selectedNode, addNode],
+		[nodes, customFields, addNodeWithEdge],
 	);
 
 	const handleCreateCustomField = useCallback(
-		(field: FormFieldDef) => {
+		(field: FormFieldDef, sourceNodeId?: string | null) => {
 			setCustomFields((prev) => [...prev, field]);
+			const newId = getNodeId();
+
+			if (sourceNodeId) {
+				const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+				if (sourceNode) {
+					const parentId = (sourceNode as any).parentId as string | undefined;
+					const inSection = !!parentId;
+					const GAP = inSection ? 12 : 80;
+					const offsetY = ((sourceNode as any).measured?.height ?? 60) + GAP;
+					addNodeWithEdge(
+						{
+							id: newId, type: "formField",
+							position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
+							...(inSection ? { parentId } : {}),
+							data: { label: field.name, typeLabel: field.typeLabel, icon: field.icon, required: field.required ?? false, fieldDefId: field.id },
+						} as any,
+						{
+							id: `e-custom-${sourceNodeId}-${newId}`,
+							source: sourceNodeId, target: newId,
+							type: "smoothstep",
+							markerEnd: { type: MarkerType.ArrowClosed },
+						} as any,
+					);
+					return;
+				}
+			}
+
 			const lastNode = [...nodes].sort((a, b) => b.position.y - a.position.y)[0];
 			const y = lastNode ? lastNode.position.y + ((lastNode as any).measured?.height ?? 80) + 80 : 100;
 			const x = lastNode ? lastNode.position.x : 240;
 			addNode({
-				id: getNodeId(),
-				type: "formField",
+				id: newId, type: "formField",
 				position: { x, y },
 				data: { label: field.name, typeLabel: field.typeLabel, icon: field.icon, required: field.required ?? false, fieldDefId: field.id },
 			} as any);
 		},
-		[nodes, addNode],
+		[nodes, addNode, addNodeWithEdge],
 	);
 
 	const handleModalSave = useCallback(
@@ -467,6 +467,11 @@ export function FormBuilder() {
 		const extra = { isHighlighted, isDimmed, isConflictHighlighted: isHighlighted && !!conflictHighlight };
 		const addCallbacks = {
 			onAddNodeBelow: (type: string, fieldDefId?: string) => handleAddNodeBelow(n.id, type as any, fieldDefId),
+			customFields,
+			onOpenCreateField: () => {
+				setCreateFieldSourceNodeId(n.id);
+				setIsCanvasCreateFieldOpen(true);
+			},
 		};
 
 		if (n.type !== "formSection") {
@@ -484,8 +489,8 @@ export function FormBuilder() {
 				onLabelChange: (label: string) => updateNodeData(n.id, { label }),
 			},
 		};
-	}), [nodes, conflictHighlight, highlightedSet, highlightedTargets, selectedNodeId,
-		handleAddNodeBelow, toggleSectionCollapse, duplicateSection, updateNodeData]);
+	}), [nodes, conflictHighlight, highlightedSet, highlightedTargets, selectedNodeId, customFields,
+		handleAddNodeBelow, toggleSectionCollapse, duplicateSection, updateNodeData, setIsCanvasCreateFieldOpen]);
 
 	const patchedEdges = useMemo(() => {
 		// Identify undefined edges: source has 2+ outgoing edges but this one has no label
@@ -662,6 +667,7 @@ export function FormBuilder() {
 				<FormPreviewPanel
 					formTitle={formTitle}
 					nodes={nodes}
+					customFields={customFields}
 					onClose={() => setIsPreviewOpen(false)}
 				/>
 			);
@@ -687,8 +693,7 @@ export function FormBuilder() {
 					onApplyLogic={(ruleSets) => handleApplyLogic(selectedNode.id, ruleSets)}
 					onHighlightNodes={(targets) => { setHighlightedTargets(targets); setConflictHighlight(null); }}
 					onClearHighlight={() => setHighlightedTargets([])}
-					suggestedFields={suggestedFields}
-					onAddSuggestedField={handleAddSuggestedField}
+					customFields={customFields}
 				/>
 			);
 		}
@@ -718,7 +723,7 @@ export function FormBuilder() {
 		}
 		return null;
 	}, [
-		isPreviewOpen, formTitle, selectedNode, nodes, handleApplyLogic, suggestedFields, handleAddSuggestedField,
+		isPreviewOpen, formTitle, selectedNode, nodes, handleApplyLogic, customFields,
 		handleContentNodeLabelChange, isConflictsPanelOpen, conflicts, activeConflictId, isAllConflictsHighlighted,
 	]);
 
@@ -809,6 +814,19 @@ export function FormBuilder() {
 					initialValues={{ templateName: formTitle, description: formDescription, applicableTo: formApplicableTo }}
 					onSave={handleEditDetailsSave}
 					onCancel={() => setIsEditDetailsOpen(false)}
+				/>
+
+				<CreateFieldModal
+					open={isCanvasCreateFieldOpen}
+					onSave={(field) => {
+						handleCreateCustomField(field, createFieldSourceNodeId);
+						setCreateFieldSourceNodeId(null);
+						setIsCanvasCreateFieldOpen(false);
+					}}
+					onCancel={() => {
+						setCreateFieldSourceNodeId(null);
+						setIsCanvasCreateFieldOpen(false);
+					}}
 				/>
 
 				{validationWarnings && (
