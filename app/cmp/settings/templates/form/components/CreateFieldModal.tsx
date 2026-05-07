@@ -173,6 +173,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 							</Select>
 						</Field>
 
+						{fieldType && (<>
 						{isOptionBased ? (
 							<>
 								{/* Single/Multi select toggle — dropdown only */}
@@ -306,6 +307,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 								</Box>
 							</DisclosureContent>
 						</Disclosure>
+						</>)}
 					</DialogBody>
 
 					<DialogFooter>

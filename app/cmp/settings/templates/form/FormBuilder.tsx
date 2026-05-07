@@ -667,6 +667,7 @@ export function FormBuilder() {
 				<FormPreviewPanel
 					formTitle={formTitle}
 					nodes={nodes}
+					edges={edges}
 					customFields={customFields}
 					onClose={() => setIsPreviewOpen(false)}
 				/>

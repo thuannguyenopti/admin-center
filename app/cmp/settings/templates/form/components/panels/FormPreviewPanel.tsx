@@ -10,10 +10,11 @@ import {
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import { IconX } from "@tabler/icons-react";
-import type { Node } from "@xyflow/react";
+import type { Node, Edge } from "@xyflow/react";
 import type { ConditionClause, ActionRow, FormFieldDef } from "../../types";
 import type { NodeConditionLogic } from "./FieldDetailsPanel";
 import { STANDARD_FIELDS } from "../../data";
+import { detectFormConflicts } from "../../utils/detectFormConflicts";
 
 // ─── Logic evaluation ─────────────────────────────────────────────────────────
 
@@ -240,21 +241,75 @@ function FieldRenderer({
 export function FormPreviewPanel({
 	formTitle,
 	nodes,
+	edges,
 	onClose,
 	customFields = [],
 }: {
 	formTitle: string;
 	nodes: Node[];
+	edges: Edge[];
 	onClose: () => void;
 	customFields?: FormFieldDef[];
 }) {
 	const allFields = [...STANDARD_FIELDS, ...customFields];
 	const [values, setValues] = useState<Record<string, string>>({});
 
+	const startNode = useMemo(() => nodes.find((n) => (n.data as any).isStartingNode), [nodes]);
+	const previewTitle = (startNode?.data as any)?.label ?? formTitle;
+
 	const hidden = useMemo(() => computeHidden(nodes, values), [nodes, values]);
+
+	// Nodes/sections with conflicts (orphan, circular, missing logic) or unreachable
+	// from the starting node are excluded from the preview.
+	const excludedNodeIds = useMemo(() => {
+		const excluded = new Set<string>();
+
+		// Reachability from the start node via edges
+		const startNode = nodes.find((n) => (n.data as any).isStartingNode);
+		if (startNode) {
+			const reachable = new Set<string>([startNode.id]);
+			const queue = [startNode.id];
+			while (queue.length > 0) {
+				const current = queue.shift()!;
+				for (const edge of edges) {
+					if (edge.source === current && !reachable.has(edge.target)) {
+						reachable.add(edge.target);
+						queue.push(edge.target);
+					}
+				}
+			}
+			// Section children inherit reachability from their section parent
+			for (const node of nodes) {
+				const parentId = (node as any).parentId as string | undefined;
+				if (parentId && reachable.has(parentId)) reachable.add(node.id);
+			}
+			for (const node of nodes) {
+				if (!reachable.has(node.id)) excluded.add(node.id);
+			}
+		}
+
+		// Conflict-flagged nodes (orphan, circular, missing logic)
+		const conflicts = detectFormConflicts(nodes, edges);
+		for (const c of conflicts) {
+			if (
+				c.type === "orphan_node" ||
+				c.type === "circular_edge" ||
+				c.type === "undefined_edge"
+			) {
+				for (const id of c.affectedNodeIds) excluded.add(id);
+			}
+		}
+
+		return excluded;
+	}, [nodes, edges]);
 
 	const set = (nodeId: string, val: string) =>
 		setValues((prev) => ({ ...prev, [nodeId]: val }));
+
+	const isStarting = (n: Node) =>
+		(n.data as any).isStartingNode === true ||
+		(n.data as any).typeLabel === "Form Title" ||
+		n.id === "form-title-start";
 
 	// Build render list: top-level nodes sorted by y, sections interleaved with children
 	const renderList = useMemo(() => {
@@ -262,14 +317,20 @@ export function FormPreviewPanel({
 			nodes.filter((n) => n.type === "formSection").map((n) => n.id),
 		);
 		return nodes
+			.filter((n) => !isStarting(n))
+			.filter((n) => !excludedNodeIds.has(n.id))
 			.filter((n) => !n.parentId || !sectionIds.has(n.parentId))
 			.map((node) => ({
 				node,
 				children: node.type === "formSection"
-					? nodes.filter((c) => c.parentId === node.id)
+					? nodes.filter((c) =>
+						c.parentId === node.id &&
+						!excludedNodeIds.has(c.id) &&
+						!isStarting(c),
+					)
 					: [],
 			}));
-	}, [nodes]);
+	}, [nodes, excludedNodeIds]);
 
 	return (
 		<DetailsPanel style={{ borderRadius: 0 }}>
@@ -287,13 +348,14 @@ export function FormPreviewPanel({
 
 			<DetailsPanelBody>
 				<Box p="24" display="flex" flexDirection="column" gap="24">
-					{/* Form title */}
+					{/* Form title — sourced from the starting node label (editable via right panel) */}
 					<Text fontSize="xl" fontWeight="700" color="fg.default">
-						{formTitle}
+						{previewTitle}
 					</Text>
 
 					{renderList.map(({ node, children }) => {
 						if (hidden.has(node.id)) return null;
+						if ((node.data as any).isStartingNode) return null;
 
 						// Section
 						if (node.type === "formSection") {
