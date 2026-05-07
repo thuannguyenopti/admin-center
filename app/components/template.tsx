@@ -229,6 +229,11 @@ const shouldHidePageHeader = routeHighlight?.hidePageHeader || hidePageHeader;
 					deleteChat={deleteChat}
 					selectChat={selectChat}
 				/>
+				<CodePanel
+					isOpen={isCodePanelOpen}
+					onClose={() => setIsCodePanelOpen(false)}
+					target={codePanelTarget}
+				/>
 			</Box>
 		);
 	}

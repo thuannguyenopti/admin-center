@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Box, Menu, MenuTrigger, MenuContent, Switch } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
@@ -10,7 +11,9 @@ import {
 	IconArrowBackUp,
 	IconArrowForwardUp,
 	IconAlertTriangle,
+	IconCode,
 } from "@tabler/icons-react";
+import { useLayout } from "@/app/context/LayoutContext";
 
 interface FormBuilderTopNavProps {
 	formTitle: string;
@@ -50,6 +53,8 @@ export function FormBuilderTopNav({
 	onClose,
 }: FormBuilderTopNavProps) {
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
+	const pathname = usePathname();
+	const { codePanelControls } = useLayout();
 
 	return (
 		<Box
@@ -120,6 +125,14 @@ export function FormBuilderTopNav({
 					aria-label="Redo (⌘⇧Z)"
 					title="Redo (⌘⇧Z)"
 					disabled={!canRedo}
+				/>
+
+				<Button
+					appearance="subtle"
+					icon={<IconCode size={18} />}
+					onClick={() => codePanelControls?.openPanel(pathname)}
+					aria-label="Source code"
+					title="Source code"
 				/>
 
 				<Box style={{ width: 1, height: 24, background: "var(--ax-colors-border-tertiary)" }} />
