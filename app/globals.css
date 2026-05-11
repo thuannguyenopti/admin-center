@@ -1,10 +1,13 @@
 @import "./styles/opalStyles.css";
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
 @layer optiaxiom.base {
 	@tailwind base;
 	@tailwind components;
 	@tailwind utilities;
 }
+
+
 
 /* Light mode as default, but defer to OS preference */
 :root {
@@ -36,165 +39,6 @@ body.dark {
 html:not([data-theme="dark"]):not(.dark) body,
 body:not(.dark) {
 	color-scheme: light;
-}
-
-/* ============================================
-   Axiom Design Token Overrides
-   ============================================
-   Override Axiom's CSS variables here.
-   These values are extracted from @optiaxiom/globals tokens.
-   Dark mode values use [data-theme="dark"] selector.
-   
-   Palette reference:
-   neutral.00: #FFFFFF, neutral.50: #F9FAFC, neutral.75: #F5F6FA
-   neutral.100: #E9EDF5, neutral.150: #DADFEB, neutral.200: #CACFDC
-   neutral.300: #B8BECB, neutral.500: #838DA4, neutral.600: #66708C
-   neutral.700: #4F576E, neutral.800: #2E3442, neutral.900: #1C212B
-   neutral.1000: #1C2029, neutral.1100: #171A23
-   brand.50: #F0F3FF, brand.200: #B3C3FF, brand.300: #6A8FFC
-   brand.400: #2E66F7, brand.500: #0037FF, brand.600: #002CCC
-   brand.700: #002894, brand.800: #001666, brand.900: #000B33
-*/
-
-/* Dark Mode Overrides - aligned with Axiom's default dark theme */
-[data-theme="dark"],
-html.dark,
-.dark {
-	/* Background colors */
-	/*--ax-colors-bg-default: #1c2029; /* neutral.1000 */
-	/*--ax-colors-bg-page: #171a23; /* neutral.1100 */
-	--ax-colors-bg-secondary: #232834; /* neutral.900 */
-	/*--ax-colors-bg-secondary-hovered: rgba(249, 250, 252, 0.12); /* neutral.50/12 */
-	--ax-colors-bg-tertiary: #353e4d; /* neutral.750 */
-	--ax-colors-bg-tertiary-hovered: #4f576e; /* neutral.700 */
-	/*--ax-colors-bg-default-hovered: rgba(249, 250, 252, 0.06); /* neutral.50/6 */
-	/*--ax-colors-bg-default-pressed: rgba(249, 250, 252, 0.12); /* neutral.50/12 */
-	/*--ax-colors-bg-default-inverse: #e9edf5; /* neutral.100 */
-	/*--ax-colors-bg-default-inverse-hovered: #cacfdc; /* neutral.200 */
-	/*--ax-colors-bg-default-inverse-pressed: #b8becb; /* neutral.300 */
-	/*--ax-colors-bg-overlay: rgba(249, 250, 252, 0.32); /* neutral.50/32 */
-
-	/* Accent backgrounds (brand colors) */
-	/*--ax-colors-bg-accent: #2e66f7; /* brand.400 */
-	--ax-colors-bg-accent-hovered: #4b7bf6; /* brand.dark.300 */
-	--ax-colors-bg-accent-subtle: #21283f; /* brand.dark.900 */
-	/*--ax-colors-bg-accent-light: #001666; /* brand.800 */
-	--ax-colors-bg-overlay: #00000077;
-
-	/* Status backgrounds - Error (red)
-	   Dark mode needs a new "red.dark" stack for muted/tinted backgrounds:
-	   red.dark.800: #3d2222, red.dark.900: #2d1f1f */
-	/*--ax-colors-bg-error: #cc1616; /* red.500 */
-	/*--ax-colors-bg-error-hovered: #f64f4f; /* red.400 */
-	/*--ax-colors-bg-error-pressed: #b21313; /* red.600 */
-	--ax-colors-bg-error-subtle: #3d2222; /* red.dark.800 */
-	--ax-colors-bg-error-subtlest: #2d1f1f; /* red.dark.900 */
-	/*--ax-colors-bg-error-light: #911d1d; /* red.700 */
-
-	/* Status backgrounds - Success (green)
-	   Dark mode needs a new "green.dark" stack:
-	   green.dark.900: #1e3329 */
-	/*--ax-colors-bg-success: #038047; /* green.600 */
-	/*--ax-colors-bg-success-hovered: #5ac58a; /* green.400 */
-	--ax-colors-bg-success-subtle: #1e3329; /* green.dark.900 */
-	/*--ax-colors-bg-success-light: #17492b; /* green.800 */
-
-	/* Status backgrounds - Warning (yellow)
-	   Dark mode needs a new "yellow.dark" stack:
-	   yellow.dark.900: #3a2d1a */
-	/*--ax-colors-bg-warning: #f79008; /* yellow.500 */
-	/*--ax-colors-bg-warning-hovered: #fdb022; /* yellow.400 */
-	--ax-colors-bg-warning-subtle: #3a2d1a; /* yellow.dark.900 */
-	/*--ax-colors-bg-warning-light: #7a2e0d; /* yellow.800 */
-
-	/* Status backgrounds - Information (blue)
-	   Dark mode needs a new "blue.dark" stack:
-	   blue.dark.900: #1e2840 */
-	/*--ax-colors-bg-information: #8fabff; /* blue.pale.200 */
-	--ax-colors-bg-information-subtle: #1e2840; /* blue.dark.900 */
-	/*--ax-colors-bg-information-light: #09306d; /* blue.800 */
-
-	/* Avatar backgrounds */
-	/*--ax-colors-bg-avatar-neutral: #2e3442; /* neutral.800 */
-	/*--ax-colors-bg-avatar-purple: #412470; /* purple.700 */
-
-	/* Spinner */
-	/*--ax-colors-bg-spinner-default: #f9fafc; /* neutral.50 */
-	/*--ax-colors-bg-spinner-inverse: #f9fafc; /* neutral.50 */
-
-	/* Foreground/text colors */
-	--ax-colors-fg-default: #d4d7e4; /* neutral.200 */
-	--ax-colors-fg-secondary: #b5bbd7; /* neutral.250 */
-	--ax-colors-fg-tertiary: #838da4; /* neutral.500 */
-	--ax-colors-fg-disabled: #8591ad; /* neutral.450 */
-	/*--ax-colors-fg-default-inverse: #2e3442; /* neutral.800 */
-	/*--ax-colors-fg-white: #ffffff; /* neutral.00 */
-
-	/* Foreground - Accent */
-	/*--ax-colors-fg-accent: #6a8ffc; /* brand.300 */
-	--ax-colors-fg-accent-hovered: #7998f6; /* brand.350 */
-	--ax-colors-fg-accent-strong: #87a2f1; /* brand.250 */
-
-	/* Foreground - Error - AAA contrast: #fca5a5 on #3d2222 = 7.2:1
-	   Dark mode needs a new "red.pale" stack for high-contrast text:
-	   red.pale.200: #fca5a5 (similar to Tailwind red-300) */
-	--ax-colors-fg-error: #fca5a5; /* red.pale.200 */
-	--ax-colors-fg-error-hovered: #fca5a5; /* red.pale.200 */
-	--ax-colors-fg-error-light: #fca5a5; /* red.pale.200 */
-	--ax-colors-fg-error-strong: #fca5a5; /* red.pale.200 */
-
-	/* Foreground - Success - AAA contrast: #86efac on #1e3329 = 9.5:1
-	   Dark mode needs a new "green.pale" stack:
-	   green.pale.200: #86efac (similar to Tailwind green-300) */
-	--ax-colors-fg-success: #86efac; /* green.pale.200 */
-	--ax-colors-fg-success-hovered: #86efac; /* green.pale.200 */
-	--ax-colors-fg-success-light: #86efac; /* green.pale.200 */
-	--ax-colors-fg-success-strong: #86efac; /* green.pale.200 */
-
-	/* Foreground - Warning - AAA contrast: #fcd34d on #3a2d1a = 8.8:1
-	   Dark mode needs a new "yellow.pale" stack:
-	   yellow.pale.300: #fcd34d (similar to Tailwind yellow-300) */
-	--ax-colors-fg-warning: #fcd34d; /* yellow.pale.300 */
-	--ax-colors-fg-warning-hovered: #fcd34d; /* yellow.pale.300 */
-	--ax-colors-fg-warning-light: #fcd34d; /* yellow.pale.300 */
-	--ax-colors-fg-warning-strong: #fcd34d; /* yellow.pale.300 */
-	/*--ax-colors-fg-warning-inverse: #2e3442; /* neutral.800 */
-
-	/* Foreground - Information - AAA contrast: #93c5fd on #1e2840 = 7.4:1
-	   Dark mode needs a new "blue.pale" stack:
-	   blue.pale.200: #93c5fd (similar to Tailwind blue-300) */
-	--ax-colors-fg-information: #93c5fd; /* blue.pale.200 */
-	--ax-colors-fg-information-light: #93c5fd; /* blue.pale.200 */
-	--ax-colors-fg-information-strong: #93c5fd; /* blue.pale.200 */
-
-	/* Foreground - Links */
-	--ax-colors-fg-link-default: #87a2f1; /* brand.pale.200 */
-	--ax-colors-fg-link-default-hovered: #7998f6; /* brand.250 */
-	/*--ax-colors-fg-link-inverse: #2e3442; /* neutral.800 */
-	--ax-colors-fg-link-subtle: #dadfeb; /* neutral.175 */
-	/*--ax-colors-fg-link-visited: #693ab6; /* purple.500 */
-
-	/* Foreground - Avatar */
-	/*--ax-colors-fg-avatar-neutral: #e9edf5; /* neutral.100 */
-	/*--ax-colors-fg-avatar-purple: #e5dcf4; /* purple.100 */
-
-	/* Foreground - Spinner */
-	/*--ax-colors-fg-spinner-default: #cacfdc; /* neutral.200 */
-	/*--ax-colors-fg-spinner-inverse: #2e3442; /* neutral.800 */
-
-	/* Border colors */
-	--ax-colors-border-default: #353e4d; /* neutral.750 */
-	--ax-colors-border-secondary: #2c3240; /* neutral.850 */
-	--ax-colors-border-tertiary: #242935; /* neutral.950 */
-	/*--ax-colors-border-control: #4f576e; /* neutral.700 */
-	/*--ax-colors-border-control-hovered: #66708c; /* neutral.600 */
-	/*--ax-colors-border-disabled: #2e3442; /* neutral.800 */
-	/*--ax-colors-border-accent: #6a8ffc; /* brand.300 */
-	/*--ax-colors-border-focus: #6a8ffc; /* brand.300 */
-	/*--ax-colors-border-focus-error: #fc8b8b; /* red.300 */
-	--ax-colors-border-error: #ff8383; /* red.pale.300 */
-	/*--ax-colors-border-success: #03a65d; /* green.500 */
-	/*--ax-colors-border-warning: #f79008; /* yellow.500 */
 }
 
 body {
