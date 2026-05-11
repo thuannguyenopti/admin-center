@@ -13,7 +13,7 @@ import {
 } from "@xyflow/react";
 // @ts-ignore — CSS side-effect import, no type declarations needed
 import "@xyflow/react/dist/style.css";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { FormBuilderTopNav } from "./components/FormBuilderTopNav";
 import { FormBuilderSidebar } from "./components/FormBuilderSidebar";
@@ -39,7 +39,8 @@ const STARTING_NODE_ID = "form-title-start";
 import { useFormBuilderState, getNodeId } from "./hooks/useFormBuilderState";
 import { validateFormGraph } from "./utils/validateFormGraph";
 import { detectFormConflicts } from "./utils/detectFormConflicts";
-import type { ValidationWarning } from "./types";
+import usePersistentState from "@/app/usePersistentState";
+import type { ValidationWarning, FormTemplate } from "./types";
 
 // ─── Validation dialog ────────────────────────────────────────────────────────
 
@@ -135,6 +136,91 @@ function ValidationDialog({
 	);
 }
 
+function UnsavedChangesDialog({
+	onSave,
+	onDiscard,
+	onCancel,
+}: {
+	onSave: () => void;
+	onDiscard: () => void;
+	onCancel: () => void;
+}) {
+	return (
+		<div
+			style={{
+				position: "fixed",
+				inset: 0,
+				zIndex: 1000,
+				background: "rgba(0,0,0,0.4)",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+			}}
+		>
+			<Box
+				bg="bg.default"
+				rounded="md"
+				p="24"
+				style={{ width: 440, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}
+				display="flex"
+				flexDirection="column"
+				gap="16"
+			>
+				<Box fontSize="md" fontWeight="600" color="fg.default">
+					Unsaved changes
+				</Box>
+				<Box fontSize="sm" color="fg.secondary">
+					You have unsaved changes. If you close now, your changes will be lost.
+				</Box>
+				<Box display="flex" gap="8" justifyContent="end">
+					<button
+						onClick={onCancel}
+						style={{
+							border: "1px solid var(--ax-colors-border-default)",
+							borderRadius: 6,
+							padding: "6px 16px",
+							background: "none",
+							cursor: "pointer",
+							fontSize: 14,
+							color: "var(--ax-colors-fg-default)",
+						}}
+					>
+						Cancel
+					</button>
+					<button
+						onClick={onDiscard}
+						style={{
+							border: "1px solid var(--ax-colors-border-default)",
+							borderRadius: 6,
+							padding: "6px 16px",
+							background: "none",
+							cursor: "pointer",
+							fontSize: 14,
+							color: "var(--ax-colors-fg-critical, #dc2626)",
+						}}
+					>
+						Discard changes
+					</button>
+					<button
+						onClick={onSave}
+						style={{
+							border: "none",
+							borderRadius: 6,
+							padding: "6px 16px",
+							background: "var(--ax-colors-bg-accent)",
+							cursor: "pointer",
+							fontSize: 14,
+							color: "#fff",
+						}}
+					>
+						Save and close
+					</button>
+				</Box>
+			</Box>
+		</div>
+	);
+}
+
 // ─── Main FormBuilder ─────────────────────────────────────────────────────────
 
 export function FormBuilder() {
@@ -148,7 +234,9 @@ export function FormBuilder() {
 	const [customFields, setCustomFields] = useState<FormFieldDef[]>([]);
 	const [isCanvasCreateFieldOpen, setIsCanvasCreateFieldOpen] = useState(false);
 	const [createFieldSourceNodeId, setCreateFieldSourceNodeId] = useState<string | null>(null);
-	const [isCreateModalOpen, setIsCreateModalOpen] = useState(true);
+	const searchParams = useSearchParams();
+	const editingFormId = searchParams.get("id");
+	const [isCreateModalOpen, setIsCreateModalOpen] = useState(!editingFormId);
 	const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
 	const [isLibraryOpen, setIsLibraryOpen] = useState(true);
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -159,6 +247,13 @@ export function FormBuilder() {
 	const [activeConflictId, setActiveConflictId] = useState<string | null>(null);
 	const [isAllConflictsHighlighted, setIsAllConflictsHighlighted] = useState(false);
 	const [conflictHighlight, setConflictHighlight] = useState<{ nodeIds: string[]; edgeIds: string[] } | null>(null);
+	const [formId, setFormId] = useState<string | null>(null);
+	const [lastSavedSig, setLastSavedSig] = useState<string>("");
+	const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+	const [formTemplates, setFormTemplates] = usePersistentState("formTemplates", [] as FormTemplate[]) as [
+		FormTemplate[] | undefined,
+		(value: FormTemplate[]) => void,
+	];
 
 	const {
 		nodes,
@@ -585,14 +680,100 @@ export function FormBuilder() {
 
 	// ─── Save ─────────────────────────────────────────────────────────────────────
 
+	// Strip non-serializable fields (icons, callbacks) before persisting.
+	const serializableSnapshot = useCallback(() => {
+		const stripData = (data: any): any => {
+			if (!data || typeof data !== "object") return data;
+			const out: any = {};
+			for (const k of Object.keys(data)) {
+				const v = (data as any)[k];
+				if (typeof v === "function") continue;
+				if (v && typeof v === "object" && (v as any).$$typeof) continue; // React elements (icons)
+				out[k] = v;
+			}
+			return out;
+		};
+		const cleanNodes = nodes.map((n) => ({ ...n, data: stripData(n.data) }));
+		const cleanCustom = customFields.map((f) => {
+			const { icon: _icon, ...rest } = f as any;
+			return rest;
+		});
+		return { nodes: cleanNodes, edges, customFields: cleanCustom };
+	}, [nodes, edges, customFields]);
+
+	const currentSig = useMemo(() => {
+		const snap = serializableSnapshot();
+		return JSON.stringify({
+			formTitle,
+			formDescription,
+			formApplicableTo,
+			isActive,
+			...snap,
+		});
+	}, [formTitle, formDescription, formApplicableTo, isActive, serializableSnapshot]);
+
+	const isDirty = currentSig !== lastSavedSig;
+
+	const persistForm = useCallback(() => {
+		const snap = serializableSnapshot();
+		const now = new Date().toISOString();
+		const id = formId ?? `form-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+		const existing = (formTemplates ?? []).find((t) => t.id === id);
+		const template: FormTemplate = {
+			id,
+			name: formTitle,
+			description: formDescription,
+			applicableTo: formApplicableTo,
+			isActive,
+			nodes: snap.nodes,
+			edges: snap.edges,
+			customFields: snap.customFields,
+			createdAt: existing?.createdAt ?? now,
+			updatedAt: now,
+		};
+		const next = existing
+			? (formTemplates ?? []).map((t) => (t.id === id ? template : t))
+			: [...(formTemplates ?? []), template];
+		setFormTemplates(next);
+		setFormId(id);
+		setLastSavedSig(currentSig);
+	}, [formId, formTemplates, setFormTemplates, formTitle, formDescription, formApplicableTo, isActive, currentSig, serializableSnapshot]);
+
 	const handleSave = useCallback(async () => {
 		const warnings = validateFormGraph(nodes, edges);
 		if (warnings.length > 0) {
 			setValidationWarnings(warnings);
 			return;
 		}
-		console.log("Form saved", { nodes, edges });
-	}, [nodes, edges]);
+		persistForm();
+		toaster.create("Form template saved", { intent: "success" });
+	}, [nodes, edges, persistForm]);
+
+	const handleCloseRequest = useCallback(() => {
+		if (isDirty) {
+			setConfirmCloseOpen(true);
+			return;
+		}
+		router.push("/cmp/settings/templates");
+	}, [isDirty, router]);
+
+	const handleConfirmDiscard = useCallback(() => {
+		setConfirmCloseOpen(false);
+		router.push("/cmp/settings/templates");
+	}, [router]);
+
+	const handleSaveAndClose = useCallback(() => {
+		const warnings = validateFormGraph(nodes, edges);
+		if (warnings.length > 0) {
+			setConfirmCloseOpen(false);
+			setValidationWarnings(warnings);
+			return;
+		}
+		persistForm();
+		setConfirmCloseOpen(false);
+		toaster.create("Form template saved", { intent: "success" });
+		router.push("/cmp/settings/templates");
+	}, [nodes, edges, persistForm, router]);
 
 	// ─── Logic apply ─────────────────────────────────────────────────────────────
 
@@ -631,6 +812,38 @@ export function FormBuilder() {
 		},
 		[updateNodeData, updateEdgesForNode],
 	);
+
+	// ─── Load existing form when ?id=… is present ────────────────────────────────
+
+	const hasLoadedRef = useRef(false);
+	useEffect(() => {
+		if (hasLoadedRef.current) return;
+		if (!editingFormId) return;
+		const template = (formTemplates ?? []).find((t) => t.id === editingFormId);
+		if (!template) return;
+		hasLoadedRef.current = true;
+		setFormId(template.id);
+		setFormTitle(template.name);
+		setFormDescription(template.description);
+		setFormApplicableTo(template.applicableTo);
+		setIsActive(template.isActive);
+		setCustomFields(template.customFields as FormFieldDef[]);
+		setNodes(template.nodes as any);
+		setEdges(template.edges as any);
+		setIsCreateModalOpen(false);
+		setTimeout(() => {
+			setLastSavedSig(JSON.stringify({
+				formTitle: template.name,
+				formDescription: template.description,
+				formApplicableTo: template.applicableTo,
+				isActive: template.isActive,
+				nodes: template.nodes,
+				edges: template.edges,
+				customFields: template.customFields,
+			}));
+			reactFlowInstance?.fitView({ padding: 0.4 });
+		}, 50);
+	}, [editingFormId, formTemplates, setNodes, setEdges, reactFlowInstance]);
 
 	// ─── Section auto-resize ─────────────────────────────────────────────────────
 
@@ -758,7 +971,7 @@ export function FormBuilder() {
 							conflictCount={conflicts.length}
 							onViewIssues={handleOpenIssues}
 							onShowPreview={() => setIsPreviewOpen(true)}
-							onClose={() => router.push("/cmp/settings/templates")}
+							onClose={handleCloseRequest}
 						/>
 					}
 					sidebar={isLibraryOpen ? (
@@ -833,8 +1046,20 @@ export function FormBuilder() {
 				{validationWarnings && (
 					<ValidationDialog
 						warnings={validationWarnings}
-						onSaveAnyway={() => { setValidationWarnings(null); console.log("Force-saved", { nodes, edges }); }}
+						onSaveAnyway={() => {
+							setValidationWarnings(null);
+							persistForm();
+							toaster.create("Form template saved", { intent: "success" });
+						}}
 						onCancel={() => setValidationWarnings(null)}
+					/>
+				)}
+
+				{confirmCloseOpen && (
+					<UnsavedChangesDialog
+						onSave={handleSaveAndClose}
+						onDiscard={handleConfirmDiscard}
+						onCancel={() => setConfirmCloseOpen(false)}
 					/>
 				)}
 		</Box>

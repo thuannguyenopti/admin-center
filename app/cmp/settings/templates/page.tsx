@@ -22,6 +22,7 @@ import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { ContentType, initialContentTypes } from "@/app/db/initialData";
+import type { FormTemplate } from "@/app/cmp/settings/templates/form/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import { performMigration, isCmpType } from "@/app/lib/contentTypeMigration";
@@ -62,6 +63,12 @@ export default function ContentModelsPage() {
 	const [contentTypes, setContentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
 		ContentType[],
 		(value: ContentType[]) => void,
+	];
+
+	// Persistent saved form templates (built via the form builder)
+	const [formTemplates, setFormTemplates] = usePersistentState("formTemplates", [] as FormTemplate[]) as [
+		FormTemplate[] | undefined,
+		(value: FormTemplate[]) => void,
 	];
 
 	// Run migration on first load
@@ -153,11 +160,62 @@ export default function ContentModelsPage() {
 								Add New
 							</Button>
 						</Box>
-						<Box py="40" textAlign="center">
-							<Text fontSize="md" color="fg.secondary">
-								No form templates yet
-							</Text>
-						</Box>
+						{(formTemplates ?? []).length === 0 ? (
+							<Box py="40" textAlign="center">
+								<Text fontSize="md" color="fg.secondary">
+									No form templates yet
+								</Text>
+							</Box>
+						) : (
+							<Table>
+								<thead>
+									<Tr>
+										<Th>Name</Th>
+										<Th>Description</Th>
+										<Th>Fields</Th>
+										<Th>Status</Th>
+										<Th>Last modified</Th>
+									</Tr>
+								</thead>
+								<tbody>
+									{(formTemplates ?? []).map((t) => {
+										const fieldCount = t.nodes.filter(
+											(n: any) => n.type === "formField" && !(n.data as any)?.isStartingNode,
+										).length;
+										return (
+											<Tr key={t.id}>
+												<Td>
+													<Link
+														href={`/cmp/settings/templates/form?id=${t.id}`}
+														style={{ color: "var(--ax-colors-fg-accent)" }}
+													>
+														{t.name || "Untitled Form"}
+													</Link>
+												</Td>
+												<Td>
+													<Text fontSize="sm" color="fg.secondary">
+														{t.description || "—"}
+													</Text>
+												</Td>
+												<Td>
+													<Text fontSize="sm">{fieldCount}</Text>
+												</Td>
+												<Td>
+													<Badge intent={t.isActive ? "success" : "neutral"}>
+														{t.isActive ? "Active" : "Inactive"}
+													</Badge>
+												</Td>
+												<Td>
+													<Text fontSize="sm" color="fg.secondary">
+														{new Date(t.updatedAt).toLocaleDateString()}
+													</Text>
+												</Td>
+											</Tr>
+										);
+									})}
+								</tbody>
+							</Table>
+						)}
 					</Box>
 				</TabsContent>
 

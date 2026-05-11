@@ -109,3 +109,18 @@ export type Snapshot = {
 	nodes: Node[];
 	edges: Edge[];
 };
+
+// ─── Persisted form template ─────────────────────────────────────────────────
+
+export type FormTemplate = {
+	id: string;
+	name: string;
+	description: string;
+	applicableTo: string[];
+	isActive: boolean;
+	nodes: Node[];
+	edges: Edge[];
+	customFields: FormFieldDef[];
+	createdAt: string;
+	updatedAt: string;
+};
