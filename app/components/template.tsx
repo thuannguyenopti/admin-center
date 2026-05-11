@@ -570,7 +570,7 @@ function TemplateContent({
 									{!shouldHidePageHeader && (
 										<Box w="full" className="min-w-0" overflow="hidden">
 											<Box display="flex" justifyContent="space-between" alignItems="center" w="full" mb="16">
-												<Heading level="3" truncate>
+												<Heading level="1" truncate>
 													{heading || routeHighlight?.label}
 												</Heading>
 												{titleActions}
