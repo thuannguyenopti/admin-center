@@ -6,8 +6,6 @@ import { Text } from "@/app/components/Text";
 import {
 	IconGripVertical,
 	IconPlus,
-	IconSearch,
-	IconX,
 } from "@tabler/icons-react";
 import {
 	STANDARD_FIELDS,
@@ -80,7 +78,6 @@ export function FormBuilderSidebar({
 	customFields?: FormFieldDef[];
 	onCreateField?: (field: FormFieldDef) => void;
 }) {
-	const [isSearching, setIsSearching] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isCreateFieldOpen, setIsCreateFieldOpen] = useState(false);
 
@@ -109,48 +106,14 @@ export function FormBuilderSidebar({
 			flexDirection="column"
 			bg="bg.default"
 		>
-			{/* Header */}
-			<Box p="16" borderB="1" borderColor="border.tertiary">
-				{isSearching ? (
-					<Box display="flex" alignItems="center" gap="8">
-						<SearchInput
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Search components..."
-							autoFocus
-							style={{ flex: 1 }}
-						/>
-						<button
-							onClick={() => {
-								setIsSearching(false);
-								setSearchQuery("");
-							}}
-							style={{
-								background: "none",
-								border: "none",
-								cursor: "pointer",
-								display: "flex",
-								alignItems: "center",
-								color: "var(--ax-colors-fg-tertiary)",
-								padding: "2px",
-							}}
-							aria-label="Close search"
-						>
-							<IconX size={16} />
-						</button>
-					</Box>
-				) : (
-					<Box
-						display="flex"
-						justifyContent="space-between"
-						alignItems="center"
-						cursor="pointer"
-						onClick={() => setIsSearching(true)}
-					>
-						<Text fontWeight="700">Form elements</Text>
-						<IconSearch size={16} color="var(--ax-colors-fg-tertiary)" />
-					</Box>
-				)}
+			{/* Search */}
+			<Box p="16">
+				<SearchInput
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+					placeholder="Search form field"
+					style={{ width: "100%" }}
+				/>
 			</Box>
 
 			{/* Component list */}

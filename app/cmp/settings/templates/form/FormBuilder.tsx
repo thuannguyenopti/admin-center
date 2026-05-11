@@ -655,6 +655,8 @@ export function FormBuilder() {
 		setConflictHighlight(null);
 		setActiveConflictId(null);
 		setIsAllConflictsHighlighted(false);
+		// Selecting a node takes over the right panel; close the preview if open.
+		setIsPreviewOpen(false);
 	}, []);
 
 	const onPaneClick = useCallback(() => {
