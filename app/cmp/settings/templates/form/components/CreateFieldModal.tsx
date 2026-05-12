@@ -103,10 +103,12 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 		{ id: "opt-1", value: "", hidden: false },
 		{ id: "opt-2", value: "", hidden: false },
 	]);
+	const [textLimit, setTextLimit] = useState("");
 
 	const isDropdown = fieldType === "dropdown";
 	const isRadioButton = fieldType === "radio-button";
 	const isOptionBased = isDropdown || isRadioButton;
+	const isRichText = fieldType === "rich-text";
 	const isValid = fieldType.length > 0 && fieldName.trim().length > 0;
 
 	const OPTION_PLACEHOLDERS: Record<string, string> = {
@@ -126,6 +128,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 			{ id: "opt-1", value: "", hidden: false },
 			{ id: "opt-2", value: "", hidden: false },
 		]);
+		setTextLimit("");
 	};
 
 	const handleSave = () => {
@@ -135,6 +138,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 				.filter((o) => o.value.trim() !== "")
 				.map((o) => ({ label: o.value.trim(), value: o.value.trim().toLowerCase().replace(/\s+/g, "_") }))
 			: undefined;
+		const parsedLimit = isRichText && textLimit.trim() !== "" ? parseInt(textLimit, 10) : undefined;
 		onSave({
 			id: `custom-${Date.now()}`,
 			name: fieldName.trim(),
@@ -145,6 +149,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 			required: isMandatory,
 			...(options ? { options } : {}),
 			...(isDropdown ? { isMultiSelect } : {}),
+			...(parsedLimit !== undefined && !isNaN(parsedLimit) ? { textLimit: parsedLimit } : {}),
 		} as any);
 		reset();
 	};
@@ -273,6 +278,20 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 									</Field>
 									<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
 								</Box>
+
+								{/* Text limit — Rich Text only */}
+								{isRichText && (
+									<Field label="Text limit">
+										<Input
+											type="number"
+											inputMode="numeric"
+											min={0}
+											value={textLimit}
+											onValueChange={(v) => setTextLimit(v.replace(/[^0-9]/g, ""))}
+											placeholder="Optional maximum number of characters"
+										/>
+									</Field>
+								)}
 							</>
 						)}
 
