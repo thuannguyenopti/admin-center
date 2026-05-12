@@ -393,9 +393,8 @@ export default function NotificationDropdown() {
         <Box style={{ position: "relative", display: "inline-flex" }}>
             <Button
                 appearance="subtle"
-                size="lg"
-                style={{ width: 40, height: 40 }}
-                icon={<IconBell size={20} style={{ width: 20, height: 20 }} />}
+                size="md"
+                icon={<IconBell />}
                 aria-label="Notifications"
                 onClick={togglePanel}
             />
