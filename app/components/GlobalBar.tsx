@@ -252,7 +252,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				</Group>
 			</Box>
 
-			<Box display="flex" alignItems="center" gap="8">
+			<Box display="flex" alignItems="center" gap="4">
 				<Menu
 					options={[
 						{
@@ -418,9 +418,8 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							},
 						]}
 					>
-						<MenuTrigger asChild>
-							<Button appearance="subtle" size="md" aria-label="User profile">
-								{isCmpTaskDetail ? (
+						<MenuTrigger icon={!isCmpTaskDetail && <IconUser />} appearance="subtle" size="sm" aria-label="User profile">
+								{isCmpTaskDetail && (
 									<Image
 										src="/avatars/aamr-fakhry.png"
 										alt="User profile"
@@ -428,27 +427,12 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 										height={24}
 										style={{borderRadius: 999}}
 									/>
-								) : (
-									<IconUser size={20} />
 								)}
-							</Button>
 						</MenuTrigger>
 						<MenuContent style={{ minWidth: "240px" }} />
 					</Menu>
 				) : (
-					<Button appearance="subtle" size="md" aria-label="User profile">
-						{isCmpTaskDetail ? (
-							<Image
-								src="/avatars/aamr-fakhry.png"
-								alt="User profile"
-								width={24}
-								height={24}
-								style={{borderRadius: 999}}
-							/>
-						) : (
-							<IconUser size={20} />
-						)}
-					</Button>
+					<Button appearance="subtle" size="md" aria-label="User profile" icon={<IconUser />} />
 				)}
 			</Box>
 		</Box>

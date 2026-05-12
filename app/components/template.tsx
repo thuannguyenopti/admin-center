@@ -557,8 +557,8 @@ function TemplateContent({
 							color="fg.default"
 							overflow={isOptimizationDetailPage ? "hidden" : "auto"}
 							px={isOptimizationDetailPage ? "0" : "32"}
-							py={isOptimizationDetailPage ? "0" : "24"}
-							pb={footerContent ? "80" : "24"}
+							py={isOptimizationDetailPage ? "0" : "32"}
+							pb={footerContent ? "80" : "32"}
 							display={isOptimizationDetailPage ? "flex" : undefined}
 							flexDirection={isOptimizationDetailPage ? "column" : undefined}
 							h={isOptimizationDetailPage ? "full" : undefined}
