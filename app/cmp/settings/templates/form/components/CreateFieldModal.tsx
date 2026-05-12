@@ -298,19 +298,19 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 						{/* Advanced settings */}
 						<Disclosure>
 							<DisclosureTrigger>
-								<Text fontSize="sm" fontWeight="500" color="fg.default">Advanced settings</Text>
+								<Text fontSize="md" color="fg.default">Advanced settings</Text>
 							</DisclosureTrigger>
 							<DisclosureContent>
 								<Box display="flex" flexDirection="column" gap="16" pt="12">
 									{/* Status */}
 									<Box display="flex" alignItems="center" justifyContent="space-between">
-										<Text fontSize="sm" color="fg.default">Active</Text>
+										<Text fontSize="md" color="fg.default">Active</Text>
 										<Switch checked={isActive} onCheckedChange={setIsActive} />
 									</Box>
 
 									{/* Read only */}
 									<Box display="flex" alignItems="center" justifyContent="space-between">
-										<Text fontSize="sm" color="fg.default">Mark as read only field</Text>
+										<Text fontSize="md" color="fg.default">Mark as read only field</Text>
 										<Switch checked={isReadOnly} onCheckedChange={setIsReadOnly} />
 									</Box>
 
