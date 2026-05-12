@@ -488,7 +488,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 								<Text fontSize="md" fontWeight="600" color="fg.default">Advanced settings</Text>
 							</DisclosureTrigger>
 							<DisclosureContent>
-								<Box display="flex" flexDirection="column" gap="16" pt="12">
+								<Box display="flex" flexDirection="column" gap="24" pt="16">
 									{/* Status */}
 									<Box display="flex" alignItems="center" justifyContent="space-between">
 										<Text fontSize="md" color="fg.default">Active</Text>
