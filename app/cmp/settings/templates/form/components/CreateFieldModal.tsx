@@ -19,7 +19,12 @@ import {
 	DisclosureContent,
 	Switch,
 	Checkbox,
+	Radio,
+	RadioGroup,
 	Box,
+	Popover,
+	PopoverAnchor,
+	PopoverContent,
 } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
@@ -89,7 +94,31 @@ interface CreateFieldModalProps {
 	onCancel: () => void;
 }
 
-type DropdownOption = { id: string; value: string; hidden: boolean };
+type DropdownOption = { id: string; value: string; hidden: boolean; color?: string };
+
+const LABEL_COLOR_PALETTE = [
+	"#facc15", // yellow
+	"#60a5fa", // blue
+	"#34d399", // green
+	"#f87171", // red
+	"#a78bfa", // purple
+	"#fb923c", // orange
+	"#9ca3af", // gray
+	"#ec4899", // pink
+];
+
+const FILTER_CONTEXTS = [
+	{ id: "analytics", label: "Analytics" },
+	{ id: "plan", label: "Plan" },
+	{ id: "library", label: "Library" },
+	{ id: "work-requests", label: "Work Requests" },
+];
+
+const NUMBER_SUBTYPES = [
+	{ value: "number", label: "Number" },
+	{ value: "currency", label: "Currency" },
+	{ value: "percent", label: "Percent" },
+];
 
 export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalProps) {
 	const [fieldType, setFieldType] = useState("");
@@ -100,20 +129,31 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 	const [isMandatory, setIsMandatory] = useState(false);
 	const [isMultiSelect, setIsMultiSelect] = useState(false);
 	const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>([
-		{ id: "opt-1", value: "", hidden: false },
-		{ id: "opt-2", value: "", hidden: false },
+		{ id: "opt-1", value: "", hidden: false, color: LABEL_COLOR_PALETTE[0] },
+		{ id: "opt-2", value: "", hidden: false, color: LABEL_COLOR_PALETTE[1] },
 	]);
 	const [textLimit, setTextLimit] = useState("");
+	const [showInFilter, setShowInFilter] = useState<string[]>([]);
+	const [numberSubtype, setNumberSubtype] = useState<string>("number");
+	const [decimalPlaces, setDecimalPlaces] = useState<string>("2");
+	const [useThousandSeparator, setUseThousandSeparator] = useState(false);
+	const [showNumberHelper, setShowNumberHelper] = useState(false);
 
 	const isDropdown = fieldType === "dropdown";
 	const isRadioButton = fieldType === "radio-button";
-	const isOptionBased = isDropdown || isRadioButton;
+	const isLabel = fieldType === "label";
+	const isCheckbox = fieldType === "checkbox";
+	const isDate = fieldType === "date";
+	const isNumber = fieldType === "number";
+	const isOptionBased = isDropdown || isRadioButton || isLabel;
 	const isRichText = fieldType === "rich-text";
+	const isFilterable = isLabel || isCheckbox || isDropdown || isDate;
 	const isValid = fieldType.length > 0 && fieldName.trim().length > 0;
 
 	const OPTION_PLACEHOLDERS: Record<string, string> = {
 		"dropdown":     "Dropdown field name",
 		"radio-button": "Radio Button field name",
+		"label":        "Label field name",
 	};
 
 	const reset = () => {
@@ -125,10 +165,15 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 		setIsMandatory(false);
 		setIsMultiSelect(false);
 		setDropdownOptions([
-			{ id: "opt-1", value: "", hidden: false },
-			{ id: "opt-2", value: "", hidden: false },
+			{ id: "opt-1", value: "", hidden: false, color: LABEL_COLOR_PALETTE[0] },
+			{ id: "opt-2", value: "", hidden: false, color: LABEL_COLOR_PALETTE[1] },
 		]);
 		setTextLimit("");
+		setShowInFilter([]);
+		setNumberSubtype("number");
+		setDecimalPlaces("2");
+		setUseThousandSeparator(false);
+		setShowNumberHelper(false);
 	};
 
 	const handleSave = () => {
@@ -136,9 +181,14 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 		const options = isOptionBased
 			? dropdownOptions
 				.filter((o) => o.value.trim() !== "")
-				.map((o) => ({ label: o.value.trim(), value: o.value.trim().toLowerCase().replace(/\s+/g, "_") }))
+				.map((o) => ({
+					label: o.value.trim(),
+					value: o.value.trim().toLowerCase().replace(/\s+/g, "_"),
+					...(isLabel && o.color ? { color: o.color } : {}),
+				}))
 			: undefined;
 		const parsedLimit = isRichText && textLimit.trim() !== "" ? parseInt(textLimit, 10) : undefined;
+		const parsedDecimals = isNumber && decimalPlaces.trim() !== "" ? parseInt(decimalPlaces, 10) : undefined;
 		onSave({
 			id: `custom-${Date.now()}`,
 			name: fieldName.trim(),
@@ -150,6 +200,14 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 			...(options ? { options } : {}),
 			...(isDropdown ? { isMultiSelect } : {}),
 			...(parsedLimit !== undefined && !isNaN(parsedLimit) ? { textLimit: parsedLimit } : {}),
+			...(isFilterable && showInFilter.length > 0 ? { showInFilter } : {}),
+			...(isNumber
+				? {
+					numberSubtype,
+					...(parsedDecimals !== undefined && !isNaN(parsedDecimals) ? { decimalPlaces: parsedDecimals } : {}),
+					useThousandSeparator,
+				}
+				: {}),
 		} as any);
 		reset();
 	};
@@ -181,13 +239,17 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 						{fieldType && (<>
 						{isOptionBased ? (
 							<>
-								{/* Single/Multi select toggle — dropdown only */}
+								{/* Single/Multi select — dropdown only */}
 								{isDropdown && (
-									<Box display="flex" alignItems="center" gap="8">
-										<Text fontSize="sm" color={!isMultiSelect ? "fg.default" : "fg.tertiary"}>Single-Select</Text>
-										<Switch checked={isMultiSelect} onCheckedChange={setIsMultiSelect} />
-										<Text fontSize="sm" color={isMultiSelect ? "fg.default" : "fg.tertiary"}>Multi-Select</Text>
-									</Box>
+									<RadioGroup
+										value={isMultiSelect ? "multi" : "single"}
+										onValueChange={(v) => setIsMultiSelect(v === "multi")}
+									>
+										<Box display="flex" alignItems="center" gap="20">
+											<Radio value="single">Single-Select</Radio>
+											<Radio value="multi">Multi-Select</Radio>
+										</Box>
+									</RadioGroup>
 								)}
 
 								{/* Field name */}
@@ -218,6 +280,61 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 									<Box display="flex" flexDirection="column" gap="4">
 										{dropdownOptions.map((opt) => (
 											<Box key={opt.id} display="flex" alignItems="center" gap="8">
+												{isLabel && (
+													<Popover>
+														<PopoverAnchor>
+															<button
+																type="button"
+																aria-label="Pick color"
+																style={{
+																	width: 30,
+																	height: 30,
+																	borderRadius: 6,
+																	border: "1px solid var(--ax-colors-border-default)",
+																	background: opt.color ?? LABEL_COLOR_PALETTE[0],
+																	cursor: "pointer",
+																	padding: 0,
+																	flexShrink: 0,
+																}}
+															/>
+														</PopoverAnchor>
+														<PopoverContent>
+															<Box
+																p="8"
+																display="flex"
+																style={{
+																	gap: 6,
+																	flexWrap: "wrap",
+																	width: 152,
+																}}
+															>
+																{LABEL_COLOR_PALETTE.map((c) => (
+																	<button
+																		key={c}
+																		type="button"
+																		onClick={() =>
+																			setDropdownOptions((prev) =>
+																				prev.map((o) => (o.id === opt.id ? { ...o, color: c } : o)),
+																			)
+																		}
+																		aria-label={`Color ${c}`}
+																		style={{
+																			width: 28,
+																			height: 28,
+																			borderRadius: 6,
+																			border: opt.color === c
+																				? "2px solid var(--ax-colors-border-accent)"
+																				: "1px solid var(--ax-colors-border-default)",
+																			background: c,
+																			cursor: "pointer",
+																			padding: 0,
+																		}}
+																	/>
+																))}
+															</Box>
+														</PopoverContent>
+													</Popover>
+												)}
 												<Box flex="1">
 													<Input
 														value={opt.value}
@@ -246,12 +363,103 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 									</Box>
 									<button
 										type="button"
-										onClick={() => setDropdownOptions((prev) => [...prev, { id: `opt-${Date.now()}`, value: "", hidden: false }])}
+										onClick={() => setDropdownOptions((prev) => [
+											...prev,
+											{
+												id: `opt-${Date.now()}`,
+												value: "",
+												hidden: false,
+												color: LABEL_COLOR_PALETTE[prev.length % LABEL_COLOR_PALETTE.length],
+											},
+										])}
 										style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px", alignSelf: "flex-start" }}
 									>
 										<IconPlus size={14} color="var(--ax-colors-fg-accent)" />
 										<Text fontSize="sm" color="fg.accent">Add option</Text>
 									</button>
+								</Box>
+							</>
+						) : isNumber ? (
+							<>
+								{/* Subtype */}
+								<RadioGroup value={numberSubtype} onValueChange={setNumberSubtype}>
+									<Box display="flex" alignItems="center" gap="20">
+										{NUMBER_SUBTYPES.map((s) => (
+											<Radio key={s.value} value={s.value}>{s.label}</Radio>
+										))}
+									</Box>
+								</RadioGroup>
+
+								{/* Field name */}
+								<Field label="Field Name" required>
+									<Input
+										value={fieldName}
+										onValueChange={setFieldName}
+										placeholder="Number field name"
+									/>
+								</Field>
+
+								{/* Helper text — collapsed link by default */}
+								{!showNumberHelper ? (
+									<button
+										type="button"
+										onClick={() => setShowNumberHelper(true)}
+										style={{
+											background: "none",
+											border: "none",
+											cursor: "pointer",
+											padding: 0,
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+											color: "var(--ax-colors-fg-accent)",
+											fontSize: 14,
+											alignSelf: "flex-start",
+										}}
+									>
+										+ Helper text
+									</button>
+								) : (
+									<Box display="flex" flexDirection="column" gap="4">
+										<Field label="Helper text">
+											<Textarea
+												value={helperText}
+												onValueChange={(v) => setHelperText(v.slice(0, 1000))}
+												placeholder="Optional helper text shown below the field"
+												rows={3}
+												resize="none"
+											/>
+										</Field>
+										<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+									</Box>
+								)}
+
+								{/* Decimal Places */}
+								<Field label="Decimal Places">
+									<Box display="flex" alignItems="center" gap="12">
+										<Box style={{ width: 96 }}>
+											<Input
+												type="number"
+												inputMode="numeric"
+												min={0}
+												value={decimalPlaces}
+												onValueChange={(v) => setDecimalPlaces(v.replace(/[^0-9]/g, ""))}
+											/>
+										</Box>
+										<Text fontSize="sm" color="fg.tertiary">
+											eg. {(1000).toFixed(Math.max(0, parseInt(decimalPlaces || "0", 10) || 0))}
+										</Text>
+									</Box>
+								</Field>
+
+								{/* 1000 separator */}
+								<Box display="flex" alignItems="center" gap="8">
+									<Checkbox
+										checked={useThousandSeparator}
+										onCheckedChange={(v) => setUseThousandSeparator(!!v)}
+									>
+										Use 1000 separator (,)
+									</Checkbox>
 								</Box>
 							</>
 						) : (
@@ -323,6 +531,45 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 											Library asset upload
 										</Checkbox>
 									</Box>
+
+									{/* Show in Filter — only for filterable types (Label, Checkbox, Dropdown, Date) */}
+									{isFilterable && (
+										<Box display="flex" flexDirection="column" gap="8">
+											<Box display="flex" flexDirection="column" gap="2">
+												<Text fontSize="md" fontWeight="600" color="fg.default">
+													Show in Filter
+												</Text>
+												<button
+													type="button"
+													onClick={() => setShowInFilter([])}
+													style={{
+														background: "none",
+														border: "none",
+														cursor: "pointer",
+														padding: 0,
+														color: "var(--ax-colors-fg-accent)",
+														fontSize: 13,
+														alignSelf: "flex-start",
+													}}
+												>
+													Clear All
+												</button>
+											</Box>
+											<Box display="flex" flexDirection="column" gap="8">
+												{FILTER_CONTEXTS.map((ctx) => (
+													<Checkbox
+														key={ctx.id}
+														checked={showInFilter.includes(ctx.id)}
+														onCheckedChange={(v) => setShowInFilter((prev) =>
+															v ? Array.from(new Set([...prev, ctx.id])) : prev.filter((x) => x !== ctx.id),
+														)}
+													>
+														{ctx.label}
+													</Checkbox>
+												))}
+											</Box>
+										</Box>
+									)}
 								</Box>
 							</DisclosureContent>
 						</Disclosure>
