@@ -1,6 +1,20 @@
 @import "./styles/opalStyles.css";
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
 
+@font-face {
+	font-family: 'Nudge Semicondensed';
+	src: url('/fonts/NudgeSemiNormal-SemiNormalSemiBold.woff2') format('woff2');
+	font-weight: 400;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Nudge Semicondensed';
+	src: url('/fonts/NudgeSemiNormal-SemiNormalExtraBold.woff2') format('woff2');
+	font-weight: 700;
+	font-display: swap; 
+}
+
 @layer optiaxiom.base {
 	@tailwind base;
 	@tailwind components;
