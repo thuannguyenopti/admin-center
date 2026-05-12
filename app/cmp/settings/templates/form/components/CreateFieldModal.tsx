@@ -137,7 +137,6 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 	const [numberSubtype, setNumberSubtype] = useState<string>("number");
 	const [decimalPlaces, setDecimalPlaces] = useState<string>("2");
 	const [useThousandSeparator, setUseThousandSeparator] = useState(false);
-	const [showNumberHelper, setShowNumberHelper] = useState(false);
 
 	const isDropdown = fieldType === "dropdown";
 	const isRadioButton = fieldType === "radio-button";
@@ -173,7 +172,6 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 		setNumberSubtype("number");
 		setDecimalPlaces("2");
 		setUseThousandSeparator(false);
-		setShowNumberHelper(false);
 	};
 
 	const handleSave = () => {
@@ -399,40 +397,19 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 									/>
 								</Field>
 
-								{/* Helper text — collapsed link by default */}
-								{!showNumberHelper ? (
-									<button
-										type="button"
-										onClick={() => setShowNumberHelper(true)}
-										style={{
-											background: "none",
-											border: "none",
-											cursor: "pointer",
-											padding: 0,
-											display: "flex",
-											alignItems: "center",
-											gap: 4,
-											color: "var(--ax-colors-fg-accent)",
-											fontSize: 14,
-											alignSelf: "flex-start",
-										}}
-									>
-										+ Helper text
-									</button>
-								) : (
-									<Box display="flex" flexDirection="column" gap="4">
-										<Field label="Helper text">
-											<Textarea
-												value={helperText}
-												onValueChange={(v) => setHelperText(v.slice(0, 1000))}
-												placeholder="Optional helper text shown below the field"
-												rows={3}
-												resize="none"
-											/>
-										</Field>
-										<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
-									</Box>
-								)}
+								{/* Helper text */}
+								<Box display="flex" flexDirection="column" gap="4">
+									<Field label="Helper text">
+										<Textarea
+											value={helperText}
+											onValueChange={(v) => setHelperText(v.slice(0, 1000))}
+											placeholder="Optional helper text shown below the field"
+											rows={3}
+											resize="none"
+										/>
+									</Field>
+									<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+								</Box>
 
 								{/* Decimal Places */}
 								<Field label="Decimal Places">
@@ -490,14 +467,16 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 								{/* Text limit — Rich Text only */}
 								{isRichText && (
 									<Field label="Text limit">
-										<Input
-											type="number"
-											inputMode="numeric"
-											min={0}
-											value={textLimit}
-											onValueChange={(v) => setTextLimit(v.replace(/[^0-9]/g, ""))}
-											placeholder="Optional maximum number of characters"
-										/>
+										<Box style={{ width: 160 }}>
+											<Input
+												type="number"
+												inputMode="numeric"
+												min={0}
+												value={textLimit}
+												onValueChange={(v) => setTextLimit(v.replace(/[^0-9]/g, ""))}
+												placeholder="Max characters"
+											/>
+										</Box>
 									</Field>
 								)}
 							</>
@@ -506,7 +485,7 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 						{/* Advanced settings */}
 						<Disclosure>
 							<DisclosureTrigger>
-								<Text fontSize="md" color="fg.default">Advanced settings</Text>
+								<Text fontSize="md" fontWeight="600" color="fg.default">Advanced settings</Text>
 							</DisclosureTrigger>
 							<DisclosureContent>
 								<Box display="flex" flexDirection="column" gap="16" pt="12">
@@ -535,26 +514,9 @@ export function CreateFieldModal({ open, onSave, onCancel }: CreateFieldModalPro
 									{/* Show in Filter — only for filterable types (Label, Checkbox, Dropdown, Date) */}
 									{isFilterable && (
 										<Box display="flex" flexDirection="column" gap="8">
-											<Box display="flex" flexDirection="column" gap="2">
-												<Text fontSize="md" fontWeight="600" color="fg.default">
-													Show in Filter
-												</Text>
-												<button
-													type="button"
-													onClick={() => setShowInFilter([])}
-													style={{
-														background: "none",
-														border: "none",
-														cursor: "pointer",
-														padding: 0,
-														color: "var(--ax-colors-fg-accent)",
-														fontSize: 13,
-														alignSelf: "flex-start",
-													}}
-												>
-													Clear All
-												</button>
-											</Box>
+											<Text fontSize="md" color="fg.default">
+												Show in Filter
+											</Text>
 											<Box display="flex" flexDirection="column" gap="8">
 												{FILTER_CONTEXTS.map((ctx) => (
 													<Checkbox
