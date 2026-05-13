@@ -11,8 +11,8 @@ import { python } from "@codemirror/lang-python";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { yCollab } from "y-codemirror.next";
 import type { CollabDoc } from "./useCollabDoc";
-import { createBlameExtensions, setBlameData } from "./blame-cm-extension";
-import type { BlameSegment } from "./blame-engine";
+import { createBlameExtensions, setBlameData } from "./collab/blame-cm-extension";
+import type { BlameSegment } from "./collab/blame-engine";
 
 export type CodeMirrorLanguage = "markdown" | "html" | "javascript" | "python";
 

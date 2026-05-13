@@ -10,7 +10,7 @@ import { IconX } from "@tabler/icons-react";
 
 export const QUICK_ACTIONS = [
   {
-    emoji: "💥",
+    emoji: "🔥",
     label: "Brainstorm",
     suggestions: [
       "Brainstorm campaign ideas for Q2 with @campaign_agent",
@@ -43,7 +43,7 @@ export const QUICK_ACTIONS = [
     ],
   },
   {
-    emoji: "🧪",
+    emoji: "✅",
     label: "Test",
     suggestions: [
       "Set up an A/B test for our hero headline with @ab_test",
@@ -88,9 +88,9 @@ export function renderWithMentions(text: string) {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              background: "#F5F3FF",
-              border: "1px solid #7c3aed",
-              color: "#7c3aed",
+              background: "var(--ax-colors-bg-accent-subtle)",
+              border: "1px solid var(--ax-colors-border-accent)",
+              color: "var(--ax-colors-fg-accent)",
               borderRadius: "9999px",
               padding: "2px 8px",
               fontSize: "12px",
@@ -99,7 +99,7 @@ export function renderWithMentions(text: string) {
               margin: "0 4px",
               verticalAlign: "middle",
               lineHeight: "20px",
-              fontFamily: "Inter, sans-serif",
+              fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
             }}
           >
             {part}
@@ -207,7 +207,7 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
       alignItems="center"
       style={{ paddingTop: "120px", position: "relative", width: "100%", boxSizing: "border-box" }}
     >
-      {/* Radial gradient glow behind input */}
+      {/* Radial gradient glow behind input — green brand tint for V3 */}
       <Box
         style={{
           position: "absolute",
@@ -217,7 +217,7 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
           width: "1400px",
           height: "600px",
           background:
-            "radial-gradient(ellipse 40% 40% at 50% 42%, rgba(167, 139, 250, 0.12) 0%, rgba(167, 139, 250, 0.07) 30%, rgba(167, 139, 250, 0.02) 55%, transparent 70%)",
+            "radial-gradient(ellipse 40% 40% at 50% 42%, rgba(3, 166, 93, 0.10) 0%, rgba(3, 166, 93, 0.05) 35%, rgba(3, 166, 93, 0.02) 60%, transparent 75%)",
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -229,8 +229,9 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
         style={{
           position: "relative",
           zIndex: 1,
-          fontSize: "29px",
-          fontWeight: 500,
+          fontFamily: "'Nudge SemiNormal', 'Die Grotesk B', sans-serif",
+          fontSize: "28px",
+          fontWeight: 600,
           color: "var(--ax-colors-fg-default)",
           letterSpacing: "-0.6px",
           lineHeight: "40px",
@@ -304,24 +305,24 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
                 alignItems: "center",
                 gap: "8px",
                 padding: "8px 16px",
-                background: isActive || isHovered ? "#F5F3FF" : "var(--ax-colors-bg-default)",
+                background: isActive || isHovered ? "var(--ax-colors-bg-accent-subtle)" : "var(--ax-colors-bg-default)",
                 border:
                   isActive || isHovered
-                    ? "1px solid #7c3aed"
+                    ? "1px solid var(--ax-colors-border-accent)"
                     : "1px solid var(--ax-colors-border-default)",
                 outline:
                   focusedChipIndex === QUICK_ACTIONS.findIndex((a) => a.label === action.label) &&
                   !isActive
-                    ? "2px solid #c4b5fd"
+                    ? "2px solid var(--ax-colors-border-focus)"
                     : "none",
                 outlineOffset: "2px",
                 borderRadius: "9999px",
                 cursor: "pointer",
                 fontSize: "14px",
                 color: "var(--ax-colors-fg-default)",
-                fontFamily: "Inter, sans-serif",
-                fontWeight: 400,
-                letterSpacing: "-0.21px",
+                fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
+                fontWeight: 500,
+                letterSpacing: "0.28px",
                 whiteSpace: "nowrap",
                 transition: "background 0.15s ease, border-color 0.15s ease",
               }}
@@ -331,10 +332,10 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
                 style={{
                   fontSize: "14px",
                   color: "var(--ax-colors-fg-default)",
-                  letterSpacing: "-0.21px",
-                  lineHeight: "1.6",
+                  letterSpacing: "0.28px",
+                  lineHeight: "1.43",
                   margin: 0,
-                  fontWeight: 400,
+                  fontWeight: 500,
                 }}
               >
                 {action.label}

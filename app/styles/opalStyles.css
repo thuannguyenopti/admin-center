@@ -77,12 +77,13 @@
   /* Background Colors - Using Axiom tokens with fallbacks */
   --opal-bg-primary: var(--ax-colors-bg-default, #ffffff);
   --opal-bg-sidebar: var(--ax-colors-bg-page, #f9fafc);
-  --opal-bg-suggest: linear-gradient(135deg, #f5f3ff 0%, #e5efff 100%);
-  --opal-bg-suggest-hover: linear-gradient(135deg, #ebe7ff 0%, #d9e8ff 100%);
+  --opal-bg-suggest: var(--ax-colors-bg-accent-subtle);
+  --opal-bg-suggest-hover: var(--ax-colors-bg-accent-light, var(--ax-colors-bg-accent-subtle));
   --opal-bg-input: var(--ax-colors-bg-default, #ffffff);
   --opal-bg-assistant: var(--ax-colors-bg-secondary, #f3f5f8);
-  --opal-bg-user: var(--ax-colors-bg-accent-subtle, #e8f0fe);
+  --opal-bg-user: #e4f0da;
   --opal-bg-history-active: var(--ax-colors-bg-secondary, #f3f5f8);
+  --opal-bg-page: var(--ax-colors-bg-page, #f9fafc);
 
   /* Border Colors - Using Axiom tokens */
   --opal-border-primary: var(--ax-colors-border-default, #d1d5db);
@@ -99,19 +100,13 @@
   --opal-text-user: var(--ax-colors-fg-default, #1f2937);
   --opal-text-label: var(--ax-colors-fg-secondary, #4b5563);
 
-  /* Neutral/600 - used for quick actions and secondary iconography */
-  --opal-neutral-600: var(--ax-colors-fg-secondary, #4F576E);
-
   /* Special Colors */
   --opal-spinner-border: var(--ax-colors-border-secondary, #e5e7eb);
   --opal-spinner-top: var(--ax-colors-fg-default, #1f2937);
   --opal-accent-red: var(--ax-colors-fg-error, #dc2626);
   --opal-icon-dark: var(--ax-colors-fg-default, #1f2937);
-  --opal-send-btn-bg: var(--ax-colors-bg-accent, #7c5cff);
-  --opal-send-btn-text: var(--ax-colors-fg-default-inverse, #ffffff);
-  /** Fixed purple for Opal processing steps (avoids theme accent resolving to blue). */
-  --opal-processing-brand: #7c5cff;
-  --opal-processing-brand-muted: rgba(124, 92, 255, 0.85);
+  --opal-send-btn-bg: var(--ax-colors-bg-accent, #03A65D);
+  --opal-send-btn-text: var(--ax-colors-fg-default, #1f2937);
 }
 
 /* Dark Mode - Gradients need special handling since they can't use light-dark() */
@@ -119,8 +114,7 @@
 [data-theme="dark"],
 html.dark,
 body.dark {
-  --opal-bg-suggest: linear-gradient(135deg, #1e1b3a 0%, #1a2b45 100%);
-  --opal-bg-suggest-hover: linear-gradient(135deg, #2a2650 0%, #243654 100%);
+  /* dark mode: accent-subtle and accent-light auto-adapt via light-dark() in Axiom tokens */
 }
 
 /* Animations */
@@ -185,32 +179,6 @@ body.dark {
   animation: opal-shimmer 1.5s ease-in-out infinite;
 }
 
-/* Footer: subtle moving gradient (lighter than Get Test Ideas button) */
-@keyframes opal-footer-gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.opal-footer-gradient-bg {
-  background: linear-gradient(
-    120deg,
-    rgba(124, 58, 237, 0.04) 0%,
-    rgba(99, 102, 241, 0.06) 25%,
-    rgba(124, 58, 237, 0.05) 50%,
-    rgba(99, 102, 241, 0.05) 75%,
-    rgba(124, 58, 237, 0.04) 100%
-  );
-  background-size: 200% 200%;
-  animation: opal-footer-gradient 8s ease infinite;
-}
-
 /* Shimmer on the actual text (placeholder labels) */
 .opal-shimmer-text {
   background: linear-gradient(90deg,
@@ -223,64 +191,6 @@ body.dark {
   -webkit-text-fill-color: transparent;
   color: transparent;
   animation: opal-shimmer 1.5s ease-in-out infinite;
-}
-
-/* Opal processing steps — accordion expand/collapse (grid + chevron) */
-.opal-processing-step-expand {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.78s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.opal-processing-step-expand[data-expanded="true"] {
-  grid-template-rows: 1fr;
-}
-
-.opal-processing-step-expand__inner {
-  overflow: hidden;
-  min-height: 0;
-}
-
-.opal-processing-step-expand__content {
-  opacity: 0;
-  transform: translateY(-4px);
-  transition:
-    opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1) 0.08s,
-    transform 0.62s cubic-bezier(0.22, 1, 0.36, 1) 0.06s;
-}
-
-.opal-processing-step-expand[data-expanded="true"] .opal-processing-step-expand__content {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.opal-processing-step-chevron {
-  display: flex;
-  flex-shrink: 0;
-  transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.opal-processing-step-chevron[data-expanded="true"] {
-  transform: rotate(90deg);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .opal-processing-step-expand {
-    transition: grid-template-rows 0.2s ease;
-  }
-
-  .opal-processing-step-expand__content {
-    transition: opacity 0.15s ease;
-    transform: none;
-  }
-
-  .opal-processing-step-expand[data-expanded="true"] .opal-processing-step-expand__content {
-    transform: none;
-  }
-
-  .opal-processing-step-chevron {
-    transition: transform 0.2s ease;
-  }
 }
 
 /* Custom scrollbar for chat */
@@ -399,12 +309,6 @@ body.dark {
   background-color: var(--opal-bg-input);
 }
 
-@media (max-width: 768px) {
-  .opal-landing-shell {
-    padding-inline: 24px;
-  }
-}
-
 /* Send Button */
 .opal-send-btn {
   width: 24px;
@@ -439,16 +343,4 @@ body.dark {
   background-color: var(--opal-bg-primary);
   border: 1px solid var(--opal-border-primary);
   border-radius: 8px;
-}
-
-/* Experiment Summary block: table headers (light grey bg, bold) */
-.experiment-summary-table table thead th {
-  background-color: var(--opal-bg-sidebar);
-  font-weight: 700;
-  color: var(--opal-text-secondary);
-}
-
-/* Experiment Summary block: smaller font for table body rows only */
-.experiment-summary-table table tbody td {
-  font-size: 12px;
 }

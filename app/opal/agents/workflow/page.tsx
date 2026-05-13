@@ -19,15 +19,13 @@ import {
     Switch,
 } from "@optiaxiom/react";
 import { Layout } from "@optiaxiom/react/unstable";
+import { IconSparkles as IconWand } from "@optimizely/axiom-icons";
+import { IconAgent } from "@optimizely/axiom-icons";
 import {
     IconSearch,
     IconBars,
     IconGripVertical,
     IconChevronDown,
-    IconSparkles as IconWand,
-} from "@optimizely/axiom-icons";
-import {
-    IconAgent,
     IconCodeBranch,
     IconBook,
     IconTerminal,
@@ -42,7 +40,7 @@ import {
     IconXmark,
     IconEllipsisStroke,
     IconFileArrowUp,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { useState, useRef, useCallback, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -390,7 +388,7 @@ function WorkflowBuilder() {
             { name: "Import (Upload)", icon: <IconFileArrowUp />, bg: "bg.accent.subtle", type: 'action' },
         ],
         Inputs: [
-            { name: "Instruction", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "Skill", icon: <IconBook />, bg: "bg.accent.subtle", type: 'action' },
             { name: "Prompts", icon: <IconTerminal />, bg: "bg.accent.subtle", type: 'action' },
         ],
         Triggers: [

@@ -2,7 +2,21 @@
 
 import type {SEOBlock, ContentType} from "@/app/db/initialData";
 
-import {Box, Button, Text, Heading, Menu, MenuTrigger, MenuContent, Tooltip, Spinner, Field, Select, SelectTrigger, SelectContent} from "@optiaxiom/react";
+import {
+	Box,
+	Button,
+	Text,
+	Heading,
+	Menu,
+	MenuTrigger,
+	MenuContent,
+	Tooltip,
+	Spinner,
+	Field,
+	Select,
+	SelectTrigger,
+	SelectContent,
+} from "@optiaxiom/react";
 import React, {useEffect, useRef, useState, useCallback} from "react";
 import {
 	IconPlus,
@@ -32,10 +46,7 @@ import {usePreflightContext} from "./ai/PreflightContext";
 import {getExtensionById} from "@/app/extensions/registry";
 
 import styles from "./VBPrototype.module.css";
-import PropertiesPanel, {
-	PageProperties,
-	PropertySection,
-} from "./vb/PropertiesPanel";
+import PropertiesPanel, {PageProperties, PropertySection} from "./vb/PropertiesPanel";
 import OutlineTree from "./vb/OutlineTree";
 import ExtensionPanel from "./ExtensionPanel";
 import ConnectionStatus from "./ConnectionStatus";
@@ -266,7 +277,6 @@ export default function VBPrototype({
 	onSyncContent,
 	onDisconnectContent,
 	hasConnection,
-	boundPropertyIds,
 	onAddToTask,
 	onRemoveFromTask,
 	currentTaskId,
@@ -301,7 +311,6 @@ export default function VBPrototype({
 	onSyncContent?: () => void;
 	onDisconnectContent?: () => void;
 	hasConnection?: boolean;
-	boundPropertyIds?: Set<string>;
 	onAddToTask?: (taskId: string, taskName: string) => void;
 	onRemoveFromTask?: () => void;
 	currentTaskId?: string | null;
@@ -427,8 +436,7 @@ export default function VBPrototype({
 		return getCompatibleInstances(
 			{contentTypeId: initialData.contentTypeId} as any,
 			cmpContentInstances,
-			persistentContentTypes,
-			[]
+			persistentContentTypes
 		).length;
 	}, [initialData?.contentTypeId, onConnectContent, cmpContentInstances, persistentContentTypes]);
 
@@ -533,23 +541,9 @@ export default function VBPrototype({
 	const [currentEle, setCurrentEle] = useState<string>("none");
 	const [currentHoverEle, setCurrentHoverEle] = useState<string>("none");
 	const [styleEditorEle, setStyleEditorEle] = useState<string | null>(null);
-	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(null);
-	const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(null);
-	const [currentSection, setCurrentSection] = useState<string | null>(null);
-	const [currentHoverSection, setCurrentHoverSection] = useState<string | null>(null);
-	const [scrollToOutlineSectionId, setScrollToOutlineSectionId] = useState<string | null>(null);
-	const [currentRow, setCurrentRow] = useState<string | null>(null);
-	const [currentHoverRow, setCurrentHoverRow] = useState<string | null>(null);
-	const [currentColumn, setCurrentColumn] = useState<string | null>(null);
-	const [currentHoverColumn, setCurrentHoverColumn] = useState<string | null>(null);
-	const [scrollToRowId, setScrollToRowId] = useState<string | null>(null);
-	const [scrollToColumnId, setScrollToColumnId] = useState<string | null>(null);
-	const [scrollToPreviewSectionId, setScrollToPreviewSectionId] = useState<string | null>(null);
-
-	// Wrapper to trigger scroll when section is added
-	const handleSectionAdded = useCallback((sectionId: string) => {
-		setScrollToSectionId(sectionId);
-	}, []);
+	const [styleEditorSource, setStyleEditorSource] = useState<"outline" | "elementEditor" | null>(
+		null
+	);
 
 	// VIEW STATE
 	const [sidebarTab, setSidebarTab] = useState<SidebarTab>(() => {
@@ -647,53 +641,49 @@ export default function VBPrototype({
 		return null;
 	};
 
-	const findOutlineIdForSection = (sectionId: string) => {
-		for (const o of outlines) {
-			const sections = o.tree ?? [];
-			if (sections.some((s: any) => s.id === sectionId)) {
-				return o.id;
+	const setCurrentEleSmart = useCallback(
+		(value: React.SetStateAction<string>) => {
+			const eleId = typeof value === "function" ? value(currentEle) : value;
+
+			console.log("[VBPrototype] setCurrentEleSmart called with:", eleId);
+
+			setCurrentEle(eleId);
+
+			if (!eleId || eleId === "none") return;
+
+			// ✅ Always drill down from View 1 -> View 2 when multi-outline
+			// (even if the element belongs to the currently active outline)
+			if (isMulti) {
+				setSidebarTab("outlines"); // keep your View 2 layout expectations
+				setOutlineView("tree");
 			}
-		}
-		return null;
-	};
 
-	const setCurrentEleSmart = useCallback((value: React.SetStateAction<string>) => {
-		const eleId = typeof value === "function" ? value(currentEle) : value;
-
-		setCurrentEle(eleId);
-
-		if (!eleId || eleId === "none") return;
-
-		// ✅ Always drill down from View 1 -> View 2 when multi-outline
-		// (even if the element belongs to the currently active outline)
-		if (isMulti) {
-			setSidebarTab("outlines"); // keep your View 2 layout expectations
-			setOutlineView("tree");
-		}
-
-		const owner = findOutlineIdForElement(eleId);
-		if (owner && owner !== activeOutlineId) {
-			setActiveOutlineId(owner);
-		}
-	}, [currentEle, isMulti, activeOutlineId, findOutlineIdForElement]);
+			const owner = findOutlineIdForElement(eleId);
+			if (owner && owner !== activeOutlineId) {
+				console.log("[VBPrototype] Switching to outline:", owner);
+				setActiveOutlineId(owner);
+			}
+		},
+		[currentEle, isMulti, activeOutlineId, findOutlineIdForElement]
+	);
 
 	// Wire up Brand Tone provider with scroll-to functionality
 	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Brand Tone");
 		brandTone.registerScrollFunction(setCurrentEleSmart);
 	}, [brandTone, setCurrentEleSmart]);
 
 	// Wire up Preflight Audit context with scroll-to functionality
 	useEffect(() => {
+		console.log("[VBPrototype] Registering scroll function with Preflight Audit");
 		registerPreflightScroll(setCurrentEleSmart);
 	}, [registerPreflightScroll, setCurrentEleSmart]);
 
 	const addSectionToEndOfActiveOutline = () => {
-		const t = Date.now();
-		const newSectionId = "section-" + t;
-
 		setData((prev) => {
+			const t = Date.now();
 			const mkSection = () => ({
-				id: newSectionId,
+				id: "section-" + t,
 				open: true,
 				children: [
 					{
@@ -712,9 +702,6 @@ export default function VBPrototype({
 
 			return [...(prev ?? []), mkSection()];
 		});
-
-		// Trigger scroll to new section
-		handleSectionAdded(newSectionId);
 	};
 
 	const addRandomBlockToEndOfActiveOutline = () => {
@@ -747,29 +734,32 @@ export default function VBPrototype({
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 	const [activeRightTool, setActiveRightTool] = usePersistentState("active-right-tool", null);
 
-	const onInputChange = useCallback((value: any, keyOrIndex: string | number) => {
-		if (currentEle === "none") return;
+	const onInputChange = useCallback(
+		(value: any, keyOrIndex: string | number) => {
+			if (currentEle === "none") return;
 
-		setTheEles((prev) => {
-			// Check if currentEle exists in the previous state
-			if (!prev[currentEle]) return prev;
+			setTheEles((prev) => {
+				// Check if currentEle exists in the previous state
+				if (!prev[currentEle]) return prev;
 
-			const ele = prev[currentEle];
-			const properties = {...(ele.properties || {})};
+				const ele = prev[currentEle];
+				const properties = {...(ele.properties || {})};
 
-			if (typeof keyOrIndex === "string") {
-				properties[keyOrIndex] = {...properties[keyOrIndex], value};
-			}
+				if (typeof keyOrIndex === "string") {
+					properties[keyOrIndex] = {...properties[keyOrIndex], value};
+				}
 
-			return {
-				...prev,
-				[currentEle]: {
-					...ele,
-					properties,
-				},
-			};
-		});
-	}, [currentEle, setTheEles]);
+				return {
+					...prev,
+					[currentEle]: {
+						...ele,
+						properties,
+					},
+				};
+			});
+		},
+		[currentEle, setTheEles]
+	);
 
 	// Style editor handlers
 	const onOpenStyleEditorFromOutline = useCallback((elementId: string) => {
@@ -785,51 +775,57 @@ export default function VBPrototype({
 		setStyleEditorSource("elementEditor");
 	}, [currentEle]);
 
-	const onStyleChange = useCallback((templateId: string) => {
-		if (!styleEditorEle) return;
+	const onStyleChange = useCallback(
+		(templateId: string) => {
+			if (!styleEditorEle) return;
 
-		setTheEles((prev) => {
-			if (!prev[styleEditorEle]) return prev;
+			setTheEles((prev) => {
+				if (!prev[styleEditorEle]) return prev;
 
-			const ele = prev[styleEditorEle];
-			const properties = {...(ele.properties || {})};
+				const ele = prev[styleEditorEle];
+				const properties = {...(ele.properties || {})};
 
-			properties.template = {value: templateId};
+				properties.template = {value: templateId};
 
-			return {
-				...prev,
-				[styleEditorEle]: {
-					...ele,
-					properties,
-				},
-			};
-		});
-	}, [styleEditorEle, setTheEles]);
+				return {
+					...prev,
+					[styleEditorEle]: {
+						...ele,
+						properties,
+					},
+				};
+			});
+		},
+		[styleEditorEle, setTheEles]
+	);
 
 	// Update element by ID (for Brand Tone suggestions)
-	const onUpdateElementById = useCallback((elementId: string, propertyKey: string, value: string) => {
-		console.log("[VBPrototype] Updating element:", elementId, propertyKey, value);
+	const onUpdateElementById = useCallback(
+		(elementId: string, propertyKey: string, value: string) => {
+			console.log("[VBPrototype] Updating element:", elementId, propertyKey, value);
 
-		setTheEles((prev) => {
-			if (!prev[elementId]) {
-				console.warn("[VBPrototype] Element not found:", elementId);
-				return prev;
-			}
+			setTheEles((prev) => {
+				if (!prev[elementId]) {
+					console.warn("[VBPrototype] Element not found:", elementId);
+					return prev;
+				}
 
-			const ele = prev[elementId];
-			const properties = {...(ele.properties || {})};
+				const ele = prev[elementId];
+				const properties = {...(ele.properties || {})};
 
-			properties[propertyKey] = {...properties[propertyKey], value};
+				properties[propertyKey] = {...properties[propertyKey], value};
 
-			return {
-				...prev,
-				[elementId]: {
-					...ele,
-					properties,
-				},
-			};
-		});
-	}, [setTheEles]);
+				return {
+					...prev,
+					[elementId]: {
+						...ele,
+						properties,
+					},
+				};
+			});
+		},
+		[setTheEles]
+	);
 
 	// Header actions (Generate only in Categories & Tags + plus-menu)
 	const showGenerateInHeader =
@@ -888,11 +884,17 @@ export default function VBPrototype({
 								setEditingSectionId(null);
 							},
 						},
-						...(onConnectContent ? [{
-							addon: <IconPlus size={16} />,
-							label: hasConnection ? "Change connected content..." : "Connect content...",
-							execute: onConnectContent,
-						}] : []),
+						...(onConnectContent
+							? [
+									{
+										addon: <IconPlus size={16} />,
+										label: hasConnection
+											? "Change connected content..."
+											: "Connect content...",
+										execute: onConnectContent,
+									},
+								]
+							: []),
 					]}
 				>
 					<MenuTrigger
@@ -1419,7 +1421,13 @@ export default function VBPrototype({
 						w="auto"
 						className="vb-outline"
 						bg="bg.page"
-						style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative", height: "100%"}}
+						style={{
+							width: 324,
+							minWidth: 180,
+							maxWidth: 600,
+							position: "relative",
+							height: "100%",
+						}}
 					>
 						<DragHandle position="right" minWidth={180} maxWidth={600} />
 
@@ -1435,7 +1443,6 @@ export default function VBPrototype({
 									pageName={pageName ?? undefined}
 									pageId={initialData?.id}
 									contentTypeId={contentType?.id}
-									boundPropertyIds={boundPropertyIds}
 									onRegisterGenerateTrigger={(fn) => {
 										generateTriggerRef.current = fn;
 									}}
@@ -1451,7 +1458,9 @@ export default function VBPrototype({
 						style={{height: "100%", overflow: "hidden"}}
 					>
 						{/* Check if this is a property-based page (has data but no outlines) */}
-						{outlines.length === 0 && contentType?.id && Object.keys(properties).length > 0 ? (
+						{outlines.length === 0 &&
+						contentType?.id &&
+						Object.keys(properties).length > 0 ? (
 							<PropertyBasedPreview
 								contentTypeId={contentType.id}
 								properties={properties}
@@ -1467,79 +1476,6 @@ export default function VBPrototype({
 								setCurrentHoverEle={setCurrentHoverEle}
 								setOutlines={setOutlines as any}
 								preview={preview}
-								scrollToSectionId={scrollToSectionId}
-								onScrollComplete={() => setScrollToSectionId(null)}
-								currentSection={currentSection}
-								currentHoverSection={currentHoverSection}
-								setCurrentSection={setCurrentSection}
-								setCurrentHoverSection={setCurrentHoverSection}
-								onSectionClick={(sectionId) => {
-									// Find which outline this section belongs to
-									const ownerOutlineId = findOutlineIdForSection(sectionId);
-
-									// Clear element and section selection
-									setCurrentEle("none");
-									setCurrentHoverEle("none");
-									setEditingSectionId(null);
-									setStyleEditorEle(null);
-
-									// Switch to the outline if needed
-									if (ownerOutlineId && ownerOutlineId !== activeOutlineId) {
-										setActiveOutlineId(ownerOutlineId);
-									}
-
-									// If multi-outline, switch to tree view
-									if (isMulti) {
-										setSidebarTab("outlines");
-										setOutlineView("tree");
-									} else {
-										// Single outline mode - switch to outline view
-										setSidebarTab("outline");
-									}
-
-									// Trigger scroll after transition completes
-									setTimeout(() => setScrollToOutlineSectionId(sectionId), 350);
-								}}
-								currentRow={currentRow}
-								currentHoverRow={currentHoverRow}
-								setCurrentRow={setCurrentRow}
-								setCurrentHoverRow={setCurrentHoverRow}
-								onRowClick={(rowId) => {
-									setCurrentEle("none");
-									setCurrentHoverEle("none");
-
-									// Switch to tree view if multi-outline
-									if (isMulti) {
-										setSidebarTab("outlines");
-										setOutlineView("tree");
-									} else {
-										setSidebarTab("outline");
-									}
-
-									setTimeout(() => setScrollToRowId(rowId), 350);
-								}}
-								currentColumn={currentColumn}
-								currentHoverColumn={currentHoverColumn}
-								setCurrentColumn={setCurrentColumn}
-								setCurrentHoverColumn={setCurrentHoverColumn}
-								onColumnClick={(columnId) => {
-									setCurrentEle("none");
-									setCurrentHoverEle("none");
-
-									// Switch to tree view if multi-outline
-									if (isMulti) {
-										setSidebarTab("outlines");
-										setOutlineView("tree");
-									} else {
-										setSidebarTab("outline");
-									}
-
-									setTimeout(() => setScrollToColumnId(columnId), 350);
-								}}
-								scrollToRowId={scrollToRowId}
-								scrollToColumnId={scrollToColumnId}
-								onRowScrollComplete={() => setScrollToRowId(null)}
-								onColumnScrollComplete={() => setScrollToColumnId(null)}
 							/>
 						)}
 						<Box borderL="1" borderColor="border.tertiary">
@@ -1710,7 +1646,6 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
 														className="cursor-pointer"
 														onClick={() => {
 															setOutlineView("list");
@@ -1757,24 +1692,6 @@ export default function VBPrototype({
 														setEditingSectionId(id);
 													}}
 													onOpenStyleEditor={onOpenStyleEditorFromOutline}
-													onSectionAdded={handleSectionAdded}
-													scrollToSectionId={scrollToOutlineSectionId}
-													onScrollComplete={() => setScrollToOutlineSectionId(null)}
-													currentSection={currentSection}
-													setCurrentHoverSection={setCurrentHoverSection}
-													currentRow={currentRow}
-													setCurrentHoverRow={setCurrentHoverRow}
-													currentColumn={currentColumn}
-													setCurrentHoverColumn={setCurrentHoverColumn}
-													onScrollToSection={(sectionId, outlineId) => {
-														if (outlineId !== activeOutlineId) {
-															setActiveOutlineId(outlineId);
-														}
-														setScrollToSectionId(sectionId);
-													}}
-													onScrollToRow={setScrollToRowId}
-													onScrollToColumn={setScrollToColumnId}
-													outlineId={activeOutline?.id}
 												/>
 											) : null}
 										</div>
@@ -1791,7 +1708,6 @@ export default function VBPrototype({
 													<Text
 														fontSize="sm"
 														fontWeight="400"
-														color="fg.accent"
 														className="cursor-pointer absolute top-0 left-0"
 														onClick={() => {
 															setActivePropertiesSection("menu");
@@ -1834,9 +1750,7 @@ export default function VBPrototype({
 													</Text>
 												</div>
 												<div className="flex items-center gap-2">
-													<Heading level="4">
-														Properties
-													</Heading>
+													<Heading level="4">Properties</Heading>
 													<div className="flex-1" />
 												</div>
 											</div>
@@ -1861,16 +1775,20 @@ export default function VBPrototype({
 														Section Properties
 													</Heading>
 													{(() => {
-														const currentSectionType = activeOutline?.sectionType || "content";
+														const currentSectionType =
+															activeOutline?.sectionType || "content";
 														const sectionTypeOptions = [
-															{ label: "Hero", value: "hero" },
-															{ label: "Features", value: "features" },
-															{ label: "Benefits", value: "benefits" },
-															{ label: "Testimonials", value: "testimonials" },
-															{ label: "Pricing", value: "pricing" },
-															{ label: "Call to Action", value: "cta" },
-															{ label: "FAQ", value: "faq" },
-															{ label: "Content", value: "content" },
+															{label: "Hero", value: "hero"},
+															{label: "Features", value: "features"},
+															{label: "Benefits", value: "benefits"},
+															{
+																label: "Testimonials",
+																value: "testimonials",
+															},
+															{label: "Pricing", value: "pricing"},
+															{label: "Call to Action", value: "cta"},
+															{label: "FAQ", value: "faq"},
+															{label: "Content", value: "content"},
 														];
 
 														return (
@@ -1879,13 +1797,21 @@ export default function VBPrototype({
 																	<Select
 																		value={currentSectionType}
 																		options={sectionTypeOptions}
-																		onValueChange={(value: string) => {
+																		onValueChange={(
+																			value: string
+																		) => {
 																			// Update section type in active outline
 																			setOutlines((prev) =>
-																				prev.map((outline) =>
-																					outline.id === activeOutlineId
-																						? {...outline, sectionType: value}
-																						: outline
+																				prev.map(
+																					(outline) =>
+																						outline.id ===
+																						activeOutlineId
+																							? {
+																									...outline,
+																									sectionType:
+																										value,
+																								}
+																							: outline
 																				)
 																			);
 																		}}
@@ -1894,7 +1820,11 @@ export default function VBPrototype({
 																		<SelectContent />
 																	</Select>
 																</Field>
-																<Text fontSize="sm" color="fg.secondary" mt="8">
+																<Text
+																	fontSize="sm"
+																	color="fg.secondary"
+																	mt="8"
+																>
 																	Section ID: {editingSectionId}
 																</Text>
 															</Box>
@@ -1910,7 +1840,6 @@ export default function VBPrototype({
 													pageName={pageName ?? undefined}
 													pageId={initialData?.id}
 													contentTypeId={contentType?.id}
-													boundPropertyIds={boundPropertyIds}
 													onRegisterGenerateTrigger={(fn) => {
 														generateTriggerRef.current = fn;
 													}}
@@ -1927,10 +1856,13 @@ export default function VBPrototype({
 												<StyleEditor
 													outlineTitle={
 														styleEditorSource === "elementEditor"
-															? (theEles[styleEditorEle]?.type || "Element")
-															: (activeOutline?.title || "Outline")
+															? theEles[styleEditorEle]?.type ||
+																"Element"
+															: activeOutline?.title || "Outline"
 													}
-													elementType={theEles[styleEditorEle]?.type || ""}
+													elementType={
+														theEles[styleEditorEle]?.type || ""
+													}
 													currentEle={styleEditorEle}
 													properties={theEles[styleEditorEle]?.properties}
 													onBack={() => {
@@ -2013,24 +1945,6 @@ export default function VBPrototype({
 													setEditingSectionId(id);
 												}}
 												onOpenStyleEditor={onOpenStyleEditorFromOutline}
-												onSectionAdded={handleSectionAdded}
-												scrollToSectionId={scrollToOutlineSectionId}
-												onScrollComplete={() => setScrollToOutlineSectionId(null)}
-												currentSection={currentSection}
-												setCurrentHoverSection={setCurrentHoverSection}
-												currentRow={currentRow}
-												setCurrentHoverRow={setCurrentHoverRow}
-												currentColumn={currentColumn}
-												setCurrentHoverColumn={setCurrentHoverColumn}
-												onScrollToSection={(sectionId, outlineId) => {
-													if (outlineId !== activeOutlineId) {
-														setActiveOutlineId(outlineId);
-													}
-													setScrollToSectionId(sectionId);
-												}}
-												onScrollToRow={setScrollToRowId}
-												onScrollToColumn={setScrollToColumnId}
-												outlineId={activeOutline?.id}
 											/>
 										</div>
 									</div>
@@ -2088,9 +2002,7 @@ export default function VBPrototype({
 													</Text>
 												</div>
 												<div className="flex items-center gap-2">
-													<Heading level="4">
-														Properties
-													</Heading>
+													<Heading level="4">Properties</Heading>
 													<div className="flex-1" />
 												</div>
 											</div>
@@ -2121,15 +2033,25 @@ export default function VBPrototype({
 												</Box>
 											) : (
 												<>
-													{hasConnection && initialData?.cmpConnection && (
-														<ConnectionStatus
-															instanceId={initialData.cmpConnection.instanceId}
-															syncStatus={initialData.cmpConnection.syncStatus}
-															lastSyncedAt={initialData.cmpConnection.lastSyncedAt}
-															onSync={onSyncContent}
-															onDisconnect={onDisconnectContent}
-														/>
-													)}
+													{hasConnection &&
+														initialData?.cmpConnection && (
+															<ConnectionStatus
+																instanceId={
+																	initialData.cmpConnection
+																		.instanceId
+																}
+																syncStatus={
+																	initialData.cmpConnection
+																		.syncStatus
+																}
+																lastSyncedAt={
+																	initialData.cmpConnection
+																		.lastSyncedAt
+																}
+																onSync={onSyncContent}
+																onDisconnect={onDisconnectContent}
+															/>
+														)}
 													<PropertiesPanel
 														value={properties}
 														onChange={setPropertiesPatch}
@@ -2138,7 +2060,6 @@ export default function VBPrototype({
 														pageName={pageName ?? undefined}
 														pageId={initialData?.id}
 														contentTypeId={contentType?.id}
-														boundPropertyIds={boundPropertyIds}
 														onRegisterGenerateTrigger={(fn) => {
 															generateTriggerRef.current = fn;
 														}}
@@ -2156,10 +2077,13 @@ export default function VBPrototype({
 												<StyleEditor
 													outlineTitle={
 														styleEditorSource === "elementEditor"
-															? (theEles[styleEditorEle]?.type || "Element")
-															: (activeOutline?.title || "Outline")
+															? theEles[styleEditorEle]?.type ||
+																"Element"
+															: activeOutline?.title || "Outline"
 													}
-													elementType={theEles[styleEditorEle]?.type || ""}
+													elementType={
+														theEles[styleEditorEle]?.type || ""
+													}
 													currentEle={styleEditorEle}
 													properties={theEles[styleEditorEle]?.properties}
 													onBack={() => {
@@ -2217,79 +2141,6 @@ export default function VBPrototype({
 						setCurrentHoverEle={setCurrentHoverEle}
 						setOutlines={setOutlines as any}
 						preview={preview}
-						scrollToSectionId={scrollToSectionId}
-						onScrollComplete={() => setScrollToSectionId(null)}
-						currentSection={currentSection}
-						currentHoverSection={currentHoverSection}
-						setCurrentSection={setCurrentSection}
-						setCurrentHoverSection={setCurrentHoverSection}
-						onSectionClick={(sectionId) => {
-							// Find which outline this section belongs to
-							const ownerOutlineId = findOutlineIdForSection(sectionId);
-
-							// Clear element and section selection
-							setCurrentEle("none");
-							setCurrentHoverEle("none");
-							setEditingSectionId(null);
-							setStyleEditorEle(null);
-
-							// Switch to the outline if needed
-							if (ownerOutlineId && ownerOutlineId !== activeOutlineId) {
-								setActiveOutlineId(ownerOutlineId);
-							}
-
-							// If multi-outline, switch to tree view
-							if (isMulti) {
-								setSidebarTab("outlines");
-								setOutlineView("tree");
-							} else {
-								// Single outline mode - switch to outline view
-								setSidebarTab("outline");
-							}
-
-							// Trigger scroll after transition completes
-							setTimeout(() => setScrollToOutlineSectionId(sectionId), 350);
-						}}
-						currentRow={currentRow}
-						currentHoverRow={currentHoverRow}
-						setCurrentRow={setCurrentRow}
-						setCurrentHoverRow={setCurrentHoverRow}
-						onRowClick={(rowId) => {
-							setCurrentEle("none");
-							setCurrentHoverEle("none");
-
-							// Switch to tree view if multi-outline
-							if (isMulti) {
-								setSidebarTab("outlines");
-								setOutlineView("tree");
-							} else {
-								setSidebarTab("outline");
-							}
-
-							setTimeout(() => setScrollToRowId(rowId), 350);
-						}}
-						currentColumn={currentColumn}
-						currentHoverColumn={currentHoverColumn}
-						setCurrentColumn={setCurrentColumn}
-						setCurrentHoverColumn={setCurrentHoverColumn}
-						onColumnClick={(columnId) => {
-							setCurrentEle("none");
-							setCurrentHoverEle("none");
-
-							// Switch to tree view if multi-outline
-							if (isMulti) {
-								setSidebarTab("outlines");
-								setOutlineView("tree");
-							} else {
-								setSidebarTab("outline");
-							}
-
-							setTimeout(() => setScrollToColumnId(columnId), 350);
-						}}
-						scrollToRowId={scrollToRowId}
-						scrollToColumnId={scrollToColumnId}
-						onRowScrollComplete={() => setScrollToRowId(null)}
-						onColumnScrollComplete={() => setScrollToColumnId(null)}
 					/>
 
 					{(() => {
@@ -2466,7 +2317,11 @@ export default function VBPrototype({
 					variations={variations}
 					pageOutlines={outlines}
 					onClose={() => setIsVersionHistoryOpen(false)}
-					initialPreviewMode={preview.mode === "fixed" || preview.mode === "scale" ? "fixed" : "responsive"}
+					initialPreviewMode={
+						preview.mode === "fixed" || preview.mode === "scale"
+							? "fixed"
+							: "responsive"
+					}
 					versionHistory={versionHistory}
 					pageId={pageId}
 					onRestore={onRestoreVersion}

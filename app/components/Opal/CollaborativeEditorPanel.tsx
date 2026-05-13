@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Avatar } from "@optiaxiom/react";
+import { Box, Tooltip } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { Button } from "../Button";
 import {
@@ -13,8 +13,8 @@ import {
   IconQuoteRight,
   IconHorizontalRule,
   IconLink,
-  IconExpand,
-  IconXmark,
+  IconArrowRotateLeft,
+  IconArrowRotateRight,
 } from "@optimizely/axiom-icons";
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
@@ -41,12 +41,11 @@ type CollaborativeEditorPanelProps = {
   filename?: string;
   fileType?: EditorFileType;
   language?: CodeMirrorLanguage;
+  /** Fill the parent container instead of using a fixed 520px width */
+  fluid?: boolean;
+  /** Seed the editor with this markdown string on first open */
+  initialMarkdown?: string;
 };
-
-const MOCK_USERS = [
-  { name: "Mary Anne", color: "#7C3AED" },
-  { name: "Stefan S.", color: "#0EA5E9" },
-];
 
 // ── Toolbar helpers ──────────────────────────────────────────────────────────
 
@@ -76,39 +75,23 @@ function ToolbarBtn({
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      appearance="subtle"
+      size="sm"
       title={title}
       onClick={onClick}
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
         width: 28,
-        height: 28,
-        border: "none",
-        borderRadius: 4,
-        cursor: "pointer",
-        background: active ? "var(--ax-colors-bg-accent-subtle)" : "transparent",
-        color: active ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)",
-        fontSize: 11,
-        fontWeight: 700,
-        lineHeight: 1,
-        transition: "background 0.1s",
+        minWidth: 28,
         flexShrink: 0,
-      }}
-      onMouseEnter={(e) => {
-        if (!active)
-          (e.currentTarget as HTMLButtonElement).style.background =
-            "var(--ax-colors-bg-secondary)";
-      }}
-      onMouseLeave={(e) => {
-        if (!active)
-          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+        ...(active && {
+          background: "var(--ax-colors-bg-accent-subtle)",
+          color: "var(--ax-colors-fg-accent)",
+        }),
       }}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -119,9 +102,11 @@ export function CollaborativeEditorPanel({
   onClose,
   filename = "document.md",
   language = "markdown",
+  fluid = false,
+  initialMarkdown,
 }: CollaborativeEditorPanelProps) {
   const [mode, setMode] = useState<ToolbarMode>("wysiwyg");
-  const collabDoc = useCollabDoc();
+  const collabDoc = useCollabDoc(initialMarkdown);
 
   const handleModeSwitch = useCallback(
     (next: ToolbarMode) => {
@@ -143,10 +128,14 @@ export function CollaborativeEditorPanel({
     <Box
       display="flex"
       flexDirection="column"
-      borderL="1"
-      borderColor="border.secondary"
+      {...(!fluid && { borderL: "1", borderColor: "border.secondary" })}
       bg="bg.default"
-      style={{
+      style={fluid ? {
+        flex: 1,
+        minWidth: 0,
+        height: "100%",
+        overflow: "hidden",
+      } : {
         width: 520,
         minWidth: 360,
         maxWidth: "45vw",
@@ -170,25 +159,23 @@ export function CollaborativeEditorPanel({
         {/* Mode toggle */}
         <Box display="flex" bg="bg.secondary" rounded="md" p="2" gap="2" style={{ flexShrink: 0 }}>
           {(["wysiwyg", "source"] as ToolbarMode[]).map((m) => (
-            <button
+            <Button
               key={m}
-              type="button"
+              appearance="subtle"
+              size="sm"
               onClick={() => handleModeSwitch(m)}
               style={{
                 padding: "3px 10px",
-                borderRadius: 4,
-                border: "none",
-                cursor: "pointer",
                 fontSize: 12,
                 fontWeight: 600,
-                background: mode === m ? "var(--ax-colors-bg-default)" : "transparent",
-                color: mode === m ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
-                boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
-                transition: "all 0.1s",
+                ...(mode === m && {
+                  background: "var(--ax-colors-bg-default)",
+                  color: "var(--ax-colors-fg-default)",
+                }),
               }}
             >
-              {m === "wysiwyg" ? "WYSIWYG" : "Source"}
-            </button>
+              {m === "wysiwyg" ? "Visual" : "Source"}
+            </Button>
           ))}
         </Box>
 
@@ -217,13 +204,19 @@ export function CollaborativeEditorPanel({
 
         <ToolbarBtn title="Link"><IconLink size={13} /></ToolbarBtn>
         <ToolbarBtn title="Code block">
-          <span style={{ fontFamily: "monospace" }}>{"{}"}</span>
+          <Box style={{ fontFamily: "monospace" }}>{"{}"}</Box>
         </ToolbarBtn>
 
         <Box style={{ flex: 1 }} />
 
-        <Button appearance="subtle" size="sm" icon={<IconExpand size={14} />} aria-label="Expand" />
-        <Button appearance="subtle" size="sm" icon={<IconXmark size={14} />} onClick={onClose} aria-label="Close" />
+        <ToolbarDivider />
+
+        <Tooltip content="Undo" delayDuration={400}>
+          <span><Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={13} />} aria-label="Undo" /></span>
+        </Tooltip>
+        <Tooltip content="Redo" delayDuration={400}>
+          <span><Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={13} />} aria-label="Redo" /></span>
+        </Tooltip>
       </Box>
 
       {/* ── Editor area ── */}
@@ -242,7 +235,7 @@ export function CollaborativeEditorPanel({
             pointerEvents: mode === "wysiwyg" ? "auto" : "none",
           }}
         >
-          <TiptapEditor collabDoc={collabDoc} />
+          <TiptapEditor collabDoc={collabDoc} initialMarkdown={initialMarkdown} />
         </Box>
 
         {/* Source */}
@@ -262,7 +255,7 @@ export function CollaborativeEditorPanel({
       <Box
         display="flex"
         alignItems="center"
-        justifyContent="space-between"
+        gap="8"
         px="16"
         py="8"
         borderT="1"
@@ -270,27 +263,13 @@ export function CollaborativeEditorPanel({
         bg="bg.secondary"
         style={{ flexShrink: 0 }}
       >
-        <Box display="flex" alignItems="center" gap="8">
-          <Box
-            rounded="full"
-            style={{ width: 8, height: 8, backgroundColor: "#22c55e", flexShrink: 0 }}
-          />
-          <Text fontSize="xs" color="fg.tertiary">Connected</Text>
-          <Text fontSize="xs" color="fg.tertiary" style={{ opacity: 0.4 }}>·</Text>
-          <Text fontSize="xs" color="fg.tertiary">{filename}</Text>
-        </Box>
-
-        <Box display="flex" alignItems="center" gap="4">
-          {MOCK_USERS.map((u) => (
-            <Avatar
-              key={u.name}
-              name={u.name}
-              size="xs"
-              colorScheme="purple"
-              style={{ border: `2px solid ${u.color}` } as React.CSSProperties}
-            />
-          ))}
-        </Box>
+        <Box
+          rounded="full"
+          style={{ width: 8, height: 8, background: "var(--ax-colors-fg-positive)", flexShrink: 0 }}
+        />
+        <Text fontSize="sm" color="fg.tertiary" style={{ fontSize: 12 }}>Connected</Text>
+        <Text fontSize="sm" color="fg.tertiary" style={{ fontSize: 12, opacity: 0.4 }}>·</Text>
+        <Text fontSize="sm" color="fg.tertiary" style={{ fontSize: 12 }}>{filename}</Text>
       </Box>
     </Box>
   );

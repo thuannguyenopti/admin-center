@@ -30,12 +30,14 @@ import {
     TableCell,
 } from "@optiaxiom/react";
 import { Pill } from "@optiaxiom/react/unstable";
+import { IconWifi, IconWifiOff, IconBrandSlack, IconTicket } from "@tabler/icons-react";
+import { IconAgent } from "@optimizely/axiom-icons";
 import {
     IconBell,
-    IconChecks,
-    IconTrash,
-    IconBellOff,
-    IconInbox,
+    IconCheckDouble as IconChecks,
+    IconTrashCan as IconTrash,
+    IconBellSlash as IconBellOff,
+    IconInboxFull as IconInbox,
     IconSearch,
     IconFilter,
     IconChevronDown,
@@ -44,20 +46,12 @@ import {
     IconRobot,
     IconClock,
     IconUser,
-    IconSettings,
-    IconRefresh,
-    IconWifi,
-    IconWifiOff,
-    IconBrandSlack,
-    IconMail,
-    IconDeviceMobile,
+    IconGear as IconSettings,
+    IconArrowsRotate as IconRefresh,
+    IconMobile as IconDeviceMobile,
     IconEye,
-    IconEyeOff,
+    IconEyeSlash as IconEyeOff,
     IconChevronUp,
-    IconLoader2,
-    IconTicket,
-} from "@tabler/icons-react";
-import {
     IconCircleExclamation,
     IconTriangleExclamation,
     IconSpinner,
@@ -69,11 +63,12 @@ import {
     IconEnvelope,
     IconXmark,
     IconPen,
-    IconAgent,
     IconScrewdriverWrench,
     IconMegaphone,
     IconCirclePause,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
+const IconLoader2 = IconSpinner;
+const IconMail = IconEnvelope;
 import { useState } from "react";
 import { Input } from "@/app/components/Input";
 

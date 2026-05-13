@@ -12,7 +12,7 @@ import {
     IconUpload,
     IconPen,
     IconXmark,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
@@ -24,7 +24,7 @@ type Step = "entry" | "designing" | "preview" | "building";
 // ─── Template Agents (from opal-v3) ──────────────────────────────────────────
 
 const TEMPLATE_AGENTS = [
-    { emoji: "✍️", name: "Write an email campaign", desc: "Draft multi-step email sequences from a single brief, personalised per audience segment.", tags: ["Content strategy", "Copywriting"], promptTemplate: "You are an expert email marketer. Draft a multi-step email sequence from [[brief]], personalised per audience segment.\n\n{Instruction}\n1. Define the email sequence structure (welcome, nurture, conversion).\n2. Write subject lines and body copy for each step, tailored to [[segment]].\n3. Recommend send cadence and A/B test variants for subject lines.\n\nUse `Email Validator`, `Template Gallery`, `Audience Segmenter`.", tools: "", variables: [], inferenceLevel: "balanced", creativity: 0.4 },
+    { emoji: "✍️", name: "Write an email campaign", desc: "Draft multi-step email sequences from a single brief, personalised per audience segment.", tags: ["Content strategy", "Copywriting"], promptTemplate: "You are an expert email marketer. Draft a multi-step email sequence from [[brief]], personalised per audience segment.\n\n{Skill}\n1. Define the email sequence structure (welcome, nurture, conversion).\n2. Write subject lines and body copy for each step, tailored to [[segment]].\n3. Recommend send cadence and A/B test variants for subject lines.\n\nUse `Email Validator`, `Template Gallery`, `Audience Segmenter`.", tools: "", variables: [], inferenceLevel: "balanced", creativity: 0.4 },
     { emoji: "🌐", name: "Optimize my GEO", desc: GEO_AUDITOR.description, tags: ["SEO/GEO", "Analytics"], promptTemplate: GEO_AUDITOR.promptTemplate, tools: GEO_AUDITOR.tools, variables: GEO_AUDITOR.variables },
     { emoji: "📊", name: "Analyze my competitors", desc: "Map competitor messaging at scale and surface content gaps into an actionable brief.", tags: ["Competitive analysis", "Research"], promptTemplate: "", tools: "", variables: [] },
     { emoji: "🧪", name: "Set up an A/B experiment", desc: "Define hypothesis, write variants, and configure your test without clunky back-and-forth.", tags: ["Testing", "Experimentation"], promptTemplate: "", tools: "", variables: [] },
@@ -33,7 +33,7 @@ const TEMPLATE_AGENTS = [
     { emoji: "🔍", name: "Audit my SEO performance", desc: SEO_METADATA_OPTIMIZATION.description, tags: ["Technical SEO", "Keywords"], promptTemplate: SEO_METADATA_OPTIMIZATION.promptTemplate, tools: SEO_METADATA_OPTIMIZATION.tools, variables: SEO_METADATA_OPTIMIZATION.variables },
     { emoji: "🔄", name: "Content Refresh Analysis", desc: CONTENT_REFRESH_ANALYSIS.description, tags: ["SEO", "Content"], promptTemplate: CONTENT_REFRESH_ANALYSIS.promptTemplate, tools: CONTENT_REFRESH_ANALYSIS.tools, variables: CONTENT_REFRESH_ANALYSIS.variables },
     { emoji: "📱", name: "Create social media strategy", desc: "Build a channel-by-channel strategy with tone, cadence, and a 30-day content starter pack.", tags: ["Strategy", "Social media"], promptTemplate: "", tools: "", variables: [] },
-    { emoji: "🚀", name: "Launch a campaign from brief", desc: "Turn a creative brief into a fully configured campaign with copy, targeting, and scheduling.", tags: ["Automation", "Campaigns"], promptTemplate: "You are a campaign launch specialist. Turn the provided creative brief into a fully configured campaign with copy, targeting, and scheduling.\n\n{Instruction}\n1. Parse [[brief]] and extract campaign goals, audience, and key messages.\n2. Write copy variants for each channel: email, social, paid.\n3. Define audience targeting parameters and recommended scheduling.\n4. Output a campaign launch checklist.\n\nUse `Campaign Builder`, `Audience Segmenter`, `Copy Generator`.", tools: "", variables: [] },
+    { emoji: "🚀", name: "Launch a campaign from brief", desc: "Turn a creative brief into a fully configured campaign with copy, targeting, and scheduling.", tags: ["Automation", "Campaigns"], promptTemplate: "You are a campaign launch specialist. Turn the provided creative brief into a fully configured campaign with copy, targeting, and scheduling.\n\n{Skill}\n1. Parse [[brief]] and extract campaign goals, audience, and key messages.\n2. Write copy variants for each channel: email, social, paid.\n3. Define audience targeting parameters and recommended scheduling.\n4. Output a campaign launch checklist.\n\nUse `Campaign Builder`, `Audience Segmenter`, `Copy Generator`.", tools: "", variables: [] },
     { emoji: "🎯", name: "Personalize audience segments", desc: "Cluster your audience into high-value segments and generate tailored messaging for each.", tags: ["Personalization", "Segmentation"], promptTemplate: "", tools: "", variables: [] },
 ];
 
@@ -167,7 +167,7 @@ export function NewAgentDialog({ open, onOpenChange }: Props) {
             const promptLines = [
                 `You are a ${MOCK.name}. ${MOCK.desc}`,
                 "",
-                "{Instruction}",
+                "{Skill}",
                 "Follow these workflow phases:",
                 "",
                 ...MOCK.phases.map((phase, i) => `${i + 1}. ${phase.title}\n   ${phase.detail}`),

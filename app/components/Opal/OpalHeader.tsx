@@ -2,13 +2,9 @@
 
 import { Box, Button } from "@optiaxiom/react";
 import { Text } from "../Text";
-import {
-    IconXmark,
-    IconBars,
-    IconCirclePlus,
-    IconChevronDown,
-    IconArrowsMaximize,
-} from "@/app/lib/axiom-icons";
+import { IconXmark, IconBars, IconCirclePlus } from "@/app/lib/axiom-icons";
+import IconDropdown from "@/app/assets/opal/icon-dropdown.svg";
+import IconMaximize from "@/app/assets/opal/icon-maximize.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
 import { useEffect, useRef, useState } from "react";
 import { useLoaderDev } from "@/app/opal/components/useLoaderDev";
@@ -123,10 +119,10 @@ export function OpalHeader({
                         {devMode && (
                             <span style={{
                                 width: '6px', height: '6px', borderRadius: '50%',
-                                background: '#7C3AED', display: 'inline-block', marginLeft: '-4px',
+                                background: 'var(--ax-colors-bg-accent)', display: 'inline-block', marginLeft: '-4px',
                             }} />
                         )}
-                        <IconChevronDown size={12} />
+                        <IconDropdown style={{ width: '10px', height: '5px' }} />
                     </Box>
 
                     {menuOpen && (
@@ -160,7 +156,7 @@ export function OpalHeader({
                                 <span style={{ fontSize: '13px', color: '#374151' }}>Loader Dev Mode</span>
                                 <div style={{
                                     width: '34px', height: '18px', borderRadius: '9px',
-                                    background: devMode ? '#7C3AED' : '#d1d5db',
+                                    background: devMode ? 'var(--ax-colors-bg-accent)' : 'var(--ax-colors-bg-avatar-neutral, #d1d5db)',
                                     position: 'relative', transition: 'background 0.2s', flexShrink: 0,
                                 }}>
                                     <div style={{
@@ -219,7 +215,7 @@ export function OpalHeader({
                             justifyContent: 'center',
                         }}
                     >
-                        <IconArrowsMaximize size={14} />
+                        <IconMaximize style={{ width: '14px', height: '14px' }} />
                     </Button>
                     <Button
                         appearance="subtle"

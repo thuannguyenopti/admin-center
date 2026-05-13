@@ -12,15 +12,17 @@ import {
     DropdownMenuItem,
 } from "@optiaxiom/react";
 import {
+    IconEllipsisStroke,
+    IconXmark,
+} from "@optiaxiom/icons";
+import {
     IconPen,
     IconEye,
     IconClockRotateLeft,
     IconCopy,
     IconEyeSlash,
     IconArrowsLeftRight,
-    IconEllipsisSolid,
 } from "@optimizely/axiom-icons";
-import { ResizableDetailsTray } from "./ResizableDetailsTray";
 
 export interface Version {
     id: string;
@@ -69,16 +71,53 @@ export function VersionHistory({
     const previousVersions = versions.filter(v => !v.isCurrent);
 
     return (
-        <ResizableDetailsTray
-            isOpen={isOpen}
-            onClose={onClose}
-            title="Version History"
-            defaultWidth={360}
-            minWidth={340}
-            maxWidth={620}
-            bodyPadding="16"
+        <Box
+            style={{
+                width: isOpen ? "360px" : "0px",
+                transition: "width 0.3s ease-in-out",
+                overflow: "hidden",
+                borderLeft: isOpen ? "1px solid var(--ax-colors-border-secondary)" : "none",
+                backgroundColor: "var(--ax-colors-bg-default)",
+                display: "flex",
+                flexDirection: "column",
+                flexShrink: 0,
+            }}
         >
-                    <Box display="flex" flexDirection="column" gap="24">
+            {isOpen && (
+                <>
+                    {/* Header */}
+                    <Box
+                        px="16"
+                        py="12"
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        style={{
+                            borderBottom: "1px solid var(--ax-colors-border-secondary)",
+                        }}
+                    >
+                        <Text fontWeight="600" fontSize="md">
+                            Version History
+                        </Text>
+                        <Button
+                            appearance="subtle"
+                            size="sm"
+                            icon={<IconXmark size={16} />}
+                            aria-label="Close"
+                            onClick={onClose}
+                        />
+                    </Box>
+
+                    {/* Content */}
+                    <Box
+                        flex="1"
+                        overflowY="auto"
+                        px="16"
+                        py="16"
+                        display="flex"
+                        flexDirection="column"
+                        gap="24"
+                    >
                         {/* Current Version Section */}
                         {currentVersion && (
                             <Box display="flex" flexDirection="column" gap="8">
@@ -128,7 +167,9 @@ export function VersionHistory({
                             </Box>
                         )}
                     </Box>
-        </ResizableDetailsTray>
+                </>
+            )}
+        </Box>
     );
 }
 
@@ -212,7 +253,7 @@ function VersionCard({
                     <Button
                         appearance="subtle"
                         size="sm"
-                        icon={<IconEllipsisSolid size={16} />}
+                        icon={<IconEllipsisStroke size={16} />}
                         aria-label="More options"
                         onClick={(e) => e.stopPropagation()}
                     />

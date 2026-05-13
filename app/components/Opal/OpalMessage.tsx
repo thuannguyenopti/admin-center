@@ -302,7 +302,7 @@ const MarkdownContent = ({ content }: { content: string }) => {
             return (
               <a
                 href={href}
-                style={{ color: 'var(--axiom-fg-accent, #7C3AED)', textDecoration: 'underline' }}
+                style={{ color: 'var(--ax-colors-fg-accent)', textDecoration: 'underline' }}
                 {...(isInternal ? {} : { target: "_blank", rel: "noopener noreferrer" })}
                 {...props}
               />
@@ -318,12 +318,12 @@ const MarkdownContent = ({ content }: { content: string }) => {
 
 // ── Dev-mode loading sequence ─────────────────────────────────────────────────
 
-const PURPLE = "#7C3AED";
+const PURPLE = "var(--ax-colors-fg-accent)";
 const PHASE1_MS = 4000;      // how long to show the big V5 loader
 const ACTIVITY_INTERVAL = 3500; // ms between each activity row appearing
-const SHIMMER_PURPLE_1 = "#7C3AED";
-const SHIMMER_PURPLE_2 = "#9D74F5";
-const SHIMMER_PURPLE_3 = "#C2A8FA";
+const SHIMMER_PURPLE_1 = "var(--ax-colors-fg-accent)";
+const SHIMMER_PURPLE_2 = "var(--ax-colors-bg-accent-light, #6A8FFC)";
+const SHIMMER_PURPLE_3 = "var(--ax-colors-bg-accent-subtle, #B3C3FF)";
 
 const ACTIVITY_LABELS = [
   "thinking",
@@ -502,7 +502,7 @@ export function OpalMessage({
         {message.eventType !== 'agent-end' && (
           <span style={{ fontSize: 14 }}>{message.agentEmoji}</span>
         )}
-        <span style={{ fontSize: 12, color: '#4f576e', fontFamily: 'Inter, sans-serif' }}>{message.content}</span>
+        <span style={{ fontSize: 12, color: '#4f576e', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>{message.content}</span>
       </div>
     );
   }
@@ -518,13 +518,13 @@ export function OpalMessage({
       {!isUser && agentContext && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
           <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
-          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>{agentContext.name}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>{agentContext.name}</span>
         </div>
       )}
       {!isUser && showOpalHeader && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
           <img src="/opal.png" alt="Opal" width={16} height={16} style={{ borderRadius: 4 }} />
-          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'Inter, sans-serif' }}>Opal</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>Opal</span>
         </div>
       )}
 
@@ -562,7 +562,7 @@ export function OpalMessage({
           <Box
             style={{
               maxWidth: isUser ? '85%' : '100%',
-              backgroundColor: isUser ? '#F3F4F6' : 'transparent',
+              backgroundColor: isUser ? 'var(--ax-colors-bg-accent-subtle)' : 'transparent',
               color: isUser ? 'var(--opal-text-user)' : 'var(--opal-text-body)',
               borderRadius: isEditing ? '12px' : (isUser ? '16px 4px 16px 16px' : '4px 16px 16px 16px'),
               padding: isEditing ? '8px' : (isUser ? '12px 16px' : '4px 8px'),
@@ -636,7 +636,7 @@ export function OpalMessage({
                         gap="12"
                         style={{ width: "fit-content", maxWidth: "100%" }}
                       >
-                        <OpalLoaderV5 size={16} color="#7C3AED" />
+                        <OpalLoaderV5 size={16} color="var(--ax-colors-fg-accent)" />
                         <Text
                           style={{
                             ...opalTypography.body,
@@ -674,7 +674,7 @@ export function OpalMessage({
                   <DevLoadingState key={`${message.id}-${sequence}`} sequence={sequence} />
                 ) : (
                   <Box display="flex" alignItems="center" gap="12" py="4">
-                    <OpalLoaderV5 size={16} color="#7C3AED" />
+                    <OpalLoaderV5 size={16} color="var(--ax-colors-fg-accent)" />
                     <Text
                       style={{
                         ...opalTypography.body,
