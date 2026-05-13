@@ -572,6 +572,7 @@ export function FormBuilder() {
 		if (n.type !== "formSection") {
 			return { ...n, data: { ...n.data, ...extra, ...addCallbacks } };
 		}
+		const childCount = nodes.filter((c) => (c as any).parentId === n.id).length;
 		return {
 			...n,
 			zIndex: -1,
@@ -579,6 +580,7 @@ export function FormBuilder() {
 				...n.data,
 				...extra,
 				...addCallbacks,
+				childCount,
 				onToggleCollapse: () => toggleSectionCollapse(n.id),
 				onDuplicate: () => duplicateSection(n.id),
 				onLabelChange: (label: string) => updateNodeData(n.id, { label }),

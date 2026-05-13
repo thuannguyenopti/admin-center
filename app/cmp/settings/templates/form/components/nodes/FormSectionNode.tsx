@@ -167,6 +167,38 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 				)}
 			</div>
 
+			{/* Empty-state placeholder — shown when the section has no children */}
+			{((d.childCount ?? 0) === 0) && (
+				<div
+					style={{
+						position: "absolute",
+						left: 16,
+						right: 16,
+						top: SECTION_HEADER_HEIGHT + 16,
+						bottom: 16,
+						borderRadius: "8px",
+						border: "2px dashed var(--ax-colors-border-default)",
+						background: "var(--ax-colors-bg-default)",
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						justifyContent: "center",
+						gap: 4,
+						padding: 12,
+						boxSizing: "border-box",
+						pointerEvents: "none",
+						zIndex: 1,
+					}}
+				>
+					<div style={{ fontSize: 13, fontWeight: 500, color: "var(--ax-colors-fg-secondary)" }}>
+						Drop fields here
+					</div>
+					<div style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)" }}>
+						Drag a field from the left into this section
+					</div>
+				</div>
+			)}
+
 			{/* Border overlay — rendered above header so top border is always visible */}
 			<div
 				style={{
