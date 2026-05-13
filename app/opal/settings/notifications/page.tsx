@@ -8,12 +8,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
     Heading,
-    Switch,
     Text,
     Tooltip,
     Button,
 } from "@optiaxiom/react";
-import { IconBell, IconPen } from "@optimizely/axiom-icons";
+import { IconPen } from "@optiaxiom/icons";
 import { useState } from "react";
 import {
     mockUserPreferences,
@@ -88,24 +87,11 @@ const CATEGORY_GROUPS: { label: string; keys: string[] }[] = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NotificationPreferencesPage() {
-    const [allEnabled, setAllEnabled] = useState(true);
     const [openKey, setOpenKey] = useState<string | null>(null);
     const [preferences, setPreferences] = useState<UserPreferences>(
         JSON.parse(JSON.stringify(mockUserPreferences))
     );
 
-    const toggleEnabled = (key: string) => {
-        setPreferences((prev) => ({
-            ...prev,
-            preferences: {
-                ...prev.preferences,
-                [key]: {
-                    ...prev.preferences[key],
-                    enabled: !prev.preferences[key].enabled,
-                },
-            },
-        }));
-    };
 
     const getChannelSummary = (key: string): string => {
         const channels = preferences.preferences[key]?.channels ?? [];
@@ -123,41 +109,6 @@ export default function NotificationPreferencesPage() {
                     Configure which notifications you receive and how they are
                     delivered.
                 </Text>
-            </Box>
-
-            {/* ── Master toggle card ──────────────────────────────────── */}
-            <Box
-                bg="bg.default"
-                border="1"
-                borderColor="border.tertiary"
-                rounded="lg"
-                display="flex"
-                alignItems="center"
-                gap="8"
-                pl="16"
-                pr="20"
-                py="12"
-            >
-                <Box display="flex" flex="1" alignItems="center" pl="12">
-                    <IconBell
-                        style={{
-                            color: "var(--ax-colors-fg-accent)",
-                            flexShrink: 0,
-                        }}
-                    />
-                    <Box display="flex" flexDirection="column" px="12">
-                        <Text fontSize="md" fontWeight="500" color="fg.default">
-                            Get Notifications
-                        </Text>
-                        <Text fontSize="sm" color="fg.tertiary">
-                            Receive notifications across all categories
-                        </Text>
-                    </Box>
-                </Box>
-                <Switch
-                    checked={allEnabled}
-                    onCheckedChange={setAllEnabled}
-                />
             </Box>
 
             {/* ── Notification rows ───────────────────────────────────── */}
@@ -215,7 +166,6 @@ export default function NotificationPreferencesPage() {
                                             bg="bg.default"
                                             className="group"
                                             onClick={() =>
-                                                allEnabled &&
                                                 setOpenKey(
                                                     openKey === key
                                                         ? null
@@ -224,9 +174,7 @@ export default function NotificationPreferencesPage() {
                                             }
                                             style={{
                                                 minHeight: 44,
-                                                cursor: allEnabled
-                                                    ? "pointer"
-                                                    : "default",
+                                                cursor: "pointer",
                                                 borderBottom: isVeryLast
                                                     ? undefined
                                                     : "1px solid var(--ax-colors-border-tertiary)",
@@ -263,7 +211,6 @@ export default function NotificationPreferencesPage() {
                                                         appearance="subtle"
                                                         icon={<IconPen />}
                                                         size="sm"
-                                                        disabled={!allEnabled}
                                                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                                                         aria-label="Edit channels"
                                                         onClick={(e) =>
@@ -272,23 +219,6 @@ export default function NotificationPreferencesPage() {
                                                     />
                                                 </Tooltip>
 
-                                                {/* Enabled switch — stopPropagation so it doesn't open the dropdown */}
-                                                <Box
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
-                                                >
-                                                    <Switch
-                                                        checked={
-                                                            pref.enabled &&
-                                                            allEnabled
-                                                        }
-                                                        onCheckedChange={() =>
-                                                            toggleEnabled(key)
-                                                        }
-                                                        disabled={!allEnabled}
-                                                    />
-                                                </Box>
                                             </Box>
                                         </Box>
 

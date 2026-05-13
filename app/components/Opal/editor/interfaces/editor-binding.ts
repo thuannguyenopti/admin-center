@@ -1,0 +1,125 @@
+import type * as Y from 'yjs';
+
+/** Modes an editor can operate in */
+export type EditorMode = 'wysiwyg' | 'source' | 'preview';
+
+/** Options passed when mounting an editor binding */
+export interface MountOptions {
+  readonly: boolean;
+  theme: 'light' | 'dark';
+  language?: string;
+  placeholder?: string;
+}
+
+/** Collaboration context provided to bindings that support it */
+export interface CollaborationContext {
+  readonly sharedText: Y.Text;
+  readonly awareness: any;
+  readonly ydoc: Y.Doc;
+}
+
+/** Callback for content changes */
+export type ContentChangeCallback = (content: string) => void;
+
+/** Callback for remote changes received via collaboration */
+export type RemoteChangeCallback = (detail: { origin: any; isRemote: boolean }) => void;
+
+/**
+ * Core interface that every editor binding must implement.
+ * Each MIME type has a concrete class implementing this.
+ *
+ * The binding itself declares which modes it supports (e.g., ['wysiwyg', 'source']).
+ * The binding manages its own mode switching internally.
+ *
+ * Lifecycle:
+ *   new Binding() → mount() → [getContent/setContent/switchMode]* → unmount() → destroy()
+ */
+export interface IEditorBinding {
+  /** Which modes this binding supports */
+  readonly supportedModes: readonly EditorMode[];
+
+  /** Currently active mode, or null when not mounted */
+  readonly activeMode: EditorMode | null;
+
+  /** Whether this binding is currently mounted to the DOM */
+  readonly mounted: boolean;
+
+  /**
+   * Mount the editor into the given container element in the specified mode.
+   * If a CollaborationContext is provided, the editor binds to Y.Text.
+   * Returns a Promise that resolves when the editor is fully interactive.
+   */
+  mount(
+    container: HTMLElement,
+    mode: EditorMode,
+    options: MountOptions,
+    collab?: CollaborationContext | null,
+  ): Promise<void>;
+
+  /** Unmount the editor from the DOM. Can be re-mounted after. */
+  unmount(): void;
+
+  /** Get the current content as a plain text string. */
+  getContent(): string;
+
+  /**
+   * Set the content from a plain text string.
+   * When collaboration is active and Y.Text already has content,
+   * this should NOT overwrite the collaborative state.
+   */
+  setContent(text: string): void;
+
+  /** Toggle readonly mode */
+  setReadonly(readonly: boolean): void;
+
+  /**
+   * Switch to a different mode within this binding's supported modes.
+   * The binding handles the internal transition (e.g., hiding CodeMirror, showing Tiptap).
+   */
+  switchMode(mode: EditorMode): Promise<void>;
+
+  /**
+   * Register a callback for content changes.
+   * Returns an unsubscribe function.
+   */
+  onContentChange(callback: ContentChangeCallback): () => void;
+
+  /**
+   * Register a callback for remote changes received via collaboration.
+   * Returns an unsubscribe function.
+   */
+  onRemoteChange(callback: RemoteChangeCallback): () => void;
+
+  /**
+   * Swap the Y.Text this binding's editors are bound to. Used by
+   * Suggest Mode to redirect editor writes into a per-user buffer
+   * Y.Doc without reconstructing the editor. Implementations must
+   * propagate the swap to both the CodeMirror (yCollab) and Tiptap
+   * (TextBinding) sides when both are in play.
+   *
+   * No-op when the binding was mounted without collaboration.
+   */
+  rebindSharedText(yText: Y.Text): void;
+
+  /**
+   * Editor-native serialized form of the current content. In WYSIWYG
+   * mode this returns Tiptap's markdown (or HTML) serialization; in
+   * source mode it returns the raw CodeMirror doc. Suggest Mode uses
+   * this at enable- and submit-time to capture symmetric before/after
+   * snapshots, so the diff view doesn't pick up normalization drift
+   * between raw Y.Text and Tiptap's serialized form.
+   */
+  getCurrentSerialized(): string;
+
+  /**
+   * Move keyboard focus into the active editor. Called after actions
+   * that take focus away from the content — e.g., clicking the Suggest
+   * Mode toggle button transfers focus to the toolbar, and without
+   * restoring focus the user's first keystroke lands on the body
+   * instead of the editor and is silently dropped.
+   */
+  focusEditor(): void;
+
+  /** Permanently destroy this binding and release all resources. */
+  destroy(): void;
+}

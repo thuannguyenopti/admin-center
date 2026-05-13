@@ -628,7 +628,7 @@ export default function WebExperimentationIdeasPage() {
 													<Td type="header" description={audience.description} style={{ borderRight: "none" }}>
 														{audience.name}
 													</Td>
-													<Td type="date">{audience.addedDate}</Td>
+													<Td>{audience.addedDate}</Td>
 													<Td type="button" style={{ borderLeft: "none" }}>
 														<div onClick={(e) => e.stopPropagation()}>
 															<Button

@@ -1,7 +1,7 @@
 "use client";
 
 import { Box, Text } from "@optiaxiom/react";
-import { IconCheck } from "@optimizely/axiom-icons";
+import { IconCheck } from "@optiaxiom/icons";
 
 interface ModalStepperProps {
     currentStep: number;

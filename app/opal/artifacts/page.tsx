@@ -6,6 +6,7 @@ import {
     Button,
     Badge,
     Avatar,
+    AvatarGroup,
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
@@ -22,13 +23,11 @@ import {
     DialogClose,
     Tooltip,
     Card,
-    Tabs,
-    TabsList,
-    TabsTrigger,
     SegmentedControl,
     SegmentedControlItem,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
+import { IconAgent } from "@optimizely/axiom-icons";
 import {
     IconFile,
     IconImage,
@@ -36,7 +35,6 @@ import {
     IconTrashCan,
     IconDownload,
     IconEllipsisSolid,
-    IconAgent,
     IconCodeBranch,
     IconGrid,
     IconList,
@@ -53,10 +51,30 @@ import {
     IconInboxFull,
     IconThumbtack,
     IconUsers,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { useState, useMemo } from "react";
 import { ArtifactViewer, type ArtifactViewerArtifact } from "./components/ArtifactViewer";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function timeAgo(timestampSeconds: number): string {
+    const now = Date.now() / 1000;
+    const diff = now - timestampSeconds;
+    if (diff < 60) return "just now";
+    if (diff < 3600) { const m = Math.floor(diff / 60); return `${m}m ago`; }
+    if (diff < 86400) { const h = Math.floor(diff / 3600); return `${h}h ago`; }
+    if (diff < 7 * 86400) { const d = Math.floor(diff / 86400); return `${d}d ago`; }
+    if (diff < 30 * 86400) { const w = Math.floor(diff / (7 * 86400)); return `${w}w ago`; }
+    if (diff < 365 * 86400) { const mo = Math.floor(diff / (30 * 86400)); return `${mo}mo ago`; }
+    const yr = Math.floor(diff / (365 * 86400)); return `${yr}y ago`;
+}
+
+function truncateMiddle(str: string, maxLength = 20): string {
+    if (str.length <= maxLength) return str;
+    const half = Math.floor((maxLength - 1) / 2);
+    return str.slice(0, half) + "…" + str.slice(str.length - half);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,6 +89,8 @@ type Artifact = {
     type: ArtifactType;
     source: { name: string; type: ArtifactSourceType; link?: string };
     createdBy: { name: string; avatar: string };
+    sharedWithTeam?: boolean;
+    sharedWith?: { name: string; avatar: string }[];
     created: string;
     createdRaw: number;   // timestamp for sorting
     size: string;
@@ -86,12 +106,13 @@ type Artifact = {
 const artifacts: Artifact[] = [
     {
         id: "1",
-        name: "Q2 Email Campaign Copy",
+        name: "Q2 Email Campaign Copy — Final Draft",
         type: "Document",
         source: { name: "Write an email campaign", type: "chat", link: "/opal/chat/1" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        created: "Mar 28, 2026",
-        createdRaw: 1743120000,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        sharedWithTeam: true,
+        created: "May 5, 2026",
+        createdRaw: 1777932000,   // 2h ago
         size: "12 KB",
         sizeRaw: 12288,
         status: "Ready",
@@ -104,9 +125,10 @@ const artifacts: Artifact[] = [
         name: "Competitor Analysis Report",
         type: "Report",
         source: { name: "Analyze my competitors", type: "agent", link: "/opal/agents/setup?id=2" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        created: "Mar 25, 2026",
-        createdRaw: 1742860800,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        sharedWithTeam: true,
+        created: "May 5, 2026",
+        createdRaw: 1777917600,   // 6h ago
         size: "48 KB",
         sizeRaw: 49152,
         status: "Ready",
@@ -116,12 +138,13 @@ const artifacts: Artifact[] = [
     },
     {
         id: "3",
-        name: "Hero Banner — Spring Sale",
+        name: "Hero Banner — Spring Sale Promotion 2025",
         type: "Image",
         source: { name: "Generate ad variations", type: "agent", link: "/opal/agents/setup?id=3" },
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        created: "Mar 22, 2026",
-        createdRaw: 1742601600,
+        sharedWithTeam: true,
+        created: "May 4, 2026",
+        createdRaw: 1777852800,   // 1d ago
         size: "1.2 MB",
         sizeRaw: 1258291,
         status: "Ready",
@@ -135,36 +158,41 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Audit my SEO performance", type: "chat", link: "/opal/chat/4" },
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        created: "Mar 20, 2026",
-        createdRaw: 1742428800,
+        sharedWithTeam: true,
+        created: "May 2, 2026",
+        createdRaw: 1777680000,   // 3d ago
         size: "24 KB",
         sizeRaw: 24576,
         status: "Ready",
         version: "1.0",
         description: "Site-wide SEO health report with recommendations.",
+        imageUrl: "/cmp/assets/recommendation/panel-02-image.jpg",
     },
     {
         id: "5",
         name: "A/B Test Variants — Checkout CTA",
         type: "Code",
         source: { name: "Set up an A/B experiment", type: "chat", link: "/opal/chat/5" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        created: "Mar 18, 2026",
-        createdRaw: 1742256000,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        sharedWith: [{ name: "William Mo.", avatar: "/avatars/user2.png" }, { name: "Mary Anne", avatar: "/avatars/user.png" }, { name: "Sarah K.", avatar: "/avatars/user3.png" }],
+        created: "Apr 30, 2026",
+        createdRaw: 1777507200,   // 5d ago
         size: "3 KB",
         sizeRaw: 3072,
         status: "Ready",
         version: "1.3",
         description: "Three CTA copy variants with tracking snippets.",
+        imageUrl: "/cmp/assets/recommendation/search-02-image.jpg",
     },
     {
         id: "6",
         name: "Content Calendar — April",
         type: "Spreadsheet",
         source: { name: "Build a content calendar", type: "chat", link: "/opal/chat/6" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        created: "Mar 15, 2026",
-        createdRaw: 1741996800,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        sharedWithTeam: true,
+        created: "Apr 28, 2026",
+        createdRaw: 1777334400,   // 1w ago
         size: "8 KB",
         sizeRaw: 8192,
         status: "Ready",
@@ -178,22 +206,25 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "GEO Recommendations", type: "workflow", link: "/opal/workflows/7" },
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        created: "Mar 12, 2026",
-        createdRaw: 1741737600,
+        sharedWithTeam: true,
+        created: "Apr 21, 2026",
+        createdRaw: 1776729600,   // 2w ago
         size: "16 KB",
         sizeRaw: 16384,
         status: "Ready",
         version: "1.0",
         description: "Top 40 GEO keywords ranked by opportunity score.",
+        imageUrl: "/cmp/assets/recommendation/search-03-image.jpg",
     },
     {
         id: "8",
         name: "Campaign Asset Bundle",
         type: "Image",
         source: { name: "ABM Campaign Workflow", type: "workflow", link: "/opal/workflows/8" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        created: "Mar 10, 2026",
-        createdRaw: 1741564800,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        sharedWith: [{ name: "William Mo.", avatar: "/avatars/user2.png" }, { name: "Mary Anne", avatar: "/avatars/user.png" }],
+        created: "Apr 14, 2026",
+        createdRaw: 1776124800,   // 3w ago
         size: "5.8 MB",
         sizeRaw: 6082150,
         status: "Ready",
@@ -203,40 +234,44 @@ const artifacts: Artifact[] = [
     },
     {
         id: "9",
-        name: "Meeting Notes — Product Sync",
+        name: "Meeting Notes — Weekly Product Sync",
         type: "Document",
         source: { name: "Summarize my meeting notes", type: "chat", link: "/opal/chat/9" },
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        created: "Mar 8, 2026",
-        createdRaw: 1741392000,
+        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        sharedWithTeam: true,
+        created: "Apr 5, 2026",
+        createdRaw: 1775347200,   // 1mo ago
         size: "6 KB",
         sizeRaw: 6144,
         status: "Generating",
         version: "1.0",
         description: "Structured action items and decisions from product sync.",
+        imageUrl: "/cmp/assets/recommendation/panel-04-image.jpg",
     },
     {
         id: "10",
         name: "Localized Copy — FR",
         type: "Document",
         source: { name: "Content Localizer", type: "agent", link: "/opal/agents/setup?id=10" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        created: "Mar 5, 2026",
-        createdRaw: 1741132800,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        sharedWith: [{ name: "Sarah K.", avatar: "/avatars/user3.png" }],
+        created: "Mar 21, 2026",
+        createdRaw: 1774051200,   // 45d ago
         size: "10 KB",
         sizeRaw: 10240,
         status: "Failed",
         version: "1.0",
         description: "French localization of Q2 campaign copy.",
+        imageUrl: "/cmp/assets/recommendation/search-05-image.jpg",
     },
     {
         id: "11",
         name: "Q1 Sales Deck",
         type: "Presentation",
         source: { name: "Sales enablement agent", type: "agent", link: "/opal/agents/setup?id=11" },
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        created: "Mar 1, 2026",
-        createdRaw: 1740787200,
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        created: "Apr 25, 2026",
+        createdRaw: 1777075200,   // 10d ago
         size: "2.4 MB",
         sizeRaw: 2516582,
         status: "Ready",
@@ -258,12 +293,21 @@ const typeIcon: Record<ArtifactType, React.ReactNode> = {
 };
 
 const typeIconSm: Record<ArtifactType, React.ReactNode> = {
-    Document:     <IconFile size={12} />,
-    Image:        <IconImage size={12} />,
-    Code:         <IconCode size={12} />,
-    Presentation: <IconPresentationScreen size={12} />,
-    Spreadsheet:  <IconFileSpreadsheet size={12} />,
-    Report:       <IconChartColumn size={12} />,
+    Document:     <IconFile size={16} />,
+    Image:        <IconImage size={16} />,
+    Code:         <IconCode size={16} />,
+    Presentation: <IconPresentationScreen size={16} />,
+    Spreadsheet:  <IconFileSpreadsheet size={16} />,
+    Report:       <IconChartColumn size={16} />,
+};
+
+const typeIconMd: Record<ArtifactType, React.ReactNode> = {
+    Document:     <IconFile size={20} />,
+    Image:        <IconImage size={20} />,
+    Code:         <IconCode size={20} />,
+    Presentation: <IconPresentationScreen size={20} />,
+    Spreadsheet:  <IconFileSpreadsheet size={20} />,
+    Report:       <IconChartColumn size={20} />,
 };
 
 // Type label shown in the badge on pinned cards (matches Figma)
@@ -277,7 +321,8 @@ const typeBadgeLabel: Record<ArtifactType, string> = {
 };
 
 // Default pinned IDs (seeded from artifacts that have a preview image)
-const DEFAULT_PINNED_IDS = new Set(artifacts.filter((a) => a.imageUrl).map((a) => a.id).slice(0, 6));
+// IDs 8 + 10 are JC-only (no team share); rest are shared — mix intentional for demo
+const DEFAULT_PINNED_IDS = new Set(["1", "2", "3", "5", "8", "10"]);
 
 const statusIntent = {
     Ready: "success",
@@ -416,10 +461,10 @@ function SortHeader({
 
 function DocThumbnail() {
     const line = (w: string, h = 6, mt = 0) => (
-        <Box style={{ height: h, width: w, background: "var(--ax-colors-bg-tertiary)", borderRadius: 3, marginTop: mt }} />
+        <Box bg="bg.tertiary" rounded="sm" style={{ height: h, width: w, marginTop: mt }} />
     );
     return (
-        <Box style={{ padding: "14px 16px", height: "100%", background: "var(--ax-colors-bg-default)", overflow: "hidden", display: "flex", flexDirection: "column", gap: 5 }}>
+        <Box bg="bg.default" style={{ padding: "14px 16px", height: "100%", overflow: "hidden", display: "flex", flexDirection: "column", gap: 5 }}>
             {line("60%", 9)}
             <Box style={{ marginTop: 4 }} />
             {line("100%")}
@@ -492,7 +537,7 @@ function SpreadsheetThumbnail() {
         Review: "var(--ax-colors-fg-warning)",
     };
     return (
-        <Box style={{ height: "100%", background: "var(--ax-colors-bg-default)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <Box bg="bg.default" style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
             {/* Header row */}
             <Box style={{ display: "flex", background: "var(--ax-colors-bg-secondary)", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                 {headers.map((h) => (
@@ -506,7 +551,7 @@ function SpreadsheetThumbnail() {
                 <Box key={i} style={{ display: "flex", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
                     {row.map((cell, j) => (
                         <Box key={j} style={{ flex: j === 1 ? 2 : 1, padding: "4px 6px", borderRight: "1px solid var(--ax-colors-border-tertiary)" }}>
-                            <Text fontSize="sm" style={{ color: j === 3 ? statusColor[cell] ?? "inherit" : "var(--ax-colors-fg-default)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", display: "block" }}>
+                            <Text fontSize="sm" color={j === 3 ? undefined : "fg.default"} style={{ color: j === 3 ? statusColor[cell] ?? "inherit" : undefined, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", display: "block" }}>
                                 {cell}
                             </Text>
                         </Box>
@@ -517,6 +562,34 @@ function SpreadsheetThumbnail() {
     );
 }
 
+// ─── Sharing avatar stack + Only You badge ────────────────────────────────────
+
+function ArtifactAvatarStack({ artifact, size }: { artifact: Artifact; size: "2xs" | "xs" | "sm" }) {
+    if (artifact.sharedWithTeam) {
+        return (
+            <AvatarGroup style={{ flexShrink: 0 }}>
+                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size={size} colorScheme="purple" />
+                <Avatar fallback="team" size={size} colorScheme="neutral" />
+            </AvatarGroup>
+        );
+    }
+    if (artifact.sharedWith && artifact.sharedWith.length > 0) {
+        const overflow = artifact.sharedWith.length - 1;
+        return (
+            <AvatarGroup style={{ flexShrink: 0 }}>
+                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size={size} colorScheme="purple" />
+                <Avatar name={artifact.sharedWith[0].name} src={artifact.sharedWith[0].avatar} size={size} colorScheme="neutral" />
+                {overflow > 0 && <Avatar size={size} colorScheme="neutral">+{overflow}</Avatar>}
+            </AvatarGroup>
+        );
+    }
+    return <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size={size} colorScheme="purple" style={{ flexShrink: 0 }} />;
+}
+
+function OnlyYouBadge() {
+    return <Badge style={{ flexShrink: 0 }}>Only you</Badge>;
+}
+
 // ─── Grid view components ─────────────────────────────────────────────────────
 
 function ArtifactPreviewCard({
@@ -524,38 +597,52 @@ function ArtifactPreviewCard({
     onOpen,
     pinned,
     onTogglePin,
+    cardLayout = "thumbnail",
+    timeOnNewRow = false,
 }: {
     artifact: Artifact;
     onOpen: (a: Artifact) => void;
     pinned: boolean;
     onTogglePin: (id: string) => void;
+    /** "thumbnail" — avatar on thumbnail; "footer" — avatar in footer row; "hover-expand" — footer expands on hover to show full name + avatar + time + source */
+    cardLayout?: "thumbnail" | "footer" | "hover-expand";
+    /** hover-expand only: time shows bottom-right at rest, drops to new row on hover */
+    timeOnNewRow?: boolean;
 }) {
     const [hovered, setHovered] = useState(false);
+    const [sourceHovered, setSourceHovered] = useState(false);
 
     const btnStyle: React.CSSProperties = {
         background: "var(--ax-colors-bg-default)",
-        borderColor: "var(--ax-colors-border-tertiary)",
-        height: 26, width: 26, padding: 0,
+        borderColor: "var(--ax-colors-border-secondary)",
+        height: 24, width: 24, padding: 0,
     };
 
     return (
         <Box
             bg="bg.default"
             border="1"
-            borderColor="border.tertiary"
+            borderColor={hovered ? "border.secondary" : "border.tertiary"}
             display="flex"
             flexDirection="column"
             overflow="hidden"
             rounded="xl"
-            style={{ height: 180 }}
+            style={{
+                cursor: "pointer",
+                transition: "border-color 0.15s",
+                ...(cardLayout === "hover-expand" ? { height: 240 } : {}),
+            }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            onClick={() => onOpen(artifact)}
         >
-            {/* Clickable preview area */}
-            <Box
-                style={{ flex: 1, overflow: "hidden", position: "relative", minHeight: 0, cursor: "pointer" }}
-                onClick={() => onOpen(artifact)}
-            >
+            {/* ── Thumbnail ── */}
+            <Box style={{
+                position: "relative",
+                overflow: "hidden",
+                ...(cardLayout === "hover-expand" ? { flex: 1 } : { height: 140, flexShrink: 0 }),
+            }}>
+                {/* Cover image / generated preview */}
                 {artifact.type === "Image" || artifact.type === "Presentation" ? (
                     <img
                         alt={artifact.name}
@@ -570,15 +657,22 @@ function ArtifactPreviewCard({
                     <DocThumbnail />
                 )}
 
-                {/* Top-right: ellipsis menu — always mounted, shown on hover via opacity */}
-                <Box
-                    style={{ position: "absolute", right: 8, top: 8, opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none", transition: "opacity 0.15s" }}
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button appearance="default" size="sm" aria-label="Options" style={btnStyle} icon={<IconEllipsisSolid size={14} />} />
-                        </DropdownMenuTrigger>
+                {/* Hover overlay — ellipsis only */}
+                <Box style={{
+                    position: "absolute", inset: 0,
+                    background: "rgba(0,0,0,0.55)",
+                    backdropFilter: hovered ? "blur(3px)" : "blur(0px)",
+                    opacity: hovered ? 1 : 0,
+                    transition: "opacity 0.4s, backdrop-filter 0.4s",
+                    pointerEvents: hovered ? "auto" : "none",
+                    display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
+                    padding: "10px",
+                }}>
+                    <Box onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button appearance="default" size="sm" aria-label="Options" style={btnStyle} icon={<IconEllipsisSolid size={13} />} />
+                            </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => onOpen(artifact)}>
                                     <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
@@ -596,56 +690,182 @@ function ArtifactPreviewCard({
                                 <DropdownMenuItem>
                                     <Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => onTogglePin(artifact.id)}>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTogglePin(artifact.id); }}>
                                     <Box display="flex" alignItems="center" gap="8"><IconThumbtack size={14} />{pinned ? "Unpin" : "Pin"}</Box>
                                 </DropdownMenuItem>
                                 <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
-                                <DropdownMenuItem style={{ color: "var(--ax-colors-fg-danger)" }}>
+                                <DropdownMenuItem style={{ color: "var(--ax-colors-fg-error)" }}>
                                     <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </Box>
+                </Box>
+
+                {/* Avatar + username — above blur, bottom-left (thumbnail layout only) */}
+                {cardLayout === "thumbnail" && (
+                    <Box style={{
+                        position: "absolute", left: 12, bottom: 12,
+                        display: "flex", alignItems: "center", gap: 6,
+                        pointerEvents: "none",
+                    }}>
+                        {artifact.sharedWithTeam ? (
+                            <AvatarGroup>
+                                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" colorScheme="purple" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
+                                <Avatar fallback="team" size="sm" colorScheme="neutral" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
+                            </AvatarGroup>
+                        ) : artifact.sharedWith && artifact.sharedWith.length > 0 ? (
+                            <AvatarGroup>
+                                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" colorScheme="purple" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
+                                <Avatar name={artifact.sharedWith[0].name} src={artifact.sharedWith[0].avatar} size="sm" colorScheme="neutral" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
+                                {artifact.sharedWith.length > 1 && <Avatar size="sm" colorScheme="neutral" border="2" style={{ borderColor: "white", flexShrink: 0 }}>{`+${artifact.sharedWith.length - 1}`}</Avatar>}
+                            </AvatarGroup>
+                        ) : (
+                            <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" colorScheme="purple" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
+                        )}
+                        <Text
+                            fontSize="sm"
+                            fontWeight="400"
+                            color="fg.white"
+                            style={{
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                maxWidth: 100,
+                                opacity: hovered ? 1 : 0,
+                                transition: "opacity 0.3s ease",
+                            }}
+                        >
+                            {(artifact.sharedWithTeam || artifact.sharedWith) ? "(Shared)" : artifact.createdBy.name}
+                        </Text>
+                    </Box>
+                )}
             </Box>
 
-            {/* Footer */}
+            {/* ── Footer — static, no transition ── */}
             <Box
                 display="flex"
                 flexDirection="column"
                 gap="4"
-                px="10"
-                py="8"
-                style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)" }}
+                style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)", padding: `10px 12px ${hovered ? 10 : 0}px` }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Badge row + pin toggle */}
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Badge intent="information">{typeBadgeLabel[artifact.type]}</Badge>
-                    <Tooltip content={pinned ? "Unpin" : "Pin"} delayDuration={300}>
-                        <span style={{ display: "inline-flex" }}>
-                            <Button
-                                appearance="subtle"
-                                size="sm"
-                                aria-label={pinned ? "Unpin" : "Pin"}
-                                style={{
-                                    height: 20, width: 20, padding: 0,
-                                    color: pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)",
-                                    opacity: hovered || pinned ? 1 : 0,
-                                    transition: "opacity 0.15s",
-                                }}
-                                onClick={() => onTogglePin(artifact.id)}
-                                icon={<IconThumbtack size={12} />}
-                            />
-                        </span>
-                    </Tooltip>
-                </Box>
-                {/* Title row */}
-                <Box display="flex" alignItems="center" gap="4" style={{ minWidth: 0 }}>
-                    <Box color="fg.tertiary" style={{ lineHeight: 0, flexShrink: 0 }}>{typeIcon[artifact.type]}</Box>
-                    <Text fontSize="sm" fontWeight="500" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                        {artifact.name}
-                    </Text>
-                </Box>
+                {cardLayout === "hover-expand" ? (
+                    /* hover-expand layout: compact default, expands on hover to show full name + avatar + time + source */
+                    <Box display="flex" flexDirection="column" gap="8">
+                        {/* Row 1: icon inline with text so wrapped lines start at the left edge */}
+                        <Text
+                            fontSize={hovered ? "lg" : "md"}
+                            fontWeight="500"
+                            style={{
+                                overflow: "hidden",
+                                whiteSpace: hovered ? "normal" : "nowrap",
+                                wordBreak: "break-word",
+                            }}
+                        >
+                            <Box asChild display="inline-flex" alignItems="center" color="fg.tertiary" style={{ marginRight: 6, verticalAlign: "middle" }}>
+                                <span>{hovered ? typeIconMd[artifact.type] : typeIconSm[artifact.type]}</span>
+                            </Box>
+                            {hovered ? artifact.name : truncateMiddle(artifact.name)}
+                        </Text>
+                        {/* Row 2: avatar (left) + badge/name slides in on hover | time bottom-right always */}
+                        <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
+                            <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
+                                <ArtifactAvatarStack artifact={artifact} size="xs" />
+                                {!artifact.sharedWithTeam && !artifact.sharedWith && (
+                                    <OnlyYouBadge />
+                                )}
+                                {(artifact.sharedWithTeam || artifact.sharedWith) && (
+                                    <Text fontSize="sm" color="fg.secondary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: hovered ? 120 : 0, opacity: hovered ? 1 : 0, transition: "max-width 0.2s ease, opacity 0.2s ease" }}>
+                                        (Shared)
+                                    </Text>
+                                )}
+                            </Box>
+                            {/* time: bottom-right always; hides and drops to new row on hover when timeOnNewRow */}
+                            <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0, maxWidth: (timeOnNewRow && hovered) ? 0 : 80, opacity: (timeOnNewRow && hovered) ? 0 : 1, overflow: "hidden", transition: "max-width 0.2s ease, opacity 0.2s ease" }}>{timeAgo(artifact.createdRaw)}</Text>
+                        </Box>
+                        {/* Row 3: time on new row — only for timeOnNewRow cards, slides in on hover */}
+                        {timeOnNewRow && (
+                            <Box style={{ maxHeight: hovered ? 20 : 0, opacity: hovered ? 1 : 0, overflow: "hidden", transition: "max-height 0.2s ease, opacity 0.2s ease" }}>
+                                <Text fontSize="sm" color="fg.tertiary">{timeAgo(artifact.createdRaw)}</Text>
+                            </Box>
+                        )}
+                        {/* Row 3/4: source — fades in on hover */}
+                        <Box
+                            display="flex"
+                            alignItems="center"
+                            gap="4"
+                            color="fg.tertiary"
+                            style={{
+                                maxHeight: hovered ? 24 : 0,
+                                opacity: hovered ? 1 : 0,
+                                overflow: "hidden",
+                                transition: "max-height 0.2s ease, opacity 0.2s ease",
+                            }}
+                        >
+                            <Box style={{ flexShrink: 0, lineHeight: 0 }}>
+                                {artifact.source.type === "workflow" ? <IconCodeBranch size={13} /> : artifact.source.type === "chat" ? <IconComments size={13} /> : <IconAgent size={13} />}
+                            </Box>
+                            <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecorationLine: sourceHovered ? "underline" : "none", cursor: "pointer" }} onMouseEnter={() => setSourceHovered(true)} onMouseLeave={() => setSourceHovered(false)}>
+                                {artifact.source.type === "chat" ? "Chat" : artifact.source.name} →
+                            </Text>
+                        </Box>
+                    </Box>
+                ) : (
+                    <>
+                        {/* Row 1: file type icon + name (middle-truncated) */}
+                        <Box display="flex" alignItems="center" gap="6">
+                            <Box color="fg.tertiary" style={{ flexShrink: 0, lineHeight: 0 }}>
+                                {typeIconSm[artifact.type]}
+                            </Box>
+                            <Text fontSize="md" fontWeight="500" style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
+                                {truncateMiddle(artifact.name)}
+                            </Text>
+                        </Box>
+                        {/* Row 2: differs by layout */}
+                        {cardLayout === "footer" ? (
+                            /* footer layout: avatar + name left | time right; source on hover */
+                            <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
+                                {hovered ? (
+                                    <Box display="flex" alignItems="center" gap="4" color="fg.tertiary" style={{ minWidth: 0 }}>
+                                        <Box style={{ flexShrink: 0, lineHeight: 0 }}>
+                                            {artifact.source.type === "workflow" ? <IconCodeBranch size={13} /> : artifact.source.type === "chat" ? <IconComments size={13} /> : <IconAgent size={13} />}
+                                        </Box>
+                                        <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecorationLine: sourceHovered ? "underline" : "none", cursor: "pointer" }} onMouseEnter={() => setSourceHovered(true)} onMouseLeave={() => setSourceHovered(false)}>
+                                            {artifact.source.type === "chat" ? "Chat" : artifact.source.name} →
+                                        </Text>
+                                    </Box>
+                                ) : (
+                                    <>
+                                        <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
+                                            <ArtifactAvatarStack artifact={artifact} size="2xs" />
+                                            <Text fontSize="sm" color="fg.secondary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                {artifact.createdBy.name}{artifact.sharedWithTeam ? " (Shared)" : ""}
+                                            </Text>
+                                        </Box>
+                                        <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>{timeAgo(artifact.createdRaw)}</Text>
+                                    </>
+                                )}
+                            </Box>
+                        ) : (
+                            /* thumbnail layout: time by default → source on hover */
+                            <Box display="flex" alignItems="center" gap="4" color="fg.tertiary">
+                                {hovered ? (
+                                    <>
+                                        <Box style={{ flexShrink: 0, lineHeight: 0 }}>
+                                            {artifact.source.type === "workflow" ? <IconCodeBranch size={13} /> : artifact.source.type === "chat" ? <IconComments size={13} /> : <IconAgent size={13} />}
+                                        </Box>
+                                        <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecorationLine: sourceHovered ? "underline" : "none", cursor: "pointer" }} onMouseEnter={() => setSourceHovered(true)} onMouseLeave={() => setSourceHovered(false)}>
+                                            {artifact.source.type === "chat" ? "Chat" : artifact.source.name} →
+                                        </Text>
+                                    </>
+                                ) : (
+                                    <Text fontSize="sm" color="fg.tertiary">{timeAgo(artifact.createdRaw)}</Text>
+                                )}
+                            </Box>
+                        )}
+                    </>
+                )}
             </Box>
         </Box>
     );
@@ -688,11 +908,11 @@ function CanvasArtifactCard({
                 style={{
                     width: 40,
                     height: 40,
-                    background: "radial-gradient(circle at 20% 20%, rgba(245,243,255,1) 10%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)",
+                    background: "radial-gradient(circle at 20% 20%, var(--ax-colors-bg-secondary) 10%, var(--ax-colors-bg-information-light) 61%, var(--ax-colors-bg-accent-light) 85%)",
                     flexShrink: 0,
                 }}
             >
-                <Box style={{ color: "var(--ax-colors-fg-default)" }}>{icon}</Box>
+                <Box color="fg.default">{icon}</Box>
             </Box>
             <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
                 <Text fontSize="sm" fontWeight="600" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -733,7 +953,7 @@ function CanvasArtifactCard({
                         <Box display="flex" alignItems="center" gap="8"><IconThumbtack size={14} />{pinned ? "Unpin" : "Pin"}</Box>
                     </DropdownMenuItem>
                     <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
-                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-danger)" }} onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-error)" }} onClick={(e) => e.stopPropagation()}>
                         <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -749,7 +969,7 @@ export default function ArtifactsPage() {
     const [typeFilter, setTypeFilter] = useState<"All" | ArtifactType>("All");
     const [creatorFilter, setCreatorFilter] = useState("All");
     const [sourceFilter, setSourceFilter] = useState<"All" | ArtifactSourceType>("All");
-    const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+    const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
     const [activeTab, setActiveTab] = useState<"my" | "shared">("my");
     const [sortKey, setSortKey] = useState<SortKey>("created");
     const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -845,7 +1065,7 @@ export default function ArtifactsPage() {
                     <DialogBody>
                         <Text>
                             Are you sure you want to delete{" "}
-                            <strong>{deleteTarget?.name}</strong>? This action cannot be undone.
+                            <Text asChild fontWeight="600"><strong>{deleteTarget?.name}</strong></Text>? This action cannot be undone.
                         </Text>
                     </DialogBody>
                     <DialogFooter>
@@ -854,7 +1074,7 @@ export default function ArtifactsPage() {
                         </DialogClose>
                         <Button
                             appearance="default"
-                            style={{ background: "var(--ax-colors-bg-danger)", color: "white", borderColor: "var(--ax-colors-border-danger)" }}
+                            style={{ background: "var(--ax-colors-bg-error)", color: "white", borderColor: "var(--ax-colors-border-error)" }}
                             onClick={() => setDeleteTarget(null)}
                         >
                             Delete
@@ -864,32 +1084,36 @@ export default function ArtifactsPage() {
             </Dialog>
 
             <Box display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
-                {/* Header */}
-                <Box display="flex" flexDirection="column" gap="8">
-                    <Text fontSize="2xl" fontWeight="600">Artifacts</Text>
-                    <Text color="fg.secondary">
-                        Browse and manage all files and outputs generated by your Opal agents.
-                    </Text>
+                {/* ── Tabs ── */}
+                <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                    {(["my", "shared"] as const).map((tab) => (
+                        <Box
+                            key={tab}
+                            pb="12"
+                            cursor="pointer"
+                            display="flex"
+                            alignItems="center"
+                            gap="6"
+                            borderB={activeTab === tab ? "2" : "0"}
+                            onClick={() => setActiveTab(tab)}
+                            style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                        >
+                            {tab === "shared" && <IconUsers size={14} color={activeTab === tab ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)"} />}
+                            <Text
+                                fontWeight={activeTab === tab ? "500" : "400"}
+                                color={activeTab === tab ? "fg.default" : "fg.secondary"}
+                            >
+                                {tab === "my" ? "My Artifacts" : "Shared with me"}
+                            </Text>
+                        </Box>
+                    ))}
                 </Box>
-
-                {/* ── Tabs (apply to both views) ── */}
-                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "my" | "shared")}>
-                    <TabsList>
-                        <TabsTrigger value="my">My Artifacts</TabsTrigger>
-                        <TabsTrigger value="shared">
-                            <Box display="flex" alignItems="center" gap="6">
-                                <IconUsers size={14} />
-                                Shared with me
-                            </Box>
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
 
                 {/* ── Toolbar ── */}
                 <Box display="flex" justifyContent="space-between" alignItems="center" gap="12">
-                    <Box display="flex" gap="8" alignItems="center" style={{ flexWrap: "wrap" }}>
+                    <Box display="flex" gap="12" alignItems="center" style={{ flexWrap: "wrap" }}>
                         {/* Search */}
-                        <Box style={{ width: 240 }}>
+                        <Box style={{ width: 264 }}>
                             <Input
                                 placeholder="Search artifacts…"
                                 value={search}
@@ -923,7 +1147,7 @@ export default function ArtifactsPage() {
                                 {["All", ...allCreators].map((c) => (
                                     <DropdownMenuItem key={c} onClick={() => setCreatorFilter(c)}>
                                         <Box display="flex" alignItems="center" gap="8">
-                                            {c !== "All" && <Avatar name={c} size="sm" />}
+                                            {c !== "All" && <Avatar name={c} size="sm" colorScheme="neutral" />}
                                             {c}
                                         </Box>
                                     </DropdownMenuItem>
@@ -1038,8 +1262,9 @@ export default function ArtifactsPage() {
                                     <Td><SourceCell artifact={artifact} onOpen={openWithPanel} /></Td>
                                     <Td>
                                         <Box display="flex" alignItems="center" gap="8">
-                                            <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" />
-                                            <Text fontSize="sm">{artifact.createdBy.name}</Text>
+                                            <ArtifactAvatarStack artifact={artifact} size="sm" />
+                                            {!artifact.sharedWithTeam && !artifact.sharedWith && <Text fontSize="sm">{artifact.createdBy.name}</Text>}
+                                            {(artifact.sharedWithTeam || artifact.sharedWith) && <Text fontSize="sm">{artifact.createdBy.name} (Shared)</Text>}
                                         </Box>
                                     </Td>
                                     <Td>
@@ -1101,7 +1326,7 @@ export default function ArtifactsPage() {
                                                 </DropdownMenuItem>
                                                 <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
                                                 <DropdownMenuItem
-                                                    style={{ color: "var(--ax-colors-fg-danger)" }}
+                                                    style={{ color: "var(--ax-colors-fg-error)" }}
                                                     onClick={(e) => { e.stopPropagation(); setDeleteTarget(artifact); }}
                                                 >
                                                     <Box display="flex" alignItems="center" gap="8">
@@ -1134,7 +1359,7 @@ export default function ArtifactsPage() {
                                     style={{ gridTemplateColumns: "repeat(6, 1fr)" }}
                                 >
                                     {pinnedArtifacts.map((a) => (
-                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} />
+                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} cardLayout="hover-expand" timeOnNewRow />
                                     ))}
                                 </Box>
                             </Box>
@@ -1147,14 +1372,15 @@ export default function ArtifactsPage() {
                                 <Box
                                     display="grid"
                                     gap="10"
-                                    style={{ gridTemplateColumns: "repeat(2, 1fr)" }}
+                                    style={{ gridTemplateColumns: "repeat(6, 1fr)" }}
                                 >
                                     {recentlyUpdated.map((a) => (
-                                        <CanvasArtifactCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} />
+                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} cardLayout="hover-expand" timeOnNewRow />
                                     ))}
                                 </Box>
                             </Box>
                         )}
+
                     </Box>
                 )}
             </Box>

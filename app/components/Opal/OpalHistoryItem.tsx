@@ -4,7 +4,9 @@ import { Box, Button } from "@optiaxiom/react";
 import { Text } from "../Text";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { useState } from "react";
-import { IconTrashCan } from "@/app/lib/axiom-icons";
+import IconSmile from "@/app/assets/opal/icon-smile.svg";
+import IconRedDot from "@/app/assets/opal/icon-red-dot.svg";
+import { IconDots, IconTrash } from "@tabler/icons-react";
 
 type OpalHistoryItemProps = {
   item: ChatHistoryItem;
@@ -77,7 +79,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
                 minWidth: 'auto',
               }}
             >
-              <IconTrashCan size={16} />
+              <IconTrash size={16} />
             </Button>
           )}
         </div>

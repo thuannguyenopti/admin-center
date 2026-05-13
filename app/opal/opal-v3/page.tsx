@@ -3,8 +3,9 @@
 import { Box, Dialog, DialogContent, DialogBody, DialogFooter } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconX, IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconSearch, IconBrandFigma } from "@tabler/icons-react";
+import { IconBrandGoogle, IconBrandSlack, IconBrandNotion, IconBrandAirtable, IconBrandGithub, IconBrandAsana, IconBrandFigma } from "@tabler/icons-react";
 import { IconAgent } from "@optimizely/axiom-icons";
+import { IconXmark as IconX, IconSearch } from "@optiaxiom/icons";
 import React, { useState, useRef, useCallback } from "react";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";

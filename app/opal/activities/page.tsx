@@ -30,22 +30,20 @@ import {
 } from "@optiaxiom/react/unstable";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { PageTitle } from "@/app/components/PageTitle";
+import { IconAgent } from "@optimizely/axiom-icons";
 import {
     IconChevronDown,
     IconChevronRight,
     IconDownload,
-    IconRefresh,
-    IconHelp,
-} from "@tabler/icons-react";
-import {
+    IconArrowsRotate as IconRefresh,
+    IconCircleQuestion as IconHelp,
     IconCircleCheck,
     IconCircleExclamation,
     IconTriangleExclamation,
     IconCirclePause,
-    IconAgent,
     IconCodeBranch,
     IconColumns3,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { useState, Fragment, useRef, useEffect } from "react";
 import { TableColumnConfig, ColumnConfig } from "@/app/components/TableColumnConfig";

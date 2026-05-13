@@ -17,7 +17,7 @@ import {
     Tooltip,
     toaster,
 } from "@optiaxiom/react";
-import { IconCheck, IconCircleInfo, IconCircleQuestion } from "@optimizely/axiom-icons";
+import { IconCheck, IconCircleInfo, IconCircleQuestion } from "@optiaxiom/icons";
 import { ModalStepper } from "./ModalStepper";
 
 export interface RemoteMcpProviderDraft {

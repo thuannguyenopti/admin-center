@@ -22,7 +22,7 @@ import {
     IconEye,
     IconPen,
     IconTrashCan,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { Input } from "@/app/components/Input";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { ConnectorTile } from "./ConnectorTile";

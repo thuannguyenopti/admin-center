@@ -9,7 +9,7 @@ import {
 import {
     IconArrowRotateLeft,
     IconXmark,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 
 interface VersionPreviewBannerProps {
     versionName: string;

@@ -18,23 +18,86 @@ import {
   type MenuOption,
 } from "@optiaxiom/react";
 import { Text } from "../Text";
-import { IconMicrophone } from "@tabler/icons-react";
 import {
-  IconAgent,
   IconArrowUp,
   IconBook,
+  IconCircleArrowUp,
+  IconCircleCheckSolid,
   IconCircleStop,
   IconFolderImage,
   IconGrid2Plus,
   IconPlus,
   IconUpload,
+  IconUser,
   IconXmark,
-} from "@/app/lib/axiom-icons";
+} from "@optiaxiom/icons";
+import { IconAgent } from "@optimizely/axiom-icons";
+import { IconBuilding } from "@tabler/icons-react";
+import { IconMicrophone } from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
 import { QUICK_ACTIONS } from "./OpalLanding";
 import { CONNECTORS } from "@/app/opal/tools/data/connectors";
 import { ConnectorAvatar } from "@/app/opal/tools/components/ConnectorAvatar";
+
+function ConnectorDetailStatus({
+  isAuth,
+  onToggle,
+}: {
+  isAuth: boolean;
+  onToggle: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const row = el.closest('[tabindex="-1"]') as HTMLElement | null;
+    if (!row) return;
+    const enter = () => setHovered(true);
+    const leave = () => setHovered(false);
+    row.addEventListener("mouseenter", enter);
+    row.addEventListener("mouseleave", leave);
+    return () => {
+      row.removeEventListener("mouseenter", enter);
+      row.removeEventListener("mouseleave", leave);
+    };
+  }, []);
+
+  return (
+    <span
+      ref={ref}
+      style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", position: "relative" }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Button
+        appearance="default"
+        size="sm"
+        style={{ opacity: hovered ? 1 : 0, pointerEvents: hovered ? undefined : "none" }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      >
+        {isAuth ? "Disconnect" : "Connect"}
+      </Button>
+      <span style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        opacity: hovered ? 0 : 1,
+        pointerEvents: "none",
+      }}>
+        {isAuth
+          ? <IconCircleCheckSolid size={16} style={{ color: "var(--ax-colors-fg-success)" }} />
+          : <IconPlus size={16} style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+        }
+      </span>
+    </span>
+  );
+}
 
 export type MentionableAgent = {
   id: string;
@@ -208,6 +271,7 @@ export function OpalInput({
     const message = contextContent
       ? `${value.trim()}\n\nContext — Selected text in Prompt:\n\n"${contextContent}"`
       : value.trim();
+
     onSend(message);
     onContextChipRemove?.();
   };
@@ -276,6 +340,7 @@ export function OpalInput({
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [authenticatedConnectorIds, setAuthenticatedConnectorIds] = useState<string[]>([]);
   const [featuredConnectorIds, setFeaturedConnectorIds] = useState<string[]>([
     "google-docs",
     "google-sheets",
@@ -312,33 +377,31 @@ export function OpalInput({
         key: "connector-submenu",
         label: "Connectors",
         subOptions: [
-          ...featuredConnectors.map<MenuOption>((connector) => ({
-            addon: <ConnectorAvatar connector={connector} size={16} framed={false} />,
-            group: { label: "Connectors", priority: 2 },
-            key: connector.id,
-            label: connector.name,
-            selected: featuredConnectorIds.includes(connector.id),
-            switch: true,
-            execute: () => {
-              setFeaturedConnectorIds((prev) =>
-                prev.includes(connector.id)
-                  ? prev.filter((id) => id !== connector.id)
-                  : [...prev, connector.id]
-              );
-            },
-          })),
+          ...featuredConnectors.map<MenuOption>((connector) => {
+            const isAuth = authenticatedConnectorIds.includes(connector.id);
+            const toggle = () => setAuthenticatedConnectorIds((prev) =>
+              prev.includes(connector.id)
+                ? prev.filter((id) => id !== connector.id)
+                : [...prev, connector.id]
+            );
+            return {
+              addon: <ConnectorAvatar connector={connector} size={16} framed={false} />,
+              detail: <ConnectorDetailStatus isAuth={isAuth} onToggle={toggle} />,
+              group: { label: "Connectors", priority: 2 },
+              key: connector.id,
+              label: connector.name,
+            };
+          }),
           {
             group: { hidden: true, label: "Connectors footer", priority: 1, separator: true },
             key: "view-all-connectors",
             label: "Browse all connectors",
-            execute: () => {
-              router.push("/opal/connectors?tab=connectors");
-            },
+            execute: () => { router.push("/opal/connectors?tab=connectors"); },
           },
         ],
       },
     ],
-    [featuredConnectors, featuredConnectorIds, router]
+    [featuredConnectors, authenticatedConnectorIds, router]
   );
 
   const agentMenuOptions = useMemo<MenuOption[]>(
@@ -358,22 +421,30 @@ export function OpalInput({
     [filteredAgents]
   );
 
-  const instructionMenuOptions = useMemo<MenuOption[]>(
+  const MOCK_SKILLS: { label: string; scope: "personal" | "org" }[] = [
+    { label: "Email Campaign Writer", scope: "personal" },
+    { label: "SEO Content Generator", scope: "org" },
+    { label: "A/B Test Designer", scope: "personal" },
+    { label: "Audience Insights Analyst", scope: "org" },
+    { label: "Social Media Scheduler", scope: "personal" },
+    { label: "Brand Voice Checker", scope: "org" },
+    { label: "Landing Page Optimizer", scope: "personal" },
+    { label: "Competitive Research", scope: "org" },
+  ];
+
+  const skillMenuOptions = useMemo<MenuOption[]>(
     () =>
-      QUICK_ACTIONS.map<MenuOption>((action) => ({
-        addon: <span style={{ fontSize: 16, lineHeight: 1 }}>{action.emoji}</span>,
-        group: { label: "Instructions", priority: 2 },
-        key: action.label,
-        label: action.label,
-        subOptions: action.suggestions.map<MenuOption>((suggestion) => ({
-          group: { hidden: true, label: `${action.label} suggestions`, priority: 2 },
-          key: suggestion,
-          label: suggestion,
-          execute: () => {
-            onChange(suggestion);
-            setTimeout(() => textareaRef.current?.focus(), 50);
-          },
-        })),
+      MOCK_SKILLS.map<MenuOption>((skill) => ({
+        addon: skill.scope === "personal"
+          ? <IconUser style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)" }} />
+          : <IconBuilding style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)" }} />,
+        group: { label: "SKILLS", priority: 2 },
+        key: skill.label,
+        label: skill.label,
+        execute: () => {
+          onChange(`{Skill: ${skill.label}}`);
+          setTimeout(() => textareaRef.current?.focus(), 50);
+        },
       })),
     [onChange]
   );
@@ -475,7 +546,7 @@ export function OpalInput({
 
   // Determine border color based on state
   const isActive = isFocused || hasValue || isLoading || isRecording || isTranscribing;
-  let borderColor = isActive ? '#7C3AED' : 'var(--ax-colors-border-default, #e5e7eb)';
+  let borderColor = isActive ? 'var(--ax-colors-border-focus)' : 'var(--ax-colors-border-default)';
 
   // CTA Icon state logic
   let ctaIcon = <IconMicrophone size={20} />;
@@ -515,11 +586,11 @@ export function OpalInput({
       {/* AgentBar slot — bottom 8px tucks under input box */}
       {agentBar && (
         <Box style={{
-          borderRadius: '6px',
+          borderRadius: '12px',
           overflow: 'hidden',
           position: 'relative',
           zIndex: 0,
-          marginBottom: '-8px',
+          margin: '0 12px -8px',
           animation: 'agentBarSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
           {agentBar}
@@ -538,11 +609,11 @@ export function OpalInput({
           flexDirection="column"
           px="12"
           border="1"
+          rounded="lg"
+          shadow={variant === 'home' ? 'sm' : 'none'}
           style={{
             backgroundColor: 'var(--opal-bg-input)',
             borderColor: borderColor,
-            borderRadius: '8px',
-            boxShadow: variant === 'home' ? 'var(--shadow-sm)' : 'none',
             transition: 'all 0.2s ease',
             minHeight: '88px',
             boxSizing: 'border-box',
@@ -560,7 +631,7 @@ export function OpalInput({
               alignItems="center"
               gap="4"
               style={{
-                backgroundColor: 'var(--ax-colors-bg-avatar-neutral)',
+                backgroundColor: 'var(--opal-neutral-50)',
                 borderRadius: '6px',
                 height: '24px',
                 padding: '2px 6px',
@@ -621,7 +692,7 @@ export function OpalInput({
         >
           {/* Left Actions */}
           <Box display="flex" gap="4">
-            <Menu options={addActionMenuOptions}>
+            <Menu options={addActionMenuOptions} size="sm">
               <MenuTrigger asChild>
                 <Button
                   appearance="subtle"
@@ -645,13 +716,13 @@ export function OpalInput({
               </MenuTrigger>
               <MenuContent align="start" side="top" sideOffset={8} />
             </Menu>
-            <Menu options={instructionMenuOptions}>
+            <Menu options={skillMenuOptions}>
               <MenuTrigger asChild>
                 <Button
                   appearance="subtle"
                   size="sm"
                   icon={<IconBook size={16} />}
-                  aria-label="Instruction menu"
+                  aria-label="Skill menu"
                   style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
                 />
               </MenuTrigger>
@@ -673,8 +744,8 @@ export function OpalInput({
                 height: '32px',
                 padding: 0,
                 borderRadius: '50%',
-                color: isRecording ? '#E01E5A' : 'var(--opal-text-primary)',
-                backgroundColor: isRecording ? 'rgba(224, 30, 90, 0.1)' : 'transparent',
+                color: isRecording ? 'var(--ax-colors-fg-error)' : 'var(--opal-text-primary)',
+                backgroundColor: isRecording ? 'var(--ax-colors-bg-error-subtlest)' : 'transparent',
                 animation: isRecording ? 'opal-pulse 1.5s infinite' : 'none',
                 opacity: isTranscribing ? 0.5 : 1,
                 cursor: isTranscribing ? 'wait' : 'pointer',
@@ -692,7 +763,7 @@ export function OpalInput({
               <Button
                 appearance="default"
                 size="md"
-                icon={isLoading ? <IconCircleStop size={20} /> : <IconArrowUp size={20} />}
+                icon={isLoading ? <IconCircleStop size={20} /> : hasValue ? <IconCircleArrowUp size={20} /> : <IconArrowUp size={20} />}
                 aria-label={isLoading ? "Stop generating" : "Send message"}
                 onClick={() => {
                   if (isLoading) {
@@ -710,8 +781,8 @@ export function OpalInput({
                   borderRadius: '8px',
                   backgroundColor: isLoading
                     ? 'var(--ax-colors-bg-secondary)'
-                    : '#7C3AED',
-                  color: isLoading ? '#7C3AED' : 'var(--opal-send-btn-text)',
+                    : 'var(--ax-colors-bg-accent)',
+                  color: isLoading ? 'var(--ax-colors-fg-accent)' : '#202320',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

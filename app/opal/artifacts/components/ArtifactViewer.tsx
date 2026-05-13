@@ -12,24 +12,22 @@ import {
     DisclosureTrigger,
 } from "@optiaxiom/react";
 import { OpalChatView } from "@/app/components/Opal/OpalChatView";
+import { CodeCanvasPanel } from "@/app/components/Opal/CodeCanvasPanel";
 import type { ChatMessage as OpalChatMessage } from "@/app/hooks/useOpalState";
 import {
-    IconXmark,
-    IconArrowRotateLeft,
-    IconArrowRotateRight,
+    IconArrowsMaximize,
+    IconCodeBranch,
+    IconComments,
     IconCopy,
     IconDownload,
-    IconArrowsMaximize,
-    IconAgent,
-    IconChevronDown,
-    IconCircleCheck,
     IconFile,
     IconImage,
     IconCode,
     IconPresentationScreen,
     IconFileSpreadsheet,
     IconChartColumn,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
+import { IconAgent } from "@optimizely/axiom-icons";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -155,6 +153,27 @@ export type ArtifactViewerArtifact = {
     version?: string;
     imageUrl?: string;
 };
+
+// ─── Mock content by artifact type ───────────────────────────────────────────
+
+const MOCK_CONTENT: Record<string, string> = {
+    Document: `<p>Dear valued customer, as we head into Q2 we want to acknowledge the partnership we've built together over the past year. Your investment in our platform has driven measurable results — and we're confident the next chapter will deliver even more.</p><p>To show our appreciation, we're extending an exclusive renewal offer: <strong>15% off your enterprise subscription</strong> when you renew within the next 14 days. This is our way of saying thank you for being part of the journey.</p><p>Ready to continue building momentum? Your account team is standing by to walk you through everything that's new — and everything that's coming.</p>`,
+    Report: `<h1>Competitive Analysis Report</h1><p>This report provides a deep-dive into 5 key competitors, analyzing their positioning, pricing, and content strategies to uncover gaps and opportunities.</p><h2>Key Findings</h2><ul><li><strong>Competitor A</strong> leads on pricing transparency but lags in enterprise features.</li><li><strong>Competitor B</strong> has strong brand recognition but poor NPS scores.</li><li><strong>Competitor C</strong> is gaining traction in the mid-market with aggressive bundling.</li></ul><h2>Recommendations</h2><p>Focus messaging on enterprise reliability and workflow integrations where competitors are weakest. Prioritize case studies from the financial services vertical.</p>`,
+    Spreadsheet: `<h2>Content Calendar — April</h2><p>This spreadsheet tracks all planned content across channels for April. Each row represents a published asset with its status, owner, and publish date.</p><h3>Summary</h3><ul><li>32 total assets planned</li><li>18 completed, 10 in review, 4 not started</li><li>Top channels: Blog (12), Social (8), Email (6), Video (4)</li></ul>`,
+    Presentation: `<h1>Q1 Sales Deck</h1><p>Exec-level Q1 readout covering pipeline performance, ARR highlights, and strategic priorities for Q2.</p><h2>Q1 Highlights</h2><ul><li>ARR grew 23% YoY to $48M</li><li>Net new logos: 47 enterprise accounts</li><li>NRR: 118%</li></ul><h2>Q2 Priorities</h2><p>Expand into EMEA, accelerate partner channel, and launch the AI-powered workflow suite in June.</p>`,
+    Code: `<h2>A/B Test Variants — Checkout CTA</h2><p>Three CTA copy variants optimized for checkout conversion, with tracking snippets for each.</p><pre><code>// Variant A
+const CTA_A = "Start your free trial";
+
+// Variant B
+const CTA_B = "Get started — no credit card required";
+
+// Variant C
+const CTA_C = "Claim your 30-day trial";</code></pre><p>Deploy via feature flag <code>checkout_cta_test</code>. Target: 33% traffic split across all three variants.</p>`,
+};
+
+function getMockContent(type: string): string {
+    return MOCK_CONTENT[type] ?? `<p>This artifact does not have a text preview.</p>`;
+}
 
 // ─── Agent Execution Log ─────────────────────────────────────────────────────
 
@@ -458,13 +477,25 @@ function CanvasPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
                         >
                             {TYPE_ICON[artifact.type] ?? <IconFile size={20} />}
                         </Box>
-                        <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1 }}>
+                        <Box display="flex" flexDirection="column" gap="4" style={{ flex: 1 }}>
                             <Text fontSize="lg" fontWeight="600" style={{ lineHeight: "24px", letterSpacing: "-0.2px" }}>
                                 {artifact.name}
                             </Text>
                             <Text color="fg.tertiary" fontSize="sm">
                                 {artifact.type} · {artifact.created}{artifact.version ? ` · v${artifact.version}` : ""}
                             </Text>
+                            <Box display="flex" alignItems="center" gap="4" color="fg.tertiary">
+                                {artifact.sourceType === "workflow" ? (
+                                    <IconCodeBranch size={13} />
+                                ) : artifact.sourceType === "chat" ? (
+                                    <IconComments size={13} />
+                                ) : (
+                                    <IconAgent size={13} />
+                                )}
+                                <Text fontSize="sm" color="fg.tertiary">
+                                    {artifact.sourceType === "chat" ? "Chat" : artifact.sourceName}
+                                </Text>
+                            </Box>
                         </Box>
                     </Box>
 
@@ -557,86 +588,16 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
                 background: "var(--ax-colors-bg-default)",
             }}
         >
-            {/* Left: canvas column — toolbar + canvas content */}
-            <Box style={{ flex: "1 1 0", overflow: "hidden", display: "flex", flexDirection: "column", borderRight: showPanel ? BORDER_S : undefined }}>
-
-                {/* Unified toolbar — scoped to the canvas column only */}
-                <Box
-                    display="flex"
-                    alignItems="center"
-                    gap="4"
-                    px="12"
-                    bg="bg.default"
-                    style={{ flexShrink: 0, borderBottom: BORDER_S, height: 48, overflow: "hidden", zIndex: 1 }}
-                >
-                    {/* Close */}
-                    <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} aria-label="Close" onClick={onClose} />
-
-                    {/* Divider */}
-                    <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
-
-                    {/* Title + badge + version */}
-                    <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
-                        <Text fontSize="md" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 240 }}>
-                            {artifact.name}
-                        </Text>
-                        <Badge intent={artifact.status === "Ready" ? "success" : artifact.status === "Failed" ? "danger" : "information"}>
-                            {artifact.status}
-                        </Badge>
-                        {artifact.version && (
-                            <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>v{artifact.version}</Text>
-                        )}
-                    </Box>
-
-                    {/* Spacer */}
-                    <Box style={{ flex: 1 }} />
-
-                    {/* Right cluster */}
-                    <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-                        {/* Saved indicator */}
-                        <Box display="flex" alignItems="center" gap="4">
-                            <IconCircleCheck size={15} color="var(--ax-colors-fg-success)" />
-                            <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Change saved.</Text>
-                        </Box>
-
-                        {/* Undo / Redo / Copy / Download */}
-                        <Box display="flex" alignItems="center" gap="4">
-                            <Tooltip content="Undo" delayDuration={300}>
-                                <span style={{ display: "inline-flex" }}>
-                                    <Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" />
-                                </span>
-                            </Tooltip>
-                            <Tooltip content="Redo" delayDuration={300}>
-                                <span style={{ display: "inline-flex" }}>
-                                    <Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" />
-                                </span>
-                            </Tooltip>
-                            <Tooltip content="Copy" delayDuration={300}>
-                                <span style={{ display: "inline-flex" }}>
-                                    <Button appearance="subtle" size="sm" icon={<IconCopy size={15} />} aria-label="Copy" />
-                                </span>
-                            </Tooltip>
-                            <Tooltip content="Download" delayDuration={300}>
-                                <span style={{ display: "inline-flex" }}>
-                                    <Button appearance="subtle" size="sm" icon={<IconDownload size={15} />} aria-label="Download" />
-                                </span>
-                            </Tooltip>
-                        </Box>
-
-                        {/* Divider */}
-                        <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
-
-                        {/* Add to */}
-                        <Button appearance="primary" size="sm" icon={<IconChevronDown size={13} />} iconPosition="end">
-                            Add to
-                        </Button>
-                    </Box>
-                </Box>
-
-                {/* Canvas content */}
-                <Box style={{ flex: 1, overflow: "hidden" }}>
-                    <CanvasPanel artifact={artifact} />
-                </Box>
+            {/* Left: canvas column — CodeCanvasPanel owns the toolbar */}
+            <Box style={{ flex: "1 1 0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <CodeCanvasPanel
+                    onClose={onClose}
+                    artifactTitle={artifact.name}
+                    artifactStatus={artifact.status}
+                    artifactVersion={artifact.version}
+                    artifactSource={{ type: artifact.sourceType, name: artifact.sourceName }}
+                    initialHtml={getMockContent(artifact.type)}
+                />
             </Box>
 
             {/* Right: context panel — only shown when opened via source */}

@@ -22,14 +22,16 @@ type AgentBarProps = {
 };
 
 const BASE_STYLES = {
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
   fontSize: 12,
-  color: "#080736",
+  color: "var(--ax-colors-fg-default)",
 };
 
 const PURPLE_CARD: React.CSSProperties = {
-  background: "#ede9fe",
-  borderRadius: "6px 6px 0 0",
+  background: "var(--opal-neutral-50)",
+  border: "1px solid var(--ax-colors-border-default)",
+  borderBottom: "none",
+  borderRadius: "12px 12px 0 0",
   padding: "8px 12px 16px",
   display: "flex",
   alignItems: "center",
@@ -45,13 +47,13 @@ const AGENT_ROW: React.CSSProperties = {
 
 const DONE_BTN: React.CSSProperties = {
   background: "transparent",
-  border: "1px solid #7c3aed",
+  border: "1px solid var(--ax-colors-border-accent)",
   borderRadius: 4,
   padding: "2px 8px",
   fontSize: 11,
-  color: "#7c3aed",
+  color: "var(--ax-colors-fg-accent)",
   cursor: "pointer",
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
   fontWeight: 500,
 };
 
@@ -59,7 +61,7 @@ const DISMISS_BTN: React.CSSProperties = {
   background: "transparent",
   border: "none",
   cursor: "pointer",
-  color: "#4f576e",
+  color: "var(--ax-colors-fg-secondary)",
   fontSize: 16,
   lineHeight: 1,
   padding: "0 2px",
@@ -68,26 +70,26 @@ const DISMISS_BTN: React.CSSProperties = {
 };
 
 const YES_BTN: React.CSSProperties = {
-  background: "#7c3aed",
+  background: "var(--ax-colors-bg-accent)",
   border: "none",
   borderRadius: 4,
   padding: "3px 10px",
   fontSize: 11,
   color: "#fff",
   cursor: "pointer",
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
   fontWeight: 500,
 };
 
 const NO_BTN: React.CSSProperties = {
   background: "transparent",
-  border: "1px solid #cacfdc",
+  border: "1px solid var(--ax-colors-border-default)",
   borderRadius: 4,
   padding: "3px 10px",
   fontSize: 11,
-  color: "#4f576e",
+  color: "var(--ax-colors-fg-secondary)",
   cursor: "pointer",
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
 };
 
 export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResumeNo, highlight }: AgentBarProps) {
@@ -107,19 +109,19 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
       <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Gray resume bar — slides up from behind the purple bar */}
         <div style={{
-          background: highlight ? "#FEE2E2" : "#e9edf5",
+          background: highlight ? "var(--ax-colors-bg-error-subtlest)" : "var(--ax-colors-bg-secondary)",
           padding: "8px 12px",
-          borderRadius: "6px 6px 0 0",
+          borderRadius: "12px 12px 0 0",
           margin: "0 8px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          fontFamily: "Inter, sans-serif",
+          fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
           animation: highlight
             ? "resumeBarShake 0.6s ease"
             : "resumeBarSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: "#2e3442" }}>Resume previous conversation?</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--ax-colors-fg-default)" }}>Resume previous conversation?</span>
           <div style={{ display: "flex", gap: 6 }}>
             <Button ref={yesRef} appearance="default" size="sm" onClick={onResumeYes}>Yes</Button>
             <Button appearance="default" size="sm" onClick={onResumeNo}>No</Button>
@@ -157,7 +159,7 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
         )}
       </div>
       {state === "default" && agent.subtitle && (
-        <div style={{ marginTop: 2, color: "#4f576e" }}>{agent.subtitle}</div>
+        <div style={{ marginTop: 2, color: "var(--ax-colors-fg-secondary)" }}>{agent.subtitle}</div>
       )}
     </div>
   );

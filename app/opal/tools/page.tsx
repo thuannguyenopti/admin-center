@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useEffect, useMemo } from "react";
+import React, { Fragment, useState, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
     Box,
@@ -10,8 +10,6 @@ import {
     Heading,
     Switch,
     Tabs,
-    TabsList,
-    TabsTrigger,
     TabsContent,
     DropdownMenu,
     DropdownMenuTrigger,
@@ -29,7 +27,7 @@ import {
     IconScrewdriverWrench,
     IconEllipsisSolid,
     IconSearch,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
 import { Input } from "@/app/components/Input";
 import { AddConnectorModal, type ConnectedConnector } from "./components/AddConnectorModal";
@@ -41,6 +39,7 @@ import { AddAuthProviderModal, type AuthProviderDraft } from "./components/AddAu
 import { RegisterRemoteMcpProviderModal, type RemoteMcpProviderDraft } from "./components/RegisterRemoteMcpProviderModal";
 import { CONNECTORS, type Connector } from "./data/connectors";
 import { requiresDeferredUserConnect, usesDirectUserConnect } from "./lib/connectorAuth";
+import usePersistentState from "@/app/usePersistentState";
 
 const STORAGE_KEY = "opal_connected_connectors";
 const TAB_VALUES = ["connectors", "tools", "registries", "auth-providers"] as const;
@@ -96,6 +95,7 @@ export default function ToolsPage() {
     // Feedback toggle
     const [ocpAsPanel, setOcpAsPanel] = useState(false);
     const [userView, setUserView] = useState(false);
+    const [ctaButtonMode, setCtaButtonMode, ctaButtonModeHydrated] = usePersistentState("opal-connectors-cta-button-mode", false) as [boolean, (v: boolean) => void, boolean];
 
     // Modal state — which connector (if any) and which screen to open to
     const [modalOpen, setModalOpen] = useState(false);
@@ -411,7 +411,7 @@ export default function ToolsPage() {
                 {/* ── Page header + feedback toggle ───────────────────────── */}
                 <Box display="flex" alignItems="center" justifyContent="space-between" gap="16">
                     <Box display="flex" flexDirection="column" gap="8">
-                        <Heading level="1" fontSize="2xl">Connectors</Heading>
+                        <Heading level="1">Connectors</Heading>
                         <Text color="fg.secondary">Enable connectors and tools your agents will use.</Text>
                     </Box>
                     <Box
@@ -438,17 +438,34 @@ export default function ToolsPage() {
                             <Switch checked={userView} onCheckedChange={setUserView} />
                             <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>User view</Text>
                         </Box>
+                        <Box display="flex" alignItems="center" gap="8">
+                            <Switch checked={ctaButtonModeHydrated ? ctaButtonMode : false} onCheckedChange={setCtaButtonMode} />
+                            <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "nowrap" }}>CTA Button</Text>
+                        </Box>
                     </Box>
                 </Box>
 
                 {/* ── Tabs ─────────────────────────────────────────────────── */}
                 <Tabs value={activeTab} onValueChange={handleTabChange}>
-                    <TabsList>
-                        <TabsTrigger value="connectors">Connectors</TabsTrigger>
-                        <TabsTrigger value="tools">Tools</TabsTrigger>
-                        <TabsTrigger value="registries">Registries</TabsTrigger>
-                        <TabsTrigger value="auth-providers">Auth Providers</TabsTrigger>
-                    </TabsList>
+                    <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                        {(["connectors", "tools", "registries", "auth-providers"] as const).map((tab) => (
+                            <Box
+                                key={tab}
+                                pb="12"
+                                cursor="pointer"
+                                borderB={activeTab === tab ? "2" : "0"}
+                                onClick={() => handleTabChange(tab)}
+                                style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                            >
+                                <Text
+                                    fontWeight={activeTab === tab ? "500" : "400"}
+                                    color={activeTab === tab ? "fg.default" : "fg.secondary"}
+                                >
+                                    {tab === "connectors" ? "Connectors" : tab === "tools" ? "Tools" : tab === "registries" ? "Registries" : "Auth Providers"}
+                                </Text>
+                            </Box>
+                        ))}
+                    </Box>
 
                     {/* ── Connectors tab: all 33 tiles ─────────────────────── */}
                     <TabsContent value="connectors">
@@ -527,6 +544,7 @@ export default function ToolsPage() {
                                             isConnected={connectedIds.includes(connector.id)}
                                             isConfigured={configuredIds.includes(connector.id)}
                                             isUserView={userView}
+                                            ctaButtonMode={ctaButtonModeHydrated ? ctaButtonMode : false}
                                             onConnect={() => {
                                                 if (connector.usesOCP) {
                                                     openOCP(connector);
@@ -735,6 +753,7 @@ function ConnectorCard({
     isConnected,
     isConfigured,
     isUserView,
+    ctaButtonMode,
     onConnect,
     onDetails,
 }: {
@@ -742,12 +761,142 @@ function ConnectorCard({
     isConnected: boolean;
     isConfigured: boolean;
     isUserView: boolean;
+    ctaButtonMode: boolean;
     onConnect: () => void;
     onDetails: () => void;
 }) {
     const showsConnectAction = usesDirectUserConnect(connector) || (requiresDeferredUserConnect(connector) && isConfigured);
     const canShowUserAction = !isUserView || isConnected || usesDirectUserConnect(connector);
 
+    if (ctaButtonMode) {
+        // ── CTA Button layout (Figma variant) ─────────────────────────────────
+        // Footer states:
+        //   not connected + admin  → Configure button
+        //   not connected + user   → Connect button
+        //   connected   + admin    → gear icon in header only (no footer button)
+        //   connected   + user     → Open button (left) + green dot + "Connected" (right)
+        const showGearInHeader = isConnected && !isUserView;
+        const showFooter = !(isConnected && !isUserView);
+
+        let footerContent: React.ReactNode = null;
+        if (isConnected && isUserView) {
+            // connected + user: Open button left, Connected indicator right
+            footerContent = (
+                <Box display="flex" alignItems="center" justifyContent="space-between" pt="4">
+                    <Button
+                        appearance="default"
+                        size="sm"
+                        onClick={e => { e.stopPropagation(); onConnect(); }}
+                    >
+                        Open
+                    </Button>
+                    <Box display="flex" alignItems="center" gap="8">
+                        <Box
+                            rounded="full"
+                            style={{
+                                width: 8,
+                                height: 8,
+                                background: "var(--ax-colors-fg-success-strong)",
+                                flexShrink: 0,
+                            }}
+                        />
+                        <Text fontSize="sm" fontWeight="500" color="fg.success">
+                            Connected
+                        </Text>
+                    </Box>
+                </Box>
+            );
+        } else if (!isConnected && canShowUserAction) {
+            // not connected + action available: label mirrors the icon aria-label
+            footerContent = (
+                <Box pt="4">
+                    <Button
+                        appearance="default"
+                        size="sm"
+                        onClick={e => { e.stopPropagation(); onConnect(); }}
+                    >
+                        {showsConnectAction ? "Connect" : "Configure"}
+                    </Button>
+                </Box>
+            );
+        } else if (!isConnected && !canShowUserAction) {
+            // user view, admin hasn't configured → passive CTA
+            footerContent = (
+                <Box pt="4">
+                    <Button
+                        appearance="default"
+                        size="sm"
+                        onClick={e => { e.stopPropagation(); onDetails(); }}
+                    >
+                        Preview
+                    </Button>
+                </Box>
+            );
+        }
+
+        return (
+            <Box
+                border="1"
+                borderColor="border.tertiary"
+                rounded="lg"
+                pt="16"
+                px="16"
+                pb="16"
+                display="flex"
+                flexDirection="column"
+                gap="12"
+                onClick={onDetails}
+                style={{
+                    background: "var(--ax-colors-bg-default)",
+                    cursor: "pointer",
+                    transition: "border-color 0.15s",
+                    minHeight: 152,
+                    height: "100%",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--ax-colors-border-secondary)")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--ax-colors-border-tertiary)")}
+            >
+                {/* Top row: name (left) + avatar (right) */}
+                <Box display="flex" alignItems="center" gap="12">
+                    <Text fontWeight="500" style={{ flex: 1 }}>
+                        {connector.name}
+                    </Text>
+                    <ConnectorAvatar connector={connector} size={40} />
+                    {showGearInHeader && (
+                        <Button
+                            appearance="subtle"
+                            size="md"
+                            icon={<IconGear />}
+                            onClick={e => { e.stopPropagation(); onConnect(); }}
+                            aria-label="Configure"
+                        />
+                    )}
+                </Box>
+
+                {/* Description */}
+                <Text
+                    fontSize="sm"
+                    color="fg.secondary"
+                    style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        lineHeight: "1.4",
+                        minHeight: "2.8em",
+                        flex: 1,
+                    }}
+                >
+                    {connector.description}
+                </Text>
+
+                {/* Footer CTA */}
+                {showFooter && footerContent}
+            </Box>
+        );
+    }
+
+    // ── Default layout (existing) ──────────────────────────────────────────────
     return (
         <Box
             border="1"

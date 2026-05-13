@@ -1,11 +1,10 @@
 "use client";
-import { useEffect } from "react";
 import Template from "./components/template";
 import "./globals.css";
-import Script from "next/script";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
 import {ProofreadingProvider} from "@/app/components/ai/ProofreadingProvider";
 import {OpalGenerationProvider} from "@/app/context/OpalGenerationContext";
+import {ExperimentResultsProvider} from "@/app/context/ExperimentResultsContext";
 import {usePathname} from "next/navigation";
 import usePersistentState from "@/app/usePersistentState";
 import {Algorithm, initialAlgorithms, ContentType, initialContentTypes} from "@/app/db/initialData";
@@ -16,26 +15,35 @@ import {NewYearEffect} from "@/app/components/effects/NewYearEffect";
 import {HydrationErrorSuppressor} from "@/app/components/HydrationErrorSuppressor";
 import {MigrationRunner} from "@/app/components/MigrationRunner";
 import {
-	IconBulb,
-	IconChartBar,
-	IconGitFork,
-	IconClock,
-	IconCode,
-	IconDashboard,
-	IconFlask,
-	IconHome,
-	IconPencil,
-	IconHierarchy3,
-	IconSettings,
+	IconGrid2,
+	IconChartColumn,
+	IconPen,
+	IconListTree,
+	IconGear,
 	IconSearch,
 	IconList,
 	IconUsers,
-	IconUsersGroup,
-	IconPuzzle,
+	IconPuzzlePiece,
 	IconFolders,
-	IconBuildingStore,
-	IconSettingsSearch,
-} from "@tabler/icons-react";
+	IconStore,
+	IconMagnifyingGlass,
+	IconCodeBranch,
+	IconHouse,
+	IconFlask,
+	IconCode,
+	IconClock,
+	IconUserGroup,
+	IconLightbulb,
+	IconAgent,
+} from "@optimizely/axiom-icons";
+import {
+	IconComments,
+	IconBooks,
+	IconBell,
+	IconFolderBookmark,
+	IconPuzzlePiece as IconPuzzlePieceV3,
+	IconGear as IconGearV3,
+} from "@optiaxiom/icons";
 
 // CMP custom icons
 import CMPCreateIcon from "@/app/cmp/assets/plus-16.svg";
@@ -53,22 +61,6 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	useEffect(() => {
-		if (typeof window === "undefined" || !window.location.hash.includes("figmacapture=")) {
-			return;
-		}
-
-		if (document.querySelector("script[data-figma-capture-script]")) {
-			return;
-		}
-
-		const script = document.createElement("script");
-		script.src = "https://mcp.figma.com/mcp/html-to-design/capture.js";
-		script.async = true;
-		script.setAttribute("data-figma-capture-script", "true");
-		document.head.appendChild(script);
-	}, []);
-
 	const path = usePathname() ?? "";
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
@@ -108,7 +100,7 @@ export default function RootLayout({
 				label: "Dashboard",
 				highlight: "cms/dashboard",
 				url: "/cms/dashboard",
-				icon: <IconDashboard />,
+				icon: <IconGrid2 />,
 			},
 			{
 				label: "Content Manager",
@@ -120,14 +112,14 @@ export default function RootLayout({
 				label: "Edit",
 				url: "/cms/edit",
 				highlight: "cms/edit",
-				icon: <IconPencil />,
+				icon: <IconPen />,
 				customLayout: true,
 			},
 			{
 				label: "Reports",
 				highlight: "cms/reports",
 				url: "/cms/reports",
-				icon: <IconChartBar />,
+				icon: <IconChartColumn />,
 			},
 			{
 				label: "Audiences",
@@ -139,7 +131,7 @@ export default function RootLayout({
 				label: "Settings",
 				highlight: "cms/settings",
 				url: "/cms/settings",
-				icon: <IconSettings />,
+				icon: <IconGear />,
 				children: [
 					// 1. AI & Automation (moved to top - prioritized)
 					{label: "AI & Automation"},
@@ -282,13 +274,13 @@ export default function RootLayout({
 				label: "Add-ons",
 				highlight: "cms/add-ons",
 				url: "/cms/add-ons",
-				icon: <IconPuzzle />,
+				icon: <IconPuzzlePiece />,
 			},
 			{
 				label: "Search Management",
 				url: "/cms/search/search-analytics",
 				highlight: "/cms/search",
-				icon: <IconSettingsSearch />,
+				icon: <IconMagnifyingGlass />,
 				children: [
 					{label: "Health & Monitoring"},
 					{
@@ -383,76 +375,18 @@ export default function RootLayout({
 				],
 			},
 		],
-		"web-experimentation": [
-			{
-				label: "Projects",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation/projects",
-				icon: <IconGitFork />,
-			},
-			{
-				label: "Home",
-				url: "/web-experimentation/home",
-				highlight: "/web-experimentation/home",
-				icon: <IconHome />,
-			},
-			{
-				label: "Optimizations",
-				url: "/web-experimentation/optimizations",
-				highlight: "/web-experimentation/optimizations",
-				icon: <IconFlask />,
-			},
-			{
-				label: "Audiences",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation/audiences",
-				icon: <IconUsers />,
-			},
-			{
-				label: "Implementation",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation/implementation",
-				icon: <IconCode />,
-			},
-			{
-				label: "History",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation/history",
-				icon: <IconClock />,
-			},
-			{
-				label: "Settings",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation/settings",
-				icon: <IconSettings />,
-			},
-			{
-				label: "Collaborate",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation/collaborate",
-				icon: <IconUsersGroup />,
-			},
-			{
-				label: "Ideas",
-				description: "Generate data-driven experiments powered by your content.",
-				url: "/web-experimentation",
-				highlight: "/web-experimentation",
-				icon: <IconBulb />,
-				exact: true,
-			},
-		],
 		"connect-platform": [
 			{
 				label: "Marketplace",
 				url: "/connect-platform/marketplace",
 				highlight: "/connect-platform/marketplace",
-				icon: <IconBuildingStore />,
+				icon: <IconStore />,
 			},
 			{
 				label: "Graph",
 				url: "/connect-platform/graph/dashboard",
 				highlight: "/connect-platform/graph",
-				icon: <IconHierarchy3 />,
+				icon: <IconListTree />,
 				children: [
 					{label: "Dashboard", url: "/connect-platform/graph/dashboard"},
 					{label: "Browse", url: "/connect-platform/graph/browse"},
@@ -502,7 +436,7 @@ export default function RootLayout({
 				label: "Chats",
 				url: "/opal",
 				highlight: "/opal",
-				icon: <img src="/nav_icons/comments.svg" alt="Chats" width={20} height={20} />,
+				icon: <IconComments />,
 				exact: true,
 				customLayout: true,
 			},
@@ -510,58 +444,43 @@ export default function RootLayout({
 				label: "Artifacts",
 				url: "/opal/artifacts",
 				highlight: "/opal/artifacts",
-				icon: <CMPLibraryIcon />,
-				hidePageHeader: true,
+				icon: <IconBooks />,
+				description: "Browse and manage all files and outputs generated by your Opal agents.",
 			},
 			{
-				label: "Context",
-				url: "/opal/instructions",
-				highlight: "/opal/instructions",
-				icon: (
-					<img
-						src="/nav_icons/folder-bookmark.svg"
-						alt="Context"
-						width={20}
-						height={20}
-					/>
-				),
-			},
-			{
-				label: "Inbox",
+				label: "Notifications",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
-				icon: <img src="/nav_icons/inbox.svg" alt="Inbox" width={20} height={20} />,
-				customLayout: true,
-			},
-			{
-				label: "Activities",
-				url: "/opal/activities",
-				highlight: "/opal/activities",
-				icon: (
-					<img src="/nav_icons/wave_pulse.svg" alt="Activities" width={20} height={20} />
-				),
+				icon: <IconBell />,
 				customLayout: true,
 			},
 			{label: "Configurations"},
 			{
-				label: "Agents",
+				label: "Context",
+				url: "/opal/context",
+				highlight: "/opal/context",
+				customLayout: true,
+				icon: <IconFolderBookmark />,
+			},
+			{
+				label: "Sub Agent",
 				url: "/opal/agents",
 				highlight: "/opal/agents",
-				icon: <img src="/nav_icons/agent_nav.svg" alt="Agents" width={20} height={20} />,
+				icon: <IconAgent />,
 				customLayout: true,
 			},
 			{
 				label: "Connectors",
 				url: "/opal/connectors",
 				highlight: "/opal/connectors",
-				icon: <img src="/nav_icons/grid-2-plus.svg" alt="Connectors" width={20} height={20} />,
+				icon: <IconPuzzlePieceV3 />,
 				hidePageHeader: true,
 			},
 			{
 				label: "Settings",
 				url: "/opal/settings",
 				highlight: "/opal/settings",
-				icon: <img src="/nav_icons/gear.svg" alt="Settings" width={20} height={20} />,
+				icon: <IconGearV3 />,
 			},
 		],
 		cmp: [
@@ -631,7 +550,7 @@ export default function RootLayout({
 				label: "Settings",
 				highlight: "cmp/settings",
 				url: "/cmp/settings",
-				icon: <IconSettings />,
+				icon: <IconGear />,
 				hidePageHeader: true,
 				children: [
 					{label: "Stefan Svebeck (Admin)", url: "/cmp/settings/profile"},
@@ -661,6 +580,64 @@ export default function RootLayout({
 				],
 			},
 		],
+		"web-experimentation": [
+			{
+				label: "Projects",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation/projects",
+				icon: <IconCodeBranch />,
+			},
+			{
+				label: "Home",
+				url: "/web-experimentation/home",
+				highlight: "/web-experimentation/home",
+				icon: <IconHouse />,
+			},
+			{
+				label: "Optimizations",
+				url: "/web-experimentation/optimizations",
+				highlight: "/web-experimentation/optimizations",
+				icon: <IconFlask />,
+			},
+			{
+				label: "Audiences",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation/audiences",
+				icon: <IconUsers />,
+			},
+			{
+				label: "Implementation",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation/implementation",
+				icon: <IconCode />,
+			},
+			{
+				label: "History",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation/history",
+				icon: <IconClock />,
+			},
+			{
+				label: "Settings",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation/settings",
+				icon: <IconGear />,
+			},
+			{
+				label: "Collaborate",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation/collaborate",
+				icon: <IconUserGroup />,
+			},
+			{
+				label: "Ideas",
+				description: "Generate data-driven experiments powered by your content.",
+				url: "/web-experimentation",
+				highlight: "/web-experimentation",
+				icon: <IconLightbulb />,
+				exact: true,
+			},
+		],
 	};
 
 	const key: string = path.split("/")[1] ?? "";
@@ -675,16 +652,19 @@ export default function RootLayout({
 					rel="stylesheet"
 				/>
 			</head>
-			<body suppressHydrationWarning>
-				<Script src="https://mcp.figma.com/mcp/html-to-design/capture.js" strategy="afterInteractive" />
+			<body suppressHydrationWarning data-brand="v3">
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>
-							<HydrationErrorSuppressor />
-							<MigrationRunner />
-							{menu ? <Template structure={menu}>{children}</Template> : children}
-							{activeEffect === "snow" && <SnowEffect />}
-							{activeEffect === "newyear" && <NewYearEffect />}
+							<ExperimentResultsProvider>
+								<HydrationErrorSuppressor />
+								<MigrationRunner />
+								<div data-brand="v3" style={{ display: "contents" }}>
+									{menu ? <Template structure={menu}>{children}</Template> : children}
+								</div>
+								{activeEffect === "snow" && <SnowEffect />}
+								{activeEffect === "newyear" && <NewYearEffect />}
+							</ExperimentResultsProvider>
 						</OpalGenerationProvider>
 					</ProofreadingProvider>
 				</ThemeProvider>

@@ -10,7 +10,7 @@ import {
     Separator,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { IconCheck, IconShieldCheck } from "@tabler/icons-react";
+import { IconCheck, IconShieldCheck } from "@optiaxiom/icons";
 import { useState } from "react";
 import {
     mockOrgDefaultPreferences,

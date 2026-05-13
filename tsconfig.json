@@ -9,6 +9,7 @@
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "experimentalDecorators": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -39,6 +40,13 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "app/components/Opal/editor/multi-editor.ts",
+    "app/components/Opal/editor/toolbar/editor-toolbar.ts",
+    "app/components/Opal/editor/toolbar/editor-status-bar.ts",
+    "app/components/Opal/editor/toolbar/comment-panel.ts",
+    "app/components/Opal/editor/toolbar/comment-list-panel.ts",
+    "app/components/Opal/editor/toolbar/suggest-status.ts",
+    "app/components/Opal/editor/toolbar/version-panel.ts"
   ]
 }

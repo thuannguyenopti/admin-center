@@ -28,6 +28,9 @@ import {
   IconFloppyDisk,
   IconArrowLeft,
   IconCirclePlus,
+  IconAgent,
+  IconCodeBranch,
+  IconComments,
 } from "@optimizely/axiom-icons";
 import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import dynamic from "next/dynamic";
@@ -38,10 +41,10 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { createLowlight, common } from "lowlight";
 import type { EditorFileType } from "./EditorOutputCard";
 import type { CodeMirrorLanguage } from "./editor/CodeMirrorEditor";
-import { BlameEngine, type BlameSegment } from "./editor/blame-engine";
-import { createBlamePlugin, blamePluginKey } from "./editor/blame-tiptap-plugin";
-import { LocalVersionManager, type LocalVersion, type DiffLine } from "./editor/local-version-manager";
-import { computeLineDiff } from "./editor/diff-engine";
+import { BlameEngine, type BlameSegment } from "./editor/collab/blame-engine";
+import { createBlamePlugin, blamePluginKey } from "./editor/collab/blame-tiptap-plugin";
+import { LocalVersionManager, type LocalVersion, type DiffLine } from "./editor/collab/local-version-manager";
+import { computeLineDiff } from "./editor/collab/diff-engine";
 
 const CodeMirrorEditor = dynamic(
   () => import("./editor/CodeMirrorEditor").then((m) => m.CodeMirrorEditor),
@@ -58,7 +61,9 @@ type CodeCanvasPanelProps = {
   artifactTitle?: string;
   artifactStatus?: string;
   artifactVersion?: string;
+  artifactSource?: { type: string; name: string };
   contentNode?: ReactNode;
+  initialHtml?: string;
 };
 
 // ── Example HTML content ──────────────────────────────────────────────────────
@@ -116,9 +121,10 @@ const COLLAB_USERS = [
   { name: "James S.", colorScheme: "neutral" as const },
 ];
 
-// ── Mock blame segments — split doc into 3 author regions ─────────────────────
+// ── Blame segment helpers ─────────────────────────────────────────────────────
 
-function getMockBlameSegments(text: string): BlameSegment[] {
+/** Split `text` into 3 mock-attributed regions. */
+function mockSegments(text: string): BlameSegment[] {
   const len = text.length;
   if (len === 0) return [];
   const third = Math.floor(len / 3);
@@ -127,6 +133,32 @@ function getMockBlameSegments(text: string): BlameSegment[] {
     { start: third,     end: third * 2, userName: "James S." },
     { start: third * 2, end: len,       userName: "You"      },
   ];
+}
+
+/**
+ * Rebuild segments whenever the doc changes.
+ * Content that existed at blame-activation time → mock 3-way split.
+ * Any new/changed content since then → attributed to "You".
+ */
+function buildBlameSegments(baselineText: string, currentText: string): BlameSegment[] {
+  if (!currentText) return [];
+
+  // Find how much of the start is still identical to baseline (common prefix)
+  let commonLen = 0;
+  const maxCommon = Math.min(baselineText.length, currentText.length);
+  while (commonLen < maxCommon && baselineText[commonLen] === currentText[commonLen]) commonLen++;
+
+  // Pure deletion with no additions — re-split the remaining text
+  if (currentText.length <= baselineText.length && commonLen === currentText.length) {
+    return mockSegments(currentText);
+  }
+
+  // Common prefix → mock attribution; everything from commonLen onward → "You"
+  const segs: BlameSegment[] = mockSegments(currentText.slice(0, commonLen));
+  if (currentText.length > commonLen) {
+    segs.push({ start: commonLen, end: currentText.length, userName: "You" });
+  }
+  return segs;
 }
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -149,9 +181,27 @@ const WYSIWYG_STYLES = `
 
 function FmtBtn({ title, active, onClick, children }: { title: string; active?: boolean; onClick?: () => void; children: React.ReactNode }) {
   return (
-    <button type="button" title={title} onClick={onClick} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 28, height: 28, border: "none", borderRadius: 4, cursor: "pointer", background: active ? "var(--ax-colors-bg-accent-subtle)" : "transparent", color: active ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-secondary)", transition: "background 0.1s", flexShrink: 0 }} onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "var(--ax-colors-bg-secondary)"; }} onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}>
+    <Button
+      type="button"
+      title={title}
+      onClick={onClick}
+      appearance="subtle"
+      size="sm"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 28,
+        height: 28,
+        flexShrink: 0,
+        ...(active && {
+          background: "var(--ax-colors-bg-accent-subtle)",
+          color: "var(--ax-colors-fg-accent)",
+        }),
+      }}
+    >
       {children}
-    </button>
+    </Button>
   );
 }
 function FmtDivider() {
@@ -160,7 +210,7 @@ function FmtDivider() {
 
 // ── WYSIWYG panel ─────────────────────────────────────────────────────────────
 
-function WysiwygPanel({ initialHtml, blameSegments }: { initialHtml: string; blameSegments?: BlameSegment[] }) {
+function WysiwygPanel({ initialHtml, blameSegments, onContentChange }: { initialHtml: string; blameSegments?: BlameSegment[]; onContentChange?: (text: string) => void }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ codeBlock: false }),
@@ -170,6 +220,9 @@ function WysiwygPanel({ initialHtml, blameSegments }: { initialHtml: string; bla
     content: initialHtml,
     editable: true,
     immediatelyRender: false,
+    onUpdate: ({ editor: e }) => {
+      onContentChange?.(e.getText());
+    },
   });
 
   // Push blame decorations into TipTap when segments change
@@ -265,7 +318,7 @@ function VersionHistoryPanel({
         position: "absolute", top: 0, right: 0, bottom: 0,
         width: 320, zIndex: 10,
         borderLeft: BORDER,
-        boxShadow: "-4px 0 12px rgba(0,0,0,0.08)",
+        boxShadow: "-4px 0 12px var(--ax-colors-border-secondary)",
       }}
     >
       {/* Header */}
@@ -337,9 +390,9 @@ function VersionHistoryPanel({
               vs. {diffBase?.label ?? formatDate(diffBase?.created_at ?? '')}
             </Text>
             <Box display="flex" gap="6" alignItems="center">
-              <Box style={{ width: 8, height: 8, borderRadius: 2, background: "#2da44e", flexShrink: 0 }} />
+              <Box style={{ width: 8, height: 8, borderRadius: 2, background: "var(--ax-colors-fg-success)", flexShrink: 0 }} />
               <Text fontSize="xs" color="fg.tertiary">{diff.filter(d => d.type === 'added').length}</Text>
-              <Box style={{ width: 8, height: 8, borderRadius: 2, background: "#cf222e", flexShrink: 0 }} />
+              <Box style={{ width: 8, height: 8, borderRadius: 2, background: "var(--ax-colors-fg-error)", flexShrink: 0 }} />
               <Text fontSize="xs" color="fg.tertiary">{diff.filter(d => d.type === 'removed').length}</Text>
             </Box>
           </Box>
@@ -353,8 +406,8 @@ function VersionHistoryPanel({
                 px="12"
                 style={{
                   lineHeight: "18px",
-                  background: line.type === 'added' ? "#d1fae5" : line.type === 'removed' ? "#fee2e2" : "transparent",
-                  color: line.type === 'added' ? "#065f46" : line.type === 'removed' ? "#991b1b" : "var(--ax-colors-fg-secondary)",
+                  background: line.type === 'added' ? "var(--ax-colors-bg-success-subtle)" : line.type === 'removed' ? "var(--ax-colors-bg-error-subtle)" : "transparent",
+                  color: line.type === 'added' ? "var(--ax-colors-fg-success)" : line.type === 'removed' ? "var(--ax-colors-fg-error)" : "var(--ax-colors-fg-secondary)",
                   whiteSpace: "pre",
                   overflowX: "hidden",
                 }}
@@ -383,7 +436,7 @@ function BlameLegend({ segments }: { segments: BlameSegment[] }) {
   }
   return (
     <Box display="flex" alignItems="center" gap="12" px="16" style={{ flexShrink: 0, height: 28, borderBottom: BORDER, background: "var(--ax-colors-bg-secondary)" }}>
-      <Text fontSize="xs" color="fg.tertiary">Blame:</Text>
+      <Text fontSize="xs" color="fg.tertiary">Contributors:</Text>
       {[...seen.entries()].map(([name, color]) => (
         <Box key={name} display="flex" alignItems="center" gap="4">
           <Box style={{ width: 10, height: 10, borderRadius: 2, background: color, flexShrink: 0 }} />
@@ -402,16 +455,21 @@ export function CodeCanvasPanel({
   artifactTitle,
   artifactStatus,
   artifactVersion,
+  artifactSource,
   contentNode,
+  initialHtml,
 }: CodeCanvasPanelProps) {
   const collabDoc = useCollabDoc(EXAMPLE_HTML);
   const [mode, setMode] = useState<CanvasMode>("preview");
-  const [previewHtml, setPreviewHtml] = useState(WYSIWYG_CONTENT);
+  const [previewHtml, setPreviewHtml] = useState(initialHtml ?? WYSIWYG_CONTENT);
 
-  // ── Blame ─────────────────────────────────────────────────────────────────
+  // ── Contributors (blame) ──────────────────────────────────────────────────
   const [blameActive, setBlameActive] = useState(false);
   const [blameSegments, setBlameSegments] = useState<BlameSegment[]>([]);
   const blameEngineRef = useRef<BlameEngine | null>(null);
+  const baselineTextRef = useRef<string>("");
+  const blameObserverRef = useRef<((update: Uint8Array, origin: unknown) => void) | null>(null);
+  const wysiwygTextRef = useRef<string>(WYSIWYG_CONTENT);
 
   useEffect(() => {
     blameEngineRef.current = new BlameEngine(collabDoc.ydoc, "canvas-doc");
@@ -421,13 +479,37 @@ export function CodeCanvasPanel({
 
   const handleToggleBlame = useCallback(() => {
     if (!blameActive) {
-      const text = collabDoc.ytext.toString() || collabDoc.ydoc.getText("codemirror").toString();
-      setBlameSegments(getMockBlameSegments(text));
+      // Snapshot current text — use WYSIWYG text in preview mode, ytext in source mode
+      const baseline = mode === "preview" ? wysiwygTextRef.current : collabDoc.ytext.toString();
+      baselineTextRef.current = baseline;
+      setBlameSegments(buildBlameSegments(baseline, baseline));
+
+      // Source mode: observe Y.doc updates (CodeMirror writes to ytext)
+      const observer = () => {
+        const current = collabDoc.ytext.toString();
+        setBlameSegments(buildBlameSegments(baselineTextRef.current, current));
+      };
+      blameObserverRef.current = observer;
+      collabDoc.ydoc.on("update", observer);
     } else {
+      if (blameObserverRef.current) {
+        collabDoc.ydoc.off("update", blameObserverRef.current);
+        blameObserverRef.current = null;
+      }
       setBlameSegments([]);
     }
     setBlameActive((v) => !v);
-  }, [blameActive, collabDoc]);
+  }, [blameActive, collabDoc, mode]);
+
+  // Always clean up observer on unmount
+  useEffect(() => {
+    return () => {
+      if (blameObserverRef.current) {
+        collabDoc.ydoc.off("update", blameObserverRef.current);
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Version History ───────────────────────────────────────────────────────
   const [versionPanelOpen, setVersionPanelOpen] = useState(false);
@@ -536,9 +618,9 @@ export function CodeCanvasPanel({
 
           <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
 
-          {/* Blame toggle */}
+          {/* Contributors toggle */}
           {!contentNode && (
-            <Tooltip content={blameActive ? "Hide blame" : "Show blame"} delayDuration={300}>
+            <Tooltip content={blameActive ? "Hide contributors" : "Show contributors"} delayDuration={300}>
               <span>
                 <ToggleButton
                   size="sm"
@@ -546,7 +628,7 @@ export function CodeCanvasPanel({
                   pressed={blameActive}
                   onPressedChange={handleToggleBlame}
                   icon={<IconUserGroup size={15} />}
-                  aria-label="Toggle blame view"
+                  aria-label="Toggle contributors"
                 />
               </span>
             </Tooltip>
@@ -600,7 +682,9 @@ export function CodeCanvasPanel({
       <Box style={{ flex: 1, minHeight: 0, overflow: "hidden", padding: "16px", display: "flex", flexDirection: "column" }}>
         <Box
           bg="bg.default"
-          style={{ flex: 1, minHeight: 0, borderRadius: 10, boxShadow: "0 1px 8px rgba(0,0,0,0.08), 0 0 0 1px var(--ax-colors-border-secondary)", overflow: "hidden", position: "relative" }}
+          rounded="xl"
+          shadow="sm"
+          style={{ flex: 1, minHeight: 0, outline: "1px solid var(--ax-colors-border-secondary)", overflow: "hidden", position: "relative" }}
         >
           {contentNode ? (
             <Box style={{ position: "absolute", inset: 0 }}>{contentNode}</Box>
@@ -614,7 +698,17 @@ export function CodeCanvasPanel({
               {/* Preview / WYSIWYG */}
               {mode === "preview" && (
                 <Box style={{ position: "absolute", inset: 0 }}>
-                  <WysiwygPanel key={previewHtml} initialHtml={previewHtml} blameSegments={blameActive ? blameSegments : undefined} />
+                  <WysiwygPanel
+                    key={previewHtml}
+                    initialHtml={previewHtml}
+                    blameSegments={blameActive ? blameSegments : undefined}
+                    onContentChange={(text) => {
+                      wysiwygTextRef.current = text;
+                      if (blameActive) {
+                        setBlameSegments(buildBlameSegments(baselineTextRef.current, text));
+                      }
+                    }}
+                  />
                 </Box>
               )}
 
@@ -634,10 +728,19 @@ export function CodeCanvasPanel({
 
       {/* ── Status bar ── */}
       {!contentNode && (
-        <Box display="flex" alignItems="center" px="20" py="6" style={{ flexShrink: 0, borderTop: BORDER }}>
+        <Box display="flex" alignItems="center" px="20" py="6" gap="8" style={{ flexShrink: 0, borderTop: BORDER }}>
           <Text fontSize="xs" color="fg.tertiary" style={{ fontFamily: "var(--ax-fonts-mono, monospace)" }}>{filename}</Text>
           <Box style={{ flex: 1 }} />
-          {blameActive && <Text fontSize="xs" color="fg.accent" style={{ marginRight: 12 }}>Blame view</Text>}
+          {artifactSource && (
+            <Box display="flex" alignItems="center" gap="4" color="fg.tertiary">
+              <Text fontSize="xs" color="fg.tertiary">From</Text>
+              <Box style={{ width: 1, height: 10, background: "var(--ax-colors-border-secondary)" }} />
+              {artifactSource.type === "workflow" ? <IconCodeBranch size={12} /> : artifactSource.type === "chat" ? <IconComments size={12} /> : <IconAgent size={12} />}
+              <Text fontSize="xs" color="fg.tertiary">{artifactSource.type === "chat" ? "Chat" : artifactSource.name}</Text>
+              <Box style={{ width: 1, height: 10, background: "var(--ax-colors-border-secondary)" }} />
+            </Box>
+          )}
+          {blameActive && <Text fontSize="xs" color="fg.accent" style={{ marginRight: 12 }}>Contributors</Text>}
           <Text fontSize="xs" color="fg.tertiary">HTML · UTF-8</Text>
         </Box>
       )}

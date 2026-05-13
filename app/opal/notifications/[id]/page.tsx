@@ -7,8 +7,6 @@ import {
     Button,
     Badge,
     Tabs,
-    TabsList,
-    TabsTrigger,
     TabsContent,
     Avatar,
     Separator,
@@ -18,38 +16,35 @@ import {
     Indicator,
     Breadcrumb,
 } from "@optiaxiom/react";
+import { IconAnalyze, IconShieldOff } from "@tabler/icons-react";
+import { IconSparkles, IconAgent } from "@optimizely/axiom-icons";
 import {
-    IconAlertCircle,
+    IconCircleExclamation as IconAlertCircle,
     IconClock,
-    IconGitBranch,
-    IconRefresh,
+    IconCodeBranch as IconGitBranch,
+    IconArrowsRotate as IconRefresh,
     IconCopy,
     IconDownload,
-    IconHelp,
-    IconPlayerStop,
+    IconCircleQuestion as IconHelp,
+    IconCircleStop as IconPlayerStop,
     IconChevronLeft,
     IconCircleCheck,
     IconCube,
-    IconDots,
+    IconEllipsisSolid as IconDots,
     IconCalendar,
-    IconMessage,
-    IconFileText,
-    IconWorld,
-    IconAnalyze,
+    IconComment as IconMessage,
+    IconFileLines,
+    IconGlobe as IconWorld,
     IconBell,
     IconShieldCheck,
     IconEye,
-    IconShieldOff,
     IconUser,
     IconCheck,
-    IconX,
+    IconXmark as IconX,
     IconLink,
-    IconAlertTriangle,
-} from "@tabler/icons-react";
-import {
-    IconEllipsisStroke, IconSparkles, IconFileLines,
-    IconAgent,
-} from "@optimizely/axiom-icons";
+    IconTriangleExclamation as IconAlertTriangle,
+    IconEllipsisStroke,
+} from "@optiaxiom/icons";
 import NextLink from "next/link";
 import { use, useState, useEffect, useMemo } from "react";
 import { mockNotifications, type Notification, getNotificationTypeLabel, getCategoryLabel } from "../mockData";
@@ -192,14 +187,31 @@ function FailedExecutionView({ notification }: { notification: Notification }) {
         setNewComment("");
     };
 
+    const failedExecTabs = [
+        { value: "details", label: "Details" },
+        { value: "trace", label: "Trace" },
+        { value: "diagnosis", label: "Error Diagnosis" },
+        { value: "ticket", label: "Support Ticket" },
+    ];
+
     return (
-        <Tabs defaultValue="details">
-            <TabsList>
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="trace">Trace</TabsTrigger>
-                <TabsTrigger value="diagnosis">Error Diagnosis</TabsTrigger>
-                <TabsTrigger value="ticket">Support Ticket</TabsTrigger>
-            </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                {failedExecTabs.map((tab) => (
+                    <Box
+                        key={tab.value}
+                        pb="12"
+                        cursor="pointer"
+                        borderB={activeTab === tab.value ? "2" : "0"}
+                        onClick={() => setActiveTab(tab.value)}
+                        style={activeTab === tab.value ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                    >
+                        <Text fontWeight={activeTab === tab.value ? "500" : "400"} color={activeTab === tab.value ? "fg.default" : "fg.secondary"}>
+                            {tab.label}
+                        </Text>
+                    </Box>
+                ))}
+            </Box>
 
             <TabsContent value="details" mt="24">
                 <Box display="flex" flexDirection="column" gap="24">
@@ -987,29 +999,42 @@ export default function NotificationDetailsPage({
                 {/* Main Content */}
                 <Box flex="1" display="flex" flexDirection="column">
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList>
-                            <TabsTrigger value="details">Details</TabsTrigger>
-                            <TabsTrigger value="trace">Trace</TabsTrigger>
-                            <TabsTrigger value="ticket">
-                                <Box style={{ position: 'relative' }} display="flex" alignItems="center">
-                                    Messages
-                                    {activeTab !== "ticket" && (
-                                        <Box
-                                            style={{
-                                                position: 'absolute',
-                                                top: '2px',
-                                                right: '-8px',
-                                                height: '8px',
-                                                width: '8px',
-                                                border: '1.5px solid #FFFFFF'
-                                            }}
-                                            bg="bg.error"
-                                            rounded="full"
-                                        />
-                                    )}
+                        <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
+                            {[
+                                { value: "details", label: "Details" },
+                                { value: "trace", label: "Trace" },
+                                { value: "ticket", label: "Messages" },
+                            ].map((tab) => (
+                                <Box
+                                    key={tab.value}
+                                    pb="12"
+                                    cursor="pointer"
+                                    borderB={activeTab === tab.value ? "2" : "0"}
+                                    onClick={() => setActiveTab(tab.value)}
+                                    style={activeTab === tab.value ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
+                                >
+                                    <Box display="inline-flex" alignItems="center" style={{ position: "relative" }}>
+                                        <Text fontWeight={activeTab === tab.value ? "500" : "400"} color={activeTab === tab.value ? "fg.default" : "fg.secondary"}>
+                                            {tab.label}
+                                        </Text>
+                                        {tab.value === "ticket" && activeTab !== "ticket" && (
+                                            <Box
+                                                style={{
+                                                    position: "absolute",
+                                                    top: "2px",
+                                                    right: "-8px",
+                                                    height: "8px",
+                                                    width: "8px",
+                                                    border: "1.5px solid #FFFFFF",
+                                                }}
+                                                bg="bg.error"
+                                                rounded="full"
+                                            />
+                                        )}
+                                    </Box>
                                 </Box>
-                            </TabsTrigger>
-                        </TabsList>
+                            ))}
+                        </Box>
 
                         <TabsContent value="details" mt="24">
                             <Box display="flex" flexDirection="column" gap="24">

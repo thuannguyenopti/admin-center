@@ -284,65 +284,6 @@ export default function OpalPage() {
     <Box h="full" style={{ overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
       {modalElement}
       <OpalLanding
-        topSlot={
-          <Box
-            style={{
-              position: "relative",
-              zIndex: 1,
-              width: "100%",
-              maxWidth: "768px",
-              marginBottom: "16px",
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              flexWrap: "wrap",
-              gap: "8px",
-              flexShrink: 0,
-            }}
-          >
-            <Button
-              appearance="default-opal"
-              size="md"
-              onClick={() => { setShowAgents(!showAgents); setShowAllAgents(false); }}
-              icon={<IconAgent />}
-              style={{ borderRadius: "9999px" }}
-            >
-              View Agents
-            </Button>
-            {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
-              <Button
-                key={agent.handle}
-                appearance="default-opal"
-                size="md"
-                icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
-                style={{ borderRadius: "9999px" }}
-                onClick={() => {
-                  handleSelectAgent(agent);
-                  const isResume = lastEndedSession?.agent.id === agent.id;
-                  if (!isResume) {
-                    const prompt = AGENT_PROMPTS[agent.id];
-                    if (prompt) setInputValue(prompt);
-                  }
-                  setShowAgents(false);
-                  setShowAllAgents(false);
-                }}
-              >
-                {agent.name}
-              </Button>
-            ))}
-            {showAgents && !showAllAgents && FEATURED_AGENTS.length > 3 && (
-              <Button
-                appearance="default-opal"
-                size="md"
-                style={{ borderRadius: "9999px" }}
-                onClick={() => setShowAllAgents(true)}
-              >
-                More agents
-              </Button>
-            )}
-          </Box>
-        }
         inputSlot={
           <OpalInput
             value={inputValue}
