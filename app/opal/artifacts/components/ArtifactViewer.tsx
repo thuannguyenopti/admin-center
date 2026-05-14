@@ -16,6 +16,7 @@ import { CodeCanvasPanel } from "@/app/components/Opal/CodeCanvasPanel";
 import type { ChatMessage as OpalChatMessage } from "@/app/hooks/useOpalState";
 import {
     IconArrowsMaximize,
+    IconAgent,
     IconCodeBranch,
     IconComments,
     IconCopy,
@@ -26,8 +27,7 @@ import {
     IconPresentationScreen,
     IconFileSpreadsheet,
     IconChartColumn,
-} from "@optiaxiom/icons";
-import { IconAgent } from "@optimizely/axiom-icons";
+} from "@optimizely/axiom-icons";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
