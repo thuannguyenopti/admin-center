@@ -3,7 +3,9 @@
 import {
     Box,
     Text,
+    Heading,
     Button,
+    AngleMenuButton,
     Badge,
     Avatar,
     AvatarGroup,
@@ -22,12 +24,10 @@ import {
     DialogFooter,
     DialogClose,
     Tooltip,
-    Card,
     SegmentedControl,
     SegmentedControlItem,
 } from "@optiaxiom/react";
 import { Table, Tr, Th, Td } from "@/app/components/Table";
-import { IconAgent } from "@optimizely/axiom-icons";
 import {
     IconFile,
     IconImage,
@@ -35,26 +35,29 @@ import {
     IconTrashCan,
     IconDownload,
     IconEllipsisSolid,
+    IconAgent,
     IconCodeBranch,
     IconGrid,
     IconList,
     IconArrowsMaximize,
-    IconCheck,
     IconPenLine,
     IconChevronUp,
     IconChevronDown,
-    IconArrowUpRightFromSquare,
     IconChartColumn,
     IconPresentationScreen,
     IconFileSpreadsheet,
     IconComments,
     IconInboxFull,
-    IconThumbtack,
-    IconUsers,
-} from "@optiaxiom/icons";
-import { Input } from "@/app/components/Input";
-import { useState, useMemo } from "react";
+
+    IconShareNodes,
+    IconAngleRight,
+    IconXmark,
+    IconSearch,
+} from "@optimizely/axiom-icons";
+import { IconLock, IconSlidersSimple, IconGear, IconThumbtack, IconThumbtackSolid } from "@optiaxiom/icons";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { ArtifactViewer, type ArtifactViewerArtifact } from "./components/ArtifactViewer";
+import { useLayout } from "@/app/context/LayoutContext";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -80,6 +83,7 @@ function truncateMiddle(str: string, maxLength = 20): string {
 
 type ArtifactType = "Document" | "Image" | "Code" | "Presentation" | "Spreadsheet" | "Report";
 type ArtifactSourceType = "chat" | "agent" | "workflow";
+type AgentBadgeIntent = "warning" | "danger" | "information" | "success" | "neutral";
 type SortKey = "name" | "created" | "size" | "version" | "status";
 type SortDir = "asc" | "desc";
 
@@ -88,200 +92,264 @@ type Artifact = {
     name: string;
     type: ArtifactType;
     source: { name: string; type: ArtifactSourceType; link?: string };
+    agentBadgeIntent: AgentBadgeIntent;
     createdBy: { name: string; avatar: string };
     sharedWithTeam?: boolean;
-    sharedWith?: { name: string; avatar: string }[];
+    sharedWith?: Array<{ name: string; avatar: string }>;
+    tags?: string[];
     created: string;
-    createdRaw: number;   // timestamp for sorting
+    createdRaw: number;
     size: string;
-    sizeRaw: number;      // bytes for sorting
+    sizeRaw: number;
     status: "Ready" | "Generating" | "Failed";
     version: string;
     description: string;
     imageUrl?: string;
+    isPrivate?: boolean;
+    lastViewedRaw?: number;
+    isInProgress?: boolean;
+    previewText?: string;
+    activityText: string;
 };
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
+const NOW = Math.floor(Date.now() / 1000);
+
 const artifacts: Artifact[] = [
     {
         id: "1",
-        name: "Q2 Email Campaign Copy — Final Draft",
+        name: "Q2 Email Nurture Draft",
         type: "Document",
-        source: { name: "Write an email campaign", type: "chat", link: "/opal/chat/1" },
+        source: { name: "Copywriter", type: "chat", link: "/opal/chat/1" },
+        agentBadgeIntent: "warning",
         createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWithTeam: true,
-        created: "May 5, 2026",
-        createdRaw: 1777932000,   // 2h ago
+        isPrivate: true,
+        isInProgress: true,
+        tags: ["Email", "Q2", "Nurture"],
+        created: "May 13, 2026",
+        createdRaw: NOW - 7200,
         size: "12 KB",
         sizeRaw: 12288,
         status: "Ready",
         version: "1.2",
         description: "Enterprise renewal email with ROI focus and 15% discount offer.",
         imageUrl: "/cmp/assets/recommendation/search-01-image.jpg",
+        previewText: "Subject: Unlocking your team's potential\nHi {{first_name}},\n\nWe noticed you've been exploring ways to scale your marketing output.",
+        activityText: "Edited 2 hours ago",
     },
     {
         id: "2",
         name: "Competitor Analysis Report",
         type: "Report",
-        source: { name: "Analyze my competitors", type: "agent", link: "/opal/agents/setup?id=2" },
+        source: { name: "Scout", type: "agent", link: "/opal/agents/setup?id=2" },
+        agentBadgeIntent: "danger",
         createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWithTeam: true,
-        created: "May 5, 2026",
-        createdRaw: 1777917600,   // 6h ago
+        isPrivate: true,
+        created: "May 13, 2026",
+        createdRaw: NOW - 21600,
+        lastViewedRaw: NOW - 3600,
         size: "48 KB",
         sizeRaw: 49152,
         status: "Ready",
         version: "1.0",
+        tags: ["Research", "Strategy"],
         description: "Deep-dive on 5 key competitors with positioning matrix.",
         imageUrl: "/cmp/assets/recommendation/panel-05-image.jpg",
+        activityText: "Viewed 1 hour ago",
     },
     {
         id: "3",
-        name: "Hero Banner — Spring Sale Promotion 2025",
+        name: "Hero Banner Variation 2025",
         type: "Image",
-        source: { name: "Generate ad variations", type: "agent", link: "/opal/agents/setup?id=3" },
+        source: { name: "Brand", type: "agent", link: "/opal/agents/setup?id=3" },
+        agentBadgeIntent: "information",
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
         sharedWithTeam: true,
-        created: "May 4, 2026",
-        createdRaw: 1777852800,   // 1d ago
+        created: "May 12, 2026",
+        createdRaw: NOW - 86400,
+        lastViewedRaw: NOW - 10800,
         size: "1.2 MB",
         sizeRaw: 1258291,
         status: "Ready",
         version: "2.1",
+        tags: ["Brand", "A/B", "Spring"],
         description: "Spring sale hero with 4 A/B variants.",
         imageUrl: "/cmp/assets/recommendation/search-04-image.jpg",
+        activityText: "Viewed 3 hours ago",
     },
     {
         id: "4",
         name: "SEO Audit Summary",
-        type: "Document",
-        source: { name: "Audit my SEO performance", type: "chat", link: "/opal/chat/4" },
+        type: "Report",
+        source: { name: "Insights", type: "agent", link: "/opal/agents/setup?id=4" },
+        agentBadgeIntent: "success",
         createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        sharedWithTeam: true,
-        created: "May 2, 2026",
-        createdRaw: 1777680000,   // 3d ago
+        isPrivate: true,
+        created: "May 13, 2026",
+        createdRaw: NOW - 10800,
         size: "24 KB",
         sizeRaw: 24576,
         status: "Ready",
         version: "1.0",
+        tags: ["SEO", "Q2"],
         description: "Site-wide SEO health report with recommendations.",
         imageUrl: "/cmp/assets/recommendation/panel-02-image.jpg",
+        activityText: "Generated 3 hours ago",
     },
     {
         id: "5",
-        name: "A/B Test Variants — Checkout CTA",
+        name: "A/B Test Checkout CTA",
         type: "Code",
-        source: { name: "Set up an A/B experiment", type: "chat", link: "/opal/chat/5" },
+        source: { name: "Compass", type: "chat", link: "/opal/chat/5" },
+        agentBadgeIntent: "neutral",
         createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWith: [{ name: "William Mo.", avatar: "/avatars/user2.png" }, { name: "Mary Anne", avatar: "/avatars/user.png" }, { name: "Sarah K.", avatar: "/avatars/user3.png" }],
-        created: "Apr 30, 2026",
-        createdRaw: 1777507200,   // 5d ago
+        isPrivate: true,
+        created: "May 12, 2026",
+        createdRaw: NOW - 86400,
         size: "3 KB",
         sizeRaw: 3072,
         status: "Ready",
         version: "1.3",
         description: "Three CTA copy variants with tracking snippets.",
-        imageUrl: "/cmp/assets/recommendation/search-02-image.jpg",
+        isInProgress: true,
+        previewText: '<button\n  className="bg-emerald-500 hover:bg-emerald-600 t\n  onClick={handleCheckout}\n>\n  Complete Purchase\n</button>',
+        activityText: "Created yesterday",
     },
     {
         id: "6",
-        name: "Content Calendar — April",
-        type: "Spreadsheet",
-        source: { name: "Build a content calendar", type: "chat", link: "/opal/chat/6" },
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWithTeam: true,
-        created: "Apr 28, 2026",
-        createdRaw: 1777334400,   // 1w ago
-        size: "8 KB",
-        sizeRaw: 8192,
-        status: "Ready",
-        version: "1.1",
-        description: "April editorial schedule across all channels.",
-        imageUrl: "/cmp/assets/recommendation/panel-03-image.jpg",
-    },
-    {
-        id: "7",
-        name: "GEO Keyword Recommendations",
-        type: "Document",
-        source: { name: "GEO Recommendations", type: "workflow", link: "/opal/workflows/7" },
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
-        sharedWithTeam: true,
-        created: "Apr 21, 2026",
-        createdRaw: 1776729600,   // 2w ago
-        size: "16 KB",
-        sizeRaw: 16384,
-        status: "Ready",
-        version: "1.0",
-        description: "Top 40 GEO keywords ranked by opportunity score.",
-        imageUrl: "/cmp/assets/recommendation/search-03-image.jpg",
-    },
-    {
-        id: "8",
         name: "Campaign Asset Bundle",
         type: "Image",
-        source: { name: "ABM Campaign Workflow", type: "workflow", link: "/opal/workflows/8" },
+        source: { name: "Brand", type: "workflow", link: "/opal/workflows/6" },
+        agentBadgeIntent: "information",
         createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWith: [{ name: "William Mo.", avatar: "/avatars/user2.png" }, { name: "Mary Anne", avatar: "/avatars/user.png" }],
-        created: "Apr 14, 2026",
-        createdRaw: 1776124800,   // 3w ago
+        sharedWith: [{ name: "William Mo.", avatar: "/avatars/user2.png" }],
+        created: "May 11, 2026",
+        createdRaw: NOW - 172800,
         size: "5.8 MB",
         sizeRaw: 6082150,
         status: "Ready",
         version: "3.0",
+        tags: ["ABM", "Campaign"],
         description: "Full ABM campaign pack: banners, email headers, social.",
         imageUrl: "/cmp/assets/recommendation/search-07-image.jpg",
+        activityText: "Shared 2 days ago",
     },
     {
-        id: "9",
-        name: "Meeting Notes — Weekly Product Sync",
-        type: "Document",
-        source: { name: "Summarize my meeting notes", type: "chat", link: "/opal/chat/9" },
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
-        sharedWithTeam: true,
-        created: "Apr 5, 2026",
-        createdRaw: 1775347200,   // 1mo ago
-        size: "6 KB",
-        sizeRaw: 6144,
-        status: "Generating",
-        version: "1.0",
-        description: "Structured action items and decisions from product sync.",
-        imageUrl: "/cmp/assets/recommendation/panel-04-image.jpg",
-    },
-    {
-        id: "10",
+        id: "7",
         name: "Localized Copy — FR",
         type: "Document",
-        source: { name: "Content Localizer", type: "agent", link: "/opal/agents/setup?id=10" },
+        source: { name: "Copywriter", type: "agent", link: "/opal/agents/setup?id=7" },
+        agentBadgeIntent: "warning",
         createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWith: [{ name: "Sarah K.", avatar: "/avatars/user3.png" }],
-        created: "Mar 21, 2026",
-        createdRaw: 1774051200,   // 45d ago
+        isPrivate: true,
+        created: "May 6, 2026",
+        createdRaw: NOW - 604800,
         size: "10 KB",
         sizeRaw: 10240,
         status: "Failed",
         version: "1.0",
         description: "French localization of Q2 campaign copy.",
         imageUrl: "/cmp/assets/recommendation/search-05-image.jpg",
+        activityText: "Edited 1 week ago",
     },
     {
-        id: "11",
+        id: "8",
         name: "Q1 Sales Deck",
         type: "Presentation",
-        source: { name: "Sales enablement agent", type: "agent", link: "/opal/agents/setup?id=11" },
+        source: { name: "Compass", type: "agent", link: "/opal/agents/setup?id=8" },
+        agentBadgeIntent: "neutral",
         createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        created: "Apr 25, 2026",
-        createdRaw: 1777075200,   // 10d ago
+        isPrivate: true,
+        created: "May 12, 2026",
+        createdRaw: NOW - 86400,
+        lastViewedRaw: NOW - 86400,
         size: "2.4 MB",
         sizeRaw: 2516582,
         status: "Ready",
         version: "2.0",
+        tags: ["Sales", "Q1"],
         description: "Exec-level Q1 readout with pipeline and ARR highlights.",
         imageUrl: "/cmp/assets/recommendation/panel-01-image.jpg",
+        activityText: "Viewed 1 day ago",
+    },
+    {
+        id: "9",
+        name: "Instagram Carousel — Spring",
+        type: "Image",
+        source: { name: "Brand", type: "agent", link: "/opal/agents/setup?id=9" },
+        agentBadgeIntent: "information",
+        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        isPrivate: true,
+        created: "May 12, 2026",
+        createdRaw: NOW - 86400,
+        lastViewedRaw: NOW - 86400,
+        size: "3.1 MB",
+        sizeRaw: 3250000,
+        status: "Ready",
+        version: "1.0",
+        description: "Spring campaign carousel with 5 slides for Instagram.",
+        imageUrl: "/cmp/assets/recommendation/search-02-image.jpg",
+        activityText: "Viewed 1 day ago",
+    },
+    {
+        id: "10",
+        name: "Content Calendar — April",
+        type: "Spreadsheet",
+        source: { name: "Compass", type: "chat", link: "/opal/chat/10" },
+        agentBadgeIntent: "neutral",
+        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        isPrivate: true,
+        created: "Apr 28, 2026",
+        createdRaw: NOW - 1296000,
+        size: "8 KB",
+        sizeRaw: 8192,
+        status: "Ready",
+        version: "1.1",
+        description: "April editorial schedule across all channels.",
+        imageUrl: "/cmp/assets/recommendation/panel-03-image.jpg",
+        activityText: "Viewed 2 weeks ago",
+    },
+    {
+        id: "11",
+        name: "GEO Keyword Recommendations",
+        type: "Document",
+        source: { name: "Insights", type: "workflow", link: "/opal/workflows/11" },
+        agentBadgeIntent: "success",
+        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        sharedWithTeam: true,
+        created: "Apr 21, 2026",
+        createdRaw: NOW - 1900800,
+        size: "16 KB",
+        sizeRaw: 16384,
+        status: "Ready",
+        version: "1.0",
+        tags: ["SEO", "GEO", "Keywords"],
+        description: "Top 40 GEO keywords ranked by opportunity score.",
+        imageUrl: "/cmp/assets/recommendation/search-03-image.jpg",
+        activityText: "Viewed 3 weeks ago",
+    },
+    {
+        id: "12",
+        name: "Meeting Notes — Weekly Product Sync",
+        type: "Document",
+        source: { name: "Copywriter", type: "chat", link: "/opal/chat/12" },
+        agentBadgeIntent: "warning",
+        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        sharedWithTeam: true,
+        created: "Apr 5, 2026",
+        createdRaw: NOW - 3456000,
+        size: "6 KB",
+        sizeRaw: 6144,
+        status: "Generating",
+        version: "1.0",
+        description: "Structured action items and decisions from product sync.",
+        imageUrl: "/cmp/assets/recommendation/panel-04-image.jpg",
+        activityText: "Generated 1 month ago",
     },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Static lookups ──────────────────────────────────────────────────────────
 
 const typeIcon: Record<ArtifactType, React.ReactNode> = {
     Document: <IconFile size={16} />,
@@ -293,36 +361,50 @@ const typeIcon: Record<ArtifactType, React.ReactNode> = {
 };
 
 const typeIconSm: Record<ArtifactType, React.ReactNode> = {
-    Document:     <IconFile size={16} />,
-    Image:        <IconImage size={16} />,
-    Code:         <IconCode size={16} />,
+    Document: <IconFile size={16} />,
+    Image: <IconImage size={16} />,
+    Code: <IconCode size={16} />,
     Presentation: <IconPresentationScreen size={16} />,
-    Spreadsheet:  <IconFileSpreadsheet size={16} />,
-    Report:       <IconChartColumn size={16} />,
+    Spreadsheet: <IconFileSpreadsheet size={16} />,
+    Report: <IconChartColumn size={16} />,
 };
 
 const typeIconMd: Record<ArtifactType, React.ReactNode> = {
-    Document:     <IconFile size={20} />,
-    Image:        <IconImage size={20} />,
-    Code:         <IconCode size={20} />,
+    Document: <IconFile size={20} />,
+    Image: <IconImage size={20} />,
+    Code: <IconCode size={20} />,
     Presentation: <IconPresentationScreen size={20} />,
-    Spreadsheet:  <IconFileSpreadsheet size={20} />,
-    Report:       <IconChartColumn size={20} />,
+    Spreadsheet: <IconFileSpreadsheet size={20} />,
+    Report: <IconChartColumn size={20} />,
 };
 
-// Type label shown in the badge on pinned cards (matches Figma)
-const typeBadgeLabel: Record<ArtifactType, string> = {
-    Document: "Text",
-    Code: "Interactive",
-    Image: "Image",
-    Presentation: "Presentation",
+const typeLabel: Record<ArtifactType, string> = {
+    Document: "Document",
+    Code: "Code",
+    Image: "Media",
+    Presentation: "Slide",
     Spreadsheet: "Spreadsheet",
     Report: "Report",
 };
 
-// Default pinned IDs (seeded from artifacts that have a preview image)
-// IDs 8 + 10 are JC-only (no team share); rest are shared — mix intentional for demo
-const DEFAULT_PINNED_IDS = new Set(["1", "2", "3", "5", "8", "10"]);
+const sourceEmoji: Record<string, string> = {
+    Copywriter: "✏️",
+    Scout: "🔎",
+    Brand: "🎨",
+    Compass: "🧭",
+    Insights: "📊",
+};
+
+function AgentCell({ name }: { name: string }) {
+    return (
+        <Box display="flex" alignItems="center" gap="8">
+            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
+            <Text fontSize="sm" color="fg.secondary">{name}</Text>
+        </Box>
+    );
+}
+
+const DEFAULT_PINNED_IDS = new Set(["2", "3", "6", "8", "9"]);
 
 const statusIntent = {
     Ready: "success",
@@ -330,98 +412,10 @@ const statusIntent = {
     Failed: "danger",
 } as const;
 
-const allCreators = [...new Set(artifacts.map((a) => a.createdBy.name))];
-const allSourceTypes: Array<"All" | ArtifactSourceType> = ["All", "chat", "agent", "workflow"];
 const allTypes: Array<"All" | ArtifactType> = ["All", "Document", "Image", "Code", "Presentation", "Spreadsheet", "Report"];
+const allCreators = [...new Set(artifacts.map((a) => a.createdBy.name))];
 
-// ─── Pin toggle cell ─────────────────────────────────────────────────────────
-
-function PinCell({ pinned, onToggle }: { pinned: boolean; onToggle: () => void }) {
-    const [hovered, setHovered] = useState(false);
-    const visible = pinned || hovered;
-    return (
-        <Box
-            style={{
-                width: 32,
-                height: "100%",
-                minHeight: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-            }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        >
-            <Tooltip content={pinned ? "Unpin" : "Pin"} delayDuration={300}>
-                <span style={{
-                    display: "inline-flex",
-                    opacity: visible ? 1 : 0,
-                    pointerEvents: visible ? "auto" : "none",
-                    transition: "opacity 0.15s",
-                }}>
-                    <IconThumbtack
-                        size={16}
-                        color={pinned ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)"}
-                    />
-                </span>
-            </Tooltip>
-        </Box>
-    );
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function SourceCell({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Artifact) => void }) {
-    const [hovered, setHovered] = useState(false);
-    return (
-        <Box
-            display="flex"
-            flexDirection="column"
-            gap="2"
-            color="fg.secondary"
-            style={{ cursor: "pointer" }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-            onClick={(e) => { e.stopPropagation(); onOpen(artifact); }}
-        >
-            <Box display="flex" alignItems="center" gap="6">
-                {artifact.source.type === "workflow" ? (
-                    <IconCodeBranch size={16} />
-                ) : artifact.source.type === "chat" ? (
-                    <IconComments size={16} />
-                ) : (
-                    <IconAgent size={16} />
-                )}
-                <Text fontSize="md" style={artifact.source.type !== "chat" ? { textDecorationLine: "underline", textDecorationColor: "var(--ax-colors-border-secondary)" } : undefined}>
-                    {artifact.source.type === "chat" ? "Chat" : artifact.source.name}
-                </Text>
-                {artifact.source.type !== "chat" && (
-                    <Box style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }}>
-                        <IconArrowUpRightFromSquare size={11} />
-                    </Box>
-                )}
-            </Box>
-            {artifact.source.type === "chat" && (
-                <Box display="flex" alignItems="center">
-                    <Box style={{
-                        width: 16,
-                        height: 10,
-                        borderLeft: "1px solid var(--ax-colors-border-secondary)",
-                        borderBottom: "1px solid var(--ax-colors-border-secondary)",
-                        borderBottomLeftRadius: 3,
-                        flexShrink: 0,
-                        marginRight: 6,
-                    }} />
-                    <Text fontSize="sm" color="fg.tertiary" style={{ textDecorationLine: "underline", textDecorationColor: "var(--ax-colors-border-secondary)" }}>
-                        {artifact.source.name}
-                    </Text>
-                </Box>
-            )}
-        </Box>
-    );
-}
+// ─── Sort header ─────────────────────────────────────────────────────────────
 
 function SortHeader({
     label,
@@ -457,7 +451,7 @@ function SortHeader({
     );
 }
 
-// ─── Content thumbnails for non-image types ──────────────────────────────────
+// ─── Content thumbnails ──────────────────────────────────────────────────────
 
 function DocThumbnail() {
     const line = (w: string, h = 6, mt = 0) => (
@@ -480,16 +474,28 @@ function DocThumbnail() {
     );
 }
 
+function CodeThumbnail({ previewText }: { previewText?: string }) {
+    const text = previewText ?? '<button\n  className="bg-emerald-500"\n>\n  Complete Purchase\n</button>';
+    return (
+        <Box style={{ padding: "12px 14px", height: "100%", background: "#1e1e1e", overflow: "hidden", display: "flex", flexDirection: "column", gap: 4 }}>
+            {text.split("\n").slice(0, 6).map((line, i) => (
+                <Text key={i} fontSize="sm" style={{ fontFamily: "monospace", color: i === 0 ? "#569cd6" : i === 1 ? "#9cdcfe" : "#4ec9b0", opacity: i > 3 ? 0.5 : 1, whiteSpace: "nowrap", overflow: "hidden" }}>
+                    {line}
+                </Text>
+            ))}
+        </Box>
+    );
+}
+
 function ReportThumbnail() {
     const kpis = [{ v: "5", l: "Competitors" }, { v: "−12%", l: "Gap" }, { v: "3.2×", l: "Velocity" }];
     const rows = [
-        { name: "AlphaCloud",  share: "34%", seo: 82, intent: "danger"  as const, t: "High"   },
-        { name: "CoreMetrics", share: "21%", seo: 71, intent: "warning" as const, t: "Medium" },
-        { name: "FlowStack",   share: "18%", seo: 65, intent: "neutral" as const, t: "Low"    },
+        { name: "AlphaCloud",  share: "34%", seo: 82, intent: "danger"  as const },
+        { name: "CoreMetrics", share: "21%", seo: 71, intent: "warning" as const },
+        { name: "FlowStack",   share: "18%", seo: 65, intent: "neutral" as const },
     ];
     return (
-        <Box style={{ padding: "10px 12px", height: "100%", background: "var(--ax-colors-bg-secondary)", overflow: "hidden", display: "flex", flexDirection: "column", gap: 8 }}>
-            {/* Mini KPIs */}
+        <Box bg="bg.secondary" style={{ padding: "10px 12px", height: "100%", overflow: "hidden", display: "flex", flexDirection: "column", gap: 8 }}>
             <Box style={{ display: "flex", gap: 6 }}>
                 {kpis.map((k) => (
                     <Box key={k.l} bg="bg.default" border="1" borderColor="border.tertiary" rounded="md" style={{ flex: 1, padding: "5px 7px" }}>
@@ -498,10 +504,9 @@ function ReportThumbnail() {
                     </Box>
                 ))}
             </Box>
-            {/* Mini table */}
             <Box bg="bg.default" border="1" borderColor="border.tertiary" rounded="md" overflow="hidden">
                 <Box bg="bg.secondary" style={{ display: "flex", padding: "3px 7px", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
-                    {["Company", "Share", "SEO", "Threat"].map((h) => (
+                    {["Company", "Share", "SEO"].map((h) => (
                         <Box key={h} style={{ flex: h === "Company" ? 2 : 1 }}>
                             <Text fontSize="sm" color="fg.tertiary" fontWeight="600">{h}</Text>
                         </Box>
@@ -511,10 +516,7 @@ function ReportThumbnail() {
                     <Box key={r.name} style={{ display: "flex", alignItems: "center", padding: "3px 7px", borderTop: i > 0 ? "1px solid var(--ax-colors-border-tertiary)" : undefined }}>
                         <Box style={{ flex: 2 }}><Text fontSize="sm">{r.name}</Text></Box>
                         <Box style={{ flex: 1 }}><Text fontSize="sm">{r.share}</Text></Box>
-                        <Box style={{ flex: 1 }}><Text fontSize="sm">{r.seo}</Text></Box>
-                        <Box style={{ flex: 1 }}>
-                            <Badge intent={r.intent}>{r.t}</Badge>
-                        </Box>
+                        <Box style={{ flex: 1 }}><Badge intent={r.intent}>{r.seo}</Badge></Box>
                     </Box>
                 ))}
             </Box>
@@ -529,7 +531,6 @@ function SpreadsheetThumbnail() {
         ["Apr 3",  "Product Update Post",    "Social", "Scheduled", "Will M."],
         ["Apr 7",  "Q2 Newsletter",          "Email",  "Draft",     "Mary A."],
         ["Apr 10", "SEO Deep Dive",          "Blog",   "Review",    "Will M."],
-        ["Apr 14", "Instagram Stories",      "Social", "Scheduled", "Mary A."],
     ];
     const statusColor: Record<string, string> = {
         Draft: "var(--ax-colors-fg-tertiary)",
@@ -538,20 +539,18 @@ function SpreadsheetThumbnail() {
     };
     return (
         <Box bg="bg.default" style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            {/* Header row */}
-            <Box style={{ display: "flex", background: "var(--ax-colors-bg-secondary)", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
+            <Box bg="bg.secondary" style={{ display: "flex", borderBottom: "1px solid var(--ax-colors-border-secondary)" }}>
                 {headers.map((h) => (
                     <Box key={h} style={{ flex: h === "Title" ? 2 : 1, padding: "4px 6px", borderRight: "1px solid var(--ax-colors-border-tertiary)" }}>
                         <Text fontSize="sm" fontWeight="600" color="fg.secondary">{h}</Text>
                     </Box>
                 ))}
             </Box>
-            {/* Data rows */}
             {rows.map((row, i) => (
                 <Box key={i} style={{ display: "flex", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
                     {row.map((cell, j) => (
                         <Box key={j} style={{ flex: j === 1 ? 2 : 1, padding: "4px 6px", borderRight: "1px solid var(--ax-colors-border-tertiary)" }}>
-                            <Text fontSize="sm" color={j === 3 ? undefined : "fg.default"} style={{ color: j === 3 ? statusColor[cell] ?? "inherit" : undefined, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", display: "block" }}>
+                            <Text fontSize="sm" style={{ color: j === 3 ? statusColor[cell] ?? "inherit" : undefined, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", display: "block" }}>
                                 {cell}
                             </Text>
                         </Box>
@@ -562,7 +561,23 @@ function SpreadsheetThumbnail() {
     );
 }
 
-// ─── Sharing avatar stack + Only You badge ────────────────────────────────────
+function ArtifactThumbnail({ artifact, height = 120 }: { artifact: Artifact; height?: number }) {
+    if (artifact.type === "Image" || artifact.type === "Presentation") {
+        return (
+            <img
+                alt={artifact.name}
+                src={artifact.imageUrl ?? "/cmp/assets/recommendation/panel-01-image.jpg"}
+                style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
+            />
+        );
+    }
+    if (artifact.type === "Report") return <ReportThumbnail />;
+    if (artifact.type === "Spreadsheet") return <SpreadsheetThumbnail />;
+    if (artifact.type === "Code") return <CodeThumbnail previewText={artifact.previewText} />;
+    return <DocThumbnail />;
+}
+
+// ─── Avatar stack + privacy ───────────────────────────────────────────────────
 
 function ArtifactAvatarStack({ artifact, size }: { artifact: Artifact; size: "2xs" | "xs" | "sm" }) {
     if (artifact.sharedWithTeam) {
@@ -586,88 +601,100 @@ function ArtifactAvatarStack({ artifact, size }: { artifact: Artifact; size: "2x
     return <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size={size} colorScheme="purple" style={{ flexShrink: 0 }} />;
 }
 
-function OnlyYouBadge() {
-    return <Badge style={{ flexShrink: 0 }}>Only you</Badge>;
+function PrivateBadge() {
+    return (
+        <Box display="inline-flex" alignItems="center" gap="4" color="fg.tertiary">
+            <IconLock style={{ width: 12, height: 12, flexShrink: 0 }} />
+            <Text fontSize="sm" color="fg.tertiary">Private</Text>
+        </Box>
+    );
 }
 
-// ─── Grid view components ─────────────────────────────────────────────────────
+// ─── Agent badge pill ─────────────────────────────────────────────────────────
 
-function ArtifactPreviewCard({
+function AgentBadgePill({ name, intent }: { name: string; intent: AgentBadgeIntent }) {
+    return <Badge intent={intent}>{name}</Badge>;
+}
+
+// ─── Workspace artifact card (used in horizontal sections) ───────────────────
+
+function WorkspaceArtifactCard({
     artifact,
     onOpen,
     pinned,
     onTogglePin,
-    cardLayout = "thumbnail",
-    timeOnNewRow = false,
+    width,
 }: {
     artifact: Artifact;
     onOpen: (a: Artifact) => void;
     pinned: boolean;
     onTogglePin: (id: string) => void;
-    /** "thumbnail" — avatar on thumbnail; "footer" — avatar in footer row; "hover-expand" — footer expands on hover to show full name + avatar + time + source */
-    cardLayout?: "thumbnail" | "footer" | "hover-expand";
-    /** hover-expand only: time shows bottom-right at rest, drops to new row on hover */
-    timeOnNewRow?: boolean;
+    width?: number;
 }) {
     const [hovered, setHovered] = useState(false);
-    const [sourceHovered, setSourceHovered] = useState(false);
-
     const btnStyle: React.CSSProperties = {
         background: "var(--ax-colors-bg-default)",
         borderColor: "var(--ax-colors-border-secondary)",
-        height: 24, width: 24, padding: 0,
+        height: 28, width: 28, padding: 0,
     };
-
     return (
         <Box
             bg="bg.default"
             border="1"
             borderColor={hovered ? "border.secondary" : "border.tertiary"}
-            display="flex"
-            flexDirection="column"
-            overflow="hidden"
             rounded="xl"
-            style={{
-                cursor: "pointer",
-                transition: "border-color 0.15s",
-                ...(cardLayout === "hover-expand" ? { height: 240 } : {}),
-            }}
+            overflow="hidden"
+            style={{ cursor: "pointer", ...(width ? { minWidth: width, maxWidth: width, flexShrink: 0 } : { width: "100%" }), transition: "border-color 0.15s", display: "flex", flexDirection: "column", height: 240 }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => onOpen(artifact)}
         >
-            {/* ── Thumbnail ── */}
-            <Box style={{
-                position: "relative",
-                overflow: "hidden",
-                ...(cardLayout === "hover-expand" ? { flex: 1 } : { height: 140, flexShrink: 0 }),
-            }}>
-                {/* Cover image / generated preview */}
-                {artifact.type === "Image" || artifact.type === "Presentation" ? (
-                    <img
-                        alt={artifact.name}
-                        src={artifact.imageUrl ?? "/cmp/assets/recommendation/panel-01-image.jpg"}
-                        style={{ display: "block", height: "100%", objectFit: "cover", width: "100%" }}
-                    />
-                ) : artifact.type === "Report" ? (
-                    <ReportThumbnail />
-                ) : artifact.type === "Spreadsheet" ? (
-                    <SpreadsheetThumbnail />
-                ) : (
-                    <DocThumbnail />
+            {/* Thumbnail */}
+            <Box style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+                <ArtifactThumbnail artifact={artifact} height={120} />
+                {/* Persistent pin indicator — always visible for pinned cards */}
+                {pinned && !hovered && (
+                    <Box style={{ position: "absolute", top: 8, left: 8, pointerEvents: "auto" }} onClick={(e) => e.stopPropagation()}>
+                        <Tooltip content="Unpin" delayDuration={300}>
+                            <span style={{ display: "inline-flex" }}>
+                                <Button
+                                    appearance="default"
+                                    size="sm"
+                                    aria-label="Unpin"
+                                    icon={<IconThumbtackSolid size={12} />}
+                                    style={btnStyle}
+                                    onClick={() => onTogglePin(artifact.id)}
+                                />
+                            </span>
+                        </Tooltip>
+                    </Box>
                 )}
-
-                {/* Hover overlay — ellipsis only */}
+                {/* Hover overlay */}
                 <Box style={{
                     position: "absolute", inset: 0,
-                    background: "rgba(0,0,0,0.55)",
-                    backdropFilter: hovered ? "blur(3px)" : "blur(0px)",
+                    background: "rgba(0,0,0,0.45)",
                     opacity: hovered ? 1 : 0,
-                    transition: "opacity 0.4s, backdrop-filter 0.4s",
+                    transition: "opacity 0.25s",
                     pointerEvents: hovered ? "auto" : "none",
-                    display: "flex", alignItems: "flex-start", justifyContent: "flex-end",
-                    padding: "10px",
+                    display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+                    padding: "8px",
                 }}>
+                    {/* Top-left: pin / unpin button */}
+                    <Box display="flex" gap="4" onClick={(e) => e.stopPropagation()}>
+                        <Tooltip content={pinned ? "Unpin" : "Pin to workspace"} delayDuration={300}>
+                            <span style={{ display: "inline-flex" }}>
+                                <Button
+                                    appearance="default"
+                                    size="sm"
+                                    aria-label={pinned ? "Unpin" : "Pin"}
+                                    icon={pinned ? <IconThumbtackSolid size={12} /> : <IconThumbtack size={12} />}
+                                    style={btnStyle}
+                                    onClick={() => onTogglePin(artifact.id)}
+                                />
+                            </span>
+                        </Tooltip>
+                    </Box>
+                    {/* Top-right: ellipsis */}
                     <Box onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -676,6 +703,9 @@ function ArtifactPreviewCard({
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => onOpen(artifact)}>
                                     <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Box display="flex" alignItems="center" gap="8"><IconShareNodes size={14} />Share</Box>
                                 </DropdownMenuItem>
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger>
@@ -687,11 +717,9 @@ function ArtifactPreviewCard({
                                         ))}
                                     </DropdownMenuSubContent>
                                 </DropdownMenuSub>
-                                <DropdownMenuItem>
-                                    <Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTogglePin(artifact.id); }}>
-                                    <Box display="flex" alignItems="center" gap="8"><IconThumbtack size={14} />{pinned ? "Unpin" : "Pin"}</Box>
+                                <DropdownMenuItem><Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box></DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onTogglePin(artifact.id)}>
+                                    <Box display="flex" alignItems="center" gap="8">{pinned ? <IconThumbtackSolid size={14} /> : <IconThumbtack size={14} />}{pinned ? "Unpin" : "Pin"}</Box>
                                 </DropdownMenuItem>
                                 <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
                                 <DropdownMenuItem style={{ color: "var(--ax-colors-fg-error)" }}>
@@ -701,200 +729,177 @@ function ArtifactPreviewCard({
                         </DropdownMenu>
                     </Box>
                 </Box>
-
-                {/* Avatar + username — above blur, bottom-left (thumbnail layout only) */}
-                {cardLayout === "thumbnail" && (
-                    <Box style={{
-                        position: "absolute", left: 12, bottom: 12,
-                        display: "flex", alignItems: "center", gap: 6,
-                        pointerEvents: "none",
-                    }}>
-                        {artifact.sharedWithTeam ? (
-                            <AvatarGroup>
-                                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" colorScheme="purple" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
-                                <Avatar fallback="team" size="sm" colorScheme="neutral" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
-                            </AvatarGroup>
-                        ) : artifact.sharedWith && artifact.sharedWith.length > 0 ? (
-                            <AvatarGroup>
-                                <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" colorScheme="purple" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
-                                <Avatar name={artifact.sharedWith[0].name} src={artifact.sharedWith[0].avatar} size="sm" colorScheme="neutral" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
-                                {artifact.sharedWith.length > 1 && <Avatar size="sm" colorScheme="neutral" border="2" style={{ borderColor: "white", flexShrink: 0 }}>{`+${artifact.sharedWith.length - 1}`}</Avatar>}
-                            </AvatarGroup>
-                        ) : (
-                            <Avatar name={artifact.createdBy.name} src={artifact.createdBy.avatar} size="sm" colorScheme="purple" border="2" style={{ borderColor: "white", flexShrink: 0 }} />
-                        )}
-                        <Text
-                            fontSize="sm"
-                            fontWeight="400"
-                            color="fg.white"
-                            style={{
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                maxWidth: 100,
-                                opacity: hovered ? 1 : 0,
-                                transition: "opacity 0.3s ease",
-                            }}
-                        >
-                            {(artifact.sharedWithTeam || artifact.sharedWith) ? "(Shared)" : artifact.createdBy.name}
-                        </Text>
-                    </Box>
-                )}
             </Box>
 
-            {/* ── Footer — static, no transition ── */}
+            {/* Card footer — expands upward on hover */}
             <Box
                 display="flex"
                 flexDirection="column"
-                gap="4"
-                style={{ flexShrink: 0, borderTop: "1px solid var(--ax-colors-border-tertiary)", padding: `10px 12px ${hovered ? 10 : 0}px` }}
+                gap="8"
+                style={{
+                    flexShrink: 0,
+                    borderTop: "1px solid var(--ax-colors-border-tertiary)",
+                    padding: `10px 12px ${hovered ? 10 : 0}px`,
+                    transition: "padding 0.25s ease",
+                }}
                 onClick={(e) => e.stopPropagation()}
             >
-                {cardLayout === "hover-expand" ? (
-                    /* hover-expand layout: compact default, expands on hover to show full name + avatar + time + source */
-                    <Box display="flex" flexDirection="column" gap="8">
-                        {/* Row 1: icon inline with text so wrapped lines start at the left edge */}
-                        <Text
-                            fontSize={hovered ? "lg" : "md"}
-                            fontWeight="500"
-                            style={{
-                                overflow: "hidden",
-                                whiteSpace: hovered ? "normal" : "nowrap",
-                                wordBreak: "break-word",
-                            }}
-                        >
-                            <Box asChild display="inline-flex" alignItems="center" color="fg.tertiary" style={{ marginRight: 6, verticalAlign: "middle" }}>
-                                <span>{hovered ? typeIconMd[artifact.type] : typeIconSm[artifact.type]}</span>
-                            </Box>
-                            {hovered ? artifact.name : truncateMiddle(artifact.name)}
-                        </Text>
-                        {/* Row 2: avatar (left) + badge/name slides in on hover | time bottom-right always */}
-                        <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-                            <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
-                                <ArtifactAvatarStack artifact={artifact} size="xs" />
-                                {!artifact.sharedWithTeam && !artifact.sharedWith && (
-                                    <OnlyYouBadge />
-                                )}
-                                {(artifact.sharedWithTeam || artifact.sharedWith) && (
-                                    <Text fontSize="sm" color="fg.secondary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: hovered ? 120 : 0, opacity: hovered ? 1 : 0, transition: "max-width 0.2s ease, opacity 0.2s ease" }}>
-                                        (Shared)
-                                    </Text>
-                                )}
-                            </Box>
-                            {/* time: bottom-right always; hides and drops to new row on hover when timeOnNewRow */}
-                            <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0, maxWidth: (timeOnNewRow && hovered) ? 0 : 80, opacity: (timeOnNewRow && hovered) ? 0 : 1, overflow: "hidden", transition: "max-width 0.2s ease, opacity 0.2s ease" }}>{timeAgo(artifact.createdRaw)}</Text>
-                        </Box>
-                        {/* Row 3: time on new row — only for timeOnNewRow cards, slides in on hover */}
-                        {timeOnNewRow && (
-                            <Box style={{ maxHeight: hovered ? 20 : 0, opacity: hovered ? 1 : 0, overflow: "hidden", transition: "max-height 0.2s ease, opacity 0.2s ease" }}>
-                                <Text fontSize="sm" color="fg.tertiary">{timeAgo(artifact.createdRaw)}</Text>
-                            </Box>
-                        )}
-                        {/* Row 3/4: source — fades in on hover */}
-                        <Box
-                            display="flex"
-                            alignItems="center"
-                            gap="4"
-                            color="fg.tertiary"
-                            style={{
-                                maxHeight: hovered ? 24 : 0,
-                                opacity: hovered ? 1 : 0,
-                                overflow: "hidden",
-                                transition: "max-height 0.2s ease, opacity 0.2s ease",
-                            }}
-                        >
-                            <Box style={{ flexShrink: 0, lineHeight: 0 }}>
-                                {artifact.source.type === "workflow" ? <IconCodeBranch size={13} /> : artifact.source.type === "chat" ? <IconComments size={13} /> : <IconAgent size={13} />}
-                            </Box>
-                            <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecorationLine: sourceHovered ? "underline" : "none", cursor: "pointer" }} onMouseEnter={() => setSourceHovered(true)} onMouseLeave={() => setSourceHovered(false)}>
-                                {artifact.source.type === "chat" ? "Chat" : artifact.source.name} →
-                            </Text>
-                        </Box>
+                {/* Row 1: name + type icon */}
+                <Box display="flex" justifyContent="space-between" alignItems="start" gap="8">
+                    <Text
+                        fontSize={hovered ? "lg" : "md"}
+                        fontWeight="500"
+                        style={{
+                            overflow: "hidden",
+                            textOverflow: hovered ? "clip" : "ellipsis",
+                            whiteSpace: hovered ? "normal" : "nowrap",
+                            transition: "font-size 0.2s ease",
+                            lineHeight: 1.3,
+                        }}
+                    >
+                        {artifact.name}
+                    </Text>
+                    <Box color="fg.tertiary" style={{ lineHeight: 0, flexShrink: 0 }}>
+                        {typeIconSm[artifact.type]}
                     </Box>
-                ) : (
-                    <>
-                        {/* Row 1: file type icon + name (middle-truncated) */}
-                        <Box display="flex" alignItems="center" gap="6">
-                            <Box color="fg.tertiary" style={{ flexShrink: 0, lineHeight: 0 }}>
-                                {typeIconSm[artifact.type]}
-                            </Box>
-                            <Text fontSize="md" fontWeight="500" style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
-                                {truncateMiddle(artifact.name)}
-                            </Text>
+                </Box>
+                {/* Row 2: visibility (private badge or avatars) + activity text */}
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                    {artifact.isPrivate && !artifact.sharedWith && !artifact.sharedWithTeam
+                        ? <PrivateBadge />
+                        : <ArtifactAvatarStack artifact={artifact} size="xs" />
+                    }
+                    <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>
+                        {artifact.activityText}
+                    </Text>
+                </Box>
+                {/* Row 3: tags (left) + source icon + View → (right) — slides in on hover */}
+                <Box style={{
+                    maxHeight: hovered ? 24 : 0,
+                    opacity: hovered ? 1 : 0,
+                    overflow: "hidden",
+                    transition: "max-height 0.25s ease, opacity 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 6,
+                }}>
+                    <Box display="flex" alignItems="center" gap="4" style={{ overflow: "hidden" }}>
+                        {(artifact.tags ?? []).slice(0, 2).map((tag) => (
+                            <Badge key={tag} intent="neutral">{tag}</Badge>
+                        ))}
+                    </Box>
+                    <Box display="flex" alignItems="center" gap="6" style={{ flexShrink: 0 }}>
+                        <Box color="fg.tertiary" style={{ lineHeight: 0 }}>
+                            {artifact.source.type === "agent" ? <IconAgent size={16} /> :
+                             artifact.source.type === "workflow" ? <IconCodeBranch size={16} /> :
+                             <IconComments size={16} />}
                         </Box>
-                        {/* Row 2: differs by layout */}
-                        {cardLayout === "footer" ? (
-                            /* footer layout: avatar + name left | time right; source on hover */
-                            <Box display="flex" alignItems="center" justifyContent="space-between" gap="8">
-                                {hovered ? (
-                                    <Box display="flex" alignItems="center" gap="4" color="fg.tertiary" style={{ minWidth: 0 }}>
-                                        <Box style={{ flexShrink: 0, lineHeight: 0 }}>
-                                            {artifact.source.type === "workflow" ? <IconCodeBranch size={13} /> : artifact.source.type === "chat" ? <IconComments size={13} /> : <IconAgent size={13} />}
-                                        </Box>
-                                        <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecorationLine: sourceHovered ? "underline" : "none", cursor: "pointer" }} onMouseEnter={() => setSourceHovered(true)} onMouseLeave={() => setSourceHovered(false)}>
-                                            {artifact.source.type === "chat" ? "Chat" : artifact.source.name} →
-                                        </Text>
-                                    </Box>
-                                ) : (
-                                    <>
-                                        <Box display="flex" alignItems="center" gap="6" style={{ minWidth: 0 }}>
-                                            <ArtifactAvatarStack artifact={artifact} size="2xs" />
-                                            <Text fontSize="sm" color="fg.secondary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                                {artifact.createdBy.name}{artifact.sharedWithTeam ? " (Shared)" : ""}
-                                            </Text>
-                                        </Box>
-                                        <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>{timeAgo(artifact.createdRaw)}</Text>
-                                    </>
-                                )}
-                            </Box>
-                        ) : (
-                            /* thumbnail layout: time by default → source on hover */
-                            <Box display="flex" alignItems="center" gap="4" color="fg.tertiary">
-                                {hovered ? (
-                                    <>
-                                        <Box style={{ flexShrink: 0, lineHeight: 0 }}>
-                                            {artifact.source.type === "workflow" ? <IconCodeBranch size={13} /> : artifact.source.type === "chat" ? <IconComments size={13} /> : <IconAgent size={13} />}
-                                        </Box>
-                                        <Text fontSize="sm" color="fg.tertiary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textDecorationLine: sourceHovered ? "underline" : "none", cursor: "pointer" }} onMouseEnter={() => setSourceHovered(true)} onMouseLeave={() => setSourceHovered(false)}>
-                                            {artifact.source.type === "chat" ? "Chat" : artifact.source.name} →
-                                        </Text>
-                                    </>
-                                ) : (
-                                    <Text fontSize="sm" color="fg.tertiary">{timeAgo(artifact.createdRaw)}</Text>
-                                )}
-                            </Box>
-                        )}
-                    </>
-                )}
+                        <Text fontSize="sm" color="fg.secondary" fontWeight="500">View →</Text>
+                    </Box>
+                </Box>
             </Box>
         </Box>
     );
 }
 
-function CanvasArtifactCard({
-    artifact,
-    onOpen,
-    pinned,
-    onTogglePin,
-}: {
-    artifact: Artifact;
-    onOpen: (a: Artifact) => void;
-    pinned: boolean;
-    onTogglePin: (id: string) => void;
-}) {
+// ─── Resume card (Continue working) ──────────────────────────────────────────
+
+function ResumeCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Artifact) => void }) {
     const [hovered, setHovered] = useState(false);
-    const icon = typeIcon[artifact.type];
+    return (
+        <Box
+            bg="bg.default"
+            border="1"
+            borderColor={hovered ? "border.secondary" : "border.secondary"}
+            rounded="xl"
+            p="24"
+            display="flex"
+            flexDirection="column"
+            gap="16"
+            style={{ flex: 1, cursor: "pointer", position: "relative" }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onClick={() => onOpen(artifact)}
+        >
+            {/* Header */}
+            <Box display="flex" alignItems="center" justifyContent="space-between" gap="10">
+                <Box display="flex" alignItems="center" gap="8">
+                    <Badge intent="success" style={{ textTransform: "uppercase", letterSpacing: "0.05em", fontSize: 11 }}>
+                        Continue working
+                    </Badge>
+                    <Text fontSize="sm" color="fg.tertiary">{artifact.activityText}</Text>
+                </Box>
+                {/* Agent + visibility — fade in on hover */}
+                <Box display="flex" alignItems="center" gap="10" style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease" }}>
+                    <AgentCell name={artifact.source.name} />
+                    <Box style={{ width: 1, height: 14, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                    {artifact.isPrivate && !artifact.sharedWith && !artifact.sharedWithTeam
+                        ? <PrivateBadge />
+                        : <ArtifactAvatarStack artifact={artifact} size="xs" />
+                    }
+                </Box>
+            </Box>
+            {/* Title + description */}
+            <Box display="flex" flexDirection="column" gap="8">
+                <Text fontSize="2xl" fontWeight="600">{artifact.name}</Text>
+                <Text fontSize="sm" color="fg.secondary">{artifact.description}</Text>
+            </Box>
+            {/* Content preview — button floats over it */}
+            {artifact.previewText && (
+                <Box style={{ position: "relative", flex: 1 }}>
+                    <Box
+                        bg="bg.secondary"
+                        border="1"
+                        borderColor="border.tertiary"
+                        rounded="lg"
+                        px="16"
+                        py="12"
+                        style={{ overflow: "hidden", height: "100%" }}
+                    >
+                        {artifact.previewText.split("\n").slice(0, 8).map((line, i) => (
+                            <Text key={i} fontSize="sm" color={i === 0 ? "fg.default" : "fg.secondary"} style={{ fontFamily: artifact.type === "Code" ? "monospace" : undefined, display: "block" }}>
+                                {line}
+                            </Text>
+                        ))}
+                    </Box>
+                    <Button
+                        appearance="inverse"
+                        size="md"
+                        aria-label="Edit"
+                        style={{
+                            position: "absolute",
+                            bottom: 12,
+                            right: 12,
+                            borderRadius: "50%",
+                            width: 40,
+                            height: 40,
+                            padding: 0,
+                        }}
+                        icon={<IconPenLine size={16} />}
+                        onClick={(e) => { e.stopPropagation(); onOpen(artifact); }}
+                    />
+                </Box>
+            )}
+        </Box>
+    );
+}
+
+// ─── Jump back in ─────────────────────────────────────────────────────────────
+
+function JumpBackInCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Artifact) => void }) {
+    const [hovered, setHovered] = useState(false);
     return (
         <Box
             bg="bg.default"
             border="1"
             borderColor={hovered ? "border.secondary" : "border.tertiary"}
-            display="flex"
-            gap="12"
-            alignItems="center"
-            px="16"
-            py="12"
             rounded="xl"
+            px="16"
+            py="16"
+            display="flex"
+            alignItems="start"
+            gap="12"
             style={{ cursor: "pointer", transition: "border-color 0.15s" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -905,87 +910,317 @@ function CanvasArtifactCard({
                 alignItems="center"
                 justifyContent="center"
                 rounded="lg"
-                style={{
-                    width: 40,
-                    height: 40,
-                    background: "radial-gradient(circle at 20% 20%, var(--ax-colors-bg-secondary) 10%, var(--ax-colors-bg-information-light) 61%, var(--ax-colors-bg-accent-light) 85%)",
-                    flexShrink: 0,
-                }}
+                bg="bg.secondary"
+                color="fg.secondary"
+                style={{ width: 36, height: 36, flexShrink: 0, marginTop: 2 }}
             >
-                <Box color="fg.default">{icon}</Box>
+                {typeIcon[artifact.type]}
             </Box>
-            <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
-                <Text fontSize="sm" fontWeight="600" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <Box display="flex" flexDirection="column" gap="6" style={{ flex: 1, minWidth: 0 }}>
+                <Text fontSize="md" fontWeight="500" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {artifact.name}
                 </Text>
-                <Text fontSize="sm" color="fg.secondary" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {artifact.description}
-                </Text>
+                <Box display="flex" alignItems="center" gap="6">
+                    {artifact.isPrivate && !artifact.sharedWith && !artifact.sharedWithTeam
+                        ? <PrivateBadge />
+                        : <ArtifactAvatarStack artifact={artifact} size="xs" />
+                    }
+                    <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0 }}>·</Text>
+                    <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>{artifact.activityText}</Text>
+                </Box>
+                {/* Slides in on hover: tags + View → */}
+                <Box style={{
+                    maxHeight: hovered ? 24 : 0,
+                    opacity: hovered ? 1 : 0,
+                    overflow: "hidden",
+                    transition: "max-height 0.25s ease, opacity 0.2s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 6,
+                }}>
+                    <Box display="flex" alignItems="center" gap="4">
+                        {(artifact.tags ?? []).slice(0, 2).map((tag) => (
+                            <Badge key={tag} intent="neutral">{tag}</Badge>
+                        ))}
+                    </Box>
+                    <Box display="flex" alignItems="center" gap="6" style={{ flexShrink: 0 }}>
+                        <Box color="fg.tertiary" style={{ lineHeight: 0 }}>
+                            {artifact.source.type === "agent" ? <IconAgent size={14} /> :
+                             artifact.source.type === "workflow" ? <IconCodeBranch size={14} /> :
+                             <IconComments size={14} />}
+                        </Box>
+                        <Text fontSize="sm" color="fg.secondary" fontWeight="500">View →</Text>
+                    </Box>
+                </Box>
             </Box>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        appearance="subtle"
-                        size="sm"
-                        icon={<IconEllipsisSolid size={16} />}
-                        aria-label="Options"
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpen(artifact); }}>
-                        <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
-                    </DropdownMenuItem>
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <Box display="flex" alignItems="center" gap="8"><IconDownload size={14} />Download as</Box>
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                            {["Markdown (.md)", "PDF (.pdf)", "Word (.docx)", "Plain text (.txt)"].map((fmt) => (
-                                <DropdownMenuItem key={fmt}>{fmt}</DropdownMenuItem>
-                            ))}
-                        </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                        <Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onTogglePin(artifact.id); }}>
-                        <Box display="flex" alignItems="center" gap="8"><IconThumbtack size={14} />{pinned ? "Unpin" : "Pin"}</Box>
-                    </DropdownMenuItem>
-                    <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
-                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-error)" }} onClick={(e) => e.stopPropagation()}>
-                        <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+        </Box>
+    );
+}
+
+function JumpBackIn({ items, onOpen }: { items: Artifact[]; onOpen: (a: Artifact) => void }) {
+    return (
+        <Box display="flex" flexDirection="column" gap="12" style={{ width: 320, flexShrink: 0 }}>
+            <Text fontSize="sm" fontWeight="600" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Jump back in
+            </Text>
+            {items.map((artifact) => (
+                <JumpBackInCard key={artifact.id} artifact={artifact} onOpen={onOpen} />
+            ))}
+        </Box>
+    );
+}
+
+// ─── Horizontal section ───────────────────────────────────────────────────────
+
+function HorizontalSection({
+    title,
+    items,
+    onOpen,
+    pinnedIds,
+    onTogglePin,
+    cardWidth = 300,
+    onSeeAll,
+}: {
+    title: string;
+    items: Artifact[];
+    onOpen: (a: Artifact) => void;
+    pinnedIds: Set<string>;
+    onTogglePin: (id: string) => void;
+    cardWidth?: number;
+    onSeeAll?: () => void;
+}) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    function updateScrollState() {
+        const el = scrollRef.current;
+        if (!el) return;
+        setCanScrollLeft(el.scrollLeft > 1);
+        setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+    }
+
+    useEffect(() => {
+        updateScrollState();
+        const el = scrollRef.current;
+        el?.addEventListener("scroll", updateScrollState, { passive: true });
+        const ro = new ResizeObserver(updateScrollState);
+        if (el) ro.observe(el);
+        return () => {
+            el?.removeEventListener("scroll", updateScrollState);
+            ro.disconnect();
+        };
+    }, [items]);
+
+    function scroll(dir: "left" | "right") {
+        scrollRef.current?.scrollBy({ left: dir === "left" ? -(cardWidth + 16) : (cardWidth + 16), behavior: "smooth" });
+    }
+
+    if (items.length === 0) return null;
+
+    return (
+        <Box display="flex" flexDirection="column" gap="12">
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Text fontSize="lg" fontWeight="600">{title}</Text>
+                <Box display="flex" alignItems="center" gap="4">
+                    {onSeeAll && <Button appearance="subtle" size="sm" onClick={onSeeAll}>See all</Button>}
+                    <Button appearance="subtle" size="sm" aria-label="Scroll left" disabled={!canScrollLeft} icon={<IconAngleRight size={14} style={{ transform: "rotate(180deg)" }} />} onClick={() => scroll("left")} />
+                    <Button appearance="subtle" size="sm" aria-label="Scroll right" disabled={!canScrollRight} icon={<IconAngleRight size={14} />} onClick={() => scroll("right")} />
+                </Box>
+            </Box>
+            <Box
+                ref={scrollRef}
+                style={{
+                    display: "flex",
+                    gap: 16,
+                    overflowX: "auto",
+                    paddingBottom: 4,
+                    scrollSnapType: "x mandatory",
+                    msOverflowStyle: "none",
+                    scrollbarWidth: "none",
+                }}
+            >
+                {items.map((artifact) => (
+                    <Box key={artifact.id} style={{ scrollSnapAlign: "start" }}>
+                        <WorkspaceArtifactCard
+                            artifact={artifact}
+                            onOpen={onOpen}
+                            pinned={pinnedIds.has(artifact.id)}
+                            onTogglePin={onTogglePin}
+                            width={cardWidth}
+                        />
+                    </Box>
+                ))}
+            </Box>
         </Box>
     );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// ─── Section customizer ───────────────────────────────────────────────────────
+
+type SectionId = "jumpBackIn" | "lastViewed" | "pinned" | "lastEdited" | "allArtifacts";
+type SectionDef = { id: SectionId; label: string; enabled: boolean };
+
+const SECTION_DEFAULTS: SectionDef[] = [
+    { id: "jumpBackIn",   label: "Jump back in", enabled: true  },
+    { id: "lastViewed",   label: "Last Viewed",  enabled: false },
+    { id: "pinned",       label: "Pinned",        enabled: true  },
+    { id: "lastEdited",   label: "Last Edited",   enabled: false },
+    { id: "allArtifacts", label: "All artifacts", enabled: true  },
+];
+
+function SectionCustomizerPanel({
+    sections,
+    setSections,
+    onClose,
+}: {
+    sections: SectionDef[];
+    setSections: (s: SectionDef[]) => void;
+    onClose: () => void;
+}) {
+    const panelRef = useRef<HTMLDivElement>(null);
+    const dragIndexRef = useRef<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+                onClose();
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [onClose]);
+
+    function toggleSection(id: SectionId) {
+        setSections(sections.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)));
+    }
+
+    function handleDragOver(e: React.DragEvent, index: number) {
+        e.preventDefault();
+        setDragOverIndex(index);
+    }
+
+    function handleDrop(toIndex: number) {
+        const from = dragIndexRef.current;
+        if (from === null || from === toIndex) { setDragOverIndex(null); return; }
+        const next = [...sections];
+        const [item] = next.splice(from, 1);
+        next.splice(toIndex, 0, item);
+        setSections(next);
+        dragIndexRef.current = null;
+        setDragOverIndex(null);
+    }
+
+    return (
+        <Box
+            ref={panelRef}
+            rounded="xl"
+            shadow="md"
+            style={{
+                position: "absolute",
+                right: 0,
+                top: "calc(100% + 8px)",
+                width: 240,
+                zIndex: 200,
+                background: "var(--ax-colors-bg-default)",
+                border: "1px solid var(--ax-colors-border-default)",
+                overflow: "hidden",
+            }}
+        >
+            <Box style={{ padding: "10px 14px", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
+                <Text fontSize="sm" fontWeight="600" color="fg.secondary">Customize view</Text>
+            </Box>
+            <Box style={{ padding: "4px 0" }}>
+                {sections.map((section, index) => (
+                    <Box
+                        key={section.id}
+                        draggable
+                        onDragStart={() => { dragIndexRef.current = index; }}
+                        onDragOver={(e: React.DragEvent) => handleDragOver(e, index)}
+                        onDrop={() => handleDrop(index)}
+                        onDragEnd={() => setDragOverIndex(null)}
+                        display="flex"
+                        alignItems="center"
+                        gap="8"
+                        style={{
+                            padding: "7px 14px",
+                            cursor: "grab",
+                            borderTop: dragOverIndex === index ? "2px solid var(--ax-colors-border-focus)" : "2px solid transparent",
+                            background: dragOverIndex === index ? "var(--ax-colors-bg-secondary)" : undefined,
+                            transition: "background 0.1s",
+                        }}
+                    >
+                        {/* Grip dots */}
+                        <svg width="10" height="14" viewBox="0 0 10 14" fill="var(--ax-colors-fg-tertiary)" style={{ flexShrink: 0 }}>
+                            <circle cx="2.5" cy="2.5" r="1.5"/><circle cx="7.5" cy="2.5" r="1.5"/>
+                            <circle cx="2.5" cy="7"   r="1.5"/><circle cx="7.5" cy="7"   r="1.5"/>
+                            <circle cx="2.5" cy="11.5" r="1.5"/><circle cx="7.5" cy="11.5" r="1.5"/>
+                        </svg>
+                        <Text fontSize="sm" color="fg.default" style={{ flex: 1 }}>{section.label}</Text>
+                        {/* Toggle */}
+                        <button
+                            onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
+                            style={{
+                                width: 34,
+                                height: 18,
+                                borderRadius: 9,
+                                border: "none",
+                                background: section.enabled ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-tertiary)",
+                                cursor: "pointer",
+                                position: "relative",
+                                transition: "background 0.2s",
+                                flexShrink: 0,
+                            }}
+                        >
+                            <Box
+                                rounded="full"
+                                shadow="sm"
+                                style={{
+                                    position: "absolute",
+                                    top: 2,
+                                    left: section.enabled ? 16 : 2,
+                                    width: 14,
+                                    height: 14,
+                                    background: "var(--ax-colors-bg-default)",
+                                    transition: "left 0.2s",
+                                }}
+                            />
+                        </button>
+                    </Box>
+                ))}
+            </Box>
+        </Box>
+    );
+}
+
 export default function ArtifactsPage() {
+    const { setHidePageHeader } = useLayout();
+    useEffect(() => {
+        setHidePageHeader(true);
+        return () => setHidePageHeader(false);
+    }, [setHidePageHeader]);
+
     const [search, setSearch] = useState("");
+    const [searchFocused, setSearchFocused] = useState(false);
+    const searchInputRef = useRef<HTMLInputElement>(null);
     const [typeFilter, setTypeFilter] = useState<"All" | ArtifactType>("All");
-    const [creatorFilter, setCreatorFilter] = useState("All");
-    const [sourceFilter, setSourceFilter] = useState<"All" | ArtifactSourceType>("All");
-    const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-    const [activeTab, setActiveTab] = useState<"my" | "shared">("my");
+    const [ownerFilter, setOwnerFilter] = useState("All");
+    const [dateFilter, setDateFilter] = useState("All");
+    const [pinnedFilter, setPinnedFilter] = useState(false);
+    const [showFullFilters, setShowFullFilters] = useState(false);
+    const [viewMode, setViewMode] = useState<"list" | "grid">("list");
     const [sortKey, setSortKey] = useState<SortKey>("created");
     const [sortDir, setSortDir] = useState<SortDir>("desc");
     const [deleteTarget, setDeleteTarget] = useState<Artifact | null>(null);
     const [openArtifact, setOpenArtifact] = useState<Artifact | null>(null);
     const [openMode, setOpenMode] = useState<"preview" | "with-panel">("preview");
-
-    function openPreview(artifact: Artifact) {
-        setOpenArtifact(artifact);
-        setOpenMode("preview");
-    }
-    function openWithPanel(artifact: Artifact) {
-        setOpenArtifact(artifact);
-        setOpenMode("with-panel");
-    }
     const [pinnedIds, setPinnedIds] = useState<Set<string>>(DEFAULT_PINNED_IDS);
+    const [sections, setSections] = useState<SectionDef[]>(SECTION_DEFAULTS);
+    const [showCustomizer, setShowCustomizer] = useState(false);
 
     function togglePin(id: string) {
         setPinnedIds((prev) => {
@@ -996,21 +1231,38 @@ export default function ArtifactsPage() {
     }
 
     function handleSort(key: SortKey) {
-        if (sortKey === key) {
-            setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-        } else {
-            setSortKey(key);
-            setSortDir("asc");
-        }
+        if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        else { setSortKey(key); setSortDir("asc"); }
     }
 
+    const hasActiveFilters = typeFilter !== "All" || ownerFilter !== "All" || dateFilter !== "All" || pinnedFilter;
+    const nowSec = Date.now() / 1000;
+    const dateFilterCutoff: Record<string, number> = {
+        "Last 7 days": nowSec - 7 * 86400,
+        "Last 30 days": nowSec - 30 * 86400,
+        "Last 90 days": nowSec - 90 * 86400,
+    };
+
+    // ── Section slices ──────────────────────────────────────────────────────
+    const recentlyViewed = useMemo(
+        () => [...artifacts].filter((a) => a.lastViewedRaw).sort((a, b) => (b.lastViewedRaw ?? 0) - (a.lastViewedRaw ?? 0)),
+        []
+    );
+    const lastEdited = useMemo(
+        () => [...artifacts].filter((a) => a.activityText.startsWith("Edited")).sort((a, b) => b.createdRaw - a.createdRaw),
+        []
+    );
+    const pinnedArtifacts = artifacts.filter((a) => pinnedIds.has(a.id));
+
+    // ── "All artifacts" filtered list ──────────────────────────────────────
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
         return artifacts
             .filter((a) => {
+                if (pinnedFilter && !pinnedIds.has(a.id)) return false;
                 if (typeFilter !== "All" && a.type !== typeFilter) return false;
-                if (creatorFilter !== "All" && a.createdBy.name !== creatorFilter) return false;
-                if (sourceFilter !== "All" && a.source.type !== sourceFilter) return false;
+                if (ownerFilter !== "All" && a.createdBy.name !== ownerFilter) return false;
+                if (dateFilter !== "All" && dateFilterCutoff[dateFilter] && a.createdRaw < dateFilterCutoff[dateFilter]) return false;
                 if (q && !a.name.toLowerCase().includes(q) && !a.source.name.toLowerCase().includes(q)) return false;
                 return true;
             })
@@ -1023,19 +1275,23 @@ export default function ArtifactsPage() {
                 else if (sortKey === "status") cmp = a.status.localeCompare(b.status);
                 return sortDir === "asc" ? cmp : -cmp;
             });
-    }, [search, typeFilter, creatorFilter, sourceFilter, sortKey, sortDir]);
+    }, [search, typeFilter, ownerFilter, pinnedFilter, pinnedIds, sortKey, sortDir]);
 
-    const pinnedArtifacts = filtered.filter((a) => pinnedIds.has(a.id));
-    const recentlyUpdated = filtered.filter((a) => !pinnedIds.has(a.id));
+    const resumeArtifact = useMemo(
+        () => filtered.find((a) => a.isInProgress) ?? filtered[0] ?? null,
+        [filtered]
+    );
 
-    // List view: pinned items float to the top, then rest in sort order
-    const filteredForList = [...pinnedArtifacts, ...recentlyUpdated];
+    const jumpBackInItems = useMemo(
+        () => recentlyViewed.filter((a) => filtered.some((f) => f.id === a.id) && a.id !== resumeArtifact?.id).slice(0, 3),
+        [recentlyViewed, filtered, resumeArtifact]
+    );
 
     const viewerArtifact: ArtifactViewerArtifact | null = openArtifact
         ? {
               id: openArtifact.id,
               name: openArtifact.name,
-              type: openArtifact.type,
+              type: openArtifact.type as ArtifactViewerArtifact["type"],
               sourceType: openArtifact.source.type,
               sourceName: openArtifact.source.name,
               sourceLink: openArtifact.source.link,
@@ -1058,7 +1314,7 @@ export default function ArtifactsPage() {
                 />
             )}
 
-            {/* Delete confirmation dialog */}
+            {/* Delete confirmation */}
             <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
                 <DialogContent>
                     <DialogHeader>Delete artifact</DialogHeader>
@@ -1069,12 +1325,9 @@ export default function ArtifactsPage() {
                         </Text>
                     </DialogBody>
                     <DialogFooter>
-                        <DialogClose>
-                            <Button appearance="subtle">Cancel</Button>
-                        </DialogClose>
+                        <DialogClose><Button appearance="subtle">Cancel</Button></DialogClose>
                         <Button
-                            appearance="default"
-                            style={{ background: "var(--ax-colors-bg-error)", color: "white", borderColor: "var(--ax-colors-border-error)" }}
+                            appearance="danger"
                             onClick={() => setDeleteTarget(null)}
                         >
                             Delete
@@ -1083,108 +1336,259 @@ export default function ArtifactsPage() {
                 </DialogContent>
             </Dialog>
 
-            <Box display="flex" flexDirection="column" gap="24" overflow="auto" h="full">
-                {/* ── Tabs ── */}
-                <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary">
-                    {(["my", "shared"] as const).map((tab) => (
-                        <Box
-                            key={tab}
-                            pb="12"
-                            cursor="pointer"
-                            display="flex"
-                            alignItems="center"
-                            gap="6"
-                            borderB={activeTab === tab ? "2" : "0"}
-                            onClick={() => setActiveTab(tab)}
-                            style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
-                        >
-                            {tab === "shared" && <IconUsers size={14} color={activeTab === tab ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)"} />}
-                            <Text
-                                fontWeight={activeTab === tab ? "500" : "400"}
-                                color={activeTab === tab ? "fg.default" : "fg.secondary"}
-                            >
-                                {tab === "my" ? "My Artifacts" : "Shared with me"}
-                            </Text>
-                        </Box>
-                    ))}
+            <Box display="flex" flexDirection="column" gap="40" overflow="auto" h="full">
+
+                {/* ── Hero ── */}
+                <Box display="flex" flexDirection="column" alignItems="center" gap="12" pt="16">
+                    <Heading level="1">Your Workspace</Heading>
+                    <Text color="fg.secondary" fontSize="lg">
+                        Everything your agents are creating, analyzing, and optimizing.
+                    </Text>
                 </Box>
 
-                {/* ── Toolbar ── */}
-                <Box display="flex" justifyContent="space-between" alignItems="center" gap="12">
-                    <Box display="flex" gap="12" alignItems="center" style={{ flexWrap: "wrap" }}>
-                        {/* Search */}
-                        <Box style={{ width: 264 }}>
-                            <Input
-                                placeholder="Search artifacts…"
+                {/* ── Search ── */}
+                <Box display="flex" flexDirection="column" alignItems="center" gap="8" style={{ width: "100%", maxWidth: 600, alignSelf: "center" }}>
+                    {/* Search input row + filter button */}
+                    <Box display="flex" alignItems="center" gap="8" style={{ width: "100%" }}>
+                        <Box
+                            display="flex"
+                            alignItems="center"
+                            gap="8"
+                            bg="bg.default"
+                            border="1"
+                            borderColor={searchFocused ? "border.focus" : "border.default"}
+                            rounded="lg"
+                            style={{ flex: 1, padding: "0 12px", minHeight: 44, cursor: "text", transition: "border-color 0.15s", flexWrap: "wrap", rowGap: 4, paddingTop: hasActiveFilters ? 6 : 0, paddingBottom: hasActiveFilters ? 6 : 0 }}
+                            onClick={() => searchInputRef.current?.focus()}
+                        >
+                            <Box color={searchFocused ? "fg.secondary" : "fg.tertiary"} style={{ flexShrink: 0, lineHeight: 0, transition: "color 0.15s" }}>
+                                <IconSearch size={16} />
+                            </Box>
+                            {/* Active filter chips */}
+                            {ownerFilter !== "All" && (
+                                <Box display="inline-flex" alignItems="center" gap="4" rounded="sm" px="8" py="2" style={{ background: "var(--ax-colors-bg-secondary)", height: 24, flexShrink: 0 }}>
+                                    <Text fontSize="xs" color="fg.default">{ownerFilter === "Jamie Chen" ? "Created by me" : ownerFilter}</Text>
+                                    <Box color="fg.default" style={{ cursor: "pointer", lineHeight: 0, width: 16, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); setOwnerFilter("All"); }}>
+                                        <IconXmark size={12} />
+                                    </Box>
+                                </Box>
+                            )}
+                            {dateFilter !== "All" && (
+                                <Box display="inline-flex" alignItems="center" gap="4" rounded="sm" px="8" py="2" style={{ background: "var(--ax-colors-bg-secondary)", height: 24, flexShrink: 0 }}>
+                                    <Text fontSize="xs" color="fg.default">{dateFilter}</Text>
+                                    <Box color="fg.default" style={{ cursor: "pointer", lineHeight: 0, width: 16, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); setDateFilter("All"); }}>
+                                        <IconXmark size={12} />
+                                    </Box>
+                                </Box>
+                            )}
+                            {typeFilter !== "All" && (
+                                <Box display="inline-flex" alignItems="center" gap="4" rounded="sm" px="8" py="2" style={{ background: "var(--ax-colors-bg-secondary)", height: 24, flexShrink: 0 }}>
+                                    <Text fontSize="xs" color="fg.default">{typeLabel[typeFilter as ArtifactType]}</Text>
+                                    <Box color="fg.default" style={{ cursor: "pointer", lineHeight: 0, width: 16, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); setTypeFilter("All"); }}>
+                                        <IconXmark size={12} />
+                                    </Box>
+                                </Box>
+                            )}
+                            {pinnedFilter && (
+                                <Box display="inline-flex" alignItems="center" gap="4" rounded="sm" px="8" py="2" style={{ background: "var(--ax-colors-bg-secondary)", height: 24, flexShrink: 0 }}>
+                                    <Text fontSize="xs" color="fg.default">Pinned</Text>
+                                    <Box color="fg.default" style={{ cursor: "pointer", lineHeight: 0, width: 16, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); setPinnedFilter(false); }}>
+                                        <IconXmark size={12} />
+                                    </Box>
+                                </Box>
+                            )}
+                            <input
+                                ref={searchInputRef}
+                                style={{
+                                    flex: 1,
+                                    minWidth: 120,
+                                    border: "none",
+                                    outline: "none",
+                                    background: "transparent",
+                                    fontSize: "var(--ax-fontSize-md-fontSize)",
+                                    color: "var(--ax-colors-fg-default)",
+                                    fontFamily: "inherit",
+                                    height: 32,
+                                }}
+                                placeholder={hasActiveFilters ? "" : "Search artifacts, ask your agents, or jump to..."}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
+                                onFocus={() => setSearchFocused(true)}
+                                onBlur={() => setTimeout(() => setSearchFocused(false), 150)}
                             />
                         </Box>
-
-                        {/* Type filter */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <LabelMenuButton label="Type">{typeFilter}</LabelMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {allTypes.map((t) => (
-                                    <DropdownMenuItem key={t} onClick={() => setTypeFilter(t)}>
-                                        <Box display="flex" alignItems="center" gap="8">
-                                            {t !== "All" && typeIcon[t]}
-                                            {t}
-                                        </Box>
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* Created by filter */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <LabelMenuButton label="Created by">{creatorFilter}</LabelMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {["All", ...allCreators].map((c) => (
-                                    <DropdownMenuItem key={c} onClick={() => setCreatorFilter(c)}>
-                                        <Box display="flex" alignItems="center" gap="8">
-                                            {c !== "All" && <Avatar name={c} size="sm" colorScheme="neutral" />}
-                                            {c}
-                                        </Box>
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-
-                        {/* Source filter */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <LabelMenuButton label="Source">{sourceFilter === "All" ? "All" : sourceFilter}</LabelMenuButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                {allSourceTypes.map((s) => (
-                                    <DropdownMenuItem key={s} onClick={() => setSourceFilter(s)}>
-                                        <Box display="flex" alignItems="center" gap="8">
-                                            {s === "chat" && <IconComments size={14} />}
-                                            {s === "agent" && <IconAgent size={14} />}
-                                            {s === "workflow" && <IconCodeBranch size={14} />}
-                                            {s === "All" ? "All sources" : s.charAt(0).toUpperCase() + s.slice(1)}
-                                        </Box>
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div style={{ position: "relative", display: "flex", gap: 8 }}>
+                            <Button
+                                appearance="default"
+                                size="lg"
+                                icon={<IconSlidersSimple />}
+                                onClick={() => setShowFullFilters((v) => !v)}
+                                aria-label="Filters"
+                                aria-pressed={showFullFilters}
+                                style={showFullFilters ? { background: "var(--ax-colors-bg-default-pressed)" } : undefined}
+                            />
+                            <Button
+                                appearance="subtle"
+                                size="lg"
+                                icon={<IconGear />}
+                                onClick={() => setShowCustomizer((v) => !v)}
+                                aria-label="Customize view"
+                                style={showCustomizer ? { background: "var(--ax-colors-bg-default-pressed)" } : undefined}
+                            />
+                            {showCustomizer && (
+                                <SectionCustomizerPanel
+                                    sections={sections}
+                                    setSections={setSections}
+                                    onClose={() => setShowCustomizer(false)}
+                                />
+                            )}
+                        </div>
                     </Box>
 
-                    {/* Right side */}
-                    <Box display="flex" alignItems="center" gap="8">
-                        {viewMode === "grid" && (
-                            <Button appearance="subtle" size="sm">
-                                <Box display="flex" alignItems="center" gap="6">
-                                    Last Modified
-                                    <IconChevronDown size={12} />
-                                </Box>
-                            </Button>
-                        )}
+                    {/* Quick-filter toggle pills — shown when search is focused, hidden when full filter panel is open */}
+                    {searchFocused && !showFullFilters && (
+                        <Box display="flex" gap="6" alignItems="center" flexWrap="wrap" style={{ width: "100%" }}>
+                            {(
+                                [
+                                    { label: "Pinned", active: pinnedFilter, onClick: () => setPinnedFilter((v) => !v) },
+                                    { label: "Created by me", active: ownerFilter === "Jamie Chen", onClick: () => setOwnerFilter(ownerFilter === "Jamie Chen" ? "All" : "Jamie Chen") },
+                                    { label: "Last 7 days", active: dateFilter === "Last 7 days", onClick: () => setDateFilter(dateFilter === "Last 7 days" ? "All" : "Last 7 days") },
+                                    { label: "Document", active: typeFilter === "Document", onClick: () => setTypeFilter(typeFilter === "Document" ? "All" : "Document") },
+                                    { label: "Media", active: typeFilter === "Image", onClick: () => setTypeFilter(typeFilter === "Image" ? "All" : "Image") },
+                                    { label: "Presentation", active: typeFilter === "Presentation", onClick: () => setTypeFilter(typeFilter === "Presentation" ? "All" : "Presentation") },
+                                ] as { label: string; active: boolean; onClick: () => void }[]
+                            ).map(({ label, active, onClick }) => (
+                                <button
+                                    key={label}
+                                    onClick={onClick}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        height: 32,
+                                        padding: "0 14px",
+                                        borderRadius: 9999,
+                                        border: `1px solid ${active ? "var(--ax-colors-border-default)" : "var(--ax-colors-border-default)"}`,
+                                        background: active ? "var(--ax-colors-bg-default-pressed)" : "var(--ax-colors-bg-default)",
+                                        color: "var(--ax-colors-fg-default)",
+                                        fontSize: "var(--ax-fontSize-sm-fontSize)",
+                                        fontFamily: "inherit",
+                                        fontWeight: active ? 500 : 400,
+                                        cursor: "pointer",
+                                        transition: "all 0.1s",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                            {hasActiveFilters && (
+                                <Button appearance="subtle" size="sm" onClick={() => { setTypeFilter("All"); setOwnerFilter("All"); setDateFilter("All"); setPinnedFilter(false); }}>
+                                    Clear
+                                </Button>
+                            )}
+                        </Box>
+                    )}
+
+                    {/* Full filter panel — shown when filter button is toggled */}
+                    {showFullFilters && (
+                        <Box display="flex" gap="8" alignItems="center" flexWrap="wrap" style={{ width: "100%" }}>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <AngleMenuButton size="md">
+                                        {typeFilter === "All" ? "Type" : typeLabel[typeFilter as ArtifactType]}
+                                    </AngleMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {allTypes.map((t) => (
+                                        <DropdownMenuItem key={t} onClick={() => setTypeFilter(t)}>
+                                            <Box display="flex" alignItems="center" gap="8">
+                                                {t !== "All" && typeIcon[t]}
+                                                {t === "All" ? "All types" : typeLabel[t]}
+                                            </Box>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <AngleMenuButton size="md">
+                                        {ownerFilter === "All" ? "Owner" : ownerFilter.split(" ")[0]}
+                                    </AngleMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {["All", ...allCreators].map((c) => (
+                                        <DropdownMenuItem key={c} onClick={() => setOwnerFilter(c)}>
+                                            <Box display="flex" alignItems="center" gap="8">
+                                                {c !== "All" && <Avatar name={c} size="sm" colorScheme="purple" />}
+                                                {c === "All" ? "All owners" : c}
+                                            </Box>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <AngleMenuButton size="md">
+                                        {dateFilter === "All" ? "Date" : dateFilter}
+                                    </AngleMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {(["All", "Last 7 days", "Last 30 days", "Last 90 days"] as const).map((t) => (
+                                        <DropdownMenuItem key={t} onClick={() => setDateFilter(t === "All" ? "All" : t)}>
+                                            {t === "All" ? "All time" : t}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <AngleMenuButton size="md">
+                                        {pinnedFilter ? "Pinned" : "Pinned: All"}
+                                    </AngleMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => setPinnedFilter(false)}>
+                                        <Box display="flex" alignItems="center" gap="8">All</Box>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setPinnedFilter(true)}>
+                                        <Box display="flex" alignItems="center" gap="8"><IconThumbtackSolid size={14} />Pinned</Box>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            {hasActiveFilters && (
+                                <Button appearance="subtle" size="sm" onClick={() => { setTypeFilter("All"); setOwnerFilter("All"); setDateFilter("All"); setPinnedFilter(false); }}>
+                                    Clear all
+                                </Button>
+                            )}
+                        </Box>
+                    )}
+                </Box>
+
+                {/* ── Dynamic sections ── */}
+                {sections.filter((s) => s.enabled).map((s) => {
+                    const openFn = (a: Artifact) => { setOpenArtifact(a); setOpenMode("preview"); };
+                    if (s.id === "jumpBackIn") return (resumeArtifact || jumpBackInItems.length > 0) ? (
+                        <Box key="jumpBackIn" display="flex" gap="24" alignItems="stretch">
+                            {resumeArtifact && <ResumeCard artifact={resumeArtifact} onOpen={openFn} />}
+                            <JumpBackIn items={jumpBackInItems} onOpen={openFn} />
+                        </Box>
+                    ) : null;
+                    if (s.id === "lastViewed") return (
+                        <HorizontalSection key="lastViewed" title="Recently viewed" items={recentlyViewed} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                    );
+                    if (s.id === "pinned") return (
+                        <HorizontalSection key="pinned" title="Pinned to workspace" items={pinnedArtifacts} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} onSeeAll={() => { setPinnedFilter(true); searchInputRef.current?.focus(); }} />
+                    );
+                    if (s.id === "lastEdited") return (
+                        <HorizontalSection key="lastEdited" title="Last edited" items={lastEdited} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                    );
+                    return null;
+                })}
+
+                {/* ── All artifacts ── */}
+                {sections.find((s) => s.id === "allArtifacts")?.enabled && <Box display="flex" flexDirection="column" gap="16">
+                    <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Text fontSize="lg" fontWeight="600">All artifacts</Text>
                         <SegmentedControl
                             value={viewMode}
                             onValueChange={(v: string) => { if (v) setViewMode(v as "list" | "grid"); }}
@@ -1193,196 +1597,135 @@ export default function ArtifactsPage() {
                             <SegmentedControlItem value="grid" icon={<IconGrid size={15} />} aria-label="Grid view" />
                         </SegmentedControl>
                     </Box>
-                </Box>
 
-                {/* Empty state */}
-                {filtered.length === 0 && (
-                    <Card>
-                        <Box display="flex" flexDirection="column" gap="8" p="48" alignItems="center">
+                    {/* Empty state */}
+                    {filtered.length === 0 && (
+                        <Box display="flex" flexDirection="column" gap="8" py="48" alignItems="center">
                             <Box color="fg.tertiary"><IconInboxFull size={32} /></Box>
                             <Text fontWeight="500">No artifacts match your filters</Text>
-                            <Text color="fg.secondary" fontSize="sm">
-                                Try adjusting the search or filter criteria.
-                            </Text>
                             <Button
                                 appearance="subtle"
                                 size="sm"
-                                onClick={() => { setSearch(""); setTypeFilter("All"); setCreatorFilter("All"); setSourceFilter("All"); }}
+                                onClick={() => { setSearch(""); setTypeFilter("All"); setOwnerFilter("All"); }}
                             >
                                 Clear filters
                             </Button>
                         </Box>
-                    </Card>
-                )}
+                    )}
 
-                {/* ── LIST VIEW ── */}
-                {viewMode === "list" && filteredForList.length > 0 && (
-                    <Table>
-                        <thead>
-                            <Tr>
-                                {/* Pin column — narrow */}
-                                <Th style={{ width: 32, paddingRight: 0 }}></Th>
-                                <SortHeader label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} />
-                                <Th>Type</Th>
-                                <Th>Source</Th>
-                                <Th>Created by</Th>
-                                <SortHeader label="Created" sortKey="created" current={sortKey} dir={sortDir} onSort={handleSort} />
-                                <SortHeader label="Version" sortKey="version" current={sortKey} dir={sortDir} onSort={handleSort} />
-                                <SortHeader label="Size" sortKey="size" current={sortKey} dir={sortDir} onSort={handleSort} />
-                                <SortHeader label="Status" sortKey="status" current={sortKey} dir={sortDir} onSort={handleSort} />
-                                <Th></Th>
-                            </Tr>
-                        </thead>
-                        <tbody>
-                            {filteredForList.map((artifact) => (
-                                <Tr
-                                    key={artifact.id}
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => openPreview(artifact)}
-                                >
-                                    {/* Pin toggle */}
-                                    <Td style={{ width: 32, paddingRight: 0, verticalAlign: "middle" }}>
-                                        <PinCell pinned={pinnedIds.has(artifact.id)} onToggle={() => togglePin(artifact.id)} />
-                                    </Td>
-                                    <Td>
-                                        <Text fontWeight="500">{artifact.name}</Text>
-                                        {artifact.description && (
-                                            <Text fontSize="sm" color="fg.tertiary" style={{ marginTop: 2 }}>
-                                                {artifact.description}
-                                            </Text>
-                                        )}
-                                    </Td>
-                                    {/* Type — icon + label */}
-                                    <Td>
-                                        <Box display="flex" alignItems="center" gap="6" color="fg.secondary">
-                                            {typeIcon[artifact.type]}
-                                            <Text fontSize="md">{artifact.type}</Text>
-                                        </Box>
-                                    </Td>
-                                    <Td><SourceCell artifact={artifact} onOpen={openWithPanel} /></Td>
-                                    <Td>
-                                        <Box display="flex" alignItems="center" gap="8">
-                                            <ArtifactAvatarStack artifact={artifact} size="sm" />
-                                            {!artifact.sharedWithTeam && !artifact.sharedWith && <Text fontSize="sm">{artifact.createdBy.name}</Text>}
-                                            {(artifact.sharedWithTeam || artifact.sharedWith) && <Text fontSize="sm">{artifact.createdBy.name} (Shared)</Text>}
-                                        </Box>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="sm">{artifact.created}</Text>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="sm" color="fg.secondary">v{artifact.version}</Text>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="sm" color="fg.secondary">{artifact.size}</Text>
-                                    </Td>
-                                    <Td>
-                                        <Badge intent={statusIntent[artifact.status]}>
-                                            {artifact.status}
-                                        </Badge>
-                                    </Td>
-                                    <Td type="button">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    appearance="subtle"
-                                                    size="sm"
-                                                    icon={<IconEllipsisSolid size={16} />}
-                                                    aria-label="Options"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                />
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); openPreview(artifact); }}>
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <IconArrowsMaximize size={14} />
-                                                        Open
-                                                    </Box>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSub>
-                                                    <DropdownMenuSubTrigger>
-                                                        <Box display="flex" alignItems="center" gap="8">
-                                                            <IconDownload size={14} />
-                                                            Download as
-                                                        </Box>
-                                                    </DropdownMenuSubTrigger>
-                                                    <DropdownMenuSubContent>
-                                                        {["Markdown (.md)", "PDF (.pdf)", "Word (.docx)", "Plain text (.txt)"].map((fmt) => (
-                                                            <DropdownMenuItem key={fmt}>{fmt}</DropdownMenuItem>
-                                                        ))}
-                                                    </DropdownMenuSubContent>
-                                                </DropdownMenuSub>
-                                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <IconPenLine size={14} />
-                                                        Rename
-                                                    </Box>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); togglePin(artifact.id); }}>
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <IconThumbtack size={14} />
-                                                        {pinnedIds.has(artifact.id) ? "Unpin" : "Pin"}
-                                                    </Box>
-                                                </DropdownMenuItem>
-                                                <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
-                                                <DropdownMenuItem
-                                                    style={{ color: "var(--ax-colors-fg-error)" }}
-                                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(artifact); }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap="8">
-                                                        <IconTrashCan size={14} />
-                                                        Delete
-                                                    </Box>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </Td>
+                    {/* List view */}
+                    {viewMode === "list" && filtered.length > 0 && (
+                        <Table>
+                            <thead>
+                                <Tr>
+                                    <Th style={{ width: 110 }}>Type</Th>
+                                    <SortHeader label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} />
+                                    <Th>Agent</Th>
+                                    <Th>Tags</Th>
+                                    <Th>Visibility</Th>
+                                    <SortHeader label="Activity" sortKey="created" current={sortKey} dir={sortDir} onSort={handleSort} />
+                                    <Th style={{ width: 40 }} />
                                 </Tr>
+                            </thead>
+                            <tbody>
+                                {filtered.map((artifact) => (
+                                    <Tr
+                                        key={artifact.id}
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => { setOpenArtifact(artifact); setOpenMode("preview"); }}
+                                    >
+                                        <Td>
+                                            <Box display="flex" alignItems="center" gap="8" color="fg.secondary">
+                                                {typeIcon[artifact.type]}
+                                                <Text fontSize="md">{typeLabel[artifact.type]}</Text>
+                                            </Box>
+                                        </Td>
+                                        <Td>
+                                            <Text fontWeight="500">{artifact.name}</Text>
+                                        </Td>
+                                        <Td>
+                                            <AgentCell name={artifact.source.name} />
+                                        </Td>
+                                        <Td>
+                                            <Box display="flex" alignItems="center" gap="4" flexWrap="wrap">
+                                                {(artifact.tags ?? []).map((tag) => (
+                                                    <Badge key={tag} intent="neutral">{tag}</Badge>
+                                                ))}
+                                            </Box>
+                                        </Td>
+                                        <Td>
+                                            {artifact.isPrivate && !artifact.sharedWith && !artifact.sharedWithTeam ? (
+                                                <PrivateBadge />
+                                            ) : (
+                                                <Box display="flex" alignItems="center" gap="8">
+                                                    <ArtifactAvatarStack artifact={artifact} size="sm" />
+                                                </Box>
+                                            )}
+                                        </Td>
+                                        <Td>
+                                            <Text fontSize="sm" color="fg.secondary">{artifact.activityText}</Text>
+                                        </Td>
+                                        <Td>
+                                            <Box onClick={(e) => e.stopPropagation()}>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button appearance="subtle" size="sm" aria-label="Options" icon={<IconEllipsisSolid size={13} />} />
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => { setOpenArtifact(artifact); setOpenMode("preview"); }}>
+                                                        <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem>
+                                                        <Box display="flex" alignItems="center" gap="8"><IconShareNodes size={14} />Share</Box>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSub>
+                                                        <DropdownMenuSubTrigger>
+                                                            <Box display="flex" alignItems="center" gap="8"><IconDownload size={14} />Download as</Box>
+                                                        </DropdownMenuSubTrigger>
+                                                        <DropdownMenuSubContent>
+                                                            {["Markdown (.md)", "PDF (.pdf)", "Word (.docx)", "Plain text (.txt)"].map((fmt) => (
+                                                                <DropdownMenuItem key={fmt}>{fmt}</DropdownMenuItem>
+                                                            ))}
+                                                        </DropdownMenuSubContent>
+                                                    </DropdownMenuSub>
+                                                    <DropdownMenuItem><Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box></DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => togglePin(artifact.id)}>
+                                                        <Box display="flex" alignItems="center" gap="8">{pinnedIds.has(artifact.id) ? <IconThumbtackSolid size={14} /> : <IconThumbtack size={14} />}{pinnedIds.has(artifact.id) ? "Unpin" : "Pin"}</Box>
+                                                    </DropdownMenuItem>
+                                                    <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+                                                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-error)" }} onClick={() => setDeleteTarget(artifact)}>
+                                                        <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                            </Box>
+                                        </Td>
+                                    </Tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    )}
+
+                    {/* Grid view */}
+                    {viewMode === "grid" && filtered.length > 0 && (
+                        <Box
+                            display="grid"
+                            gap="16"
+                            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}
+                        >
+                            {filtered.map((artifact) => (
+                                <WorkspaceArtifactCard
+                                    key={artifact.id}
+                                    artifact={artifact}
+                                    onOpen={(a) => { setOpenArtifact(a); setOpenMode("preview"); }}
+                                    pinned={pinnedIds.has(artifact.id)}
+                                    onTogglePin={togglePin}
+                                />
                             ))}
-                        </tbody>
-                    </Table>
-                )}
+                        </Box>
+                    )}
+                </Box>}
 
-                {/* ── GRID VIEW ── */}
-                {viewMode === "grid" && filtered.length > 0 && (
-                    <Box display="flex" flexDirection="column" gap="24">
-                        {/* Pinned section */}
-                        {pinnedArtifacts.length > 0 && (
-                            <Box display="flex" flexDirection="column" gap="12">
-                                <Box display="flex" alignItems="center" gap="6">
-                                    <Box color="fg.tertiary" style={{ lineHeight: 0 }}><IconThumbtack size={13} /></Box>
-                                    <Text fontSize="md" fontWeight="600" color="fg.secondary">Pinned</Text>
-                                </Box>
-                                <Box
-                                    display="grid"
-                                    gap="12"
-                                    style={{ gridTemplateColumns: "repeat(6, 1fr)" }}
-                                >
-                                    {pinnedArtifacts.map((a) => (
-                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} cardLayout="hover-expand" timeOnNewRow />
-                                    ))}
-                                </Box>
-                            </Box>
-                        )}
-
-                        {/* Recently Updated section */}
-                        {recentlyUpdated.length > 0 && (
-                            <Box display="flex" flexDirection="column" gap="12">
-                                <Text fontSize="md" fontWeight="600" color="fg.secondary">Recently Updated</Text>
-                                <Box
-                                    display="grid"
-                                    gap="10"
-                                    style={{ gridTemplateColumns: "repeat(6, 1fr)" }}
-                                >
-                                    {recentlyUpdated.map((a) => (
-                                        <ArtifactPreviewCard key={a.id} artifact={a} onOpen={setOpenArtifact} pinned={pinnedIds.has(a.id)} onTogglePin={togglePin} cardLayout="hover-expand" timeOnNewRow />
-                                    ))}
-                                </Box>
-                            </Box>
-                        )}
-
-                    </Box>
-                )}
             </Box>
         </>
     );
