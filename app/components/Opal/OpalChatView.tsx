@@ -95,6 +95,7 @@ type OpalChatViewProps = {
     mentionableAgents?: MentionableAgent[];
     onMentionSelect?: (agent: MentionableAgent) => void;
     activeAgentCtx?: { emoji: string; name: string } | null;
+    inputAgentCtx?: { name: string; handle?: string } | null;
     /** Disables the input independently of isLoading (e.g. during resume flow). */
     disabled?: boolean;
     /** Called when the user tries to submit while blocked (e.g. resume flow). */
@@ -144,6 +145,7 @@ export function OpalChatView({
     mentionableAgents,
     onMentionSelect,
     activeAgentCtx,
+    inputAgentCtx,
     disabled,
     onSubmitBlocked,
     contextualActionCard,
@@ -238,6 +240,7 @@ export function OpalChatView({
                             isLoading={isLoading}
                             error={error}
                             agentBar={agentBar}
+                            inputAgentCtx={inputAgentCtx}
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
@@ -283,6 +286,7 @@ export function OpalChatView({
                             error={error}
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
+                            inputAgentCtx={inputAgentCtx}
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
@@ -388,6 +392,7 @@ export function OpalChatView({
                             enableAI={enableAI}
                             onEnableAIChange={onEnableAIChange}
                             agentBar={agentBar}
+                            inputAgentCtx={inputAgentCtx}
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}

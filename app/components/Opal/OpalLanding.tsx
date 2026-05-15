@@ -207,22 +207,6 @@ export function OpalLanding({ inputSlot, contextualActionCard, topSlot, onSugges
       alignItems="center"
       style={{ paddingTop: "120px", position: "relative", width: "100%", boxSizing: "border-box" }}
     >
-      {/* Radial gradient glow behind input — green brand tint for V3 */}
-      <Box
-        style={{
-          position: "absolute",
-          top: "20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "1400px",
-          height: "600px",
-          background:
-            "radial-gradient(ellipse 40% 40% at 50% 42%, rgba(3, 166, 93, 0.10) 0%, rgba(3, 166, 93, 0.05) 35%, rgba(3, 166, 93, 0.02) 60%, transparent 75%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
       {/* Heading */}
       <Heading
         level="2"

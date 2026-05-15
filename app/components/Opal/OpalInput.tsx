@@ -17,14 +17,15 @@ import {
   ListboxLabel,
   type MenuOption,
 } from "@optiaxiom/react";
+import { Pill } from "@optiaxiom/react/unstable";
 import { Text } from "../Text";
 import {
   IconArrowUp,
   IconBook,
+  IconBooks,
   IconCircleArrowUp,
   IconCircleCheckSolid,
   IconCircleStop,
-  IconFolderImage,
   IconGrid2Plus,
   IconPlus,
   IconUpload,
@@ -118,6 +119,7 @@ type OpalInputProps = {
   enableAI?: boolean;
   onEnableAIChange?: (enabled: boolean) => void;
   agentBar?: React.ReactNode;
+  inputAgentCtx?: { name: string; handle?: string } | null;
   mentionableAgents?: MentionableAgent[];
   onMentionSelect?: (agent: MentionableAgent) => void;
   /** Called when the user tries to submit but is blocked (e.g. during resume flow) */
@@ -138,6 +140,7 @@ export function OpalInput({
   enableAI,
   onEnableAIChange,
   agentBar,
+  inputAgentCtx,
   mentionableAgents = [],
   onMentionSelect,
   onSubmitBlocked,
@@ -153,9 +156,11 @@ export function OpalInput({
   const [isFocused, setIsFocused] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [dropdownWidth, setDropdownWidth] = useState<number | undefined>();
+  const [agentPillIndent, setAgentPillIndent] = useState(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const agentPillRef = useRef<HTMLSpanElement>(null);
 
   // Always track the input container's current width so the dropdown matches exactly
   useEffect(() => {
@@ -166,6 +171,20 @@ export function OpalInput({
     setDropdownWidth(el.offsetWidth); // initial read
     return () => obs.disconnect();
   }, []);
+
+  useLayoutEffect(() => {
+    const el = agentPillRef.current;
+    if (!el || !inputAgentCtx) {
+      setAgentPillIndent(0);
+      return;
+    }
+
+    const updateIndent = () => setAgentPillIndent(el.offsetWidth + 12);
+    const obs = new ResizeObserver(updateIndent);
+    obs.observe(el);
+    updateIndent();
+    return () => obs.disconnect();
+  }, [inputAgentCtx]);
 
   // Auto-focus textarea when value is set externally (e.g. suggestion/card click)
   const prevValueRef = useRef('');
@@ -366,7 +385,7 @@ export function OpalInput({
         label: "Upload from device",
       },
       {
-        addon: <IconFolderImage size={16} />,
+        addon: <IconBooks size={16} />,
         group: { hidden: true, label: "Primary actions", priority: 2 },
         key: "add-dam",
         label: "Add from DAM",
@@ -652,35 +671,51 @@ export function OpalInput({
           </Box>
         )}
 
-        <textarea
-          ref={textareaRef}
-          placeholder="Ask Opal"
-          value={value}
-          onChange={(e) => handleInputChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          disabled={isLoading}
-          rows={1}
-          style={{
-            border: 'none',
-            padding: 0,
-            resize: 'none',
-            height: '34px',
-            minHeight: '0px',
-            fontSize: '14px',
-            fontWeight: 400,
-            lineHeight: '22.4px',
-            fontFamily: 'Inter, sans-serif',
-            color: 'var(--opal-text-body)',
-            backgroundColor: 'transparent',
-            boxShadow: 'none',
-            outline: 'none',
-            overflowY: 'hidden',
-            boxSizing: 'border-box',
-            width: '100%',
-          }}
-        />
+        <Box w="full" style={{ minHeight: '34px', position: 'relative' }}>
+          {inputAgentCtx && (
+            <span
+              ref={agentPillRef}
+              style={{
+                left: 0,
+                position: 'absolute',
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              <Pill readOnly size="xs">
+                {inputAgentCtx.handle ?? `@${inputAgentCtx.name}`}
+              </Pill>
+            </span>
+          )}
+          <textarea
+            ref={textareaRef}
+            placeholder="Ask Opal"
+            value={value}
+            onChange={(e) => handleInputChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            disabled={isLoading}
+            rows={1}
+            style={{
+              border: 'none',
+              padding: 0,
+              resize: 'none',
+              height: '34px',
+              minHeight: '0px',
+              fontSize: '14px',
+              fontWeight: 400,
+              lineHeight: '22.4px',
+              color: 'var(--opal-text-body)',
+              backgroundColor: 'transparent',
+              outline: 'none',
+              overflowY: 'hidden',
+              boxSizing: 'border-box',
+              width: '100%',
+              textIndent: agentPillIndent ? `${agentPillIndent}px` : undefined,
+            }}
+          />
+        </Box>
 
         {/* Actions Row */}
         <Box

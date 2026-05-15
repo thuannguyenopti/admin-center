@@ -258,6 +258,7 @@ export default function OpalPage() {
           mentionableAgents={sortedAgents}
           onMentionSelect={handleSelectAgent}
           activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
+          inputAgentCtx={agentSession ? { name: agentSession.agent.name, handle: agentSession.agent.handle } : null}
           disabled={isResuming}
           onSubmitBlocked={triggerResumeHighlight}
           contextualActionCard={
@@ -294,6 +295,7 @@ export default function OpalPage() {
             error={error}
             variant="home"
             agentBar={agentBarElement}
+            inputAgentCtx={agentSession ? { name: agentSession.agent.name, handle: agentSession.agent.handle } : null}
             mentionableAgents={sortedAgents}
             onMentionSelect={handleSelectAgent}
             onSubmitBlocked={triggerResumeHighlight}

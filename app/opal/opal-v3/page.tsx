@@ -378,6 +378,7 @@ export default function OpalPage() {
           mentionableAgents={sortedAgents}
           onMentionSelect={handleSelectAgent}
           activeAgentCtx={agentSession?.state === 'in-chat' ? { emoji: agentSession.agent.emoji, name: agentSession.agent.name } : null}
+          inputAgentCtx={agentSession ? { name: agentSession.agent.name, handle: agentSession.agent.handle } : null}
           disabled={isResuming}
           onSubmitBlocked={triggerResumeHighlight}
           contextualActionCard={atlassianActionCard}
@@ -392,66 +393,6 @@ export default function OpalPage() {
 
       {/* Shared landing: heading + OpalInput + chips + dropdown */}
       <OpalLanding
-        topSlot={
-          <Box
-            style={{
-              position: "relative",
-              zIndex: 1,
-              width: "100%",
-              maxWidth: "768px",
-              marginBottom: "16px",
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              flexWrap: "wrap",
-              gap: "8px",
-              flexShrink: 0,
-            }}
-          >
-            <Button
-              appearance="default-opal"
-              size="md"
-              onClick={() => { setShowAgents(!showAgents); setShowAllAgents(false); }}
-              icon={<IconAgent />}
-              style={{ borderRadius: "9999px" }}
-            >
-              View Agents
-            </Button>
-            {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
-              <Button
-                key={agent.handle}
-                appearance="default-opal"
-                size="md"
-                icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
-                style={{ borderRadius: "9999px" }}
-                onClick={() => {
-                  handleAgentActivated(agent);
-                  // Skip prompt if this is the resume flow — handleResumeNo will set it
-                  const isResume = lastEndedSession?.agent.id === agent.id;
-                  if (!isResume) {
-                    const prompt = AGENT_PROMPTS[agent.id];
-                    if (prompt) setInputValue(prompt);
-                  }
-                  setShowAgents(false);
-                  setShowAllAgents(false);
-                }}
-              >
-                {agent.name}
-              </Button>
-            ))}
-            {showAgents && !showAllAgents && FEATURED_AGENTS.length > 3 && (
-              <Button
-                appearance="default-opal"
-                size="md"
-                style={{ borderRadius: "9999px" }}
-                onClick={() => setShowAllAgents(true)}
-              >
-                More agents
-              </Button>
-            )}
-          </Box>
-        }
         inputSlot={
           <div ref={inputContainerRef}>
             <OpalInput
@@ -463,6 +404,7 @@ export default function OpalPage() {
               error={error}
               variant="home"
               agentBar={agentBarElement}
+              inputAgentCtx={agentSession ? { name: agentSession.agent.name, handle: agentSession.agent.handle } : null}
               mentionableAgents={sortedAgents}
               onMentionSelect={handleAgentActivated}
               onSubmitBlocked={triggerResumeHighlight}
