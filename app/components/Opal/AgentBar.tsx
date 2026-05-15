@@ -28,8 +28,8 @@ const BASE_STYLES = {
 };
 
 const PURPLE_CARD: React.CSSProperties = {
-  background: "var(--opal-neutral-50)",
-  border: "1px solid var(--ax-colors-border-default)",
+  background: "var(--ax-colors-bg-secondary)",
+  border: "1px solid var(--ax-colors-border-secondary)",
   borderBottom: "none",
   borderRadius: "12px 12px 0 0",
   padding: "8px 12px 16px",
@@ -47,11 +47,11 @@ const AGENT_ROW: React.CSSProperties = {
 
 const DONE_BTN: React.CSSProperties = {
   background: "transparent",
-  border: "1px solid var(--ax-colors-border-accent)",
+  border: "1px solid var(--ax-colors-border-secondary)",
   borderRadius: 4,
   padding: "2px 8px",
   fontSize: 11,
-  color: "var(--ax-colors-fg-accent)",
+  color: "var(--ax-colors-fg-default)",
   cursor: "pointer",
   fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
   fontWeight: 500,
@@ -75,7 +75,7 @@ const YES_BTN: React.CSSProperties = {
   borderRadius: 4,
   padding: "3px 10px",
   fontSize: 11,
-  color: "#fff",
+  color: "var(--ax-colors-fg-default-inverse)",
   cursor: "pointer",
   fontFamily: "var(--ax-fontFamily-sans, sans-serif)",
   fontWeight: 500,
@@ -132,9 +132,6 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
           <div style={AGENT_ROW}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
             <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px" }}>{agent.name}</span>
-            {agent.handle && (
-              <span style={{ fontSize: 12, color: "var(--ax-colors-fg-link-visited)" }}>{agent.handle}</span>
-            )}
           </div>
         </div>
       </div>
@@ -147,9 +144,6 @@ export function AgentBar({ agent, state, onDone, onDismiss, onResumeYes, onResum
         <div style={AGENT_ROW}>
           <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
           <span style={{ fontSize: 14, fontWeight: 500, lineHeight: "20px" }}>{agent.name}</span>
-          {agent.handle && (
-            <span style={{ fontSize: 12, color: "var(--ax-colors-fg-link-visited)" }}>{agent.handle}</span>
-          )}
         </div>
         {state === "in-chat" && (
           <Button appearance="default" size="sm" onClick={onDone}>Done</Button>
