@@ -3,15 +3,13 @@ import {Badge, Box, Avatar, Tooltip, TableRow, TableHeaderCell} from "@optiaxiom
 import {Text} from "./Text";
 import {Button} from "./Button";
 import {
-	IconDots as IconMenu,
-	IconInfoCircle,
-	IconCaretUp,
-	IconCaretDown,
-	IconCaretUpDown,
-	IconCaretDownFilled,
-	IconCaretUpFilled,
-	IconCaretUpDownFilled,
-} from "@tabler/icons-react";
+	IconEllipsisSolid as IconMenu,
+	IconCircleInfo as IconInfoCircle,
+	IconCaretDownSolid as IconCaretDownFilled,
+	IconCaretUpSolid as IconCaretUpFilled,
+	IconAnglesUpDown as IconCaretUpDownFilled,
+} from "@optimizely/axiom-icons";
+import { IconCaretUp, IconCaretDown, IconCaretUpDown } from "../lib/axiom-icons";
 
 export const Table = ({
 	children,

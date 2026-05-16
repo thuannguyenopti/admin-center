@@ -3,6 +3,7 @@ import type { AgentBarAgent } from "@/app/components/Opal/AgentBar";
 export type FeaturedAgent = AgentBarAgent & { id: string; handle: string };
 
 export const FEATURED_AGENTS: FeaturedAgent[] = [
+  { id: "content_creation", emoji: "✏️", name: "Content editor", handle: "@content_creation", subtitle: "Edit and update your current page content" },
   { id: "email_gen_agent", emoji: "✍️", name: "Email campaign writer", handle: "@email_gen_agent", subtitle: "Write an email campaign for your product or feature" },
   { id: "ab_test", emoji: "🧪", name: "A/B experiment setup", handle: "@ab_test", subtitle: "Design and launch an A/B test for your page" },
   { id: "competitors_are_dust", emoji: "📊", name: "Competitor analysis", handle: "@competitors_are_dust", subtitle: "Analyze and compare competitor positioning" },
@@ -15,6 +16,7 @@ export const FEATURED_AGENTS: FeaturedAgent[] = [
 
 /** Starter prompt templates shown in the input after an agent is activated. */
 export const AGENT_PROMPTS: Record<string, string> = {
+  content_creation:      "Update [element/section] to [desired change]",
   email_gen_agent:       "Write an email campaign for [product or feature] targeting [audience] with the goal of [campaign goal]",
   ab_test:               "Set up an A/B test for [page or element] to test [hypothesis], measuring [success metric]",
   competitors_are_dust:  "Analyze competitors for [your product or market] focusing on [positioning / pricing / features]",

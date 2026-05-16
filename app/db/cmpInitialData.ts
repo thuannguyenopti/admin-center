@@ -193,6 +193,7 @@ export type ContentInstance = {
 	createdAt: string;
 	modifiedAt?: string;
 	taskId?: string; // Which CMP task this instance belongs to
+	publishStatus?: "Published" | "Draft" | "Changed"; // Publishing state
 	fields: Record<string, any>; // Field values conforming to model properties
 };
 
@@ -707,6 +708,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-20T10:00:00Z",
 		taskId: "5",
+		publishStatus: "Draft",
 		fields: {
 			headline: "Getting Started with Running",
 			byline: "Alice Johnson",
@@ -725,6 +727,7 @@ export const initialContentInstances: ContentInstance[] = [
 		modelDisplayName: "Blog Post",
 		createdAt: "2024-03-21T14:30:00Z",
 		taskId: "5",
+		publishStatus: "Changed",
 		fields: {
 			headline: "Marathon Training Tips",
 			byline: "Bob Smith",

@@ -11,7 +11,7 @@ export const ButtonBlock = React.memo(function ButtonBlock({ properties, hasBgIm
     const buttonClasses = getTemplateClasses("ct-button", properties, { hasBgImage });
 
     return (
-        <div className={`mt-6 ${!hasBgImage ? "text-center" : ""}`}>
+        <div className={`my-8 ${!hasBgImage ? "text-center" : ""}`}>
             <div className={`inline-block cursor-pointer ${buttonClasses}`}>
                 {label}
             </div>

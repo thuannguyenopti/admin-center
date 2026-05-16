@@ -7,12 +7,16 @@ type OpalPanelControls = {
 	openPanel: () => void;
 	togglePanel: () => void;
 	closePanel: () => void;
+	createNewChat: () => string;
 	clearHistory: () => void;
-	setInputValue: (value: string) => void;
 	addMessage: (message: Omit<ChatMessage, "id" | "timestamp">) => ChatMessage;
 	updateMessage: (id: string, updates: Partial<ChatMessage>) => void;
 	removeMessage: (id: string) => void;
+	setInputValue: (value: string) => void;
+	sendMessage: (content: string) => void | Promise<void>;
 	setInputDisabled: (disabled: boolean) => void;
+	launchPrompt: (prompt: string) => void;
+	launchWithContext: (label: string, content: string) => void;
 };
 
 type CodePanelControls = {
@@ -24,6 +28,10 @@ type CodePanelControls = {
 type LayoutContextType = {
 	asideContent: ReactNode | null;
 	setAsideContent: (content: ReactNode | null) => void;
+	subNavContent: ReactNode | null;
+	setSubNavContent: (content: ReactNode | null) => void;
+	subNavWidth: number;
+	setSubNavWidth: (width: number) => void;
 	footerContent: ReactNode | null;
 	setFooterContent: (content: ReactNode | null) => void;
 	hidePageHeader: boolean;
@@ -44,6 +52,8 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
 
 export function LayoutProvider({children}: {children: ReactNode}) {
 	const [asideContent, setAsideContent] = useState<ReactNode | null>(null);
+	const [subNavContent, setSubNavContent] = useState<ReactNode | null>(null);
+	const [subNavWidth, setSubNavWidth] = useState<number>(272);
 	const [topContent, setTopContent] = useState<ReactNode | null>(null);
 	const [footerContent, setFooterContent] = useState<ReactNode | null>(null);
 	const [hidePageHeader, setHidePageHeader] = useState<boolean>(false);
@@ -57,6 +67,10 @@ export function LayoutProvider({children}: {children: ReactNode}) {
 			value={{
 				asideContent,
 				setAsideContent,
+				subNavContent,
+				setSubNavContent,
+				subNavWidth,
+				setSubNavWidth,
 				topContent,
 				setTopContent,
 				footerContent,

@@ -56,7 +56,15 @@ All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements i
 
 **Exception**: `app/components/vb/blocks/` uses raw HTML + Tailwind (Visual Builder renders customer website content, not product UI).
 
-**Critical rules:**
+**Axiom versions by area:**
+- `app/opal/` — uses **Axiom V3** (`@optiaxiom/react@3.0.0-next.0`) + Opal design layer (see `OPAL_DESIGN_SYSTEM.md`)
+- All other product areas — uses **Axiom V2** (`@optiaxiom/react@^1.9.1`)
+
+**`data-brand="v3"` is applied globally** (all routes) via a wrapper `<div>` in `app/layout.tsx`. V3 CSS tokens (`--ax-colors-bg-accent`, `--ax-colors-fg-accent`, etc.) and the lime-green palette are therefore active on every page in this branch — not just `/opal/*`. When working on CMS, CMP, or other non-Opal routes, expect V3 token values; do not add a local `data-brand="v3"` wrapper.
+
+**Primary button text color** — V2 Axiom primary buttons in a `[data-brand="v3"]` context use `--v3iotm` to override the default white text with dark (`#202320`) text on the lime-green background. This is set in `app/globals.css` on the `[data-brand="v3"]` rule. Do not remove it.
+
+**Critical rules (all areas):**
 - Spacing tokens only: `"0" "2" "4" "6" "8" "10" "12" "16" "20" "24" "32" "40" "48" "56" "64" "80"` — never arbitrary px
 - Semantic color tokens: `fg.*`, `bg.*`, `border.*` — never hex values
 - Border radius: `rounded` prop (not `borderRadius`); shadow: `shadow` prop (not `boxShadow`)
@@ -64,16 +72,36 @@ All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements i
 - Wrap inputs with `<Field label="...">` — never manual `<Text>` labels
 - Dark mode: use `[data-theme="dark"]` selector — never `@media (prefers-color-scheme: dark)`
 
+**Additional rules for `app/opal/` (Axiom V3 + Opal layer):**
+- Opal gradient colors → CSS custom properties (`--opal-gradient-*`), never `bg.*` tokens
+- Action Cards → must use `@optiaxiom/proteus`, never custom HTML
+- OpalOrb → always use `/opal-orb.png`, never CSS/SVG recreation
+- Loading states → reuse existing `OpalLoader` components in `app/opal/components/`
+- See **[OPAL_DESIGN_SYSTEM.md](OPAL_DESIGN_SYSTEM.md)** for full Opal-specific rules
+- See **[.claude/AXIOM_V3_MIGRATION.md](.claude/AXIOM_V3_MIGRATION.md)** for the V2→V3 conversion checklist, audit guide, and GlobalBar V3 implementation details
+
 ### Icons
 
-**ALWAYS use `@optimizely/axiom-icons` — NEVER `@tabler/icons-react` in product UI code.**
+**Icon packages are version-specific — use the right one for the area you're editing:**
 
-- **`@optimizely/axiom-icons`** — the real Axiom icons package (FontAwesome Pro Light). This is the ONLY icon source for all product UI. Import from it normally: `import { IconAgent, IconSparkles } from "@optimizely/axiom-icons"`.
-- **`app/lib/axiom-icons.tsx`** — a bridge shim that re-exports the real Axiom icons and provides Tabler fallbacks only for icons not yet in the Axiom package. The shim is aliased via `next.config.ts` so `@optimizely/axiom-icons` always works.
+| Area | Package | Import example |
+|------|---------|----------------|
+| `app/opal/` (Axiom V3) | `@optiaxiom/icons` | `import { IconSearch } from "@optiaxiom/icons"` |
+| All other areas (Axiom V2) | `@optimizely/axiom-icons` | `import { IconAgent } from "@optimizely/axiom-icons"` |
+
+**NEVER use `@tabler/icons-react` in product UI code** — only allowed in `app/lib/axiom-icons.tsx` as a fallback shim.
+
+- **`@optiaxiom/icons`** — the V3 icons package. Import directly in any `app/opal/` file.
+- **`@optimizely/axiom-icons`** — the V2 icons package (FontAwesome Pro Light, vendor file). Also the fallback for icons not yet in `@optiaxiom/icons` (e.g. `IconAgent`, `IconSparkles`).
+- **`app/lib/axiom-icons.tsx`** — a bridge shim for V2 areas that re-exports `@optimizely/axiom-icons` and provides Tabler fallbacks for missing icons. Not used in `app/opal/`.
 - **`@tabler/icons-react`** — only allowed in `app/lib/axiom-icons.tsx` for fallback mappings. Never import Tabler directly in any other file.
 - **CMP custom SVG icons** — in `app/cmp/assets/`, imported as React components (SVGR), use `fill="currentColor"`
 
-**When adding a new icon**: first check if it exists in `@optimizely/axiom-icons`. If not, add a Tabler fallback entry to `app/lib/axiom-icons.tsx`.
+**When adding a new icon in `app/opal/`**: check `@optiaxiom/icons` first. If missing, fall back to `@optimizely/axiom-icons` (not Tabler).
+
+**Sub Agent icon placeholder** — the `Sub Agent` nav item (`app/layout.tsx`) and the agents type column (`app/opal/agents/page.tsx`) currently use `IconAgent` from `@optimizely/axiom-icons` as a temporary stand-in. The intended icon is the Material `web_traffic` icon (cursor with 3 radiating splash lines). Replace with the correct `@optiaxiom/icons` export once it is added to the package. Note: `IconSubAgent` in `@optimizely/axiom-icons` is a dashed-border box — do NOT use it for this.
+
+**When adding a new icon outside `app/opal/`**: check `@optimizely/axiom-icons` first. If missing, add a Tabler fallback entry to `app/lib/axiom-icons.tsx`.
 
 ### Key Patterns
 
@@ -103,7 +131,7 @@ Before writing code, check if files you're touching are monolithic (300+ lines, 
 
 ## Git & Deployment
 
-**Repo**: `Ben-Holme/axiom-play` | **Live**: https://axiom-play-lac.vercel.app
+**Repo**: `episerver/axiom-play` | **Live**: https://axiom-play-lac.vercel.app
 
 - **Never push directly to `main`** — always use a PR via `gh pr create`
 - **Never merge locally** — merge via GitHub so CI checks run first
@@ -159,6 +187,117 @@ To minimize tokens and round-trips, always batch related changes into a single r
 **Dropdown separator:**
 ```tsx
 <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+```
+
+**Box inside a button label or menu trigger** — `LabelMenuButton` and similar components render children inside a `<p>`. Using `<Box>` (which renders as `<div>`) causes a React hydration error: `<p> cannot contain a nested <div>`. Axiom's `Box` does NOT support `as="span"` — the `as` prop is ignored and the element still renders as `<div>`. Use `asChild` with a native `<span>` instead:
+```tsx
+// WRONG — Box renders as <div> regardless of as="span"
+<Box display="flex" alignItems="center" gap="8"><IconClock />All Time</Box>
+<Box as="span" display="flex" alignItems="center" gap="8"><IconClock />All Time</Box>
+
+// CORRECT — Box asChild merges its classes onto the <span>
+<Box asChild display="inline-flex" alignItems="center" gap="8">
+  <span><IconClock />All Time</span>
+</Box>
+```
+
+**Expandable / grouped table rows** — groups rows under a collapsible header row with a chevron icon button. Requires `colSpan` prop on `<Td>` (already added to `app/components/Table.tsx`).
+
+**Column layout**: merge checkbox + chevron into a single col 1. Spacing spec:
+- Header `<Th>`: `paddingLeft: 16, paddingRight: 0`
+- Col 1 `<Td>` (checkbox + chevron merged via flex): `paddingLeft: 16, paddingRight: 0, verticalAlign: "middle"`
+- Gap between checkbox and chevron button: `gap="16"` on the flex container
+- Content `<Td>` (colSpan remainder): `paddingLeft: 4, verticalAlign: "middle"`
+- Child data rows col 1: same `paddingLeft: 16, paddingRight: 0`; content col: `paddingLeft: 8`
+- Include a `<Box style={{ width: 32, height: 32, flexShrink: 0 }} />` placeholder in child row col 1 to keep content aligned with group header content
+
+Pattern:
+```tsx
+// 1. State
+const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+const toggleGroup = (key: string) => setCollapsedGroups(prev => {
+  const next = new Set(prev);
+  next.has(key) ? next.delete(key) : next.add(key);
+  return next;
+});
+
+// 2. Group data
+const groups = rows.reduce<Record<string, typeof rows>>((acc, r) => {
+  const key = r.groupKey ?? "Other";
+  (acc[key] ??= []).push(r);
+  return acc;
+}, {});
+
+// 3. Thead
+<Tr>
+  <Th style={{ paddingLeft: 16, paddingRight: 0 }}>
+    <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
+  </Th>
+  <Th style={{ minWidth: 320, paddingLeft: 8 }}>Label</Th>
+  {/* ...other columns... */}
+</Tr>
+
+// 4. Render — inside <tbody>
+{Object.entries(groups).map(([groupKey, groupRows]) => {
+  const isCollapsed = collapsedGroups.has(groupKey);
+  return (
+    <React.Fragment key={groupKey}>
+      {/* Group header row — checkbox + chevron in col 1 */}
+      <Tr onClick={() => toggleGroup(groupKey)} suppressActiveStyle style={{ cursor: "pointer" }}>
+        <Td style={{ paddingLeft: 16, paddingRight: 0, verticalAlign: "middle" }}>
+          <Box display="flex" alignItems="center" gap="16">
+            <Box onClick={(e) => e.stopPropagation()}>
+              <Checkbox
+                checked={groupRows.every(r => selectedIds.has(r.id))}
+                onCheckedChange={(checked) => groupRows.forEach(r => {
+                  if (checked !== selectedIds.has(r.id)) toggleSelect(r.id);
+                })}
+              />
+            </Box>
+            <Button
+              appearance="subtle"
+              size="sm"
+              icon={isCollapsed ? <IconAngleRight /> : <IconAngleDown />}
+              aria-label={isCollapsed ? "Expand" : "Collapse"}
+              onClick={(e) => { e.stopPropagation(); toggleGroup(groupKey); }}
+            />
+          </Box>
+        </Td>
+        <Td colSpan={/* remaining column count */5} style={{ paddingLeft: 4, verticalAlign: "middle" }}>
+          <Box display="flex" alignItems="center" gap="8">
+            <IconAgent style={{ color: "var(--ax-colors-fg-tertiary)" }} />
+            <Text fontSize="md" fontWeight="500" color="fg.default">{groupKey}</Text>
+            <Badge variant="subtle">{groupRows.length}</Badge>
+          </Box>
+        </Td>
+      </Tr>
+      {/* Child rows — hidden when collapsed */}
+      {!isCollapsed && groupRows.map(r => (
+        <Tr key={r.id}>
+          <Td style={{ paddingLeft: 16, paddingRight: 0, verticalAlign: "middle" }}>
+            <Box display="flex" alignItems="center" gap="16">
+              <Box onClick={(e) => e.stopPropagation()}>
+                <Checkbox checked={selectedIds.has(r.id)} onCheckedChange={() => toggleSelect(r.id)} />
+              </Box>
+              <Box style={{ width: 32, height: 32, flexShrink: 0 }} /> {/* chevron placeholder */}
+            </Box>
+          </Td>
+          <Td style={{ paddingLeft: 8 }}>
+            {/* row content */}
+          </Td>
+        </Tr>
+      ))}
+    </React.Fragment>
+  );
+})}
+```
+
+**Keyed list returning multiple siblings** — `<>` shorthand cannot carry a `key` prop. Use `<React.Fragment key={...}>` whenever `.map()` returns more than one sibling element:
+```tsx
+// WRONG — key on inner element, fragment has no key
+return <><Tr key={name}>...</Tr>{rows.map(...)}</>;
+// CORRECT
+return <React.Fragment key={name}><Tr>...</Tr>{rows.map(...)}</React.Fragment>;
 ```
 
 ### Key agent files (opal/agents area)

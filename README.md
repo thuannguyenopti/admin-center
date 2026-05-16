@@ -19,7 +19,7 @@ Before starting the installation, ensure you have the following accounts set up 
 - Required to clone the repository from GitHub
 - Sign up at [github.com](https://github.com) if you don't have an account
 - **Important**: You must be invited to the GitHub repository before you can clone it
-- Contact the team to request access to `https://github.com/Ben-Holme/axiom-play.git`
+- Contact the team to request access to `https://github.com/episerver/axiom-play.git`
 - Once invited, accept the invitation through your GitHub account
 
 ---
@@ -103,7 +103,7 @@ Before starting the installation, ensure you have the following accounts set up 
 1. Open VS Code/Cursor
 2. Press `Cmd+Shift+P` (Mac) or `Ctrl+Shift+P` (Windows/Linux)
 3. Type "Git: Clone" and select it
-4. Enter repository URL: `https://github.com/Ben-Holme/axiom-play.git`
+4. Enter repository URL: `https://github.com/episerver/axiom-play.git`
 5. Choose a location to clone the repository
 6. When prompted, click "Open" to open the cloned repository
 
@@ -112,7 +112,7 @@ Before starting the installation, ensure you have the following accounts set up 
 **Option B: Using Terminal** (Can Be Executed via IDE Agent)
 
 1. Open integrated terminal in VS Code/Cursor (`Ctrl+`` or `View > Terminal`)
-2. Run: `git clone https://github.com/Ben-Holme/axiom-play.git`
+2. Run: `git clone https://github.com/episerver/axiom-play.git`
 3. **Can be executed via IDE agent**: Ask the AI assistant to clone the repository
 4. Open the folder: `File > Open Folder...` and select the `axiom-play` directory
 
@@ -120,7 +120,7 @@ Before starting the installation, ensure you have the following accounts set up 
 
 **Option C: Via IDE Agent**
 
-1. Ask the AI assistant: "Clone the repository https://github.com/Ben-Holme/axiom-play.git"
+1. Ask the AI assistant: "Clone the repository https://github.com/episerver/axiom-play.git"
 2. The agent can execute the git clone command for you
 
 ---
@@ -233,6 +233,30 @@ Once the development server is running, you can view your application and see ch
 - **Format on Save**: Configure VS Code/Cursor to format on save for consistent code style
 - **Git Integration**: Use the Source Control panel (`Ctrl+Shift+G`) to manage Git operations visually
 
+## Claude Code & MCP Servers
+
+This project ships a `.mcp.json` that auto-configures MCP servers for [Claude Code](https://claude.ai/code). Once you open the project in Claude Code, these servers connect automatically — no extra setup needed.
+
+### Axiom MCP servers (key for UI work)
+
+| Server | Package | What it provides |
+|--------|---------|-----------------|
+| `axiom` | `@optiaxiom/mcp` | Live Axiom **V2** component docs — valid props, token values, and usage patterns for all `app/` routes outside `app/opal/` |
+| `axiom-v3` | `@optiaxiom/mcp@next` | Live Axiom **V3** component docs — same, but for `app/opal/` which uses the V3 design system |
+
+Claude (and any skill that touches UI) calls these servers to validate color tokens, enum prop values, and component APIs against the live spec before writing code. Always prefer these over guessing prop values from memory.
+
+### Other MCP servers
+
+| Server | What it provides |
+|--------|-----------------|
+| `figma` | Read Figma design files and component context |
+| `coda` | Access Coda docs |
+| `optimizely` | Optimizely project data |
+| `granola` | Meeting transcripts |
+
+---
+
 ## Summary: Required vs Optional
 
 **Required Setup**:
@@ -333,7 +357,7 @@ General steps for deploying to Vercel:
 
 ### Project Repository
 
-- **Repository URL**: [https://github.com/Ben-Holme/axiom-play.git](https://github.com/Ben-Holme/axiom-play.git)
+- **Repository URL**: [https://github.com/episerver/axiom-play.git](https://github.com/episerver/axiom-play.git)
 
 ### Development Server
 

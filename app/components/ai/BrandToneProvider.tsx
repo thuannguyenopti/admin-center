@@ -46,7 +46,6 @@ export function BrandToneProvider({children}: {children: React.ReactNode}) {
 	const scrollFunctionRef = useRef<((elementId: string) => void) | null>(null);
 
 	const registerScrollFunction = useCallback((fn: (elementId: string) => void) => {
-		console.log("[BrandToneProvider] Scroll function registered");
 		scrollFunctionRef.current = fn;
 	}, []);
 

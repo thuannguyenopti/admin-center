@@ -26,8 +26,10 @@ export const QUICK_ACTIONS = [
     suggestions: [
       "Write an email campaign for our new feature with @email_gen_agent",
       "__landing_page__",
+      "Update hero headline to be more engaging with @content_creation",
       "Create social media posts for this week with @social_media_pro",
       "Generate ad copy variations for Google Ads with @ad_variations_agent",
+      "Change product image to show 5 people instead of 3 with @content_creation",
       "Write a product description for our homepage",
     ],
   },

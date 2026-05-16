@@ -94,10 +94,11 @@ export function useTaskDetailState(taskId: string) {
 		state.setSelectedArticleId(null);
 	};
 	const createAndAddPage = useCallback(
-		(instance: ContentInstance, targetContentTypeId: string) => {
+		(instance: ContentInstance, targetContentTypeId: string, applicationName?: string) => {
 			const result = createPageFromInstance(instance, targetContentTypeId, state.contentTypes, state.pages, {
 				taskId,
 				taskName: currentTaskName,
+				applicationName,
 			});
 
 			if (result.error) {
@@ -112,7 +113,7 @@ export function useTaskDetailState(taskId: string) {
 			state.setSelectedContentInstanceId(null);
 			state.setSelectedTaskAssetId(null);
 			state.setSelectedArticleId(null);
-			toaster.create(`Page "${result.page!.name}" created successfully`, { intent: "success" });
+			toaster.create(`Draft page "${result.page!.name}" created successfully`, { intent: "success" });
 			state.setIsTargetSelectionOpen(false);
 			state.setInstanceToAdd(null);
 
@@ -148,7 +149,7 @@ export function useTaskDetailState(taskId: string) {
 		[currentTaskName, state.contentTypes, state.pages, state.setIsTargetSelectionOpen, state.setInstanceToAdd, state.setPages, state.setPublishingChannels, state.setSelectedArticleId, state.setSelectedContentInstanceId, state.setSelectedPageId, state.setSelectedTaskAssetId, taskId],
 	);
 	const handleAddToApplication = useCallback(
-		(instance: ContentInstance) => {
+		(instance: ContentInstance, applicationName?: string) => {
 			const sourceType = state.contentTypes.find((contentType) => contentType.id === instance.modelId);
 			if (!sourceType || !sourceType.mappings) {
 				toaster.create("No mappings configured for this content type", { intent: "danger" });
@@ -168,7 +169,7 @@ export function useTaskDetailState(taskId: string) {
 			}
 
 			if (availableTargets.length === 1) {
-				createAndAddPage(instance, availableTargets[0].targetType.id);
+				createAndAddPage(instance, availableTargets[0].targetType.id, applicationName);
 				return;
 			}
 

@@ -305,6 +305,8 @@ Variant property names are **case-sensitive** — use exact strings below.
 | Icon Position | start / end |
 | State | Default / Hover / Active / Focused / Disabled / Loading |
 
+> **⚠️ Opal appearances (`Default Opal`, `Primary Opal`) are reserved exclusively for actions that directly invoke an AI feature** (e.g. "Ask Opal", "Generate", "Summarize"). Use standard appearances (`Primary`, `Default`, `Subtle`) for all other actions — including toolbar actions, navigation, sharing, and file management.
+
 ### Toggle Button
 **componentKey:** `d8956657543d7623c4056abc4f6b8a4a98b5b4a7`
 
@@ -332,6 +334,27 @@ Variant property names are **case-sensitive** — use exact strings below.
 |---|---|
 | State | Default / Hover / Focused / Disabled / Error / Read Only |
 | Resize | none / auto / vertical |
+
+### Alert
+**componentSetKey:** `fd2f5d933b6b697eb909b769b17b71f86c0a61cf` ← use with `importComponentSetByKeyAsync`  
+Component set node: `1593:19796` in `JYy51au6YaA4QZKpQy1ZRg`  
+⚠️ Use `Information` not `Info` for the intent value.
+
+| Figma prop | Values |
+|---|---|
+| Intent | Neutral / Information / Warning / Danger / Success / Opal |
+
+```js
+const alertSet = await figma.importComponentSetByKeyAsync("fd2f5d933b6b697eb909b769b17b71f86c0a61cf");
+const variant = alertSet.children.find(c => c.name.includes("Information")) ?? alertSet.defaultVariant;
+const instance = variant.createInstance();
+parent.appendChild(instance);
+instance.layoutSizingHorizontal = "FILL";
+// Set text via component TEXT property
+for (const [key, def] of Object.entries(instance.componentProperties)) {
+  if (def.type === "TEXT") instance.setProperties({ [key]: "Your message here" });
+}
+```
 
 ### Badge
 **componentKey:** `d853342dd778628f8f008ef2ceb342957ce3a50f`  
@@ -378,7 +401,178 @@ Variant property names are **case-sensitive** — use exact strings below.
 | Appearance | Default / Inverse |
 | Size | sm / md / lg |
 
-### Select Trigger
+### LabelMenuButton ⚠️ (filter dropdowns — commonly missed)
+**componentKey:** `80b8cd95cfcf2af31af016b6d56effd9986cbbb4`
+
+> **Always use for filter chips** that show "Label  Value ▾". Never substitute a plain Button or Select.  
+> In code: `<LabelMenuButton label="Type">All</LabelMenuButton>`
+
+| Figma prop | inspect variant name string |
+|---|---|
+| State | Default / Hover / Focused / Disabled |
+
+### Search
+**componentKey (set):** `421cb252c1f8c991af051195f642d380b3354a4e`  
+Figma ref: `JYy51au6YaA4QZKpQy1ZRg` node `814:36172`
+
+| Prop | Values |
+|---|---|
+| `Variant` | `Text` (has typed value) / `Placeholder` (empty — use this for default state) |
+| `Size` | `Medium - 32` (toolbar/compact) / `Large -40` (prominent) |
+| `State` | `Default` / `Hover` / `Focus` / `Disabled` |
+
+**Default placeholder text is `"Search"`** — override `Placeholder#…` prop to change it.
+
+Individual variant keys (for `importComponentByKeyAsync` direct):
+
+| Variant | Key |
+|---|---|
+| Placeholder, Medium - 32, Default | `e46eef6b390b7dd258bed222c49caeb984905d9c` |
+| Placeholder, Large -40, Default | `80f3bfa879cfaa191679e85fc992cf72ddfd090b` |
+| Text, Large -40, Default | `ea94b49afbc23ba9374c013d7755e4a2edda57db` |
+| Text, Medium - 32, Default | `c04c41780c5e5bfb2e6d60a7ab5fb8ea5a9e15c6` |
+
+Usage — toolbar search (empty, medium, default placeholder "Search"):
+```js
+const searchSet = await figma.importComponentSetByKeyAsync("421cb252c1f8c991af051195f642d380b3354a4e");
+const variant = searchSet.children.find(c => c.name === "Variant=Placeholder, Size=Medium - 32, State=Default");
+const inst = variant.createInstance();
+parent.appendChild(inst);
+inst.layoutSizingHorizontal = "FIXED";
+inst.resize(220, inst.height); // set desired width after append
+// Placeholder text is "Search" by default — override only if different:
+// const ph = Object.keys(inst.componentProperties).find(k => k.startsWith("Placeholder#"));
+// if (ph) inst.setProperties({ [ph]: "Search artifacts..." });
+```
+
+### Tabs
+**Tabs wrapper componentKey:** `3d5b3ddd2d93c0a736988bf55b7122f3b6bfd993` (single Component — not a set)  
+**Tab Item componentKey (set):** `aa3fd698b0912fa5e0ecc9d769d5a7cb0f410fc9`
+
+> ⚠️ **Tab Item variants are NOT importable** (`importComponentSetByKeyAsync` fails — variants are unpublished in the library). Always use the full `Tabs` wrapper component.
+
+> ⛔ **`TabNav` (key `3b43ff3be2c4c729a9b2bd834a20437a1b822305`) is from "Axiom Components" (V3) — WRONG LIBRARY.** Never use it for V2 builds. Always use `Tabs` (`3d5b3ddd2d93c0a736988bf55b7122f3b6bfd993`) from "Components V2 – Legacy".
+
+**Tab Item structure** (direct children of the `Tabs` instance):
+- Property: `IsSelected` = `"true"` / `"false"` (string, not boolean)
+- Text node name: `Label` (inside child `Content frame`)
+- Hide extra tabs: `tabItems[i].visible = false` for items 2–8
+
+```js
+const tabsComp = await figma.importComponentByKeyAsync("3d5b3ddd2d93c0a736988bf55b7122f3b6bfd993");
+const inst = tabsComp.createInstance();
+parent.appendChild(inst);
+inst.layoutSizingHorizontal = "FILL";
+
+const items = inst.children.filter(c => c.name === "Tab Item" && c.type === "INSTANCE");
+// Tab 1 — active
+items[0].setProperties({ "IsSelected": "true" });
+items[0].findOne(n => n.name === "Label" && n.type === "TEXT").characters = "My Artifacts";
+// Tab 2 — inactive
+items[1].setProperties({ "IsSelected": "false" });
+items[1].findOne(n => n.name === "Label" && n.type === "TEXT").characters = "Shared with me";
+// Hide extras
+for (let i = 2; i < items.length; i++) items[i].visible = false;
+```
+
+### Segmented Control
+**Segmented Control (set):** `aa3ef4a941928e28f6a1aac81a4084ee275c937f`  
+**Segmented Control Item (set):** `fa4d95991a293dc5910526a91588d466b73fc47a`
+
+| Variant name | Use |
+|---|---|
+| `Variant=2 items` | List/grid toggle |
+| `Variant=3 Items` | Three-option selector |
+
+### Table Components ⚠️ (use these keys — old keys were wrong)
+
+> The Table Template set contains internal parts (`Part=Table Header`, `Part=Table`) that look importable but are not the right components to use. Use **Column Header Cell** and **Data Cell** instead.
+
+**Column Header Cell (COMPONENT_SET):** `d473cabd925eb8cd7066d03b3122f7ce01241484`
+
+| Variant | Use |
+|---|---|
+| `Variant=Text, Hover=false` | Standard text header |
+| `Variant=Select All, Hover=false` | Checkbox select-all header |
+| `Variant=Numeric, Hover=false` | Right-aligned number header |
+
+**Data Cell (COMPONENT_SET):** `a051c4754e3ea047feb07b5e30ceae244c63b6a2`
+
+| Variant | Use |
+|---|---|
+| `Type=Row Header, Hover=false` | First column (artifact name) |
+| `Type=Text, Hover=false` | String values (type, source) |
+| `Type=Date, Hover=false` | Dates — set `Time#5950:76` to `""` to hide second line |
+| `Type=Badge, Hover=false` | Status/badge cells |
+| `Type=Avatar, Hover=false` | User avatar cells |
+
+**Instance property fixes required after creating Data Cell instances:**
+```js
+// Hide description row (shows doubled text if left true)
+cell.setProperties({ "Show Description#3225:6": false, "User Name#10846:19": false });
+// For Date cells — clear Time to get single-line display
+cell.setProperties({ "Time#5950:76": "" });
+```
+
+**Table Template (internal, do not use directly):** `0f0af50f988ccd85f537da38eab5a2378131b7a3`  
+**Sorting indicator (set):** `0b937ddf17778c87c4504cb994361d8ca16fa140`
+
+### Select (full — trigger + open dropdown)
+**componentSetKey:** `1c849767fea793e0e8567f9d5fe126e9659fc6a7`
+
+⚠️ **Always use this — never approximate a select/dropdown with a custom frame.** Use whenever a form field, filter, or row action needs a pick-one dropdown.
+
+| Variant | componentKey |
+|---|---|
+| `Variant=Select, Open=True` | `231c90292aa960cb39e3506b2501c122cee8a8f5` |
+| `Variant=Filter, Open=True` | `2b322dea5c63e38885ee19e92a687f3697e39ebb` |
+
+**Structure inside the instance:**
+- `Text value` TEXT node — set to the currently selected option (e.g. `"Reuse existing"`)
+- `Label` INSTANCE — hide (`visible=false`) when no field label is needed
+- `Form note` INSTANCE — hide when no helper text is needed
+- Listbox list items: `findAll(n => n.type === "INSTANCE" && n.name.includes("Listitem"))` — set `Label` TEXT to each option label; hide extras with `visible=false`; mark selected item with `setProperties({ "Selected": "True" })`
+
+**Usage pattern:**
+```js
+const selectComp = await figma.importComponentByKeyAsync("231c90292aa960cb39e3506b2501c122cee8a8f5");
+const inst = selectComp.createInstance();
+parent.appendChild(inst);
+inst.resize(200, inst.height); // resize width to fit context
+
+// Set current value
+const valueText = inst.findOne(n => n.type === "TEXT" && n.name === "Text value");
+if (valueText) valueText.characters = "Reuse existing";
+
+// Hide label + form note
+const labelInst = inst.findOne(n => n.name === "Label" && n.type === "INSTANCE");
+if (labelInst) labelInst.visible = false;
+const formNote = inst.findOne(n => n.name === "Form note");
+if (formNote) formNote.visible = false;
+
+// Set list item labels (show 2, hide the rest)
+const listItems = inst.findAll(n => n.type === "INSTANCE" && n.name.includes("Listitem"));
+const options = [
+  { label: "Reuse existing", selected: true },
+  { label: "Create new copy", selected: false },
+];
+listItems.forEach((item, i) => {
+  if (i < options.length) {
+    item.visible = true;
+    const lbl = item.findOne(n => n.type === "TEXT" && n.name === "Label");
+    if (lbl) lbl.characters = options[i].label;
+    try { item.setProperties({ "Selected": options[i].selected ? "True" : "False" }); } catch {}
+  } else {
+    item.visible = false;
+  }
+});
+```
+
+**Select/ Listbox** (dropdown panel only, for custom dropdown UI):
+- componentSetKey: `2c1de206fad3b9213a971b6023f4d105e9f8d726`
+- `Variant=Label` key: `1c89e9c4549833a4cc9f51c26b3dbdbd8f162cb2`
+
+### Select Trigger (trigger only — closed state)
 **componentKey:** `9760ea4ea204b736a54f40b93697fbd0b8885455`
 
 | Figma prop | Values |
@@ -397,6 +591,72 @@ Variant property names are **case-sensitive** — use exact strings below.
 
 ### Thumbnail
 **componentKey:** `76e8a682b1a0e4de9f81e37af79398f6ccd725ba`
+
+---
+
+### Global Bar ⚠️ (app-wide top nav — built from primitives, not a single component)
+
+**Figma reference:** node `4289:4250`, file `JYy51au6YaA4QZKpQy1ZRg`
+
+The Global Bar is NOT a single importable component — it is built from Axiom `Button` (Subtle/md) + `Menu` primitives in code (`app/components/GlobalBar.tsx`). In Figma, construct it manually as follows.
+
+**Frame spec:**
+- Height: `48px`, width: FILL (full width)
+- Fill: `bg.default`
+- Border bottom: 1px `border.tertiary`
+- Padding: `pl=8, pr=24`
+- Layout: `HORIZONTAL`, `SPACE_BETWEEN`, `CENTER` align
+
+**Left cluster — "Product Switcher"** (`gap=32`, height=48px, `CENTER` align):
+1. **Logo container** — 40×40, `pl=10, pr=6`, contains 24×24 Optimizely logo SVG
+2. **Account dropdown** — `px=8, py=10, rounded=md`; text 14px/Medium/`fg.default` + `IconAngleDown` (16px, `fg.default`)
+3. **Product switcher dropdown** — same spec as account dropdown; label reflects current product (e.g. "Opal")
+
+**Right cluster — "Actions"** (`gap=4`, `CENTER` align):
+1. **Theme button** — `Button Subtle/md` with label "System" + device-desktop icon
+2. **"Ask Opal" pill** — `h=40, px=12, rounded=12`; text 14px/Medium/`fg.default` + 20×20 Opal orb image (`/opal-orb.png`)
+3. **Icon items** — each: `Button Subtle/md` with `Icon Button=True`, swap icon slot using `swapComponent` (never `setProperties` INSTANCE_SWAP):
+
+| Button | Axiom icon name | componentKey |
+|---|---|---|
+| Search | `magnifying-glass-regular` | `bc585dfd171e7301a658a5fc09f90bd136f9fb51` |
+| Notifications | `bell 16` | `1de5afa669027f45f28ce446bfb2aa8207855084` |
+| Help | `circle-question 16` | `d733ad5214f664970008b9cf2b03ae767eeeb713` |
+| Code | `code 16` | `ff36366d7fa96e047996d8f9e0f3860b6002d47b` |
+| User | `user 16` | `f286b22126c5b4145fb34e63b4dedf6c9f075f35` |
+| Angle-down (dropdown chevron) | `angle-down 16` | `8dc5a493b96d8e97df1b1ae487cb5a18d2f28c25` |
+
+**How to build in Figma Plugin API:**
+```js
+// Left dropdown items (Stride, Opal) — custom frames, NOT Button instances
+const angleDown = await figma.importComponentByKeyAsync("8dc5a493b96d8e97df1b1ae487cb5a18d2f28c25");
+const dropdown = figma.createFrame();
+dropdown.layoutMode = "HORIZONTAL";
+dropdown.counterAxisAlignItems = "CENTER";
+dropdown.itemSpacing = 6;
+dropdown.paddingLeft = 8; dropdown.paddingRight = 8;
+dropdown.paddingTop = 6; dropdown.paddingBottom = 6;
+dropdown.cornerRadius = 6;
+dropdown.fills = [];
+// add text node (Inter Medium 14px, fg.default) + angleDown.createInstance()
+
+// Right icon buttons — real Button Subtle/md, swap icon slot
+const buttonSet = await figma.importComponentSetByKeyAsync("3296fc4820c3d0194d963b89c435b3e5b4dcc0ea");
+const subtleMd = buttonSet.children.find(c => {
+  const p = Object.fromEntries(c.name.split(', ').map(s => s.split('=')));
+  return p["Appearance"] === "Subtle" && p["Size"] === "md";
+}) ?? buttonSet.defaultVariant;
+const btn = subtleMd.createInstance();
+btn.setProperties({ "Icon Button": "True" });
+// Find "Icon" slot and swapComponent — never use setProperties for INSTANCE_SWAP
+function findIconSlot(node) {
+  if (node.type === "INSTANCE" && node.name === "Icon") return node;
+  if ('children' in node) for (const c of node.children) { const r = findIconSlot(c); if (r) return r; }
+  return null;
+}
+const iconComp = await figma.importComponentByKeyAsync("bc585dfd171e7301a658a5fc09f90bd136f9fb51"); // e.g. magnifying-glass
+findIconSlot(btn)?.swapComponent(iconComp);
+```
 
 ---
 
@@ -522,12 +782,237 @@ Active state: bg #f9fafc
 
 ---
 
+## Opal Product Page Layout (standard shell for Agents, Context, etc.)
+
+All Opal product pages follow the same layout shell. Use this spec when building any new Opal product page in Figma.
+
+### Frame structure
+
+```
+Page frame (1440 × 900, VERTICAL auto-layout)
+├── Top Nav Bar           (FILL width, 48px — use Global Bar component)
+└── Body row              (FILL width, FILL height, HORIZONTAL)
+     ├── Sidenav Base     (56px wide, FILL height)
+     └── Content area     (FILL width, FILL height, VERTICAL, px=32 py=24 gap=24)
+          ├── Page header  (VERTICAL, gap=8, HUG height)
+          │    ├── Heading  (fontSize=24/600, fg.default)
+          │    └── Text     (fontSize=14/400, fg.secondary)
+          ├── Tabs row     (HORIZONTAL, gap=0, HUG height — use Tabs V2 component)
+          └── Content      (FILL width, FILL height — tab-specific content)
+```
+
+### Page header spec
+
+| Property | Value |
+|---|---|
+| Layout | VERTICAL auto-layout, `gap: 8px`, HUG height, FILL width |
+| Heading | Inter 24px / Semi-bold 600, `fg.default`, `letterSpacing: -0.336px` |
+| Description | Inter 14px / Regular 400, `fg.secondary`, `lineHeight: 1.6` |
+
+### Tabs row spec
+
+Use the **Tabs** component (`3d5b3ddd2d93c0a736988bf55b7122f3b6bfd993`) from V2 Legacy.
+- FILL width, HUG height
+- Active tab: `fg.default`, 500 weight, 2px bottom border `border.default` (blue `#0069ff`)
+- Inactive tab: `fg.secondary`, 400 weight, no border
+
+### Content area padding
+
+| Token | Value |
+|---|---|
+| `px` (left + right) | 32px |
+| `py` (top + bottom) | 24px |
+| Gap between sections | 24px |
+| Header inner gap | 8px |
+
+### Light mode fills (bind to variables, never hardcode)
+
+| Element | Variable | Hex fallback |
+|---|---|---|
+| Page background | `bg.page` | `#F9FAFC` |
+| Content surface | `bg.default` | `#FFFFFF` |
+| Heading text | `fg.default` | `#2E3442` |
+| Description text | `fg.secondary` | `#4F576E` |
+
+---
+
 ## Rules for Figma Builds
 
-1. **Never hardcode hex colors** — always look up the semantic token and bind to the variable key
-2. **Dark mode** = `bg.page` is `#171A23`, `bg.default` is `#1C2029`, `fg.default` is `#F5F6FA`
-3. **Opal UI is always dark mode** — use dark column values for all Opal screens
-4. **Input min size is `md`** — never `sm`
-5. **Badge intent is `Information`** not `Info`
-6. **Variant props are case-sensitive**: `"Appearance"` not `"appearance"`, `"Default"` not `"default"`
-7. **Set `layoutSizingHorizontal`/`Vertical` AFTER appending** to parent in Plugin API
+---
+
+### ⛔ Critical Anti-Patterns (do NOT do these)
+
+| Anti-pattern | Correct approach |
+|---|---|
+| Assuming dark mode for Opal | **Scan the live page first.** Opal Artifacts is light mode. Only apply dark mode when DOM confirms `data-theme="dark"` |
+| Using `TabNav` (`3b43ff3be2c4c729a9b2bd834a20437a1b822305`) | That is Axiom V3. Use `Tabs` (`3d5b3ddd2d93c0a736988bf55b7122f3b6bfd993`) from V2 Legacy |
+| Using any component from "Axiom Components" library | That library is V3. All V2 builds must use "Components V2 – Legacy" (`JYy51au6YaA4QZKpQy1ZRg`) |
+| Hardcoding hex fills (`#FFFFFF`, `#F5F6FA`) | Import semantic variables and use `setBoundVariableForPaint` — then theme-switching is one line |
+| Building without scanning the live page | Always run the scan script below before building any frame |
+| Applying `Type=Row Header` to body rows in Data Cell | `Type=Row Header` is ONLY for the leftmost name/title column cell. All other body rows use `Type=Text` |
+| WRAP layout container with `primaryAxisSizingMode = "AUTO"` | AUTO means all children in one row — use `FIXED` width so the layout knows when to wrap |
+| Setting `counterAxisSizingMode = "AUTO"` BEFORE `resize()` | `resize()` resets all sizing modes to FIXED. Always re-set AUTO **after** resize |
+| Skipping the 3-property Data Cell fix | Every Data Cell instance must have `Show Description#3225:6: false`, `User Name#10846:19: false` applied |
+
+---
+
+### Step 0 — Scan the live page before building anything
+
+Run this in the browser (via `javascript_tool` or console) before writing a single line of Plugin API code:
+
+```js
+({
+  theme: document.documentElement.getAttribute('data-theme'),       // 'dark', 'light', or null
+  colorScheme: getComputedStyle(document.documentElement).colorScheme, // 'light' or 'dark'
+  tabs: [...document.querySelectorAll('[role="tab"]')].map(t => t.textContent.trim()),
+  columnHeaders: [...document.querySelectorAll('th')].map(h => h.textContent.trim()),
+  segmentedControl: [...document.querySelectorAll('[role="radio"], [role="tab"]')].map(b => b.textContent.trim()),
+})
+```
+
+Use the results to determine:
+- **Variable mode**: Light Mode = `"20:6"`, Dark Mode = `"20:7"` — set on the wrapper frame, not individual nodes
+- **Exact tab labels** — don't guess from code; read from DOM
+- **Exact column headers** — same
+- **Which segmented control item is active**
+
+---
+
+### Color variable bindings (never hardcode hex)
+
+All fills must be bound to semantic variables from Foundations V2 (`V1Svt6wLb5r22caAEr7bG0`). Set the mode once on the wrapper frame — all child instances resolve automatically.
+
+```js
+async function bindFill(node, variableKey) {
+  const v = await figma.variables.importVariableByKeyAsync(variableKey);
+  node.fills = [figma.variables.setBoundVariableForPaint(
+    { type: "SOLID", color: { r: 0.5, g: 0.5, b: 0.5 } }, "color", v
+  )];
+  return v;
+}
+
+// Apply mode once on the wrapper (propagates to all children):
+const v = await figma.variables.importVariableByKeyAsync("35ecda0a306974bb70ea94dc27ea3d0702bb31c5");
+const coll = await figma.variables.getVariableCollectionByIdAsync(v.variableCollectionId);
+wrapperFrame.setExplicitVariableModeForCollection(coll, "20:6"); // Light
+// wrapperFrame.setExplicitVariableModeForCollection(coll, "20:7"); // Dark
+```
+
+### Key semantic variable keys (Foundations V2 — `V1Svt6wLb5r22caAEr7bG0`)
+
+| Token | Key |
+|---|---|
+| bg/page | `c9e3f58a7256942fa097b24457f6453ea8e730f6` |
+| bg/default | `35ecda0a306974bb70ea94dc27ea3d0702bb31c5` |
+| bg/secondary | `66c13b5090fb3e75aa80635175f9c9a6f6454bc7` |
+| bg/accent/subtle | `6481fb820e99634e8fb8fae703a3c2509054773c` |
+| fg/default | `7abc10201ce52ada8d86efab3c20deb9b5dbb74c` |
+| fg/secondary | `004088e1a2861d1a0f6dd1f730d0bc8e50dc2765` |
+| fg/tertiary | `d154ff42a348938753f1a184ace8ede7f513b312` |
+| fg/accent/base | `bf1dee83142cc476e490f5a0d8e02bf0adc81e3c` |
+| border/default | `7e7e0bfb3bdbaa10b80d55b8d9b5a32bdaa94e17` |
+| border/secondary | `2946d3b901152b21fb9b102fbea02f382d9430ef` |
+| border/tertiary | `2dd99e70b6287384911bc7d343b6b357863b4d50` |
+
+Collection modes: Light Mode = `"20:6"`, Dark Mode = `"20:7"`
+
+---
+
+### Plugin API gotchas
+
+**`resize()` resets all sizing modes to FIXED**  
+Always re-set `counterAxisSizingMode = "AUTO"` (or `primaryAxisSizingMode`) AFTER any `resize()` call:
+```js
+frame.resize(width, 1);              // sets width; height placeholder
+frame.primaryAxisSizingMode = "FIXED";   // lock width at set value
+frame.counterAxisSizingMode = "AUTO";    // re-set AFTER resize — height HUGs content
+```
+
+**WRAP layout requires FIXED primary axis width**  
+Setting `primaryAxisSizingMode = "AUTO"` on a HORIZONTAL WRAP frame places all children in one row. Use `FIXED` with an explicit width so rows actually break:
+```js
+grid.primaryAxisSizingMode = "FIXED";  // cards wrap at this width
+grid.resize(contentFrameWidth, 1);
+grid.counterAxisSizingMode = "AUTO";   // height expands with rows (set AFTER resize)
+```
+
+**Set `layoutSizingHorizontal`/`Vertical` AFTER appending to parent**  
+`FILL` and `HUG` throw if set before the node is inside an auto-layout parent.
+
+**`swapComponent` on nested instances**  
+Find the target sub-instance first, then swap:
+```js
+const iconSlot = btn.findOne(n => n.type === "INSTANCE" && n.name === "Icon");
+iconSlot.swapComponent(myIconComponent); // pass COMPONENT node, not INSTANCE
+```
+
+**`mainComponent` does not exist on COMPONENT nodes**  
+`someComponent.mainComponent` throws. Pass the component variant directly to `swapComponent`.
+
+**Page context resets between `use_figma` calls**  
+`figma.currentPage` starts on page 1 each call. If targeting a non-first page, always start with:
+```js
+const targetPage = figma.root.children.find(p => p.name === "My Page");
+await figma.setCurrentPageAsync(targetPage);
+```
+
+---
+
+### Data Cell fixes (required after every instance creation)
+```js
+cell.setProperties({
+  "Show Description#3225:6": false, // prevents double-text row
+  "User Name#10846:19": false,       // prevents extra user row
+});
+// Date cells only — clear Time to get single-line date:
+cell.setProperties({ "Time#5950:76": "" });
+```
+
+`Type=Row Header` → **only the first column (artifact/record name)**. All other body cells → `Type=Text`.
+
+---
+
+### General component rules
+- **Input min size is `md`** — `sm` is not supported on Input or SearchInput
+- **Badge intent is `Information`** — not `Info`
+- **Variant props are case-sensitive**: `"Appearance"` not `"appearance"`, `"Default"` not `"default"`
+- **`IsSelected`** on V2 Tab Item takes string `"true"` / `"false"`, not boolean
+- **Tab Item text node** is named `"Label"` inside `"Content frame"` (not the root text child)
+
+---
+
+## Menu Components
+
+> Full documentation: `.claude/FIGMA_MENU_V2.md`  
+> Source: file `JYy51au6YaA4QZKpQy1ZRg`, section node `9797:35525`  
+> ⚠️ There is NO importable shell/container — build the panel frame manually (4px padding, 1px `border.default`, `radius-md`, shadow/md).
+
+| Component | Type | componentKey | Key variant props |
+|---|---|---|---|
+| `Listitem/Menu` | COMPONENT_SET | `da71179c3b4739448f9cc47f5611d0921cf5cb96` | `Variant`: Default/Danger · `State`: Default/Hover/Pressed/Focus/Disabled |
+| `Listitem/Single select` | COMPONENT_SET | `06b1bb0cfd6d4a18506235994abda23ae0d4dedc` | `Selected`: False/True · `State`: Default/Hover/Pressed/Focus/Disabled |
+| `Listitem/Multiselect` | COMPONENT_SET | `a985d7a693f08c37723b64c9eb1c10695e21dc37` | `State`: Default/Hover/Pressed/Focus/Disabled · `Selected`: False/True |
+| `Listitem/User select` | COMPONENT_SET | `248c7ee9f75457666160b11fc36a2c93d00bd865` | `State`: Default/Hover/Pressed/Focus/Disabled · `Selected`: False/True |
+| `Listitem/Group header` | COMPONENT | `984fbb4a94f0863f3d139993f934b59a90ac8405` | No variants — single text row, 12px `fg.tertiary` |
+| `Listitem/Divider` | COMPONENT | `aa67201939f81ab340758095bc5807ae41e4cc25` | No variants — 1px `border.secondary` line |
+| `Listitem/Search` | COMPONENT | `0a53f41ca75868b7e625c342eb43ef3180e0e50d` | No variants — 32px search input with `IconSearch` |
+| `Listitem/Footer` | COMPONENT | `90dd3301bde5de37cd3a06b75e1d75329d7807f5` | No variants — Cancel + Confirm button row, top border |
+| `Addon After` | COMPONENT_SET | `ba833648828a021119793d4b947cfa838db4a4a6` | `Variant`: Sub menu arrow / Badge |
+| `Scroll bar` | COMPONENT | `18f4bed49edbb40531090d9a2cf8d673203b2dc8` | Visual only — 8px bar, `neutral.alpha.light-150` |
+| `Listbox/Empty` | COMPONENT | `31d61efd2e0617589ce54af6e633fb870e12a9d8` | No variants — "No results found" with panel shell |
+| `Listbox/Loading` | COMPONENT | `c70f0e7e4c051150b447ab8422a06abaa45c3db3` | No variants — Spinner centered with panel shell |
+
+### Default variant keys (most-used states)
+
+| Component | Default variant key |
+|---|---|
+| Listitem/Menu — Default/Default | `bd1c88fe9ca4a0f39aa1b76f34afc818c48e2974` |
+| Listitem/Menu — Danger/Default | `d0fdafe80144c7816be5ad7631b98210b9c7bc3f` |
+| Listitem/Single select — False/Default | `121d6af3b3d51f2ca53a6d6515de6bb0164e797a` |
+| Listitem/Single select — True/Default | `0f1d473c39b150c6540195d9ca5db857f0293b47` |
+| Listitem/Multiselect — False/Default | `e84bdcf5f5729c2a1d34937376a117480dbbef52` |
+| Listitem/Multiselect — True/Default | `e1fea18009ac063cefdd340b4a9aa94d39b62a16` |
+| Listitem/User select — False/Default | `9be5ef53e007b5656f4e92617f7f2a88ed601516` |
+| Listitem/User select — True/Default | `f64ef729ae1249ead64abf3fa1d7462e333eebaa` |
+| Addon After — Sub menu arrow | `0102a55afd21e650dc6ef4345745431cd6b5c005` |
+| Addon After — Badge | `213937a1126096d0f7a730f3968a3478091ee563` |

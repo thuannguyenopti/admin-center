@@ -16,6 +16,7 @@ type ResizableDetailsTrayProps = {
     minWidth?: number;
     maxWidth?: number;
     insetPadding?: string;
+    height?: string;
     bodyPadding?: "0" | "2" | "4" | "6" | "8" | "10" | "12" | "16" | "20" | "24" | "32" | "40" | "48" | "64" | "80";
     bodyOverflowY?: "auto" | "hidden";
 };
@@ -31,6 +32,7 @@ export function ResizableDetailsTray({
     minWidth = 320,
     maxWidth = 640,
     insetPadding = "12px 12px 12px 0",
+    height = "calc(100vh - 57px)",
     bodyPadding = "16",
     bodyOverflowY = "auto",
 }: ResizableDetailsTrayProps) {
@@ -73,7 +75,7 @@ export function ResizableDetailsTray({
         <Box
             style={{
                 width: isOpen ? `${panelWidth + 24}px` : "0px",
-                height: isOpen ? "calc(100vh - 57px)" : "0px",
+                height: isOpen ? height : "0px",
                 transition: isResizing ? "none" : "width 0.3s ease-in-out",
                 overflow: "hidden",
                 display: "flex",
@@ -90,6 +92,10 @@ export function ResizableDetailsTray({
                         role="separator"
                         aria-orientation="vertical"
                         aria-label={`Resize ${title}`}
+                        rounded="lg"
+                        border="1"
+                        borderColor="border.secondary"
+                        bg="bg.default"
                         onPointerDown={handleResizeStart}
                         style={{
                             position: "absolute",
@@ -98,9 +104,6 @@ export function ResizableDetailsTray({
                             transform: "translate(-50%, -50%)",
                             width: "14px",
                             height: "56px",
-                            borderRadius: "8px",
-                            border: "1px solid var(--ax-colors-border-secondary)",
-                            background: "var(--ax-colors-bg-default)",
                             cursor: "col-resize",
                             zIndex: 2,
                         }}

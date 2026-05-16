@@ -27,8 +27,11 @@ import {
     IconPresentationScreen,
     IconFileSpreadsheet,
     IconChartColumn,
+    IconCircleCheckSolid,
+    IconPen,
 } from "@optimizely/axiom-icons";
-import { useState, useEffect } from "react";
+import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 const BORDER_S = "1px solid var(--ax-colors-border-secondary)";
@@ -138,7 +141,331 @@ function IslandContentTile({
     );
 }
 
-type ArtifactSource = "chat" | "agent" | "workflow";
+// ─── Team Thread Panel ────────────────────────────────────────────────────────
+
+type ApprovalState = "pending" | "approved" | "changes";
+
+/** Inline approval action card — matches opal/page.tsx ApprovalActionCard */
+function ThreadApprovalCard({
+    state,
+    onApprove,
+    onRequestChanges,
+}: {
+    state: ApprovalState;
+    onApprove: () => void;
+    onRequestChanges: () => void;
+}) {
+    if (state !== "pending") {
+        return (
+            <Box
+                display="flex"
+                flexDirection="column"
+                gap="4"
+                p="16"
+                rounded="lg"
+                style={{
+                    border: BORDER_S,
+                    background: "var(--ax-colors-bg-default)",
+                    opacity: 0.6,
+                }}
+            >
+                <Text fontWeight="500" style={{ fontSize: 14, color: "var(--ax-colors-fg-default)", lineHeight: 1.43 }}>
+                    Team approval needed for Q and A: Discover the unknown
+                </Text>
+                <Text style={{ fontSize: 14, color: "var(--ax-colors-fg-tertiary)", lineHeight: 1.43 }}>
+                    Jamie Chen: {state === "approved" ? "Approved" : "Requested changes"}
+                </Text>
+            </Box>
+        );
+    }
+    return (
+        <Box
+            display="flex"
+            flexDirection="column"
+            gap="12"
+            p="20"
+            rounded="lg"
+            style={{ border: BORDER_S, background: "var(--ax-colors-bg-default)" }}
+        >
+            {/* Agent indicator */}
+            <Box display="flex" alignItems="center" gap="4">
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    rounded="xs"
+                    style={{ width: 20, height: 20, background: "#e4f0da", flexShrink: 0, overflow: "hidden" }}
+                >
+                    <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={14} height={14} />
+                </Box>
+                <Text style={{ fontSize: 12, fontWeight: 400, letterSpacing: "0.36px", textTransform: "uppercase", color: "var(--ax-colors-fg-tertiary)", lineHeight: 1.25 }}>
+                    GEO Q&amp;A Generator
+                </Text>
+            </Box>
+
+            {/* File info */}
+            <Box display="flex" flexDirection="column" gap="4">
+                <Text fontWeight="600" style={{ fontSize: 16, lineHeight: 1.3, color: "var(--ax-colors-fg-default)" }}>
+                    Q and A: Discover the unknown
+                </Text>
+                <Text style={{ fontSize: 14, letterSpacing: "0.28px", color: "var(--ax-colors-fg-secondary)", lineHeight: 1.43 }}>
+                    GEO Q&amp;A article · v2.0
+                </Text>
+            </Box>
+
+            <Box style={{ height: 1, background: "var(--ax-colors-border-default)", width: "100%" }} />
+
+            {/* Key insight */}
+            <Box
+                display="flex"
+                flexDirection="column"
+                gap="8"
+                p="16"
+                rounded="sm"
+                style={{ background: "#f6faf3" }}
+            >
+                <Text fontWeight="500" style={{ fontSize: 14, letterSpacing: "0.28px", color: "var(--ax-colors-fg-default)", lineHeight: 1.43 }}>
+                    Team approval needed
+                </Text>
+                <Text style={{ fontSize: 14, letterSpacing: "0.28px", color: "var(--ax-colors-fg-secondary)", lineHeight: 1.43 }}>
+                    Review the updated Q&amp;A article. Approve to proceed with publishing, or request further changes.
+                </Text>
+            </Box>
+
+            {/* Actions */}
+            <Box display="flex" justifyContent="flex-end" gap="4">
+                <Button appearance="subtle" size="md" onClick={onRequestChanges}>Ask Changes</Button>
+                <Button appearance="primary" size="md" onClick={onApprove} icon={<IconCircleCheckSolid size={14} />}>
+                    Approve
+                </Button>
+            </Box>
+        </Box>
+    );
+}
+
+/** A single message bubble in the team thread */
+function ThreadMessage({
+    author,
+    avatar,
+    isAgent,
+    time,
+    children,
+}: {
+    author: string;
+    avatar?: string;
+    isAgent?: boolean;
+    time: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <Box display="flex" flexDirection="column" gap="8">
+            {/* Row: avatar + name + time */}
+            <Box display="flex" alignItems="center" gap="8">
+                {isAgent ? (
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="center"
+                        rounded="sm"
+                        style={{ width: 28, height: 28, background: "#e4f0da", flexShrink: 0, overflow: "hidden" }}
+                    >
+                        <Image src="/avatars/mock-avatar-geo.svg" alt={author} width={20} height={20} />
+                    </Box>
+                ) : (
+                    <Avatar name={author} src={avatar} size="sm" style={{ flexShrink: 0 }} />
+                )}
+                <Text fontSize="sm" fontWeight="600" color="fg.default">{author}</Text>
+                <Text fontSize="sm" color="fg.tertiary">{time}</Text>
+            </Box>
+            {/* Content */}
+            <Box pl="32" display="flex" flexDirection="column" gap="10">
+                {children}
+            </Box>
+        </Box>
+    );
+}
+
+const GEO_V1_DESCRIPTION = "GEO-optimised Q&A article covering Stride Discover the Unknown — 7 core Q&A pairs targeting AI search citations.";
+const GEO_V2_DESCRIPTION = "Updated v2: explicit activity callouts (trail running, climbing, diving, skydiving), adventure-first tone, competitive team challenges emphasis.";
+
+const VAU_INITIAL_TEXT = `I've autonomously generated a Q&A article for the Stride "Discover the Unknown" campaign. The article is structured around 7 core question-and-answer pairs optimized for AI-powered search citations. I've aligned the content with Stride's adventure travel positioning and targeted long-tail queries across the outdoor activities vertical.
+
+Please review and approve to proceed with publishing.`;
+
+const VAU_UPDATED_TEXT = `I've incorporated your feedback:
+
+✓ **Activities** — Explicitly listed trail running, climbing, diving, skydiving, and multi-terrain endurance challenges
+✓ **Team use cases** — Rewired around competitive multi-sport group challenges, not generic team building
+✓ **Opening tone** — Rewrote the first 3 Q&As in Stride's adventurous, explorer-first voice
+
+The updated article is ready for final review.`;
+
+function TeamThreadPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
+    const [approvalState, setApprovalState] = useState<ApprovalState>("pending");
+    const bottomRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [approvalState]);
+
+    return (
+        <Box
+            display="flex"
+            flexDirection="column"
+            style={{ height: "100%", overflowY: "auto", background: "var(--ax-colors-bg-default)" }}
+        >
+            {/* Header */}
+            <Box
+                display="flex"
+                alignItems="center"
+                gap="10"
+                px="16"
+                py="12"
+                style={{ borderBottom: BORDER_S, flexShrink: 0 }}
+            >
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    rounded="md"
+                    style={{ width: 32, height: 32, background: "#e4f0da", flexShrink: 0, overflow: "hidden" }}
+                >
+                    <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={22} height={22} />
+                </Box>
+                <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
+                    <Text fontSize="sm" fontWeight="600">GEO Q&amp;A Generator</Text>
+                    <Text fontSize="sm" color="fg.tertiary">Team approval thread</Text>
+                </Box>
+                <Badge intent="warning">In Review</Badge>
+            </Box>
+
+            {/* Thread messages */}
+            <Box display="flex" flexDirection="column" gap="24" p="16">
+
+                {/* ── Message 1: VAU initial ── */}
+                <ThreadMessage author="GEO Q&A Generator" isAgent time="Today at 9:02 AM">
+                    <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
+                        {VAU_INITIAL_TEXT}
+                    </Text>
+                    {/* Canvas tile v1 */}
+                    <IslandContentTile
+                        name="Q and A: Discover the unknown"
+                        type="Document"
+                        description={GEO_V1_DESCRIPTION}
+                    />
+                    {/* First approval card — already actioned (collapsed) */}
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        gap="4"
+                        p="16"
+                        rounded="lg"
+                        style={{ border: BORDER_S, background: "var(--ax-colors-bg-default)", opacity: 0.6 }}
+                    >
+                        <Text fontWeight="500" style={{ fontSize: 14, color: "var(--ax-colors-fg-default)", lineHeight: 1.43 }}>
+                            Team approval needed for Q and A: Discover the unknown v1
+                        </Text>
+                        <Box display="flex" gap="12">
+                            <Text style={{ fontSize: 14, color: "var(--ax-colors-fg-tertiary)", lineHeight: 1.43 }}>
+                                Jamie Chen: Requested changes
+                            </Text>
+                            <Text style={{ fontSize: 14, color: "var(--ax-colors-fg-tertiary)", lineHeight: 1.43 }}>
+                                Riley Park: Requested changes
+                            </Text>
+                        </Box>
+                    </Box>
+                </ThreadMessage>
+
+                {/* ── Message 2: JC feedback ── */}
+                <ThreadMessage author="Jamie Chen" avatar="/avatars/jc.png" time="Today at 9:18 AM">
+                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+                        Good start! The Q&amp;A structure is solid and the schema markup looks right. A few tweaks needed before we can approve:
+                    </Text>
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        gap="6"
+                        p="12"
+                        rounded="md"
+                        style={{ background: "var(--ax-colors-bg-page)", border: BORDER_T }}
+                    >
+                        {[
+                            "The activities list is too generic — explicitly call out trail running, rock climbing, diving, skydiving, and multi-terrain endurance challenges to match Stride's positioning.",
+                            "The opening tone needs to be more adventurous and explorer-first. It currently reads like a generic product FAQ.",
+                        ].map((item, i) => (
+                            <Box key={i} display="flex" gap="8" alignItems="start">
+                                <Text fontSize="sm" color="fg.tertiary" style={{ flexShrink: 0, paddingTop: 2 }}>{i + 1}.</Text>
+                                <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: 1.6 }}>{item}</Text>
+                            </Box>
+                        ))}
+                    </Box>
+                </ThreadMessage>
+
+                {/* ── Message 3: Riley feedback ── */}
+                <ThreadMessage author="Riley Park" avatar="/avatars/user2.png" time="Today at 9:24 AM">
+                    <Text fontSize="sm" color="fg.secondary" style={{ lineHeight: 1.6 }}>
+                        +1 to JC&apos;s notes. Also the team-use section leans too much toward generic team building — it should emphasize competitive multi-sport group challenges, which is core to the Stride brand. Looking forward to the revision!
+                    </Text>
+                </ThreadMessage>
+
+                {/* ── Message 4: VAU updated ── */}
+                <ThreadMessage author="GEO Q&A Generator" isAgent time="Today at 9:31 AM">
+                    <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
+                        {VAU_UPDATED_TEXT}
+                    </Text>
+                    {/* Canvas tile v2 */}
+                    <IslandContentTile
+                        name="Q and A: Discover the unknown"
+                        type="Document"
+                        description={GEO_V2_DESCRIPTION}
+                    />
+                    {/* Final approval card — interactive */}
+                    <ThreadApprovalCard
+                        state={approvalState}
+                        onApprove={() => setApprovalState("approved")}
+                        onRequestChanges={() => setApprovalState("changes")}
+                    />
+                </ThreadMessage>
+
+                {/* Approved / changes-requested confirmation */}
+                {approvalState === "approved" && (
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap="8"
+                        p="12"
+                        rounded="md"
+                        style={{ background: "#f0faf0", border: "1px solid var(--ax-colors-border-secondary)" }}
+                    >
+                        <IconCircleCheckSolid size={16} style={{ color: "var(--ax-colors-fg-accent)", flexShrink: 0 }} />
+                        <Text fontSize="sm" fontWeight="500" color="fg.default">
+                            You approved — submitting for publication.
+                        </Text>
+                    </Box>
+                )}
+                {approvalState === "changes" && (
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        gap="8"
+                        p="12"
+                        rounded="md"
+                        style={{ background: "var(--ax-colors-bg-page)", border: BORDER_S }}
+                    >
+                        <IconPen size={14} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
+                        <Text fontSize="sm" color="fg.secondary">
+                            Changes requested — VAU will revise and resubmit.
+                        </Text>
+                    </Box>
+                )}
+
+                <div ref={bottomRef} />
+            </Box>
+        </Box>
+    );
+}
+
+type ArtifactSource = "chat" | "agent" | "workflow" | "thread";
 
 export type ArtifactViewerArtifact = {
     id: string;
@@ -152,6 +479,7 @@ export type ArtifactViewerArtifact = {
     status: string;
     version?: string;
     imageUrl?: string;
+    hasTeamThread?: boolean;
 };
 
 // ─── Mock content by artifact type ───────────────────────────────────────────
@@ -567,6 +895,7 @@ type ArtifactViewerProps = {
 
 export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: ArtifactViewerProps) {
     const [mounted, setMounted] = useState(false);
+    const [chatOpen, setChatOpen] = useState(openMode === "with-panel");
 
     useEffect(() => {
         setMounted(true);
@@ -576,7 +905,7 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
     if (!mounted) return null;
 
     const isWorkflow = artifact.sourceType === "workflow" || artifact.sourceType === "agent";
-    const showPanel = openMode === "with-panel";
+    const isThread = artifact.hasTeamThread || artifact.sourceType === "thread";
 
     const panel = (
         <Box
@@ -596,14 +925,19 @@ export function ArtifactViewer({ artifact, onClose, openMode = "preview" }: Arti
                     artifactStatus={artifact.status}
                     artifactVersion={artifact.version}
                     artifactSource={{ type: artifact.sourceType, name: artifact.sourceName }}
+                    artifactCreator={artifact.createdBy}
                     initialHtml={getMockContent(artifact.type)}
+                    chatOpen={chatOpen}
+                    onChatToggle={() => setChatOpen(v => !v)}
                 />
             </Box>
 
-            {/* Right: context panel — only shown when opened via source */}
-            {showPanel && (
-                <Box style={{ width: 400, flexShrink: 0, overflow: "hidden" }}>
-                    {isWorkflow ? (
+            {/* Right: context panel — toggled via chat button in toolbar */}
+            {chatOpen && (
+                <Box style={{ width: 400, flexShrink: 0, overflow: "hidden", borderLeft: BORDER_S }}>
+                    {isThread ? (
+                        <TeamThreadPanel artifact={artifact} />
+                    ) : isWorkflow ? (
                         <AgentExecutionLog artifact={artifact} />
                     ) : (
                         <ChatPanel artifact={artifact} />

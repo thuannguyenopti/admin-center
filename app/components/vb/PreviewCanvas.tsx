@@ -233,7 +233,7 @@ export default function PreviewCanvas({
 	}, [scrollToColumnId, onColumnScrollComplete]);
 
 	// "tablet/mobile" breakpoint
-	const MOBILE_BP = 1024;
+	const MOBILE_BP = 768;
 
 	const [viewportW, setViewportW] = useState<number>(() => {
 		// fixed/scale should behave like that device width immediately

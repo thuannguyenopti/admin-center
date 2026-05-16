@@ -256,7 +256,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 				badgeLabel: "Not Started",
 				showCalendarAction: true,
 			},
-			{ id: "newsletter-5", title: "5. Publish to CC", date: "Jun 30" },
+			{ id: "newsletter-5", title: "5. Final Review", date: "Jun 30" },
 		],
 	},
 	{
@@ -279,7 +279,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 				showCalendarAction: true,
 			},
 			{ id: "legal-5", title: "5. Executive Approval", date: "Jul 15" },
-			{ id: "legal-6", title: "6. Publish to CC", date: "Jul 18" },
+			{ id: "legal-6", title: "6. Finalize Documentation", date: "Jul 18" },
 		],
 	},
 	{
@@ -303,7 +303,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 				showCalendarAction: true,
 			},
 			{ id: "sponsor-6", title: "6. Hi-fi mockups", date: "Jun 24" },
-			{ id: "sponsor-7", title: "7. Publish to CC", date: "Jun 30" },
+			{ id: "sponsor-7", title: "7. Final Delivery", date: "Jun 30" },
 		],
 	},
 	{
@@ -324,7 +324,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 				badgeLabel: "Not Started",
 				showCalendarAction: true,
 			},
-			{ id: "social-4", title: "4. Schedule & Publish", date: "Aug 8" },
+			{ id: "social-4", title: "4. Schedule Posts", date: "Aug 8" },
 		],
 	},
 	{
@@ -354,7 +354,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 		id: "blog-cms",
 		icon: "tag",
 		name: "Blog Post to CMS",
-		subtitle: "Write, review, and publish a blog post",
+		subtitle: "Write, review, and prepare blog content",
 		steps: [
 			{ id: "blog-1", title: "1. Draft", date: "Apr 21" },
 			{
@@ -368,7 +368,7 @@ export const workflowTemplates: WorkflowTemplate[] = [
 				showCalendarAction: true,
 			},
 			{ id: "blog-3", title: "3. Add Images & Media", date: "Apr 25" },
-			{ id: "blog-4", title: "4. Publish to CMS", date: "Apr 28" },
+			{ id: "blog-4", title: "4. Final Approval", date: "Apr 28" },
 		],
 	},
 ];

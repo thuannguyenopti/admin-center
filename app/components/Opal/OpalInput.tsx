@@ -127,6 +127,7 @@ type OpalInputProps = {
   contextChip?: string | null;
   contextContent?: string | null;
   onContextChipRemove?: () => void;
+  imMode?: boolean;
 };
 
 export function OpalInput({

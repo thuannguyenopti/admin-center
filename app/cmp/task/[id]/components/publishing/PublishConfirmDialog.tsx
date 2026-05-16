@@ -46,13 +46,26 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 			if (channel.channelTypeId !== "cms-12") {
 				return { ...channel, appNames: [] };
 			}
-			const appNames = getApplicationNamesForPages(channel.selectedContentIds, pages, applications);
+
+			// Get application names from page metadata first, fallback to hierarchy lookup
+			const appNamesFromMetadata = channel.selectedContentIds
+				.map((id) => pages.find((p) => p.id === id)?.cmpTaskMetadata?.applicationName)
+				.filter((name): name is string => !!name);
+
+			const uniqueAppNames = Array.from(new Set(appNamesFromMetadata));
+
+			// If we found app names in metadata, use those; otherwise fall back to hierarchy lookup
+			const appNames = uniqueAppNames.length > 0
+				? uniqueAppNames.sort()
+				: getApplicationNamesForPages(channel.selectedContentIds, pages, applications);
+
 			return { ...channel, appNames };
 		});
 	}, [channels, pages, applications]);
 
 	const channelsWithContent = channelsWithAppInfo.filter((ch) => ch.selectedContentIds.length > 0);
 	const hasChannelsWithContent = channelsWithContent.length > 0;
+	const hasAnyContent = hasInstances || hasPages || hasChannelsWithContent;
 
 	// Check if any CMS pages are NOT assigned to a CMS channel
 	const cmsChannelPageIds = new Set(
@@ -62,6 +75,14 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 	);
 	const unpublishedPages = pages.filter((page) => !cmsChannelPageIds.has(page.id));
 	const hasUnpublishedPages = unpublishedPages.length > 0;
+
+	// Determine dialog title based on content type
+	const onlyLibraryContent = hasInstances && !hasChannelsWithContent && !hasPages;
+	const dialogTitle = !hasAnyContent
+		? "Complete Task"
+		: onlyLibraryContent
+			? "Publish to Library"
+			: "Publish & Complete Task";
 
 	return (
 		<>
@@ -92,7 +113,7 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 							color="fg.default"
 							style={{ fontSize: 24, fontWeight: 500, letterSpacing: "-0.6px", lineHeight: "32px", maxWidth: "none" }}
 						>
-							Publish & Complete Task
+							{dialogTitle}
 						</Text>
 					</AlertDialogHeader>
 					<AlertDialogBody style={{ padding: "0 24px 16px" }}>
@@ -113,34 +134,42 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 								</Box>
 							)}
 
-							{hasChannelsWithContent && (
+							{(hasChannelsWithContent || hasInstances) && (
 								<>
 									{hasInstances && <Separator />}
 									<Text color="fg.default" style={{ fontSize: 13, fontWeight: 600, lineHeight: "18px", maxWidth: "none" }}>
 										Publish to Channels
 									</Text>
-									{channelsWithContent.map((channel) => {
-										const def = getChannelDef(channel.channelTypeId);
-										if (!def) return null;
+									{hasChannelsWithContent ? (
+										channelsWithContent.map((channel) => {
+											const def = getChannelDef(channel.channelTypeId);
+											if (!def) return null;
 
-										// For CMS channels, append application names if available
-										const displayName =
-											channel.channelTypeId === "cms-12" && channel.appNames.length > 0 ? `${def.name} - ${channel.appNames.join(", ")}` : def.name;
+											// For CMS channels, append application names if available
+											const displayName =
+												channel.channelTypeId === "cms-12" && channel.appNames.length > 0 ? `${def.name} - ${channel.appNames.join(", ")}` : def.name;
 
-										return (
-											<Box key={channel.id} display="flex" flexDirection="column" gap="4" style={{ paddingLeft: 8 }}>
-												<Box alignItems="center" display="flex" gap="8">
-													<ChannelIcon icon={def.icon} size={14} />
-													<Text color="fg.default" style={{ fontSize: 13, fontWeight: 500, lineHeight: "18px", maxWidth: "none" }}>
-														{displayName}
-													</Text>
-													<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>
-														({channel.selectedContentIds.length} items)
-													</Text>
+											return (
+												<Box key={channel.id} display="flex" flexDirection="column" gap="4" style={{ paddingLeft: 8 }}>
+													<Box alignItems="center" display="flex" gap="8">
+														<ChannelIcon icon={def.icon} size={14} />
+														<Text color="fg.default" style={{ fontSize: 13, fontWeight: 500, lineHeight: "18px", maxWidth: "none" }}>
+															{displayName}
+														</Text>
+														<Text color="fg.tertiary" style={{ fontSize: 12, lineHeight: "16px", maxWidth: "none" }}>
+															({channel.selectedContentIds.length} items)
+														</Text>
+													</Box>
 												</Box>
-											</Box>
-										);
-									})}
+											);
+										})
+									) : (
+										<Box style={{ paddingLeft: 8 }}>
+											<Text color="fg.tertiary" style={{ fontSize: 13, lineHeight: "18px", maxWidth: "none" }}>
+												No channels added.
+											</Text>
+										</Box>
+									)}
 								</>
 							)}
 
@@ -185,7 +214,7 @@ export function PublishConfirmDialog({ applications, channels, contentInstances,
 							Cancel
 						</AlertDialogCancel>
 						<AlertDialogAction appearance="primary" onClick={onConfirm} size="lg">
-							Publish & Complete
+							{!hasAnyContent ? "Mark Complete" : onlyLibraryContent ? "Save & Complete" : "Publish & Complete"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

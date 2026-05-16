@@ -5,7 +5,7 @@ import { OpalChat } from "./OpalChat";
 import { OpalInput, MentionableAgent } from "./OpalInput";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
-import { ReactNode, useCallback, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { OpalHeader } from "./OpalHeader";
 import { OpalHistorySidebar } from "./OpalHistorySidebar";
 import { OpalLoaderDevPanel } from "@/app/opal/components/OpalLoaderDevPanel";
@@ -101,8 +101,14 @@ type OpalChatViewProps = {
     /** Called when the user tries to submit while blocked (e.g. resume flow). */
     onSubmitBlocked?: () => void;
     contextualActionCard?: ReactNode;
+    /** Per-message cards keyed by cardAfterKey */
+    messageCards?: Record<string, ReactNode>;
     /** When provided, renders as a full-width canvas on the left with chat as a right sidebar. */
     leftCanvas?: ReactNode;
+    /** When true, IM mode defaults to on (canvas is open). */
+    canvasMode?: boolean;
+    /** Controls visibility of the right chat sidebar when leftCanvas is active. Defaults to true. */
+    chatPanelVisible?: boolean;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -149,10 +155,19 @@ export function OpalChatView({
     disabled,
     onSubmitBlocked,
     contextualActionCard,
+    messageCards,
     leftCanvas,
+    canvasMode = false,
+    chatPanelVisible = true,
 }: OpalChatViewProps) {
     const hasMessages = messages.length > 0;
     const [chatWidth, setChatWidth] = useState(400);
+    const [imMode, setImMode] = useState(canvasMode);
+
+    // Sync imMode on when canvas opens
+    useEffect(() => {
+        if (canvasMode) setImMode(true);
+    }, [canvasMode]);
 
     const handleResize = useCallback((dx: number) => {
         // Dragging right = canvas grows, chat shrinks; left = canvas shrinks, chat grows
@@ -179,21 +194,22 @@ export function OpalChatView({
                     {leftCanvas}
                 </Box>
 
-                {/* Drag handle */}
-                <GrabHandle onResize={handleResize} />
+                {/* Drag handle — only when chat panel is visible */}
+                {chatPanelVisible && <GrabHandle onResize={handleResize} />}
 
-                {/* Right chat sidebar — animates width in */}
+                {/* Right chat sidebar — hidden when chatPanelVisible is false */}
                 <Box
                     display="flex"
                     flexDirection="column"
                     style={{
-                        width: chatWidth,
+                        width: chatPanelVisible ? chatWidth : 0,
                         flexShrink: 0,
                         height: '100%',
                         minHeight: 0,
                         overflow: 'hidden',
-                        borderLeft: '1px solid var(--ax-colors-border-secondary)',
+                        borderLeft: chatPanelVisible ? '1px solid var(--ax-colors-border-secondary)' : 'none',
                         animation: 'chatSlideIn 0.35s cubic-bezier(0.16,1,0.3,1) both',
+                        transition: 'width 0.25s cubic-bezier(0.16,1,0.3,1)',
                     }}
                 >
                     {variant === 'home' && (
@@ -201,6 +217,8 @@ export function OpalChatView({
                             <OpalHeader
                                 onToggleHistory={onToggleHistory || (() => {})}
                                 onNewChat={onNewChat}
+                                imMode={imMode}
+                                onImModeChange={setImMode}
                             />
                         </Box>
                     )}
@@ -228,6 +246,7 @@ export function OpalChatView({
                             onCloseOpalRange={onCloseOpalRange}
                             activeAgentCtx={activeAgentCtx}
                             contextualActionCard={contextualActionCard}
+                            messageCards={messageCards}
                         />
                     </Box>
                     <Box style={{ flexShrink: 0, padding: '12px' }}>
@@ -244,6 +263,7 @@ export function OpalChatView({
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
+                            imMode={imMode}
                         />
                     </Box>
                 </Box>
@@ -332,6 +352,8 @@ export function OpalChatView({
                         <OpalHeader
                             onToggleHistory={onToggleHistory || (() => { })}
                             onNewChat={onNewChat}
+                            imMode={imMode}
+                            onImModeChange={setImMode}
                         />
                     </Box>
                 )}
@@ -368,6 +390,7 @@ export function OpalChatView({
                         onCloseOpalRange={onCloseOpalRange}
                         activeAgentCtx={activeAgentCtx}
                         contextualActionCard={contextualActionCard}
+                        messageCards={messageCards}
                     />
                 </Box>
 
@@ -396,6 +419,7 @@ export function OpalChatView({
                             mentionableAgents={mentionableAgents}
                             onMentionSelect={onMentionSelect}
                             onSubmitBlocked={onSubmitBlocked}
+                            imMode={imMode}
                         />
                     </Box>
                 </Box>

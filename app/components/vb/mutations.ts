@@ -140,14 +140,16 @@ export const insertElement = (outline: OutlineState, selection: Selection, type:
 
 	const newId = overrideId ?? idFor("ele");
 	const isElementSelection = path.elementIndex >= 0;
-	
+
+	const currentElements = column.elements || [];
+
 	// If selecting an element, we can insert before or after.
 	// If selecting a column/row, we typically append to end (which is elementIndex -1, so line below handles it as length).
-	const targetIndex = isElementSelection 
-		? (position === 'after' ? path.elementIndex + 1 : path.elementIndex) 
-		: column.elements.length;
+	const targetIndex = isElementSelection
+		? (position === 'after' ? path.elementIndex + 1 : path.elementIndex)
+		: currentElements.length;
 
-	const newElements = [...column.elements];
+	const newElements = [...currentElements];
 	newElements.splice(targetIndex, 0, { id: newId });
 
 	const updatedColumn: ColumnNode = {
@@ -188,7 +190,10 @@ export const mergeColumnRight = (outline: OutlineState, selection: Selection): O
 	const column = row.children[path.columnIndex];
 	const target = row.children[path.columnIndex + 1];
 	if (!column || !target) return outline;
-	const merged: ColumnNode = { ...column, elements: [...column.elements, ...target.elements] };
+	const merged: ColumnNode = {
+		...column,
+		elements: [...(column.elements || []), ...(target.elements || [])]
+	};
 	row.children.splice(path.columnIndex, 2, merged);
 	return { ...outline, tree: nextTree };
 };
@@ -245,6 +250,7 @@ export const getSelectionForElement = (outline: OutlineState, elementId: string)
 	for (const [sIdx, section] of outline.tree.entries()) {
 		for (const [rIdx, row] of section.children.entries()) {
 			for (const [cIdx, column] of row.children.entries()) {
+				if (!column.elements) continue;
 				const eIdx = column.elements.findIndex((e: { id: string }) => e.id === elementId);
 				if (eIdx !== -1) {
 					return {
@@ -271,7 +277,7 @@ export const deleteElement = (outline: OutlineState, elementId: string): Outline
 
 	const nextTree = clone(outline.tree);
 	const column = nextTree[path.sectionIndex]?.children[path.rowIndex]?.children[path.columnIndex];
-	if (!column) return outline;
+	if (!column || !column.elements) return outline;
 
 	column.elements.splice(path.elementIndex, 1);
 
@@ -285,9 +291,12 @@ export const getPreviousElementId = (outline: OutlineState, elementId: string): 
 	const path = findPath(outline, selection);
 	if (!path) return null;
 
+	const column = outline.tree[path.sectionIndex]?.children[path.rowIndex]?.children[path.columnIndex];
+	if (!column || !column.elements) return null;
+
 	// Same column, previous element
 	if (path.elementIndex > 0) {
-		return outline.tree[path.sectionIndex].children[path.rowIndex].children[path.columnIndex].elements[path.elementIndex - 1].id;
+		return column.elements[path.elementIndex - 1].id;
 	}
     // Previous column end? Previous Row? For now just simple prev in column
 	return null;
@@ -298,7 +307,9 @@ export const getNextElementId = (outline: OutlineState, elementId: string): stri
 	const path = findPath(outline, selection);
 	if (!path) return null;
 
-    const column = outline.tree[path.sectionIndex].children[path.rowIndex].children[path.columnIndex];
+    const column = outline.tree[path.sectionIndex]?.children[path.rowIndex]?.children[path.columnIndex];
+	if (!column || !column.elements) return null;
+
 	if (path.elementIndex < column.elements.length - 1) {
 		return column.elements[path.elementIndex + 1].id;
 	}

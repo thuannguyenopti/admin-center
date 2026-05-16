@@ -31,6 +31,7 @@ export function TaskDetailView({ taskId }: { taskId: string }) {
 	const workflowSidebar = (
 		<WorkflowSidebar
 			filteredTemplates={state.filteredWorkflowTemplates}
+			hasTaskContent={state.hasTaskContent}
 			isAllDone={state.isAllWorkflowDone}
 			isMenuOpen={state.workflowMenuOpen}
 			onMarkComplete={state.markTaskComplete}
