@@ -430,7 +430,7 @@ function AgentCell({ name }: { name: string }) {
     return (
         <Box display="flex" alignItems="center" gap="8">
             {avatar ? (
-                <span style={{ width: 18, height: 18, borderRadius: 4, background: "#e4f0da", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                <span style={{ width: 18, height: 18, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                     <img src={avatar} alt={name} style={{ width: 13, height: 13, display: "block" }} />
                 </span>
             ) : (
@@ -699,7 +699,7 @@ function WorkspaceArtifactCard({
                                     appearance="default"
                                     size="sm"
                                     aria-label="Unpin"
-                                    icon={<IconThumbtackSolid size={12} />}
+                                    icon={<IconThumbtackSolid size={10} />}
                                     style={btnStyle}
                                     onClick={() => onTogglePin(artifact.id)}
                                 />
@@ -725,7 +725,7 @@ function WorkspaceArtifactCard({
                                     appearance="default"
                                     size="sm"
                                     aria-label={pinned ? "Unpin" : "Pin"}
-                                    icon={pinned ? <IconThumbtackSolid size={12} /> : <IconThumbtack size={12} />}
+                                    icon={pinned ? <IconThumbtackSolid size={10} /> : <IconThumbtack size={10} />}
                                     style={btnStyle}
                                     onClick={() => onTogglePin(artifact.id)}
                                 />
@@ -1464,7 +1464,7 @@ function FilterSidebar({
                                 style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
                             >
                                 {avatar ? (
-                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "#e4f0da", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                                         <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
                                     </span>
                                 ) : (
@@ -1495,7 +1495,7 @@ function FilterSidebar({
                                 style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
                             >
                                 {avatar ? (
-                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "#e4f0da", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "var(--ax-colors-bg-secondary)", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
                                         <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
                                     </span>
                                 ) : (
