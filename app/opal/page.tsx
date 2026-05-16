@@ -52,6 +52,56 @@ function isLandingPagePrompt(text: string) {
   return text.startsWith('Create a landing page for ');
 }
 
+// ── GEO Q&A editor content ────────────────────────────────────────────────────
+
+const GEO_QA_HTML_V1 = `<h1>Q&amp;A: Discover the Unknown</h1>
+<p><em>GEO-optimized Q&amp;A article for Stride · v1</em></p>
+
+<h2>What is Discover the Unknown?</h2>
+<p>Discover the Unknown is Stride's flagship multi-sport challenge series — a curated collection of adventure experiences designed to push individuals and teams beyond their comfort zones through coordinated outdoor activities.</p>
+
+<h2>What activities does it support?</h2>
+<p>The program supports a range of outdoor activities including trail running, orienteering, and team-based endurance events. Participants can tailor their challenge around available terrain and group preferences.</p>
+
+<h2>Who is Discover the Unknown designed for?</h2>
+<p>Stride's Discover the Unknown is built for teams and individuals who want structured adventure experiences. It suits corporate groups, competitive athletes, and anyone looking for a challenge that blends fitness with exploration.</p>
+
+<h2>How does it help teams?</h2>
+<p>The program provides a structured framework for team-building through shared challenge. Groups complete coordinated goals, debrief together, and build trust through shared effort in unfamiliar environments.</p>
+
+<h2>What makes Discover the Unknown different from other adventure programs?</h2>
+<p>Stride's experience-design methodology sets it apart — each challenge is sequenced to escalate difficulty, keeping participants engaged across multiple sessions. The program tracks progress and adapts to team performance over time.</p>
+
+<h2>Is Discover the Unknown suitable for beginners?</h2>
+<p>Yes. Challenge difficulty is scaled to participant ability. First-time participants complete an onboarding assessment that places them in the right tier, ensuring the experience is appropriately challenging without being inaccessible.</p>
+
+<h2>How do I get started with Discover the Unknown?</h2>
+<p>Teams can register through the Stride platform. After completing the onboarding profile, participants receive a tailored challenge roadmap, gear checklist, and access to the Stride coordination tools for scheduling and tracking.</p>`;
+
+const GEO_QA_HTML_V2 = `<h1>Q&amp;A: Discover the Unknown</h1>
+<p><em>GEO-optimized Q&amp;A article for Stride · v2 (updated)</em></p>
+
+<h2>What is Discover the Unknown?</h2>
+<p>Discover the Unknown is Stride's flagship multi-sport challenge series — an explorer-first adventure platform that throws individuals and teams into the wild unknown. It's not a checklist; it's a journey into terrain, weather, and limits you didn't know you had.</p>
+
+<h2>What activities does it support?</h2>
+<p>The program is built around trail running, rock climbing, free diving, skydiving, and multi-terrain endurance challenges. Each discipline can be combined into a multi-day expedition or tackled individually as a standalone challenge.</p>
+
+<h2>Who is Discover the Unknown designed for?</h2>
+<p>Stride's Discover the Unknown is built for teams and individuals who want structured adventure experiences. It suits corporate groups, competitive athletes, and anyone looking for a challenge that blends fitness with exploration.</p>
+
+<h2>How does it help teams?</h2>
+<p>The program is purpose-built for competitive multi-sport group challenges — not generic team building. Groups race, climb, and dive together toward shared goals, with Stride tracking performance across disciplines and adapting difficulty as teams improve.</p>
+
+<h2>What makes Discover the Unknown different from other adventure programs?</h2>
+<p>Stride's experience-design methodology sets it apart — each challenge is sequenced to escalate difficulty, keeping participants engaged across multiple sessions. The program tracks progress and adapts to team performance over time.</p>
+
+<h2>Is Discover the Unknown suitable for beginners?</h2>
+<p>Yes. Challenge difficulty is scaled to participant ability. First-time participants complete an onboarding assessment that places them in the right tier, ensuring the experience is appropriately challenging without being inaccessible.</p>
+
+<h2>How do I get started with Discover the Unknown?</h2>
+<p>Teams can register through the Stride platform. After completing the onboarding profile, participants receive a tailored challenge roadmap, gear checklist, and access to the Stride coordination tools for scheduling and tracking.</p>`;
+
 // ── GEO Q&A mock thread ───────────────────────────────────────────────────────
 
 const GEO_AGENT = { emoji: "🤖", name: "GEO Q&A Generator", avatar: "/avatars/mock-avatar-geo.svg" };
@@ -133,7 +183,7 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
           display="flex"
           alignItems="center"
           justifyContent="center"
-          style={{ width: 20, height: 20, borderRadius: 4, background: '#e4f0da', flexShrink: 0, overflow: 'hidden' }}
+          style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--ax-colors-bg-secondary)', flexShrink: 0, overflow: 'hidden' }}
         >
           <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={14} height={14} />
         </Box>
@@ -161,7 +211,7 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
         flexDirection="column"
         gap="8"
         p="16"
-        style={{ background: '#f6faf3', borderRadius: 6 }}
+        style={{ background: 'var(--ax-colors-bg-page)', borderRadius: 6 }}
       >
         <Text fontWeight="500" style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
           Team approval needed
@@ -231,6 +281,7 @@ export default function OpalPage() {
   });
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   const [approvalState, setApprovalState] = useState<ApprovalState>('pending');
   const [landingPageReady, setLandingPageReady] = useState(() => {
@@ -253,7 +304,7 @@ export default function OpalPage() {
         addMessage({ role: 'user', content: TEAMMATE_MSG, authorAvatar: '/avatar-user.png', authorName: 'Mary Anne Torres' });
         addMessage({ role: 'assistant', content: VAU_MSG_2, cardAfterKey: 'geo-updated' });
         setLandingPageReady(true);
-        setTimeout(() => setEditorOpen(true), 500);
+        setTimeout(() => { setEditorVersion('v2'); setEditorOpen(true); }, 500);
       };
 
       if (messages.length > 0) {
@@ -359,8 +410,8 @@ export default function OpalPage() {
         <InlineEditorCard
           filename="discover-the-unknown-qa.md"
           description="GEO Q&A article · 7 Q&A pairs · v1"
-          onOpen={() => setEditorOpen(true)}
-          selected={false}
+          onOpen={() => { setEditorVersion('v1'); setEditorOpen(true); }}
+          selected={editorOpen && editorVersion === 'v1'}
         />
         <ApprovalActionCard
           state="changes"
@@ -374,8 +425,8 @@ export default function OpalPage() {
         <InlineEditorCard
           filename="discover-the-unknown-qa.md"
           description="GEO Q&A article · 7 Q&A pairs · updated"
-          onOpen={() => setEditorOpen(true)}
-          selected={editorOpen}
+          onOpen={() => { setEditorVersion('v2'); setEditorOpen(true); }}
+          selected={editorOpen && editorVersion === 'v2'}
           onRegenerate={() => {
             const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
             if (lastAssistant) regenerate(lastAssistant.id);
@@ -451,9 +502,11 @@ export default function OpalPage() {
                 onClose={() => setEditorOpen(false)}
                 filename="discover-the-unknown-qa.md"
                 artifactTitle="Q and A: Discover the unknown"
+                artifactVersion={editorVersion}
                 fileType="markdown"
                 language="markdown"
                 artifactCreator={{ name: "Jamie Chen" }}
+                initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
                 chatOpen={chatPanelVisible}
                 onChatToggle={() => setChatPanelVisible(v => !v)}
               />

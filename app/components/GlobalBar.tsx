@@ -37,8 +37,17 @@ import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
 import NotificationDropdown from "./NotificationDropdown";
-import light from "react-syntax-highlighter/dist/esm/light";
-import { IconGrid2 } from "@optimizely/axiom-icons";
+import { IconGrid2, IconXmark } from "@optimizely/axiom-icons";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+
+const VAUS = [
+	{ name: "Pixel Perfect Checker", avatar: "/avatars/mock-avatar-seo.svg" },
+	{ name: "GEO Q&A Generator", avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Weekly Traffic Reporter", avatar: "/avatars/mock-avatar-traffic.svg" },
+	{ name: "Product Launch Quarterback", avatar: "/avatars/mock-avatar-abu.svg" },
+	{ name: "ABM Page Generator", avatar: "/avatars/mock-avatar-geo.svg" },
+];
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -56,6 +65,22 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 
 	const handleCodeClick = () => {
 		codePanelControls?.openPanel(pathname);
+	};
+
+	const vauGroup = { label: "Manage Virtual Teammates", separator: false, hidden: false };
+
+	const [activeVAU, setActiveVAU] = useState<{ name: string; avatar: string } | null>(null);
+	const [switchingVAU, setSwitchingVAU] = useState<{ name: string; avatar: string } | null>(null);
+	const [switchVisible, setSwitchVisible] = useState(false);
+
+	const handleSelectVAU = (vau: { name: string; avatar: string }) => {
+		setSwitchingVAU(vau);
+		setSwitchVisible(true);
+		setTimeout(() => setSwitchVisible(false), 1400);
+		setTimeout(() => {
+			setSwitchingVAU(null);
+			setActiveVAU(vau);
+		}, 1700);
 	};
 
 	const settingsGroups = {
@@ -80,17 +105,53 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	return (
 		<Box
 			w="full"
-			py="12"
-			px="12"
 			bg="bg.default"
 			style={{gridColumn: "1 / -1"}}
 			borderB="1"
 			borderColor="border.tertiary"
 			display="flex"
-			alignItems="center"
-			justifyContent="space-between"
+			flexDirection="column"
 			className="global-bar"
 		>
+			{/* Managing-as banner */}
+			{activeVAU && isOpalRoute && (
+				<Box
+					display="flex"
+					alignItems="center"
+					gap="8"
+					px="16"
+					py="8"
+					style={{
+						background: "var(--ax-colors-bg-information-subtle)",
+						borderBottom: "1px solid var(--ax-colors-border-information)",
+					}}
+				>
+					<Text fontSize="sm">
+						You are acting as{" "}
+					</Text>
+					<Image src={activeVAU.avatar} alt="" width={18} height={18} style={{ borderRadius: 999, flexShrink: 0 }} />
+					<Text fontSize="sm" fontWeight="600">{activeVAU.name}</Text>
+					<Box style={{ flex: 1 }} />
+					<Button
+						appearance="subtle"
+						size="sm"
+						icon={<IconXmark size={14} />}
+						aria-label="Exit"
+						onClick={() => setActiveVAU(null)}
+					>
+						Exit
+					</Button>
+				</Box>
+			)}
+
+			{/* Nav row */}
+			<Box
+				display="flex"
+				alignItems="center"
+				justifyContent="space-between"
+				py="12"
+				px="12"
+			>
 			<Box display="flex" alignItems="center" gap="12">
 				<Link href={"/"}>
 					{light ? (
@@ -253,6 +314,41 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			</Box>
 
 			<Box display="flex" alignItems="center" gap="4">
+				{isOpalRoute ? (
+					<>
+						<Button appearance="default" size="md" onClick={onOpalClick}>
+							<Box asChild display="inline-flex" alignItems="center" gap="6">
+								<span>
+									<Image src="/opal-orb.png" alt="" width={16} height={16} />
+									Ask Opal
+								</span>
+							</Box>
+						</Button>
+						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
+						<NotificationDropdown />
+						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
+						<Menu
+							options={VAUS.map(vau => ({
+								group: vauGroup,
+								label: vau.name,
+								addon: <Image src={vau.avatar} alt="" width={20} height={20} style={{ borderRadius: 999, flexShrink: 0 }} />,
+								execute: () => handleSelectVAU(vau),
+							}))}
+						>
+							<MenuTrigger asChild>
+								<Button appearance="subtle" size="md" aria-label={activeVAU ? activeVAU.name : "Jamie Chen"}>
+									{activeVAU ? (
+										<Image src={activeVAU.avatar} alt={activeVAU.name} width={24} height={24} style={{ borderRadius: 999, flexShrink: 0 }} />
+									) : (
+										<span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: 999, background: "var(--ax-colors-bg-avatar-purple)", color: "var(--ax-colors-fg-avatar-purple)", fontSize: 10, fontWeight: 600, letterSpacing: "0.02em", flexShrink: 0 }}>JC</span>
+									)}
+								</Button>
+							</MenuTrigger>
+							<MenuContent style={{ minWidth: "220px" }} />
+						</Menu>
+					</>
+				) : (
+				<>
 				<Menu
 					options={[
 						{
@@ -434,7 +530,58 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 				) : (
 					<Button appearance="subtle" size="md" aria-label="User profile" icon={<IconUser />} />
 				)}
+				</>
+				)}
 			</Box>
+			</Box>
+
+			{/* Switching overlay */}
+			{switchingVAU && typeof window !== "undefined" && createPortal(
+				<div style={{
+					position: "fixed", inset: 0, zIndex: 9999,
+					display: "flex", alignItems: "center", justifyContent: "center",
+					background: "rgba(0,0,0,0.55)",
+					opacity: switchVisible ? 1 : 0,
+					transition: "opacity 0.3s ease",
+					pointerEvents: switchVisible ? "auto" : "none",
+				}}>
+					<div style={{
+						background: "var(--ax-colors-bg-default)",
+						borderRadius: 16,
+						padding: "32px 40px",
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "center",
+						gap: 16,
+						minWidth: 280,
+						boxShadow: "0 24px 64px rgba(0,0,0,0.24)",
+					}}>
+						<div style={{
+							width: 64, height: 64, borderRadius: 16,
+							background: "var(--ax-colors-bg-secondary)",
+							display: "flex", alignItems: "center", justifyContent: "center",
+							overflow: "hidden",
+						}}>
+							<Image src={switchingVAU.avatar} alt="" width={44} height={44} />
+						</div>
+						<div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 4 }}>
+							<p style={{ margin: 0, fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ax-colors-fg-tertiary)" }}>Acting as</p>
+							<p style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "var(--ax-colors-fg-default)" }}>{switchingVAU.name}</p>
+						</div>
+						<div style={{ display: "flex", gap: 5 }}>
+							{[0, 1, 2].map(i => (
+								<div key={i} style={{
+									width: 6, height: 6, borderRadius: 999,
+									background: "var(--ax-colors-fg-accent)",
+									animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`,
+								}} />
+							))}
+						</div>
+					</div>
+					<style>{`@keyframes pulse { 0%,100%{opacity:0.3;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }`}</style>
+				</div>,
+				document.body
+			)}
 		</Box>
 	);
 }

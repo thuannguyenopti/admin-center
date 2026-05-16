@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import {
+  Badge,
   Box,
   Button,
   Menu,
@@ -21,18 +22,24 @@ import { Pill } from "@optiaxiom/react/unstable";
 import { Text } from "../Text";
 import {
   IconArrowUp,
+  IconBold,
   IconBook,
   IconBooks,
   IconCircleArrowUp,
   IconCircleCheckSolid,
   IconCircleStop,
   IconGrid2Plus,
+  IconItalic,
+  IconListOl,
+  IconListUl,
   IconPlus,
+  IconStrikethrough,
+  IconText,
   IconUpload,
   IconUser,
   IconXmark,
 } from "@optiaxiom/icons";
-import { IconAgent } from "@optimizely/axiom-icons";
+import { IconAgent, IconSubAgent } from "@optimizely/axiom-icons";
 import { IconBuilding } from "@tabler/icons-react";
 import { IconMicrophone } from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
@@ -106,7 +113,26 @@ export type MentionableAgent = {
   subtitle?: string;
   emoji?: string;
   handle: string;
+  group?: 'agent' | 'uau' | 'user';
 };
+
+type MentionUser = MentionableAgent & { avatar?: string; email?: string };
+
+const MOCK_MENTION_USERS: MentionUser[] = [
+  { id: 'user_jc', name: 'Jamie Chen', email: 'jamie.chen@optimizely.com', handle: '@jamie.chen', group: 'user' },
+  { id: 'user_ma', name: 'Mary Anne Torres', email: 'maryanne.torres@optimizely.com', handle: '@maryanne.torres', group: 'user' },
+  { id: 'user_sk', name: 'Sarah Kim', email: 'sarah.kim@optimizely.com', handle: '@sarah.kim', group: 'user' },
+  { id: 'user_ap', name: 'Alex Park', email: 'alex.park@optimizely.com', handle: '@alex.park', group: 'user' },
+  { id: 'user_rw', name: 'Ryan Walsh', email: 'ryan.walsh@optimizely.com', handle: '@ryan.walsh', group: 'user' },
+];
+
+const MOCK_MENTION_VAUS: MentionUser[] = [
+  { id: 'vau_ppc', name: 'Pixel Perfect Checker', email: 'pixel-perfect@opal.optimizely.com', handle: '@pixel-perfect', avatar: '/avatars/mock-avatar-seo.svg', group: 'uau' },
+  { id: 'vau_geo', name: 'GEO Q&A Generator', email: 'geo-qa@opal.optimizely.com', handle: '@geo-qa', avatar: '/avatars/mock-avatar-geo.svg', group: 'uau' },
+  { id: 'vau_traffic', name: 'Weekly Traffic Reporter', email: 'traffic-reporter@opal.optimizely.com', handle: '@traffic-reporter', avatar: '/avatars/mock-avatar-traffic.svg', group: 'uau' },
+  { id: 'vau_plq', name: 'Product Launch Quarterback', email: 'product-launch@opal.optimizely.com', handle: '@product-launch', avatar: '/avatars/mock-avatar-abu.svg', group: 'uau' },
+  { id: 'vau_abm', name: 'ABM Page Generator', email: 'abm-generator@opal.optimizely.com', handle: '@abm-generator', avatar: '/avatars/mock-avatar-geo.svg', group: 'uau' },
+];
 
 type OpalInputProps = {
   value: string;
@@ -148,6 +174,7 @@ export function OpalInput({
   contextChip,
   contextContent,
   onContextChipRemove,
+  imMode = false,
 }: OpalInputProps) {
   const featuredConnectorMenuIds = useMemo(
     () => ["figma", "google-docs", "google-sheets", "google-slides"],
@@ -155,6 +182,7 @@ export function OpalInput({
   );
   const router = useRouter();
   const [isFocused, setIsFocused] = useState(false);
+  const [showFormatBar, setShowFormatBar] = useState(false);
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   const [dropdownWidth, setDropdownWidth] = useState<number | undefined>();
   const [agentPillIndent, setAgentPillIndent] = useState(0);
@@ -223,46 +251,57 @@ export function OpalInput({
     const textarea = textareaRef.current;
     const container = containerRef.current;
     if (textarea && container) {
-      // Reset to auto so scrollHeight reflects true content height (not flex-stretched height)
       textarea.style.height = 'auto';
       const naturalHeight = textarea.scrollHeight;
 
-      // Calculate final heights
-      // Total 88px = Textarea 34px + Offset 54px
-      // Offset 54px = Padding (8+8=16) + Margin (2) + Submit Button (32) + Extra Gap (4)
-      const offset = 54;
-      // Home variant starts taller (4-row default like Ana's design)
-      // Context chip variant starts taller so the input is clearly in view
-      const minTextareaHeight = variant === 'home' ? 90 : contextChip ? 72 : 34;
-      const minContainerHeight = variant === 'home' ? 144 : contextChip ? 126 : 88;
-      const maxContainerHeight = window.innerHeight * 0.5; // 50vh
+      const offset = 58;
+      let minTextareaHeight: number;
+      let minContainerHeight: number;
+      if (imMode) {
+        const hasVal = value.trim().length > 0;
+        minTextareaHeight = isFocused || hasVal ? 50 : 22;
+        minContainerHeight = isFocused || hasVal ? 108 : 80;
+      } else if (variant === 'home') {
+        minTextareaHeight = 90;
+        minContainerHeight = 148;
+      } else if (contextChip) {
+        minTextareaHeight = 72;
+        minContainerHeight = 130;
+      } else {
+        minTextareaHeight = 34;
+        minContainerHeight = 92;
+      }
+      const maxContainerHeight = window.innerHeight * 0.5;
 
-      const targetTextareaHeight = Math.max(naturalHeight, minTextareaHeight);
-      const neededContainerHeight = targetTextareaHeight + offset;
+      const isImCompact = imMode && !isFocused && value.trim() === '';
+      const targetTextareaHeight = isImCompact ? minTextareaHeight : Math.max(naturalHeight, minTextareaHeight);
+      const formatBarExtra = imMode && showFormatBar ? 38 : 0;
+      const neededContainerHeight = targetTextareaHeight + offset + formatBarExtra;
       const finalContainerHeight = Math.round(Math.min(neededContainerHeight, maxContainerHeight));
-      const finalTextareaHeight = finalContainerHeight - offset;
+      const finalTextareaHeight = finalContainerHeight - offset - formatBarExtra;
 
-      // Apply heights with !important
       container.style.setProperty('height', `${finalContainerHeight}px`, 'important');
       textarea.style.setProperty('height', `${finalTextareaHeight}px`, 'important');
 
-      // Strict scrollbar control
-      if (naturalHeight > finalTextareaHeight + 1) {
-        textarea.style.overflowY = 'auto';
-      } else {
+      if (isImCompact || naturalHeight <= finalTextareaHeight + 1) {
         textarea.style.overflowY = 'hidden';
+      } else {
+        textarea.style.overflowY = 'auto';
       }
 
       container.style.boxSizing = 'border-box';
       textarea.style.boxSizing = 'border-box';
     }
-  }, [value, contextChip]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, contextChip, isFocused, imMode, showFormatBar]);
 
   // Filter mentionable agents based on text after @
   const mentionQuery = value.startsWith('@') ? value.slice(1).toLowerCase() : '';
-  const filteredAgents = mentionableAgents.filter(a =>
-    !mentionQuery || a.name.toLowerCase().includes(mentionQuery) || a.handle.toLowerCase().includes(mentionQuery)
-  );
+  const matchesMentionQuery = (a: MentionableAgent) =>
+    !mentionQuery || a.name.toLowerCase().includes(mentionQuery) || a.handle.toLowerCase().includes(mentionQuery);
+  const filteredAgents = mentionableAgents.filter(matchesMentionQuery);
+  const filteredUsers = MOCK_MENTION_USERS.filter(matchesMentionQuery);
+  const filteredVAUs = MOCK_MENTION_VAUS.filter(matchesMentionQuery);
 
   useEffect(() => {
     if (value.startsWith('@') && mentionableAgents.length > 0) {
@@ -272,8 +311,16 @@ export function OpalInput({
     }
   }, [value, mentionableAgents]);
 
+  // Slash command menu — auto-open when user types "/"
+  const showSlashMenu = imMode && value.startsWith('/') && !showAgentDropdown;
+  const slashTriggerRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (showSlashMenu) setTimeout(() => slashTriggerRef.current?.click(), 10);
+  }, [showSlashMenu]);
+
   const [focusedAgentIndex, setFocusedAgentIndex] = useState(0);
-  const agentListLength = filteredAgents.length;
+  const allMentionItems = [...filteredUsers, ...filteredVAUs, ...filteredAgents];
+  const agentListLength = allMentionItems.length;
 
   useEffect(() => {
     if (showAgentDropdown) {
@@ -297,6 +344,11 @@ export function OpalInput({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showSlashMenu && e.key === 'Escape') {
+      e.preventDefault();
+      onChange('');
+      return;
+    }
     if (showAgentDropdown) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -315,10 +367,10 @@ export function OpalInput({
       }
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (filteredAgents[focusedAgentIndex]) {
-          handleSelectAgent(filteredAgents[focusedAgentIndex]);
+        if (allMentionItems[focusedAgentIndex]) {
+          handleSelectAgent(allMentionItems[focusedAgentIndex]);
         }
-        return; // never fall through to triggerSend while dropdown is open
+        return;
       }
     }
 
@@ -468,6 +520,55 @@ export function OpalInput({
       })),
     [onChange]
   );
+
+  const slashCommandMenuOptions = useMemo<MenuOption[]>(() => [
+    {
+      addon: <IconAgent size={16} />,
+      description: "Invoke an agent for this task",
+      group: { hidden: true, label: "Commands", priority: 3 },
+      key: "agents",
+      label: "Agents",
+      subOptions: mentionableAgents.slice(0, 8).map<MenuOption>((agent) => ({
+        addon: agent.emoji ? <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span> : <IconAgent size={16} />,
+        description: agent.subtitle,
+        group: { hidden: true, label: "Agents", priority: 2 },
+        key: agent.id,
+        label: agent.name,
+        execute: () => { onChange(''); onMentionSelect?.(agent); setTimeout(() => textareaRef.current?.focus(), 50); },
+      })),
+    },
+    {
+      addon: <IconBook size={16} />,
+      description: "Apply a skill or instruction",
+      group: { hidden: true, label: "Commands", priority: 3 },
+      key: "skills",
+      label: "Skills",
+      subOptions: MOCK_SKILLS.map<MenuOption>((skill) => ({
+        addon: skill.scope === "personal"
+          ? <IconUser style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)" }} />
+          : <IconBuilding style={{ width: 14, height: 14, color: "var(--ax-colors-fg-tertiary)" }} />,
+        group: { hidden: true, label: "Skills", priority: 2 },
+        key: skill.label,
+        label: skill.label,
+        execute: () => { onChange(`{Skill: ${skill.label}}`); setTimeout(() => textareaRef.current?.focus(), 50); },
+      })),
+    },
+    {
+      addon: <IconGrid2Plus size={16} />,
+      description: "Use a connected tool or integration",
+      group: { hidden: true, label: "Commands", priority: 3 },
+      key: "tools",
+      label: "Tools",
+      subOptions: featuredConnectors.map<MenuOption>((connector) => ({
+        addon: <ConnectorAvatar connector={connector} size={16} framed={false} />,
+        group: { hidden: true, label: "Tools", priority: 2 },
+        key: connector.id,
+        label: connector.name,
+        execute: () => { onChange(''); setTimeout(() => textareaRef.current?.focus(), 50); },
+      })),
+    },
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [mentionableAgents, onChange, onMentionSelect, featuredConnectors]);
 
   const toggleRecording = async () => {
     if (isRecording) {
@@ -634,8 +735,8 @@ export function OpalInput({
           style={{
             backgroundColor: 'var(--opal-bg-input)',
             borderColor: borderColor,
-            transition: 'all 0.2s ease',
-            minHeight: '88px',
+            transition: 'height 0.15s ease, border-color 0.2s ease',
+            minHeight: imMode ? '0px' : '88px',
             boxSizing: 'border-box',
             paddingTop: '8px',
             paddingBottom: '8px',
@@ -672,6 +773,76 @@ export function OpalInput({
           </Box>
         )}
 
+        {/* Formatting toolbar — shown above textarea when active in IM mode */}
+        {imMode && showFormatBar && (
+          <Box
+            display="flex"
+            alignItems="center"
+            gap="2"
+            style={{
+              borderBottom: '1px solid var(--ax-colors-border-secondary)',
+              paddingBottom: '6px',
+              marginBottom: '6px',
+            }}
+          >
+            {([
+              { icon: <IconBold size={13} />, title: 'Bold', wrap: '**' },
+              { icon: <IconItalic size={13} />, title: 'Italic', wrap: '_' },
+              { icon: <IconStrikethrough size={13} />, title: 'Strike', wrap: '~~' },
+            ] as const).map(({ icon, title, wrap }) => (
+              <button
+                key={title}
+                title={title}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  const el = textareaRef.current;
+                  if (!el) return;
+                  const start = el.selectionStart ?? 0;
+                  const end = el.selectionEnd ?? 0;
+                  const selected = value.slice(start, end);
+                  const newVal = value.slice(0, start) + wrap + selected + wrap + value.slice(end);
+                  onChange(newVal);
+                  setTimeout(() => { el.focus(); el.setSelectionRange(start + wrap.length, end + wrap.length); }, 0);
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 26, height: 26, borderRadius: 4, border: 'none', background: 'transparent',
+                  cursor: 'pointer', color: 'var(--ax-colors-fg-secondary)', transition: 'background 0.12s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--ax-colors-bg-secondary)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >{icon}</button>
+            ))}
+            <div style={{ width: 1, height: 14, background: 'var(--ax-colors-border-secondary)', margin: '0 2px', flexShrink: 0 }} />
+            {([
+              { icon: <IconListUl size={13} />, title: 'Bullet list', prefix: '- ' },
+              { icon: <IconListOl size={13} />, title: 'Numbered list', prefix: '1. ' },
+            ] as const).map(({ icon, title, prefix }) => (
+              <button
+                key={title}
+                title={title}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  const el = textareaRef.current;
+                  if (!el) return;
+                  const pos = el.selectionStart ?? 0;
+                  const lineStart = value.lastIndexOf('\n', pos - 1) + 1;
+                  const newVal = value.slice(0, lineStart) + prefix + value.slice(lineStart);
+                  onChange(newVal);
+                  setTimeout(() => { el.focus(); el.setSelectionRange(pos + prefix.length, pos + prefix.length); }, 0);
+                }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 26, height: 26, borderRadius: 4, border: 'none', background: 'transparent',
+                  cursor: 'pointer', color: 'var(--ax-colors-fg-secondary)', transition: 'background 0.12s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--ax-colors-bg-secondary)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >{icon}</button>
+            ))}
+          </Box>
+        )}
+
         <Box w="full" style={{ minHeight: '34px', position: 'relative' }}>
           {inputAgentCtx && (
             <span
@@ -690,7 +861,10 @@ export function OpalInput({
           )}
           <textarea
             ref={textareaRef}
-            placeholder="Ask Opal"
+            placeholder={imMode
+              ? (isFocused || value ? "type / for commands, @ to tag your agents and teammates" : "Collaborate with your team")
+              : "Ask Opal"
+            }
             value={value}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -718,6 +892,37 @@ export function OpalInput({
           />
         </Box>
 
+        {/* Slash command Menu — hidden anchor trigger, auto-opens when user types "/" in IM mode */}
+        {imMode && (
+          <Menu options={slashCommandMenuOptions} size="sm">
+            <MenuTrigger asChild>
+              <button
+                ref={slashTriggerRef}
+                tabIndex={-1}
+                style={{
+                  position: 'absolute',
+                  bottom: 48,
+                  left: 0,
+                  width: 1,
+                  height: 1,
+                  opacity: 0,
+                  pointerEvents: 'none',
+                  border: 'none',
+                  padding: 0,
+                  background: 'transparent',
+                  cursor: 'default',
+                }}
+              />
+            </MenuTrigger>
+            <MenuContent
+              align="start"
+              side="top"
+              sideOffset={8}
+              style={{ width: dropdownWidth ? `${dropdownWidth}px` : undefined }}
+            />
+          </Menu>
+        )}
+
         {/* Actions Row */}
         <Box
           display="flex"
@@ -740,30 +945,43 @@ export function OpalInput({
               </MenuTrigger>
               <MenuContent align="start" side="top" sideOffset={8} />
             </Menu>
-            <Menu options={agentMenuOptions}>
-              <MenuTrigger asChild>
-                <Button
-                  appearance="subtle"
-                  size="sm"
-                  icon={<IconAgent size={16} />}
-                  aria-label="Agent selection"
-                  style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
-                />
-              </MenuTrigger>
-              <MenuContent align="start" side="top" sideOffset={8} />
-            </Menu>
-            <Menu options={skillMenuOptions}>
-              <MenuTrigger asChild>
-                <Button
-                  appearance="subtle"
-                  size="sm"
-                  icon={<IconBook size={16} />}
-                  aria-label="Skill menu"
-                  style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
-                />
-              </MenuTrigger>
-              <MenuContent align="start" side="top" sideOffset={8} />
-            </Menu>
+            {!imMode && (
+              <Menu options={agentMenuOptions}>
+                <MenuTrigger asChild>
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    icon={<IconSubAgent size={16} />}
+                    aria-label="Agent selection"
+                    style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
+                  />
+                </MenuTrigger>
+                <MenuContent align="start" side="top" sideOffset={8} />
+              </Menu>
+            )}
+            {!imMode ? (
+              <Menu options={skillMenuOptions}>
+                <MenuTrigger asChild>
+                  <Button
+                    appearance="subtle"
+                    size="sm"
+                    icon={<IconBook size={16} />}
+                    aria-label="Skill menu"
+                    style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
+                  />
+                </MenuTrigger>
+                <MenuContent align="start" side="top" sideOffset={8} />
+              </Menu>
+            ) : (
+              <Button
+                appearance={showFormatBar ? 'default' : 'subtle'}
+                size="sm"
+                icon={<IconText size={16} />}
+                aria-label="Text formatting"
+                onClick={() => setShowFormatBar(v => !v)}
+                style={{ padding: '4px', height: 'auto', color: showFormatBar ? undefined : 'var(--opal-text-tertiary)' }}
+              />
+            )}
           </Box>
 
           {/* Right Actions (Mic + Send) */}
@@ -848,33 +1066,99 @@ export function OpalInput({
           }}
         >
           <Listbox>
-            <ListboxGroup>
-              <ListboxLabel px="12" pt="8" pb="4">
-                Recently used agents
-              </ListboxLabel>
-              {filteredAgents.map((agent, index) => (
-                <ListboxItem
-                  key={agent.id}
-                  addonBefore={agent.emoji
-                    ? <span style={{ fontSize: 16, lineHeight: 1 }}>{agent.emoji}</span>
-                    : undefined}
-                  description={agent.subtitle}
-                  onClick={() => handleSelectAgent(agent)}
-                  onMouseEnter={() => setFocusedAgentIndex(index)}
-                  style={{
-                    cursor: 'pointer',
-                    backgroundColor: index === focusedAgentIndex
-                      ? 'var(--ax-colors-bg-secondary)'
-                      : undefined,
-                  }}
-                >
-                  <Box display="flex" alignItems="center" gap="8">
-                    <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
-                    <Text fontSize="sm" color="fg.link.visited">{agent.handle}</Text>
-                  </Box>
-                </ListboxItem>
-              ))}
-            </ListboxGroup>
+            {filteredUsers.length > 0 && (
+              <ListboxGroup>
+                <ListboxLabel px="12" pt="8" pb="4">Teammates</ListboxLabel>
+                {filteredUsers.map((user, i) => {
+                  const globalIdx = i;
+                  const initials = user.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+                  return (
+                    <ListboxItem
+                      key={user.id}
+                      addonBefore={
+                        <span style={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          border: '2px solid var(--ax-colors-bg-default)',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden', flexShrink: 0,
+                          background: user.avatar ? undefined : '#6d28d9',
+                          fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
+                        }}>
+                          {user.avatar
+                            ? <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : initials}
+                        </span>
+                      }
+                      description={user.email}
+                      onClick={() => handleSelectAgent(user)}
+                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
+                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
+                    >
+                      <Text fontSize="md" fontWeight="500" color="fg.default">{user.name}</Text>
+                    </ListboxItem>
+                  );
+                })}
+              </ListboxGroup>
+            )}
+            {filteredVAUs.length > 0 && (
+              <ListboxGroup>
+                <ListboxLabel px="12" pt="8" pb="4">Virtual Teammates</ListboxLabel>
+                {filteredVAUs.map((vau, i) => {
+                  const globalIdx = filteredUsers.length + i;
+                  const initials = vau.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+                  return (
+                    <ListboxItem
+                      key={vau.id}
+                      addonBefore={
+                        <span style={{
+                          width: 28, height: 28, borderRadius: '50%',
+                          border: '2px solid var(--ax-colors-bg-default)',
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden', flexShrink: 0,
+                          background: vau.avatar ? undefined : '#6d28d9',
+                          fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
+                        }}>
+                          {vau.avatar
+                            ? <img src={vau.avatar} alt={vau.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            : initials}
+                        </span>
+                      }
+                      description={vau.email}
+                      onClick={() => handleSelectAgent(vau)}
+                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
+                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
+                    >
+                      <Text fontSize="md" fontWeight="500" color="fg.default">{vau.name}</Text>
+                    </ListboxItem>
+                  );
+                })}
+              </ListboxGroup>
+            )}
+            {filteredAgents.length > 0 && (
+              <ListboxGroup>
+                <ListboxLabel px="12" pt="8" pb="4">Agents</ListboxLabel>
+                {filteredAgents.map((agent, i) => {
+                  const globalIdx = filteredUsers.length + filteredVAUs.length + i;
+                  return (
+                    <ListboxItem
+                      key={agent.id}
+                      addonBefore={agent.emoji
+                        ? <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>{agent.emoji}</span>
+                        : undefined}
+                      description={agent.subtitle}
+                      onClick={() => handleSelectAgent(agent)}
+                      onMouseEnter={() => setFocusedAgentIndex(globalIdx)}
+                      style={{ cursor: 'pointer', backgroundColor: globalIdx === focusedAgentIndex ? 'var(--ax-colors-bg-secondary)' : undefined }}
+                    >
+                      <Box display="flex" alignItems="center" gap="8">
+                        <Text fontSize="md" fontWeight="500" color="fg.default">{agent.name}</Text>
+                        <Badge variant="subtle" style={{ fontSize: 11, fontWeight: 400 }}>{agent.handle}</Badge>
+                      </Box>
+                    </ListboxItem>
+                  );
+                })}
+              </ListboxGroup>
+            )}
           </Listbox>
         </PopoverContent>
       </Popover>

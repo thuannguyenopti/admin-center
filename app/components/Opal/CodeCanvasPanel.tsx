@@ -1,6 +1,12 @@
 "use client";
 
-import { Box, Button, ToggleButton, Tooltip, Avatar, Badge, Menu, MenuContent, MenuTrigger, toaster } from "@optiaxiom/react";
+import {
+  Box, Button, ToggleButton, Tooltip, Avatar, Badge, Menu, MenuContent, MenuTrigger, toaster,
+  Dialog, DialogContent, DialogBody, DialogClose, DialogFooter, DialogHeader,
+  Select, SelectContent, SelectTrigger,
+  Field, Input,
+  Text as AxiomText,
+} from "@optiaxiom/react";
 import { Text } from "../Text";
 import {
   IconXmark,
@@ -31,8 +37,14 @@ import {
   IconAgent,
   IconCodeBranch,
   IconComments,
+  IconEllipsisSolid,
+  IconUserPlus,
+  IconUsers,
+  IconGlobe,
+  IconShieldCheck,
+  IconTrashCan,
 } from "@optimizely/axiom-icons";
-import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode, type KeyboardEvent } from "react";
 import dynamic from "next/dynamic";
 import { useCollabDoc } from "./editor/useCollabDoc";
 import { useEditor, EditorContent, Extension } from "@tiptap/react";
@@ -45,6 +57,7 @@ import { BlameEngine, type BlameSegment } from "./editor/collab/blame-engine";
 import { createBlamePlugin, blamePluginKey } from "./editor/collab/blame-tiptap-plugin";
 import { LocalVersionManager, type LocalVersion, type DiffLine } from "./editor/collab/local-version-manager";
 import { computeLineDiff } from "./editor/collab/diff-engine";
+import { createCollabCursorPlugin, collabCursorKey, type CollabCursor } from "./editor/collab-cursor-plugin";
 
 const CodeMirrorEditor = dynamic(
   () => import("./editor/CodeMirrorEditor").then((m) => m.CodeMirrorEditor),
@@ -119,9 +132,20 @@ const WYSIWYG_CONTENT = `<h1>Build something people love</h1>
 <h3>🔒 Enterprise-ready</h3>
 <p>SOC 2 compliant, SSO support, and role-based access control — built for teams of any size.</p>`;
 
-const COLLAB_USERS = [
-  { name: "Mary K.", colorScheme: "purple" as const },
-  { name: "James S.", colorScheme: "neutral" as const },
+type CollabUser =
+  | { name: string; type: "ai"; src: string }
+  | { name: string; type: "human"; colorScheme: "purple" | "neutral"; lightPurple?: boolean };
+
+const COLLAB_USERS: CollabUser[] = [
+  { name: "GEO QA VAU", type: "ai", src: "/avatars/mock-avatar-geo.svg" },
+  { name: "Jamie Chen", type: "human", colorScheme: "purple", lightPurple: true },
+  { name: "James S.", type: "human", colorScheme: "purple" },
+  { name: "Marie Anne", type: "human", colorScheme: "neutral" },
+];
+
+const MOCK_CURSORS: CollabCursor[] = [
+  { id: "jc", name: "Jamie Chen", color: "#7c3aed", position: 80 },
+  { id: "js", name: "James S.", color: "#2563eb", position: 260 },
 ];
 
 // ── Blame segment helpers ─────────────────────────────────────────────────────
@@ -169,6 +193,7 @@ function buildBlameSegments(baselineText: string, currentText: string): BlameSeg
 const BORDER = "1px solid var(--ax-colors-border-secondary)";
 
 const WYSIWYG_STYLES = `
+@keyframes collab-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .tiptap-canvas .tiptap { outline: none; font-size: 14px; line-height: 1.75; color: var(--ax-colors-fg-default); font-family: var(--ax-fonts-sans, system-ui, sans-serif); }
 .tiptap-canvas .tiptap > * + * { margin-top: 0.75em; }
 .tiptap-canvas .tiptap h1 { font-size: 22px; font-weight: 700; line-height: 1.3; }
@@ -184,27 +209,29 @@ const WYSIWYG_STYLES = `
 
 function FmtBtn({ title, active, onClick, children }: { title: string; active?: boolean; onClick?: () => void; children: React.ReactNode }) {
   return (
-    <Button
+    <button
       type="button"
       title={title}
+      aria-label={title}
+      aria-pressed={active}
       onClick={onClick}
-      appearance="subtle"
-      size="sm"
       style={{
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        width: 28,
-        height: 28,
+        width: 26,
+        height: 26,
         flexShrink: 0,
-        ...(active && {
-          background: "var(--ax-colors-bg-accent-subtle)",
-          color: "var(--ax-colors-fg-accent)",
-        }),
+        padding: 0,
+        border: "none",
+        borderRadius: 6,
+        cursor: "pointer",
+        background: active ? "var(--ax-colors-bg-accent-subtle)" : "transparent",
+        color: active ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-default)",
       }}
     >
       {children}
-    </Button>
+    </button>
   );
 }
 function FmtDivider() {
@@ -219,6 +246,7 @@ function WysiwygPanel({ initialHtml, blameSegments, onContentChange }: { initial
       StarterKit.configure({ codeBlock: false }),
       CodeBlockLowlight.configure({ lowlight: createLowlight(common) }),
       Extension.create({ name: "blame", addProseMirrorPlugins: () => [createBlamePlugin()] }),
+      Extension.create({ name: "collabCursor", addProseMirrorPlugins: () => [createCollabCursorPlugin(MOCK_CURSORS)] }),
     ],
     content: initialHtml,
     editable: true,
@@ -236,31 +264,61 @@ function WysiwygPanel({ initialHtml, blameSegments, onContentChange }: { initial
     );
   }, [editor, blameSegments]);
 
+  // Simulate live cursor movement
+  useEffect(() => {
+    if (!editor) return;
+    const tick = setInterval(() => {
+      const maxPos = editor.state.doc.content.size;
+      if (maxPos < 20) return;
+      const updated: CollabCursor[] = [
+        { id: "jc", name: "Jamie Chen", color: "#7c3aed", position: Math.min(maxPos - 1, Math.floor(Math.random() * maxPos * 0.45) + 15) },
+        { id: "js", name: "James S.", color: "#2563eb", position: Math.min(maxPos - 1, Math.floor(Math.random() * maxPos * 0.4) + Math.floor(maxPos * 0.5)) },
+      ];
+      editor.view.dispatch(editor.view.state.tr.setMeta(collabCursorKey, updated));
+    }, 2800);
+    return () => clearInterval(tick);
+  }, [editor]);
+
   if (!editor) return null;
 
   return (
     <Box style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Formatting toolbar + avatars */}
       <Box display="flex" alignItems="center" px="8" style={{ flexShrink: 0, height: 40, borderBottom: BORDER, gap: 2, overflowX: "auto" }}>
-        <FmtBtn title="H1" active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}><span style={{ fontWeight: 700, fontSize: 11, fontFamily: "monospace" }}>H1</span></FmtBtn>
-        <FmtBtn title="H2" active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><span style={{ fontWeight: 700, fontSize: 11, fontFamily: "monospace" }}>H2</span></FmtBtn>
-        <FmtBtn title="H3" active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><span style={{ fontWeight: 700, fontSize: 11, fontFamily: "monospace" }}>H3</span></FmtBtn>
+        <FmtBtn title="H1" active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H1</span></FmtBtn>
+        <FmtBtn title="H2" active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H2</span></FmtBtn>
+        <FmtBtn title="H3" active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H3</span></FmtBtn>
         <FmtDivider />
-        <FmtBtn title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><IconBold size={13} /></FmtBtn>
-        <FmtBtn title="Italic" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}><IconItalic size={13} /></FmtBtn>
-        <FmtBtn title="Strike" active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><IconStrikethrough size={13} /></FmtBtn>
-        <FmtBtn title="Code" active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><IconCode size={13} /></FmtBtn>
-        <FmtDivider />
-        <FmtBtn title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}><IconListUl size={13} /></FmtBtn>
-        <FmtBtn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><IconListOl size={13} /></FmtBtn>
-        <FmtBtn title="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><IconQuoteRight size={13} /></FmtBtn>
-        <FmtBtn title="Link"><IconLink size={13} /></FmtBtn>
+        <FmtBtn title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><IconBold size={15} /></FmtBtn>
+        <FmtBtn title="Italic" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}><IconItalic size={15} /></FmtBtn>
+        <FmtBtn title="Strike" active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><IconStrikethrough size={15} /></FmtBtn>
+        <FmtBtn title="Code" active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><IconCode size={15} /></FmtBtn>
+<FmtDivider />
+        <FmtBtn title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}><IconListUl size={15} /></FmtBtn>
+        <FmtBtn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><IconListOl size={15} /></FmtBtn>
+        <FmtBtn title="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><IconQuoteRight size={15} /></FmtBtn>
+        <FmtBtn title="Link"><IconLink size={15} /></FmtBtn>
         <Box style={{ flex: 1 }} />
         <Box display="flex" alignItems="center" style={{ gap: 0, flexShrink: 0 }}>
           {COLLAB_USERS.map((u, i) => (
             <Tooltip key={u.name} content={u.name} delayDuration={300}>
               <span style={{ marginLeft: i > 0 ? -6 : 0, zIndex: COLLAB_USERS.length - i, position: "relative", display: "inline-flex" }}>
-                <Avatar name={u.name} size="xs" colorScheme={u.colorScheme} style={{ width: 32, height: 32, fontSize: 11, border: "2px solid var(--ax-colors-bg-default)" } as React.CSSProperties} />
+                {u.type === "ai" ? (
+                  <span style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--ax-colors-bg-default)", flexShrink: 0 }}>
+                    <img src={u.src} alt={u.name} width={28} height={28} style={{ display: "block", borderRadius: "50%" }} />
+                  </span>
+                ) : (
+                  <Avatar
+                    name={u.name}
+                    size="xs"
+                    colorScheme={u.lightPurple ? undefined : u.colorScheme}
+                    style={{
+                      width: 28, height: 28, fontSize: 10,
+                      border: "2px solid var(--ax-colors-bg-default)",
+                      ...(u.lightPurple && { background: "#ede9fe", color: "#7c3aed" }),
+                    } as React.CSSProperties}
+                  />
+                )}
               </span>
             </Tooltip>
           ))}
@@ -428,6 +486,223 @@ function VersionHistoryPanel({
   );
 }
 
+// ── Share dialog ──────────────────────────────────────────────────────────────
+
+type PermissionRole = "Owner" | "Admin" | "Editor" | "Viewer";
+
+type AccessSubject = {
+  id: string;
+  name: string;
+  detail: string;
+  role: PermissionRole;
+  kind: "user" | "team" | "org" | "vau";
+  colorScheme: "purple" | "neutral";
+  avatar?: string;
+  avatarName?: string;
+  badges?: string[];
+};
+
+const ROLE_OPTIONS = [
+  { label: "Can manage", value: "Admin", description: "Can change content, share access, and remove the artifact." },
+  { label: "Can edit",   value: "Editor", description: "Can change content and share with others." },
+  { label: "Can view",   value: "Viewer", description: "Can open and comment on the artifact." },
+] as const;
+
+const SHARE_DIALOG_BORDER = "1px solid var(--ax-colors-border-secondary)";
+
+const ROLE_LABELS: Record<PermissionRole, string> = {
+  Owner: "Owner", Admin: "Can manage", Editor: "Can edit", Viewer: "Can view",
+};
+
+const DEFAULT_ARTIFACT_CREATOR = { name: "Jamie Chen" };
+
+function getStrideEmail(name: string) {
+  return `${name.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/(^\.|\.$)/g, "")}@stride.com`;
+}
+
+function getInitialAccess(artifactCreator: { name: string; avatar?: string }): AccessSubject[] {
+  const creatorName = artifactCreator.name || DEFAULT_ARTIFACT_CREATOR.name;
+  return [
+    { id: "owner", name: "GEO Q&A Generator", detail: "geo-qa-generator@stride.com", role: "Owner", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-geo.svg" },
+    { id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin", kind: "user", colorScheme: "purple", avatar: artifactCreator.avatar, badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined },
+    { id: "stride-org", name: "Stride", detail: "stride@stride.com", role: "Viewer", kind: "org", colorScheme: "neutral" },
+    { id: "abu-siddik", name: "Abu Siddik", detail: "abu.siddik@stride.com", role: "Editor", kind: "user", colorScheme: "neutral" },
+    { id: "content-ops", name: "Content Operations", detail: "content-operations@stride.com", role: "Admin", kind: "team", colorScheme: "neutral" },
+    { id: "weekly-traffic-reporter", name: "Weekly Traffic Reporter", detail: "weekly-traffic-reporter@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-traffic.svg" },
+    { id: "seo-advisor", name: "SEO Advisor", detail: "seo-advisor@stride.com", role: "Viewer", kind: "vau", colorScheme: "neutral", avatar: "/avatars/mock-avatar-seo.svg" },
+  ];
+}
+
+function PermissionRoleSelect({ role, allowOwnershipTransfer, disabled, onChange }: { role: PermissionRole; allowOwnershipTransfer?: boolean; disabled?: boolean; onChange: (role: PermissionRole) => void }) {
+  if (role === "Owner" || disabled) {
+    return <Badge intent={role === "Owner" ? "information" : "neutral"} style={{ flexShrink: 0 }}>{ROLE_LABELS[role]}</Badge>;
+  }
+  type RoleSelectValue = PermissionRole | "Make owner";
+  return (
+    <Select
+      value={role}
+      onValueChange={(value) => onChange(value === "Make owner" ? "Owner" : value as PermissionRole)}
+      options={[
+        ...ROLE_OPTIONS,
+        ...(allowOwnershipTransfer ? [{ label: "Make owner", value: "Make owner" as RoleSelectValue, description: "Transfer ownership to this person." }] : []),
+      ]}
+    >
+      <SelectTrigger size="md" style={{ minWidth: 132 }}>{ROLE_LABELS[role]}</SelectTrigger>
+      <SelectContent />
+    </Select>
+  );
+}
+
+function AccessAvatar({ subject }: { subject: AccessSubject }) {
+  if (subject.kind === "team") {
+    return <Box display="flex" alignItems="center" justifyContent="center" bg="bg.secondary" rounded="full" style={{ width: 32, height: 32, flexShrink: 0 }}><IconUsers size={15} style={{ color: "var(--ax-colors-fg-secondary)" }} /></Box>;
+  }
+  if (subject.kind === "org") {
+    return <Box display="flex" alignItems="center" justifyContent="center" bg="bg.secondary" rounded="full" style={{ width: 32, height: 32, flexShrink: 0 }}><IconGlobe size={15} style={{ color: "var(--ax-colors-fg-secondary)" }} /></Box>;
+  }
+  if (subject.kind === "vau") {
+    if (subject.avatar) {
+      return <Avatar name={subject.name} src={subject.avatar} size="md" colorScheme={subject.colorScheme} style={{ flexShrink: 0 } as React.CSSProperties} />;
+    }
+    return <Box display="flex" alignItems="center" justifyContent="center" bg="bg.secondary" rounded="full" style={{ width: 32, height: 32, flexShrink: 0 }}><IconAgent size={15} style={{ color: "var(--ax-colors-fg-secondary)" }} /></Box>;
+  }
+  return <Avatar name={subject.name} src={subject.avatar} size="md" colorScheme={subject.colorScheme} style={{ flexShrink: 0 } as React.CSSProperties} />;
+}
+
+function AccessRow({ subject, showMakeOwner, onRoleChange, onRemove }: { subject: AccessSubject; showMakeOwner: boolean; onRoleChange: (role: PermissionRole) => void; onRemove: () => void }) {
+  const isOwner = subject.role === "Owner";
+  const canBecomeOwner = showMakeOwner && (subject.kind === "user" || subject.kind === "vau");
+  return (
+    <Box display="flex" alignItems="center" gap="10" py="8" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
+      <AccessAvatar subject={subject} />
+      <Box style={{ minWidth: 0, flex: 1 }}>
+        <Box display="flex" alignItems="center" gap="8" style={{ minWidth: 0 }}>
+          <AxiomText fontSize="sm" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subject.name}</AxiomText>
+          {(subject.kind === "org" || subject.kind === "vau") && <Badge intent="neutral">{subject.kind === "org" ? "Org" : "VAU"}</Badge>}
+          {subject.badges?.map((badge) => <Badge key={badge} intent="neutral">{badge}</Badge>)}
+        </Box>
+        <AxiomText fontSize="sm" color="fg.tertiary">{subject.detail}</AxiomText>
+      </Box>
+      <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+        <PermissionRoleSelect role={subject.role} allowOwnershipTransfer={canBecomeOwner} disabled={isOwner} onChange={onRoleChange} />
+        <Tooltip content={isOwner ? "Transfer ownership from the owner menu" : "Remove access"} delayDuration={300}>
+          <span style={{ display: "inline-flex" }}>
+            <Button appearance="subtle" size="sm" icon={isOwner ? <IconShieldCheck size={14} /> : <IconTrashCan size={14} />} aria-label={isOwner ? "Owner protected" : `Remove ${subject.name}`} disabled={isOwner} onClick={onRemove} />
+          </span>
+        </Tooltip>
+      </Box>
+    </Box>
+  );
+}
+
+function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = DEFAULT_ARTIFACT_CREATOR }: { open: boolean; onOpenChange: (open: boolean) => void; artifactTitle?: string; artifactCreator?: { name: string; avatar?: string } }) {
+  const [inviteQuery, setInviteQuery] = useState("");
+  const [inviteTokens, setInviteTokens] = useState<string[]>([]);
+  const [inviteRole, setInviteRole] = useState<PermissionRole>("Editor");
+  const [accessList, setAccessList] = useState<AccessSubject[]>(() => getInitialAccess(artifactCreator));
+  const shareUrl = "https://stride.com/artifacts/landing-page";
+  const showMakeOwner = artifactCreator.name === "Jamie Chen";
+
+  useEffect(() => { setAccessList(getInitialAccess(artifactCreator)); }, [artifactCreator]);
+
+  const handleCopyLink = useCallback(() => {
+    navigator.clipboard.writeText(shareUrl).catch(() => {});
+    toaster.create("Share link copied", { intent: "success" });
+  }, [shareUrl]);
+
+  const addInviteToken = useCallback((value: string) => {
+    const token = value.trim().replace(/,$/, "");
+    if (!token) return;
+    setInviteTokens((tokens) => (tokens.includes(token) ? tokens : [...tokens, token]));
+    setInviteQuery("");
+  }, []);
+
+  const handleInviteKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") { event.preventDefault(); addInviteToken(inviteQuery); return; }
+    if (event.key === "Backspace" && !inviteQuery && inviteTokens.length > 0) setInviteTokens((tokens) => tokens.slice(0, -1));
+  }, [addInviteToken, inviteQuery, inviteTokens.length]);
+
+  const handleInvite = useCallback(() => {
+    const invitees = [...inviteTokens, inviteQuery.trim()].map((item) => item.replace(/,$/, "")).filter(Boolean);
+    if (invitees.length === 0) return;
+    setAccessList((items) => [...items, ...invitees.map((invitee, index) => ({
+      id: `${invitee.toLowerCase().replace(/\W+/g, "-")}-${Date.now()}-${index}`,
+      name: invitee, detail: invitee.includes("@") ? "Pending invite" : "Direct invite",
+      role: inviteRole, kind: "user" as const, colorScheme: "neutral" as const,
+    }))]);
+    setInviteTokens([]);
+    setInviteQuery("");
+    toaster.create("People added", { intent: "success" });
+  }, [inviteQuery, inviteRole, inviteTokens]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent size="lg" style={{ width: "min(880px, calc(100vw - 48px))", height: "calc(100dvh - 32px)", minHeight: "calc(100dvh - 32px)", maxHeight: "calc(100dvh - 32px)", top: 16, overflow: "hidden" }}>
+        <DialogHeader>Share &quot;{artifactTitle ?? "Untitled artifact"}&quot;</DialogHeader>
+        <DialogBody style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <Box display="flex" flexDirection="column" gap="24" style={{ flex: 1, minHeight: 0 }}>
+          <Box display="grid" gap="8" style={{ gridTemplateColumns: "minmax(0, 1fr) 148px auto", alignItems: "end" }}>
+            <Field label="Share with">
+              <Input
+                size="md"
+                value={inviteQuery}
+                onChange={(event) => setInviteQuery(event.target.value)}
+                onBlur={() => addInviteToken(inviteQuery)}
+                onKeyDown={handleInviteKeyDown}
+                placeholder={inviteTokens.length > 0 ? "" : "Type names or emails..."}
+                aria-label="Share with"
+                addonBefore={inviteTokens.length > 0 && (
+                  <Box display="flex" alignItems="center" gap="4" style={{ flexWrap: "wrap" }}>
+                    {inviteTokens.map((token) => (
+                      <Badge key={token} intent="neutral" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        {token}
+                        <Button appearance="subtle" size="sm" icon={<IconXmark size={10} />} aria-label={`Remove ${token}`} onClick={(e) => { e.stopPropagation(); setInviteTokens((tokens) => tokens.filter((t) => t !== token)); }} style={{ width: 18, height: 18, minWidth: 18 }} />
+                      </Badge>
+                    ))}
+                  </Box>
+                )}
+              />
+            </Field>
+            <Field label="Access">
+              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as PermissionRole)} options={[...ROLE_OPTIONS]}>
+                <SelectTrigger size="md">{ROLE_LABELS[inviteRole]}</SelectTrigger>
+                <SelectContent />
+              </Select>
+            </Field>
+            <Button appearance="primary" size="md" onClick={handleInvite} disabled={!inviteQuery.trim() && inviteTokens.length === 0}>Share</Button>
+          </Box>
+
+          <Box display="flex" flexDirection="column" gap="12" style={{ flex: 1, minHeight: 0 }}>
+            <AxiomText fontSize="lg" fontWeight="600">Who has access</AxiomText>
+            <Box rounded="lg" bg="bg.default" px="16" style={{ border: SHARE_DIALOG_BORDER, flex: 1, minHeight: 0, overflowY: "auto" }}>
+              {accessList.map((subject) => (
+                <AccessRow
+                  key={subject.id}
+                  subject={subject}
+                  showMakeOwner={showMakeOwner}
+                  onRoleChange={(role) => setAccessList((items) => items.map((item) => {
+                    if (item.id === subject.id) return { ...item, role };
+                    if (role === "Owner" && item.role === "Owner") return { ...item, role: "Admin" as PermissionRole };
+                    return item;
+                  }))}
+                  onRemove={() => setAccessList((items) => items.filter((item) => item.id !== subject.id))}
+                />
+              ))}
+            </Box>
+          </Box>
+        </Box>
+        </DialogBody>
+        <DialogFooter>
+          <Box display="flex" alignItems="center" style={{ width: "100%", justifyContent: "space-between" }}>
+            <Button appearance="default" size="lg" icon={<IconLink size={15} />} onClick={handleCopyLink}>Copy link</Button>
+            <DialogClose asChild><Button appearance="primary" size="lg">Done</Button></DialogClose>
+          </Box>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Blame legend ──────────────────────────────────────────────────────────────
 
 function BlameLegend({ segments }: { segments: BlameSegment[] }) {
@@ -455,15 +730,20 @@ function BlameLegend({ segments }: { segments: BlameSegment[] }) {
 export function CodeCanvasPanel({
   onClose,
   filename = "landing-page.html",
+  fileType = "html",
   artifactTitle,
   artifactStatus,
   artifactVersion,
   artifactSource,
+  artifactCreator,
   contentNode,
   initialHtml,
+  chatOpen,
+  onChatToggle,
 }: CodeCanvasPanelProps) {
   const collabDoc = useCollabDoc(EXAMPLE_HTML);
   const [mode, setMode] = useState<CanvasMode>("preview");
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(initialHtml ?? WYSIWYG_CONTENT);
 
   // ── Contributors (blame) ──────────────────────────────────────────────────
@@ -570,19 +850,14 @@ export function CodeCanvasPanel({
         {/* Artifact title */}
         {artifactTitle && (
           <>
-            <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 1, minWidth: 0, overflow: "hidden" }}>
-              <Text fontSize="sm" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 220 }}>
-                {artifactTitle}
-              </Text>
-              {artifactStatus && (
-                <Badge intent={artifactStatus === "Ready" ? "success" : artifactStatus === "Failed" ? "danger" : "neutral"} style={{ flexShrink: 0 }}>
-                  {artifactStatus}
-                </Badge>
-              )}
-              {artifactVersion && (
-                <Text fontSize="xs" color="fg.tertiary" style={{ whiteSpace: "nowrap", flexShrink: 0 }}>v{artifactVersion}</Text>
-              )}
-            </Box>
+            <Text fontSize="md" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 300, flexShrink: 1, minWidth: 0 }}>
+              {artifactTitle}
+            </Text>
+            {artifactStatus && (
+              <Badge intent={artifactStatus === "Ready" ? "success" : artifactStatus === "Failed" ? "danger" : "neutral"} style={{ flexShrink: 0 }}>
+                {artifactStatus}
+              </Badge>
+            )}
             <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
           </>
         )}
@@ -592,12 +867,12 @@ export function CodeCanvasPanel({
           <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
             <Tooltip content="Source code" delayDuration={400}>
               <span>
-                <ToggleButton size="sm" appearance="subtle" pressed={mode === "source"} onPressedChange={() => handleSetMode("source")} icon={<IconCode size={15} />} aria-label="Source" />
+                <ToggleButton size="md" appearance="subtle" pressed={mode === "source"} onPressedChange={() => handleSetMode("source")} icon={<IconCode size={15} />} aria-label="Source" />
               </span>
             </Tooltip>
             <Tooltip content="Preview / WYSIWYG" delayDuration={400}>
               <span>
-                <ToggleButton size="sm" appearance="subtle" pressed={mode === "preview"} onPressedChange={() => handleSetMode("preview")} icon={<IconEye size={15} />} aria-label="Preview" />
+                <ToggleButton size="md" appearance="subtle" pressed={mode === "preview"} onPressedChange={() => handleSetMode("preview")} icon={<IconEye size={15} />} aria-label="Preview" />
               </span>
             </Tooltip>
           </Box>
@@ -614,67 +889,52 @@ export function CodeCanvasPanel({
           </Box>
 
           <Box display="flex" alignItems="center" gap="4">
-            <Tooltip content="Undo" delayDuration={400}><span><Button appearance="subtle" size="sm" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" /></span></Tooltip>
-            <Tooltip content="Redo" delayDuration={400}><span><Button appearance="subtle" size="sm" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" /></span></Tooltip>
-            <Tooltip content="Copy" delayDuration={400}><span><Button appearance="subtle" size="sm" icon={<IconCopy size={15} />} aria-label="Copy" /></span></Tooltip>
+            <Tooltip content="Undo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" /></span></Tooltip>
+            <Tooltip content="Redo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" /></span></Tooltip>
           </Box>
 
           <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
 
-          {/* Contributors toggle */}
-          {!contentNode && (
-            <Tooltip content={blameActive ? "Hide contributors" : "Show contributors"} delayDuration={300}>
-              <span>
-                <ToggleButton
-                  size="sm"
-                  appearance="subtle"
-                  pressed={blameActive}
-                  onPressedChange={handleToggleBlame}
-                  icon={<IconUserGroup size={15} />}
-                  aria-label="Toggle contributors"
-                />
-              </span>
-            </Tooltip>
-          )}
-
-          {/* Version History */}
-          {!contentNode && (
-            <Tooltip content="Version history" delayDuration={300}>
-              <span>
-                <ToggleButton
-                  size="sm"
-                  appearance="subtle"
-                  pressed={versionPanelOpen}
-                  onPressedChange={() => setVersionPanelOpen((v) => !v)}
-                  icon={<IconClockRotateLeft size={15} />}
-                  aria-label="Version history"
-                />
-              </span>
-            </Tooltip>
-          )}
-
-          <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
-
-          {/* Share */}
+          {/* More actions menu */}
           <Menu
             options={[
-              { label: "Copy link", addon: <IconLink size={14} />, execute: () => { navigator.clipboard.writeText(window.location.href).catch(() => {}); toaster.create("Link copied to clipboard", { intent: "success" }); } },
-              { label: "Microsoft Word (.docx)", addon: <IconFileWord size={14} />, group: { label: "Download as" }, execute: () => {} },
-              { label: "PDF Document (.pdf)", addon: <IconFilePdf size={14} />, group: { label: "Download as", hidden: true }, execute: () => {} },
-              { label: "Plain Text (.txt)", addon: <IconFileLines size={14} />, group: { label: "Download as", hidden: true }, execute: () => {} },
-              { label: "Rich Text Format (.rtf)", addon: <IconFile size={14} />, group: { label: "Download as", hidden: true }, execute: () => {} },
-              { label: "Markdown (.md)", addon: <IconFileLines size={14} />, group: { label: "Download as", hidden: true }, execute: () => {} },
+              { label: "Copy", addon: <IconCopy size={14} />, execute: () => { navigator.clipboard.writeText(collabDoc.ytext.toString()).catch(() => {}); toaster.create("Copied to clipboard", { intent: "success" }); } },
+              { label: "Add to", addon: <IconCirclePlus size={14} />, execute: () => {} },
+              ...(!contentNode ? [
+                { label: blameActive ? "Hide contributors" : "Show contributors", addon: <IconUserGroup size={14} />, execute: handleToggleBlame },
+                { label: versionPanelOpen ? "Hide version history" : "Show version history", addon: <IconClockRotateLeft size={14} />, execute: () => setVersionPanelOpen((v) => !v) },
+              ] : []),
+              ...(onChatToggle !== undefined ? [
+                { label: chatOpen ? "Hide thread" : "Show thread", addon: <IconComments size={14} />, execute: onChatToggle },
+              ] : []),
             ]}
           >
             <MenuTrigger asChild>
-              <Button appearance="default" size="sm" style={{ whiteSpace: "nowrap" }}>Share</Button>
+              <Button appearance="subtle" size="md" icon={<IconEllipsisSolid size={15} />} aria-label="More editor actions" />
             </MenuTrigger>
             <MenuContent />
           </Menu>
 
-          <Button appearance="primary" size="sm" icon={<IconChevronDown size={13} />} iconPosition="end" style={{ whiteSpace: "nowrap" }}>
-            Add to
-          </Button>
+          <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+
+          {/* Share */}
+          <Button appearance="default" size="md" icon={<IconUserPlus size={15} />} onClick={() => setShareDialogOpen(true)} style={{ whiteSpace: "nowrap" }}>Share</Button>
+
+          {/* Thread toggle */}
+          {onChatToggle !== undefined && (
+            <Tooltip content={chatOpen ? "Hide thread" : "Show thread"} delayDuration={400}>
+              <span>
+                <ToggleButton
+                  size="md"
+                  appearance="subtle"
+                  pressed={!!chatOpen}
+                  onPressedChange={onChatToggle}
+                  icon={<IconComments size={11} />}
+                  aria-label={chatOpen ? "Hide thread" : "Show thread"}
+                />
+              </span>
+            </Tooltip>
+          )}
         </Box>
       </Box>
 
@@ -744,9 +1004,16 @@ export function CodeCanvasPanel({
             </Box>
           )}
           {blameActive && <Text fontSize="xs" color="fg.accent" style={{ marginRight: 12 }}>Contributors</Text>}
-          <Text fontSize="xs" color="fg.tertiary">HTML · UTF-8</Text>
+          <Text fontSize="xs" color="fg.tertiary">{fileType === "markdown" ? "Markdown" : fileType === "code" ? "Plain Text" : "HTML"} · UTF-8</Text>
         </Box>
       )}
+
+      <OpalShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        artifactTitle={artifactTitle ?? filename}
+        artifactCreator={artifactCreator ?? DEFAULT_ARTIFACT_CREATOR}
+      />
     </Box>
   );
 }
