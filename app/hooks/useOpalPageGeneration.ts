@@ -47,6 +47,7 @@ export function useOpalPageGeneration(
 	const onSaveRef = useRef(onSave);
 	const generationDataRef = useRef(generationData);
 	const setActivePageRef = useRef(setActivePage);
+	const isMountedRef = useRef(true);
 
 	// Keep refs up to date
 	useEffect(() => {
@@ -55,6 +56,14 @@ export function useOpalPageGeneration(
 		generationDataRef.current = generationData;
 		setActivePageRef.current = setActivePage;
 	});
+
+	// Track mounted state
+	useEffect(() => {
+		isMountedRef.current = true;
+		return () => {
+			isMountedRef.current = false;
+		};
+	}, []);
 
 	useEffect(() => {
 		// Check for pending generation
@@ -65,10 +74,19 @@ export function useOpalPageGeneration(
 			return;
 		}
 
-		// Remove from localStorage immediately to prevent double-starts (e.g., strict mode double-mount)
-		// Store the data first so we can use it
+		// Prevent double-starts in the same session using sessionStorage
+		// This survives Fast Refresh but clears on page reload
+		const sessionKey = `opal_generating_${pageId}`;
+		if (sessionStorage.getItem(sessionKey) === 'true') {
+			console.log("[useOpalPageGeneration] Generation already in progress for this page in this session");
+			return;
+		}
+
+		// Mark as started in session
+		sessionStorage.setItem(sessionKey, 'true');
+
+		// Store the data (keep in localStorage until generation completes in case of reload)
 		const pendingData = JSON.parse(pendingDataStr);
-		localStorage.removeItem(`opal_generation_${pageId}`);
 
 		const abortController = new AbortController();
 		let readerRef: ReadableStreamDefaultReader<Uint8Array> | null = null;
@@ -109,13 +127,22 @@ export function useOpalPageGeneration(
 				});
 
 				// Connect to SSE stream with abort signal
-				const response = await fetch("/api/generate-page/stream", {
+				// Use edit-page/stream with empty outline for generation from scratch
+				const response = await fetch("/api/edit-page/stream", {
 					method: "POST",
 					headers: {"Content-Type": "application/json"},
 					body: JSON.stringify({
 						pageId,
 						instructions: pendingData.instructions,
 						contentTypeId,
+						currentContent: {
+							outlines: [{
+								id: "ol-main",
+								title: "Main",
+								tree: [],
+								elements: {}
+							}]
+						},
 						files: fileData,
 					}),
 					signal: abortController.signal,
@@ -158,24 +185,42 @@ export function useOpalPageGeneration(
 
 						console.log("[useOpalPageGeneration] Event:", eventType, data);
 
-						// Guard all updates with abort check
-						if (abortController.signal.aborted) {
-							console.log("[useOpalPageGeneration] Skipping update after abort");
+						// Guard all updates with abort check and mounted check
+						if (abortController.signal.aborted || !isMountedRef.current) {
+							console.log("[useOpalPageGeneration] Skipping update after abort or unmount");
 							break;
 						}
 
 						if (eventType === "checklist") {
-							// Update progress checklist
+							// Update progress checklist with contextual data
 							opalPanelControlsRef.current!.updateMessage(progressMsg.id, {
-								metadata: {checklist: data, loadingMessage: "Generating page..."},
+								metadata: {
+									checklist: data.items || data, // Backward compatibility
+									pageType: data.pageType,
+									sections: data.sections,
+									isCompleted: data.isCompleted,
+									loadingMessage: "Generating page...",
+								},
 							});
 						} else if (eventType === "structure") {
-							// Apply page structure
+							// Apply page structure - supports both outlines and data
 							console.log("[useOpalPageGeneration] Applying structure:", data);
-							onSaveRef.current({
-								outlines: data.outlines,
+
+							const patch: {outlines?: any; properties?: any; variationId?: string} = {
 								variationId: "original",
-							});
+							};
+
+							// Add outlines if present
+							if (data.outlines && data.outlines.length > 0) {
+								patch.outlines = data.outlines;
+							}
+
+							// Add property data if present
+							if (data.data && Object.keys(data.data).length > 0) {
+								patch.properties = data.data;
+							}
+
+							onSaveRef.current(patch);
 						} else if (eventType === "content") {
 							// Apply individual content updates
 							console.log("[useOpalPageGeneration] Applying content:", data);
@@ -194,7 +239,13 @@ export function useOpalPageGeneration(
 							// Set as active page for iteration
 							setActivePageRef.current(pageId);
 
-							setIsGenerating(false);
+							// Remove pending generation flags
+							localStorage.removeItem(`opal_generation_${pageId}`);
+							sessionStorage.removeItem(`opal_generating_${pageId}`);
+
+							if (isMountedRef.current) {
+								setIsGenerating(false);
+							}
 						} else if (eventType === "error") {
 							// Show error
 							opalPanelControlsRef.current!.removeMessage(progressMsg.id);
@@ -202,7 +253,14 @@ export function useOpalPageGeneration(
 								role: "assistant",
 								content: `Error: ${data.message || "An error occurred during generation"}`,
 							});
-							setIsGenerating(false);
+
+							// Remove pending generation flags
+							localStorage.removeItem(`opal_generation_${pageId}`);
+							sessionStorage.removeItem(`opal_generating_${pageId}`);
+
+							if (isMountedRef.current) {
+								setIsGenerating(false);
+							}
 						}
 					}
 				}
@@ -214,9 +272,16 @@ export function useOpalPageGeneration(
 				}
 
 				console.error("[useOpalPageGeneration] Error:", error);
-				setIsGenerating(false);
 
-				if (opalPanelControlsRef.current && !abortController.signal.aborted) {
+				// Remove pending generation flags on error
+				localStorage.removeItem(`opal_generation_${pageId}`);
+				sessionStorage.removeItem(`opal_generating_${pageId}`);
+
+				if (isMountedRef.current) {
+					setIsGenerating(false);
+				}
+
+				if (opalPanelControlsRef.current && !abortController.signal.aborted && isMountedRef.current) {
 					opalPanelControlsRef.current.addMessage({
 						role: "assistant",
 						content: `Error: ${error instanceof Error ? error.message : "An error occurred during generation"}`,
@@ -227,9 +292,11 @@ export function useOpalPageGeneration(
 
 		startGeneration();
 
-		// Cleanup function to cancel stream when unmounting
+		// Cleanup function - abort on unmount to prevent memory leaks
+		// Fast Refresh won't trigger this because deps (pageId, contentTypeId) don't change
+		// But navigation away or actual unmount will abort and cleanup
 		return () => {
-			console.log("[useOpalPageGeneration] Cleaning up - aborting generation");
+			console.log("[useOpalPageGeneration] Component unmounting, aborting generation");
 			abortController.abort();
 			if (readerRef) {
 				readerRef.cancel().catch((err) => {

@@ -48,7 +48,12 @@ yarn.lock
 # code viewer source bundle (auto-generated during build)
 /public/source-bundle.json
 .envrc
-.claude/
+# .claude — ignore sensitive local files but track shared agent skills
+.claude/*.json
+.claude/*.sh
+.claude/worktrees/
+.claude/settings*.json
+.claude/mcp.json
 .cursor/
 .vscode/
 logs/*.log*

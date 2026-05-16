@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText } from "@optiaxiom/react";
+import { IconSparkles } from "@optimizely/axiom-icons";
 import {
   IconPen,
   IconArrowsRotate,
@@ -8,15 +9,12 @@ import {
   IconDownload,
   IconThumbsUp,
   IconThumbsDown,
-  IconSparkles,
-} from "@optimizely/axiom-icons";
-import {
   IconCheck,
   IconChevronDown,
   IconChevronRight,
-  IconFileText,
-  IconTools,
-} from "@tabler/icons-react";
+  IconFileLines as IconFileText,
+  IconScrewdriverWrench as IconTools,
+} from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
 import { ExperimentSummaryBlock } from "./ExperimentSummaryBlock";
@@ -114,7 +112,7 @@ function OpalProcessingStepCard({
                   justifyContent: "center",
                 }}
               >
-                <IconCheck size={12} stroke={3} color="white" aria-hidden />
+                <IconCheck size={12} stroke="3" color="white" aria-hidden />
               </Box>
             ) : isActive ? (
               <Box
@@ -163,7 +161,7 @@ function OpalProcessingStepCard({
           alignItems="center"
           aria-hidden
         >
-          <IconChevronRight size={18} stroke={2} color={OPAL_ICON_MUTED} />
+          <IconChevronRight size={18} stroke="2" color={OPAL_ICON_MUTED} />
         </Box>
       </Box>
       <Box
@@ -189,7 +187,7 @@ function OpalProcessingStepCard({
                 [
                   {
                     label: "Stride Business Context",
-                    icon: <IconFileText size={14} stroke={1.5} color={OPAL_ICON_MUTED} />,
+                    icon: <IconFileText size={14} stroke="1.5" color={OPAL_ICON_MUTED} />,
                   },
                   {
                     label: "@experiment_summary",
@@ -197,7 +195,7 @@ function OpalProcessingStepCard({
                   },
                   {
                     label: "search_optimizely_docs",
-                    icon: <IconTools size={14} stroke={1.5} color={OPAL_ICON_MUTED} />,
+                    icon: <IconTools size={14} stroke="1.5" color={OPAL_ICON_MUTED} />,
                   },
                 ] as const
               ).map((chip) => (
@@ -239,7 +237,7 @@ type OpalMessageProps = {
   onEdit?: (id: string, newContent: string) => void;
   onRegenerate?: (id: string) => void;
   onVersionChange?: (id: string, versionIndex: number, content: string) => void;
-  agentContext?: { emoji: string; name: string } | null;
+  agentContext?: { emoji: string; name: string; avatar?: string } | null;
   showOpalHeader?: boolean;
   /** Hides the quick-actions bar (used when a contextualActionCard below already provides consolidated actions) */
   hideActionBar?: boolean;
@@ -517,7 +515,11 @@ export function OpalMessage({
       {/* Agent or Opal name header for assistant messages */}
       {!isUser && agentContext && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, paddingLeft: 8 }}>
-          <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
+          {agentContext.avatar ? (
+            <img src={agentContext.avatar} alt={agentContext.name} width={18} height={18} style={{ borderRadius: '50%', flexShrink: 0 }} />
+          ) : (
+            <span style={{ fontSize: 15, lineHeight: 1 }}>{agentContext.emoji}</span>
+          )}
           <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>{agentContext.name}</span>
         </div>
       )}
@@ -741,16 +743,34 @@ export function OpalMessage({
                 borderRadius: '50%',
                 overflow: 'hidden',
                 flexShrink: 0,
-                marginTop: '4px'
+                marginTop: '4px',
+                background: message.authorAvatar ? undefined : message.authorName ? 'var(--ax-colors-bg-avatar-purple)' : 'var(--ax-colors-bg-accent-strong, #1a2e1a)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
-              <Image
-                src="/avatar-user.png"
-                alt="User"
-                width={24}
-                height={24}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              {message.authorAvatar ? (
+                <img
+                  src={message.authorAvatar}
+                  alt={message.authorName ?? 'User'}
+                  width={24}
+                  height={24}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : message.authorName ? (
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--ax-colors-fg-avatar-purple)', fontFamily: 'Inter, sans-serif', letterSpacing: '0.02em', lineHeight: 1 }}>
+                  {message.authorName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
+                </span>
+              ) : (
+                <Image
+                  src="/avatar-user.png"
+                  alt="User"
+                  width={24}
+                  height={24}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              )}
             </Box>
           )}
         </Box>

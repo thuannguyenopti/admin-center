@@ -48,14 +48,18 @@ import {
     IconFileSpreadsheet,
     IconComments,
     IconInboxFull,
-
     IconShareNodes,
     IconAngleRight,
     IconXmark,
     IconSearch,
+    IconLock,
+    IconSlidersSimple,
+    IconGear,
+    IconThumbtack,
+    IconThumbtackSolid,
 } from "@optimizely/axiom-icons";
-import { IconLock, IconSlidersSimple, IconGear, IconThumbtack, IconThumbtackSolid } from "@optiaxiom/icons";
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { ArtifactViewer, type ArtifactViewerArtifact } from "./components/ArtifactViewer";
 import { useLayout } from "@/app/context/LayoutContext";
 
@@ -110,6 +114,7 @@ type Artifact = {
     isInProgress?: boolean;
     previewText?: string;
     activityText: string;
+    directLink?: string;
 };
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -118,14 +123,35 @@ const NOW = Math.floor(Date.now() / 1000);
 
 const artifacts: Artifact[] = [
     {
+        id: "geo-qa",
+        name: "Q and A: Discover the unknown",
+        type: "Document",
+        source: { name: "GEO Q&A Generator", type: "chat", link: "/opal?artifacts=1" },
+        agentBadgeIntent: "success",
+        createdBy: { name: "Jamie Chen", avatar: "" },
+        sharedWithTeam: true,
+        tags: ["GEO", "Q&A", "Stride"],
+        created: "May 15, 2026",
+        createdRaw: NOW - 600,
+        lastViewedRaw: NOW - 60,
+        isInProgress: true,
+        size: "8 KB",
+        sizeRaw: 8192,
+        status: "Ready",
+        version: "2.0",
+        description: "GEO-optimised Q&A article covering Stride Discover the Unknown — 7 core Q&A pairs targeting AI search citations.",
+        previewText: "What is Discover the Unknown by Stride?\nDiscover the Unknown is a Stride product line for tracking outdoor adventure and performance activity across land, sea, and air.\nWhat activities does it support?\nTrail running, climbing, diving, skydiving, and multi-terrain endurance challenges.\nWho is it designed for?\nRunners, climbers, divers, sky athletes, expedition teams, and active groups who want one place to record training and share adventure progress.\nWhat metrics can it track?\nRoute, elevation, ascent, depth, duration, altitude, heart rate, weather, pace, and activity history.",
+        activityText: "Edited just now",
+        directLink: "/opal?artifacts=1",
+    },
+    {
         id: "1",
         name: "Q2 Email Nurture Draft",
         type: "Document",
         source: { name: "Copywriter", type: "chat", link: "/opal/chat/1" },
         agentBadgeIntent: "warning",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        createdBy: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
-        isInProgress: true,
         tags: ["Email", "Q2", "Nurture"],
         created: "May 13, 2026",
         createdRaw: NOW - 7200,
@@ -144,7 +170,7 @@ const artifacts: Artifact[] = [
         type: "Report",
         source: { name: "Scout", type: "agent", link: "/opal/agents/setup?id=2" },
         agentBadgeIntent: "danger",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        createdBy: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 13, 2026",
         createdRaw: NOW - 21600,
@@ -164,7 +190,7 @@ const artifacts: Artifact[] = [
         type: "Image",
         source: { name: "Brand", type: "agent", link: "/opal/agents/setup?id=3" },
         agentBadgeIntent: "information",
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
         sharedWithTeam: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -184,7 +210,7 @@ const artifacts: Artifact[] = [
         type: "Report",
         source: { name: "Insights", type: "agent", link: "/opal/agents/setup?id=4" },
         agentBadgeIntent: "success",
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
         isPrivate: true,
         created: "May 13, 2026",
         createdRaw: NOW - 10800,
@@ -203,7 +229,7 @@ const artifacts: Artifact[] = [
         type: "Code",
         source: { name: "Compass", type: "chat", link: "/opal/chat/5" },
         agentBadgeIntent: "neutral",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        createdBy: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -222,8 +248,8 @@ const artifacts: Artifact[] = [
         type: "Image",
         source: { name: "Brand", type: "workflow", link: "/opal/workflows/6" },
         agentBadgeIntent: "information",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
-        sharedWith: [{ name: "William Mo.", avatar: "/avatars/user2.png" }],
+        createdBy: { name: "Jamie Chen", avatar: "" },
+        sharedWith: [{ name: "William Mo.", avatar: "" }],
         created: "May 11, 2026",
         createdRaw: NOW - 172800,
         size: "5.8 MB",
@@ -241,7 +267,7 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Copywriter", type: "agent", link: "/opal/agents/setup?id=7" },
         agentBadgeIntent: "warning",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        createdBy: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 6, 2026",
         createdRaw: NOW - 604800,
@@ -259,7 +285,7 @@ const artifacts: Artifact[] = [
         type: "Presentation",
         source: { name: "Compass", type: "agent", link: "/opal/agents/setup?id=8" },
         agentBadgeIntent: "neutral",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        createdBy: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -279,7 +305,7 @@ const artifacts: Artifact[] = [
         type: "Image",
         source: { name: "Brand", type: "agent", link: "/opal/agents/setup?id=9" },
         agentBadgeIntent: "information",
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
         isPrivate: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -298,7 +324,7 @@ const artifacts: Artifact[] = [
         type: "Spreadsheet",
         source: { name: "Compass", type: "chat", link: "/opal/chat/10" },
         agentBadgeIntent: "neutral",
-        createdBy: { name: "Jamie Chen", avatar: "/avatars/jc.png" },
+        createdBy: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "Apr 28, 2026",
         createdRaw: NOW - 1296000,
@@ -316,7 +342,7 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Insights", type: "workflow", link: "/opal/workflows/11" },
         agentBadgeIntent: "success",
-        createdBy: { name: "William Mo.", avatar: "/avatars/user2.png" },
+        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
         sharedWithTeam: true,
         created: "Apr 21, 2026",
         createdRaw: NOW - 1900800,
@@ -335,7 +361,7 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Copywriter", type: "chat", link: "/opal/chat/12" },
         agentBadgeIntent: "warning",
-        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        createdBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
         sharedWithTeam: true,
         created: "Apr 5, 2026",
         createdRaw: NOW - 3456000,
@@ -395,10 +421,21 @@ const sourceEmoji: Record<string, string> = {
     Insights: "📊",
 };
 
+const sourceAvatar: Record<string, string> = {
+    "GEO Q&A Generator": "/avatars/mock-avatar-geo.svg",
+};
+
 function AgentCell({ name }: { name: string }) {
+    const avatar = sourceAvatar[name];
     return (
         <Box display="flex" alignItems="center" gap="8">
-            <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
+            {avatar ? (
+                <span style={{ width: 18, height: 18, borderRadius: 4, background: "#e4f0da", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                    <img src={avatar} alt={name} style={{ width: 13, height: 13, display: "block" }} />
+                </span>
+            ) : (
+                <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
+            )}
             <Text fontSize="sm" color="fg.secondary">{name}</Text>
         </Box>
     );
@@ -414,6 +451,7 @@ const statusIntent = {
 
 const allTypes: Array<"All" | ArtifactType> = ["All", "Document", "Image", "Code", "Presentation", "Spreadsheet", "Report"];
 const allCreators = [...new Set(artifacts.map((a) => a.createdBy.name))];
+const allAgents = [...new Set(artifacts.map((a) => a.source.name))];
 
 // ─── Sort header ─────────────────────────────────────────────────────────────
 
@@ -1075,10 +1113,14 @@ const SECTION_DEFAULTS: SectionDef[] = [
 function SectionCustomizerPanel({
     sections,
     setSections,
+    sidebarEnabled,
+    setSidebarEnabled,
     onClose,
 }: {
     sections: SectionDef[];
     setSections: (s: SectionDef[]) => void;
+    sidebarEnabled: boolean;
+    setSidebarEnabled: (v: boolean) => void;
     onClose: () => void;
 }) {
     const panelRef = useRef<HTMLDivElement>(null);
@@ -1134,7 +1176,7 @@ function SectionCustomizerPanel({
             <Box style={{ padding: "10px 14px", borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
                 <Text fontSize="sm" fontWeight="600" color="fg.secondary">Customize view</Text>
             </Box>
-            <Box style={{ padding: "4px 0" }}>
+            <Box style={{ padding: "4px 0 0" }}>
                 {sections.map((section, index) => (
                     <Box
                         key={section.id}
@@ -1192,23 +1234,298 @@ function SectionCustomizerPanel({
                         </button>
                     </Box>
                 ))}
+                {/* Sidebar toggle — separated by a divider */}
+                <Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0" }} />
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    gap="8"
+                    style={{ padding: "7px 14px" }}
+                >
+                    <Box style={{ width: 10, flexShrink: 0 }} />
+                    <Text fontSize="sm" color="fg.default" style={{ flex: 1 }}>Sidebar</Text>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setSidebarEnabled(!sidebarEnabled); }}
+                        style={{
+                            width: 34, height: 18, borderRadius: 9, border: "none",
+                            background: sidebarEnabled ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-bg-tertiary)",
+                            cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0,
+                        }}
+                    >
+                        <Box rounded="full" shadow="sm" style={{
+                            position: "absolute", top: 2,
+                            left: sidebarEnabled ? 16 : 2,
+                            width: 14, height: 14,
+                            background: "var(--ax-colors-bg-default)",
+                            transition: "left 0.2s",
+                        }} />
+                    </button>
+                </Box>
             </Box>
         </Box>
     );
 }
 
-export default function ArtifactsPage() {
-    const { setHidePageHeader } = useLayout();
-    useEffect(() => {
-        setHidePageHeader(true);
-        return () => setHidePageHeader(false);
-    }, [setHidePageHeader]);
+// ─── Filter sidebar ───────────────────────────────────────────────────────────
 
+const SECTION_ICONS: Record<SectionId, React.ReactNode> = {
+    jumpBackIn:   <IconInboxFull size={14} />,
+    lastViewed:   <IconArrowsMaximize size={14} />,
+    pinned:       <IconThumbtackSolid size={14} />,
+    lastEdited:   <IconPenLine size={14} />,
+    allArtifacts: <IconList size={14} />,
+};
+
+function CountBadge({ count }: { count: number }) {
+    return <Badge>{count}</Badge>;
+}
+
+function FilterSidebar({
+    sections,
+    setSections,
+    typeFilter, setTypeFilter,
+    creatorFilter, setCreatorFilter,
+    agentFilter, setAgentFilter,
+    dateFilter, setDateFilter,
+    pinnedFilter, setPinnedFilter,
+    sectionCounts,
+    typeCounts,
+    ownerCounts,
+    agentCounts,
+    pinnedCount,
+    activeQuick,
+    setActiveQuick: _setActiveQuick,
+    quickCollapsed,
+    setQuickCollapsed,
+    handleQuick,
+}: {
+    sections: SectionDef[];
+    setSections: (s: SectionDef[]) => void;
+    typeFilter: string; setTypeFilter: (v: "All" | ArtifactType) => void;
+    creatorFilter: string; setCreatorFilter: (v: string) => void;
+    agentFilter: string; setAgentFilter: (v: string) => void;
+    dateFilter: string; setDateFilter: (v: string) => void;
+    pinnedFilter: boolean; setPinnedFilter: (v: boolean) => void;
+    sectionCounts: Record<SectionId, number>;
+    typeCounts: Record<string, number>;
+    ownerCounts: Record<string, number>;
+    agentCounts: Record<string, number>;
+    pinnedCount: number;
+    activeQuick: SectionId | null;
+    setActiveQuick: (v: SectionId | null) => void;
+    quickCollapsed: boolean;
+    setQuickCollapsed: (v: boolean | ((prev: boolean) => boolean)) => void;
+    handleQuick: (id: SectionId) => void;
+}) {
+    const [typeCollapsed, setTypeCollapsed] = useState(false);
+    const [dateCollapsed, setDateCollapsed] = useState(false);
+    const [creatorCollapsed, setCreatorCollapsed] = useState(true);
+    const [agentsCollapsed, setAgentsCollapsed] = useState(true);
+
+    const navItem: React.CSSProperties = {
+        display: "flex", alignItems: "center", gap: 12,
+        height: 40, minHeight: 40, flexShrink: 0,
+        padding: "0 12px", borderRadius: 8,
+        border: "none", cursor: "pointer", width: "100%", textAlign: "left",
+        fontFamily: "inherit", background: "transparent", transition: "background 0.1s",
+    };
+
+    const labelStyle: React.CSSProperties = {
+        flex: 1,
+        fontSize: "var(--ax-fontSize-md-fontSize, 14px)",
+        lineHeight: 1.43,
+        letterSpacing: "0.28px",
+        fontWeight: 500,
+        color: "var(--ax-colors-fg-secondary)",
+    };
+
+    function SectionGroupHeader({ label, collapsed, onToggle }: { label: string; collapsed?: boolean; onToggle?: () => void }) {
+        return (
+            <button onClick={onToggle} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 12px", width: "100%", border: "none",
+                background: "transparent", cursor: "pointer", fontFamily: "inherit",
+                marginTop: 4, flexShrink: 0,
+            }}>
+                <span style={{
+                    flex: 1, textAlign: "left",
+                    fontSize: 12,
+                    color: "var(--ax-colors-fg-tertiary)",
+                    fontWeight: 400,
+                    letterSpacing: "0.36px",
+                    lineHeight: 1.25,
+                    textTransform: "uppercase",
+                }}>{label}</span>
+                <IconChevronDown size={14} style={{
+                    color: "var(--ax-colors-fg-tertiary)",
+                    flexShrink: 0,
+                    transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
+                    transition: "transform 0.15s",
+                }} />
+            </button>
+        );
+    }
+
+    return (
+        <Box style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", overflowY: "auto", paddingTop: 8, paddingBottom: 16, gap: 2, background: "var(--ax-colors-bg-default)" }}>
+
+            {/* Quick Filters */}
+            <SectionGroupHeader label="Quick Filters" collapsed={quickCollapsed} onToggle={() => setQuickCollapsed(v => !v)} />
+            {!quickCollapsed && sections.map(section => {
+                const isActive = activeQuick === section.id;
+                const count = sectionCounts[section.id];
+                return (
+                    <button
+                        key={section.id}
+                        onClick={() => handleQuick(section.id)}
+                        style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent" }}
+                    >
+                        <Box style={{ color: isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)", lineHeight: 0, flexShrink: 0 }}>
+                            {SECTION_ICONS[section.id]}
+                        </Box>
+                        <span style={{ ...labelStyle, color: isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)" }}>
+                            {section.label}
+                        </span>
+                        {count !== undefined && <CountBadge count={count} />}
+                    </button>
+                );
+            })}
+
+            {/* Type — collapsible inline list */}
+            <Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0" }} />
+            <SectionGroupHeader label="Type" collapsed={typeCollapsed} onToggle={() => setTypeCollapsed(v => !v)} />
+            {!typeCollapsed && (
+                <>
+                    {(["Document", "Image", "Code", "Presentation", "Spreadsheet", "Report"] as ArtifactType[]).map(t => (
+                        <button
+                            key={t}
+                            onClick={() => setTypeFilter(typeFilter === t ? "All" : t)}
+                            style={{ ...navItem, background: typeFilter === t ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
+                        >
+                            <Box style={{ color: typeFilter === t ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)", lineHeight: 0, flexShrink: 0 }}>
+                                {typeIcon[t]}
+                            </Box>
+                            <span style={{ ...labelStyle, flex: 1, color: typeFilter === t ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)" }}>
+                                {typeLabel[t]}
+                            </span>
+                            {typeCounts[t] !== undefined && <CountBadge count={typeCounts[t]} />}
+                        </button>
+                    ))}
+                </>
+            )}
+
+            {/* Date — collapsible inline list */}
+            <Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0" }} />
+            <SectionGroupHeader label="Date" collapsed={dateCollapsed} onToggle={() => setDateCollapsed(v => !v)} />
+            {!dateCollapsed && (
+                <>
+                    {(["All", "Last 7 days", "Last 30 days", "Last 90 days"] as const).map(d => (
+                        <button
+                            key={d}
+                            onClick={() => setDateFilter(d === "All" ? "All" : d)}
+                            style={{ ...navItem, background: dateFilter === (d === "All" ? "All" : d) ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
+                        >
+                            <span style={{ ...labelStyle, color: dateFilter === (d === "All" ? "All" : d) ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)" }}>
+                                {d === "All" ? "All time" : d}
+                            </span>
+                        </button>
+                    ))}
+                </>
+            )}
+
+            {/* Creator — collapsible inline list (humans + VAUs) */}
+            <Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0" }} />
+            <SectionGroupHeader label="Creator" collapsed={creatorCollapsed} onToggle={() => setCreatorCollapsed(v => !v)} />
+            {!creatorCollapsed && (
+                <>
+                    {allCreators.map(c => {
+                        const avatar = artifacts.find(a => a.createdBy.name === c)?.createdBy.avatar;
+                        return (
+                        <button
+                            key={c}
+                            onClick={() => { setCreatorFilter(creatorFilter === c ? "All" : c); setAgentFilter("All"); }}
+                            style={{ ...navItem, background: creatorFilter === c ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
+                        >
+                            <Avatar name={c} src={avatar} size="sm" colorScheme="purple" style={{ flexShrink: 0 }} />
+                            <span style={{ ...labelStyle, flex: 1, color: creatorFilter === c ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)" }}>
+                                {c}
+                            </span>
+                            {ownerCounts[c] !== undefined && <CountBadge count={ownerCounts[c]} />}
+                        </button>
+                        );
+                    })}
+                    {allAgents.map(name => {
+                        const avatar = sourceAvatar[name];
+                        const isActive = creatorFilter === name;
+                        return (
+                            <button
+                                key={`vau-${name}`}
+                                onClick={() => { setCreatorFilter(creatorFilter === name ? "All" : name); setAgentFilter("All"); }}
+                                style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
+                            >
+                                {avatar ? (
+                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "#e4f0da", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                        <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
+                                    </span>
+                                ) : (
+                                    <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
+                                )}
+                                <span style={{ ...labelStyle, flex: 1, color: isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)" }}>
+                                    {name}
+                                </span>
+                                {agentCounts[name] !== undefined && <CountBadge count={agentCounts[name]} />}
+                            </button>
+                        );
+                    })}
+                </>
+            )}
+
+            {/* Agents — collapsible inline list */}
+            <Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0" }} />
+            <SectionGroupHeader label="Agents" collapsed={agentsCollapsed} onToggle={() => setAgentsCollapsed(v => !v)} />
+            {!agentsCollapsed && (
+                <>
+                    {allAgents.map(name => {
+                        const avatar = sourceAvatar[name];
+                        const isActive = agentFilter === name;
+                        return (
+                            <button
+                                key={name}
+                                onClick={() => { setAgentFilter(agentFilter === name ? "All" : name); setCreatorFilter("All"); }}
+                                style={{ ...navItem, background: isActive ? "var(--ax-colors-bg-secondary)" : "transparent", padding: "0 12px" }}
+                            >
+                                {avatar ? (
+                                    <span style={{ width: 20, height: 20, borderRadius: 4, background: "#e4f0da", display: "inline-flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                                        <img src={avatar} alt={name} style={{ width: 14, height: 14, display: "block" }} />
+                                    </span>
+                                ) : (
+                                    <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
+                                )}
+                                <span style={{ ...labelStyle, flex: 1, color: isActive ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)" }}>
+                                    {name}
+                                </span>
+                                {agentCounts[name] !== undefined && <CountBadge count={agentCounts[name]} />}
+                            </button>
+                        );
+                    })}
+                </>
+            )}
+        </Box>
+    );
+}
+
+export default function ArtifactsPage() {
+    const { setSubNavContent, setSubNavWidth } = useLayout();
+    const [sidebarEnabled, setSidebarEnabled] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const router = useRouter();
     const [search, setSearch] = useState("");
     const [searchFocused, setSearchFocused] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
     const [typeFilter, setTypeFilter] = useState<"All" | ArtifactType>("All");
-    const [ownerFilter, setOwnerFilter] = useState("All");
+    const [creatorFilter, setCreatorFilter] = useState("All");
+    const [agentFilter, setAgentFilter] = useState("All");
     const [dateFilter, setDateFilter] = useState("All");
     const [pinnedFilter, setPinnedFilter] = useState(false);
     const [showFullFilters, setShowFullFilters] = useState(false);
@@ -1221,6 +1538,9 @@ export default function ArtifactsPage() {
     const [pinnedIds, setPinnedIds] = useState<Set<string>>(DEFAULT_PINNED_IDS);
     const [sections, setSections] = useState<SectionDef[]>(SECTION_DEFAULTS);
     const [showCustomizer, setShowCustomizer] = useState(false);
+    const [activeQuick, setActiveQuick] = useState<SectionId | null>(null);
+    const [quickCollapsed, setQuickCollapsed] = useState(false);
+    const sectionRefs = useRef<Partial<Record<SectionId, HTMLElement | null>>>({});
 
     function togglePin(id: string) {
         setPinnedIds((prev) => {
@@ -1235,7 +1555,12 @@ export default function ArtifactsPage() {
         else { setSortKey(key); setSortDir("asc"); }
     }
 
-    const hasActiveFilters = typeFilter !== "All" || ownerFilter !== "All" || dateFilter !== "All" || pinnedFilter;
+    const handleQuick = useCallback((id: SectionId) => {
+        // Toggle: clicking the active filter clears it (show all)
+        setActiveQuick(prev => prev === id ? null : id);
+    }, [setActiveQuick]);
+
+    const hasActiveFilters = typeFilter !== "All" || creatorFilter !== "All" || dateFilter !== "All" || pinnedFilter || agentFilter !== "All" || activeQuick !== null;
     const nowSec = Date.now() / 1000;
     const dateFilterCutoff: Record<string, number> = {
         "Last 7 days": nowSec - 7 * 86400,
@@ -1252,16 +1577,28 @@ export default function ArtifactsPage() {
         () => [...artifacts].filter((a) => a.activityText.startsWith("Edited")).sort((a, b) => b.createdRaw - a.createdRaw),
         []
     );
-    const pinnedArtifacts = artifacts.filter((a) => pinnedIds.has(a.id));
+    const pinnedArtifacts = useMemo(() => artifacts.filter((a) => pinnedIds.has(a.id)), [pinnedIds]);
 
     // ── "All artifacts" filtered list ──────────────────────────────────────
     const filtered = useMemo(() => {
+        // Quick filters narrow the base set first
+        let base: Artifact[];
+        if (activeQuick === "jumpBackIn") base = recentlyViewed.slice(0, 3);
+        else if (activeQuick === "lastViewed") base = recentlyViewed;
+        else if (activeQuick === "pinned") base = artifacts.filter((a) => pinnedIds.has(a.id));
+        else if (activeQuick === "lastEdited") base = lastEdited;
+        else base = artifacts;
+
         const q = search.trim().toLowerCase();
-        return artifacts
+        return base
             .filter((a) => {
                 if (pinnedFilter && !pinnedIds.has(a.id)) return false;
                 if (typeFilter !== "All" && a.type !== typeFilter) return false;
-                if (ownerFilter !== "All" && a.createdBy.name !== ownerFilter) return false;
+                if (creatorFilter !== "All") {
+                    const isVAU = allAgents.includes(creatorFilter);
+                    if (isVAU ? a.source.name !== creatorFilter : a.createdBy.name !== creatorFilter) return false;
+                }
+                if (agentFilter !== "All" && a.source.name !== agentFilter) return false;
                 if (dateFilter !== "All" && dateFilterCutoff[dateFilter] && a.createdRaw < dateFilterCutoff[dateFilter]) return false;
                 if (q && !a.name.toLowerCase().includes(q) && !a.source.name.toLowerCase().includes(q)) return false;
                 return true;
@@ -1275,7 +1612,7 @@ export default function ArtifactsPage() {
                 else if (sortKey === "status") cmp = a.status.localeCompare(b.status);
                 return sortDir === "asc" ? cmp : -cmp;
             });
-    }, [search, typeFilter, ownerFilter, pinnedFilter, pinnedIds, sortKey, sortDir]);
+    }, [activeQuick, recentlyViewed, pinnedIds, lastEdited, search, typeFilter, creatorFilter, agentFilter, pinnedFilter, sortKey, sortDir]);
 
     const resumeArtifact = useMemo(
         () => filtered.find((a) => a.isInProgress) ?? filtered[0] ?? null,
@@ -1287,12 +1624,76 @@ export default function ArtifactsPage() {
         [recentlyViewed, filtered, resumeArtifact]
     );
 
+    // ── Federated counts ────────────────────────────────────────────────────
+    const sectionCounts = useMemo<Record<SectionId, number>>(() => ({
+        jumpBackIn: recentlyViewed.slice(0, 3).length,
+        lastViewed: recentlyViewed.length,
+        pinned: pinnedArtifacts.length,
+        lastEdited: lastEdited.length,
+        allArtifacts: artifacts.length,
+    }), [recentlyViewed, pinnedArtifacts, lastEdited]);
+
+    const typeCounts = useMemo<Record<string, number>>(() => {
+        const counts: Record<string, number> = {};
+        artifacts.forEach(a => { counts[a.type] = (counts[a.type] ?? 0) + 1; });
+        return counts;
+    }, []);
+
+    const ownerCounts = useMemo<Record<string, number>>(() => {
+        const counts: Record<string, number> = {};
+        artifacts.forEach(a => { counts[a.createdBy.name] = (counts[a.createdBy.name] ?? 0) + 1; });
+        return counts;
+    }, []);
+
+    const agentCounts = useMemo<Record<string, number>>(() => {
+        const counts: Record<string, number> = {};
+        artifacts.forEach(a => { counts[a.source.name] = (counts[a.source.name] ?? 0) + 1; });
+        return counts;
+    }, []);
+
+    // ── Inject sidebar into template secondary nav slot ─────────────────────
+    useEffect(() => {
+        setSubNavWidth(272);
+        if (sidebarEnabled && sidebarOpen) {
+            setSubNavContent(
+                <FilterSidebar
+                    sections={sections}
+                    setSections={setSections}
+                    typeFilter={typeFilter} setTypeFilter={setTypeFilter}
+                    creatorFilter={creatorFilter} setCreatorFilter={setCreatorFilter}
+                    agentFilter={agentFilter} setAgentFilter={setAgentFilter}
+                    dateFilter={dateFilter} setDateFilter={setDateFilter}
+                    pinnedFilter={pinnedFilter} setPinnedFilter={setPinnedFilter}
+                    sectionCounts={sectionCounts}
+                    typeCounts={typeCounts}
+                    ownerCounts={ownerCounts}
+                    agentCounts={agentCounts}
+                    pinnedCount={pinnedArtifacts.length}
+                    activeQuick={activeQuick}
+                    setActiveQuick={setActiveQuick}
+                    quickCollapsed={quickCollapsed}
+                    setQuickCollapsed={setQuickCollapsed}
+                    handleQuick={handleQuick}
+                />
+            );
+        } else {
+            setSubNavContent(null);
+        }
+        return () => setSubNavContent(null);
+    }, [
+        sidebarEnabled, sidebarOpen, sections, typeFilter, creatorFilter, agentFilter,
+        dateFilter, pinnedFilter, sectionCounts, typeCounts, ownerCounts, agentCounts,
+        pinnedArtifacts.length, setSubNavContent, setSubNavWidth, setSections,
+        setTypeFilter, setCreatorFilter, setAgentFilter, setDateFilter, setPinnedFilter,
+        activeQuick, quickCollapsed, handleQuick,
+    ]);
+
     const viewerArtifact: ArtifactViewerArtifact | null = openArtifact
         ? {
               id: openArtifact.id,
               name: openArtifact.name,
               type: openArtifact.type as ArtifactViewerArtifact["type"],
-              sourceType: openArtifact.source.type,
+              sourceType: openArtifact.source.type as ArtifactViewerArtifact["sourceType"],
               sourceName: openArtifact.source.name,
               sourceLink: openArtifact.source.link,
               createdBy: openArtifact.createdBy,
@@ -1300,6 +1701,7 @@ export default function ArtifactsPage() {
               status: openArtifact.status,
               version: openArtifact.version,
               imageUrl: openArtifact.imageUrl,
+              hasTeamThread: openArtifact.sharedWithTeam && openArtifact.isInProgress,
           }
         : null;
 
@@ -1336,18 +1738,22 @@ export default function ArtifactsPage() {
                 </DialogContent>
             </Dialog>
 
-            <Box display="flex" flexDirection="column" gap="40" overflow="auto" h="full">
+            <Box display="flex" flexDirection="column" gap="40" overflow="auto" style={{ flex: 1, minWidth: 0, minHeight: 0 }}>
 
                 {/* ── Hero ── */}
-                <Box display="flex" flexDirection="column" alignItems="center" gap="12" pt="16">
-                    <Heading level="1">Your Workspace</Heading>
-                    <Text color="fg.secondary" fontSize="lg">
-                        Everything your agents are creating, analyzing, and optimizing.
-                    </Text>
-                </Box>
+                {!hasActiveFilters && (
+                    <Box display="flex" flexDirection="column" alignItems={sidebarEnabled ? "start" : "center"} gap="12" pt="16">
+                        <Heading level="1">Your Workspace</Heading>
+                        {!sidebarEnabled && (
+                            <Text color="fg.secondary" fontSize="lg">
+                                Everything your agents are creating, analyzing, and optimizing.
+                            </Text>
+                        )}
+                    </Box>
+                )}
 
                 {/* ── Search ── */}
-                <Box display="flex" flexDirection="column" alignItems="center" gap="8" style={{ width: "100%", maxWidth: 600, alignSelf: "center" }}>
+                <Box display="flex" flexDirection="column" alignItems={sidebarEnabled ? "start" : "center"} gap="8" style={{ width: "100%", maxWidth: sidebarEnabled ? "none" : 600, alignSelf: sidebarEnabled ? "stretch" : "center" }}>
                     {/* Search input row + filter button */}
                     <Box display="flex" alignItems="center" gap="8" style={{ width: "100%" }}>
                         <Box
@@ -1365,10 +1771,10 @@ export default function ArtifactsPage() {
                                 <IconSearch size={16} />
                             </Box>
                             {/* Active filter chips */}
-                            {ownerFilter !== "All" && (
+                            {creatorFilter !== "All" && (
                                 <Box display="inline-flex" alignItems="center" gap="4" rounded="sm" px="8" py="2" style={{ background: "var(--ax-colors-bg-secondary)", height: 24, flexShrink: 0 }}>
-                                    <Text fontSize="xs" color="fg.default">{ownerFilter === "Jamie Chen" ? "Created by me" : ownerFilter}</Text>
-                                    <Box color="fg.default" style={{ cursor: "pointer", lineHeight: 0, width: 16, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); setOwnerFilter("All"); }}>
+                                    <Text fontSize="xs" color="fg.default">{creatorFilter === "Jamie Chen" ? "Created by me" : creatorFilter}</Text>
+                                    <Box color="fg.default" style={{ cursor: "pointer", lineHeight: 0, width: 16, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={(e) => { e.stopPropagation(); setCreatorFilter("All"); }}>
                                         <IconXmark size={12} />
                                     </Box>
                                 </Box>
@@ -1422,10 +1828,10 @@ export default function ArtifactsPage() {
                                 appearance="default"
                                 size="lg"
                                 icon={<IconSlidersSimple />}
-                                onClick={() => setShowFullFilters((v) => !v)}
+                                onClick={() => sidebarEnabled ? setSidebarOpen(v => !v) : setShowFullFilters(v => !v)}
                                 aria-label="Filters"
-                                aria-pressed={showFullFilters}
-                                style={showFullFilters ? { background: "var(--ax-colors-bg-default-pressed)" } : undefined}
+                                aria-pressed={sidebarEnabled ? sidebarOpen : showFullFilters}
+                                style={(sidebarEnabled ? sidebarOpen : showFullFilters) ? { background: "var(--ax-colors-bg-default-pressed)" } : undefined}
                             />
                             <Button
                                 appearance="subtle"
@@ -1439,6 +1845,8 @@ export default function ArtifactsPage() {
                                 <SectionCustomizerPanel
                                     sections={sections}
                                     setSections={setSections}
+                                    sidebarEnabled={sidebarEnabled}
+                                    setSidebarEnabled={(v) => { setSidebarEnabled(v); setSidebarOpen(v); }}
                                     onClose={() => setShowCustomizer(false)}
                                 />
                             )}
@@ -1451,7 +1859,7 @@ export default function ArtifactsPage() {
                             {(
                                 [
                                     { label: "Pinned", active: pinnedFilter, onClick: () => setPinnedFilter((v) => !v) },
-                                    { label: "Created by me", active: ownerFilter === "Jamie Chen", onClick: () => setOwnerFilter(ownerFilter === "Jamie Chen" ? "All" : "Jamie Chen") },
+                                    { label: "Created by me", active: creatorFilter === "Jamie Chen", onClick: () => setCreatorFilter(creatorFilter === "Jamie Chen" ? "All" : "Jamie Chen") },
                                     { label: "Last 7 days", active: dateFilter === "Last 7 days", onClick: () => setDateFilter(dateFilter === "Last 7 days" ? "All" : "Last 7 days") },
                                     { label: "Document", active: typeFilter === "Document", onClick: () => setTypeFilter(typeFilter === "Document" ? "All" : "Document") },
                                     { label: "Media", active: typeFilter === "Image", onClick: () => setTypeFilter(typeFilter === "Image" ? "All" : "Image") },
@@ -1482,7 +1890,7 @@ export default function ArtifactsPage() {
                                 </button>
                             ))}
                             {hasActiveFilters && (
-                                <Button appearance="subtle" size="sm" onClick={() => { setTypeFilter("All"); setOwnerFilter("All"); setDateFilter("All"); setPinnedFilter(false); }}>
+                                <Button appearance="subtle" size="sm" onClick={() => { setTypeFilter("All"); setCreatorFilter("All"); setAgentFilter("All"); setDateFilter("All"); setPinnedFilter(false); }}>
                                     Clear
                                 </Button>
                             )}
@@ -1512,15 +1920,15 @@ export default function ArtifactsPage() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <AngleMenuButton size="md">
-                                        {ownerFilter === "All" ? "Owner" : ownerFilter.split(" ")[0]}
+                                        {creatorFilter === "All" ? "Creator" : creatorFilter.split(" ")[0]}
                                     </AngleMenuButton>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
                                     {["All", ...allCreators].map((c) => (
-                                        <DropdownMenuItem key={c} onClick={() => setOwnerFilter(c)}>
+                                        <DropdownMenuItem key={c} onClick={() => setCreatorFilter(c)}>
                                             <Box display="flex" alignItems="center" gap="8">
                                                 {c !== "All" && <Avatar name={c} size="sm" colorScheme="purple" />}
-                                                {c === "All" ? "All owners" : c}
+                                                {c === "All" ? "All creators" : c}
                                             </Box>
                                         </DropdownMenuItem>
                                     ))}
@@ -1556,7 +1964,7 @@ export default function ArtifactsPage() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             {hasActiveFilters && (
-                                <Button appearance="subtle" size="sm" onClick={() => { setTypeFilter("All"); setOwnerFilter("All"); setDateFilter("All"); setPinnedFilter(false); }}>
+                                <Button appearance="subtle" size="sm" onClick={() => { setTypeFilter("All"); setCreatorFilter("All"); setAgentFilter("All"); setDateFilter("All"); setPinnedFilter(false); }}>
                                     Clear all
                                 </Button>
                             )}
@@ -1564,31 +1972,40 @@ export default function ArtifactsPage() {
                     )}
                 </Box>
 
-                {/* ── Dynamic sections ── */}
-                {sections.filter((s) => s.enabled).map((s) => {
-                    const openFn = (a: Artifact) => { setOpenArtifact(a); setOpenMode("preview"); };
+                {/* ── Dynamic sections — hidden when any filter is active ── */}
+                {!hasActiveFilters && sections.filter((s) => s.enabled).map((s) => {
+                    const openFn = (a: Artifact) => {
+                        if (a.directLink) { router.push(a.directLink); return; }
+                        setOpenArtifact(a); setOpenMode("preview");
+                    };
                     if (s.id === "jumpBackIn") return (resumeArtifact || jumpBackInItems.length > 0) ? (
-                        <Box key="jumpBackIn" display="flex" gap="24" alignItems="stretch">
+                        <Box key="jumpBackIn" ref={(el) => { sectionRefs.current.jumpBackIn = el; }} display="flex" gap="24" alignItems="stretch">
                             {resumeArtifact && <ResumeCard artifact={resumeArtifact} onOpen={openFn} />}
                             <JumpBackIn items={jumpBackInItems} onOpen={openFn} />
                         </Box>
                     ) : null;
                     if (s.id === "lastViewed") return (
-                        <HorizontalSection key="lastViewed" title="Recently viewed" items={recentlyViewed} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                        <div key="lastViewed" ref={(el) => { sectionRefs.current.lastViewed = el; }}>
+                            <HorizontalSection title="Recently viewed" items={recentlyViewed} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                        </div>
                     );
                     if (s.id === "pinned") return (
-                        <HorizontalSection key="pinned" title="Pinned to workspace" items={pinnedArtifacts} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} onSeeAll={() => { setPinnedFilter(true); searchInputRef.current?.focus(); }} />
+                        <div key="pinned" ref={(el) => { sectionRefs.current.pinned = el; }}>
+                            <HorizontalSection title="Pinned to workspace" items={pinnedArtifacts} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} onSeeAll={() => { setPinnedFilter(true); searchInputRef.current?.focus(); }} />
+                        </div>
                     );
                     if (s.id === "lastEdited") return (
-                        <HorizontalSection key="lastEdited" title="Last edited" items={lastEdited} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                        <div key="lastEdited" ref={(el) => { sectionRefs.current.lastEdited = el; }}>
+                            <HorizontalSection title="Last edited" items={lastEdited} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                        </div>
                     );
                     return null;
                 })}
 
                 {/* ── All artifacts ── */}
-                {sections.find((s) => s.id === "allArtifacts")?.enabled && <Box display="flex" flexDirection="column" gap="16">
+                {sections.find((s) => s.id === "allArtifacts")?.enabled && <Box ref={(el) => { sectionRefs.current.allArtifacts = el; }} display="flex" flexDirection="column" gap="16">
                     <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Text fontSize="lg" fontWeight="600">All artifacts</Text>
+                        <Text fontSize="lg" fontWeight="600">{hasActiveFilters ? `${filtered.length} result${filtered.length !== 1 ? "s" : ""}` : "All artifacts"}</Text>
                         <SegmentedControl
                             value={viewMode}
                             onValueChange={(v: string) => { if (v) setViewMode(v as "list" | "grid"); }}
@@ -1606,7 +2023,7 @@ export default function ArtifactsPage() {
                             <Button
                                 appearance="subtle"
                                 size="sm"
-                                onClick={() => { setSearch(""); setTypeFilter("All"); setOwnerFilter("All"); }}
+                                onClick={() => { setSearch(""); setTypeFilter("All"); setCreatorFilter("All"); setAgentFilter("All"); }}
                             >
                                 Clear filters
                             </Button>

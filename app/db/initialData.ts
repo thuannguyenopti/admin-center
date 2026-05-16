@@ -250,6 +250,21 @@ export const initialPropertyGroups: PropertyGroup[] = [
 		name: "Social",
 		description: "Social media related fields",
 	},
+	{
+		id: "event-details",
+		name: "Event Details",
+		description: "Event timing and schedule information",
+	},
+	{
+		id: "location",
+		name: "Location",
+		description: "Physical and virtual location details",
+	},
+	{
+		id: "registration",
+		name: "Registration",
+		description: "Registration and signup information",
+	},
 ];
 
 export type PropertyType =
@@ -468,6 +483,55 @@ export const initialContentTypes: ContentType[] = [
 		guid: "c3d4e5f6-a7b8-9012-cdef-g34567890123",
 		isAvailable: true,
 		availableContentTypes: { include: ["ct-blog-post"] }, // Only allow blog posts as children
+		modifiedAt: new Date().toISOString(),
+		modifiedBy: "System",
+		properties: [
+			{ id: "title", name: "Title", displayName: "Title", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
+		],
+	},
+	{
+		id: "ct-event",
+		name: "Event",
+		displayName: "Event",
+		baseType: "Page",
+		description: "An event with date, location, and registration details",
+		availableContentTypes: { availability: "None" },
+		includeOn: ["ct-event-listing"],
+		properties: [
+			{ id: "title", name: "Title", displayName: "Event Title", type: "String", required: true, groupName: "Content", order: 1 },
+			{ id: "subtitle", name: "Subtitle", displayName: "Subtitle", type: "String", groupName: "Content", order: 2 },
+			{ id: "featuredImage", name: "Featured Image", displayName: "Event Banner", type: "ContentReference", allowedTypes: ["ct-image", "ct-image-block"], groupName: "Content", order: 3 },
+			{ id: "description", name: "Description", displayName: "Event Description", type: "XhtmlString", required: true, groupName: "Content", order: 4 },
+			{ id: "startDate", name: "Start Date", displayName: "Start Date & Time", type: "DateTime", required: true, groupName: "Event Details", order: 1 },
+			{ id: "endDate", name: "End Date", displayName: "End Date & Time", type: "DateTime", groupName: "Event Details", order: 2 },
+			{ id: "timezone", name: "Timezone", displayName: "Timezone", type: "String", groupName: "Event Details", order: 3 },
+			{ id: "locationType", name: "Location Type", displayName: "Location Type", type: "String", groupName: "Event Details", order: 4 },
+			{ id: "venueName", name: "Venue Name", displayName: "Venue Name", type: "String", groupName: "Location", order: 1 },
+			{ id: "address", name: "Address", displayName: "Street Address", type: "String", groupName: "Location", order: 2 },
+			{ id: "city", name: "City", displayName: "City", type: "String", groupName: "Location", order: 3 },
+			{ id: "state", name: "State", displayName: "State/Province", type: "String", groupName: "Location", order: 4 },
+			{ id: "country", name: "Country", displayName: "Country", type: "String", groupName: "Location", order: 5 },
+			{ id: "virtualLink", name: "Virtual Link", displayName: "Virtual Event Link", type: "String", groupName: "Location", order: 6 },
+			{ id: "capacity", name: "Capacity", displayName: "Max Attendees", type: "Int", groupName: "Registration", order: 1 },
+			{ id: "registrationUrl", name: "Registration URL", displayName: "Registration Link", type: "String", groupName: "Registration", order: 2 },
+			{ id: "registrationDeadline", name: "Registration Deadline", displayName: "Registration Deadline", type: "DateTime", groupName: "Registration", order: 3 },
+			{ id: "price", name: "Price", displayName: "Ticket Price", type: "String", groupName: "Registration", order: 4 },
+			{ id: "organizer", name: "Organizer", displayName: "Event Organizer", type: "ContentReference", allowedTypes: ["ct-author"], groupName: "Content", order: 5 },
+			{ id: "seo", name: "SEO", displayName: "SEO Settings", type: "ContentReference", allowedTypes: ["ct-seo"], groupName: "GEO & SEO", order: 1 },
+		],
+	},
+	{
+		id: "ct-event-listing",
+		name: "Event Listing",
+		displayName: "Event Listing",
+		baseType: "Page",
+		description: "An event listing page that can only contain events",
+		groupName: "Standard",
+		guid: "d4e5f6a7-b8c9-0123-defg-h45678901234",
+		isAvailable: true,
+		availableContentTypes: { include: ["ct-event"] },
 		modifiedAt: new Date().toISOString(),
 		modifiedBy: "System",
 		properties: [
@@ -992,6 +1056,7 @@ export type Page = {
 		taskId: string; // ID of the CMP task (from URL /cmp/task/[id])
 		taskName: string; // Display name of the task
 		addedAt: string; // ISO timestamp when page was added to task
+		applicationName?: string; // Name of the application this page was published to
 		addedVia: "created" | "manual"; // How it was added: created via "Add to Application" or manually added
 	};
 };
@@ -1210,7 +1275,7 @@ export const initialPages: Page[] = [
 											{
 												id: "col-about-story",
 												open: true,
-												children: [
+												elements: [
 													{ id: "ele-about-heading" },
 													{ id: "ele-about-body" },
 												],
@@ -4080,6 +4145,151 @@ export const initialPages: Page[] = [
 	},
 
 	{
+		id: "page-site-events",
+		name: "Events",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2024-01-15",
+		contentTypeId: "ct-event-listing",
+		slug: "events",
+		data: {
+			title: "Upcoming Events",
+			subtitle: "Join us for training sessions, races, and community gatherings",
+			seo: {
+				en: {
+					original: {
+						title: "Events | Stride",
+						description: "Discover upcoming Stride events, training sessions, and races.",
+						canonicalUrl: "https://stride.com/events",
+						robots: "index,follow",
+					},
+				},
+			},
+		},
+	},
+
+	{
+		id: "page-site-event-1",
+		name: "Spring Marathon Training Kickoff",
+		parentId: "page-site-events",
+		status: "Published",
+		lastModified: "2024-01-15",
+		contentTypeId: "ct-event",
+		slug: "spring-marathon-training-kickoff",
+		data: {
+			title: "Spring Marathon Training Kickoff",
+			subtitle: "Start your marathon journey with expert coaching",
+			description: `<h2>About This Event</h2>
+<p>Join us for the official kickoff of our Spring Marathon Training program. Whether you're targeting your first marathon or aiming for a new personal best, this 16-week structured program will get you to the finish line strong.</p>
+<h2>What to Expect</h2>
+<ul>
+  <li><p>Expert coaching from certified running coaches</p></li>
+  <li><p>Personalized training plans for all levels</p></li>
+  <li><p>Weekly group runs and track workouts</p></li>
+  <li><p>Nutrition and injury prevention workshops</p></li>
+</ul>
+<h2>Schedule</h2>
+<p>Program runs for 16 weeks from February through May, culminating in the City Spring Marathon.</p>`,
+			startDate: "2024-02-10T09:00:00Z",
+			endDate: "2024-02-10T11:00:00Z",
+			timezone: "PST",
+			locationType: "in-person",
+			venueName: "Stride Running Club",
+			address: "123 Runner's Lane",
+			city: "Portland",
+			state: "OR",
+			country: "USA",
+			virtualLink: "",
+			capacity: 50,
+			registrationUrl: "https://stride.com/events/spring-marathon-training/register",
+			registrationDeadline: "2024-02-05T23:59:59Z",
+			price: "$199",
+			organizer: "1",
+		},
+	},
+
+	{
+		id: "page-site-event-2",
+		name: "Virtual 5K Challenge",
+		parentId: "page-site-events",
+		status: "Published",
+		lastModified: "2024-01-16",
+		contentTypeId: "ct-event",
+		slug: "virtual-5k-challenge",
+		data: {
+			title: "Virtual 5K Challenge",
+			subtitle: "Run anywhere, compete with everyone",
+			description: `<h2>About This Event</h2>
+<p>Our monthly Virtual 5K Challenge lets you compete from anywhere in the world. Run on your schedule, submit your time, and see how you stack up against the Stride community.</p>
+<h2>How It Works</h2>
+<ul>
+  <li><p>Register and receive your digital race bib</p></li>
+  <li><p>Complete your 5K run anytime between Feb 1-28</p></li>
+  <li><p>Submit your verified time through the Stride app</p></li>
+  <li><p>View leaderboards and celebrate with the community</p></li>
+</ul>
+<h2>Prizes</h2>
+<p>Top 3 finishers in each age group receive Stride gear and premium app features.</p>`,
+			startDate: "2024-02-01T00:00:00Z",
+			endDate: "2024-02-28T23:59:59Z",
+			timezone: "UTC",
+			locationType: "virtual",
+			venueName: "",
+			address: "",
+			city: "",
+			state: "",
+			country: "",
+			virtualLink: "https://stride.com/events/virtual-5k",
+			capacity: 1000,
+			registrationUrl: "https://stride.com/events/virtual-5k/register",
+			registrationDeadline: "2024-02-27T23:59:59Z",
+			price: "Free",
+			organizer: "1",
+		},
+	},
+
+	{
+		id: "page-site-event-3",
+		name: "Trail Running Workshop",
+		parentId: "page-site-events",
+		status: "Published",
+		lastModified: "2024-01-17",
+		contentTypeId: "ct-event",
+		slug: "trail-running-workshop",
+		data: {
+			title: "Trail Running Workshop",
+			subtitle: "Master the techniques for off-road running",
+			description: `<h2>About This Event</h2>
+<p>Take your running off-road with confidence. This hands-on workshop covers everything from proper trail running form to navigation and safety essentials.</p>
+<h2>Topics Covered</h2>
+<ul>
+  <li><p>Trail running technique and form</p></li>
+  <li><p>Uphill and downhill strategies</p></li>
+  <li><p>Gear selection and must-haves</p></li>
+  <li><p>Navigation basics and trail safety</p></li>
+  <li><p>Leave No Trace principles</p></li>
+</ul>
+<h2>What to Bring</h2>
+<p>Trail running shoes, water bottle, weather-appropriate clothing, and an adventurous spirit!</p>`,
+			startDate: "2024-03-15T08:00:00Z",
+			endDate: "2024-03-15T12:00:00Z",
+			timezone: "PST",
+			locationType: "in-person",
+			venueName: "Forest Park Trailhead",
+			address: "NW Thurman St & NW Aspen Ave",
+			city: "Portland",
+			state: "OR",
+			country: "USA",
+			virtualLink: "",
+			capacity: 25,
+			registrationUrl: "https://stride.com/events/trail-workshop/register",
+			registrationDeadline: "2024-03-10T23:59:59Z",
+			price: "$75",
+			organizer: "1",
+		},
+	},
+
+	{
 		id: "page-activities",
 		contentTypeId: "exp-landing-page",
 		name: "Activities",
@@ -5493,6 +5703,10 @@ const getPageTagsAndCategories = (pageId: string, contentTypeId: string): { tags
 		"page-site-blog-post-2": ["sprint-training", "exercise-routine"],
 		"page-site-blog-post-3": ["outdoor-training"],
 		"page-site-blog-post-4": ["road-cycling", "cycling-training"],
+		"page-site-events": ["fitness-tracking"],
+		"page-site-event-1": ["endurance-training", "exercise-routine"],
+		"page-site-event-2": ["fitness-tracking", "cardio-workout"],
+		"page-site-event-3": ["outdoor-training", "endurance-training"],
 		"page-activities": ["outdoor-training", "fitness-tracking"],
 		"page-community": ["fitness-tracking"],
 		"page-challenges": ["exercise-routine", "fitness-tracking"],
@@ -5518,6 +5732,10 @@ const getPageTagsAndCategories = (pageId: string, contentTypeId: string): { tags
 		"page-site-blog-post-2": ["content", "training"],
 		"page-site-blog-post-3": ["content"],
 		"page-site-blog-post-4": ["content", "products"],
+		"page-site-events": ["events"],
+		"page-site-event-1": ["events", "training"],
+		"page-site-event-2": ["events"],
+		"page-site-event-3": ["events", "training"],
 		"page-activities": ["features"],
 		"page-community": ["features"],
 		"page-challenges": ["features"],

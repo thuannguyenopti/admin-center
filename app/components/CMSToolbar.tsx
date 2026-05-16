@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
 	Box,
 	Text,
@@ -19,7 +19,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuLabel,
 	toaster,
-	Input,
 } from "@optiaxiom/react";
 import {Button} from "./Button";
 import {
@@ -54,8 +53,6 @@ import {
 	IconHistory,
 	IconRestore,
 	IconSparkles,
-	IconChecklist,
-	IconCheck,
 	IconExternalLink,
 } from "@tabler/icons-react";
 import {PreviewSettings} from "./vb/PreviewSettings";
@@ -72,6 +69,7 @@ import {useLayout} from "@/app/context/LayoutContext";
 import {usePreflightContext} from "@/app/components/ai/PreflightContext";
 import type {PageField} from "@/app/components/ai/PreflightAuditTypes";
 import ContentConnectionMenuItems from "./ContentConnectionMenuItems";
+import TaskAssignmentMenu from "./TaskAssignmentMenu";
 import { initialCmpTasks, type CmpTask } from "@/app/db/cmpInitialData";
 
 interface CMSToolbarProps {
@@ -111,7 +109,6 @@ interface CMSToolbarProps {
 
 	// Content Connection (CMP Integration)
 	onConnectContent?: () => void;
-	onSyncContent?: () => void;
 	onDisconnectContent?: () => void;
 	hasConnection?: boolean;
 	compatibleInstancesCount?: number;
@@ -120,6 +117,7 @@ interface CMSToolbarProps {
 	onAddToTask?: (taskId: string, taskName: string) => void;
 	onRemoveFromTask?: () => void;
 	currentTaskId?: string | null;
+	onSyncContent?: () => void;
 }
 
 const getStatusIntent = (
@@ -186,7 +184,6 @@ export default function CMSToolbar({
 	onUpdateElement,
 
 	onConnectContent,
-	onSyncContent,
 	onDisconnectContent,
 	hasConnection = false,
 	compatibleInstancesCount = 0,
@@ -224,10 +221,6 @@ export default function CMSToolbar({
 
 	// CMP Tasks for "Add to task" submenu
 	const [cmpTasks] = usePersistentState("cmpTasks", initialCmpTasks) as [CmpTask[], any];
-	const [taskSearchQuery, setTaskSearchQuery] = useState("");
-	const filteredTasks = cmpTasks.filter((task) =>
-		task.title.toLowerCase().includes(taskSearchQuery.toLowerCase())
-	);
 
 	// Get enabled Opal Actions for Improve button and context menu
 	const [opalConfig] = usePersistentState("opal-config", defaultOpalConfiguration) as [
@@ -908,7 +901,6 @@ export default function CMSToolbar({
 						{/* Content Connection (CMP Integration) */}
 						<ContentConnectionMenuItems
 							onConnectContent={onConnectContent}
-							onSyncContent={onSyncContent}
 							onDisconnectContent={onDisconnectContent}
 							hasConnection={hasConnection}
 							compatibleInstancesCount={compatibleInstancesCount}
@@ -934,100 +926,14 @@ export default function CMSToolbar({
 							</Box>
 						</DropdownMenuItem>
 
-						{/* Add to Task submenu */}
+						{/* Add to Task / Remove from Task */}
 						{onAddToTask && (
-							<DropdownMenuSub onOpenChange={(open) => {
-								if (!open) setTaskSearchQuery("");
-							}}>
-								<DropdownMenuSubTrigger>
-									<Box display="flex" alignItems="center" gap="8">
-										<IconChecklist size={16} />
-										{currentTaskId ? "Change task" : "Add to task"}
-									</Box>
-								</DropdownMenuSubTrigger>
-								<DropdownMenuSubContent
-									style={{ minWidth: 280, maxHeight: 340, overflow: "auto" }}
-								>
-									{/* Search input */}
-									<Box px="8" py="4">
-										<Input
-											placeholder="Search tasks..."
-											value={taskSearchQuery}
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-												setTaskSearchQuery(e.target.value)
-											}
-											onKeyDown={(e: React.KeyboardEvent) => e.stopPropagation()}
-											size="md"
-										/>
-									</Box>
-									<DropdownMenuSeparator />
-
-									{/* Current task indicator */}
-									{currentTaskId && (() => {
-										const currentTask = cmpTasks.find((t) => t.id === currentTaskId);
-										return currentTask ? (
-											<>
-												<DropdownMenuLabel>Current task</DropdownMenuLabel>
-												<DropdownMenuItem disabled>
-													<Box display="flex" alignItems="center" gap="8" w="full">
-														<IconCheck size={16} />
-														<Box>
-															<Text style={{ fontSize: 13, fontWeight: 500 }}>
-																{currentTask.title}
-															</Text>
-															<Text style={{ fontSize: 12 }} color="fg.tertiary">
-																{currentTask.reference}
-															</Text>
-														</Box>
-													</Box>
-												</DropdownMenuItem>
-												{onRemoveFromTask && (
-													<DropdownMenuItem
-														intent="danger"
-														onSelect={onRemoveFromTask}
-													>
-														<Box display="flex" alignItems="center" gap="8">
-															<IconTrash size={16} />
-															Remove from task
-														</Box>
-													</DropdownMenuItem>
-												)}
-												<DropdownMenuSeparator />
-											</>
-										) : null;
-									})()}
-
-									{/* Task list */}
-									<DropdownMenuLabel>
-										{currentTaskId ? "Switch to" : "Tasks"}
-									</DropdownMenuLabel>
-									{filteredTasks.filter((task) => task.id !== currentTaskId).length === 0 ? (
-										<Box px="12" py="8">
-											<Text style={{ fontSize: 13 }} color="fg.tertiary">
-												No tasks found
-											</Text>
-										</Box>
-									) : (
-										filteredTasks
-											.filter((task) => task.id !== currentTaskId)
-											.map((task) => (
-												<DropdownMenuItem
-													key={task.id}
-													onSelect={() => onAddToTask(task.id, task.title)}
-												>
-													<Box>
-														<Text style={{ fontSize: 13, fontWeight: 500 }}>
-															{task.title}
-														</Text>
-														<Text style={{ fontSize: 12 }} color="fg.tertiary">
-															{task.reference}
-														</Text>
-													</Box>
-												</DropdownMenuItem>
-											))
-									)}
-								</DropdownMenuSubContent>
-							</DropdownMenuSub>
+							<TaskAssignmentMenu
+								currentTaskId={currentTaskId}
+								tasks={cmpTasks}
+								onAddToTask={onAddToTask}
+								onRemoveFromTask={onRemoveFromTask}
+							/>
 						)}
 
 						<DropdownMenuItem intent="danger" onSelect={onTrash}>

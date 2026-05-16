@@ -14,6 +14,12 @@
       "args": ["-y", "@optiaxiom/mcp"],
       "env": {}
     },
+    "axiom-v3": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@optiaxiom/mcp@next"],
+      "env": {}
+    },
     "optimizely": {
       "type": "stdio",
       "command": "npx",

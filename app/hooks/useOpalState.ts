@@ -16,6 +16,7 @@ import {
   parseExperimentCreationRunMessage,
 } from '@/app/web-experimentation/optimizations/parseExperimentCreationRun';
 import type { Optimization } from '@/app/web-experimentation/optimizations/mockData';
+import { useOpalPageEditing } from './useOpalPageEditing';
 
 const EXPERIMENT_CREATION_STEPS = [
   'Parsing experiment inputs',
@@ -57,6 +58,11 @@ export type ChatMessage = {
   eventType?: 'agent-start' | 'agent-end';
   agentEmoji?: string;
   agentName?: string;
+  // Per-message author identity (for multi-user mock threads)
+  authorName?: string;
+  authorAvatar?: string;
+  /** Optional key used to look up an inline card rendered below this message */
+  cardAfterKey?: string;
 };
 
 export type OpalState = {
@@ -244,6 +250,13 @@ export function useOpalState({
   const [error, setError] = useState<string | undefined>();
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const [editTrigger, setEditTrigger] = useState<{pageId: string; instructions: string; contentTypeId: string} | null>(null);
+
+  // Hook to handle page editing with @content_creation
+  useOpalPageEditing(editTrigger, () => {
+    setEditTrigger(null);
+    setIsLoading(false);
+  });
 
   // Load chat messages when activeChatId changes
   useEffect(() => {
@@ -388,6 +401,63 @@ export function useOpalState({
     if (!content.trim() || isLoading) return;
 
     const trimmed = content.trim();
+
+    // Detect @content_creation mention for page editing
+    const isContentCreation = trimmed.includes('@content_creation') && activePageId;
+
+    console.log('[useOpalState] sendMessage called:', {
+      trimmed,
+      hasContentCreation: trimmed.includes('@content_creation'),
+      activePageId,
+      isContentCreation,
+    });
+
+    if (isContentCreation) {
+      // Extract instructions (remove @content_creation mention)
+      const instructions = trimmed.replace(/@content_creation\s*/g, '').trim();
+
+      console.log('[useOpalState] Content creation detected, instructions:', instructions);
+
+      // TODO: Get contentTypeId from OpalGenerationContext once it's available there
+      // For now, we'll need to get it from the page object in the edit page context
+      // This is a temporary limitation - contentTypeId should be passed to setActivePage
+
+      // Get current page from persistent storage
+      let pages: any[] = [];
+      try {
+        pages = JSON.parse(localStorage.getItem('pages_v5') || '[]');
+      } catch (parseError) {
+        console.error('[useOpalState] Failed to parse pages_v5 from localStorage', parseError);
+        setError('Cannot edit page right now because saved page data is invalid. Please refresh and try again.');
+        return;
+      }
+      const currentPage = pages.find((p: any) => p.id === activePageId);
+
+      console.log('[useOpalState] Found page:', currentPage);
+
+      if (!currentPage || !currentPage.contentTypeId) {
+        console.error('[useOpalState] Page or content type not found');
+        setError("Cannot edit page: page or content type not found");
+        return;
+      }
+
+      // Trigger page editing flow via hook
+      console.log('[useOpalState] Setting edit trigger:', {
+        pageId: activePageId,
+        instructions,
+        contentTypeId: currentPage.contentTypeId,
+      });
+
+      setEditTrigger({
+        pageId: activePageId,
+        instructions,
+        contentTypeId: currentPage.contentTypeId,
+      });
+
+      setIsLoading(true);
+      return;
+    }
+
     const isExperimentCreationRun = trimmed.startsWith('Run the Experiment Creation agent');
     const isSummarizeRequest =
       optimizationId != null &&
@@ -400,6 +470,7 @@ export function useOpalState({
     addMessage({
       role: 'user',
       content: trimmed,
+      authorName: 'Jamie Chen',
     });
 
     if (onMessageSent) {

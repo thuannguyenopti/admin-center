@@ -18,6 +18,8 @@ type OpalHeaderProps = {
     onToggleHistory: () => void;
     onToggleMode?: () => void;
     sticky?: boolean;
+    imMode?: boolean;
+    onImModeChange?: (enabled: boolean) => void;
 };
 
 export function OpalHeader({
@@ -26,6 +28,8 @@ export function OpalHeader({
     onToggleHistory,
     onToggleMode,
     sticky = false,
+    imMode = false,
+    onImModeChange,
 }: OpalHeaderProps) {
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -162,6 +166,32 @@ export function OpalHeader({
                                     <div style={{
                                         position: 'absolute', top: '3px',
                                         left: devMode ? '19px' : '3px',
+                                        width: '12px', height: '12px', borderRadius: '50%',
+                                        background: 'white', transition: 'left 0.2s',
+                                        boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                                    }} />
+                                </div>
+                            </div>
+
+                            <div
+                                onClick={() => onImModeChange?.(!imMode)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '7px 10px', borderRadius: '6px', cursor: 'pointer',
+                                    transition: 'background 0.15s',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+                                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                            >
+                                <span style={{ fontSize: '13px', color: '#374151' }}>IM Mode</span>
+                                <div style={{
+                                    width: '34px', height: '18px', borderRadius: '9px',
+                                    background: imMode ? '#7C3AED' : '#d1d5db',
+                                    position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+                                }}>
+                                    <div style={{
+                                        position: 'absolute', top: '3px',
+                                        left: imMode ? '19px' : '3px',
                                         width: '12px', height: '12px', borderRadius: '50%',
                                         background: 'white', transition: 'left 0.2s',
                                         boxShadow: '0 1px 2px rgba(0,0,0,0.15)',

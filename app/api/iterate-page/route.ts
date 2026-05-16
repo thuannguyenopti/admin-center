@@ -1,52 +1,13 @@
 /**
  * API endpoint for iterating on AI-generated pages
  * Handles user feedback and updates page content accordingly
+ * Uses action-based architecture from edit-page
  */
 
-import OpenAI from "openai";
-
-const openai = process.env.OPENAI_API_KEY
-	? new OpenAI({apiKey: process.env.OPENAI_API_KEY})
-	: null;
-
-/**
- * Validates and fixes element IDs in page structure
- * Ensures all elements have proper IDs to prevent React key warnings
- */
-function validateAndFixElementIds(outlines: any[]): any[] {
-	return outlines.map((outline: any) => {
-		// Validate elements object
-		if (outline.elements) {
-			Object.keys(outline.elements).forEach((eleId) => {
-				if (!eleId || eleId === "undefined") {
-					console.warn("[Iterate Page] Found element without proper ID");
-				}
-			});
-		}
-
-		// Fix tree element references
-		if (outline.tree) {
-			outline.tree = outline.tree.map((section: any) => ({
-				...section,
-				children: (section.children || []).map((row: any) => ({
-					...row,
-					children: (row.children || []).map((col: any) => {
-						const elements = (col.elements || []).map((el: any) => {
-							if (!el.id) {
-								console.warn("[Iterate Page] Element missing ID, generating one");
-								return {...el, id: `ele-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`};
-							}
-							return el;
-						});
-						return {...col, elements};
-					}),
-				})),
-			}));
-		}
-
-		return outline;
-	});
-}
+import {openai} from "@/app/lib/openai";
+import {executeActions, type EditAction, type AIResponse} from "../edit-page/actions";
+import {STRIDE_SHORT_CONTEXT} from "../ai-context";
+import {simplifyTree} from "../edit-page/actions";
 
 export async function POST(request: Request) {
 	try {
@@ -73,57 +34,89 @@ export async function POST(request: Request) {
 			);
 		}
 
-		// Use OpenAI to understand the feedback and apply changes to the page structure
+		// Get outline from currentPage
+		const outline = currentPage.outlines?.[0] || currentPage;
+
+		console.log("[Iterate Page] Current outline:", {
+			hasTree: !!outline.tree,
+			treeLength: outline.tree?.length,
+			elementsCount: Object.keys(outline.elements || {}).length
+		});
+
+		// Simplified structure for AI
+		const elementsView = JSON.stringify(outline.elements || {}, null, 2);
+		const treeView = simplifyTree(outline.tree || []);
+
+		// Use the same action-based prompt as edit-page
+		const systemPrompt = `You are editing a web page's visual builder content.
+
+${STRIDE_SHORT_CONTEXT}
+
+Current page elements:
+${elementsView}
+
+Current tree structure:
+${treeView}
+
+Apply the user's requested changes by returning a JSON object with an array of actions.
+
+AVAILABLE ACTIONS:
+
+1. add_image: Add a new image element
+2. update_text: Change text content of existing element
+3. update_image: Replace an existing image
+4. delete_element: Remove an element
+5. add_text: Add new text or heading
+6. add_button: Add a new button element
+7. update_property: Change any element property (visual style, level, etc.)
+
+VISUAL STYLES (template property):
+
+ct-heading templates:
+- "default" - standard heading
+- "prominent" - large, eye-catching (use for: make it bigger, emphasize, hero)
+- "subtle" - smaller, understated (use for: make it smaller, de-emphasize, quiet)
+- "accent-red" - red color (use for: make it red, danger, alert, warning)
+- "accent-blue" - blue color (use for: make it blue, primary color, brand)
+
+ct-text templates:
+- "default" - standard text
+- "prominent" - larger, emphasis (use for: make it bigger, important, emphasize)
+- "subtle" - smaller, secondary (use for: make it smaller, muted, de-emphasize)
+
+ct-button templates:
+- "primary" - main CTA style (use for: primary, main action, prominent)
+- "secondary" - outline style (use for: secondary, alternative, outline)
+- "subtle" - text-like, minimal (use for: subtle, link-like, minimal)
+
+COMMON OPERATIONS:
+- "make the heading red" → {"action": "update_property", "elementId": "ele-X", "property": "template", "value": "accent-red"}
+- "make it more prominent" → {"action": "update_property", "elementId": "ele-X", "property": "template", "value": "prominent"}
+- "tone it down" → {"action": "update_property", "elementId": "ele-X", "property": "template", "value": "subtle"}
+- "change to h3" → {"action": "update_property", "elementId": "ele-X", "property": "level", "value": "h3"}
+- "make the button secondary" → {"action": "update_property", "elementId": "ele-X", "property": "template", "value": "secondary"}
+- "remove the button" → {"action": "delete_element", "elementId": "ele-X"}
+
+Return format:
+{
+  "actions": [/* array of action objects */],
+  "summary": "Brief description of changes made"
+}
+
+CRITICAL RULES:
+- Use existing element IDs from the structure above
+- Generate unique IDs for new elements (use descriptive names like "ele-new-race-bicycle")
+- For images, ALWAYS use imagePrompt (detailed DALL-E prompt), not URLs
+- Be specific with element placement (afterElementId or beforeElementId)
+- Return multiple actions if needed
+- IMPORTANT: Return valid JSON format only`;
+
 		const completion = await openai.chat.completions.create({
 			model: "gpt-4o",
 			messages: [
 				{
 					role: "system",
-					content: `You are a helpful web page editor. The user wants to modify their page. Apply the requested changes directly to the page structure.
-
-Current page structure (outlines with elements):
-${JSON.stringify(currentPage, null, 2)}
-
-IMPORTANT: Return the COMPLETE MODIFIED page structure with all changes applied. Include ALL outlines, even ones that weren't modified.
-
-Respond with a JSON object:
-{
-  "outlines": [...complete modified outlines array...],
-  "summary": "Brief description of what was changed (e.g., 'Removed the button from the Welcome section')"
-}
-
-Common operations:
-- Remove element: Delete it from the elements object and elementIds array
-- Update text: Modify the properties.text.value
-- Add element: Create new element with unique ID, add to elements object and elementIds array
-- Change heading level: Modify properties.level.value
-- Change visual style: Modify properties.template.value
-
-VISUAL STYLE TEMPLATES:
-When user requests visual changes (color, size, emphasis), modify the "template" property instead of text content.
-
-ct-heading templates (properties.template.value):
-- "default" (standard) - semantics: default, normal, standard
-- "prominent" (large, eye-catching) - semantics: prominent, large, hero, big, emphasize
-- "subtle" (smaller, understated) - semantics: subtle, small, minimal, quiet, de-emphasize
-- "accent-red" (red color) - semantics: red, danger, alert, warning, urgent
-- "accent-blue" (blue color) - semantics: blue, primary, brand, cool
-
-ct-text templates (properties.template.value):
-- "default" (standard) - semantics: default, normal, standard
-- "prominent" (larger, emphasis) - semantics: prominent, large, emphasis, important
-- "subtle" (smaller, secondary) - semantics: subtle, small, secondary, muted, quiet
-
-ct-button templates (properties.template.value):
-- "primary" (main CTA) - semantics: primary, main, cta, prominent, important
-- "secondary" (outline style) - semantics: secondary, outline, ghost, alternative
-- "subtle" (text-like) - semantics: subtle, text, link, minimal
-
-Examples:
-- "make the heading red" → set properties.template.value = "accent-red"
-- "make it more prominent" → set properties.template.value = "prominent"
-- "tone it down" → set properties.template.value = "subtle"
-- "make the button secondary" → set properties.template.value = "secondary"`,
+					content: systemPrompt,
 				},
 				{
 					role: "user",
@@ -136,23 +129,35 @@ Examples:
 		});
 
 		const result = completion.choices[0]?.message?.content?.trim() || "{}";
-		const updates = JSON.parse(result);
+		const parsed: AIResponse = JSON.parse(result);
 
-		// Validate and fix element IDs
-		if (updates.outlines) {
-			updates.outlines = validateAndFixElementIds(updates.outlines);
-		}
+		console.log("[Iterate Page] AI returned actions:", parsed.actions);
 
-		console.log("[Iterate Page] Applied changes:", {
-			summary: updates.summary,
-			outlinesCount: updates.outlines?.length,
-			elementCounts: updates.outlines?.map((o: any) => Object.keys(o.elements || {}).length),
-		});
+		// Execute actions using the action executor
+		// Create a no-op sendEvent since we're not streaming
+		const sendEvent = (event: string, data: any) => {
+			console.log(`[Iterate Page] Event: ${event}`, data);
+		};
 
-		return new Response(JSON.stringify(updates), {
-			status: 200,
-			headers: {"Content-Type": "application/json"},
-		});
+		const updatedOutline = await executeActions(
+			parsed.actions,
+			outline,
+			sendEvent,
+			[] // Empty checklist since we're not streaming progress
+		);
+
+		console.log("[Iterate Page] Actions executed successfully");
+
+		return new Response(
+			JSON.stringify({
+				outlines: [updatedOutline],
+				summary: parsed.summary
+			}),
+			{
+				status: 200,
+				headers: {"Content-Type": "application/json"},
+			}
+		);
 	} catch (error) {
 		console.error("[Iterate Page] Error occurred:", error);
 		return new Response(

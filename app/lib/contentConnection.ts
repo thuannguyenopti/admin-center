@@ -336,7 +336,7 @@ export function createPageFromInstance(
 	targetContentTypeId: string,
 	contentTypes: ContentType[],
 	pages: Page[],
-	taskMetadata?: { taskId: string; taskName: string }
+	taskMetadata?: { taskId: string; taskName: string; applicationName?: string }
 ): {
 	page?: Page;
 	parentId?: string | null;
@@ -396,6 +396,7 @@ export function createPageFromInstance(
 			taskName: taskMetadata.taskName,
 			addedAt: new Date().toISOString(),
 			addedVia: "created",
+			applicationName: taskMetadata.applicationName,
 		} : undefined,
 	};
 

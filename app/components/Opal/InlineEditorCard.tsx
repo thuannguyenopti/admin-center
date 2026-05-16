@@ -12,13 +12,19 @@ import {
   IconDownload,
   IconThumbsUp,
   IconThumbsDown,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 
-// Matches the Figma "Island - contents" radial gradient thumb
-const THUMB_GRADIENT =
-  "radial-gradient(ellipse at 20% 20%, rgba(245,243,255,1) 5%, rgba(229,239,255,1) 61%, rgba(221,214,254,1) 85%)";
+// Unselected thumb: brand/50 lime green (Figma node 146:8608)
+const THUMB_BG = "#eeffd9";
+const THUMB_COLOR = "#262b37";
 
-const BORDER_T = "1px solid var(--ax-colors-border-tertiary)";
+// Selected thumb: sage palette
+const THUMB_SELECTED_BG = "#d2dec2";
+const THUMB_SELECTED_COLOR = "#071a14";
+const CARD_SELECTED_BG = "#eff5eb";
+const CARD_SELECTED_BORDER = "1.5px solid #d2dec2";
+
+const BORDER_DEFAULT = "1px solid var(--ax-colors-border-secondary)";
 
 type InlineEditorCardProps = {
   filename: string;
@@ -30,7 +36,7 @@ type InlineEditorCardProps = {
 
 export function InlineEditorCard({ filename, description, onOpen, selected, onRegenerate }: InlineEditorCardProps) {
   return (
-    <Box display="flex" flexDirection="column" gap="8" style={{ minWidth: "66.667%", width: "fit-content", maxWidth: "100%" }}>
+    <Box display="flex" flexDirection="column" gap="8" style={{ width: "100%" }}>
       {/* Artifact card — matches IslandContentTile design */}
       <Box
         display="flex"
@@ -38,15 +44,11 @@ export function InlineEditorCard({ filename, description, onOpen, selected, onRe
         gap="8"
         p="16"
         style={{
-          border: selected
-            ? "1.5px solid var(--ax-colors-border-accent)"
-            : BORDER_T,
+          border: selected ? CARD_SELECTED_BORDER : BORDER_DEFAULT,
           borderRadius: 12,
           overflow: "hidden",
           cursor: "pointer",
-          background: selected
-            ? "var(--ax-colors-bg-accent-subtle)"
-            : "var(--ax-colors-bg-default)",
+          background: selected ? CARD_SELECTED_BG : "var(--ax-colors-bg-default)",
         }}
         onClick={onOpen}
       >
@@ -58,9 +60,9 @@ export function InlineEditorCard({ filename, description, onOpen, selected, onRe
           style={{
             padding: "8px 12px",
             borderRadius: 6,
-            background: THUMB_GRADIENT,
+            background: selected ? THUMB_SELECTED_BG : THUMB_BG,
             flexShrink: 0,
-            color: "#080736",
+            color: selected ? THUMB_SELECTED_COLOR : THUMB_COLOR,
           }}
         >
           <IconCode size={20} />

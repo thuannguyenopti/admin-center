@@ -20,14 +20,7 @@ import {
 	checkProofreading,
 	checkBrandTone,
 } from "../utils";
-
-/**
- * Checklist item representing the status of an individual audit
- */
-interface ChecklistItem {
-	label: string;
-	status: "pending" | "running" | "completed" | "failed";
-}
+import {ChecklistItem, delay, sseHeaders} from "@/app/lib/streaming";
 
 /**
  * SSE Streaming endpoint for Preflight Audit
@@ -63,7 +56,6 @@ export async function POST(request: Request) {
 				};
 
 				// Helper to add minimum delay between tasks (100-200ms)
-				const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 				const taskDelay = () => delay(100 + Math.random() * 100); // Random 100-200ms
 
 				// Initial checklist with all audits pending
@@ -301,13 +293,7 @@ export async function POST(request: Request) {
 			},
 		});
 
-		return new Response(stream, {
-			headers: {
-				"Content-Type": "text/event-stream",
-				"Cache-Control": "no-cache",
-				Connection: "keep-alive",
-			},
-		});
+		return new Response(stream, {headers: sseHeaders()});
 	} catch (error) {
 		console.error("[Preflight Audit Stream] Error occurred:", error);
 		return new Response(JSON.stringify({error: "Internal Server Error"}), {

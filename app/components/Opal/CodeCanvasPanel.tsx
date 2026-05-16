@@ -62,8 +62,11 @@ type CodeCanvasPanelProps = {
   artifactStatus?: string;
   artifactVersion?: string;
   artifactSource?: { type: string; name: string };
+  artifactCreator?: { name: string };
   contentNode?: ReactNode;
   initialHtml?: string;
+  chatOpen?: boolean;
+  onChatToggle?: () => void;
 };
 
 // ── Example HTML content ──────────────────────────────────────────────────────

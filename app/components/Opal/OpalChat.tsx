@@ -31,9 +31,11 @@ type OpalChatProps = {
   activeAgentCtx?: { emoji: string; name: string } | null;
   contextChip?: string | null;
   contextualActionCard?: React.ReactNode;
+  /** Cards keyed by cardAfterKey — rendered inline below the matching message */
+  messageCards?: Record<string, React.ReactNode>;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, messageCards }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [streamingExpandedByThreadKey, setStreamingExpandedByThreadKey] = useState<Record<string, boolean>>({});
   let opalContext;
@@ -340,6 +342,11 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                   isOpalLoading={isLoading}
                   hideActionBar={!!lastAssistantId && message.id === lastAssistantId}
                 />
+                {message.cardAfterKey && messageCards?.[message.cardAfterKey] && (
+                  <Box mt="4">
+                    {messageCards[message.cardAfterKey]}
+                  </Box>
+                )}
                 {collapsedOpal && (
                   <Disclosure
                     my="16"

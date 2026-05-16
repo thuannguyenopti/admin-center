@@ -40,7 +40,7 @@ On every new conversation, check if the files you're about to touch are monolith
 
 ## Git & Deployment
 
-- **Repo**: `Ben-Holme/axiom-play` — **Hosting**: Vercel (auto-deploys)
+- **Repo**: `episerver/axiom-play` — **Hosting**: Vercel (auto-deploys)
 - **Never push directly to `main`** — always create a PR
 - **Never merge locally** — merge via GitHub so checks run and Vercel auto-deploys
 - Always verify build (`yarn build`) before pushing

@@ -15,6 +15,7 @@ import { WorkflowTemplateMenu } from "./WorkflowTemplateMenu";
 
 type WorkflowSidebarProps = {
 	filteredTemplates: WorkflowTemplate[];
+	hasTaskContent: boolean;
 	isAllDone: boolean;
 	isMenuOpen: boolean;
 	onMarkComplete: () => void;
@@ -36,6 +37,7 @@ type WorkflowSidebarProps = {
 
 export function WorkflowSidebar({
 	filteredTemplates,
+	hasTaskContent,
 	isAllDone,
 	isMenuOpen,
 	onMarkComplete,
@@ -91,12 +93,12 @@ export function WorkflowSidebar({
 					</Box>
 					<Box alignItems="center" display="flex" gap="8">
 						<Button
-							appearance={isAllDone ? "subtle" : "default"}
+							appearance={isAllDone ? "subtle" : hasTaskContent ? "primary" : "default"}
 							onClick={isAllDone ? onUndoComplete : onMarkComplete}
 							size="sm"
 							style={{ borderRadius: 6, height: 28, padding: "0 10px" }}
 						>
-							{isAllDone ? "Undo Complete" : "Mark Complete"}
+							{isAllDone ? "Undo Complete" : hasTaskContent ? "Publish" : "Mark Complete"}
 						</Button>
 						<Button appearance="subtle" aria-label="More" icon={<IconDots size={16} />} size="sm" style={{ height: 28, width: 28 }} />
 					</Box>

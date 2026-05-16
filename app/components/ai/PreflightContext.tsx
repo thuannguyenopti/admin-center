@@ -50,7 +50,6 @@ export function PreflightProvider({children}: {children: ReactNode}) {
 	}, []);
 
 	const registerScrollFunction = useCallback((fn: (elementId: string) => void) => {
-		console.log("[PreflightContext] Scroll function registered");
 		scrollFunctionRef.current = fn;
 	}, []);
 
