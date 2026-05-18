@@ -34,27 +34,17 @@ import {
 	IconClock,
 	IconUserGroup,
 	IconLightbulb,
-} from "@optimizely/axiom-icons";
-import {
 	IconComments,
 	IconBooks,
 	IconBell,
 	IconFolderBookmark,
-	IconPuzzlePiece as IconPuzzlePieceV3,
-	IconGear as IconGearV3,
-	IconSubAgent as IconAgent,
+	IconAgent,
+	IconPlus,
+	IconSparkles,
+	IconFileLines,
 } from "@optiaxiom/icons";
 
 // CMP custom icons
-import CMPCreateIcon from "@/app/cmp/assets/plus-16.svg";
-import CMPHomeIcon from "@/app/cmp/assets/home.svg";
-import CMPPlanIcon from "@/app/cmp/assets/plan.svg";
-import CMPDashboardIcon from "@/app/cmp/assets/dashboard.svg";
-import CMPResourceManagementIcon from "@/app/cmp/assets/resource-management.svg";
-import CMPIdeaLabIcon from "@/app/cmp/assets/sparkles 16.svg";
-import CMPLibraryIcon from "@/app/cmp/assets/library.svg";
-import CMPMarketplaceIcon from "@/app/cmp/assets/marketplace.svg";
-import CMPWorkRequestIcon from "@/app/cmp/assets/workrequest.svg";
 
 export default function RootLayout({
 	children,
@@ -464,7 +454,7 @@ export default function RootLayout({
 				icon: <IconFolderBookmark />,
 			},
 			{
-				label: "Sub Agent",
+				label: "Agents",
 				url: "/opal/agents",
 				highlight: "/opal/agents",
 				icon: <IconAgent />,
@@ -474,20 +464,20 @@ export default function RootLayout({
 				label: "Connectors",
 				url: "/opal/connectors",
 				highlight: "/opal/connectors",
-				icon: <IconPuzzlePieceV3 />,
+				icon: <IconPuzzlePiece />,
 				hidePageHeader: true,
 			},
 			{
 				label: "Settings",
 				url: "/opal/settings",
 				highlight: "/opal/settings",
-				icon: <IconGearV3 />,
+				icon: <IconGear />,
 			},
 		],
 		cmp: [
 			{
 				label: "Create",
-				icon: <CMPCreateIcon />,
+				icon: <IconPlus />,
 				isMenuTrigger: true,
 				menuOptions: [
 					{label: "Campaign", url: "/cmp/create/campaign"},
@@ -500,52 +490,46 @@ export default function RootLayout({
 				],
 			},
 			{
-				label: "Home",
-				url: "/cmp/dashboard",
-				highlight: "/cmp/dashboard",
-				icon: <CMPHomeIcon />,
-			},
-			{
 				label: "Plan",
 				url: "/cmp/plan-view",
 				highlight: "/cmp/plan-view",
-				icon: <CMPPlanIcon />,
+				icon: <IconList />,
 			},
 			{
 				label: "Library",
 				url: "/cmp/library",
 				highlight: "/cmp/library",
-				icon: <CMPLibraryIcon />,
+				icon: <IconBooks />,
 			},
 			{
 				label: "Stock Images",
 				url: "/cmp/stock-images",
 				highlight: "/cmp/stock-images",
-				icon: <CMPMarketplaceIcon />,
+				icon: <IconStore />,
 			},
 			{
 				label: "Resource Management",
 				url: "/cmp/resource-management",
 				highlight: "/cmp/resource-management",
-				icon: <CMPResourceManagementIcon />,
+				icon: <IconUserGroup />,
 			},
 			{
 				label: "Idea Lab",
 				url: "/cmp/idea-lab",
 				highlight: "/cmp/idea-lab",
-				icon: <CMPIdeaLabIcon />,
+				icon: <IconSparkles />,
 			},
 			{
 				label: "Analytics",
 				url: "/cmp/reports",
 				highlight: "/cmp/reports",
-				icon: <CMPDashboardIcon />,
+				icon: <IconChartColumn />,
 			},
 			{
 				label: "Requests",
 				url: "/cmp/work-request",
 				highlight: "/cmp/work-request",
-				icon: <CMPWorkRequestIcon />,
+				icon: <IconFileLines />,
 			},
 			{
 				label: "Settings",
@@ -652,6 +636,8 @@ export default function RootLayout({
 					href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
 					rel="stylesheet"
 				/>
+				{/* figma-capture: remove after capture */}
+				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
 			<body suppressHydrationWarning data-brand="v3">
 				<ThemeProvider>

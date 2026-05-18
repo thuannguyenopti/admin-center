@@ -37,7 +37,7 @@ import Link from "next/link";
 import {useTheme} from "@/app/hooks/useTheme";
 import {useLayout} from "@/app/context/LayoutContext";
 import NotificationDropdown from "./NotificationDropdown";
-import { IconGrid2, IconXmark } from "@optimizely/axiom-icons";
+import { IconXmark } from "@optimizely/axiom-icons";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
@@ -306,7 +306,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							addonAfter={<IconChevronDown size="20" />}
 							appearance="subtle"
 							iconPosition="start"
-							icon={isOpalRoute ? <IconGrid2 /> : <IconLayout2 />}
+							icon={<IconLayout2 />}
 							aria-label="Select product"
 						>
 								{getCurrentProduct()}
