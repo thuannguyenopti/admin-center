@@ -42,11 +42,12 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const VAUS = [
-	{ name: "Pixel Perfect Checker", avatar: "/avatars/mock-avatar-seo.svg" },
-	{ name: "GEO Q&A Generator", avatar: "/avatars/mock-avatar-geo.svg" },
-	{ name: "Weekly Traffic Reporter", avatar: "/avatars/mock-avatar-traffic.svg" },
-	{ name: "Product Launch Quarterback", avatar: "/avatars/mock-avatar-abu.svg" },
-	{ name: "ABM Page Generator", avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Henry",  role: "Product Launch Quarterback",    avatar: "/avatars/mock-avatar-abu.svg" },
+	{ name: "Poppy",  role: "Product Marketer",              avatar: "/avatars/mock-avatar-seo.svg" },
+	{ name: "Jonas",  role: "Journey Optimization Marketer", avatar: "/avatars/mock-avatar-abu.svg" },
+	{ name: "Kerby",  role: "Account Based Marketer",        avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Mayling", role: "GEO Content Strategist",       avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Tony",   role: "Traffic & Growth Marketer",     avatar: "/avatars/mock-avatar-traffic.svg" },
 ];
 
 type GlobalBarProps = {
@@ -67,13 +68,14 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		codePanelControls?.openPanel(pathname);
 	};
 
-	const vauGroup = { label: "Manage Virtual Teammates", separator: false, hidden: false };
+	const vauGroup = { label: "Act as", separator: false, hidden: false };
+	const vauFooterGroup = { label: "", separator: true, hidden: true };
 
-	const [activeVAU, setActiveVAU] = useState<{ name: string; avatar: string } | null>(null);
-	const [switchingVAU, setSwitchingVAU] = useState<{ name: string; avatar: string } | null>(null);
+	const [activeVAU, setActiveVAU] = useState<{ name: string; role: string; avatar: string } | null>(null);
+	const [switchingVAU, setSwitchingVAU] = useState<{ name: string; role: string; avatar: string } | null>(null);
 	const [switchVisible, setSwitchVisible] = useState(false);
 
-	const handleSelectVAU = (vau: { name: string; avatar: string }) => {
+	const handleSelectVAU = (vau: { name: string; role: string; avatar: string }) => {
 		setSwitchingVAU(vau);
 		setSwitchVisible(true);
 		setTimeout(() => setSwitchVisible(false), 1400);
@@ -131,6 +133,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</Text>
 					<Image src={activeVAU.avatar} alt="" width={18} height={18} style={{ borderRadius: 999, flexShrink: 0 }} />
 					<Text fontSize="sm" fontWeight="600">{activeVAU.name}</Text>
+					<Text fontSize="sm" color="fg.secondary">{activeVAU.role}</Text>
 					<Box style={{ flex: 1 }} />
 					<Button
 						appearance="subtle"
@@ -316,24 +319,25 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			<Box display="flex" alignItems="center" gap="4">
 				{isOpalRoute ? (
 					<>
-						<Button appearance="default" size="md" onClick={onOpalClick}>
-							<Box asChild display="inline-flex" alignItems="center" gap="6">
-								<span>
-									<Image src="/opal-orb.png" alt="" width={16} height={16} />
-									Ask Opal
-								</span>
-							</Box>
-						</Button>
 						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 						<NotificationDropdown />
 						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
 						<Menu
-							options={VAUS.map(vau => ({
-								group: vauGroup,
-								label: vau.name,
-								addon: <Image src={vau.avatar} alt="" width={20} height={20} style={{ borderRadius: 999, flexShrink: 0 }} />,
-								execute: () => handleSelectVAU(vau),
-							}))}
+							options={[
+								...VAUS.map(vau => ({
+									group: vauGroup,
+									label: vau.name,
+									description: vau.role,
+									addon: <Image src={vau.avatar} alt="" width={20} height={20} style={{ borderRadius: 999, flexShrink: 0 }} />,
+									execute: () => handleSelectVAU(vau),
+								})),
+								{
+									group: vauFooterGroup,
+									label: "Manage Virtual Teammates",
+									addon: <IconUsers size={16} />,
+									execute: () => {},
+								},
+							]}
 						>
 							<MenuTrigger asChild>
 								<Button appearance="subtle" size="md" aria-label={activeVAU ? activeVAU.name : "Jamie Chen"}>

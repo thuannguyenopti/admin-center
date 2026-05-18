@@ -34,7 +34,6 @@ import {
 	IconClock,
 	IconUserGroup,
 	IconLightbulb,
-	IconAgent,
 } from "@optimizely/axiom-icons";
 import {
 	IconComments,
@@ -43,6 +42,7 @@ import {
 	IconFolderBookmark,
 	IconPuzzlePiece as IconPuzzlePieceV3,
 	IconGear as IconGearV3,
+	IconSubAgent as IconAgent,
 } from "@optiaxiom/icons";
 
 // CMP custom icons

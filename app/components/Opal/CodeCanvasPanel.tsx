@@ -4,9 +4,10 @@ import {
   Box, Button, ToggleButton, Tooltip, Avatar, Badge, Menu, MenuContent, MenuTrigger, toaster,
   Dialog, DialogContent, DialogBody, DialogClose, DialogFooter, DialogHeader,
   Select, SelectContent, SelectTrigger,
-  Field, Input,
+  Field, Checkbox,
   Text as AxiomText,
 } from "@optiaxiom/react";
+import { Pill } from "@optiaxiom/react/unstable";
 import { Text } from "../Text";
 import {
   IconXmark,
@@ -523,12 +524,12 @@ function getStrideEmail(name: string) {
 function getInitialAccess(artifactCreator: { name: string; avatar?: string }): AccessSubject[] {
   const creatorName = artifactCreator.name || DEFAULT_ARTIFACT_CREATOR.name;
   return [
-    { id: "owner", name: "GEO Q&A Generator", detail: "geo-qa-generator@stride.com", role: "Owner", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-geo.svg" },
+    { id: "owner", name: "GEO Content Strategist", detail: "geo-qa-generator@stride.com", role: "Owner", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-geo.svg" },
     { id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin", kind: "user", colorScheme: "purple", avatar: artifactCreator.avatar, badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined },
     { id: "stride-org", name: "Stride", detail: "stride@stride.com", role: "Viewer", kind: "org", colorScheme: "neutral" },
     { id: "abu-siddik", name: "Abu Siddik", detail: "abu.siddik@stride.com", role: "Editor", kind: "user", colorScheme: "neutral" },
     { id: "content-ops", name: "Content Operations", detail: "content-operations@stride.com", role: "Admin", kind: "team", colorScheme: "neutral" },
-    { id: "weekly-traffic-reporter", name: "Weekly Traffic Reporter", detail: "weekly-traffic-reporter@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-traffic.svg" },
+    { id: "weekly-traffic-reporter", name: "Traffic & Growth Marketer", detail: "weekly-traffic-reporter@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-traffic.svg" },
     { id: "seo-advisor", name: "SEO Advisor", detail: "seo-advisor@stride.com", role: "Viewer", kind: "vau", colorScheme: "neutral", avatar: "/avatars/mock-avatar-seo.svg" },
   ];
 }
@@ -595,15 +596,27 @@ function AccessRow({ subject, showMakeOwner, onRoleChange, onRemove }: { subject
   );
 }
 
-function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = DEFAULT_ARTIFACT_CREATOR }: { open: boolean; onOpenChange: (open: boolean) => void; artifactTitle?: string; artifactCreator?: { name: string; avatar?: string } }) {
+export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = DEFAULT_ARTIFACT_CREATOR }: { open: boolean; onOpenChange: (open: boolean) => void; artifactTitle?: string; artifactCreator?: { name: string; avatar?: string } }) {
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteTokens, setInviteTokens] = useState<string[]>([]);
   const [inviteRole, setInviteRole] = useState<PermissionRole>("Editor");
   const [accessList, setAccessList] = useState<AccessSubject[]>(() => getInitialAccess(artifactCreator));
+  const [notifyPeople, setNotifyPeople] = useState(true);
+  const [notifyMessage, setNotifyMessage] = useState("");
+  const [chipInputFocused, setChipInputFocused] = useState(false);
+  const chipInputRef = useRef<HTMLInputElement>(null);
   const shareUrl = "https://stride.com/artifacts/landing-page";
   const showMakeOwner = artifactCreator.name === "Jamie Chen";
 
+  const q = inviteQuery.trim().toLowerCase();
+  const filteredAccessList = q
+    ? accessList.filter(s => s.name.toLowerCase().includes(q) || s.detail.toLowerCase().includes(q))
+    : accessList;
+
+  const showNotify = inviteTokens.length > 0 || (q.length > 0 && filteredAccessList.length === 0);
+
   useEffect(() => { setAccessList(getInitialAccess(artifactCreator)); }, [artifactCreator]);
+  useEffect(() => { if (!open) { setInviteTokens([]); setInviteQuery(""); setNotifyMessage(""); } }, [open]);
 
   const handleCopyLink = useCallback(() => {
     navigator.clipboard.writeText(shareUrl).catch(() => {});
@@ -618,64 +631,104 @@ function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = 
   }, []);
 
   const handleInviteKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" || event.key === ",") { event.preventDefault(); addInviteToken(inviteQuery); return; }
-    if (event.key === "Backspace" && !inviteQuery && inviteTokens.length > 0) setInviteTokens((tokens) => tokens.slice(0, -1));
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addInviteToken(inviteQuery);
+      return;
+    }
+    if (event.key === "Backspace" && !inviteQuery && inviteTokens.length > 0) {
+      setInviteTokens((tokens) => tokens.slice(0, -1));
+    }
   }, [addInviteToken, inviteQuery, inviteTokens.length]);
 
-  const handleInvite = useCallback(() => {
-    const invitees = [...inviteTokens, inviteQuery.trim()].map((item) => item.replace(/,$/, "")).filter(Boolean);
-    if (invitees.length === 0) return;
+  const handleSend = useCallback(() => {
+    const pending = inviteQuery.trim() ? [inviteQuery.trim(), ...inviteTokens] : inviteTokens;
+    const invitees = [...new Set(pending)].filter(Boolean);
+    if (invitees.length === 0) { onOpenChange(false); return; }
     setAccessList((items) => [...items, ...invitees.map((invitee, index) => ({
       id: `${invitee.toLowerCase().replace(/\W+/g, "-")}-${Date.now()}-${index}`,
-      name: invitee, detail: invitee.includes("@") ? "Pending invite" : "Direct invite",
-      role: inviteRole, kind: "user" as const, colorScheme: "neutral" as const,
+      name: invitee,
+      detail: invitee.includes("@") ? "Pending invite" : "Direct invite",
+      role: inviteRole,
+      kind: "user" as const,
+      colorScheme: "neutral" as const,
     }))]);
-    setInviteTokens([]);
-    setInviteQuery("");
-    toaster.create("People added", { intent: "success" });
-  }, [inviteQuery, inviteRole, inviteTokens]);
+    toaster.create(`Invited ${invitees.join(", ")}`, { intent: "success" });
+    onOpenChange(false);
+  }, [inviteQuery, inviteRole, inviteTokens, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="lg" style={{ width: "min(880px, calc(100vw - 48px))", height: "calc(100dvh - 32px)", minHeight: "calc(100dvh - 32px)", maxHeight: "calc(100dvh - 32px)", top: 16, overflow: "hidden" }}>
-        <DialogHeader>Share &quot;{artifactTitle ?? "Untitled artifact"}&quot;</DialogHeader>
-        <DialogBody style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <Box display="flex" flexDirection="column" gap="24" style={{ flex: 1, minHeight: 0 }}>
-          <Box display="grid" gap="8" style={{ gridTemplateColumns: "minmax(0, 1fr) 148px auto", alignItems: "end" }}>
-            <Field label="Share with">
-              <Input
-                size="md"
+      <DialogContent size="md" maxH="full">
+        <DialogHeader>
+          <AxiomText fontSize="lg" fontWeight="600" style={{ marginBottom: 12, display: "block" }}>
+            Share &quot;{artifactTitle ?? "Untitled artifact"}&quot;
+          </AxiomText>
+          <Box display="flex" alignItems="start" gap="8">
+            <div
+              role="textbox"
+              aria-label="Add people"
+              onClick={() => chipInputRef.current?.focus()}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 6,
+                minHeight: 36,
+                padding: "4px 10px",
+                border: chipInputFocused
+                  ? "1px solid var(--ax-colors-border-focus)"
+                  : "1px solid var(--ax-colors-border-control)",
+                borderRadius: 6,
+                background: "var(--ax-colors-bg-default)",
+                cursor: "text",
+                boxShadow: chipInputFocused ? "0 0 0 2px color-mix(in srgb, var(--ax-colors-border-focus) 20%, transparent)" : "none",
+                transition: "border-color 0.15s, box-shadow 0.15s",
+              }}
+            >
+              {inviteTokens.map((token) => (
+                <Pill
+                  key={token}
+                  onDismiss={() => { setInviteTokens((tokens) => tokens.filter((t) => t !== token)); }}
+                >
+                  {token}
+                </Pill>
+              ))}
+              <input
+                ref={chipInputRef}
+                type="text"
                 value={inviteQuery}
-                onChange={(event) => setInviteQuery(event.target.value)}
-                onBlur={() => addInviteToken(inviteQuery)}
+                onChange={(e) => setInviteQuery(e.target.value)}
                 onKeyDown={handleInviteKeyDown}
-                placeholder={inviteTokens.length > 0 ? "" : "Type names or emails..."}
-                aria-label="Share with"
-                addonBefore={inviteTokens.length > 0 && (
-                  <Box display="flex" alignItems="center" gap="4" style={{ flexWrap: "wrap" }}>
-                    {inviteTokens.map((token) => (
-                      <Badge key={token} intent="neutral" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                        {token}
-                        <Button appearance="subtle" size="sm" icon={<IconXmark size={10} />} aria-label={`Remove ${token}`} onClick={(e) => { e.stopPropagation(); setInviteTokens((tokens) => tokens.filter((t) => t !== token)); }} style={{ width: 18, height: 18, minWidth: 18 }} />
-                      </Badge>
-                    ))}
-                  </Box>
-                )}
+                onFocus={() => setChipInputFocused(true)}
+                onBlur={() => setChipInputFocused(false)}
+                placeholder={inviteTokens.length === 0 ? "Add people, groups..." : ""}
+                style={{
+                  flex: 1,
+                  minWidth: 140,
+                  height: 26,
+                  border: "none",
+                  outline: "none",
+                  background: "transparent",
+                  fontSize: 14,
+                  color: "var(--ax-colors-fg-default)",
+                  fontFamily: "inherit",
+                }}
               />
-            </Field>
-            <Field label="Access">
-              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as PermissionRole)} options={[...ROLE_OPTIONS]}>
-                <SelectTrigger size="md">{ROLE_LABELS[inviteRole]}</SelectTrigger>
-                <SelectContent />
-              </Select>
-            </Field>
-            <Button appearance="primary" size="md" onClick={handleInvite} disabled={!inviteQuery.trim() && inviteTokens.length === 0}>Share</Button>
+            </div>
+            <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as PermissionRole)} options={[...ROLE_OPTIONS]}>
+              <SelectTrigger size="md" style={{ flexShrink: 0 }}>{ROLE_LABELS[inviteRole]}</SelectTrigger>
+              <SelectContent />
+            </Select>
           </Box>
+        </DialogHeader>
 
-          <Box display="flex" flexDirection="column" gap="12" style={{ flex: 1, minHeight: 0 }}>
-            <AxiomText fontSize="lg" fontWeight="600">Who has access</AxiomText>
-            <Box rounded="lg" bg="bg.default" px="16" style={{ border: SHARE_DIALOG_BORDER, flex: 1, minHeight: 0, overflowY: "auto" }}>
-              {accessList.map((subject) => (
+        <DialogBody display="flex" flexDirection="column" gap="16">
+          {!showNotify ? (<>
+            <AxiomText fontSize="sm" fontWeight="600" color="fg.secondary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>Who has access</AxiomText>
+            <Box rounded="lg" px="16" style={{ border: SHARE_DIALOG_BORDER }}>
+              {filteredAccessList.map((subject) => (
                 <AccessRow
                   key={subject.id}
                   subject={subject}
@@ -689,13 +742,45 @@ function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = 
                 />
               ))}
             </Box>
-          </Box>
-        </Box>
+          </>) : (<>
+            <Checkbox checked={notifyPeople} onCheckedChange={(v) => setNotifyPeople(!!v)}>
+              Notify people
+            </Checkbox>
+            {notifyPeople && (
+              <textarea
+                value={notifyMessage}
+                onChange={(e) => setNotifyMessage(e.target.value)}
+                placeholder="Message"
+                rows={6}
+                style={{
+                  width: "100%",
+                  padding: "12px 14px",
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  color: "var(--ax-colors-fg-default)",
+                  background: "var(--ax-colors-bg-default)",
+                  border: "1px solid var(--ax-colors-border-control)",
+                  borderRadius: 8,
+                  resize: "vertical",
+                  outline: "none",
+                  fontFamily: "inherit",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--ax-colors-border-focus)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--ax-colors-border-control)"; }}
+              />
+            )}
+          </>)}
         </DialogBody>
+
         <DialogFooter>
-          <Box display="flex" alignItems="center" style={{ width: "100%", justifyContent: "space-between" }}>
-            <Button appearance="default" size="lg" icon={<IconLink size={15} />} onClick={handleCopyLink}>Copy link</Button>
-            <DialogClose asChild><Button appearance="primary" size="lg">Done</Button></DialogClose>
+          <Button appearance="subtle" size="md" icon={<IconLink size={14} />} onClick={handleCopyLink}>Copy link</Button>
+          <Box display="flex" alignItems="center" gap="8">
+            <DialogClose asChild><Button appearance="subtle" size="md">Cancel</Button></DialogClose>
+            {showNotify
+              ? <Button appearance="primary" size="md" onClick={handleSend}>Send</Button>
+              : <DialogClose asChild><Button appearance="primary" size="md">Done</Button></DialogClose>
+            }
           </Box>
         </DialogFooter>
       </DialogContent>
