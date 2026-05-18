@@ -104,7 +104,7 @@ const GEO_QA_HTML_V2 = `<h1>Q&amp;A: Discover the Unknown</h1>
 
 // ── GEO Q&A mock thread ───────────────────────────────────────────────────────
 
-const GEO_AGENT = { emoji: "🤖", name: "GEO Q&A Generator", avatar: "/avatars/mock-avatar-geo.svg" };
+const GEO_AGENT = { emoji: "🤖", name: "GEO Content Strategist", avatar: "/avatars/mock-avatar-geo.svg" };
 
 const VAU_MSG_1 = `Hi team — I've been monitoring our GEO content strategy for Stride and identified a gap in AI-searchable content for the _Discover the Unknown_ product line.
 
@@ -539,15 +539,7 @@ export default function OpalPage() {
               flexShrink: 0,
             }}
           >
-            <Button
-              appearance="default-opal"
-              size="md"
-              onClick={() => { setShowAgents(!showAgents); setShowAllAgents(false); }}
-              icon={<IconAgent />}
-              style={{ borderRadius: "9999px" }}
-            >
-              View Agents
-            </Button>
+
             {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
               <Button
                 key={agent.handle}

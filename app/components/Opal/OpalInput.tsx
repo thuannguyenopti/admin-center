@@ -38,8 +38,9 @@ import {
   IconUpload,
   IconUser,
   IconXmark,
+  IconSubAgent,
+  IconSubAgent as IconAgent,
 } from "@optiaxiom/icons";
-import { IconAgent, IconSubAgent } from "@optimizely/axiom-icons";
 import { IconBuilding } from "@tabler/icons-react";
 import { IconMicrophone } from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";

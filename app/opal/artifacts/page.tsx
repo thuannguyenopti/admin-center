@@ -49,6 +49,7 @@ import {
     IconComments,
     IconInboxFull,
     IconShareNodes,
+    IconUserPlus,
     IconAngleRight,
     IconXmark,
     IconSearch,
@@ -62,6 +63,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArtifactViewer, type ArtifactViewerArtifact } from "./components/ArtifactViewer";
 import { useLayout } from "@/app/context/LayoutContext";
+import { OpalShareDialog } from "@/app/components/Opal/CodeCanvasPanel";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -98,6 +100,7 @@ type Artifact = {
     source: { name: string; type: ArtifactSourceType; link?: string };
     agentBadgeIntent: AgentBadgeIntent;
     createdBy: { name: string; avatar: string };
+    owner: { name: string; avatar: string };
     sharedWithTeam?: boolean;
     sharedWith?: Array<{ name: string; avatar: string }>;
     tags?: string[];
@@ -128,7 +131,8 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "GEO Q&A Generator", type: "chat", link: "/opal?artifacts=1" },
         agentBadgeIntent: "success",
-        createdBy: { name: "Jamie Chen", avatar: "" },
+        createdBy: { name: "Mayling", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         sharedWithTeam: true,
         tags: ["GEO", "Q&A", "Stride"],
         created: "May 15, 2026",
@@ -151,6 +155,7 @@ const artifacts: Artifact[] = [
         source: { name: "Copywriter", type: "chat", link: "/opal/chat/1" },
         agentBadgeIntent: "warning",
         createdBy: { name: "Jamie Chen", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         tags: ["Email", "Q2", "Nurture"],
         created: "May 13, 2026",
@@ -170,7 +175,8 @@ const artifacts: Artifact[] = [
         type: "Report",
         source: { name: "Scout", type: "agent", link: "/opal/agents/setup?id=2" },
         agentBadgeIntent: "danger",
-        createdBy: { name: "Jamie Chen", avatar: "" },
+        createdBy: { name: "Poppy", avatar: "" },
+        owner: { name: "William Mo.", avatar: "/avatars/user2.png" },
         isPrivate: true,
         created: "May 13, 2026",
         createdRaw: NOW - 21600,
@@ -190,7 +196,8 @@ const artifacts: Artifact[] = [
         type: "Image",
         source: { name: "Brand", type: "agent", link: "/opal/agents/setup?id=3" },
         agentBadgeIntent: "information",
-        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
+        createdBy: { name: "Henry", avatar: "" },
+        owner: { name: "William Mo.", avatar: "/avatars/user2.png" },
         sharedWithTeam: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -210,7 +217,8 @@ const artifacts: Artifact[] = [
         type: "Report",
         source: { name: "Insights", type: "agent", link: "/opal/agents/setup?id=4" },
         agentBadgeIntent: "success",
-        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
+        createdBy: { name: "Tony", avatar: "" },
+        owner: { name: "William Mo.", avatar: "/avatars/user2.png" },
         isPrivate: true,
         created: "May 13, 2026",
         createdRaw: NOW - 10800,
@@ -230,6 +238,7 @@ const artifacts: Artifact[] = [
         source: { name: "Compass", type: "chat", link: "/opal/chat/5" },
         agentBadgeIntent: "neutral",
         createdBy: { name: "Jamie Chen", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -248,7 +257,8 @@ const artifacts: Artifact[] = [
         type: "Image",
         source: { name: "Brand", type: "workflow", link: "/opal/workflows/6" },
         agentBadgeIntent: "information",
-        createdBy: { name: "Jamie Chen", avatar: "" },
+        createdBy: { name: "Kerby", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         sharedWith: [{ name: "William Mo.", avatar: "" }],
         created: "May 11, 2026",
         createdRaw: NOW - 172800,
@@ -267,7 +277,8 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Copywriter", type: "agent", link: "/opal/agents/setup?id=7" },
         agentBadgeIntent: "warning",
-        createdBy: { name: "Jamie Chen", avatar: "" },
+        createdBy: { name: "Mayling", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 6, 2026",
         createdRaw: NOW - 604800,
@@ -285,7 +296,8 @@ const artifacts: Artifact[] = [
         type: "Presentation",
         source: { name: "Compass", type: "agent", link: "/opal/agents/setup?id=8" },
         agentBadgeIntent: "neutral",
-        createdBy: { name: "Jamie Chen", avatar: "" },
+        createdBy: { name: "Henry", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -305,7 +317,8 @@ const artifacts: Artifact[] = [
         type: "Image",
         source: { name: "Brand", type: "agent", link: "/opal/agents/setup?id=9" },
         agentBadgeIntent: "information",
-        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
+        createdBy: { name: "Poppy", avatar: "" },
+        owner: { name: "William Mo.", avatar: "/avatars/user2.png" },
         isPrivate: true,
         created: "May 12, 2026",
         createdRaw: NOW - 86400,
@@ -325,6 +338,7 @@ const artifacts: Artifact[] = [
         source: { name: "Compass", type: "chat", link: "/opal/chat/10" },
         agentBadgeIntent: "neutral",
         createdBy: { name: "Jamie Chen", avatar: "" },
+        owner: { name: "Jamie Chen", avatar: "" },
         isPrivate: true,
         created: "Apr 28, 2026",
         createdRaw: NOW - 1296000,
@@ -342,7 +356,8 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Insights", type: "workflow", link: "/opal/workflows/11" },
         agentBadgeIntent: "success",
-        createdBy: { name: "William Mo.", avatar: "/avatars/avatar-3.png" },
+        createdBy: { name: "Tony", avatar: "" },
+        owner: { name: "William Mo.", avatar: "/avatars/user2.png" },
         sharedWithTeam: true,
         created: "Apr 21, 2026",
         createdRaw: NOW - 1900800,
@@ -361,7 +376,8 @@ const artifacts: Artifact[] = [
         type: "Document",
         source: { name: "Copywriter", type: "chat", link: "/opal/chat/12" },
         agentBadgeIntent: "warning",
-        createdBy: { name: "Mary Anne", avatar: "/avatars/avatar-2.png" },
+        createdBy: { name: "Mary Anne", avatar: "/avatars/user.png" },
+        owner: { name: "Mary Anne", avatar: "/avatars/user.png" },
         sharedWithTeam: true,
         created: "Apr 5, 2026",
         createdRaw: NOW - 3456000,
@@ -419,10 +435,16 @@ const sourceEmoji: Record<string, string> = {
     Brand: "🎨",
     Compass: "🧭",
     Insights: "📊",
+    GEO: "🌐",
 };
 
 const sourceAvatar: Record<string, string> = {
     "GEO Q&A Generator": "/avatars/mock-avatar-geo.svg",
+    "Mayling": "/avatars/mock-avatar-geo.svg",
+    "Tony": "/avatars/mock-avatar-traffic.svg",
+    "Poppy": "/avatars/mock-avatar-seo.svg",
+    "Henry": "/avatars/mock-avatar-abu.svg",
+    "Kerby": "/avatars/mock-avatar-geo.svg",
 };
 
 function AgentCell({ name }: { name: string }) {
@@ -437,6 +459,19 @@ function AgentCell({ name }: { name: string }) {
                 <span style={{ fontSize: 15, lineHeight: 1, flexShrink: 0 }}>{sourceEmoji[name] ?? "🤖"}</span>
             )}
             <Text fontSize="sm" color="fg.secondary">{name}</Text>
+        </Box>
+    );
+}
+
+function PersonCell({ person }: { person: { name: string; avatar: string } }) {
+    const isKnownAgent = sourceEmoji[person.name] !== undefined || sourceAvatar[person.name] !== undefined;
+    if (!person.avatar && isKnownAgent) {
+        return <AgentCell name={person.name} />;
+    }
+    return (
+        <Box display="flex" alignItems="center" gap="8">
+            <Avatar size="xs" name={person.name} {...(person.avatar ? { src: person.avatar } : {})} />
+            <Text fontSize="sm" color="fg.secondary">{person.name}</Text>
         </Box>
     );
 }
@@ -654,17 +689,57 @@ function AgentBadgePill({ name, intent }: { name: string; intent: AgentBadgeInte
     return <Badge intent={intent}>{name}</Badge>;
 }
 
+// ─── Shared ellipsis menu ─────────────────────────────────────────────────────
+
+function ArtifactEllipsisMenu({ artifact, onOpen, onShare, size = "sm" }: { artifact: Artifact; onOpen: (a: Artifact) => void; onShare: (a: Artifact) => void; size?: "sm" | "md" | "lg" }) {
+    const btnStyle = { opacity: 1, padding: "0 6px", minWidth: 28, height: 28 } as const;
+    return (
+        <Box onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button appearance="subtle" size={size} aria-label="Options" style={btnStyle} icon={<IconEllipsisSolid size={13} />} />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onOpen(artifact)}>
+                        <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onShare(artifact)}>
+                        <Box display="flex" alignItems="center" gap="8"><IconUserPlus size={14} />Share</Box>
+                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Box display="flex" alignItems="center" gap="8"><IconDownload size={14} />Download as</Box>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                            {["Markdown (.md)", "PDF (.pdf)", "Word (.docx)", "Plain text (.txt)"].map((fmt) => (
+                                <DropdownMenuItem key={fmt}>{fmt}</DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuItem><Box display="flex" alignItems="center" gap="8"><IconPenLine size={14} />Rename</Box></DropdownMenuItem>
+                    <Box style={{ height: 1, background: "var(--ax-colors-border-default)", margin: "4px 12px" }} />
+                    <DropdownMenuItem style={{ color: "var(--ax-colors-fg-error)" }}>
+                        <Box display="flex" alignItems="center" gap="8"><IconTrashCan size={14} />Delete</Box>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </Box>
+    );
+}
+
 // ─── Workspace artifact card (used in horizontal sections) ───────────────────
 
 function WorkspaceArtifactCard({
     artifact,
     onOpen,
+    onShare,
     pinned,
     onTogglePin,
     width,
 }: {
     artifact: Artifact;
     onOpen: (a: Artifact) => void;
+    onShare: (a: Artifact) => void;
     pinned: boolean;
     onTogglePin: (id: string) => void;
     width?: number;
@@ -742,8 +817,8 @@ function WorkspaceArtifactCard({
                                 <DropdownMenuItem onClick={() => onOpen(artifact)}>
                                     <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Box display="flex" alignItems="center" gap="8"><IconShareNodes size={14} />Share</Box>
+                                <DropdownMenuItem onClick={() => onShare(artifact)}>
+                                    <Box display="flex" alignItems="center" gap="8"><IconUserPlus size={14} />Share</Box>
                                 </DropdownMenuItem>
                                 <DropdownMenuSub>
                                     <DropdownMenuSubTrigger>
@@ -843,7 +918,7 @@ function WorkspaceArtifactCard({
 
 // ─── Resume card (Continue working) ──────────────────────────────────────────
 
-function ResumeCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Artifact) => void }) {
+function ResumeCard({ artifact, onOpen, onShare }: { artifact: Artifact; onOpen: (a: Artifact) => void; onShare: (a: Artifact) => void }) {
     const [hovered, setHovered] = useState(false);
     return (
         <Box
@@ -868,7 +943,7 @@ function ResumeCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Arti
                     </Badge>
                     <Text fontSize="sm" color="fg.tertiary">{artifact.activityText}</Text>
                 </Box>
-                {/* Agent + visibility — fade in on hover */}
+                {/* Agent + visibility + ellipsis — fade in on hover */}
                 <Box display="flex" alignItems="center" gap="10" style={{ opacity: hovered ? 1 : 0, transition: "opacity 0.2s ease" }}>
                     <AgentCell name={artifact.source.name} />
                     <Box style={{ width: 1, height: 14, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
@@ -876,6 +951,8 @@ function ResumeCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Arti
                         ? <PrivateBadge />
                         : <ArtifactAvatarStack artifact={artifact} size="xs" />
                     }
+                    <Box style={{ width: 1, height: 14, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                    <ArtifactEllipsisMenu artifact={artifact} onOpen={onOpen} onShare={onShare} />
                 </Box>
             </Box>
             {/* Title + description */}
@@ -925,7 +1002,7 @@ function ResumeCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Arti
 
 // ─── Jump back in ─────────────────────────────────────────────────────────────
 
-function JumpBackInCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: Artifact) => void }) {
+function JumpBackInCard({ artifact, onOpen, onShare }: { artifact: Artifact; onOpen: (a: Artifact) => void; onShare: (a: Artifact) => void }) {
     const [hovered, setHovered] = useState(false);
     return (
         <Box
@@ -938,7 +1015,7 @@ function JumpBackInCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: 
             display="flex"
             alignItems="start"
             gap="12"
-            style={{ cursor: "pointer", transition: "border-color 0.15s" }}
+            style={{ cursor: "pointer", transition: "border-color 0.15s", position: "relative" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={() => onOpen(artifact)}
@@ -992,18 +1069,22 @@ function JumpBackInCard({ artifact, onOpen }: { artifact: Artifact; onOpen: (a: 
                     </Box>
                 </Box>
             </Box>
+            {/* Ellipsis — top-right, fades in on hover */}
+            <Box style={{ position: "absolute", top: 10, right: 10, opacity: hovered ? 1 : 0, transition: "opacity 0.15s" }}>
+                <ArtifactEllipsisMenu artifact={artifact} onOpen={onOpen} onShare={onShare} />
+            </Box>
         </Box>
     );
 }
 
-function JumpBackIn({ items, onOpen }: { items: Artifact[]; onOpen: (a: Artifact) => void }) {
+function JumpBackIn({ items, onOpen, onShare }: { items: Artifact[]; onOpen: (a: Artifact) => void; onShare: (a: Artifact) => void }) {
     return (
         <Box display="flex" flexDirection="column" gap="12" style={{ width: 320, flexShrink: 0 }}>
             <Text fontSize="sm" fontWeight="600" color="fg.tertiary" style={{ textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Jump back in
             </Text>
             {items.map((artifact) => (
-                <JumpBackInCard key={artifact.id} artifact={artifact} onOpen={onOpen} />
+                <JumpBackInCard key={artifact.id} artifact={artifact} onOpen={onOpen} onShare={onShare} />
             ))}
         </Box>
     );
@@ -1015,6 +1096,7 @@ function HorizontalSection({
     title,
     items,
     onOpen,
+    onShare,
     pinnedIds,
     onTogglePin,
     cardWidth = 300,
@@ -1023,6 +1105,7 @@ function HorizontalSection({
     title: string;
     items: Artifact[];
     onOpen: (a: Artifact) => void;
+    onShare: (a: Artifact) => void;
     pinnedIds: Set<string>;
     onTogglePin: (id: string) => void;
     cardWidth?: number;
@@ -1084,6 +1167,7 @@ function HorizontalSection({
                         <WorkspaceArtifactCard
                             artifact={artifact}
                             onOpen={onOpen}
+                            onShare={onShare}
                             pinned={pinnedIds.has(artifact.id)}
                             onTogglePin={onTogglePin}
                             width={cardWidth}
@@ -1533,6 +1617,7 @@ export default function ArtifactsPage() {
     const [sortKey, setSortKey] = useState<SortKey>("created");
     const [sortDir, setSortDir] = useState<SortDir>("desc");
     const [deleteTarget, setDeleteTarget] = useState<Artifact | null>(null);
+    const [shareArtifact, setShareArtifact] = useState<Artifact | null>(null);
     const [openArtifact, setOpenArtifact] = useState<Artifact | null>(null);
     const [openMode, setOpenMode] = useState<"preview" | "with-panel">("preview");
     const [pinnedIds, setPinnedIds] = useState<Set<string>>(DEFAULT_PINNED_IDS);
@@ -1980,23 +2065,23 @@ export default function ArtifactsPage() {
                     };
                     if (s.id === "jumpBackIn") return (resumeArtifact || jumpBackInItems.length > 0) ? (
                         <Box key="jumpBackIn" ref={(el) => { sectionRefs.current.jumpBackIn = el; }} display="flex" gap="24" alignItems="stretch">
-                            {resumeArtifact && <ResumeCard artifact={resumeArtifact} onOpen={openFn} />}
-                            <JumpBackIn items={jumpBackInItems} onOpen={openFn} />
+                            {resumeArtifact && <ResumeCard artifact={resumeArtifact} onOpen={openFn} onShare={setShareArtifact} />}
+                            <JumpBackIn items={jumpBackInItems} onOpen={openFn} onShare={setShareArtifact} />
                         </Box>
                     ) : null;
                     if (s.id === "lastViewed") return (
                         <div key="lastViewed" ref={(el) => { sectionRefs.current.lastViewed = el; }}>
-                            <HorizontalSection title="Recently viewed" items={recentlyViewed} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                            <HorizontalSection title="Recently viewed" items={recentlyViewed} onOpen={openFn} onShare={setShareArtifact} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
                         </div>
                     );
                     if (s.id === "pinned") return (
                         <div key="pinned" ref={(el) => { sectionRefs.current.pinned = el; }}>
-                            <HorizontalSection title="Pinned to workspace" items={pinnedArtifacts} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} onSeeAll={() => { setPinnedFilter(true); searchInputRef.current?.focus(); }} />
+                            <HorizontalSection title="Pinned to workspace" items={pinnedArtifacts} onOpen={openFn} onShare={setShareArtifact} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} onSeeAll={() => { setPinnedFilter(true); searchInputRef.current?.focus(); }} />
                         </div>
                     );
                     if (s.id === "lastEdited") return (
                         <div key="lastEdited" ref={(el) => { sectionRefs.current.lastEdited = el; }}>
-                            <HorizontalSection title="Last edited" items={lastEdited} onOpen={openFn} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
+                            <HorizontalSection title="Last edited" items={lastEdited} onOpen={openFn} onShare={setShareArtifact} pinnedIds={pinnedIds} onTogglePin={togglePin} cardWidth={320} />
                         </div>
                     );
                     return null;
@@ -2037,6 +2122,8 @@ export default function ArtifactsPage() {
                                 <Tr>
                                     <Th style={{ width: 110 }}>Type</Th>
                                     <SortHeader label="Name" sortKey="name" current={sortKey} dir={sortDir} onSort={handleSort} />
+                                    <Th>Created by</Th>
+                                    <Th>Owner</Th>
                                     <Th>Agent</Th>
                                     <Th>Tags</Th>
                                     <Th>Visibility</Th>
@@ -2059,6 +2146,12 @@ export default function ArtifactsPage() {
                                         </Td>
                                         <Td>
                                             <Text fontWeight="500">{artifact.name}</Text>
+                                        </Td>
+                                        <Td>
+                                            <PersonCell person={artifact.createdBy} />
+                                        </Td>
+                                        <Td>
+                                            <PersonCell person={artifact.owner} />
                                         </Td>
                                         <Td>
                                             <AgentCell name={artifact.source.name} />
@@ -2092,7 +2185,7 @@ export default function ArtifactsPage() {
                                                     <DropdownMenuItem onClick={() => { setOpenArtifact(artifact); setOpenMode("preview"); }}>
                                                         <Box display="flex" alignItems="center" gap="8"><IconArrowsMaximize size={14} />Open</Box>
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => setShareArtifact(artifact)}>
                                                         <Box display="flex" alignItems="center" gap="8"><IconShareNodes size={14} />Share</Box>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSub>
@@ -2135,6 +2228,7 @@ export default function ArtifactsPage() {
                                     key={artifact.id}
                                     artifact={artifact}
                                     onOpen={(a) => { setOpenArtifact(a); setOpenMode("preview"); }}
+                                    onShare={setShareArtifact}
                                     pinned={pinnedIds.has(artifact.id)}
                                     onTogglePin={togglePin}
                                 />
@@ -2144,6 +2238,14 @@ export default function ArtifactsPage() {
                 </Box>}
 
             </Box>
+
+            {/* Share dialog */}
+            <OpalShareDialog
+                open={!!shareArtifact}
+                onOpenChange={(open) => { if (!open) setShareArtifact(null); }}
+                artifactTitle={shareArtifact?.name}
+                artifactCreator={shareArtifact?.createdBy}
+            />
         </>
     );
 }
