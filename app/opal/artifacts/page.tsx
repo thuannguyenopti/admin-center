@@ -58,7 +58,7 @@ import {
     IconGear,
     IconThumbtack,
     IconThumbtackSolid,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArtifactViewer, type ArtifactViewerArtifact } from "./components/ArtifactViewer";

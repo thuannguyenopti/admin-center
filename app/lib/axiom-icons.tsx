@@ -298,3 +298,4 @@ export { IconCircleCheckFilled as IconCircleCheckSolid } from "@tabler/icons-rea
 export { IconTool as IconScrewdriverWrench } from "@tabler/icons-react";
 export { IconUser as IconCircleUser } from "@tabler/icons-react";
 export { IconFile as IconFileZipper } from "@tabler/icons-react";
+export { IconBuilding } from "@tabler/icons-react";

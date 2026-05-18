@@ -38,10 +38,9 @@ import {
   IconUpload,
   IconUser,
   IconXmark,
-  IconSubAgent,
-  IconSubAgent as IconAgent,
+  IconAgent,
 } from "@optiaxiom/icons";
-import { IconBuilding } from "@tabler/icons-react";
+import { IconBuilding } from "@/app/lib/axiom-icons";
 import { IconMicrophone } from "@/app/lib/axiom-icons";
 import { KeyboardEvent, useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { opalTypography } from "@/app/styles/opalTypography";
@@ -952,7 +951,7 @@ export function OpalInput({
                   <Button
                     appearance="subtle"
                     size="sm"
-                    icon={<IconSubAgent size={16} />}
+                    icon={<IconAgent size={16} />}
                     aria-label="Agent selection"
                     style={{ padding: '4px', height: 'auto', color: 'var(--opal-text-tertiary)' }}
                   />
@@ -1082,8 +1081,8 @@ export function OpalInput({
                           border: '2px solid var(--ax-colors-bg-default)',
                           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                           overflow: 'hidden', flexShrink: 0,
-                          background: user.avatar ? undefined : '#6d28d9',
-                          fontSize: 10, fontWeight: 700, color: '#fff', letterSpacing: '0.02em',
+                          background: user.avatar ? undefined : 'var(--ax-colors-bg-avatar-purple)',
+                          fontSize: 10, fontWeight: 700, color: 'var(--ax-colors-fg-avatar-purple)', letterSpacing: '0.02em',
                         }}>
                           {user.avatar
                             ? <img src={user.avatar} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />

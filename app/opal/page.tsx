@@ -9,7 +9,6 @@ import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
 import { OpalInput } from "@/app/components/Opal/OpalInput";
 import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
-import { FEATURED_AGENTS, AGENT_PROMPTS } from "@/app/opal/opalAgents";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
@@ -258,10 +257,7 @@ export default function OpalPage() {
     handleSelectAgent,
     handleSendMessage,
     handleSuggestionClick: _handleSuggestionClick,
-    showAgents,
-    setShowAgents,
-    showAllAgents,
-    setShowAllAgents,
+
     collapsedSessionIds,
     handleExpandSession,
     opalDisclosureIds,
@@ -539,38 +535,6 @@ export default function OpalPage() {
               flexShrink: 0,
             }}
           >
-
-            {showAgents && (showAllAgents ? sortedAgents : sortedAgents.slice(0, 3)).map((agent) => (
-              <Button
-                key={agent.handle}
-                appearance="default-opal"
-                size="md"
-                icon={<span style={{ fontSize: 14, lineHeight: 1 }}>{agent.emoji}</span>}
-                style={{ borderRadius: "9999px" }}
-                onClick={() => {
-                  handleSelectAgent(agent);
-                  const isResume = lastEndedSession?.agent.id === agent.id;
-                  if (!isResume) {
-                    const prompt = AGENT_PROMPTS[agent.id];
-                    if (prompt) setInputValue(prompt);
-                  }
-                  setShowAgents(false);
-                  setShowAllAgents(false);
-                }}
-              >
-                {agent.name}
-              </Button>
-            ))}
-            {showAgents && !showAllAgents && FEATURED_AGENTS.length > 3 && (
-              <Button
-                appearance="default-opal"
-                size="md"
-                style={{ borderRadius: "9999px" }}
-                onClick={() => setShowAllAgents(true)}
-              >
-                More agents
-              </Button>
-            )}
           </Box>
         )}
         inputSlot={
