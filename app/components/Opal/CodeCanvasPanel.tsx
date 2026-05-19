@@ -524,10 +524,11 @@ function getStrideEmail(name: string) {
 function getInitialAccess(artifactCreator: { name: string; avatar?: string }): AccessSubject[] {
   const creatorName = artifactCreator.name || DEFAULT_ARTIFACT_CREATOR.name;
   return [
-    { id: "owner", name: "GEO Content Strategist", detail: "geo-qa-generator@stride.com", role: "Owner", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-geo.svg" },
+    { id: "owner", name: "Frank", detail: "frank@stride.com", role: "Owner", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-geo.svg" },
     { id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin", kind: "user", colorScheme: "purple", avatar: artifactCreator.avatar, badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined },
+    ...(creatorName !== "Jamie Chen" ? [{ id: "jamie-chen", name: "Jamie Chen", detail: "jamie.chen@stride.com", role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "neutral" as const, badges: ["Principal"] }] : []),
     { id: "stride-org", name: "Stride", detail: "stride@stride.com", role: "Viewer", kind: "org", colorScheme: "neutral" },
-    { id: "abu-siddik", name: "Abu Siddik", detail: "abu.siddik@stride.com", role: "Editor", kind: "user", colorScheme: "neutral" },
+    { id: "mary-anne-torres", name: "Mary Anne Torres", detail: "mary.anne@stride.com", role: "Editor", kind: "user", colorScheme: "neutral", avatar: "/avatars/user.png" },
     { id: "content-ops", name: "Content Operations", detail: "content-operations@stride.com", role: "Admin", kind: "team", colorScheme: "neutral" },
     { id: "weekly-traffic-reporter", name: "Traffic & Growth Marketer", detail: "weekly-traffic-reporter@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-traffic.svg" },
     { id: "seo-advisor", name: "SEO Advisor", detail: "seo-advisor@stride.com", role: "Viewer", kind: "vau", colorScheme: "neutral", avatar: "/avatars/mock-avatar-seo.svg" },
@@ -584,7 +585,7 @@ function AccessRow({ subject, showMakeOwner, onRoleChange, onRemove }: { subject
         </Box>
         <AxiomText fontSize="sm" color="fg.tertiary">{subject.detail}</AxiomText>
       </Box>
-      <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
+      <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0, minWidth: 172 }}>
         <PermissionRoleSelect role={subject.role} allowOwnershipTransfer={canBecomeOwner} disabled={isOwner} onChange={onRoleChange} />
         <Tooltip content={isOwner ? "Transfer ownership from the owner menu" : "Remove access"} delayDuration={300}>
           <span style={{ display: "inline-flex" }}>
@@ -661,10 +662,14 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="md" maxH="full">
         <DialogHeader>
-          <AxiomText fontSize="lg" fontWeight="600" style={{ marginBottom: 12, display: "block" }}>
+          <AxiomText fontSize="lg" fontWeight="600">
             Share &quot;{artifactTitle ?? "Untitled artifact"}&quot;
           </AxiomText>
-          <Box display="flex" alignItems="start" gap="8">
+        </DialogHeader>
+
+        <DialogBody display="flex" flexDirection="column" gap="16">
+          {/* Invite row */}
+          <Box display="flex" alignItems="center" gap="8">
             <div
               role="textbox"
               aria-label="Add people"
@@ -675,7 +680,7 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
                 flexWrap: "wrap",
                 alignItems: "center",
                 gap: 6,
-                minHeight: 36,
+                minHeight: 40,
                 padding: "4px 10px",
                 border: chipInputFocused
                   ? "1px solid var(--ax-colors-border-focus)"
@@ -718,13 +723,10 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
               />
             </div>
             <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as PermissionRole)} options={[...ROLE_OPTIONS]}>
-              <SelectTrigger size="md" style={{ flexShrink: 0 }}>{ROLE_LABELS[inviteRole]}</SelectTrigger>
+              <SelectTrigger size="md" style={{ flexShrink: 0, minWidth: 132, height: 40 }}>{ROLE_LABELS[inviteRole]}</SelectTrigger>
               <SelectContent />
             </Select>
           </Box>
-        </DialogHeader>
-
-        <DialogBody display="flex" flexDirection="column" gap="16">
           {!showNotify ? (<>
             <AxiomText fontSize="sm" fontWeight="600" color="fg.secondary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>Who has access</AxiomText>
             <Box rounded="lg" px="16" style={{ border: SHARE_DIALOG_BORDER }}>
@@ -774,7 +776,7 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
         </DialogBody>
 
         <DialogFooter>
-          <Button appearance="subtle" size="md" icon={<IconLink size={14} />} onClick={handleCopyLink}>Copy link</Button>
+          <Button appearance="subtle" size="md" icon={<IconLink size={14} />} onClick={handleCopyLink} style={{ marginRight: 'auto' }}>Copy link</Button>
           <Box display="flex" alignItems="center" gap="8">
             <DialogClose asChild><Button appearance="subtle" size="md">Cancel</Button></DialogClose>
             {showNotify

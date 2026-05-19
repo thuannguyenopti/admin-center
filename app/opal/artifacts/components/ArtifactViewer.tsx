@@ -199,7 +199,7 @@ function ThreadApprovalCard({
                     <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={14} height={14} />
                 </Box>
                 <Text style={{ fontSize: 12, fontWeight: 400, letterSpacing: "0.36px", textTransform: "uppercase", color: "var(--ax-colors-fg-tertiary)", lineHeight: 1.25 }}>
-                    GEO Q&amp;A Generator
+                    Frank
                 </Text>
             </Box>
 
@@ -333,7 +333,7 @@ function TeamThreadPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
                     <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={22} height={22} />
                 </Box>
                 <Box display="flex" flexDirection="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
-                    <Text fontSize="sm" fontWeight="600">GEO Q&amp;A Generator</Text>
+                    <Text fontSize="sm" fontWeight="600">Frank</Text>
                     <Text fontSize="sm" color="fg.tertiary">Team approval thread</Text>
                 </Box>
                 <Badge intent="warning">In Review</Badge>
@@ -343,7 +343,7 @@ function TeamThreadPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
             <Box display="flex" flexDirection="column" gap="24" p="16">
 
                 {/* ── Message 1: VAU initial ── */}
-                <ThreadMessage author="GEO Q&A Generator" isAgent time="Today at 9:02 AM">
+                <ThreadMessage author="Frank" isAgent time="Today at 9:02 AM">
                     <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
                         {VAU_INITIAL_TEXT}
                     </Text>
@@ -409,7 +409,7 @@ function TeamThreadPanel({ artifact }: { artifact: ArtifactViewerArtifact }) {
                 </ThreadMessage>
 
                 {/* ── Message 4: VAU updated ── */}
-                <ThreadMessage author="GEO Q&A Generator" isAgent time="Today at 9:31 AM">
+                <ThreadMessage author="Frank" isAgent time="Today at 9:31 AM">
                     <Text fontSize="sm" color="fg.secondary" style={{ whiteSpace: "pre-line", lineHeight: 1.6 }}>
                         {VAU_UPDATED_TEXT}
                     </Text>
