@@ -5,32 +5,36 @@ import {Text} from "./Text";
 import {useRouter, usePathname} from "next/navigation";
 import {
 	IconSearch,
-	IconHelp,
 	IconUser,
-	IconSunFilled,
-	IconMoon,
-	IconDeviceDesktop,
-	IconBuilding,
 	IconUsers,
 	IconSparkles,
 	IconFolder,
 	IconCircleDot,
+	IconList,
+	IconShieldCheck,
+	IconCode,
+	IconBolt,
+	IconChevronDown,
+	IconGrid,
+} from "@/app/lib/axiom-icons";
+import {
+	IconActivity,
 	IconApps,
+	IconBuilding,
+	IconCloud,
+	IconDeviceDesktop,
+	IconFileDownload,
 	IconGitBranch,
+	IconHelpCircle as IconHelp,
+	IconLayout2,
+	IconMail,
+	IconMoon,
+	IconShare,
+	IconSunFilled,
 	IconTarget,
 	IconTemplate,
-	IconList,
-	IconFileDownload,
-	IconActivity,
 	IconTrash,
-	IconShare,
-	IconShieldCheck,
-	IconMail,
-	IconCloud,
 	IconWebhook,
-	IconCode,
-	IconChevronDown,
-	IconLayout2,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -104,6 +108,103 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
 		return "Opal";
 	};
+
+	if (isCmpRoute) {
+		return (
+			<Box
+				w="full"
+				h="48"
+				bg="bg.default"
+				style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center" }}
+				borderB="1"
+				borderColor="border.tertiary"
+				className="global-bar cmp-v3-global-bar"
+			>
+				<Box
+					w="full"
+					px="20"
+					display="flex"
+					alignItems="center"
+					justifyContent="space-between"
+					style={{ minHeight: 48 }}
+				>
+					<Box display="flex" alignItems="center" gap="16">
+						<Link href="/cmp/library" style={{ display: "flex", alignItems: "center" }}>
+							<Image
+								src="/optimizely-wordmark.svg"
+								alt="Optimizely"
+								width={130}
+								height={30}
+								priority
+								style={{ height: 30, width: "auto" }}
+							/>
+						</Link>
+						<Button appearance="subtle" size="md" icon={<IconGrid size={18} />} aria-label="App switcher" />
+						<Menu
+							options={[
+								{
+									label: "Content Marketing Platform",
+									execute: () => router.push("/cmp/library"),
+								},
+								{
+									label: "Opal",
+									execute: () => router.push("/opal"),
+								},
+								{
+									label: "Content Management System",
+									execute: () => router.push("/cms/dashboard"),
+								},
+								{
+									label: "Web Experimentation",
+									execute: () => router.push("/web-experimentation"),
+								},
+							]}
+						>
+							<MenuTrigger asChild>
+								<Button
+									appearance="subtle"
+									size="md"
+									icon={<IconChevronDown size={14} />}
+									iconPosition="end"
+									style={{ fontWeight: 500 }}
+								>
+									Content Marketing Platform
+								</Button>
+							</MenuTrigger>
+							<MenuContent />
+						</Menu>
+					</Box>
+					<Box display="flex" alignItems="center" gap="8">
+						<Button
+							appearance="default"
+							size="md"
+							icon={<IconBolt size={14} />}
+							onClick={onOpalClick}
+							style={{
+								borderColor: "var(--ax-colors-border-accent)",
+								boxShadow: "inset 0 0 0 1px var(--ax-colors-border-accent)",
+								fontWeight: 600,
+							}}
+						>
+							Ask Opal
+						</Button>
+						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
+						<NotificationDropdown />
+						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />
+						<Button appearance="subtle" size="md" aria-label="Account" style={{ minWidth: 32, padding: 0 }}>
+							<Image
+								src={activeVAU?.avatar ?? "/avatars/user.png"}
+								alt={activeVAU?.name ?? "Account"}
+								width={28}
+								height={28}
+								style={{ borderRadius: 999 }}
+							/>
+						</Button>
+					</Box>
+				</Box>
+			</Box>
+		);
+	}
 
 	return (
 		<Box
