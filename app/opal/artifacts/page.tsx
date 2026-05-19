@@ -129,9 +129,9 @@ const artifacts: Artifact[] = [
         id: "geo-qa",
         name: "Q and A: Discover the unknown",
         type: "Document",
-        source: { name: "GEO Q&A Generator", type: "chat", link: "/opal?artifacts=1" },
+        source: { name: "Frank", type: "chat", link: "/opal?artifacts=1" },
         agentBadgeIntent: "success",
-        createdBy: { name: "Mayling", avatar: "" },
+        createdBy: { name: "Frank", avatar: "" },
         owner: { name: "Jamie Chen", avatar: "" },
         sharedWithTeam: true,
         tags: ["GEO", "Q&A", "Stride"],
@@ -440,6 +440,7 @@ const sourceEmoji: Record<string, string> = {
 
 const sourceAvatar: Record<string, string> = {
     "GEO Q&A Generator": "/avatars/mock-avatar-geo.svg",
+    "Frank": "/avatars/mock-avatar-geo.svg",
     "Mayling": "/avatars/mock-avatar-geo.svg",
     "Tony": "/avatars/mock-avatar-traffic.svg",
     "Poppy": "/avatars/mock-avatar-seo.svg",

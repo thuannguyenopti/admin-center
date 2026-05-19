@@ -103,7 +103,7 @@ const GEO_QA_HTML_V2 = `<h1>Q&amp;A: Discover the Unknown</h1>
 
 // ── GEO Q&A mock thread ───────────────────────────────────────────────────────
 
-const GEO_AGENT = { emoji: "🤖", name: "GEO Content Strategist", avatar: "/avatars/mock-avatar-geo.svg" };
+const GEO_AGENT = { emoji: "🤖", name: "Frank", avatar: "/avatars/mock-avatar-geo.svg" };
 
 const VAU_MSG_1 = `Hi team — I've been monitoring our GEO content strategy for Stride and identified a gap in AI-searchable content for the _Discover the Unknown_ product line.
 
@@ -142,7 +142,7 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
 }) {
   if (state === 'approved') {
     return (
-      <Box display="flex" flexDirection="column" gap="4" p="16" style={{ border: '1px solid var(--ax-colors-border-default)', borderRadius: 12, background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
+      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="lg" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
         <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
           Team approval needed for discover-the-unknown-qa.md
         </Text>
@@ -154,7 +154,7 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
   }
   if (state === 'changes') {
     return (
-      <Box display="flex" flexDirection="column" gap="4" p="16" style={{ border: '1px solid var(--ax-colors-border-default)', borderRadius: 12, background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
+      <Box display="flex" flexDirection="column" gap="4" p="16" rounded="lg" style={{ border: '1px solid var(--ax-colors-border-default)', background: 'var(--ax-colors-bg-default)', opacity: 0.6 }}>
         <Text fontWeight="500" style={{ fontSize: 14, color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
           Team approval needed for discover-the-unknown-qa.md
         </Text>
@@ -170,9 +170,9 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
       flexDirection="column"
       gap="12"
       p="20"
+      rounded="lg"
       style={{
         border: '1px solid var(--ax-colors-border-default)',
-        borderRadius: 12,
         background: 'var(--ax-colors-bg-default)',
       }}
     >
@@ -182,12 +182,13 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
           display="flex"
           alignItems="center"
           justifyContent="center"
-          style={{ width: 20, height: 20, borderRadius: 4, background: 'var(--ax-colors-bg-secondary)', flexShrink: 0, overflow: 'hidden' }}
+          rounded="xs"
+          style={{ width: 20, height: 20, background: 'var(--ax-colors-bg-secondary)', flexShrink: 0, overflow: 'hidden' }}
         >
           <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={14} height={14} />
         </Box>
         <Text style={{ fontSize: 12, fontWeight: 400, letterSpacing: '0.36px', textTransform: 'uppercase', color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.25 }}>
-          GEO Q&amp;A Generator
+          Frank
         </Text>
       </Box>
 
@@ -210,7 +211,8 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
         flexDirection="column"
         gap="8"
         p="16"
-        style={{ background: 'var(--ax-colors-bg-page)', borderRadius: 6 }}
+        rounded="sm"
+        style={{ background: 'var(--ax-colors-bg-page)' }}
       >
         <Text fontWeight="500" style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-default)', lineHeight: 1.43 }}>
           Team approval needed

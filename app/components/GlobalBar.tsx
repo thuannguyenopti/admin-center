@@ -42,12 +42,13 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const VAUS = [
-	{ name: "Henry",  role: "Product Launch Quarterback",    avatar: "/avatars/mock-avatar-abu.svg" },
-	{ name: "Poppy",  role: "Product Marketer",              avatar: "/avatars/mock-avatar-seo.svg" },
-	{ name: "Jonas",  role: "Journey Optimization Marketer", avatar: "/avatars/mock-avatar-abu.svg" },
-	{ name: "Kerby",  role: "Account Based Marketer",        avatar: "/avatars/mock-avatar-geo.svg" },
-	{ name: "Mayling", role: "GEO Content Strategist",       avatar: "/avatars/mock-avatar-geo.svg" },
-	{ name: "Tony",   role: "Traffic & Growth Marketer",     avatar: "/avatars/mock-avatar-traffic.svg" },
+	{ name: "Henry",   role: "Product Marketer",              avatar: "/avatars/mock-avatar-seo.svg" },
+	{ name: "Poppy",   role: "Product Launch Quarterback",   avatar: "/avatars/mock-avatar-abu.svg" },
+	{ name: "Jonas",   role: "Journey Optimization Marketer", avatar: "/avatars/mock-avatar-abu.svg" },
+	{ name: "Kerby",   role: "Account Based Marketer",        avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Frank",   role: "GEO Content Strategist",        avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Mayling", role: "Social Media Marketer",         avatar: "/avatars/mock-avatar-geo.svg" },
+	{ name: "Tony",    role: "Traffic & Growth Marketer",     avatar: "/avatars/mock-avatar-traffic.svg" },
 ];
 
 type GlobalBarProps = {
