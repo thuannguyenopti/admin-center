@@ -10,6 +10,7 @@ import type { Application, ContentType, Page } from "@/app/db/initialData";
 import { initialContentTypes } from "@/app/db/initialData";
 import usePersistentState from "@/app/usePersistentState";
 import { IconChevronDown, IconCopy, IconDots, IconLink, IconPencil, IconTag } from "@tabler/icons-react";
+import { IconBolt } from "@/app/lib/axiom-icons";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { Outline } from "@/app/components/vb/PreviewCanvas";
@@ -214,9 +215,13 @@ export function ContentFilledPage({
 						</Box>
 						<Box alignItems="center" display="flex" style={{ gap: 12 }}>
 							<IconTag color="var(--ax-colors-fg-secondary)" size={16} />
-							<button aria-label="Open suggested assets" onClick={onOpenSuggested} style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", padding: 0 }} type="button">
-								<img alt="" aria-hidden="true" height={16} src="/opal-orb.png" width={16} />
-							</button>
+							<Button
+								appearance="subtle"
+								aria-label="Open suggested assets"
+								icon={<IconBolt size={16} />}
+								onClick={onOpenSuggested}
+								size="sm"
+							/>
 							<IconLink color="var(--ax-colors-fg-secondary)" size={16} />
 							{selectedContentInstance && (
 								<>
