@@ -142,7 +142,7 @@ export default function SearchAnalytics() {
 				/>
 			</Box>
 			{/* Problematic Queries Table */}
-			<Heading level="4" mb="16">
+			<Heading level="2" mb="16">
 				Problematic Queries
 			</Heading>
 			<Table>
