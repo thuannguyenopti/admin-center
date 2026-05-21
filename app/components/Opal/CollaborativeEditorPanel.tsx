@@ -16,7 +16,7 @@ import {
   IconArrowRotateLeft,
   IconArrowRotateRight,
 } from "@optimizely/axiom-icons";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useCollabDoc } from "./editor/useCollabDoc";
 import type { EditorFileType } from "./EditorOutputCard";
@@ -105,16 +105,8 @@ export function CollaborativeEditorPanel({
   fluid = false,
   initialMarkdown,
 }: CollaborativeEditorPanelProps) {
-  const [mode, setMode] = useState<ToolbarMode>("wysiwyg");
+  const [mode] = useState<ToolbarMode>("wysiwyg");
   const collabDoc = useCollabDoc(initialMarkdown);
-
-  const handleModeSwitch = useCallback(
-    (next: ToolbarMode) => {
-      if (next === mode) return;
-      setMode(next);
-    },
-    [mode]
-  );
 
   if (!open) return null;
 
@@ -156,31 +148,6 @@ export function CollaborativeEditorPanel({
         bg="bg.default"
         style={{ flexShrink: 0, flexWrap: "wrap", minHeight: 44 }}
       >
-        {/* Mode toggle */}
-        <Box display="flex" bg="bg.secondary" rounded="md" p="2" gap="2" style={{ flexShrink: 0 }}>
-          {(["wysiwyg", "source"] as ToolbarMode[]).map((m) => (
-            <Button
-              key={m}
-              appearance="subtle"
-              size="sm"
-              onClick={() => handleModeSwitch(m)}
-              style={{
-                padding: "3px 10px",
-                fontSize: 12,
-                fontWeight: 600,
-                ...(mode === m && {
-                  background: "var(--ax-colors-bg-default)",
-                  color: "var(--ax-colors-fg-default)",
-                }),
-              }}
-            >
-              {m === "wysiwyg" ? "Visual" : "Source"}
-            </Button>
-          ))}
-        </Box>
-
-        <ToolbarDivider />
-
         {/* Inline formatting — only meaningful in WYSIWYG, shown in both modes */}
         <ToolbarBtn title="Bold"><IconBold size={13} /></ToolbarBtn>
         <ToolbarBtn title="Italic"><IconItalic size={13} /></ToolbarBtn>

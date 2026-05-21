@@ -42,6 +42,7 @@ import {
 	IconPlus,
 	IconSparkles,
 	IconFileLines,
+	IconSquareUser,
 } from "@optiaxiom/icons";
 
 // CMP custom icons
@@ -452,6 +453,13 @@ export default function RootLayout({
 				highlight: "/opal/context",
 				customLayout: true,
 				icon: <IconFolderBookmark />,
+			},
+			{
+				label: "Virtual Teammates",
+				url: "/opal/virtual-teammates",
+				highlight: "/opal/virtual-teammates",
+				icon: <IconSquareUser />,
+				customLayout: true,
 			},
 			{
 				label: "Agents",

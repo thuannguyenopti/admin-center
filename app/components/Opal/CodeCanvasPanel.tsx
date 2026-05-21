@@ -13,6 +13,7 @@ import {
   IconXmark,
   IconCode,
   IconEye,
+  IconPen,
   IconCopy,
   IconDownload,
   IconChevronDown,
@@ -44,6 +45,7 @@ import {
   IconGlobe,
   IconShieldCheck,
   IconTrashCan,
+  IconLock,
 } from "@optimizely/axiom-icons";
 import { useState, useCallback, useEffect, useRef, type ReactNode, type KeyboardEvent } from "react";
 import dynamic from "next/dynamic";
@@ -138,7 +140,7 @@ type CollabUser =
   | { name: string; type: "human"; colorScheme: "purple" | "neutral"; lightPurple?: boolean };
 
 const COLLAB_USERS: CollabUser[] = [
-  { name: "GEO QA VAU", type: "ai", src: "/avatars/mock-avatar-geo.svg" },
+  { name: "Frank", type: "ai", src: "/avatars/vau-frank.png" },
   { name: "Jamie Chen", type: "human", colorScheme: "purple", lightPurple: true },
   { name: "James S.", type: "human", colorScheme: "purple" },
   { name: "Marie Anne", type: "human", colorScheme: "neutral" },
@@ -241,7 +243,7 @@ function FmtDivider() {
 
 // ── WYSIWYG panel ─────────────────────────────────────────────────────────────
 
-function WysiwygPanel({ initialHtml, blameSegments, onContentChange }: { initialHtml: string; blameSegments?: BlameSegment[]; onContentChange?: (text: string) => void }) {
+function WysiwygPanel({ initialHtml, editable = true, blameSegments, onContentChange }: { initialHtml: string; editable?: boolean; blameSegments?: BlameSegment[]; onContentChange?: (text: string) => void }) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ codeBlock: false }),
@@ -250,12 +252,18 @@ function WysiwygPanel({ initialHtml, blameSegments, onContentChange }: { initial
       Extension.create({ name: "collabCursor", addProseMirrorPlugins: () => [createCollabCursorPlugin(MOCK_CURSORS)] }),
     ],
     content: initialHtml,
-    editable: true,
+    editable,
     immediatelyRender: false,
     onUpdate: ({ editor: e }) => {
       onContentChange?.(e.getText());
     },
   });
+
+  // Keep Tiptap's editable state in sync with the prop
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(editable);
+  }, [editor, editable]);
 
   // Push blame decorations into TipTap when segments change
   useEffect(() => {
@@ -489,7 +497,7 @@ function VersionHistoryPanel({
 
 // ── Share dialog ──────────────────────────────────────────────────────────────
 
-type PermissionRole = "Owner" | "Admin" | "Editor" | "Viewer";
+type PermissionRole = "Owner" | "Admin" | "Editor" | "Viewer" | "None";
 
 type AccessSubject = {
   id: string;
@@ -503,16 +511,33 @@ type AccessSubject = {
   badges?: string[];
 };
 
+// Rows with system status (Owner, Principal, or org-level) appear in the top card.
+function isTopCardRow(subject: AccessSubject): boolean {
+  return (
+    subject.role === "Owner" ||
+    subject.kind === "org" ||
+    !!subject.badges?.includes("Principal")
+  );
+}
+
 const ROLE_OPTIONS = [
   { label: "Can manage", value: "Admin", description: "Can change content, share access, and remove the artifact." },
   { label: "Can edit",   value: "Editor", description: "Can change content and share with others." },
   { label: "Can view",   value: "Viewer", description: "Can open and comment on the artifact." },
 ] as const;
 
+// Org-wide audiences (e.g. "Anyone in Stride") cannot be granted manage rights,
+// but can be set to no access without removing the row.
+const ORG_ROLE_OPTIONS = [
+  { label: "Can edit",  value: "Editor",  description: "Can change content and share with others." },
+  { label: "Can view",  value: "Viewer",  description: "Can open and comment on the artifact." },
+  { label: "No access", value: "None",    description: "Cannot open or comment on the artifact.", addon: <IconLock size={14} /> },
+];
+
 const SHARE_DIALOG_BORDER = "1px solid var(--ax-colors-border-secondary)";
 
 const ROLE_LABELS: Record<PermissionRole, string> = {
-  Owner: "Owner", Admin: "Can manage", Editor: "Can edit", Viewer: "Can view",
+  Owner: "Owner", Admin: "Can manage", Editor: "Can edit", Viewer: "Can view", None: "No access",
 };
 
 const DEFAULT_ARTIFACT_CREATOR = { name: "Jamie Chen" };
@@ -521,31 +546,37 @@ function getStrideEmail(name: string) {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, ".").replace(/(^\.|\.$)/g, "")}@stride.com`;
 }
 
-function getInitialAccess(artifactCreator: { name: string; avatar?: string }): AccessSubject[] {
+function getInitialAccess(
+  artifactCreator: { name: string; avatar?: string },
+  artifactOwner?: { name: string; avatar?: string }
+): AccessSubject[] {
   const creatorName = artifactCreator.name || DEFAULT_ARTIFACT_CREATOR.name;
+  const ownerName = artifactOwner?.name || "Jamie Chen";
+  const ownerAvatar = artifactOwner?.avatar;
   return [
-    { id: "owner", name: "Frank", detail: "frank@stride.com", role: "Owner", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-geo.svg" },
-    { id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin", kind: "user", colorScheme: "purple", avatar: artifactCreator.avatar, badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined },
-    ...(creatorName !== "Jamie Chen" ? [{ id: "jamie-chen", name: "Jamie Chen", detail: "jamie.chen@stride.com", role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "neutral" as const, badges: ["Principal"] }] : []),
+    { id: "owner", name: ownerName, detail: getStrideEmail(ownerName), role: "Owner", kind: "user", colorScheme: "purple", avatar: ownerAvatar, badges: ownerName === "Jamie Chen" ? ["Principal"] : undefined },
+    ...(creatorName !== ownerName ? [{ id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "purple" as const, avatar: artifactCreator.avatar, badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined }] : []),
+    ...(ownerName !== "Jamie Chen" && creatorName !== "Jamie Chen" ? [{ id: "jamie-chen", name: "Jamie Chen", detail: "jamie.chen@stride.com", role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "purple" as const, badges: ["Principal"] }] : []),
     { id: "stride-org", name: "Stride", detail: "stride@stride.com", role: "Viewer", kind: "org", colorScheme: "neutral" },
     { id: "mary-anne-torres", name: "Mary Anne Torres", detail: "mary.anne@stride.com", role: "Editor", kind: "user", colorScheme: "neutral", avatar: "/avatars/user.png" },
     { id: "content-ops", name: "Content Operations", detail: "content-operations@stride.com", role: "Admin", kind: "team", colorScheme: "neutral" },
-    { id: "weekly-traffic-reporter", name: "Traffic & Growth Marketer", detail: "weekly-traffic-reporter@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/mock-avatar-traffic.svg" },
-    { id: "seo-advisor", name: "SEO Advisor", detail: "seo-advisor@stride.com", role: "Viewer", kind: "vau", colorScheme: "neutral", avatar: "/avatars/mock-avatar-seo.svg" },
+    { id: "map", name: "Tony", detail: "tony@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/vau-tony.png" },
+    { id: "kerby", name: "Kerby", detail: "kerby@stride.com", role: "Viewer", kind: "vau", colorScheme: "neutral", avatar: "/avatars/vau-kerby.png" },
   ];
 }
 
-function PermissionRoleSelect({ role, allowOwnershipTransfer, disabled, onChange }: { role: PermissionRole; allowOwnershipTransfer?: boolean; disabled?: boolean; onChange: (role: PermissionRole) => void }) {
+function PermissionRoleSelect({ role, subjectKind, allowOwnershipTransfer, disabled, onChange }: { role: PermissionRole; subjectKind?: AccessSubject["kind"]; allowOwnershipTransfer?: boolean; disabled?: boolean; onChange: (role: PermissionRole) => void }) {
   if (role === "Owner" || disabled) {
     return <Badge intent={role === "Owner" ? "information" : "neutral"} style={{ flexShrink: 0 }}>{ROLE_LABELS[role]}</Badge>;
   }
   type RoleSelectValue = PermissionRole | "Make owner";
+  const baseOptions = subjectKind === "org" ? ORG_ROLE_OPTIONS : ROLE_OPTIONS;
   return (
     <Select
       value={role}
       onValueChange={(value) => onChange(value === "Make owner" ? "Owner" : value as PermissionRole)}
       options={[
-        ...ROLE_OPTIONS,
+        ...baseOptions,
         ...(allowOwnershipTransfer ? [{ label: "Make owner", value: "Make owner" as RoleSelectValue, description: "Transfer ownership to this person." }] : []),
       ]}
     >
@@ -571,43 +602,55 @@ function AccessAvatar({ subject }: { subject: AccessSubject }) {
   return <Avatar name={subject.name} src={subject.avatar} size="md" colorScheme={subject.colorScheme} style={{ flexShrink: 0 } as React.CSSProperties} />;
 }
 
-function AccessRow({ subject, showMakeOwner, onRoleChange, onRemove }: { subject: AccessSubject; showMakeOwner: boolean; onRoleChange: (role: PermissionRole) => void; onRemove: () => void }) {
+function AccessRow({ subject, showMakeOwner, showTopBorder, onRoleChange, onRemove }: { subject: AccessSubject; showMakeOwner: boolean; showTopBorder?: boolean; onRoleChange: (role: PermissionRole) => void; onRemove: () => void }) {
   const isOwner = subject.role === "Owner";
   const canBecomeOwner = showMakeOwner && (subject.kind === "user" || subject.kind === "vau");
   return (
-    <Box display="flex" alignItems="center" gap="10" py="8" style={{ borderBottom: "1px solid var(--ax-colors-border-tertiary)" }}>
+    <Box
+      display="flex"
+      alignItems="center"
+      gap="12"
+      px="16"
+      py="12"
+      style={{ borderTop: showTopBorder ? "1px solid var(--ax-colors-border-tertiary)" : undefined }}
+    >
       <AccessAvatar subject={subject} />
       <Box style={{ minWidth: 0, flex: 1 }}>
         <Box display="flex" alignItems="center" gap="8" style={{ minWidth: 0 }}>
           <AxiomText fontSize="sm" fontWeight="600" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subject.name}</AxiomText>
-          {(subject.kind === "org" || subject.kind === "vau") && <Badge intent="neutral">{subject.kind === "org" ? "Org" : "VAU"}</Badge>}
+          {(subject.kind === "org" || subject.kind === "vau") && <Badge intent="neutral">{subject.kind === "org" ? "ORG" : "Virtual Teammate"}</Badge>}
           {subject.badges?.map((badge) => <Badge key={badge} intent="neutral">{badge}</Badge>)}
         </Box>
         <AxiomText fontSize="sm" color="fg.tertiary">{subject.detail}</AxiomText>
       </Box>
-      <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0, minWidth: 172 }}>
-        <PermissionRoleSelect role={subject.role} allowOwnershipTransfer={canBecomeOwner} disabled={isOwner} onChange={onRoleChange} />
-        <Tooltip content={isOwner ? "Transfer ownership from the owner menu" : "Remove access"} delayDuration={300}>
-          <span style={{ display: "inline-flex" }}>
-            <Button appearance="subtle" size="sm" icon={isOwner ? <IconShieldCheck size={14} /> : <IconTrashCan size={14} />} aria-label={isOwner ? "Owner protected" : `Remove ${subject.name}`} disabled={isOwner} onClick={onRemove} />
-          </span>
-        </Tooltip>
-      </Box>
+      {isOwner ? (
+        <PermissionRoleSelect role={subject.role} subjectKind={subject.kind} allowOwnershipTransfer={false} disabled onChange={() => {}} />
+      ) : (
+        <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0, minWidth: 172 }}>
+          <PermissionRoleSelect role={subject.role} subjectKind={subject.kind} allowOwnershipTransfer={canBecomeOwner} onChange={onRoleChange} />
+          <Tooltip content="Remove access" delayDuration={300}>
+            <span style={{ display: "inline-flex" }}>
+              <Button appearance="subtle" size="sm" icon={<IconTrashCan size={14} />} aria-label={`Remove ${subject.name}`} onClick={onRemove} />
+            </span>
+          </Tooltip>
+        </Box>
+      )}
     </Box>
   );
 }
 
-export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = DEFAULT_ARTIFACT_CREATOR }: { open: boolean; onOpenChange: (open: boolean) => void; artifactTitle?: string; artifactCreator?: { name: string; avatar?: string } }) {
+export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCreator = DEFAULT_ARTIFACT_CREATOR, artifactOwner }: { open: boolean; onOpenChange: (open: boolean) => void; artifactTitle?: string; artifactCreator?: { name: string; avatar?: string }; artifactOwner?: { name: string; avatar?: string } }) {
   const [inviteQuery, setInviteQuery] = useState("");
   const [inviteTokens, setInviteTokens] = useState<string[]>([]);
   const [inviteRole, setInviteRole] = useState<PermissionRole>("Editor");
-  const [accessList, setAccessList] = useState<AccessSubject[]>(() => getInitialAccess(artifactCreator));
+  const [accessList, setAccessList] = useState<AccessSubject[]>(() => getInitialAccess(artifactCreator, artifactOwner));
   const [notifyPeople, setNotifyPeople] = useState(true);
   const [notifyMessage, setNotifyMessage] = useState("");
+  const [hasChanges, setHasChanges] = useState(false);
   const [chipInputFocused, setChipInputFocused] = useState(false);
   const chipInputRef = useRef<HTMLInputElement>(null);
   const shareUrl = "https://stride.com/artifacts/landing-page";
-  const showMakeOwner = artifactCreator.name === "Jamie Chen";
+  const showMakeOwner = (artifactOwner?.name ?? artifactCreator.name) === "Jamie Chen";
 
   const q = inviteQuery.trim().toLowerCase();
   const filteredAccessList = q
@@ -616,8 +659,8 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
 
   const showNotify = inviteTokens.length > 0 || (q.length > 0 && filteredAccessList.length === 0);
 
-  useEffect(() => { setAccessList(getInitialAccess(artifactCreator)); }, [artifactCreator]);
-  useEffect(() => { if (!open) { setInviteTokens([]); setInviteQuery(""); setNotifyMessage(""); } }, [open]);
+  useEffect(() => { setAccessList(getInitialAccess(artifactCreator, artifactOwner)); }, [artifactCreator, artifactOwner]);
+  useEffect(() => { if (!open) { setInviteTokens([]); setInviteQuery(""); setNotifyMessage(""); setHasChanges(false); } }, [open]);
 
   const handleCopyLink = useCallback(() => {
     navigator.clipboard.writeText(shareUrl).catch(() => {});
@@ -668,14 +711,15 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
         </DialogHeader>
 
         <DialogBody display="flex" flexDirection="column" gap="16">
-          {/* Invite row */}
-          <Box display="flex" alignItems="center" gap="8">
+          {/* Invite row — in DialogBody so it has the same width as the access box */}
+          <Box display="flex" alignItems="end" gap="8">
+            <Box display="flex" flexDirection="column" gap="4" style={{ flex: 1 }}>
+            <AxiomText fontSize="sm" color="fg.secondary">Share with</AxiomText>
             <div
               role="textbox"
               aria-label="Add people"
               onClick={() => chipInputRef.current?.focus()}
               style={{
-                flex: 1,
                 display: "flex",
                 flexWrap: "wrap",
                 alignItems: "center",
@@ -722,28 +766,75 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
                 }}
               />
             </div>
-            <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as PermissionRole)} options={[...ROLE_OPTIONS]}>
-              <SelectTrigger size="md" style={{ flexShrink: 0, minWidth: 132, height: 40 }}>{ROLE_LABELS[inviteRole]}</SelectTrigger>
-              <SelectContent />
-            </Select>
+            </Box>
+            <Box display="flex" flexDirection="column" gap="4">
+              <AxiomText fontSize="sm" color="fg.secondary">Access</AxiomText>
+              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as PermissionRole)} options={[...ROLE_OPTIONS]}>
+                <SelectTrigger size="md" style={{ flexShrink: 0, minWidth: 132, height: 40 }}>{ROLE_LABELS[inviteRole]}</SelectTrigger>
+                <SelectContent />
+              </Select>
+            </Box>
           </Box>
           {!showNotify ? (<>
-            <AxiomText fontSize="sm" fontWeight="600" color="fg.secondary" style={{ textTransform: "uppercase", letterSpacing: "0.06em" }}>Who has access</AxiomText>
-            <Box rounded="lg" px="16" style={{ border: SHARE_DIALOG_BORDER }}>
-              {filteredAccessList.map((subject) => (
-                <AccessRow
-                  key={subject.id}
-                  subject={subject}
-                  showMakeOwner={showMakeOwner}
-                  onRoleChange={(role) => setAccessList((items) => items.map((item) => {
-                    if (item.id === subject.id) return { ...item, role };
-                    if (role === "Owner" && item.role === "Owner") return { ...item, role: "Admin" as PermissionRole };
-                    return item;
-                  }))}
-                  onRemove={() => setAccessList((items) => items.filter((item) => item.id !== subject.id))}
-                />
-              ))}
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <AxiomText fontSize="md" fontWeight="600">Who has access</AxiomText>
+              <Button appearance="subtle" size="sm" icon={<IconLink size={14} />} onClick={handleCopyLink}>Copy link</Button>
             </Box>
+            {(() => {
+              const topRows = filteredAccessList.filter(isTopCardRow);
+              const bottomRows = filteredAccessList.filter(s => !isTopCardRow(s));
+              const orgRowNoAccess = topRows.some(s => s.kind === "org" && s.role === "None");
+              const handleRoleChange = (subject: AccessSubject) => (role: PermissionRole) => {
+                setHasChanges(true);
+                setAccessList((items) => items.map((item) => {
+                  if (item.id === subject.id) return { ...item, role };
+                  if (role === "Owner" && item.role === "Owner") return { ...item, role: "Admin" as PermissionRole };
+                  return item;
+                }));
+              };
+              const handleRemove = (subject: AccessSubject) => () => {
+                setHasChanges(true);
+                setAccessList((items) => items.filter((item) => item.id !== subject.id));
+              };
+              return (
+                <>
+                  {topRows.length > 0 && (
+                    <Box rounded="lg" style={{ border: SHARE_DIALOG_BORDER, overflow: "hidden" }}>
+                      {topRows.map((subject, idx) => (
+                        <AccessRow
+                          key={subject.id}
+                          subject={subject}
+                          showMakeOwner={showMakeOwner}
+                          showTopBorder={idx > 0}
+                          onRoleChange={handleRoleChange(subject)}
+                          onRemove={handleRemove(subject)}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                  {orgRowNoAccess && (
+                    <Box display="flex" alignItems="center" gap="6" px="4">
+                      <IconLock size={12} style={{ color: "var(--ax-colors-fg-tertiary)", flexShrink: 0 }} />
+                      <AxiomText fontSize="sm" color="fg.tertiary">Only invited users can access</AxiomText>
+                    </Box>
+                  )}
+                  {bottomRows.length > 0 && (
+                    <Box rounded="lg" style={{ border: SHARE_DIALOG_BORDER, overflow: "hidden" }}>
+                      {bottomRows.map((subject, idx) => (
+                        <AccessRow
+                          key={subject.id}
+                          subject={subject}
+                          showMakeOwner={showMakeOwner}
+                          showTopBorder={idx > 0}
+                          onRoleChange={handleRoleChange(subject)}
+                          onRemove={handleRemove(subject)}
+                        />
+                      ))}
+                    </Box>
+                  )}
+                </>
+              );
+            })()}
           </>) : (<>
             <Checkbox checked={notifyPeople} onCheckedChange={(v) => setNotifyPeople(!!v)}>
               Notify people
@@ -776,14 +867,12 @@ export function OpalShareDialog({ open, onOpenChange, artifactTitle, artifactCre
         </DialogBody>
 
         <DialogFooter>
-          <Button appearance="subtle" size="md" icon={<IconLink size={14} />} onClick={handleCopyLink} style={{ marginRight: 'auto' }}>Copy link</Button>
-          <Box display="flex" alignItems="center" gap="8">
-            <DialogClose asChild><Button appearance="subtle" size="md">Cancel</Button></DialogClose>
-            {showNotify
-              ? <Button appearance="primary" size="md" onClick={handleSend}>Send</Button>
-              : <DialogClose asChild><Button appearance="primary" size="md">Done</Button></DialogClose>
-            }
-          </Box>
+          {showNotify ? (<>
+            <Button appearance="subtle" size="md" icon={<IconArrowLeft size={14} />} onClick={() => { setInviteQuery(""); setInviteTokens([]); }} style={{ marginRight: "auto" }}>Back</Button>
+            <Button appearance="primary" size="md" onClick={handleSend}>Send</Button>
+          </>) : (
+            <DialogClose asChild><Button appearance="primary" size="md">{hasChanges ? "Update" : "Done"}</Button></DialogClose>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -830,6 +919,7 @@ export function CodeCanvasPanel({
 }: CodeCanvasPanelProps) {
   const collabDoc = useCollabDoc(EXAMPLE_HTML);
   const [mode, setMode] = useState<CanvasMode>("preview");
+  const [isEditing, setIsEditing] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(initialHtml ?? WYSIWYG_CONTENT);
 
@@ -969,16 +1059,31 @@ export function CodeCanvasPanel({
 
         {/* Right cluster */}
         <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
-          {/* Saved indicator */}
-          <Box display="flex" alignItems="center" gap="4">
-            <IconCircleCheck size={16} style={{ color: "var(--ax-colors-fg-success)", flexShrink: 0 }} />
-            <Text fontSize="sm" color="fg.tertiary" style={{ whiteSpace: "nowrap" }}>Change saved.</Text>
-          </Box>
+          {/* Editing / Saved badge */}
+          <Badge intent={isEditing ? "neutral" : "success"} style={{ flexShrink: 0 }}>
+            {isEditing ? "Editing" : "Saved"}
+          </Badge>
 
-          <Box display="flex" alignItems="center" gap="4">
-            <Tooltip content="Undo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" /></span></Tooltip>
-            <Tooltip content="Redo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" /></span></Tooltip>
-          </Box>
+          {/* Edit / Cancel + Save */}
+          {isEditing ? (
+            <Box display="flex" alignItems="center" gap="4">
+              <Button appearance="subtle" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+              <Button appearance="primary" size="sm" onClick={() => setIsEditing(false)}>Save</Button>
+            </Box>
+          ) : (
+            <Tooltip content="Edit" delayDuration={400}>
+              <span>
+                <Button appearance="subtle" size="md" icon={<IconPen size={14} />} aria-label="Edit" onClick={() => setIsEditing(true)} />
+              </span>
+            </Tooltip>
+          )}
+
+          {isEditing && (
+            <Box display="flex" alignItems="center" gap="4">
+              <Tooltip content="Undo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" /></span></Tooltip>
+              <Tooltip content="Redo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" /></span></Tooltip>
+            </Box>
+          )}
 
           <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
 
@@ -989,7 +1094,6 @@ export function CodeCanvasPanel({
               { label: "Add to", addon: <IconCirclePlus size={14} />, execute: () => {} },
               ...(!contentNode ? [
                 { label: blameActive ? "Hide contributors" : "Show contributors", addon: <IconUserGroup size={14} />, execute: handleToggleBlame },
-                { label: versionPanelOpen ? "Hide version history" : "Show version history", addon: <IconClockRotateLeft size={14} />, execute: () => setVersionPanelOpen((v) => !v) },
               ] : []),
               ...(onChatToggle !== undefined ? [
                 { label: chatOpen ? "Hide thread" : "Show thread", addon: <IconComments size={14} />, execute: onChatToggle },
@@ -1002,10 +1106,14 @@ export function CodeCanvasPanel({
             <MenuContent />
           </Menu>
 
-          <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+          {!isEditing && (
+            <>
+              <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
 
-          {/* Share */}
-          <Button appearance="default" size="md" icon={<IconUserPlus size={15} />} onClick={() => setShareDialogOpen(true)} style={{ whiteSpace: "nowrap" }}>Share</Button>
+              {/* Share */}
+              <Button appearance="default" size="md" icon={<IconUserPlus size={15} />} onClick={() => setShareDialogOpen(true)} style={{ whiteSpace: "nowrap" }}>Share</Button>
+            </>
+          )}
 
           {/* Thread toggle */}
           {onChatToggle !== undefined && (
@@ -1051,6 +1159,7 @@ export function CodeCanvasPanel({
                   <WysiwygPanel
                     key={previewHtml}
                     initialHtml={previewHtml}
+                    editable={isEditing}
                     blameSegments={blameActive ? blameSegments : undefined}
                     onContentChange={(text) => {
                       wysiwygTextRef.current = text;
@@ -1060,16 +1169,6 @@ export function CodeCanvasPanel({
                     }}
                   />
                 </Box>
-              )}
-
-              {/* Version History panel — overlays right side of editor card */}
-              {versionPanelOpen && (
-                <VersionHistoryPanel
-                  versions={versions}
-                  onSave={handleSaveVersion}
-                  onRevert={handleRevertVersion}
-                  onClose={() => setVersionPanelOpen(false)}
-                />
               )}
             </>
           )}
