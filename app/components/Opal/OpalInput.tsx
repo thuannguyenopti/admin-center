@@ -127,11 +127,11 @@ const MOCK_MENTION_USERS: MentionUser[] = [
 ];
 
 const MOCK_MENTION_VAUS: MentionUser[] = [
-  { id: 'vau_ppc', name: 'Pixel Perfect Checker', email: 'pixel-perfect@opal.optimizely.com', handle: '@pixel-perfect', avatar: '/avatars/mock-avatar-seo.svg', group: 'uau' },
-  { id: 'vau_geo', name: 'GEO Q&A Generator', email: 'geo-qa@opal.optimizely.com', handle: '@geo-qa', avatar: '/avatars/mock-avatar-geo.svg', group: 'uau' },
-  { id: 'vau_traffic', name: 'Weekly Traffic Reporter', email: 'traffic-reporter@opal.optimizely.com', handle: '@traffic-reporter', avatar: '/avatars/mock-avatar-traffic.svg', group: 'uau' },
-  { id: 'vau_plq', name: 'Product Launch Quarterback', email: 'product-launch@opal.optimizely.com', handle: '@product-launch', avatar: '/avatars/mock-avatar-abu.svg', group: 'uau' },
-  { id: 'vau_abm', name: 'ABM Page Generator', email: 'abm-generator@opal.optimizely.com', handle: '@abm-generator', avatar: '/avatars/mock-avatar-geo.svg', group: 'uau' },
+  { id: 'vau_pm', name: 'Poppy', email: 'poppy@opal.optimizely.com', handle: '@poppy', avatar: '/avatars/vau-poppy.png', group: 'uau' },
+  { id: 'vau_geo', name: 'Mayling', email: 'mayling@opal.optimizely.com', handle: '@mayling', avatar: '/avatars/vau-mayling.png', group: 'uau' },
+  { id: 'vau_traffic', name: 'Tony', email: 'tony@opal.optimizely.com', handle: '@tony', avatar: '/avatars/vau-tony.png', group: 'uau' },
+  { id: 'vau_plq', name: 'Henry', email: 'henry@opal.optimizely.com', handle: '@henry', avatar: '/avatars/vau-henry.png', group: 'uau' },
+  { id: 'vau_abm', name: 'Kerby', email: 'kerby@opal.optimizely.com', handle: '@kerby', avatar: '/avatars/vau-kerby.png', group: 'uau' },
 ];
 
 type OpalInputProps = {

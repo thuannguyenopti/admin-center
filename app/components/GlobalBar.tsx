@@ -44,16 +44,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import { IconXmark } from "@optimizely/axiom-icons";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-
-const VAUS = [
-	{ name: "Henry",   role: "Product Marketer",              avatar: "/avatars/mock-avatar-seo.svg" },
-	{ name: "Poppy",   role: "Product Launch Quarterback",   avatar: "/avatars/mock-avatar-abu.svg" },
-	{ name: "Jonas",   role: "Journey Optimization Marketer", avatar: "/avatars/mock-avatar-abu.svg" },
-	{ name: "Kerby",   role: "Account Based Marketer",        avatar: "/avatars/mock-avatar-geo.svg" },
-	{ name: "Frank",   role: "GEO Content Strategist",        avatar: "/avatars/mock-avatar-geo.svg" },
-	{ name: "Mayling", role: "Social Media Marketer",         avatar: "/avatars/mock-avatar-geo.svg" },
-	{ name: "Tony",    role: "Traffic & Growth Marketer",     avatar: "/avatars/mock-avatar-traffic.svg" },
-];
+import { VAUS, type VAU } from "@/app/opal/data/vaus";
 
 type GlobalBarProps = {
 	onOpalClick?: () => void;
@@ -76,11 +67,11 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 	const vauGroup = { label: "Act as", separator: false, hidden: false };
 	const vauFooterGroup = { label: "", separator: true, hidden: true };
 
-	const [activeVAU, setActiveVAU] = useState<{ name: string; role: string; avatar: string } | null>(null);
-	const [switchingVAU, setSwitchingVAU] = useState<{ name: string; role: string; avatar: string } | null>(null);
+	const [activeVAU, setActiveVAU] = useState<VAU | null>(null);
+	const [switchingVAU, setSwitchingVAU] = useState<VAU | null>(null);
 	const [switchVisible, setSwitchVisible] = useState(false);
 
-	const handleSelectVAU = (vau: { name: string; role: string; avatar: string }) => {
+	const handleSelectVAU = (vau: VAU) => {
 		setSwitchingVAU(vau);
 		setSwitchVisible(true);
 		setTimeout(() => setSwitchVisible(false), 1400);
@@ -235,7 +226,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					</Text>
 					<Image src={activeVAU.avatar} alt="" width={18} height={18} style={{ borderRadius: 999, flexShrink: 0 }} />
 					<Text fontSize="sm" fontWeight="600">{activeVAU.name}</Text>
-					<Text fontSize="sm" color="fg.secondary">{activeVAU.role}</Text>
+					<Text fontSize="sm" color="fg.secondary">{activeVAU.templateName}</Text>
 					<Box style={{ flex: 1 }} />
 					<Button
 						appearance="subtle"
@@ -429,7 +420,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								...VAUS.map(vau => ({
 									group: vauGroup,
 									label: vau.name,
-									description: vau.role,
+									description: vau.templateName,
 									addon: <Image src={vau.avatar} alt="" width={20} height={20} style={{ borderRadius: 999, flexShrink: 0 }} />,
 									execute: () => handleSelectVAU(vau),
 								})),
@@ -514,9 +505,31 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 					aria-label="View source code"
 					onClick={handleCodeClick}
 				/>
-				{isCmpRoute ? (
-					<Menu
-						options={[
+				<Menu
+					options={[
+						...VAUS.map(vau => ({
+							group: { label: "Act as", separator: false, hidden: false },
+							label: vau.name,
+							description: vau.templateName,
+							addon: (
+								<Image
+									src={vau.avatar}
+									alt={vau.name}
+									width={20}
+									height={20}
+									style={{ borderRadius: 999, flexShrink: 0 }}
+									unoptimized
+								/>
+							),
+							execute: () => handleSelectVAU(vau),
+						})),
+						{
+							group: { label: "Manage", separator: true, hidden: true },
+							label: "Manage Virtual Teammates",
+							addon: <IconUsers size={16} />,
+							execute: () => router.push("/opal/virtual-teammates"),
+						},
+						...(isCmpRoute ? [
 							{
 								group: settingsGroups.userOrg,
 								label: "Stefan Svebeck (Admin)",
@@ -618,24 +631,22 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								label: "Social Accounts",
 								addon: <IconShare size={16} />,
 							},
-						]}
-					>
-						<MenuTrigger icon={!isCmpTaskDetail && <IconUser />} appearance="subtle" size="sm" aria-label="User profile">
-								{isCmpTaskDetail && (
-									<Image
-										src="/avatars/aamr-fakhry.png"
-										alt="User profile"
-										width={24}
-										height={24}
-										style={{borderRadius: 999}}
-									/>
-								)}
-						</MenuTrigger>
-						<MenuContent style={{ minWidth: "240px" }} />
-					</Menu>
-				) : (
-					<Button appearance="subtle" size="md" aria-label="User profile" icon={<IconUser />} />
-				)}
+						] : []),
+					]}
+				>
+					<MenuTrigger icon={!isCmpTaskDetail && <IconUser />} appearance="subtle" size="sm" aria-label="User profile">
+							{isCmpTaskDetail && (
+								<Image
+									src="/avatars/aamr-fakhry.png"
+									alt="User profile"
+									width={24}
+									height={24}
+									style={{borderRadius: 999}}
+								/>
+							)}
+					</MenuTrigger>
+					<MenuContent style={{ minWidth: "240px" }} />
+				</Menu>
 				</>
 				)}
 			</Box>
@@ -668,7 +679,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 							display: "flex", alignItems: "center", justifyContent: "center",
 							overflow: "hidden",
 						}}>
-							<Image src={switchingVAU.avatar} alt="" width={44} height={44} />
+							<Image src={switchingVAU.avatar} alt="" width={44} height={44} unoptimized />
 						</div>
 						<div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: 4 }}>
 							<p style={{ margin: 0, fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ax-colors-fg-tertiary)" }}>Acting as</p>

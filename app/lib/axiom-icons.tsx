@@ -299,3 +299,22 @@ export { IconTool as IconScrewdriverWrench } from "@tabler/icons-react";
 export { IconUser as IconCircleUser } from "@tabler/icons-react";
 export { IconFile as IconFileZipper } from "@tabler/icons-react";
 export { IconBuilding } from "@tabler/icons-react";
+
+// Brand icons — Tabler fallbacks (Axiom package only ships IconGoogle)
+export {
+	IconBrandFigma,
+	IconBrandSlack,
+	IconBrandNotion,
+	IconBrandAirtable,
+	IconBrandGithub,
+	IconBrandAsana,
+	IconBrandGoogle,
+} from "@tabler/icons-react";
+
+// Axiom rename aliases (icon exists under a different name)
+export { IconSunBright as IconSunFilled } from "@optimizely/axiom-icons";
+export { IconDesktop as IconDeviceDesktop } from "@optimizely/axiom-icons";
+export { IconCodeBranch as IconGitBranch } from "@optimizely/axiom-icons";
+export { IconTrashCan as IconTrash } from "@optimizely/axiom-icons";
+export { IconShareNodes as IconShare } from "@optimizely/axiom-icons";
+export { IconEnvelope as IconMail } from "@optimizely/axiom-icons";

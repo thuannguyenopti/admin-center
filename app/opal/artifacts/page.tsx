@@ -439,13 +439,13 @@ const sourceEmoji: Record<string, string> = {
 };
 
 const sourceAvatar: Record<string, string> = {
-    "GEO Q&A Generator": "/avatars/mock-avatar-geo.svg",
-    "Frank": "/avatars/mock-avatar-geo.svg",
-    "Mayling": "/avatars/mock-avatar-geo.svg",
-    "Tony": "/avatars/mock-avatar-traffic.svg",
-    "Poppy": "/avatars/mock-avatar-seo.svg",
-    "Henry": "/avatars/mock-avatar-abu.svg",
-    "Kerby": "/avatars/mock-avatar-geo.svg",
+    "Frank": "/avatars/vau-frank.png",
+    "Mayling": "/avatars/vau-mayling.png",
+    "Tony": "/avatars/vau-tony.png",
+    "Poppy": "/avatars/vau-poppy.png",
+    "Henry": "/avatars/vau-henry.png",
+    "Kerby": "/avatars/vau-kerby.png",
+    "Jonas": "/avatars/vau-jonas.png",
 };
 
 function AgentCell({ name }: { name: string }) {

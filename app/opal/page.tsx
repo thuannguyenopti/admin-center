@@ -103,7 +103,7 @@ const GEO_QA_HTML_V2 = `<h1>Q&amp;A: Discover the Unknown</h1>
 
 // ── GEO Q&A mock thread ───────────────────────────────────────────────────────
 
-const GEO_AGENT = { emoji: "🤖", name: "Frank", avatar: "/avatars/mock-avatar-geo.svg" };
+const GEO_AGENT = { emoji: "🤖", name: "Frank", avatar: "/avatars/vau-frank.png", templateName: "GEO Content Strategist" };
 
 const VAU_MSG_1 = `Hi team — I've been monitoring our GEO content strategy for Stride and identified a gap in AI-searchable content for the _Discover the Unknown_ product line.
 
@@ -185,7 +185,7 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
           rounded="xs"
           style={{ width: 20, height: 20, background: 'var(--ax-colors-bg-secondary)', flexShrink: 0, overflow: 'hidden' }}
         >
-          <Image src="/avatars/mock-avatar-geo.svg" alt="GEO" width={14} height={14} />
+          <Image src="/avatars/vau-frank.png" alt="GEO" width={14} height={14} />
         </Box>
         <Text style={{ fontSize: 12, fontWeight: 400, letterSpacing: '0.36px', textTransform: 'uppercase', color: 'var(--ax-colors-fg-tertiary)', lineHeight: 1.25 }}>
           Frank

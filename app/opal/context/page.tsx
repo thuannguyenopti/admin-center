@@ -10,6 +10,7 @@ import {
   SearchInput,
   Progress,
   Tooltip,
+  ToggleButton,
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
@@ -34,7 +35,10 @@ import {
   IconArrowsMaximize,
   IconArrowsMinimize,
   IconPen,
+  IconCode,
+  IconEye,
   IconClockRotateLeft,
+  IconUserPlus,
   IconEllipsisSolid,
   IconUser,
   IconUsers,
@@ -51,11 +55,19 @@ import {
   IconFileSpreadsheet,
   IconFileWord,
 } from "@optiaxiom/icons";
+import dynamic from "next/dynamic";
 import { FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { CollaborativeEditorPanel } from "@/app/components/Opal/CollaborativeEditorPanel";
+import { OpalShareDialog } from "@/app/components/Opal/CodeCanvasPanel";
 import { TiptapEditor } from "@/app/components/Opal/editor/TiptapEditor";
+import { useCollabDoc } from "@/app/components/Opal/editor/useCollabDoc";
 import { VersionHistory } from "@/app/opal/agents/setup/components/VersionHistory";
 import type { Version } from "@/app/opal/agents/setup/components/VersionHistory";
+
+const CodeMirrorEditor = dynamic(
+  () => import("@/app/components/Opal/editor/CodeMirrorEditor").then((m) => m.CodeMirrorEditor),
+  { ssr: false }
+);
 
 // ── File tree data ────────────────────────────────────────────────────────────
 
@@ -712,6 +724,17 @@ function FileTree({
   );
 }
 
+// ── Markdown source view (CodeMirror) ─────────────────────────────────────────
+
+function MarkdownSourceView({ markdown }: { markdown: string }) {
+  const collabDoc = useCollabDoc(markdown);
+  return (
+    <Box style={{ height: "100%", overflow: "hidden" }}>
+      <CodeMirrorEditor collabDoc={collabDoc} language="markdown" darkMode={false} />
+    </Box>
+  );
+}
+
 // ── Markdown / Mermaid preview (read-only Tiptap) ─────────────────────────────
 
 function TiptapPreview({ markdown, fileId }: { markdown: string; fileId: string }) {
@@ -1235,8 +1258,11 @@ export default function FilesPage() {
   const [treeData, setTreeData] = useState<FileNode[]>(INITIAL_FILE_TREE);
   const [selectedFileId, setSelectedFileId] = useState("1-1");
   const [activeTab, setActiveTab] = useState<"skills" | "files" | "memory" | "rag">("files");
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [editorMode, setEditorMode] = useState<"source" | "preview">("preview");
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [viewingVersionId, setViewingVersionId] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const contentPaneRef = useRef<HTMLDivElement>(null);
@@ -1249,7 +1275,6 @@ export default function FilesPage() {
     el.addEventListener("scroll", onScroll, true);
     return () => el.removeEventListener("scroll", onScroll, true);
   }, []);
-  const [viewingVersionId, setViewingVersionId] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [dragCounter, setDragCounter] = useState(0);
   const [bulkMode, setBulkMode] = useState(false);
@@ -1752,9 +1777,40 @@ export default function FilesPage() {
               <Badge intent={isEditing ? "neutral" : "success"}>
                 {isEditing ? "Editing" : "Saved"}
               </Badge>
+              {selectedContentType === "markdown" && (
+                <>
+                  <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
+                  <Box display="flex" alignItems="center" gap="4">
+                    <Tooltip content="Source" delayDuration={400}>
+                      <span>
+                        <ToggleButton
+                          size="md"
+                          appearance="subtle"
+                          pressed={editorMode === "source"}
+                          onPressedChange={() => setEditorMode("source")}
+                          icon={<IconCode size={15} />}
+                          aria-label="Source"
+                        />
+                      </span>
+                    </Tooltip>
+                    <Tooltip content="Preview" delayDuration={400}>
+                      <span>
+                        <ToggleButton
+                          size="md"
+                          appearance="subtle"
+                          pressed={editorMode === "preview"}
+                          onPressedChange={() => setEditorMode("preview")}
+                          icon={<IconEye size={15} />}
+                          aria-label="Preview"
+                        />
+                      </span>
+                    </Tooltip>
+                  </Box>
+                </>
+              )}
             </Box>
 
-            <Box display="flex" alignItems="center" gap="12">
+            <Box display="flex" alignItems="center" gap="8">
               {isEditing ? (
                 <>
                   <Button
@@ -1811,23 +1867,6 @@ export default function FilesPage() {
                   />
                 </span>
               </Tooltip>
-              <Tooltip delayDuration={300} content="Version history">
-                <span>
-                  <Button
-                    appearance="subtle"
-                    size="sm"
-                    icon={<IconClockRotateLeft size={14} />}
-                    aria-label="Version history"
-                    aria-pressed={detailsOpen}
-                    onClick={() => setDetailsOpen((v) => !v)}
-                    style={
-                      detailsOpen
-                        ? { background: "var(--ax-colors-bg-secondary)", color: "var(--ax-colors-fg-default)" }
-                        : undefined
-                    }
-                  />
-                </span>
-              </Tooltip>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <span>
@@ -1854,6 +1893,12 @@ export default function FilesPage() {
                       </Box>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                    <Box display="flex" alignItems="center" gap="8">
+                      <IconUserPlus size={13} />
+                      Share
+                    </Box>
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Box display="flex" alignItems="center" gap="8">
                       <IconDownload size={13} />
@@ -1861,10 +1906,10 @@ export default function FilesPage() {
                     </Box>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setDetailsOpen(true)}>
                     <Box display="flex" alignItems="center" gap="8">
-                      <IconLock size={13} />
-                      Manage Permissions
+                      <IconClockRotateLeft size={13} />
+                      Version history
                     </Box>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -1903,6 +1948,8 @@ export default function FilesPage() {
                 <CsvPreview key={selectedFileId} />
               ) : selectedContentType === "word" ? (
                 <WordPreview key={selectedFileId} />
+              ) : editorMode === "source" ? (
+                <MarkdownSourceView key={selectedFileId} markdown={selectedMarkdown} />
               ) : isEditing ? (
                 <CollaborativeEditorPanel
                   key={selectedFileId}
@@ -1937,6 +1984,13 @@ export default function FilesPage() {
         </Box>
       </Box>
       </Box>
+
+      {/* Share dialog */}
+      <OpalShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        artifactTitle={selectedFilename.replace(/\.[^.]+$/, "")}
+      />
 
       {/* Delete confirmation dialog */}
       <Dialog open={!!deletingFileId} onOpenChange={(open) => { if (!open) setDeletingFileId(null); }}>

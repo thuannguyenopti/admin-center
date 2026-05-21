@@ -411,3 +411,11 @@ html:not([data-theme="dark"]) [data-brand="v3"] {
 [data-brand="v3"] h6 {
 	font-family: "Nudge SemiNormal", sans-serif;
 }
+
+.vau-card {
+	transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.vau-card:hover {
+	box-shadow: var(--ax-shadows-lg);
+	border-color: var(--ax-colors-border-accent);
+}
