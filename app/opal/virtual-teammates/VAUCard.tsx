@@ -100,8 +100,8 @@ export function VAUCard({ vau, onSelect }: { vau: VAU; onSelect: (vau: VAU) => v
 				)}
 			</Box>
 
-			{/* Divider */}
-			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", width: "100%" }} />
+			{/* Divider — mt:auto pushes divider + footer to the bottom of the card */}
+			<Box style={{ height: 1, background: "var(--ax-colors-border-secondary)", width: "100%", marginTop: "auto" }} />
 
 			{/* Footer: connector chips + ellipsis menu */}
 			<Box display="flex" alignItems="center" justifyContent="space-between">
