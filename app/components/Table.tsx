@@ -97,33 +97,35 @@ export const Th = ({
 }) => {
 	const interactive = !!(onSort || onClick);
 	return (
-		<TableHeaderCell
-			className={`[&>div]:bg-transparent ${interactive ? "cursor-pointer select-none" : ""} ${className || ""}`}
-			style={{
-				textAlign: align,
-				...style,
-			}}
-			onClick={onSort || onClick}
-		>
-			<span className="inline-flex items-center gap-1 min-h-[14px]">
-				{children}
-				{onSort &&
-					(sortDirection === "asc" ? (
-						<IconCaretUpFilled size={14} aria-hidden />
-					) : sortDirection === "desc" ? (
-						<IconCaretDownFilled size={14} aria-hidden />
-					) : (
-						<IconCaretUpDownFilled size={14} aria-hidden />
-					))}
-				{tooltip && (
-					<Tooltip content={tooltip}>
-						<span className="inline-flex" onClick={(e) => e.stopPropagation()}>
-							<IconInfoCircle size={14} />
-						</span>
-					</Tooltip>
-				)}
-			</span>
-		</TableHeaderCell>
+		<Box asChild textAlign="start" px="16" py="8">
+			<th
+				className={`[&>div]:bg-transparent ${interactive ? "cursor-pointer select-none" : ""} ${className || ""}`}
+				style={{
+					textAlign: align,
+					...style,
+				}}
+				onClick={onSort || onClick}
+			>
+					<Text fontFamily="mono" fontSize="sm" textTransform="uppercase" color="fg.tertiary" fontWeight="400" className="inline-flex items-center gap-1 min-h-[14px]">
+						{children}
+						{onSort &&
+							(sortDirection === "asc" ? (
+								<IconCaretUpFilled size={14} aria-hidden />
+							) : sortDirection === "desc" ? (
+								<IconCaretDownFilled size={14} aria-hidden />
+							) : (
+								<IconCaretUpDownFilled size={14} aria-hidden />
+							))}
+						{tooltip && (
+							<Tooltip content={tooltip}>
+								<span className="inline-flex" onClick={(e) => e.stopPropagation()}>
+									<IconInfoCircle size={14} />
+								</span>
+							</Tooltip>
+						)}
+					</Text>
+			</th>
+		</Box>
 	);
 };
 
