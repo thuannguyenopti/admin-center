@@ -134,12 +134,12 @@ export default function Home() {
 				</svg>
 			) : (
 				<svg
-					width="131"
-					height="32"
+					width="160"
 					viewBox="0 0 131 32"
 					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
+					xmlns="http://www.w3.org/2000/svg"	
+					style={{position: "absolute", bottom: "24px", left: "24px"}}
+								>
 					<path
 						d="M29.3249 10.2103C28.3523 10.2103 27.8174 11.9119 27.8174 14.4888C27.8174 17.0412 28.3523 18.5728 29.3249 18.5971C30.3219 18.5728 30.8811 17.0168 30.8811 14.4888C30.8811 11.8876 30.3219 10.186 29.3249 10.2103Z"
 						fill="#D2DEC2"
