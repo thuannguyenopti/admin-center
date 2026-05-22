@@ -1379,7 +1379,6 @@ export default function VBPrototype({
 		return (
 			<div className="select-none" style={{height: "100%"}}>
 				<Box
-					bg="bg.page"
 					w="full"
 					className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
 					style={{height: "100%", overflow: "hidden"}}
@@ -1522,6 +1521,8 @@ export default function VBPrototype({
 				w="full"
 				className="grid grid-cols-[auto_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)]"
 				style={{height: "100%", overflow: "hidden"}}
+				borderL="1"
+				borderColor="border.secondary"
 			>
 				<CMSToolbar
 					pageName={pageName || "New Page"}
@@ -1563,7 +1564,6 @@ export default function VBPrototype({
 					pr="0"
 					w="auto"
 					className="vb-outline"
-					bg="bg.page"
 					style={{width: 324, minWidth: 180, maxWidth: 600, position: "relative"}}
 				>
 					<DragHandle position="right" minWidth={180} maxWidth={600} />

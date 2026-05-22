@@ -20,13 +20,11 @@ import {
 	IconPen,
 	IconListTree,
 	IconGear,
-	IconSearch,
 	IconList,
 	IconUsers,
 	IconPuzzlePiece,
 	IconFolders,
 	IconStore,
-	IconMagnifyingGlass,
 	IconCodeBranch,
 	IconHouse,
 	IconFlask,
@@ -102,10 +100,17 @@ export default function RootLayout({
 			},
 			{
 				label: "Edit",
+				description: "Select pages from the content tree to view or modify their content.",
 				url: "/cms/edit",
 				highlight: "cms/edit",
 				icon: <IconPen />,
-				customLayout: true,
+				children: [
+					{
+						label: "Edit Item",
+						url: "/cms/edit/",
+						customLayout: true,
+					},
+				],
 			},
 			{
 				label: "Reports",
@@ -593,6 +598,13 @@ export default function RootLayout({
 				url: "/web-experimentation/optimizations",
 				highlight: "/web-experimentation/optimizations",
 				icon: <IconFlask />,
+				children: [
+					{
+						label: "Optimization Details",
+						url: "/web-experimentation/optimizations/",
+						customLayout: true,
+					},
+				],
 			},
 			{
 				label: "Audiences",

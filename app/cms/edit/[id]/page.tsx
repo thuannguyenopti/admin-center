@@ -14,7 +14,12 @@ import {useOpalPageGeneration} from "@/app/hooks/useOpalPageGeneration";
 import {useOpalGeneration} from "@/app/context/OpalGenerationContext";
 import ContentInstancePicker from "@/app/components/ContentInstancePicker";
 import {initialContentInstances, ContentInstance} from "@/app/db/cmpInitialData";
-import {connectInstanceToPage, syncPageWithInstance, disconnectPage, getCompatibleInstances} from "@/app/lib/contentConnection";
+import {
+	connectInstanceToPage,
+	syncPageWithInstance,
+	disconnectPage,
+	getCompatibleInstances,
+} from "@/app/lib/contentConnection";
 
 export default function EditPageDetail() {
 	const params = useParams();
@@ -32,8 +37,14 @@ export default function EditPageDetail() {
 	const versionHistory = useVersionHistory(id);
 
 	// CMP Content Connection
-	const [contentInstances] = usePersistentState("cmpContentInstances", initialContentInstances) as [ContentInstance[], any];
-	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [ContentType[], any];
+	const [contentInstances] = usePersistentState(
+		"cmpContentInstances",
+		initialContentInstances
+	) as [ContentInstance[], any];
+	const [contentTypes] = usePersistentState("contentTypes", initialContentTypes) as [
+		ContentType[],
+		any,
+	];
 	const [isContentPickerOpen, setIsContentPickerOpen] = useState(false);
 
 	// Check for pending generation immediately on mount
@@ -57,101 +68,95 @@ export default function EditPageDetail() {
 
 	type PagePatch = {outlines?: any; properties?: any; variationId?: string};
 
-	const handleSave = useCallback((patch: PagePatch) => {
-		if (!page) {
-			console.log("[handleSave] No page, skipping save");
-			return;
-		}
+	const handleSave = useCallback(
+		(patch: PagePatch) => {
+			if (!page) {
+				console.log("[handleSave] No page, skipping save");
+				return;
+			}
 
-		console.log("[handleSave] Saving patch:", patch);
+			console.log("[handleSave] Saving patch:", patch);
 
-		const vid = patch.variationId || "original";
+			const vid = patch.variationId || "original";
 
-		// 1. Prepare Next State
-		let nextVariations = page.variations ? [...page.variations] : [];
-		let nextOutlines = page.outlines;
-		let nextData = page.data;
+			// 1. Prepare Next State
+			let nextVariations = page.variations ? [...page.variations] : [];
+			let nextOutlines = page.outlines;
+			let nextData = page.data;
 
-		// Consolidated update logic: always update the variation in the array
-		const idx = nextVariations.findIndex((v) => v.id === vid);
-		if (idx !== -1) {
-			nextVariations[idx] = {
-				...nextVariations[idx],
-				outlines: patch.outlines,
-				data: patch.properties ?? nextVariations[idx].data,
+			// Consolidated update logic: always update the variation in the array
+			const idx = nextVariations.findIndex((v) => v.id === vid);
+			if (idx !== -1) {
+				nextVariations[idx] = {
+					...nextVariations[idx],
+					outlines: patch.outlines,
+					data: patch.properties ?? nextVariations[idx].data,
+				};
+
+				// Also update page-level outlines if this is the original variation
+				if (vid === "original" && patch.outlines !== undefined) {
+					nextOutlines = patch.outlines;
+				}
+				// Update page-level data if properties were provided
+				if (vid === "original" && patch.properties !== undefined) {
+					nextData = patch.properties;
+				}
+			}
+
+			const nextPage: Page = {
+				...page,
+				outlines: nextOutlines,
+				variations: nextVariations,
+				data: nextData,
+				status: "Changed" as const,
 			};
 
-			// Also update page-level outlines if this is the original variation
-			if (vid === "original" && patch.outlines !== undefined) {
-				nextOutlines = patch.outlines;
-			}
-			// Update page-level data if properties were provided
-			if (vid === "original" && patch.properties !== undefined) {
-				nextData = patch.properties;
-			}
-		}
+			setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
 
-		const nextPage: Page = {
-			...page,
-			outlines: nextOutlines,
-			variations: nextVariations,
-			data: nextData,
-			status: "Changed" as const,
-		};
+			setPage(nextPage);
 
-		setPages((prev: any[]) => prev.map((p) => (p.id === id ? nextPage : p)));
-
-		setPage(nextPage);
-
-		console.log("[handleSave] Saved successfully. Next page:", {
-			outlinesCount: nextPage.outlines?.length,
-			variationsCount: nextPage.variations?.length,
-			firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
-		});
-	}, [page, id, setPages]);
+			console.log("[handleSave] Saved successfully. Next page:", {
+				outlinesCount: nextPage.outlines?.length,
+				variationsCount: nextPage.variations?.length,
+				firstVariationOutlinesCount: nextPage.variations?.[0]?.outlines?.length,
+			});
+		},
+		[page, id, setPages]
+	);
 
 	// CMP Content Connection Handlers
-	const handleConnectInstance = useCallback((instance: ContentInstance | ContentInstance[]) => {
-		if (!page) return;
+	const handleConnectInstance = useCallback(
+		(instance: ContentInstance | ContentInstance[]) => {
+			if (!page) return;
 
-		// Only handle single instance selection (not multi-select)
-		const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
-		if (!selectedInstance) return;
+			// Only handle single instance selection (not multi-select)
+			const selectedInstance = Array.isArray(instance) ? instance[0] : instance;
+			if (!selectedInstance) return;
 
-		const connectedPage = connectInstanceToPage(
-			selectedInstance,
-			page,
-			contentTypes
-		);
+			const connectedPage = connectInstanceToPage(selectedInstance, page, contentTypes);
 
-		setPages((prev: Page[]) =>
-			prev.map(p => p.id === page.id ? connectedPage : p)
-		);
+			setPages((prev: Page[]) => prev.map((p) => (p.id === page.id ? connectedPage : p)));
 
-		setPage(connectedPage);
-		setRenderKey(prev => prev + 1); // Force re-render to show updated data
-		setIsContentPickerOpen(false);
-		toaster.create("Content connected successfully", { intent: "success" });
-	}, [page, setPages, contentTypes]);
+			setPage(connectedPage);
+			setRenderKey((prev) => prev + 1); // Force re-render to show updated data
+			setIsContentPickerOpen(false);
+			toaster.create("Content connected successfully", {intent: "success"});
+		},
+		[page, setPages, contentTypes]
+	);
 
 	const handleSyncContent = useCallback(() => {
 		if (!page) return;
 
-		const syncedPage = syncPageWithInstance(
-			page,
-			contentInstances,
-			contentTypes
-		);
+		const syncedPage = syncPageWithInstance(page, contentInstances, contentTypes);
 
 		if (syncedPage) {
-			setPages((prev: Page[]) =>
-				prev.map(p => p.id === page.id ? syncedPage : p)
-			);
+			setPages((prev: Page[]) => prev.map((p) => (p.id === page.id ? syncedPage : p)));
 			setPage(syncedPage);
-			setRenderKey(prev => prev + 1); // Force re-render to show updated data
-			toaster.create("Content synced successfully", { intent: "success" });
+			setRenderKey((prev) => prev + 1); // Force re-render to show updated data
+			toaster.create("Content synced successfully", {intent: "success"});
 		} else {
-			toaster.create("Could not sync content - instance not found", { intent: "danger" });
+			toaster.create("Could not sync content - instance not found", {intent: "danger"});
 		}
 	}, [page, contentInstances, setPages, contentTypes]);
 
@@ -160,22 +165,18 @@ export default function EditPageDetail() {
 
 		const disconnectedPage = disconnectPage(page);
 
-		setPages((prev: Page[]) =>
-			prev.map(p => p.id === page.id ? disconnectedPage : p)
-		);
+		setPages((prev: Page[]) => prev.map((p) => (p.id === page.id ? disconnectedPage : p)));
 
 		setPage(disconnectedPage);
-		toaster.create("Content disconnected", { intent: "information" });
+		toaster.create("Content disconnected", {intent: "information"});
 	}, [page, setPages]);
 
-	const compatibleInstances = page ? getCompatibleInstances(page, contentInstances, contentTypes) : [];
+	const compatibleInstances = page
+		? getCompatibleInstances(page, contentInstances, contentTypes)
+		: [];
 
 	// Opal page generation hook (must be after handleSave is defined)
-	const {isGenerating} = useOpalPageGeneration(
-		id,
-		page?.contentTypeId || "",
-		handleSave
-	);
+	const {isGenerating} = useOpalPageGeneration(id, page?.contentTypeId || "", handleSave);
 
 	// Register page update handler and set active page for iteration
 	const {setPageUpdateHandler, setActivePage, setPageDataGetter} = useOpalGeneration();
@@ -188,7 +189,7 @@ export default function EditPageDetail() {
 			if (!page) return null;
 
 			// Get outlines from the original variation or fallback to page.outlines
-			const originalVariation = page.variations?.find(v => v.id === "original");
+			const originalVariation = page.variations?.find((v) => v.id === "original");
 			const outlines = originalVariation?.outlines || page.outlines || [];
 
 			return {
@@ -217,7 +218,7 @@ export default function EditPageDetail() {
 
 		// Create version snapshot before publishing
 		// Get the current variation's data
-		const currentVariation = page.variations?.find(v => v.id === "original") || null;
+		const currentVariation = page.variations?.find((v) => v.id === "original") || null;
 		const outlines = currentVariation?.outlines || page.outlines || [];
 		const properties = currentVariation?.data || page.data || {};
 
@@ -343,15 +344,15 @@ export default function EditPageDetail() {
 		};
 		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
 		setPage(updatedPage);
-		toaster.create(`Added to task: ${taskName}`, { intent: "success" });
+		toaster.create(`Added to task: ${taskName}`, {intent: "success"});
 	};
 
 	const handleRemoveFromTask = () => {
 		if (!page) return;
-		const updatedPage = { ...page, cmpTaskMetadata: undefined };
+		const updatedPage = {...page, cmpTaskMetadata: undefined};
 		setPages((prev: any[]) => prev.map((p) => (p.id === id ? updatedPage : p)));
 		setPage(updatedPage);
-		toaster.create("Removed from task", { intent: "information" });
+		toaster.create("Removed from task", {intent: "information"});
 	};
 
 	const handleRestoreVersion = (version: any) => {
@@ -445,7 +446,12 @@ export default function EditPageDetail() {
 			{page?.cmpTaskMetadata && (
 				<Box pl="24" pt="16" pr="12" pb="8" bg="bg.default">
 					<Alert intent="information">
-						<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
+						<Box
+							display="flex"
+							alignItems="center"
+							justifyContent="space-between"
+							w="full"
+						>
 							<Text>
 								Part of task:{" "}
 								<Link
@@ -459,9 +465,7 @@ export default function EditPageDetail() {
 									{page.cmpTaskMetadata.taskName}
 								</Link>
 							</Text>
-							{page.cmpConnection && (
-								<Badge intent="success">Connected to CMP</Badge>
-							)}
+							{page.cmpConnection && <Badge intent="success">Connected to CMP</Badge>}
 						</Box>
 					</Alert>
 				</Box>
