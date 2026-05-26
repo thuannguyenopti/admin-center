@@ -216,12 +216,14 @@ function NotificationRow({
     toggleSelect,
     getStatusIcon,
     getTypeIcon,
+    isChild = false,
 }: {
     n: Notification;
     selectedIds: Set<string>;
     toggleSelect: (id: string) => void;
     getStatusIcon: (n: Notification) => React.ReactNode;
     getTypeIcon: (n: Notification) => React.ReactNode;
+    isChild?: boolean;
 }) {
     return (
         <Tr
@@ -245,7 +247,7 @@ function NotificationRow({
                     </Box>
                 </Box>
             </Td>
-            <Td style={{ paddingLeft: 4, paddingTop: 8, paddingBottom: 8 }}>
+            <Td style={{ paddingLeft: isChild ? 48 : 4, paddingTop: 8, paddingBottom: 8 }}>
                 <Box display="flex" flexDirection="row" gap="12" alignItems="center">
                     <Box style={{ flexShrink: 0 }}>
                         {getStatusIcon(n) ?? getTypeIcon(n)}
@@ -978,6 +980,7 @@ export default function NotificationCenter({ sidebarMode = false }: { sidebarMod
                                                     toggleSelect={toggleSelect}
                                                     getStatusIcon={getStatusIcon}
                                                     getTypeIcon={getTypeIcon}
+                                                    isChild
                                                 />
                                             ))}
                                         </React.Fragment>
