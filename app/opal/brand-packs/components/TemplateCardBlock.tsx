@@ -23,7 +23,7 @@ type TemplateCardMeta = {
 };
 
 function TemplateCardBlock({ metadata }: AdaptiveBlockComponentProps) {
-	const { template } = metadata as TemplateCardMeta;
+	const { template } = metadata as unknown as TemplateCardMeta;
 
 	return (
 		<Box
