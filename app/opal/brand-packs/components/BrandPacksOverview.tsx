@@ -2,11 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Button, SearchInput, Text } from "@optiaxiom/react";
-import { IconChevronDown, IconFilter } from "@optimizely/axiom-icons";
+import {
+	Box,
+	Button,
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+	SearchInput,
+	Text,
+} from "@optiaxiom/react";
+import { IconAngleDown } from "@optiaxiom/icons";
+import { IconFilter } from "@optimizely/axiom-icons";
 import { BrandPackCard, NewBrandPackCard } from "./BrandPackCard";
 import { BrandPackHero } from "./BrandPackHero";
-import { NewBrandPackModal } from "./NewBrandPackModal";
 import { activePack, brandPacks } from "../data";
 import type { BrandPackStatus } from "../types";
 
@@ -25,7 +35,6 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState<BrandPackStatus | "all">("all");
-	const [showNewModal, setShowNewModal] = useState(false);
 
 	const nonActivePacks = useMemo(() => {
 		return brandPacks.filter((p) => p.status !== "active");
@@ -39,11 +48,6 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 		});
 	}, [nonActivePacks, search, statusFilter]);
 
-	const handleNewPack = (method: "opal" | "figma" | "manual") => {
-		setShowNewModal(false);
-		router.push(`/opal/brand-packs/new/${method}`);
-	};
-
 	return (
 		<Box h="full" overflow="auto">
 			<Box
@@ -53,10 +57,13 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 				style={{
 					margin: embedded ? 0 : "0 auto",
 					maxWidth: embedded ? "none" : 1200,
-					padding: embedded ? "24px 32px 64px" : "32px 40px 64px",
+					// embedded: 0 top padding — the context page tabs already provide 16px
+					// of visual separation via their mb="16" before this content area
+					padding: embedded ? "0 32px 64px" : "32px 40px 64px",
 					width: "100%",
 				}}
 			>
+				{/* Header row */}
 				<Box alignItems="start" display="flex" justifyContent="space-between">
 					<Box display="flex" flexDirection="column" gap="4">
 						{!embedded && (
@@ -69,20 +76,46 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 						</Text>
 					</Box>
 
-					<Button
-						appearance="primary"
-						size="md"
-						icon={<IconChevronDown />}
-						iconPosition="end"
-						onClick={() => setShowNewModal(true)}
-					>
-						New Brand Pack
-					</Button>
+					{/* Dropdown — chevron now means dropdown, not modal */}
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								appearance="primary"
+								size="md"
+								icon={<IconAngleDown />}
+								iconPosition="end"
+							>
+								New Brand Pack
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={() => router.push("/opal/brand-packs/new/opal")}>
+								<Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
+									<Text fontSize="sm" fontWeight="500">Create with Opal</Text>
+									<Text fontSize="xs" color="fg.tertiary">AI-powered brand generation</Text>
+								</Box>
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={() => router.push("/opal/brand-packs/new/figma")}>
+								<Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
+									<Text fontSize="sm" fontWeight="500">Import from Figma</Text>
+									<Text fontSize="xs" color="fg.tertiary">Sync a Figma design library</Text>
+								</Box>
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem onClick={() => router.push("/opal/brand-packs/new/manual")}>
+								<Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
+									<Text fontSize="sm" fontWeight="500">Manual setup</Text>
+									<Text fontSize="xs" color="fg.tertiary">Upload assets and configure manually</Text>
+								</Box>
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</Box>
 
 				{activePack && <BrandPackHero pack={activePack} />}
 
 				<Box display="flex" flexDirection="column" gap="16">
+					{/* Section header + controls */}
 					<Box
 						alignItems="center"
 						display="flex"
@@ -99,6 +132,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 						</Box>
 
 						<Box alignItems="center" display="flex" gap="8">
+							{/* Segmented status filter */}
 							<Box
 								alignItems="center"
 								bg="bg.secondary"
@@ -135,26 +169,18 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 								/>
 							</Box>
 
-							<Box
-								alignItems="center"
-								bg="bg.secondary"
-								border="1"
-								borderColor="border.tertiary"
-								display="flex"
-								justifyContent="center"
-								rounded="md"
-								style={{
-									cursor: "pointer",
-									height: 36,
-									width: 36,
-									flexShrink: 0,
-								}}
-							>
-								<IconFilter style={{ color: "var(--ax-colors-fg-secondary)", width: 15, height: 15 }} />
-							</Box>
+							<Button
+								appearance="default"
+								aria-label="Filter brand packs"
+								icon={<IconFilter />}
+								size="md"
+								style={{ flexShrink: 0 }}
+								title="Filter brand packs"
+							/>
 						</Box>
 					</Box>
 
+					{/* Pack grid */}
 					{filtered.length === 0 && search ? (
 						<Box
 							alignItems="center"
@@ -166,7 +192,7 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 							py="48"
 							rounded="xl"
 						>
-							<Text fontWeight="500">No packs match "{search}"</Text>
+							<Text fontWeight="500">No packs match &ldquo;{search}&rdquo;</Text>
 							<Text color="fg.secondary" fontSize="sm">
 								Try a different name or clear the filter
 							</Text>
@@ -180,20 +206,11 @@ export function BrandPacksOverview({ embedded = false }: BrandPacksOverviewProps
 							{filtered.map((pack) => (
 								<BrandPackCard key={pack.id} pack={pack} />
 							))}
-							<NewBrandPackCard onClick={() => setShowNewModal(true)} />
+							<NewBrandPackCard onClick={() => router.push("/opal/brand-packs/new/opal")} />
 						</Box>
 					)}
 				</Box>
 			</Box>
-
-			{showNewModal && (
-				<NewBrandPackModal
-					onClose={() => setShowNewModal(false)}
-					onSelectOpal={() => handleNewPack("opal")}
-					onSelectFigma={() => handleNewPack("figma")}
-					onSelectManual={() => handleNewPack("manual")}
-				/>
-			)}
 		</Box>
 	);
 }

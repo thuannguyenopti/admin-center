@@ -34,8 +34,8 @@ export function BrandPackCard({ pack }: BrandPackCardProps) {
 			flexDirection="column"
 			overflow="hidden"
 			rounded="xl"
+			shadow={hovered && !isArchived ? "md" : "sm"}
 			style={{
-				boxShadow: hovered && !isArchived ? "var(--ax-boxShadow-md)" : "var(--ax-boxShadow-sm)",
 				cursor: "pointer",
 				opacity: isArchived ? 0.65 : 1,
 				transform: hovered && !isArchived ? "translateY(-2px)" : "none",
@@ -93,26 +93,15 @@ export function BrandPackCard({ pack }: BrandPackCardProps) {
 						{pack.name}
 					</Text>
 					<StatusBadge status={pack.status} />
-					<Box
+					<Button
+						appearance="subtle"
+						aria-label={`More actions for ${pack.name}`}
+						icon={<IconEllipsis />}
 						onClick={(e) => e.stopPropagation()}
+						size="sm"
 						style={{ flexShrink: 0 }}
-					>
-						<button
-							type="button"
-							style={{
-								alignItems: "center",
-								background: "transparent",
-								border: 0,
-								borderRadius: 6,
-								color: "var(--ax-colors-fg-tertiary)",
-								cursor: "pointer",
-								display: "flex",
-								padding: 4,
-							}}
-						>
-							<IconEllipsis style={{ width: 14, height: 14 }} />
-						</button>
-					</Box>
+						title={`More actions for ${pack.name}`}
+					/>
 				</Box>
 
 				{/* Template count + date — light, not bold */}
@@ -158,8 +147,8 @@ export function NewBrandPackCard({ onClick }: { onClick: () => void }) {
 			gap="12"
 			justifyContent="center"
 			rounded="xl"
+			shadow={hovered ? "sm" : undefined}
 			style={{
-				boxShadow: hovered ? "var(--ax-boxShadow-sm)" : "none",
 				borderStyle: "dashed",
 				cursor: "pointer",
 				minHeight: 240,

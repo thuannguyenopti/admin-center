@@ -36,45 +36,45 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 			border="1"
 			borderColor="border.tertiary"
 			rounded="xl"
+			shadow="sm"
 			style={{
-				boxShadow: "var(--ax-boxShadow-sm)",
 				position: "relative",
 				overflow: "hidden",
 				display: "flex",
-				minHeight: 320,
+				minHeight: 304,
+				background:
+					"linear-gradient(115deg, var(--ax-colors-bg-default) 0%, var(--ax-colors-bg-default) 48%, var(--ax-colors-bg-secondary) 100%)",
 			}}
 		>
-			{/* ── LEFT — text content, always on top ── */}
 			<Box
 				display="flex"
 				flexDirection="column"
-				gap="24"
+				gap="20"
 				p="32"
 				style={{
-					width: "52%",
+					width: "50%",
 					flexShrink: 0,
 					position: "relative",
 					zIndex: 4,
-					background: "var(--ax-colors-bg-default)",
+					background:
+						"linear-gradient(to right, var(--ax-colors-bg-default) 0%, var(--ax-colors-bg-default) 82%, transparent 100%)",
 				}}
 			>
-				{/* ACTIVE PACK badge */}
 				<Box style={{ width: "fit-content" }}>
-					<Box bg="bg.accent.subtle" rounded="full" style={{ padding: "3px 10px" }}>
+					<Box bg="bg.success.subtle" rounded="full" style={{ padding: "3px 10px" }}>
 						<Text
-							color="fg.accent"
-							style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em" }}
+							color="fg.success"
+							style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0 }}
 						>
 							ACTIVE PACK
 						</Text>
 					</Box>
 				</Box>
 
-				{/* Pack name + description */}
 				<Box display="flex" flexDirection="column" gap="8">
 					<Text
 						fontWeight="700"
-						style={{ fontSize: 28, lineHeight: 1.15, color: "var(--ax-colors-fg-default)" }}
+						style={{ fontSize: 26, lineHeight: 1.18, color: "var(--ax-colors-fg-default)" }}
 					>
 						{pack.name}
 					</Text>
@@ -83,15 +83,13 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 					</Text>
 				</Box>
 
-				{/* Divider */}
-				<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)" }} />
+				<Box style={{ height: 1, width: "88%", background: "var(--ax-colors-border-tertiary)" }} />
 
-				{/* Channels + Tone */}
-				<Box display="flex" gap="40">
+				<Box display="flex" gap="32" style={{ maxWidth: 430 }}>
 					<Box display="flex" flexDirection="column" gap="6">
 						<Text
 							color="fg.tertiary"
-							style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}
+							style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0, textTransform: "uppercase" }}
 						>
 							Channels
 						</Text>
@@ -105,7 +103,7 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 					<Box display="flex" flexDirection="column" gap="6">
 						<Text
 							color="fg.tertiary"
-							style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}
+							style={{ fontSize: 10, fontWeight: 600, letterSpacing: 0, textTransform: "uppercase" }}
 						>
 							Tone
 						</Text>
@@ -118,23 +116,21 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 					</Box>
 				</Box>
 
-				{/* Count + date */}
 				<Box alignItems="center" display="flex" gap="24">
 					<Box alignItems="center" display="flex" gap="6">
 						<IconGrid2 style={{ color: "var(--ax-colors-fg-tertiary)", height: 14, width: 14, flexShrink: 0 }} />
-						<Text style={{ fontSize: 13, color: "var(--ax-colors-fg-default)", fontWeight: 600 }}>
+						<Text style={{ fontSize: 13, color: "var(--ax-colors-fg-secondary)", fontWeight: 500 }}>
 							{pack.templateCount} Templates
 						</Text>
 					</Box>
 					<Box alignItems="center" display="flex" gap="6">
 						<IconCalendarDays style={{ color: "var(--ax-colors-fg-tertiary)", height: 14, width: 14, flexShrink: 0 }} />
-						<Text color="fg.tertiary" style={{ fontSize: 13 }}>
+						<Text color="fg.secondary" style={{ fontSize: 13 }}>
 							Updated {updatedLabel}
 						</Text>
 					</Box>
 				</Box>
 
-				{/* CTA */}
 				<Box style={{ marginTop: "auto" }}>
 					<Button
 						appearance="primary"
@@ -148,22 +144,19 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 				</Box>
 			</Box>
 
-			{/* ── RIGHT — cards floating over white, no panel ── */}
-			{/* Wide fade so cards never bleed over text */}
 			<Box
 				style={{
 					position: "absolute",
 					top: 0,
 					bottom: 0,
-					left: "38%",
-					width: 140,
+					left: "41%",
+					width: 160,
 					background: "linear-gradient(to right, var(--ax-colors-bg-default), transparent)",
 					zIndex: 3,
 					pointerEvents: "none",
 				}}
 			/>
 
-			{/* Carousel — starts well after the text column ends */}
 			<Box
 				style={{
 					position: "absolute",
@@ -178,18 +171,28 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 					paddingBottom: 32,
 				}}
 			>
+				<Box
+					style={{
+						height: 252,
+						position: "relative",
+						width: "min(58vw, 560px)",
+					}}
+				>
 				{/* Left partial card */}
 				{t1 && (
 					<Box
+						border="1"
+						borderColor="border.tertiary"
+						shadow="sm"
 						style={{
 							position: "absolute",
-							left: -70,
-							width: 230,
+							left: "clamp(28px, 13%, 72px)",
+							top: 42,
+							width: 214,
 							borderRadius: 14,
 							overflow: "hidden",
-							boxShadow: "var(--ax-boxShadow-sm)",
-							opacity: 0.6,
-							transform: "scale(0.92)",
+							opacity: 0.72,
+							transform: "scale(0.9)",
 						}}
 					>
 						<img
@@ -203,14 +206,19 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 				{/* Center — dominant floating card */}
 				{t0 && (
 					<Box
+						border="1"
+						borderColor="border.tertiary"
+						shadow="lg"
 						style={{
-							width: 270,
-							borderRadius: 18,
+							left: "50%",
+							position: "absolute",
+							top: 0,
+							transform: "translateX(-50%)",
+							width: 252,
+							borderRadius: 16,
 							overflow: "hidden",
-							boxShadow: "0 20px 60px rgba(0,0,0,0.22), 0 4px 16px rgba(0,0,0,0.1)",
 							background: "var(--ax-colors-bg-default)",
 							flexShrink: 0,
-							position: "relative",
 							zIndex: 2,
 						}}
 					>
@@ -225,15 +233,18 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 				{/* Right partial card */}
 				{t2 && (
 					<Box
+						border="1"
+						borderColor="border.tertiary"
+						shadow="sm"
 						style={{
 							position: "absolute",
-							right: -40,
-							width: 230,
+							right: "clamp(28px, 13%, 72px)",
+							top: 42,
+							width: 214,
 							borderRadius: 14,
 							overflow: "hidden",
-							boxShadow: "var(--ax-boxShadow-sm)",
-							opacity: 0.6,
-							transform: "scale(0.92)",
+							opacity: 0.72,
+							transform: "scale(0.9)",
 						}}
 					>
 						<img
@@ -243,9 +254,9 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 						/>
 					</Box>
 				)}
+				</Box>
 			</Box>
 
-			{/* Pagination dots — bottom-center of right half */}
 			<Box
 				alignItems="center"
 				display="flex"
@@ -262,10 +273,10 @@ export function BrandPackHero({ pack }: BrandPackHeroProps) {
 					<Box
 						key={i}
 						style={{
-							width: i === 0 ? 20 : 6,
-							height: 6,
+							width: i === 0 ? 8 : 6,
+							height: i === 0 ? 8 : 6,
 							borderRadius: 999,
-							background: i === 0 ? "var(--ax-colors-fg-default)" : "var(--ax-colors-border-secondary)",
+							background: i === 0 ? "var(--ax-colors-bg-accent)" : "var(--ax-colors-border-secondary)",
 						}}
 					/>
 				))}
