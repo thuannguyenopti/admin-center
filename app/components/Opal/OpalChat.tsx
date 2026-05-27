@@ -33,9 +33,21 @@ type OpalChatProps = {
   contextualActionCard?: React.ReactNode;
   /** Cards keyed by cardAfterKey — rendered inline below the matching message */
   messageCards?: Record<string, React.ReactNode>;
+  /** When true, render the IM-flavored quick actions (emoji + edit + copy) and reaction pills. */
+  imMode?: boolean;
+  /** Current user id (for reaction is-mine state). */
+  currentUserId?: string;
+  /** Reactions keyed by message id: { messageId: { emoji: [userId[]] } }. */
+  messageReactions?: Record<string, Record<string, string[]>>;
+  /** Toggle reaction handler. */
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  /** Reply-in-thread handler — opens a thread panel for the message id. */
+  onReplyInThread?: (messageId: string) => void;
+  /** Quote-reply handler — pins message as quote in the main composer. */
+  onQuoteReply?: (messageId: string) => void;
 };
 
-export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, messageCards }: OpalChatProps) {
+export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamingMode = "collapsed", threadKey, isLoading, onRegenerate, onVersionChange, hideSuggestions, variant = 'assistant', collapsedSessionIds, onExpandSession, opalDisclosureIds, opalClosedIds, collapsingOpalEndId, highlightedOpalEndId, onOpenOpalRange, onCloseOpalRange, activeAgentCtx, contextChip, contextualActionCard, messageCards, imMode, currentUserId, messageReactions, onToggleReaction, onReplyInThread, onQuoteReply }: OpalChatProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [streamingExpandedByThreadKey, setStreamingExpandedByThreadKey] = useState<Record<string, boolean>>({});
   let opalContext;
@@ -341,9 +353,15 @@ export function OpalChat({ messages, onSuggestionClick, onSubmitPrompt, streamin
                   }
                   isOpalLoading={isLoading}
                   hideActionBar={!!lastAssistantId && message.id === lastAssistantId}
+                  imMode={imMode}
+                  currentUserId={currentUserId}
+                  reactions={messageReactions?.[message.id]}
+                  onToggleReaction={onToggleReaction}
+                  onReplyInThread={onReplyInThread}
+                  onQuoteReply={onQuoteReply}
                 />
                 {message.cardAfterKey && messageCards?.[message.cardAfterKey] && (
-                  <Box mt="4">
+                  <Box style={{ marginTop: -20 }}>
                     {messageCards[message.cardAfterKey]}
                   </Box>
                 )}

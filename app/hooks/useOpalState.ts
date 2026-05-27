@@ -61,6 +61,11 @@ export type ChatMessage = {
   // Per-message author identity (for multi-user mock threads)
   authorName?: string;
   authorAvatar?: string;
+  /** Subtitle shown on avatar hover — e.g. VAU template name */
+  authorTitle?: string;
+  /** When true, render the author's avatar inline to the left of the bubble
+   * (Slack-style) instead of in a header row above it. */
+  authorInlineAvatar?: boolean;
   /** Optional key used to look up an inline card rendered below this message */
   cardAfterKey?: string;
 };

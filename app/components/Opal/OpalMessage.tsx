@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText } from "@optiaxiom/react";
+import { Box, Disclosure, DisclosureContent, DisclosureTrigger, Text as AxiomText, Tooltip } from "@optiaxiom/react";
 import { IconSparkles } from "@optimizely/axiom-icons";
 import {
   IconPen,
@@ -14,6 +14,12 @@ import {
   IconChevronRight,
   IconFileLines as IconFileText,
   IconScrewdriverWrench as IconTools,
+  IconFaceSmile,
+  IconQuoteRight,
+  IconEllipsisStroke,
+  IconShareNodes,
+  IconThumbtack,
+  IconLink,
 } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
@@ -28,7 +34,7 @@ import "../ai/blocks"; // Auto-register all blocks
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { opalTypography } from "@/app/styles/opalTypography";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { OpalLoaderV5 } from "@/app/opal/components/OpalLoaderV5";
 import { OpalLoader } from "@/app/opal/components/OpalLoader";
 import { OpalLoaderV2 } from "@/app/opal/components/OpalLoaderV2";
@@ -241,6 +247,18 @@ type OpalMessageProps = {
   showOpalHeader?: boolean;
   /** Hides the quick-actions bar (used when a contextualActionCard below already provides consolidated actions) */
   hideActionBar?: boolean;
+  /** When true, render the IM-flavored action bar (emoji picker + edit/copy) and reaction pills. */
+  imMode?: boolean;
+  /** Current user's id — used to determine reaction "is-mine" state in IM mode. */
+  currentUserId?: string;
+  /** Existing reactions: emoji → array of user ids. */
+  reactions?: Record<string, string[]>;
+  /** Called when the user toggles a reaction in IM mode. */
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  /** Called when the user clicks "Reply in thread" in IM mode. */
+  onReplyInThread?: (messageId: string) => void;
+  /** Called when the user clicks "Quote reply" in IM mode. */
+  onQuoteReply?: (messageId: string) => void;
 };
 
 // Helper component for action buttons
@@ -272,6 +290,370 @@ const ActionButton = ({ icon: Icon, onClick, tooltip }: { icon: any, onClick?: (
     <Icon size={16} />
   </button>
 );
+
+// IM mode quick-action bar: 3 MRU emoji shortcuts + full picker + (edit, own only) + copy.
+// MRU is persisted in localStorage and updates whenever the user reacts.
+const MRU_STORAGE_KEY = "opal-im-mru-emojis";
+const DEFAULT_MRU: string[] = ["👍", "👀", "✅"];
+const MAX_MRU = 3;
+const MORE_EMOJIS = [
+  "❤️", "😄", "🎉", "😢", "🤔", "🙌",
+  "🔥", "👏", "🙏", "💯", "😍", "🚀",
+  "👀", "✨", "💪", "😅", "😎", "🤯",
+];
+
+let mruCache: string[] | null = null;
+const mruListeners = new Set<() => void>();
+
+function loadMRU(): string[] {
+  if (mruCache) return mruCache;
+  if (typeof window === "undefined") return [...DEFAULT_MRU];
+  try {
+    const raw = window.localStorage.getItem(MRU_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.every((x) => typeof x === "string")) {
+        const list = parsed.slice(0, MAX_MRU);
+        for (const fallback of DEFAULT_MRU) {
+          if (list.length >= MAX_MRU) break;
+          if (!list.includes(fallback)) list.push(fallback);
+        }
+        mruCache = list;
+        return mruCache;
+      }
+    }
+  } catch {
+    /* fall through to default */
+  }
+  mruCache = [...DEFAULT_MRU];
+  return mruCache;
+}
+
+function pushMRU(emoji: string) {
+  const current = loadMRU();
+  const next = [emoji, ...current.filter((e) => e !== emoji)].slice(0, MAX_MRU);
+  for (const fallback of DEFAULT_MRU) {
+    if (next.length >= MAX_MRU) break;
+    if (!next.includes(fallback)) next.push(fallback);
+  }
+  mruCache = next;
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(MRU_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore quota errors */
+    }
+  }
+  for (const l of mruListeners) l();
+}
+
+function useMRUEmojis(): string[] {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const listener = () => setTick((t) => t + 1);
+    mruListeners.add(listener);
+    return () => {
+      mruListeners.delete(listener);
+    };
+  }, []);
+  return loadMRU();
+}
+
+function EmojiShortcutButton({
+  emoji,
+  onClick,
+}: {
+  emoji: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`React with ${emoji}`}
+      style={{
+        width: 28,
+        height: 28,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "transparent",
+        border: "none",
+        cursor: "pointer",
+        padding: 0,
+        fontSize: 16,
+        borderRadius: 6,
+        lineHeight: 1,
+        transition: "background 0.15s",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+    >
+      {emoji}
+    </button>
+  );
+}
+
+function IMQuickActions({
+  messageId,
+  isOwn,
+  onEdit,
+  onCopy,
+  onToggleReaction,
+  onQuoteReply,
+}: {
+  messageId: string;
+  isOwn: boolean;
+  onEdit?: () => void;
+  onCopy?: () => void;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+  onQuoteReply?: (messageId: string) => void;
+}) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const mruEmojis = useMRUEmojis();
+  const handleReact = (emoji: string) => {
+    pushMRU(emoji);
+    onToggleReaction?.(messageId, emoji);
+  };
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "2px", position: "relative" }}>
+      {mruEmojis.map((emoji) => (
+        <EmojiShortcutButton
+          key={emoji}
+          emoji={emoji}
+          onClick={() => handleReact(emoji)}
+        />
+      ))}
+      <ActionButton
+        icon={IconFaceSmile}
+        tooltip="More reactions"
+        onClick={() => setPickerOpen((v) => !v)}
+      />
+      {isOwn ? (
+        onEdit && <ActionButton icon={IconPen} tooltip="Edit" onClick={onEdit} />
+      ) : (
+        onQuoteReply && (
+          <ActionButton
+            icon={IconQuoteRight}
+            tooltip="Reply with quote"
+            onClick={() => onQuoteReply(messageId)}
+          />
+        )
+      )}
+      <IMOverflowMenu
+        isOwn={isOwn}
+        onQuoteReply={onQuoteReply ? () => onQuoteReply(messageId) : undefined}
+        onCopyLink={onCopy}
+      />
+      {pickerOpen && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: isOwn ? "auto" : 0,
+            right: isOwn ? 0 : "auto",
+            marginTop: 4,
+            background: "var(--ax-colors-bg-default)",
+            border: "1px solid var(--ax-colors-border-secondary)",
+            borderRadius: 8,
+            padding: "4px 6px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            display: "flex",
+            gap: 4,
+            zIndex: 10,
+          }}
+          onMouseLeave={() => setPickerOpen(false)}
+        >
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(6, 1fr)",
+              gap: 2,
+            }}
+          >
+            {MORE_EMOJIS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  handleReact(emoji);
+                  setPickerOpen(false);
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 6,
+                  fontSize: 18,
+                  borderRadius: 4,
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")
+                }
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IMOverflowMenu({
+  isOwn,
+  onQuoteReply,
+  onCopyLink,
+}: {
+  isOwn: boolean;
+  onQuoteReply?: () => void;
+  onCopyLink?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const items: { label: string; icon: ReactNode; onClick: () => void }[] = [];
+  if (isOwn && onQuoteReply) {
+    items.push({ label: "Reply with quote", icon: <IconQuoteRight size={14} />, onClick: onQuoteReply });
+  }
+  items.push({ label: "Forward", icon: <IconShareNodes size={14} />, onClick: () => {} });
+  items.push({ label: "Pin", icon: <IconThumbtack size={14} />, onClick: () => {} });
+  if (onCopyLink) {
+    items.push({ label: "Copy link", icon: <IconLink size={14} />, onClick: onCopyLink });
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", display: "inline-flex" }}>
+      <ActionButton
+        icon={IconEllipsisStroke}
+        tooltip="More"
+        onClick={() => setOpen((v) => !v)}
+      />
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            right: 0,
+            marginTop: 4,
+            background: "var(--ax-colors-bg-default)",
+            border: "1px solid var(--ax-colors-border-secondary)",
+            borderRadius: 8,
+            padding: 4,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+            minWidth: 180,
+            zIndex: 20,
+          }}
+        >
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => {
+                item.onClick();
+                setOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: "7px 10px",
+                borderRadius: 6,
+                fontSize: 13,
+                color: "var(--ax-colors-fg-default)",
+                textAlign: "left",
+                transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ax-colors-bg-secondary)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <span style={{ display: "inline-flex", color: "var(--ax-colors-fg-secondary)" }}>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReactionPills({
+  messageId,
+  reactions,
+  currentUserId,
+  alignRight,
+  onToggleReaction,
+}: {
+  messageId: string;
+  reactions: Record<string, string[]>;
+  currentUserId?: string;
+  alignRight: boolean;
+  onToggleReaction?: (messageId: string, emoji: string) => void;
+}) {
+  const entries = Object.entries(reactions).filter(([, ids]) => ids.length > 0);
+  if (entries.length === 0) return null;
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 4,
+        marginTop: 4,
+        justifyContent: alignRight ? "flex-end" : "flex-start",
+        marginRight: alignRight ? 32 : 0,
+        marginLeft: alignRight ? 0 : 8,
+      }}
+    >
+      {entries.map(([emoji, ids]) => {
+        const mine = !!currentUserId && ids.includes(currentUserId);
+        return (
+          <button
+            key={emoji}
+            type="button"
+            onClick={() => onToggleReaction?.(messageId, emoji)}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              padding: "2px 8px",
+              borderRadius: 999,
+              background: mine
+                ? "var(--ax-colors-bg-accent-subtle, var(--ax-colors-bg-secondary))"
+                : "var(--ax-colors-bg-secondary)",
+              border: mine
+                ? "1px solid var(--ax-colors-border-accent, var(--ax-colors-border-default))"
+                : "1px solid var(--ax-colors-border-secondary)",
+              cursor: "pointer",
+              fontSize: 12,
+              lineHeight: 1.2,
+            }}
+          >
+            <span>{emoji}</span>
+            <span style={{ color: "var(--ax-colors-fg-tertiary)" }}>{ids.length}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 const MarkdownContent = ({ content }: { content: string }) => {
   return (
@@ -430,6 +812,12 @@ export function OpalMessage({
   agentContext,
   showOpalHeader,
   hideActionBar,
+  imMode,
+  currentUserId,
+  reactions,
+  onToggleReaction,
+  onReplyInThread,
+  onQuoteReply,
 }: OpalMessageProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -529,6 +917,49 @@ export function OpalMessage({
           <span style={{ fontSize: 12, fontWeight: 500, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>Opal</span>
         </div>
       )}
+      {!isUser && !agentContext && !showOpalHeader && message.authorName && !message.authorInlineAvatar && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingLeft: 8 }}>
+          <AuthorAvatarHover name={message.authorName} title={message.authorTitle}>
+            {message.authorAvatar ? (
+              <img
+                src={message.authorAvatar}
+                alt={message.authorName}
+                width={28}
+                height={28}
+                style={{ borderRadius: '50%', flexShrink: 0, objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <span
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: 'var(--ax-colors-bg-avatar-purple)',
+                  color: 'var(--ax-colors-fg-avatar-purple)',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  fontFamily: 'Inter, sans-serif',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  letterSpacing: '0.02em',
+                  flexShrink: 0,
+                }}
+              >
+                {message.authorName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
+              </span>
+            )}
+          </AuthorAvatarHover>
+          <span style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 13, fontWeight: 400, color: '#2e3442', fontFamily: 'var(--ax-fontFamily-sans, sans-serif)' }}>
+            <span>{message.authorName}</span>
+            {message.timestamp && (
+              <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)', fontWeight: 400 }}>
+                {formatChatTime(message.timestamp)}
+              </span>
+            )}
+          </span>
+        </div>
+      )}
 
       <Box
         display="flex"
@@ -538,6 +969,19 @@ export function OpalMessage({
           alignItems: isUser ? "flex-end" : "flex-start",
         }}
       >
+        {isUser && message.timestamp && imMode && (
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--ax-colors-fg-tertiary)',
+              fontFamily: 'var(--ax-fontFamily-sans, sans-serif)',
+              marginBottom: 2,
+              paddingRight: 4,
+            }}
+          >
+            {formatChatTime(message.timestamp)}
+          </span>
+        )}
         {/* Experiment blocks are full-width, rendered outside the normal bubble */}
         {!isLoading && isExperimentCreation && message.payload ? (
           <ExperimentCreationAgentBlock
@@ -561,6 +1005,22 @@ export function OpalMessage({
             justifyContent: isUser ? 'flex-end' : 'flex-start',
           }}
         >
+          {message.authorInlineAvatar && !isUser && message.authorAvatar && (
+            <img
+              src={message.authorAvatar}
+              alt={message.authorName ?? ''}
+              width={28}
+              height={28}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                objectFit: 'cover',
+                flexShrink: 0,
+                marginTop: 4,
+              }}
+            />
+          )}
           <Box
             style={{
               maxWidth: isUser ? '85%' : '100%',
@@ -572,6 +1032,27 @@ export function OpalMessage({
               width: isEditing ? '100%' : 'auto',
             }}
           >
+            {message.authorInlineAvatar && !isUser && message.authorName && (
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 8,
+                  fontSize: 13,
+                  fontWeight: 400,
+                  color: '#2e3442',
+                  fontFamily: 'var(--ax-fontFamily-sans, sans-serif)',
+                  marginBottom: 2,
+                }}
+              >
+                <span>{message.authorName}</span>
+                {message.timestamp && (
+                  <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)', fontWeight: 400 }}>
+                    {formatChatTime(message.timestamp)}
+                  </span>
+                )}
+              </span>
+            )}
             {isEditing ? (
               <Box display="flex" flexDirection="column" gap="8" w="full">
                 <textarea
@@ -738,8 +1219,8 @@ export function OpalMessage({
           {!isEditing && isUser && (
             <Box
               style={{
-                width: '24px',
-                height: '24px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 overflow: 'hidden',
                 flexShrink: 0,
@@ -754,12 +1235,12 @@ export function OpalMessage({
                 <img
                   src={message.authorAvatar}
                   alt={message.authorName ?? 'User'}
-                  width={24}
-                  height={24}
+                  width={28}
+                  height={28}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               ) : message.authorName ? (
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--ax-colors-fg-avatar-purple)', fontFamily: 'Inter, sans-serif', letterSpacing: '0.02em', lineHeight: 1 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ax-colors-fg-avatar-purple)', fontFamily: 'Inter, sans-serif', letterSpacing: '0.02em', lineHeight: 1 }}>
                   {message.authorName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
                 </span>
               ) : (
@@ -776,6 +1257,17 @@ export function OpalMessage({
         </Box>
         )}
 
+        {/* IM reaction pills (above the action row) */}
+        {imMode && reactions && (
+          <ReactionPills
+            messageId={message.id}
+            reactions={reactions}
+            currentUserId={currentUserId}
+            alignRight={isUser}
+            onToggleReaction={onToggleReaction}
+          />
+        )}
+
         {/* Quick Actions Row */}
         {!isLoading && !isEditing && !isExperimentCreation && !isExperimentSummary && !hideActionBar && (
           <Box
@@ -785,15 +1277,25 @@ export function OpalMessage({
             style={{
               marginLeft: isUser ? '0' : '8px',
               marginRight: isUser ? '32px' : '0',
-              opacity: isUser ? (isHovered ? 1 : 0) : 1,
+              opacity: imMode ? (isHovered ? 1 : 0) : isUser ? (isHovered ? 1 : 0) : 1,
               transition: 'opacity 0.2s',
               marginTop: isUser ? '4px' : isFullWidthSpecialBlock ? '16px' : '-8px',
               width: '100%',
-              justifyContent: 'space-between',
+              justifyContent: imMode && isUser ? 'flex-end' : 'space-between',
               alignItems: 'center',
             }}
           >
-            {isUser ? (
+            {imMode ? (
+              // IM Mode: emoji picker + (edit if own) + copy. No "Edit in Canvas" / regenerate / thumbs.
+              <IMQuickActions
+                messageId={message.id}
+                isOwn={isUser}
+                onEdit={isUser ? () => setIsEditing(true) : undefined}
+                onCopy={handleCopy}
+                onToggleReaction={onToggleReaction}
+                onQuoteReply={onQuoteReply}
+              />
+            ) : isUser ? (
               // User Actions: Edit, Copy
               <>
                 <ActionButton icon={IconPen} tooltip="Edit" onClick={() => setIsEditing(true)} />
@@ -874,6 +1376,23 @@ export function OpalMessage({
   );
 }
 
+function AuthorAvatarHover({ name, title, children }: { name: string; title?: string; children: ReactNode }) {
+  if (!title) return <>{children}</>;
+  return (
+    <Tooltip
+      delayDuration={300}
+      content={
+        <span style={{ display: 'inline-flex', flexDirection: 'column', gap: 2, lineHeight: 1.3 }}>
+          <span style={{ fontWeight: 600 }}>{name}</span>
+          <span style={{ opacity: 0.85 }}>{title}</span>
+        </span>
+      }
+    >
+      <span style={{ display: 'inline-flex', flexShrink: 0 }}>{children}</span>
+    </Tooltip>
+  );
+}
+
 function formatTimestamp(timestamp: number): string {
   const now = Date.now();
   const diff = now - timestamp;
@@ -883,4 +1402,8 @@ function formatTimestamp(timestamp: number): string {
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
 
   return new Date(timestamp).toLocaleDateString();
+}
+
+function formatChatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }

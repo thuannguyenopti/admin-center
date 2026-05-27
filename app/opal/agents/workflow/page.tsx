@@ -58,7 +58,8 @@ import {
     ConditionNode,
     AddTriggerNode,
     StepPlaceholderNode,
-    ConditionEdge
+    ConditionEdge,
+    ApprovalNode,
 } from "./components/WorkflowNodes";
 import WebhookIcon from "./icon/WebhookIcon";
 import {
@@ -183,6 +184,39 @@ const INITIAL_EDGES: any[] = [
         markerEnd: { type: MarkerType.ArrowClosed },
         style: { strokeDasharray: '5,5' }
     }
+];
+
+const WF_AGENT_NODES: any[] = [
+    {
+        id: 'wf-start',
+        type: 'trigger',
+        position: { x: 300, y: 50 },
+        data: { label: 'Start', description: 'Workflow triggered by CMP task submission', bg: 'bg.success.subtle' },
+    },
+    {
+        id: 'wf-review',
+        type: 'action',
+        position: { x: 300, y: 220 },
+        data: { label: 'Review', description: 'Opal agent reviews content and prepares approval request', bg: 'bg.accent.subtle' },
+    },
+    {
+        id: 'wf-approval',
+        type: 'approval',
+        position: { x: 300, y: 390 },
+        data: { label: 'Approval', description: 'Waiting for human review and sign-off' },
+    },
+    {
+        id: 'wf-end',
+        type: 'action',
+        position: { x: 300, y: 560 },
+        data: { label: 'End', description: 'Workflow complete — artifact published', bg: 'bg.tertiary' },
+    },
+];
+
+const WF_AGENT_EDGES: any[] = [
+    { id: 'e-start-review', source: 'wf-start', target: 'wf-review', type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
+    { id: 'e-review-approval', source: 'wf-review', target: 'wf-approval', type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
+    { id: 'e-approval-end', source: 'wf-approval', target: 'wf-end', type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } },
 ];
 
 const CMP_NODES: any[] = [
@@ -344,15 +378,27 @@ function WorkflowBuilder() {
     const [isSetupPanelOpen, setIsSetupPanelOpen] = useState(!isViewingExisting);
     const [isLibraryOpen, setIsLibraryOpen] = useState(!isViewingExisting);
     const [isEditing, setIsEditing] = useState(false);
-    const [workflowName, setWorkflowName] = useState(preset === 'cmp-workflow' ? "CMP Workflow Agent" : "Untitled Workflow");
+    const [workflowName, setWorkflowName] = useState(
+        preset === 'cmp-workflow' ? "CMP Workflow Agent" :
+        preset === 'wf-agent' ? "WF Approval Agent" :
+        "Untitled Workflow"
+    );
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isElkEnabled, setIsElkEnabled] = useState(false);
 
     // React Flow hooks
     const reactFlowWrapper = useRef(null);
-    const [nodes, setNodes, onNodesChange] = useNodesState(preset === 'cmp-workflow' ? CMP_NODES : INITIAL_NODES);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(preset === 'cmp-workflow' ? CMP_EDGES : INITIAL_EDGES);
+    const [nodes, setNodes, onNodesChange] = useNodesState(
+        preset === 'cmp-workflow' ? CMP_NODES :
+        preset === 'wf-agent' ? WF_AGENT_NODES :
+        INITIAL_NODES
+    );
+    const [edges, setEdges, onEdgesChange] = useEdgesState(
+        preset === 'cmp-workflow' ? CMP_EDGES :
+        preset === 'wf-agent' ? WF_AGENT_EDGES :
+        INITIAL_EDGES
+    );
     const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
 
     const nodeTypes = useMemo(() => ({
@@ -361,7 +407,8 @@ function WorkflowBuilder() {
         loop: LoopNode,
         condition: ConditionNode,
         addTrigger: AddTriggerNode,
-        stepPlaceholder: StepPlaceholderNode
+        stepPlaceholder: StepPlaceholderNode,
+        approval: ApprovalNode,
     }), []);
 
     const edgeTypes = useMemo(() => ({
@@ -402,7 +449,7 @@ function WorkflowBuilder() {
         Logic: [
             { name: "Condition", icon: <IconSplit />, bg: "bg.accent.subtle", type: 'condition', category: 'Logic' },
             { name: "Loop", icon: <IconArrowsRepeat />, bg: "bg.accent.subtle", type: 'loop' },
-            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'action' },
+            { name: "User Approval", icon: <IconUserCheck />, bg: "bg.accent.subtle", type: 'approval', description: 'Waiting for human review' },
         ],
     };
 

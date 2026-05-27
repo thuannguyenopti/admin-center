@@ -1,6 +1,6 @@
 import { Handle, Position, NodeProps, useReactFlow, MarkerType, BaseEdge, getSmoothStepPath, EdgeLabelRenderer, type EdgeProps } from '@xyflow/react';
 import { Box, Text, Badge, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, type BoxProps } from '@optiaxiom/react';
-import { IconPlay, IconEllipsisStroke, IconSplit, IconPlus, IconHouse as IconHome, IconCode } from "@optiaxiom/icons";
+import { IconPlay, IconEllipsisStroke, IconSplit, IconPlus, IconHouse as IconHome, IconCode, IconUser } from "@optiaxiom/icons";
 import { ReactNode } from 'react';
 
 // Common wrapper for nodes to handle selection state and basic styling
@@ -299,6 +299,44 @@ export function ConditionNode({ id, data, selected }: NodeProps) {
 // The screenshot shows "Chat Input" with specific text "User inputs goal/KPI..."
 export function TriggerNode(props: NodeProps) {
     return <ActionNode {...props} data={{ ...props.data, active: false }} />;
+}
+
+export function ApprovalNode({ id, data, selected }: NodeProps) {
+    const label = (data?.label as string) || "Approval";
+    const description = (data?.description as string) || "Waiting for human review";
+    const { deleteElements } = useReactFlow();
+
+    const onRemove = () => deleteElements({ nodes: [{ id }] });
+
+    return (
+        <NodeWrapper
+            selected={selected}
+            borderColor={selected ? "border.accent" : "border.accent"}
+            border="2"
+            style={{ width: '240px', position: 'relative' }}
+        >
+            <Handle type="target" position={Position.Top} />
+            <Handle type="source" position={Position.Bottom} />
+
+            <NodeHeader
+                icon={
+                    <Box p="4" bg="bg.accent.subtle" rounded="full" color="fg.accent">
+                        <IconUser size={16} />
+                    </Box>
+                }
+                title={label}
+                onRemove={onRemove}
+            />
+
+            <NodeBody>
+                <Text fontSize="sm" color="fg.secondary">{description}</Text>
+            </NodeBody>
+
+            <NodeFooter>
+                <Badge intent="information" variant="subtle">Pending</Badge>
+            </NodeFooter>
+        </NodeWrapper>
+    );
 }
 
 export function LoopNode({ data, selected }: NodeProps) {

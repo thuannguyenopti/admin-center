@@ -20,6 +20,12 @@ type OpalHeaderProps = {
     sticky?: boolean;
     imMode?: boolean;
     onImModeChange?: (enabled: boolean) => void;
+    /** When set, renders this static title instead of the Opal dropdown trigger. */
+    titleOverride?: string;
+    /** Aria label for the + new chat button. */
+    newChatLabel?: string;
+    /** When provided, renders an X close button as the first item in the header (top-left). */
+    leadingClose?: () => void;
 };
 
 export function OpalHeader({
@@ -30,6 +36,9 @@ export function OpalHeader({
     sticky = false,
     imMode = false,
     onImModeChange,
+    titleOverride,
+    newChatLabel = 'New chat',
+    leadingClose,
 }: OpalHeaderProps) {
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -63,6 +72,18 @@ export function OpalHeader({
             }}
         >
             <Box display="flex" alignItems="center" gap="12">
+                {leadingClose && (
+                    <>
+                        <Button
+                            appearance="subtle"
+                            size="md"
+                            aria-label="Close chat"
+                            onClick={leadingClose}
+                            icon={<IconXmark size={18} />}
+                        />
+                        <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
+                    </>
+                )}
                 <Button
                     appearance="subtle"
                     size="md"
@@ -86,7 +107,7 @@ export function OpalHeader({
                     <Button
                         appearance="subtle"
                         size="md"
-                        aria-label="New chat"
+                        aria-label={newChatLabel}
                         onClick={onNewChat}
                         style={{
                             width: '40px',
@@ -103,6 +124,17 @@ export function OpalHeader({
                     </Button>
                 )}
 
+                {titleOverride ? (
+                    <Text
+                        style={{
+                            ...opalTypography.title,
+                            margin: 0,
+                            color: 'var(--opal-text-primary)',
+                        }}
+                    >
+                        {titleOverride}
+                    </Text>
+                ) : (
                 <div ref={menuRef} style={{ position: 'relative' }}>
                     <Box
                         display="flex"
@@ -143,7 +175,7 @@ export function OpalHeader({
                             overflow: 'hidden',
                             padding: '4px',
                         }}>
-                            <MenuItem label="Opal" muted />
+                            <MenuItem label="Threads" muted />
                             <MenuItem label="Settings" muted />
                             <div style={{ height: '1px', background: '#f3f4f6', margin: '4px 0' }} />
 
@@ -226,6 +258,7 @@ export function OpalHeader({
                         </div>
                     )}
                 </div>
+                )}
             </Box>
             {showWindowControls ? (
                 <Box display="flex" alignItems="center" gap="8">

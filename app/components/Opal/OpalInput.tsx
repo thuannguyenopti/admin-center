@@ -154,6 +154,10 @@ type OpalInputProps = {
   contextContent?: string | null;
   onContextChipRemove?: () => void;
   imMode?: boolean;
+  /** When provided in IM mode, the + menu "Upload from device" picks a file and calls this. */
+  onAttachFile?: (file: File) => void;
+  /** Optional node rendered inside the input container, above the textarea (e.g. quote chip). */
+  topContent?: React.ReactNode;
 };
 
 export function OpalInput({
@@ -175,7 +179,10 @@ export function OpalInput({
   contextContent,
   onContextChipRemove,
   imMode = false,
+  onAttachFile,
+  topContent,
 }: OpalInputProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const featuredConnectorMenuIds = useMemo(
     () => ["figma", "google-docs", "google-sheets", "google-slides"],
     []
@@ -190,6 +197,7 @@ export function OpalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const agentPillRef = useRef<HTMLSpanElement>(null);
+  const topContentRef = useRef<HTMLDivElement>(null);
 
   // Always track the input container's current width so the dropdown matches exactly
   useEffect(() => {
@@ -276,9 +284,10 @@ export function OpalInput({
       const isImCompact = imMode && !isFocused && value.trim() === '';
       const targetTextareaHeight = isImCompact ? minTextareaHeight : Math.max(naturalHeight, minTextareaHeight);
       const formatBarExtra = imMode && showFormatBar ? 38 : 0;
-      const neededContainerHeight = targetTextareaHeight + offset + formatBarExtra;
+      const topContentExtra = topContentRef.current ? topContentRef.current.offsetHeight + 8 : 0;
+      const neededContainerHeight = targetTextareaHeight + offset + formatBarExtra + topContentExtra;
       const finalContainerHeight = Math.round(Math.min(neededContainerHeight, maxContainerHeight));
-      const finalTextareaHeight = finalContainerHeight - offset - formatBarExtra;
+      const finalTextareaHeight = finalContainerHeight - offset - formatBarExtra - topContentExtra;
 
       container.style.setProperty('height', `${finalContainerHeight}px`, 'important');
       textarea.style.setProperty('height', `${finalTextareaHeight}px`, 'important');
@@ -293,7 +302,7 @@ export function OpalInput({
       textarea.style.boxSizing = 'border-box';
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, contextChip, isFocused, imMode, showFormatBar]);
+  }, [value, contextChip, isFocused, imMode, showFormatBar, topContent]);
 
   // Filter mentionable agents based on text after @
   const mentionQuery = value.startsWith('@') ? value.slice(1).toLowerCase() : '';
@@ -436,6 +445,7 @@ export function OpalInput({
         group: { hidden: true, label: "Primary actions", priority: 2 },
         key: "upload-device",
         label: "Upload from device",
+        execute: onAttachFile ? () => fileInputRef.current?.click() : undefined,
       },
       {
         addon: <IconBooks size={16} />,
@@ -473,7 +483,7 @@ export function OpalInput({
         ],
       },
     ],
-    [featuredConnectors, authenticatedConnectorIds, router]
+    [featuredConnectors, authenticatedConnectorIds, router, onAttachFile]
   );
 
   const agentMenuOptions = useMemo<MenuOption[]>(
@@ -773,6 +783,13 @@ export function OpalInput({
           </Box>
         )}
 
+        {/* Top content slot (e.g. quote-reply chip) — sits inside the input container above the textarea */}
+        {topContent && (
+          <div ref={topContentRef} style={{ marginBottom: 8 }}>
+            {topContent}
+          </div>
+        )}
+
         {/* Formatting toolbar — shown above textarea when active in IM mode */}
         {imMode && showFormatBar && (
           <Box
@@ -922,6 +939,18 @@ export function OpalInput({
             />
           </Menu>
         )}
+
+        {/* Hidden file input for IM attach */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          style={{ display: "none" }}
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onAttachFile) onAttachFile(file);
+            e.target.value = "";
+          }}
+        />
 
         {/* Actions Row */}
         <Box
