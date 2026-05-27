@@ -362,6 +362,8 @@ body.dark .newly-imported {
 	/* Accent subtle (NavItem active background) — apply in both modes */
 	--ax-colors-bg-accent-subtle: rgba(94, 139, 39, 0.16);
 	--ax-colors-bg-accent-subtle-hovered: rgba(94, 139, 39, 0.24);
+	/* Brand 50 — pale lime in light mode, deep forest in dark (matches Axiom V3 light-dark token). */
+	--ax-colors-brand-50: #EEFFD9;
 
 	/* Nav icon size — @optiaxiom/icons Material icons sized via --ax-size-2xs (1rem=16px by default).
 	   Override to 1.25rem (20px) so thin-stroke Material icons match Figma's 20px NavItem icon spec. */
@@ -396,6 +398,12 @@ html:not([data-theme="dark"]) [data-brand="v3"] {
 	--ax-colors-fg-accent-strong: #226b1e;
 	--ax-colors-fg-link-default: #226b1e;
 	--ax-colors-fg-link-default-hovered: #1a5216;
+}
+
+/* Dark-mode-only V3 overrides. Mirrors Axiom V3 light-dark token swaps
+   so brand-tinted surfaces (e.g. brand-50) read on dark backgrounds. */
+html[data-theme="dark"] [data-brand="v3"] {
+	--ax-colors-brand-50: #203526;
 }
 
 [data-brand="v3"] button {

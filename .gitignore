@@ -57,3 +57,8 @@ yarn.lock
 .cursor/
 .vscode/
 logs/*.log*
+
+# IM mock backend data store
+.messaging-data.json
+# IM mock backend uploads
+/public/im-uploads/

@@ -46,9 +46,10 @@ import {
   IconShieldCheck,
   IconTrashCan,
   IconLock,
-} from "@optimizely/axiom-icons";
+} from "@optiaxiom/icons";
 import { useState, useCallback, useEffect, useRef, type ReactNode, type KeyboardEvent } from "react";
 import dynamic from "next/dynamic";
+import { InitialsAvatar, initialsFromName } from "@/app/opal/components/InitialsAvatar";
 import { useCollabDoc } from "./editor/useCollabDoc";
 import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -137,13 +138,13 @@ const WYSIWYG_CONTENT = `<h1>Build something people love</h1>
 
 type CollabUser =
   | { name: string; type: "ai"; src: string }
-  | { name: string; type: "human"; colorScheme: "purple" | "neutral"; lightPurple?: boolean };
+  | { name: string; type: "human"; colorScheme: "purple" | "neutral"; lightPurple?: boolean; imageUrl?: string };
 
 const COLLAB_USERS: CollabUser[] = [
   { name: "Frank", type: "ai", src: "/avatars/vau-frank.png" },
-  { name: "Jamie Chen", type: "human", colorScheme: "purple", lightPurple: true },
+  { name: "Jamie Chen", type: "human", colorScheme: "purple", lightPurple: true, imageUrl: "/avatars/avatar-3.png" },
   { name: "James S.", type: "human", colorScheme: "purple" },
-  { name: "Marie Anne", type: "human", colorScheme: "neutral" },
+  { name: "Mary Anne", type: "human", colorScheme: "neutral", imageUrl: "/avatars/avatar-2.png" },
 ];
 
 const MOCK_CURSORS: CollabCursor[] = [
@@ -292,41 +293,36 @@ function WysiwygPanel({ initialHtml, editable = true, blameSegments, onContentCh
 
   return (
     <Box style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      {/* Formatting toolbar + avatars */}
-      <Box display="flex" alignItems="center" px="8" style={{ flexShrink: 0, height: 40, borderBottom: BORDER, gap: 2, overflowX: "auto" }}>
-        <FmtBtn title="H1" active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H1</span></FmtBtn>
-        <FmtBtn title="H2" active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H2</span></FmtBtn>
-        <FmtBtn title="H3" active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H3</span></FmtBtn>
-        <FmtDivider />
-        <FmtBtn title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><IconBold size={15} /></FmtBtn>
-        <FmtBtn title="Italic" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}><IconItalic size={15} /></FmtBtn>
-        <FmtBtn title="Strike" active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><IconStrikethrough size={15} /></FmtBtn>
-        <FmtBtn title="Code" active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><IconCode size={15} /></FmtBtn>
-<FmtDivider />
-        <FmtBtn title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}><IconListUl size={15} /></FmtBtn>
-        <FmtBtn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><IconListOl size={15} /></FmtBtn>
-        <FmtBtn title="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><IconQuoteRight size={15} /></FmtBtn>
-        <FmtBtn title="Link"><IconLink size={15} /></FmtBtn>
+      {/* Formatting toolbar + avatars — formatting buttons hide in preview, avatars always visible */}
+      <Box display="flex" alignItems="center" px="8" style={{ flexShrink: 0, height: 40, gap: 2, overflowX: "auto" }}>
+        {editable && (
+          <>
+            <FmtBtn title="H1" active={editor.isActive("heading", { level: 1 })} onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H1</span></FmtBtn>
+            <FmtBtn title="H2" active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H2</span></FmtBtn>
+            <FmtBtn title="H3" active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}><span style={{ fontWeight: 700, fontSize: 13, fontFamily: "monospace" }}>H3</span></FmtBtn>
+            <FmtDivider />
+            <FmtBtn title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}><IconBold size={15} /></FmtBtn>
+            <FmtBtn title="Italic" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}><IconItalic size={15} /></FmtBtn>
+            <FmtBtn title="Strike" active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}><IconStrikethrough size={15} /></FmtBtn>
+            <FmtBtn title="Code" active={editor.isActive("codeBlock")} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><IconCode size={15} /></FmtBtn>
+            <FmtDivider />
+            <FmtBtn title="Bullet list" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}><IconListUl size={15} /></FmtBtn>
+            <FmtBtn title="Numbered list" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}><IconListOl size={15} /></FmtBtn>
+            <FmtBtn title="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}><IconQuoteRight size={15} /></FmtBtn>
+            <FmtBtn title="Link"><IconLink size={15} /></FmtBtn>
+          </>
+        )}
         <Box style={{ flex: 1 }} />
         <Box display="flex" alignItems="center" style={{ gap: 0, flexShrink: 0 }}>
           {COLLAB_USERS.map((u, i) => (
             <Tooltip key={u.name} content={u.name} delayDuration={300}>
               <span style={{ marginLeft: i > 0 ? -6 : 0, zIndex: COLLAB_USERS.length - i, position: "relative", display: "inline-flex" }}>
                 {u.type === "ai" ? (
-                  <span style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--ax-colors-bg-default)", flexShrink: 0 }}>
-                    <img src={u.src} alt={u.name} width={28} height={28} style={{ display: "block", borderRadius: "50%" }} />
+                  <span style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--ax-colors-bg-default)", flexShrink: 0 }}>
+                    <img src={u.src} alt={u.name} width={24} height={24} style={{ display: "block", borderRadius: "50%" }} />
                   </span>
                 ) : (
-                  <Avatar
-                    name={u.name}
-                    size="xs"
-                    colorScheme={u.lightPurple ? undefined : u.colorScheme}
-                    style={{
-                      width: 28, height: 28, fontSize: 10,
-                      border: "2px solid var(--ax-colors-bg-default)",
-                      ...(u.lightPurple && { background: "#ede9fe", color: "#7c3aed" }),
-                    } as React.CSSProperties}
-                  />
+                  <InitialsAvatar initials={initialsFromName(u.name)} size={24} imageUrl={u.imageUrl} />
                 )}
               </span>
             </Tooltip>
@@ -552,13 +548,13 @@ function getInitialAccess(
 ): AccessSubject[] {
   const creatorName = artifactCreator.name || DEFAULT_ARTIFACT_CREATOR.name;
   const ownerName = artifactOwner?.name || "Jamie Chen";
-  const ownerAvatar = artifactOwner?.avatar;
+  const ownerAvatar = artifactOwner?.avatar ?? (ownerName === "Jamie Chen" ? "/avatars/avatar-3.png" : undefined);
   return [
     { id: "owner", name: ownerName, detail: getStrideEmail(ownerName), role: "Owner", kind: "user", colorScheme: "purple", avatar: ownerAvatar, badges: ownerName === "Jamie Chen" ? ["Principal"] : undefined },
-    ...(creatorName !== ownerName ? [{ id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "purple" as const, avatar: artifactCreator.avatar, badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined }] : []),
-    ...(ownerName !== "Jamie Chen" && creatorName !== "Jamie Chen" ? [{ id: "jamie-chen", name: "Jamie Chen", detail: "jamie.chen@stride.com", role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "purple" as const, badges: ["Principal"] }] : []),
+    ...(creatorName !== ownerName ? [{ id: "creator", name: creatorName, detail: getStrideEmail(creatorName), role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "purple" as const, avatar: artifactCreator.avatar ?? (creatorName === "Jamie Chen" ? "/avatars/avatar-3.png" : undefined), badges: creatorName === "Jamie Chen" ? ["Principal"] : undefined }] : []),
+    ...(ownerName !== "Jamie Chen" && creatorName !== "Jamie Chen" ? [{ id: "jamie-chen", name: "Jamie Chen", detail: "jamie.chen@stride.com", role: "Admin" as PermissionRole, kind: "user" as const, colorScheme: "purple" as const, avatar: "/avatars/avatar-3.png", badges: ["Principal"] }] : []),
     { id: "stride-org", name: "Stride", detail: "stride@stride.com", role: "Viewer", kind: "org", colorScheme: "neutral" },
-    { id: "mary-anne-torres", name: "Mary Anne Torres", detail: "mary.anne@stride.com", role: "Editor", kind: "user", colorScheme: "neutral", avatar: "/avatars/user.png" },
+    { id: "mary-anne-torres", name: "Mary Anne Torres", detail: "mary.anne@stride.com", role: "Editor", kind: "user", colorScheme: "neutral", avatar: "/avatars/avatar-2.png" },
     { id: "content-ops", name: "Content Operations", detail: "content-operations@stride.com", role: "Admin", kind: "team", colorScheme: "neutral" },
     { id: "map", name: "Tony", detail: "tony@stride.com", role: "Editor", kind: "vau", colorScheme: "purple", avatar: "/avatars/vau-tony.png" },
     { id: "kerby", name: "Kerby", detail: "kerby@stride.com", role: "Viewer", kind: "vau", colorScheme: "neutral", avatar: "/avatars/vau-kerby.png" },
@@ -922,6 +918,19 @@ export function CodeCanvasPanel({
   const [isEditing, setIsEditing] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(initialHtml ?? WYSIWYG_CONTENT);
+  const [isNarrow, setIsNarrow] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      setIsNarrow(width < 640);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // ── Contributors (blame) ──────────────────────────────────────────────────
   const [blameActive, setBlameActive] = useState(false);
@@ -1007,6 +1016,7 @@ export function CodeCanvasPanel({
 
   return (
     <Box
+      ref={panelRef as unknown as React.Ref<HTMLDivElement>}
       display="flex"
       flexDirection="column"
       bg="bg.secondary"
@@ -1021,7 +1031,7 @@ export function CodeCanvasPanel({
         bg="bg.default"
         style={{ flexShrink: 0, borderBottom: BORDER, height: 48, flexWrap: "nowrap", overflow: "hidden" }}
       >
-        <Button appearance="subtle" size="sm" icon={<IconXmark size={16} />} onClick={onClose} aria-label="Close editor" />
+        <Button appearance="subtle" size="md" icon={<IconXmark size={18} />} onClick={onClose} aria-label="Close editor" />
         <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
 
         {/* Artifact title */}
@@ -1044,12 +1054,12 @@ export function CodeCanvasPanel({
           <Box display="flex" alignItems="center" gap="8" style={{ flexShrink: 0 }}>
             <Tooltip content="Source code" delayDuration={400}>
               <span>
-                <ToggleButton size="md" appearance="subtle" pressed={mode === "source"} onPressedChange={() => handleSetMode("source")} icon={<IconCode size={15} />} aria-label="Source" />
+                <ToggleButton size="md" appearance="subtle" pressed={mode === "source"} onPressedChange={() => handleSetMode("source")} icon={<IconCode size={18} />} aria-label="Source" />
               </span>
             </Tooltip>
             <Tooltip content="Preview / WYSIWYG" delayDuration={400}>
               <span>
-                <ToggleButton size="md" appearance="subtle" pressed={mode === "preview"} onPressedChange={() => handleSetMode("preview")} icon={<IconEye size={15} />} aria-label="Preview" />
+                <ToggleButton size="md" appearance="subtle" pressed={mode === "preview"} onPressedChange={() => handleSetMode("preview")} icon={<IconEye size={18} />} aria-label="Preview" />
               </span>
             </Tooltip>
           </Box>
@@ -1073,15 +1083,15 @@ export function CodeCanvasPanel({
           ) : (
             <Tooltip content="Edit" delayDuration={400}>
               <span>
-                <Button appearance="subtle" size="md" icon={<IconPen size={14} />} aria-label="Edit" onClick={() => setIsEditing(true)} />
+                <Button appearance="subtle" size="md" icon={<IconPen size={18} />} aria-label="Edit" onClick={() => setIsEditing(true)} />
               </span>
             </Tooltip>
           )}
 
           {isEditing && (
             <Box display="flex" alignItems="center" gap="4">
-              <Tooltip content="Undo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateLeft size={15} />} aria-label="Undo" /></span></Tooltip>
-              <Tooltip content="Redo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateRight size={15} />} aria-label="Redo" /></span></Tooltip>
+              <Tooltip content="Undo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateLeft size={18} />} aria-label="Undo" /></span></Tooltip>
+              <Tooltip content="Redo" delayDuration={400}><span><Button appearance="subtle" size="md" icon={<IconArrowRotateRight size={18} />} aria-label="Redo" /></span></Tooltip>
             </Box>
           )}
 
@@ -1098,20 +1108,23 @@ export function CodeCanvasPanel({
               ...(onChatToggle !== undefined ? [
                 { label: chatOpen ? "Hide thread" : "Show thread", addon: <IconComments size={14} />, execute: onChatToggle },
               ] : []),
+              ...(isNarrow && !isEditing ? [
+                { label: "Share", addon: <IconUserPlus size={14} />, execute: () => setShareDialogOpen(true) },
+              ] : []),
             ]}
           >
             <MenuTrigger asChild>
-              <Button appearance="subtle" size="md" icon={<IconEllipsisSolid size={15} />} aria-label="More editor actions" />
+              <Button appearance="subtle" size="md" icon={<IconEllipsisSolid size={18} />} aria-label="More editor actions" />
             </MenuTrigger>
             <MenuContent />
           </Menu>
 
-          {!isEditing && (
+          {!isEditing && !isNarrow && (
             <>
               <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0 }} />
 
               {/* Share */}
-              <Button appearance="default" size="md" icon={<IconUserPlus size={15} />} onClick={() => setShareDialogOpen(true)} style={{ whiteSpace: "nowrap" }}>Share</Button>
+              <Button appearance="default" size="md" icon={<IconUserPlus size={18} />} onClick={() => setShareDialogOpen(true)} style={{ whiteSpace: "nowrap" }}>Share</Button>
             </>
           )}
 
@@ -1124,7 +1137,7 @@ export function CodeCanvasPanel({
                   appearance="subtle"
                   pressed={!!chatOpen}
                   onPressedChange={onChatToggle}
-                  icon={<IconComments size={11} />}
+                  icon={<IconComments size={18} />}
                   aria-label={chatOpen ? "Hide thread" : "Show thread"}
                 />
               </span>

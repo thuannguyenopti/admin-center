@@ -433,8 +433,36 @@ export default function RootLayout({
 				label: "Chats",
 				url: "/opal",
 				highlight: "/opal",
-				icon: <IconComments />,
+				icon: (
+					<span
+						style={{
+							display: "inline-flex",
+							width: 24,
+							height: 24,
+							minWidth: 24,
+							minHeight: 24,
+							maxWidth: 24,
+							maxHeight: 24,
+							borderRadius: "50%",
+							overflow: "hidden",
+							flexShrink: 0,
+						}}
+					>
+						<img
+							src="/opal-icon-nav.png"
+							alt=""
+							style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+						/>
+					</span>
+				),
 				exact: true,
+				customLayout: true,
+			},
+			{
+				label: "Messages",
+				url: "/opal/im",
+				highlight: "/opal/im",
+				icon: <IconComments />,
 				customLayout: true,
 			},
 			{
@@ -447,7 +475,7 @@ export default function RootLayout({
 				hidePageHeader: true,
 			},
 			{
-				label: "Notifications",
+				label: "Activities",
 				url: "/opal/notifications",
 				highlight: "/opal/notifications",
 				icon: <IconBell />,

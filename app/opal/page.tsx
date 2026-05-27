@@ -3,7 +3,7 @@
 import { Alert, Box, Button as AxiomButton } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
-import { IconAgent, IconCircleCheckSolid } from "@optimizely/axiom-icons";
+import { IconAgent, IconCircleCheckSolid, IconArrowLeft } from "@optimizely/axiom-icons";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useOpalContext } from "@/app/context/OpalContext";
@@ -12,6 +12,8 @@ import { useAgentChatMode } from "@/app/hooks/useAgentChatMode";
 import { useAtlassianConnectorSuggestion } from "@/app/hooks/useAtlassianConnectorSuggestion";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { InlineEditorCard } from "@/app/components/Opal/InlineEditorCard";
+import { HeadlessTaskPanel } from "./components/HeadlessTaskPanel";
+import { GrabHandle } from "@/app/components/Opal/OpalChatView";
 
 // Loaded client-side only — contains @codemirror/*, @tiptap/*, yjs which are
 // browser-only and must not be included in the SSR bundle.
@@ -135,10 +137,12 @@ The updated article is ready for final review. See the revised artifact below.`;
 
 type ApprovalState = 'pending' | 'approved' | 'changes';
 
-function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
+function ApprovalActionCard({ state, onApprove, onRequestChanges, onOpenTask, selected }: {
   state: ApprovalState;
   onApprove: () => void;
   onRequestChanges: () => void;
+  onOpenTask?: () => void;
+  selected?: boolean;
 }) {
   if (state === 'approved') {
     return (
@@ -172,8 +176,10 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
       p="20"
       rounded="lg"
       style={{
-        border: '1px solid var(--ax-colors-border-default)',
+        border: selected ? '1px solid var(--ax-colors-border-accent)' : '1px solid var(--ax-colors-border-default)',
         background: 'var(--ax-colors-bg-default)',
+        boxShadow: selected ? '0 0 0 3px var(--ax-colors-bg-accent-subtle)' : undefined,
+        transition: 'border-color 0.15s, box-shadow 0.15s',
       }}
     >
       {/* VAU product indicator */}
@@ -220,10 +226,32 @@ function ApprovalActionCard({ state, onApprove, onRequestChanges }: {
         <Text style={{ fontSize: 14, letterSpacing: '0.28px', color: 'var(--ax-colors-fg-secondary)', lineHeight: 1.43 }}>
           Review the updated Q&amp;A article. Approve to proceed with publishing, or request further changes.
         </Text>
+        {onOpenTask && (
+          <button
+            type="button"
+            onClick={onOpenTask}
+            style={{
+              alignSelf: 'flex-start',
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'var(--ax-colors-fg-accent)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <IconArrowLeft size={14} />
+            View Task
+          </button>
+        )}
       </Box>
 
       {/* Actions */}
-      <Box display="flex" justifyContent="flex-end" gap="4">
+      <Box display="flex" alignItems="center" justifyContent="flex-end" gap="4">
         <AxiomButton appearance="subtle" size="md" onClick={onRequestChanges}>Ask Changes</AxiomButton>
         <AxiomButton appearance="primary" size="md" onClick={onApprove} icon={<IconCircleCheckSolid size={14} />}>Approve</AxiomButton>
       </Box>
@@ -282,6 +310,11 @@ export default function OpalPage() {
   const [editorVersion, setEditorVersion] = useState<'v1' | 'v2'>('v1');
   const [chatPanelVisible, setChatPanelVisible] = useState(true);
   const [approvalState, setApprovalState] = useState<ApprovalState>('pending');
+  const [headlessTaskOpen, setHeadlessTaskOpen] = useState(false);
+  const [taskPanelWidth, setTaskPanelWidth] = useState(460);
+  const handleTaskResize = useCallback((dx: number) => {
+    setTaskPanelWidth(prev => Math.max(320, Math.min(720, prev - dx)));
+  }, []);
   const [landingPageReady, setLandingPageReady] = useState(() => {
     if (typeof window === 'undefined') return false;
     return new URLSearchParams(window.location.search).get('artifacts') === '1';
@@ -298,8 +331,8 @@ export default function OpalPage() {
 
       const seedThread = () => {
         addMessage({ role: 'assistant', content: VAU_MSG_1, cardAfterKey: 'geo-initial' });
-        addMessage({ role: 'user', content: JC_MSG, authorName: 'Jamie Chen' });
-        addMessage({ role: 'user', content: TEAMMATE_MSG, authorAvatar: '/avatar-user.png', authorName: 'Mary Anne Torres' });
+        addMessage({ role: 'user', content: JC_MSG, authorName: 'Jamie Chen', authorAvatar: '/avatars/avatar-3.png' });
+        addMessage({ role: 'user', content: TEAMMATE_MSG, authorAvatar: '/avatars/avatar-2.png', authorName: 'Mary Anne Torres' });
         addMessage({ role: 'assistant', content: VAU_MSG_2, cardAfterKey: 'geo-updated' });
         setLandingPageReady(true);
         setTimeout(() => { setEditorVersion('v2'); setEditorOpen(true); }, 500);
@@ -415,6 +448,8 @@ export default function OpalPage() {
           state="changes"
           onApprove={() => {}}
           onRequestChanges={() => {}}
+          onOpenTask={() => setHeadlessTaskOpen(true)}
+          selected={headlessTaskOpen}
         />
       </Box>
     ),
@@ -434,6 +469,8 @@ export default function OpalPage() {
           state={approvalState}
           onApprove={() => setApprovalState('approved')}
           onRequestChanges={() => setApprovalState('changes')}
+          onOpenTask={() => setHeadlessTaskOpen(true)}
+          selected={headlessTaskOpen}
         />
       </Box>
     ),
@@ -492,22 +529,45 @@ export default function OpalPage() {
           onSubmitBlocked={triggerResumeHighlight}
           contextualActionCard={approvalState === 'approved' ? <Alert intent="success">Approved — submitting for publication</Alert> : (atlassianActionCard ?? undefined)}
           messageCards={messageCards}
-          canvasMode={editorOpen}
+          canvasMode={editorOpen || headlessTaskOpen}
           chatPanelVisible={chatPanelVisible}
+          onCloseChat={(editorOpen || headlessTaskOpen) ? () => setChatPanelVisible(false) : undefined}
           leftCanvas={
-            editorOpen ? (
-              <CodeCanvasPanel
-                onClose={() => setEditorOpen(false)}
-                filename="discover-the-unknown-qa.md"
-                artifactTitle="Q and A: Discover the unknown"
-                artifactVersion={editorVersion}
-                fileType="markdown"
-                language="markdown"
-                artifactCreator={{ name: "Jamie Chen" }}
-                initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
-                chatOpen={chatPanelVisible}
-                onChatToggle={() => setChatPanelVisible(v => !v)}
-              />
+            editorOpen || headlessTaskOpen ? (
+              <Box display="flex" flexDirection="row" h="full" w="full" style={{ minHeight: 0 }}>
+                {editorOpen && (
+                  <Box style={{ flex: 1, minWidth: 0, height: '100%', overflow: 'hidden' }}>
+                    <CodeCanvasPanel
+                      onClose={() => setEditorOpen(false)}
+                      filename="discover-the-unknown-qa.md"
+                      artifactTitle="Q and A: Discover the unknown"
+                      artifactVersion={editorVersion}
+                      fileType="markdown"
+                      language="markdown"
+                      artifactCreator={{ name: "Jamie Chen" }}
+                      initialHtml={editorVersion === 'v2' ? GEO_QA_HTML_V2 : GEO_QA_HTML_V1}
+                      chatOpen={chatPanelVisible}
+                      onChatToggle={() => setChatPanelVisible(v => !v)}
+                    />
+                  </Box>
+                )}
+                {editorOpen && headlessTaskOpen && <GrabHandle onResize={handleTaskResize} />}
+                {headlessTaskOpen && (
+                  <Box
+                    style={{
+                      width: editorOpen ? taskPanelWidth : '100%',
+                      flexShrink: 0,
+                      flexGrow: editorOpen ? 0 : 1,
+                      height: '100%',
+                      minHeight: 0,
+                      overflow: 'hidden',
+                      transition: editorOpen ? 'none' : 'width 0.25s cubic-bezier(0.16,1,0.3,1)',
+                    }}
+                  >
+                    <HeadlessTaskPanel open={headlessTaskOpen} onClose={() => setHeadlessTaskOpen(false)} variant="geo-qa" />
+                  </Box>
+                )}
+              </Box>
             ) : undefined
           }
         />
