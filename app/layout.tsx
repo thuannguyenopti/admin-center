@@ -496,13 +496,13 @@ export default function RootLayout({
 				icon: <IconSquareUser />,
 				customLayout: true,
 			},
-			{
-				label: "Agents",
-				url: "/opal/agents",
-				highlight: "/opal/agents",
-				icon: <IconAgent />,
-				customLayout: true,
-			},
+				{
+					label: "Agents",
+					url: "/opal/agents",
+					highlight: "/opal/agents",
+					icon: <IconAgent />,
+					customLayout: true,
+				},
 			{
 				label: "Connectors",
 				url: "/opal/connectors",
