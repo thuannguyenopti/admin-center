@@ -328,7 +328,11 @@ async function load(): Promise<StoreShape> {
 async function persist(): Promise<void> {
   if (!cache) return;
   const snapshot = JSON.stringify(cache, null, 2);
-  writeQueue = writeQueue.then(() => fs.writeFile(DATA_FILE, snapshot, "utf-8"));
+  writeQueue = writeQueue.then(() =>
+    fs.writeFile(DATA_FILE, snapshot, "utf-8").catch(() => {
+      // Vercel serverless FS is read-only — silently degrade to in-memory only.
+    }),
+  );
   await writeQueue;
 }
 
