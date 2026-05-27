@@ -126,7 +126,7 @@ export function OpalHistorySidebar({
       </Box>
 
       {/* Chat History Groups */}
-      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
         {Object.entries(groupedHistory).map(([dateLabel, items]) => {
           if (items.length === 0) return null;
           const isCollapsed = collapsedSections.has(dateLabel);
