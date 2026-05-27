@@ -56,6 +56,7 @@ import {
   IconFileWord,
 } from "@optiaxiom/icons";
 import dynamic from "next/dynamic";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FileUpload, FileUploadDropzone } from "@optiaxiom/react/unstable";
 import { CollaborativeEditorPanel } from "@/app/components/Opal/CollaborativeEditorPanel";
 import { OpalShareDialog } from "@/app/components/Opal/CodeCanvasPanel";
@@ -63,6 +64,7 @@ import { TiptapEditor } from "@/app/components/Opal/editor/TiptapEditor";
 import { useCollabDoc } from "@/app/components/Opal/editor/useCollabDoc";
 import { VersionHistory } from "@/app/opal/agents/setup/components/VersionHistory";
 import type { Version } from "@/app/opal/agents/setup/components/VersionHistory";
+import { BrandPacksOverview } from "@/app/opal/brand-packs/components/BrandPacksOverview";
 
 const CodeMirrorEditor = dynamic(
   () => import("@/app/components/Opal/editor/CodeMirrorEditor").then((m) => m.CodeMirrorEditor),
@@ -1255,9 +1257,14 @@ function WordPreview() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FilesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [treeData, setTreeData] = useState<FileNode[]>(INITIAL_FILE_TREE);
   const [selectedFileId, setSelectedFileId] = useState("1-1");
-  const [activeTab, setActiveTab] = useState<"skills" | "files" | "memory" | "rag">("files");
+  const [activeTab, setActiveTab] = useState<"skills" | "files" | "brand-packs" | "memory" | "rag">(
+    searchParams.get("tab") === "brand-packs" ? "brand-packs" : "files"
+  );
+  const isBrandPacksTab = activeTab === "brand-packs";
   const [isEditing, setIsEditing] = useState(false);
   const [editorMode, setEditorMode] = useState<"source" | "preview">("preview");
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -1456,97 +1463,112 @@ export default function FilesPage() {
 
         {/* Tabs */}
         <Box display="flex" gap="24" borderB="1" borderColor="border.tertiary" mb="16">
-          {(["skills", "files", "memory", "rag"] as const).map((tab) => (
+          {(["skills", "files", "brand-packs", "memory", "rag"] as const).map((tab) => (
             <Box
               key={tab}
               pb="12"
               cursor="pointer"
               borderB={activeTab === tab ? "2" : "0"}
               borderColor={activeTab === tab ? "border.default" : "transparent"}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                router.push(tab === "brand-packs" ? "/opal/context?tab=brand-packs" : "/opal/context");
+              }}
               style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
             >
               <Text
                 fontWeight={activeTab === tab ? "500" : "400"}
                 color={activeTab === tab ? "fg.default" : "fg.secondary"}
               >
-                {tab === "rag" ? "RAG" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === "rag" ? "RAG" : tab === "brand-packs" ? "Brand Packs" : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
             </Box>
           ))}
         </Box>
 
         {/* Filter bar */}
-      <Box display="flex" gap="12" alignItems="center">
-        <Box style={{ flex: 1, maxWidth: 264 }}>
-          <SearchInput size="lg" placeholder="Search files..." />
-        </Box>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <LabelMenuButton label="File Type">All</LabelMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem>All</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {[
-              { label: "Documents",    sub: "PDF, Word, Markdown, HTML" },
-              { label: "Spreadsheets", sub: "CSV, Excel" },
-              { label: "Media",        sub: "PNG, JPEG, GIF, WebP, SVG" },
-              { label: "Code",         sub: "JS, TS, HTML, CSS" },
-            ].map(({ label, sub }) => (
-              <DropdownMenuItem key={label}>
-                <Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
-                  <Text fontSize="sm" fontWeight="500">{label}</Text>
-                  <Text fontSize="xs" color="fg.tertiary">{sub}</Text>
-                </Box>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <LabelMenuButton label="Owner">Jamie Chen (You)</LabelMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {["Jamie Chen (You)", "Organization"].map((o) => (
-              <DropdownMenuItem key={o}>{o}</DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Box style={{ flex: 1 }} />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button appearance="primary" size="lg" icon={<IconAngleDown />} iconPosition="end">
-              Add
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Box display="flex" alignItems="center" gap="8">
-                <IconUpload size={14} />
-                Upload Files
-              </Box>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Box display="flex" alignItems="center" gap="8">
-                <IconFile size={14} />
-                New File
-              </Box>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Box display="flex" alignItems="center" gap="8">
-                <IconFolder size={14} />
-                New Folder
-              </Box>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </Box>
+        {!isBrandPacksTab && (
+          <Box display="flex" gap="12" alignItems="center">
+            <Box style={{ flex: 1, maxWidth: 264 }}>
+              <SearchInput size="lg" placeholder="Search files..." />
+            </Box>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <LabelMenuButton label="File Type">All</LabelMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>All</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {[
+                  { label: "Documents",    sub: "PDF, Word, Markdown, HTML" },
+                  { label: "Spreadsheets", sub: "CSV, Excel" },
+                  { label: "Media",        sub: "PNG, JPEG, GIF, WebP, SVG" },
+                  { label: "Code",         sub: "JS, TS, HTML, CSS" },
+                ].map(({ label, sub }) => (
+                  <DropdownMenuItem key={label}>
+                    <Box display="flex" flexDirection="column" gap="2" style={{ alignItems: "flex-start" }}>
+                      <Text fontSize="sm" fontWeight="500">{label}</Text>
+                      <Text fontSize="xs" color="fg.tertiary">{sub}</Text>
+                    </Box>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <LabelMenuButton label="Owner">Jamie Chen (You)</LabelMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {["Jamie Chen (You)", "Organization"].map((o) => (
+                  <DropdownMenuItem key={o}>{o}</DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Box style={{ flex: 1 }} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button appearance="primary" size="lg" icon={<IconAngleDown />} iconPosition="end">
+                  Add
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <Box display="flex" alignItems="center" gap="8">
+                    <IconUpload size={14} />
+                    Upload Files
+                  </Box>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Box display="flex" alignItems="center" gap="8">
+                    <IconFile size={14} />
+                    New File
+                  </Box>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Box display="flex" alignItems="center" gap="8">
+                    <IconFolder size={14} />
+                    New Folder
+                  </Box>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Box>
+        )}
       </Box>
 
       {/* Content body */}
-      <Box px="32" pt="16" pb="16" style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      {isBrandPacksTab ? (
+        <Box style={{ flex: 1, minHeight: 0 }}>
+          <BrandPacksOverview embedded />
+        </Box>
+      ) : (
+      <Box
+        px="32"
+        pt="16"
+        pb="16"
+        style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+      >
       <Box
         display="flex"
         flexDirection="row"
@@ -1984,6 +2006,7 @@ export default function FilesPage() {
         </Box>
       </Box>
       </Box>
+      )}
 
       {/* Share dialog */}
       <OpalShareDialog
