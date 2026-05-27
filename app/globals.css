@@ -117,6 +117,15 @@ body {
 	height: 100%;
 }
 
+/*
+ * Axiom 1.9 primary buttons still default strong button text to fg.white.
+ * The V3 rebrand primary is lime, so scope the strong text bridge to
+ * primary buttons only and leave danger/inverse strong buttons unchanged.
+ */
+.vre7li._47vzdo {
+	--_6o2eap: var(--ax-colors-fg-default-inverse);
+}
+
 /* Prevent page scroll when a modal is open (single scrollbar inside modal only) */
 body[data-modal-open] {
 	overflow: hidden !important;
