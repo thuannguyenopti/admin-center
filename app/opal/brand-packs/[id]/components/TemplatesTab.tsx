@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { Box, Button, Text } from "@optiaxiom/react";
-import { IconGrid2, IconListUl, IconArrowUpRightFromSquare, IconCopy } from "@optimizely/axiom-icons";
+import { IconGrid2, IconListUl, IconCopy, IconBolt } from "@optimizely/axiom-icons";
+import { useLayout } from "@/app/context/LayoutContext";
 import type { BrandPack, BrandTemplate } from "../../types";
+// Register the template_card adaptive block so Opal can render it
+import "@/app/opal/brand-packs/components/TemplateCardBlock";
 
 type TemplatesTabProps = {
 	pack: BrandPack;
@@ -25,7 +28,13 @@ function ratioPaddingTop(ratio: string): string {
 }
 
 
-function TemplateGridCard({ template }: { template: BrandTemplate }) {
+function TemplateGridCard({
+	template,
+	onUseTemplate,
+}: {
+	template: BrandTemplate;
+	onUseTemplate: (template: BrandTemplate) => void;
+}) {
 	const [hovered, setHovered] = useState(false);
 
 	return (
@@ -69,10 +78,11 @@ function TemplateGridCard({ template }: { template: BrandTemplate }) {
 					<Box
 						alignItems="center"
 						display="flex"
+						flexDirection="column"
 						gap="8"
 						justifyContent="center"
 						style={{
-							background: "rgba(0,0,0,0.42)",
+							background: "rgba(0,0,0,0.52)",
 							bottom: 0,
 							left: 0,
 							position: "absolute",
@@ -80,21 +90,25 @@ function TemplateGridCard({ template }: { template: BrandTemplate }) {
 							top: 0,
 						}}
 					>
+						{/* Primary CTA */}
 						<Button
 							appearance="default"
 							size="sm"
-							icon={<IconArrowUpRightFromSquare />}
-							onClick={(e) => e.stopPropagation()}
+							icon={<IconBolt size={14} />}
+							iconPosition="start"
+							onClick={(e) => { e.stopPropagation(); onUseTemplate(template); }}
+							style={{ color: "#202320", fontWeight: 600 }}
 						>
-							Open
+							Use template
 						</Button>
+						{/* Secondary: duplicate */}
 						<Button
 							appearance="subtle"
 							size="sm"
-							icon={<IconCopy />}
+							icon={<IconCopy size={14} />}
 							aria-label="Duplicate"
 							onClick={(e) => e.stopPropagation()}
-							style={{ background: "rgba(255,255,255,0.12)", color: "#fff" }}
+							style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}
 						/>
 					</Box>
 				)}
@@ -115,7 +129,13 @@ function TemplateGridCard({ template }: { template: BrandTemplate }) {
 	);
 }
 
-function TemplateListRow({ template }: { template: BrandTemplate }) {
+function TemplateListRow({
+	template,
+	onUseTemplate,
+}: {
+	template: BrandTemplate;
+	onUseTemplate: (template: BrandTemplate) => void;
+}) {
 	const [hovered, setHovered] = useState(false);
 
 	return (
@@ -130,10 +150,12 @@ function TemplateListRow({ template }: { template: BrandTemplate }) {
 			rounded="lg"
 			style={{
 				boxShadow: hovered ? "var(--ax-boxShadow-sm)" : "none",
+				cursor: "pointer",
 				transition: "box-shadow 0.15s ease",
 			}}
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
+			onClick={() => onUseTemplate(template)}
 		>
 			{/* Thumb */}
 			<Box
@@ -158,9 +180,18 @@ function TemplateListRow({ template }: { template: BrandTemplate }) {
 
 			{/* Actions */}
 			{hovered && (
-				<Box alignItems="center" display="flex" gap="4" style={{ flexShrink: 0 }}>
-					<Button appearance="subtle" size="sm" icon={<IconCopy />} aria-label="Duplicate" />
-					<Button appearance="subtle" size="sm" icon={<IconArrowUpRightFromSquare />} aria-label="Open" />
+				<Box alignItems="center" display="flex" gap="4" style={{ flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+					<Button appearance="subtle" size="sm" icon={<IconCopy size={15} />} aria-label="Duplicate" />
+					<Button
+						appearance="default"
+						size="sm"
+						icon={<IconBolt size={14} />}
+						iconPosition="start"
+						onClick={() => onUseTemplate(template)}
+						style={{ color: "#202320", fontWeight: 600 }}
+					>
+						Use template
+					</Button>
 				</Box>
 			)}
 		</Box>
@@ -170,6 +201,30 @@ function TemplateListRow({ template }: { template: BrandTemplate }) {
 export function TemplatesTab({ pack }: TemplatesTabProps) {
 	const [view, setView] = useState<ViewMode>("grid");
 	const [filterChannel, setFilterChannel] = useState<string>("All");
+	const { opalPanelControls } = useLayout();
+
+	const handleUseTemplate = (template: BrandTemplate) => {
+		if (!opalPanelControls) return;
+
+		opalPanelControls.createNewChat();
+		opalPanelControls.openPanel();
+
+		// Add the template as a user "card" message
+		opalPanelControls.addMessage({
+			role: "user",
+			content: `Use template: ${template.name}`,
+			messageType: "template_card",
+			metadata: { template },
+		});
+
+		// Opal responds with the hook after a brief pause
+		setTimeout(() => {
+			opalPanelControls.addMessage({
+				role: "assistant",
+				content: `I've got **${template.name}** ready — a ${template.format} (${template.ratio}) built for ${template.channel}.\n\n**What do you want to create?** Tell me about your campaign, audience, or message and I'll draft the content to match your brand.`,
+			});
+		}, 350);
+	};
 
 	// Unique channels for filter tabs
 	const channels = ["All", ...Array.from(new Set(pack.templates.map((t) => t.channel))).sort()];
@@ -268,13 +323,13 @@ export function TemplatesTab({ pack }: TemplatesTabProps) {
 					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", alignItems: "start" }}
 				>
 					{visible.map((t) => (
-						<TemplateGridCard key={t.id} template={t} />
+						<TemplateGridCard key={t.id} template={t} onUseTemplate={handleUseTemplate} />
 					))}
 				</Box>
 			) : (
 				<Box display="flex" flexDirection="column" gap="6">
 					{visible.map((t) => (
-						<TemplateListRow key={t.id} template={t} />
+						<TemplateListRow key={t.id} template={t} onUseTemplate={handleUseTemplate} />
 					))}
 				</Box>
 			)}
