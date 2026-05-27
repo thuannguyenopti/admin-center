@@ -92,7 +92,7 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 									<Text fontWeight="700" style={{ fontSize: 20 }}>
 										{pack.name}
 									</Text>
-									{isActive && (
+									{isActive ? (
 										<Box
 											alignItems="center"
 											bg="bg.accent"
@@ -106,8 +106,9 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 												ACTIVE
 											</Text>
 										</Box>
+									) : (
+										<StatusBadge status={pack.status} />
 									)}
-									<StatusBadge status={pack.status} />
 								</Box>
 								<Text color="fg.secondary" fontSize="xs">
 									{pack.typography.heading} · {pack.templateCount} templates · {pack.channels.join(", ")}
