@@ -493,7 +493,7 @@ export default function OpalPage() {
         <OpalChatView
           variant="home"
           streamingMode="expanded"
-          headerTitle={landingPageReady ? "Thread" : undefined}
+          headerTitle={landingPageReady ? "Threads" : undefined}
           messages={messages}
           inputValue={inputValue}
           isLoading={isLoading}
