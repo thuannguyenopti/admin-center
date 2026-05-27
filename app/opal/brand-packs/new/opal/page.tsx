@@ -14,6 +14,7 @@ import {
 	IconCheck,
 	IconGlobe,
 } from "@optimizely/axiom-icons";
+import { BrandPackPageHeader } from "../../components/BrandPackPageHeader";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -83,6 +84,8 @@ const ANALYZING_STEPS = [
 	"Detecting tone of voice…",
 	"Building brand pack…",
 ];
+
+const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
 
 // ── Chat history ──────────────────────────────────────────────────────────────
 
@@ -977,7 +980,7 @@ export default function BrandPackOpalSetupPage() {
 	}
 
 	function handleDismiss() {
-		router.push("/opal/brand-packs");
+		router.push(BRAND_PACKS_HOME);
 	}
 
 	function handleUrlSubmit() {
@@ -1017,29 +1020,14 @@ export default function BrandPackOpalSetupPage() {
 			`}</style>
 
 			<Box display="flex" flexDirection="column" h="full" overflow="hidden">
-				{/* Header */}
 				<Box
-					bg="bg.default"
-					alignItems="center"
-					display="flex"
-					gap="12"
-					style={{
-						borderBottom: "1px solid var(--ax-colors-border-tertiary)",
-						flexShrink: 0,
-						padding: "12px 24px",
-					}}
+					style={{ flexShrink: 0, padding: "32px 32px 16px" }}
 				>
-					<Button
-						appearance="subtle"
-						size="sm"
-						icon={<IconArrowLeft />}
-						aria-label="Back"
-						onClick={handleDismiss}
+					<BrandPackPageHeader
+						onBack={handleDismiss}
+						title="New Brand Pack"
+						subtitle="Set up with Opal"
 					/>
-					<Box display="flex" flexDirection="column" gap="2">
-						<Text fontWeight="600" style={{ fontSize: 14 }}>New Brand Pack</Text>
-						<Text color="fg.tertiary" fontSize="xs">Set up with Opal</Text>
-					</Box>
 				</Box>
 
 				{/* Chat area */}

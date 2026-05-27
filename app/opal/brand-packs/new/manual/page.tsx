@@ -10,6 +10,7 @@ import {
 	IconPlus,
 	IconXmark,
 } from "@optimizely/axiom-icons";
+import { BrandPackPageHeader } from "../../components/BrandPackPageHeader";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,8 @@ const COLOR_ROLES = [
 	{ role: "background", label: "Background" },
 	{ role: "text", label: "Text" },
 ] as const;
+
+const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
 
 // ── Stepper ──────────────────────────────────────────────────────────────────
 
@@ -316,29 +319,14 @@ export default function BrandPackManualPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" h="full" overflow="hidden">
-			{/* Header */}
 			<Box
-				bg="bg.default"
-				alignItems="center"
-				display="flex"
-				gap="12"
-				style={{
-					borderBottom: "1px solid var(--ax-colors-border-tertiary)",
-					flexShrink: 0,
-					padding: "12px 24px",
-				}}
+				style={{ flexShrink: 0, padding: "32px 32px 16px" }}
 			>
-				<Button
-					appearance="subtle"
-					size="sm"
-					icon={<IconArrowLeft />}
-					aria-label="Back"
-					onClick={() => router.push("/opal/brand-packs")}
+				<BrandPackPageHeader
+					onBack={() => router.push(BRAND_PACKS_HOME)}
+					title="New Brand Pack"
+					subtitle="Build manually"
 				/>
-				<Box display="flex" flexDirection="column" gap="2">
-					<Text fontWeight="600" style={{ fontSize: 14 }}>New Brand Pack</Text>
-					<Text color="fg.tertiary" fontSize="xs">Build manually</Text>
-				</Box>
 			</Box>
 
 			{/* Step bar */}

@@ -1261,9 +1261,8 @@ export default function FilesPage() {
   const searchParams = useSearchParams();
   const [treeData, setTreeData] = useState<FileNode[]>(INITIAL_FILE_TREE);
   const [selectedFileId, setSelectedFileId] = useState("1-1");
-  const [activeTab, setActiveTab] = useState<"skills" | "files" | "brand-packs" | "memory" | "rag">(
-    searchParams.get("tab") === "brand-packs" ? "brand-packs" : "files"
-  );
+  const [activeContextTab, setActiveContextTab] = useState<"skills" | "files" | "memory" | "rag">("files");
+  const activeTab = searchParams.get("tab") === "brand-packs" ? "brand-packs" : activeContextTab;
   const isBrandPacksTab = activeTab === "brand-packs";
   const [isEditing, setIsEditing] = useState(false);
   const [editorMode, setEditorMode] = useState<"source" | "preview">("preview");
@@ -1471,8 +1470,12 @@ export default function FilesPage() {
               borderB={activeTab === tab ? "2" : "0"}
               borderColor={activeTab === tab ? "border.default" : "transparent"}
               onClick={() => {
-                setActiveTab(tab);
-                router.push(tab === "brand-packs" ? "/opal/context?tab=brand-packs" : "/opal/context");
+                if (tab === "brand-packs") {
+                  router.push("/opal/context?tab=brand-packs");
+                } else {
+                  setActiveContextTab(tab);
+                  router.push("/opal/context");
+                }
               }}
               style={activeTab === tab ? { borderBottomColor: "var(--ax-colors-fg-default)" } : {}}
             >

@@ -4,12 +4,12 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Button, Text } from "@optiaxiom/react";
 import {
-	IconArrowLeft,
 	IconCheck,
 	IconSparkles,
 	IconLink,
 	IconTriangleExclamation as IconWarning,
 } from "@optimizely/axiom-icons";
+import { BrandPackPageHeader } from "../../components/BrandPackPageHeader";
 
 type FlowStep = "input" | "validating" | "preview" | "importing" | "done";
 
@@ -36,6 +36,8 @@ const PREVIEW_DATA = {
 	components: 47,
 	styles: 12,
 };
+
+const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
 
 function ColorDot({ hex, name }: { hex: string; name: string }) {
 	return (
@@ -108,41 +110,20 @@ export default function BrandPackFigmaPage() {
 
 	return (
 		<Box display="flex" flexDirection="column" h="full" overflow="hidden">
-			{/* Header */}
-			<Box
-				bg="bg.default"
-				alignItems="center"
-				display="flex"
-				gap="12"
-				style={{
-					borderBottom: "1px solid var(--ax-colors-border-tertiary)",
-					flexShrink: 0,
-					padding: "12px 24px",
-				}}
-			>
-				<Button
-					appearance="subtle"
-					size="sm"
-					icon={<IconArrowLeft />}
-					aria-label="Back"
-					onClick={() => router.push("/opal/brand-packs")}
-				/>
-				<Box display="flex" flexDirection="column" gap="2">
-					<Text fontWeight="600" style={{ fontSize: 14 }}>
-						New Brand Pack
-					</Text>
-					<Text color="fg.tertiary" fontSize="xs">
-						Import from Figma
-					</Text>
-				</Box>
-			</Box>
-
-			{/* Content */}
 			<Box
 				display="flex"
 				flexDirection="column"
-				style={{ flex: 1, overflowY: "auto", padding: "48px 24px" }}
+				style={{ flex: 1, overflowY: "auto", padding: "40px 24px 64px" }}
 			>
+				<Box style={{ marginBottom: 40 }}>
+					<BrandPackPageHeader
+						maxWidth={960}
+						onBack={() => router.push(BRAND_PACKS_HOME)}
+						title="New Brand Pack"
+						subtitle="Import from Figma"
+					/>
+				</Box>
+
 				<Box
 					display="flex"
 					flexDirection="column"
