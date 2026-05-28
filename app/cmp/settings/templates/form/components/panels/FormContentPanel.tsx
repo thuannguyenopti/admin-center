@@ -60,11 +60,11 @@ export function FormContentPanel({ node, onClose, onLabelChange }: FormContentPa
 
 			<DetailsPanelBody>
 				<Box p="16">
-					<Field label="Text">
+					<Field label="Form title">
 						<Input
 							value={label}
 							onValueChange={handleChange}
-							placeholder="Enter text..."
+							placeholder="Form title"
 						/>
 					</Field>
 				</Box>
