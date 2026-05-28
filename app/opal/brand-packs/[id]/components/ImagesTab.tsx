@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
+import { Box, Button, Select, Text, Textarea } from "@optiaxiom/react";
 import { IconArrowUpRightFromSquare, IconDownload } from "@optimizely/axiom-icons";
 import type { BrandAsset, BrandPack } from "../../types";
 
@@ -11,58 +11,17 @@ type ImagesTabProps = {
 
 type Classification = "style-ref" | "logo";
 
+const CLASSIFICATION_OPTIONS = [
+	{ label: "Style reference", value: "style-ref" },
+	{ label: "Logo", value: "logo" },
+];
+
 const ASSET_TYPE_LABEL: Record<BrandAsset["type"], string> = {
 	logo: "Logo",
 	photo: "Photo",
 	icon: "Icon",
 	illustration: "Illustration",
 };
-
-/**
- * Segmented classification control — always visible on each card.
- * Persistent state (type classification) should never be buried in a menu.
- */
-function ClassificationControl({
-	value,
-	onChange,
-}: {
-	value: Classification;
-	onChange: (v: Classification) => void;
-}) {
-	return (
-		<Box
-			alignItems="center"
-			bg="bg.secondary"
-			display="inline-flex"
-			gap="2"
-			p="2"
-			rounded="full"
-			style={{ alignSelf: "flex-start" }}
-		>
-			{(["style-ref", "logo"] as Classification[]).map((opt) => (
-				<button
-					key={opt}
-					type="button"
-					onClick={(e) => { e.stopPropagation(); onChange(opt); }}
-					style={{
-						background: value === opt ? "var(--ax-colors-bg-default)" : "transparent",
-						border: 0,
-						borderRadius: 999,
-						boxShadow: value === opt ? "0 1px 2px rgba(0,0,0,0.08)" : "none",
-						color: value === opt ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-tertiary)",
-						cursor: "pointer",
-						fontSize: 11,
-						fontWeight: value === opt ? 600 : 400,
-						padding: "3px 10px",
-						transition: "all 0.12s ease",
-					}}
-				>
-					{opt === "style-ref" ? "Style Ref" : "Logo"}
-				</button>
-			))}
-		</Box>
-	);
-}
 
 function ImageCard({
 	asset,
@@ -96,7 +55,6 @@ function ImageCard({
 			onMouseEnter={() => setHovered(true)}
 			onMouseLeave={() => setHovered(false)}
 		>
-			{/* Image preview */}
 			<Box
 				alignItems="center"
 				bg="bg.secondary"
@@ -150,9 +108,7 @@ function ImageCard({
 				)}
 			</Box>
 
-			{/* Card body */}
 			<Box display="flex" flexDirection="column" gap="8" p="12">
-				{/* Name + type */}
 				<Box display="flex" flexDirection="column" gap="2">
 					<Text
 						fontWeight="500"
@@ -170,33 +126,24 @@ function ImageCard({
 					</Text>
 				</Box>
 
-				{/* Classification — always visible */}
-				<ClassificationControl value={classification} onChange={onClassify} />
+				<Select
+					value={classification}
+					onValueChange={(value) => onClassify(value as Classification)}
+					options={CLASSIFICATION_OPTIONS}
+				/>
 
-				{/* LLM constraint field */}
 				{constraintExpanded ? (
-					<textarea
+					<Textarea
 						value={constraint}
 						onChange={(e) => onConstraintChange(e.target.value)}
-						placeholder="LLM guidance — e.g. Do not recreate this artwork, use only for composition reference."
+						placeholder="LLM guidance: do not recreate this artwork; resize/crop only; use as composition reference."
 						rows={2}
 						style={{
-							background: "var(--ax-colors-bg-secondary)",
-							border: "1px solid var(--ax-colors-border-default)",
-							borderRadius: 6,
-							color: "var(--ax-colors-fg-default)",
-							fontFamily: "inherit",
 							fontSize: 11,
 							lineHeight: 1.5,
-							outline: "none",
-							padding: "6px 8px",
 							resize: "none",
-							transition: "border-color 0.15s",
-							width: "100%",
 						}}
-						onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
 						onBlur={(e) => {
-							e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
 							if (!constraint) setConstraintExpanded(false);
 						}}
 					/>
@@ -245,14 +192,12 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 
 	return (
 		<Box display="flex" flexDirection="column" gap="20">
-			{/* Header */}
 			<Box
 				alignItems="center"
 				display="flex"
 				justifyContent="space-between"
 				style={{ flexWrap: "wrap", gap: 12 }}
 			>
-				{/* Filter pills */}
 				<Box
 					alignItems="center"
 					bg="bg.secondary"
@@ -293,7 +238,6 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 				</Box>
 			</Box>
 
-			{/* Constraint explainer — contextual, single line */}
 			<Box
 				alignItems="center"
 				bg="bg.secondary"
@@ -310,11 +254,10 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 					style={{ flexShrink: 0, height: 6, width: 6 }}
 				/>
 				<Text color="fg.secondary" fontSize="xs">
-					Classify images as <strong>Style Ref</strong> (composition/mood reference) or <strong>Logo</strong>. Add LLM guidance to control how Opal uses each image in generation.
+					Classify every asset where it appears. Use <strong>Style reference</strong> for mood/composition and <strong>Logo</strong> only for marks Opal may place. Add constraints when an image should be resized or referenced, not recreated.
 				</Text>
 			</Box>
 
-			{/* Image grid */}
 			{filtered.length > 0 ? (
 				<Box
 					display="grid"

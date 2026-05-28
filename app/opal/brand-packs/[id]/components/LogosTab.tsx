@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
+import { Box, Button, Select, Text } from "@optiaxiom/react";
 import { IconArrowUpRightFromSquare, IconDownload } from "@optimizely/axiom-icons";
 import type { BrandPack } from "../../types";
 
@@ -9,8 +9,16 @@ type LogosTabProps = {
 	pack: BrandPack;
 };
 
+type Classification = "logo" | "style-ref";
+
+const CLASSIFICATION_OPTIONS = [
+	{ label: "Logo", value: "logo" },
+	{ label: "Style reference", value: "style-ref" },
+];
+
 function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 	const [hovered, setHovered] = useState(false);
+	const [classification, setClassification] = useState<Classification>("logo");
 
 	return (
 		<Box
@@ -106,6 +114,11 @@ function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 				<Text color="fg.tertiary" fontSize="xs">
 					{asset.format}
 				</Text>
+				<Select
+					value={classification}
+					onValueChange={(value) => setClassification(value as Classification)}
+					options={CLASSIFICATION_OPTIONS}
+				/>
 			</Box>
 		</Box>
 	);
@@ -143,9 +156,9 @@ function UploadZone() {
 				Drop logo files here
 			</Text>
 			<Text color="fg.tertiary" fontSize="xs">
-				SVG, PNG, or WebP — transparent backgrounds preferred
+				SVG, PNG, or WebP. Classify questionable artwork after upload.
 			</Text>
-			<Button appearance="default" size="sm" style={{ marginTop: 4 }}>
+			<Button appearance="default" size="md" style={{ marginTop: 4 }}>
 				Browse files
 			</Button>
 		</Box>
@@ -162,7 +175,7 @@ export function LogosTab({ pack }: LogosTabProps) {
 				<Text color="fg.secondary" fontSize="sm">
 					{logos.length} logo{logos.length !== 1 ? "s" : ""}
 				</Text>
-				<Button appearance="default" size="sm">
+				<Button appearance="default" size="md">
 					Upload logo
 				</Button>
 			</Box>

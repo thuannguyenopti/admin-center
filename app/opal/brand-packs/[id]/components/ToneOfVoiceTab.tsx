@@ -1,235 +1,163 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
-import {
-	IconPenToSquare as IconEdit,
-	IconCheck,
-	IconSparkles,
-} from "@optimizely/axiom-icons";
+import { useRef, useState } from "react";
+import { Box, Button, Input, Text, Textarea } from "@optiaxiom/react";
+import { IconCheck, IconPlus, IconXmark } from "@optimizely/axiom-icons";
 import type { BrandPack } from "../../types";
 
 type ToneOfVoiceTabProps = {
 	pack: BrandPack;
 };
 
-function ToneChip({
-	label,
-	onRemove,
+const INITIAL_RULES = [
+	"Write in the second person when possible.",
+	"Lead with the outcome, not the feature.",
+	"Use short sentences and active verbs.",
+	"Avoid jargon, inflated AI claims, and corporate filler.",
+];
+
+function TonePill({ label, onRemove }: { label: string; onRemove: () => void }) {
+	return (
+		<Box alignItems="center" bg="bg.accent.subtle" display="inline-flex" gap="6" rounded="full" style={{ padding: "4px 6px 4px 12px" }}>
+			<Text color="fg.accent" fontSize="sm" fontWeight="500">{label}</Text>
+			<Button appearance="subtle" aria-label={`Remove ${label}`} icon={<IconXmark />} onClick={onRemove} size="sm" />
+		</Box>
+	);
+}
+
+function SectionCard({
+	children,
+	description,
+	title,
 }: {
-	label: string;
-	onRemove: () => void;
+	children: React.ReactNode;
+	description: string;
+	title: string;
 }) {
 	return (
 		<Box
-			alignItems="center"
-			bg="bg.accent.subtle"
-			display="inline-flex"
-			gap="6"
-			rounded="full"
-			style={{ padding: "5px 10px 5px 14px" }}
+			bg="bg.default"
+			border="1"
+			borderColor="border.tertiary"
+			display="flex"
+			flexDirection="column"
+			gap="16"
+			p="20"
+			rounded="xl"
+			shadow="sm"
 		>
-			<Text color="fg.accent" fontWeight="500" style={{ fontSize: 13 }}>
-				{label}
-			</Text>
-			<button
-				type="button"
-				onClick={onRemove}
-				aria-label={`Remove ${label}`}
-				style={{
-					alignItems: "center",
-					background: "transparent",
-					border: 0,
-					borderRadius: "50%",
-					color: "var(--ax-colors-fg-accent)",
-					cursor: "pointer",
-					display: "flex",
-					fontSize: 15,
-					fontWeight: 300,
-					lineHeight: 1,
-					opacity: 0.55,
-					padding: 0,
-					transition: "opacity 0.12s",
-				}}
-				onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-				onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.55"; }}
-			>
-				×
-			</button>
+			<Box display="flex" flexDirection="column" gap="4">
+				<Text fontWeight="600" style={{ fontSize: 14 }}>{title}</Text>
+				<Text color="fg.secondary" fontSize="sm">{description}</Text>
+			</Box>
+			{children}
 		</Box>
 	);
 }
 
 export function ToneOfVoiceTab({ pack }: ToneOfVoiceTabProps) {
-	const [isEditingBrief, setIsEditingBrief] = useState(false);
-	const [briefText, setBriefText] = useState(pack.brandBrief);
-	const [saved, setSaved] = useState(false);
-
-	const [toneKeywords, setToneKeywords] = useState<string[]>(pack.toneKeywords);
+	const [keywords, setKeywords] = useState<string[]>(pack.toneKeywords);
+	const [rules, setRules] = useState(INITIAL_RULES.join("\n"));
+	const [goodExample, setGoodExample] = useState("Train smarter. Race faster.");
+	const [avoidExample, setAvoidExample] = useState("Our AI-powered platform optimizes your training schedule.");
 	const [draft, setDraft] = useState("");
+	const [saved, setSaved] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 
-	const handleSaveBrief = () => {
-		setSaved(true);
-		setIsEditingBrief(false);
-		setTimeout(() => setSaved(false), 2000);
-	};
-
 	const addKeyword = () => {
-		const val = draft.trim();
-		if (!val || toneKeywords.includes(val)) return;
-		setToneKeywords((p) => [...p, val]);
+		const value = draft.trim();
+		if (!value || keywords.includes(value)) return;
+		setKeywords((current) => [...current, value]);
 		setDraft("");
 		inputRef.current?.focus();
 	};
 
-	const removeKeyword = (kw: string) =>
-		setToneKeywords((p) => p.filter((k) => k !== kw));
+	const save = () => {
+		setSaved(true);
+		setTimeout(() => setSaved(false), 2000);
+	};
 
 	return (
-		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 760 }}>
-			{/* Brand Brief */}
-			<Box
-				bg="bg.default"
-				border="1"
-				borderColor="border.tertiary"
-				display="flex"
-				flexDirection="column"
-				gap="16"
-				p="20"
-				rounded="xl"
-				shadow="sm"
-			>
-				<Box alignItems="center" display="flex" justifyContent="space-between">
-					<Box display="flex" flexDirection="column" gap="2">
-						<Text fontWeight="600" style={{ fontSize: 14 }}>Brand Brief</Text>
-						<Text color="fg.tertiary" fontSize="xs">
-							A narrative description of this brand — voice, values, audience
-						</Text>
+		<Box display="grid" gap="16" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(320px, 420px)", maxWidth: 980 }}>
+			<Box display="flex" flexDirection="column" gap="16">
+				<SectionCard
+					title="Tone Keywords"
+					description="Short traits Opal should preserve across copy and generated assets."
+				>
+					<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
+						{keywords.map((keyword) => (
+							<TonePill
+								key={keyword}
+								label={keyword}
+								onRemove={() => setKeywords((current) => current.filter((item) => item !== keyword))}
+							/>
+						))}
 					</Box>
 					<Box alignItems="center" display="flex" gap="8">
-						{!isEditingBrief && (
-							<Button
-								appearance="subtle"
-								size="sm"
-								icon={<IconSparkles />}
-								style={{ color: "var(--ax-colors-fg-accent)" }}
-							>
-								Regenerate with Opal
-							</Button>
-						)}
-						{isEditingBrief ? (
-							<>
-								<Button
-									appearance="subtle"
-									size="sm"
-									onClick={() => setIsEditingBrief(false)}
-								>
-									Cancel
-								</Button>
-								<Button
-									appearance="primary"
-									size="sm"
-									icon={saved ? <IconCheck /> : undefined}
-									onClick={handleSaveBrief}
-								>
-									{saved ? "Saved" : "Save"}
-								</Button>
-							</>
-						) : (
-							<Button
-								appearance="subtle"
-								size="sm"
-								icon={<IconEdit />}
-								onClick={() => setIsEditingBrief(true)}
-							>
-								Edit
-							</Button>
-						)}
+						<Input
+							ref={inputRef}
+							value={draft}
+							onChange={(event) => setDraft(event.target.value)}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") {
+									event.preventDefault();
+									addKeyword();
+								}
+							}}
+							placeholder="Add tone keyword"
+						/>
+						<Button appearance="default" icon={<IconPlus />} onClick={addKeyword} size="md">
+							Add
+						</Button>
 					</Box>
-				</Box>
+				</SectionCard>
 
-				{isEditingBrief ? (
-					<textarea
-						value={briefText}
-						onChange={(e) => setBriefText(e.target.value)}
-						rows={8}
-						style={{
-							background: "var(--ax-colors-bg-secondary)",
-							border: "1.5px solid var(--ax-colors-border-accent)",
-							borderRadius: 10,
-							color: "var(--ax-colors-fg-default)",
-							fontFamily: "inherit",
-							fontSize: 14,
-							lineHeight: 1.7,
-							outline: "none",
-							padding: "12px 16px",
-							resize: "vertical",
-							width: "100%",
-						}}
+				<SectionCard
+					title="Voice Rules"
+					description="Operational language rules used by Opal before generation."
+				>
+					<Textarea
+						value={rules}
+						onChange={(event) => setRules(event.target.value)}
+						rows={6}
+						style={{ lineHeight: 1.6 }}
 					/>
-				) : (
-					<Text
-						color="fg.secondary"
-						fontSize="sm"
-						style={{ lineHeight: 1.7, whiteSpace: "pre-wrap" }}
-					>
-						{briefText}
-					</Text>
-				)}
+				</SectionCard>
 			</Box>
 
-			{/* Tone Keywords */}
-			<Box
-				bg="bg.default"
-				border="1"
-				borderColor="border.tertiary"
-				display="flex"
-				flexDirection="column"
-				gap="16"
-				p="20"
-				rounded="xl"
-				shadow="sm"
-			>
-				<Box display="flex" flexDirection="column" gap="2">
-					<Text fontWeight="600" style={{ fontSize: 14 }}>Tone Keywords</Text>
-					<Text color="fg.tertiary" fontSize="xs">
-						These guide Opal's language — word choice, sentence structure, communication style
-					</Text>
-				</Box>
+			<Box display="flex" flexDirection="column" gap="16">
+				<SectionCard
+					title="Examples"
+					description="Give Opal a good direction and a pattern to avoid."
+				>
+					<Box display="flex" flexDirection="column" gap="12">
+						<Box display="flex" flexDirection="column" gap="6">
+							<Text color="fg.secondary" fontSize="xs" fontWeight="600">Good</Text>
+							<Input value={goodExample} onChange={(event) => setGoodExample(event.target.value)} />
+						</Box>
+						<Box display="flex" flexDirection="column" gap="6">
+							<Text color="fg.secondary" fontSize="xs" fontWeight="600">Avoid</Text>
+							<Input value={avoidExample} onChange={(event) => setAvoidExample(event.target.value)} />
+						</Box>
+					</Box>
+				</SectionCard>
 
-				{/* Chips */}
-				<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
-					{toneKeywords.map((kw) => (
-						<ToneChip key={kw} label={kw} onRemove={() => removeKeyword(kw)} />
-					))}
-				</Box>
+				<SectionCard
+					title="Channels"
+					description="Tone applies across these approved channels."
+				>
+					<Box display="flex" gap="6" style={{ flexWrap: "wrap" }}>
+						{pack.channels.map((channel) => (
+							<Box key={channel} bg="bg.secondary" rounded="full" style={{ padding: "5px 12px" }}>
+								<Text color="fg.secondary" fontSize="xs" fontWeight="500">{channel}</Text>
+							</Box>
+						))}
+					</Box>
+				</SectionCard>
 
-				{/* Add keyword */}
-				<Box alignItems="center" display="flex" gap="8">
-					<input
-						ref={inputRef}
-						value={draft}
-						onChange={(e) => setDraft(e.target.value)}
-						placeholder="Add a tone keyword…"
-						onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
-						style={{
-							background: "var(--ax-colors-bg-secondary)",
-							border: "1px solid var(--ax-colors-border-default)",
-							borderRadius: 6,
-							color: "var(--ax-colors-fg-default)",
-							flex: 1,
-							fontFamily: "inherit",
-							fontSize: 13,
-							outline: "none",
-							padding: "6px 10px",
-							transition: "border-color 0.15s",
-						}}
-						onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
-						onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
-					/>
-					<Button appearance="subtle" size="sm" onClick={addKeyword} style={{ flexShrink: 0 }}>
-						Add
+				<Box display="flex" justifyContent="end">
+					<Button appearance="primary" icon={saved ? <IconCheck /> : undefined} onClick={save} size="md">
+						{saved ? "Saved" : "Save tone"}
 					</Button>
 				</Box>
 			</Box>

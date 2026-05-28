@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Text } from "@optiaxiom/react";
-import { IconCheck } from "@optimizely/axiom-icons";
+import { Box, Button, Input, Select, Text } from "@optiaxiom/react";
+import { IconCheck, IconPlus, IconXmark } from "@optimizely/axiom-icons";
 import type { BrandColor, BrandPack } from "../../types";
 
 type ColoursTabProps = {
@@ -11,19 +11,8 @@ type ColoursTabProps = {
 
 type ColorEntry = BrandColor & { _id: string };
 
-const ROLES: BrandColor["role"][] = ["primary", "secondary", "accent", "neutral", "background", "text"];
-
-const inputStyle: React.CSSProperties = {
-	background: "var(--ax-colors-bg-secondary)",
-	border: "1px solid var(--ax-colors-border-default)",
-	borderRadius: 6,
-	color: "var(--ax-colors-fg-default)",
-	fontFamily: "inherit",
-	fontSize: 13,
-	outline: "none",
-	padding: "6px 10px",
-	transition: "border-color 0.15s",
-};
+const ROLE_OPTIONS = (["primary", "secondary", "accent", "neutral", "background", "text"] as BrandColor["role"][])
+	.map((role) => ({ label: role.charAt(0).toUpperCase() + role.slice(1), value: role }));
 
 function ColorRow({
 	entry,
@@ -75,63 +64,39 @@ function ColorRow({
 			</Box>
 
 			{/* Name */}
-			<input
+			<Input
 				value={entry.name}
 				onChange={(e) => onChange({ ...entry, name: e.target.value })}
 				placeholder="Colour name"
-				style={{ ...inputStyle, flex: 1, minWidth: 0 }}
-				onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
-				onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
+				style={{ flex: 1, minWidth: 0 }}
 			/>
 
 			{/* Hex */}
-			<input
+			<Input
 				value={entry.hex}
 				onChange={(e) => onChange({ ...entry, hex: e.target.value })}
 				placeholder="#000000"
-				style={{ ...inputStyle, fontFamily: "monospace", fontSize: 12, width: 96 }}
-				onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)"; }}
-				onBlur={(e) => { e.currentTarget.style.borderColor = "var(--ax-colors-border-default)"; }}
+				style={{ fontFamily: "monospace", width: 108 }}
 			/>
 
 			{/* Role */}
-			<select
-				value={entry.role}
-				onChange={(e) => onChange({ ...entry, role: e.target.value as BrandColor["role"] })}
-				style={{ ...inputStyle, cursor: "pointer", width: 116 }}
-			>
-				{ROLES.map((r) => (
-					<option key={r} value={r}>
-						{r.charAt(0).toUpperCase() + r.slice(1)}
-					</option>
-				))}
-			</select>
+			<Box style={{ width: 144 }}>
+				<Select
+					value={entry.role}
+					onValueChange={(role) => onChange({ ...entry, role: role as BrandColor["role"] })}
+					options={ROLE_OPTIONS}
+				/>
+			</Box>
 
 			{/* Remove */}
-			<button
-				type="button"
-				onClick={onRemove}
+			<Button
+				appearance="subtle"
 				aria-label="Remove colour"
-				style={{
-					alignItems: "center",
-					background: "transparent",
-					border: 0,
-					borderRadius: 4,
-					color: "var(--ax-colors-fg-tertiary)",
-					cursor: "pointer",
-					display: "flex",
-					flexShrink: 0,
-					fontSize: 18,
-					fontWeight: 300,
-					lineHeight: 1,
-					padding: "2px 4px",
-					transition: "color 0.15s",
-				}}
-				onMouseEnter={(e) => { e.currentTarget.style.color = "var(--ax-colors-fg-default)"; }}
-				onMouseLeave={(e) => { e.currentTarget.style.color = "var(--ax-colors-fg-tertiary)"; }}
-			>
-				×
-			</button>
+				icon={<IconXmark />}
+				onClick={onRemove}
+				size="sm"
+				style={{ flexShrink: 0 }}
+			/>
 		</Box>
 	);
 }
@@ -201,42 +166,24 @@ export function ColoursTab({ pack }: ColoursTabProps) {
 			</Box>
 
 			{/* Add colour */}
-			<button
-				type="button"
+			<Button
+				appearance="default"
+				icon={<IconPlus />}
 				onClick={add}
+				size="md"
 				style={{
-					alignItems: "center",
-					background: "transparent",
 					border: "1.5px dashed var(--ax-colors-border-default)",
-					borderRadius: 8,
-					color: "var(--ax-colors-fg-secondary)",
-					cursor: "pointer",
-					display: "flex",
-					fontSize: 13,
-					fontWeight: 500,
-					gap: 6,
-					justifyContent: "center",
-					padding: "10px",
-					transition: "border-color 0.15s, color 0.15s",
 					width: "100%",
 				}}
-				onMouseEnter={(e) => {
-					e.currentTarget.style.borderColor = "var(--ax-colors-border-accent)";
-					e.currentTarget.style.color = "var(--ax-colors-fg-accent)";
-				}}
-				onMouseLeave={(e) => {
-					e.currentTarget.style.borderColor = "var(--ax-colors-border-default)";
-					e.currentTarget.style.color = "var(--ax-colors-fg-secondary)";
-				}}
 			>
-				+ Add colour
-			</button>
+				Add colour
+			</Button>
 
 			{/* Save */}
 			<Box display="flex" justifyContent="end">
 				<Button
 					appearance="primary"
-					size="sm"
+					size="md"
 					icon={saved ? <IconCheck /> : undefined}
 					onClick={save}
 				>
