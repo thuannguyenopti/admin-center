@@ -702,14 +702,14 @@ export default function RootLayout({
 				{/* figma-capture: remove after capture */}
 				<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
 			</head>
-			<body suppressHydrationWarning data-brand="v3">
+			<body suppressHydrationWarning data-brand={path.startsWith("/site") ? undefined : "v3"}>
 				<ThemeProvider>
 					<ProofreadingProvider>
 						<OpalGenerationProvider>
 							<ExperimentResultsProvider>
 								<HydrationErrorSuppressor />
 								<MigrationRunner />
-								<div data-brand="v3" style={{display: "contents"}}>
+								<div data-brand={path.startsWith("/site") ? undefined : "v3"} style={{display: "contents"}}>
 									{menu ? (
 										<Template structure={menu}>{children}</Template>
 									) : (
