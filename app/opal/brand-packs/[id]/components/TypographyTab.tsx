@@ -2,224 +2,208 @@
 
 import { useState } from "react";
 import { Box, Button, Input, Select, Text } from "@optiaxiom/react";
-import { IconCheck, IconPlus, IconXmark } from "@optimizely/axiom-icons";
+import { IconCheck, IconEllipsisStroke, IconStar, IconMagnifyingGlass, IconPlus } from "@optimizely/axiom-icons";
 import type { BrandPack } from "../../types";
 
 type TypographyTabProps = {
 	pack: BrandPack;
 };
 
-type FontSource = "library" | "web" | "upload" | "custom";
-
-type FontEntry = {
-	_id: string;
+type Typeface = {
+	category: "Primary" | "Secondary" | "Mono" | "Display" | "System";
 	family: string;
-	removable: boolean;
+	inUse?: boolean;
+	meta: string;
 	role: string;
-	source: FontSource;
-	url: string;
-	weight: string;
+	source: "library" | "upload" | "web" | "custom";
+	styles: number;
+	weight: number;
 };
 
-const FONT_OPTIONS = [
-	"Inter",
-	"JetBrains Mono",
-	"Helvetica Neue",
-	"Georgia",
-	"Arial",
-	"Times New Roman",
-	"Courier New",
-].map((font) => ({ label: font, value: font }));
-
-const ROLE_OPTIONS = ["Heading", "Body", "Display", "Caption", "Mono", "Label"]
-	.map((role) => ({ label: role, value: role }));
-
-const SOURCE_OPTIONS: Array<{ label: string; value: FontSource }> = [
-	{ label: "Font library", value: "library" },
-	{ label: "Web font URL", value: "web" },
-	{ label: "Uploaded file", value: "upload" },
-	{ label: "Name only", value: "custom" },
-];
-
-const WEIGHT_OPTIONS = [
-	{ value: "300", label: "Light 300" },
-	{ value: "400", label: "Regular 400" },
-	{ value: "500", label: "Medium 500" },
-	{ value: "600", label: "Semibold 600" },
-	{ value: "700", label: "Bold 700" },
-	{ value: "800", label: "Extra Bold 800" },
-];
-
+const PANGRAM = "The quick brown fox jumps over the lazy dog.";
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
-const NUMERALS = "0123456789 & @ ? !";
-const PANGRAM = "The quick brown fox jumps over the lazy dog.";
+const NUMERALS = "0123456789";
 
-function fontStack(entry: FontEntry) {
-	if (entry.role === "Mono") return `"${entry.family}", monospace`;
-	return `"${entry.family}", Inter, sans-serif`;
+const CATEGORY_OPTIONS = [
+	{ label: "All categories", value: "all" },
+	{ label: "Primary", value: "Primary" },
+	{ label: "Secondary", value: "Secondary" },
+	{ label: "Mono", value: "Mono" },
+	{ label: "Display", value: "Display" },
+];
+
+const FONT_LIBRARY: Typeface[] = [
+	{ family: "Inter", category: "Primary", role: "Product UI", meta: "Humanist sans-serif", styles: 14, weight: 700, source: "library", inUse: true },
+	{ family: "Inter Tight", category: "Secondary", role: "Marketing", meta: "Tight spacing variant", styles: 12, weight: 500, source: "library" },
+	{ family: "JetBrains Mono", category: "Mono", role: "Code and tokens", meta: "Monospace", styles: 10, weight: 700, source: "library", inUse: true },
+	{ family: "Overpass", category: "Display", role: "Campaign display", meta: "Condensed sans-serif", styles: 1, weight: 800, source: "web" },
+	{ family: "Source Serif 4", category: "Secondary", role: "Long-form editorial", meta: "Serif", styles: 7, weight: 400, source: "upload" },
+];
+
+function fontStack(typeface: Typeface) {
+	if (typeface.category === "Mono") return `"${typeface.family}", monospace`;
+	return `"${typeface.family}", Inter, sans-serif`;
 }
 
-function sourceLabel(source: FontSource) {
-	return SOURCE_OPTIONS.find((option) => option.value === source)?.label ?? "Name only";
+function Pill({ children }: { children: React.ReactNode }) {
+	return (
+		<Box bg="bg.success.subtle" rounded="full" style={{ padding: "5px 12px" }}>
+			<Text color="fg.success" fontSize="xs" fontWeight="500">{children}</Text>
+		</Box>
+	);
 }
 
-function TypefaceCard({
-	entry,
-	onChange,
-	onRemove,
-}: {
-	entry: FontEntry;
-	onChange: (entry: FontEntry) => void;
-	onRemove: () => void;
-}) {
-	const specimenStyle = {
-		fontFamily: fontStack(entry),
-		fontWeight: Number(entry.weight),
-	};
-
+function HeroSpecimen({ typeface }: { typeface: Typeface }) {
+	const family = fontStack(typeface);
 	return (
 		<Box
 			bg="bg.default"
 			border="1"
 			borderColor="border.tertiary"
-			display="flex"
-			flexDirection="column"
-			overflow="hidden"
+			display="grid"
+			gap="24"
+			p="24"
 			rounded="xl"
 			shadow="sm"
+			style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(280px, 420px)" }}
 		>
-			<Box bg="bg.secondary" display="grid" gap="20" p="24" style={{ gridTemplateColumns: "minmax(0, 1fr) 160px" }}>
-				<Box display="flex" flexDirection="column" gap="16">
-					<Box alignItems="start" display="flex" gap="16" justifyContent="space-between">
-						<Box display="flex" flexDirection="column" gap="4">
-							<Text color="fg.tertiary" fontSize="xs" fontWeight="600" style={{ letterSpacing: "0.08em", textTransform: "uppercase" }}>
-								{entry.role}
-							</Text>
-							<Text style={{ ...specimenStyle, fontSize: 44, lineHeight: 1 }}>
-								{entry.family || "Typeface"}
-							</Text>
-						</Box>
-						{entry.removable && (
-							<Button appearance="subtle" aria-label="Remove typeface" icon={<IconXmark />} onClick={onRemove} size="sm" />
-						)}
-					</Box>
-
-					<Box display="flex" flexDirection="column" gap="8">
-						<Text style={{ ...specimenStyle, fontSize: 22, lineHeight: 1.25 }}>
-							{PANGRAM}
-						</Text>
-						<Text color="fg.secondary" style={{ ...specimenStyle, fontSize: 15, lineHeight: 1.45 }}>
-							{ALPHABET}
-						</Text>
-						<Text color="fg.secondary" style={{ ...specimenStyle, fontSize: 15, lineHeight: 1.45 }}>
-							{LOWERCASE}
-						</Text>
-						<Text color="fg.secondary" style={{ ...specimenStyle, fontSize: 15, lineHeight: 1.45 }}>
-							{NUMERALS}
-						</Text>
-					</Box>
+			<Box display="flex" flexDirection="column" gap="20">
+				<Box display="flex" flexDirection="column" gap="12">
+					<Pill>Primary typeface</Pill>
+					<Text style={{ fontFamily: family, fontSize: 72, fontWeight: typeface.weight, letterSpacing: 0, lineHeight: 0.95 }}>
+						{typeface.family}
+					</Text>
+					<Text style={{ fontFamily: family, fontSize: 28, fontWeight: 700, lineHeight: 1.2, maxWidth: 560 }}>
+						{PANGRAM}
+					</Text>
 				</Box>
 
-				<Box alignItems="end" display="flex" flexDirection="column" gap="8" justifyContent="space-between">
-					<Box bg="bg.default" p="16" rounded="xl" style={{ textAlign: "right" }}>
-						<Text style={{ ...specimenStyle, fontSize: 52, lineHeight: 1 }}>Aa</Text>
-					</Box>
-					<Box display="flex" flexDirection="column" gap="4" style={{ textAlign: "right" }}>
-						<Text color="fg.secondary" fontSize="xs" fontWeight="600">{sourceLabel(entry.source)}</Text>
-						<Text color="fg.tertiary" fontSize="xs">{entry.weight} weight</Text>
+				<Box display="flex" flexDirection="column" gap="12">
+					<Text color="fg.secondary" fontSize="sm">
+						{typeface.meta} · {typeface.styles} styles · Variable · Optimized for UI and Web
+					</Text>
+					<Box display="flex" gap="8" style={{ flexWrap: "wrap" }}>
+						{["Product UI", "Marketing", "Emails", "Documentation"].map((label) => <Pill key={label}>{label}</Pill>)}
 					</Box>
 				</Box>
 			</Box>
 
-			<Box display="grid" gap="12" p="16" style={{ gridTemplateColumns: "132px minmax(180px, 1fr) 160px 152px" }}>
-				<Select value={entry.role} onValueChange={(role) => onChange({ ...entry, role })} options={ROLE_OPTIONS} />
-				{entry.source === "library" ? (
-					<Select value={entry.family} onValueChange={(family) => onChange({ ...entry, family })} options={FONT_OPTIONS} />
-				) : (
-					<Input
-						value={entry.family}
-						onChange={(event) => onChange({ ...entry, family: event.target.value })}
-						placeholder="Typeface name"
-					/>
-				)}
-				<Select value={entry.weight} onValueChange={(weight) => onChange({ ...entry, weight })} options={WEIGHT_OPTIONS} />
-				<Select value={entry.source} onValueChange={(source) => onChange({ ...entry, source: source as FontSource })} options={SOURCE_OPTIONS} />
+			<Box alignItems="center" display="flex" flexDirection="column" gap="20" justifyContent="center">
+				<Text style={{ fontFamily: family, fontSize: 176, fontWeight: typeface.weight, letterSpacing: 0, lineHeight: 0.8 }}>
+					Aa
+				</Text>
+				<Box alignItems="center" display="flex" gap="20">
+					{["Regular", "Medium", "Semibold", "Bold"].map((weight) => (
+						<Text key={weight} color={weight === "Semibold" ? "fg.success" : "fg.secondary"} fontSize="sm" fontWeight={weight === "Semibold" ? "600" : "400"}>
+							{weight}
+						</Text>
+					))}
+				</Box>
+				<Box display="flex" gap="6">
+					{Array.from({ length: 6 }).map((_, index) => (
+						<Box key={index} bg={index === 0 ? "bg.success" : "bg.secondary"} rounded="full" style={{ height: 8, width: 8 }} />
+					))}
+				</Box>
 			</Box>
+		</Box>
+	);
+}
 
-			{entry.source === "web" && (
-				<Box p="16" pt="0">
-					<Input
-						value={entry.url}
-						onChange={(event) => onChange({ ...entry, url: event.target.value })}
-						placeholder="https://fonts.example.com/typeface.woff2"
-					/>
+function TypefaceRow({ typeface }: { typeface: Typeface }) {
+	const family = fontStack(typeface);
+	return (
+		<Box alignItems="center" bg="bg.default" borderB="1" borderColor="border.tertiary" display="grid" gap="20" p="20" style={{ gridTemplateColumns: "120px 180px minmax(260px, 1fr) 132px" }}>
+			<Text style={{ fontFamily: family, fontSize: 62, fontWeight: typeface.weight, letterSpacing: 0, lineHeight: 1 }}>Ag</Text>
+			<Box display="flex" flexDirection="column" gap="4">
+				<Box alignItems="center" display="flex" gap="8">
+					<Text fontWeight="600">{typeface.family}</Text>
+					{typeface.inUse && <Pill>Primary</Pill>}
 				</Box>
-			)}
-
-			{entry.source === "upload" && (
-				<Box alignItems="center" display="flex" gap="12" p="16" pt="0">
-					<Button appearance="default" size="md">Upload font file</Button>
-					<Text color="fg.tertiary" fontSize="xs">Supports WOFF, WOFF2, TTF, and OTF.</Text>
-				</Box>
-			)}
+				<Text color="fg.secondary" fontSize="sm">{typeface.meta}</Text>
+				<Text color="fg.tertiary" fontSize="xs">{typeface.styles} styles · {typeface.source}</Text>
+			</Box>
+			<Box display="flex" flexDirection="column" gap="6">
+				<Text style={{ fontFamily: family, fontSize: 17, fontWeight: typeface.weight, lineHeight: 1.25 }}>{PANGRAM}</Text>
+				<Text color="fg.secondary" style={{ fontFamily: family, fontSize: 12, lineHeight: 1.4 }}>{ALPHABET}</Text>
+				<Text color="fg.secondary" style={{ fontFamily: family, fontSize: 12, lineHeight: 1.4 }}>{LOWERCASE} {NUMERALS}</Text>
+			</Box>
+			<Box alignItems="center" display="flex" gap="8" justifyContent="end">
+				<Button appearance="subtle" aria-label={`Favorite ${typeface.family}`} icon={<IconStar />} size="sm" />
+				<Button appearance="subtle" aria-label={`More actions for ${typeface.family}`} icon={<IconEllipsisStroke />} size="sm" />
+				<Button appearance={typeface.inUse ? "subtle" : "default"} size="md">
+					{typeface.inUse ? "In use" : "Add to pack"}
+				</Button>
+			</Box>
 		</Box>
 	);
 }
 
 export function TypographyTab({ pack }: TypographyTabProps) {
-	const [entries, setEntries] = useState<FontEntry[]>(() => {
-		const base: FontEntry[] = [
-			{ _id: "heading", role: "Heading", family: pack.typography.heading, weight: "700", source: "library", url: "", removable: false },
-			{ _id: "body", role: "Body", family: pack.typography.body, weight: "400", source: "library", url: "", removable: false },
-		];
-		if (pack.typography.mono) {
-			base.push({ _id: "mono", role: "Mono", family: pack.typography.mono, weight: "400", source: "library", url: "", removable: false });
-		}
-		return base;
-	});
+	const [category, setCategory] = useState("all");
 	const [saved, setSaved] = useState(false);
+	const primaryTypeface = FONT_LIBRARY.find((font) => font.family === pack.typography.heading) ?? FONT_LIBRARY[0];
+	const filtered = category === "all" ? FONT_LIBRARY : FONT_LIBRARY.filter((font) => font.category === category);
 
-	const update = (id: string, updated: FontEntry) =>
-		setEntries((current) => current.map((entry) => (entry._id === id ? updated : entry)));
-	const remove = (id: string) =>
-		setEntries((current) => current.filter((entry) => entry._id !== id));
-	const add = () =>
-		setEntries((current) => [
-			...current,
-			{ _id: `font-${Date.now()}`, role: "Display", family: "Inter", weight: "700", source: "library", url: "", removable: true },
-		]);
 	const save = () => {
 		setSaved(true);
 		setTimeout(() => setSaved(false), 2000);
 	};
 
 	return (
-		<Box display="flex" flexDirection="column" gap="16" style={{ maxWidth: 980 }}>
-			<Box display="grid" gap="16" style={{ gridTemplateColumns: "minmax(0, 1fr) 260px" }}>
-				<Box display="flex" flexDirection="column" gap="4">
-					<Text fontWeight="600" style={{ fontSize: 16 }}>Typeface system</Text>
-					<Text color="fg.secondary" fontSize="sm">
-						Manage the fonts Opal can actually resolve: choose from the library, link a web font, upload a file, or keep a name-only reference.
+		<Box display="flex" flexDirection="column" gap="24">
+			<Box alignItems="end" display="grid" gap="24" style={{ gridTemplateColumns: "minmax(0, 1fr) 320px" }}>
+				<Box display="flex" flexDirection="column" gap="12">
+					<Text style={{ fontSize: 56, fontWeight: 800, letterSpacing: 0, lineHeight: 1 }}>Typography</Text>
+					<Text color="fg.secondary" fontSize="md" style={{ lineHeight: 1.55, maxWidth: 520 }}>
+						Type systems that shape our voice and create consistency across every Opal-generated experience.
 					</Text>
 				</Box>
-				<Box alignItems="center" display="flex" gap="8" justifyContent="end">
-					<Button appearance="default" icon={<IconPlus />} onClick={add} size="md">Add typeface</Button>
+				<Box alignItems="center" display="flex" justifyContent="end">
+					<Text color="fg.success" style={{ fontSize: 118, fontWeight: 300, letterSpacing: 0, lineHeight: 0.8 }}>
+						Aa
+					</Text>
+				</Box>
+			</Box>
+
+			<HeroSpecimen typeface={primaryTypeface} />
+
+			<Box alignItems="center" display="flex" justifyContent="space-between" style={{ flexWrap: "wrap", gap: 12 }}>
+				<Box display="flex" flexDirection="column" gap="4">
+					<Text fontWeight="600" style={{ fontSize: 18 }}>All typefaces</Text>
+					<Text color="fg.secondary" fontSize="sm">Showing {filtered.length} of {FONT_LIBRARY.length} available typefaces</Text>
+				</Box>
+				<Box alignItems="center" display="flex" gap="8">
+					<Select value={category} onValueChange={setCategory} options={CATEGORY_OPTIONS} />
+					<Box style={{ width: 240 }}>
+						<Input placeholder="Search typefaces..." />
+					</Box>
+					<Button appearance="default" icon={<IconPlus />} size="md">Add typeface</Button>
 					<Button appearance="primary" icon={saved ? <IconCheck /> : undefined} onClick={save} size="md">
-						{saved ? "Saved" : "Save typography"}
+						{saved ? "Saved" : "Manage type system"}
 					</Button>
 				</Box>
 			</Box>
 
-			<Box display="flex" flexDirection="column" gap="12">
-				{entries.map((entry) => (
-					<TypefaceCard
-						key={entry._id}
-						entry={entry}
-						onChange={(updated) => update(entry._id, updated)}
-						onRemove={() => remove(entry._id)}
-					/>
-				))}
+			<Box display="grid" gap="20" style={{ gridTemplateColumns: "180px minmax(0, 1fr)" }}>
+				<Box display="flex" flexDirection="column" gap="8">
+					{["All typefaces", "Primary", "Secondary", "Mono", "Display", "System"].map((label) => (
+						<Box key={label} alignItems="center" bg={label === "All typefaces" ? "bg.success.subtle" : undefined} display="flex" justifyContent="space-between" p="12" rounded="lg">
+							<Text color={label === "All typefaces" ? "fg.success" : "fg.secondary"} fontSize="sm" fontWeight={label === "All typefaces" ? "600" : "400"}>{label}</Text>
+							<Text color="fg.tertiary" fontSize="xs">{label === "All typefaces" ? FONT_LIBRARY.length : FONT_LIBRARY.filter((font) => font.category === label).length}</Text>
+						</Box>
+					))}
+					<Box bg="bg.secondary" display="flex" flexDirection="column" gap="12" mt="24" p="16" rounded="xl">
+						<IconMagnifyingGlass size={15} style={{ color: "var(--ax-colors-fg-success)" }} />
+						<Text fontWeight="600" fontSize="sm">Need a typeface?</Text>
+						<Text color="fg.secondary" fontSize="sm">Upload a font file or request a new one.</Text>
+						<Button appearance="subtle" icon={<IconPlus />} size="sm">Add typeface</Button>
+					</Box>
+				</Box>
+
+				<Box border="1" borderColor="border.tertiary" display="flex" flexDirection="column" overflow="hidden" rounded="xl" shadow="sm">
+					{filtered.map((typeface) => <TypefaceRow key={typeface.family} typeface={typeface} />)}
+				</Box>
 			</Box>
 		</Box>
 	);

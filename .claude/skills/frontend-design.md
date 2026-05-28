@@ -166,6 +166,28 @@ Avoid:
 
 For hero or featured product areas, make the layout feel curated, not filled.
 
+## Editorial product surfaces
+
+Some product screens are not dashboards or settings panels even when they contain editable data. When the subject is inherently visual, such as typography, brand assets, color systems, templates, imagery, or creative rules, design the screen as an editorial product surface first and place management controls second.
+
+Examples:
+- Typography should feel like a premium type-foundry specimen embedded in the product, not a settings form
+- Brand imagery should feel like a curated visual library, not file storage
+- Color palettes should feel like a brand system, not a table of hex values
+
+Use:
+- Large specimen moments
+- Curated preview panels
+- Productive but quiet controls
+- Sidebar/category navigation only when it helps browsing
+- Detail rows that preview the asset before asking the user to edit metadata
+
+Avoid:
+- Repeating card forms for every item
+- Leading with inputs before the user understands the asset
+- Treating creative-system data like generic admin settings
+- Tiny samples that undersell the visual subject
+
 ## Typography rules
 
 Use the product font stack and Axiom type patterns.
@@ -176,6 +198,8 @@ Guidance:
 - Use labels sparingly and consistently
 - Make metadata secondary, not visually equal to titles
 - Never allow text clipping, collisions, or awkward wrapping
+- For font management UI, show a real specimen: family name, Aa, pangram, uppercase alphabet, lowercase alphabet, numerals, and available weights/styles
+- Let users understand whether a font is from the library, uploaded, linked from the web, or name-only metadata
 
 If everything is bold, reduce weight until the page has a clear hierarchy again.
 
