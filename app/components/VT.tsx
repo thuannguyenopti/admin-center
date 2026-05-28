@@ -23,7 +23,9 @@ export default function VT({
 	backLink?: {label: string; url?: string};
 	title?: string;
 	description?: string;
-	items: Array<{label: string; url?: string; separator?: boolean}> | undefined;
+	items:
+		| Array<{label: string; url?: string; separator?: boolean; icon?: React.ReactNode}>
+		| undefined;
 }>) {
 	const router = useRouter();
 	const path = usePathname();
@@ -75,6 +77,7 @@ export default function VT({
 									onClick={() => menuClick(menuItem.url || "")}
 									active={menuItem.url === path}
 									aria-label={menuItem.label}
+									icon={menuItem.icon}
 								>
 									{menuItem.label}
 								</NavItem>

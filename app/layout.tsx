@@ -41,6 +41,16 @@ import {
 	IconSparkles,
 	IconFileLines,
 	IconSquareUser,
+	IconFlag,
+	IconCircleQuestion,
+	IconGauge,
+	IconUser,
+	IconRobot,
+	IconPeopleSimple,
+	IconGrid,
+	IconClockRotateLeft,
+	IconShieldCheck,
+	IconCircleDollar,
 } from "@optiaxiom/icons";
 import {IconSettingsSearch} from "@tabler/icons-react";
 
@@ -671,6 +681,55 @@ export default function RootLayout({
 				highlight: "/web-experimentation",
 				icon: <IconLightbulb />,
 				exact: true,
+			},
+		],
+		"admin-center": [
+			{
+				label: "Dashboard",
+				highlight: "admin-center/dashboard",
+				url: "/admin-center/dashboard",
+				icon: <IconGauge />,
+				hidePageHeader: true,
+			},
+			{
+				label: "User Management",
+				highlight: "admin-center/user-management",
+				url: "/admin-center/user-management/users",
+				icon: <IconUserGroup />,
+				hidePageHeader: true,
+				children: [
+					{label: "Users", url: "/admin-center/user-management/users", icon: <IconUser />},
+					{label: "Virtual Teammates", url: "/admin-center/user-management/agents", icon: <IconRobot />},
+					{label: "Teams", url: "/admin-center/user-management/teams", icon: <IconPeopleSimple />},
+					{label: "Groups", url: "/admin-center/user-management/groups", icon: <IconUserGroup />},
+				],
+			},
+			{
+				label: "Access Setup",
+				highlight: "admin-center/access-setup",
+				url: "/admin-center/access-setup/product-access",
+				icon: <IconFlag />,
+				children: [
+					{label: "Product Access", url: "/admin-center/access-setup/product-access", icon: <IconGrid />},
+					{label: "Roles", url: "/admin-center/access-setup/roles", icon: <IconShieldCheck />},
+				],
+			},
+			{
+				label: "Settings",
+				highlight: "admin-center/settings",
+				url: "/admin-center/settings/usage-billing",
+				icon: <IconGear />,
+				children: [
+					{label: "Usage & Billing", url: "/admin-center/settings/usage-billing", icon: <IconCircleDollar />},
+					{label: "Activity log", url: "/admin-center/settings/activity-log", icon: <IconClockRotateLeft />},
+					{label: "Settings", url: "/admin-center/settings/settings", icon: <IconGear />},
+				],
+			},
+			{
+				label: "Support",
+				highlight: "admin-center/support",
+				url: "/admin-center/support",
+				icon: <IconCircleQuestion />,
 			},
 		],
 	};

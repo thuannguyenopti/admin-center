@@ -407,7 +407,7 @@ function TemplateContent({
 												if (!menuItem.url) {
 													return (
 														<Box
-															key={menuItem.label}
+															key={`section-${menuItem.label}`}
 															px="16"
 															py="8"
 															mt="4"

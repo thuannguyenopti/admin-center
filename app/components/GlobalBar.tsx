@@ -96,6 +96,7 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 		if (pathname.startsWith("/web-experimentation")) return "Web Experimentation";
 		if (pathname.startsWith("/cms")) return "CMS";
 		if (pathname.startsWith("/cmp")) return "CMP";
+		if (pathname.startsWith("/admin-center")) return "Admin Center";
 		if (pathname.startsWith("/graph")) return "Graph";
 		if (pathname.startsWith("/fe-hosting")) return "Frontend Hosting";
 		if (pathname.startsWith("/connect-platform")) return "Connect Platform";
@@ -146,6 +147,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 								{
 									label: "Content Management System",
 									execute: () => router.push("/cms/dashboard"),
+								},
+								{
+									label: "Admin Center",
+									execute: () => router.push("/admin-center/dashboard"),
 								},
 								{
 									label: "Web Experimentation",
@@ -378,6 +383,10 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 						{
 							label: "Content Marketing Platform",
 							execute: () => router.push("/cmp/dashboard"),
+						},
+						{
+							label: "Admin Center",
+							execute: () => router.push("/admin-center/dashboard"),
 						},
 						{
 							label: "Connect Platform",
