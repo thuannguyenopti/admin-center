@@ -1,4 +1,5 @@
 "use client";
+import {useState, useEffect} from "react";
 import Template from "./components/template";
 import "./globals.css";
 import {ThemeProvider} from "@/app/providers/ThemeProvider";
@@ -52,6 +53,16 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const path = usePathname() ?? "";
+	const [imLayout, setImLayout] = useState<string>("A");
+	useEffect(() => {
+		try {
+			const stored = localStorage.getItem("im-layout");
+			if (stored) setImLayout(JSON.parse(stored));
+		} catch { /* ignore */ }
+		const handler = (e: Event) => setImLayout((e as CustomEvent<string>).detail);
+		window.addEventListener("im-layout-change", handler);
+		return () => window.removeEventListener("im-layout-change", handler);
+	}, []);
 	const algorithmMatch = path.match(/\/cms\/search\/algorithms\/([^/]+)/);
 	const algorithmId = algorithmMatch ? algorithmMatch[1] : null;
 	const webhookMatch = path.match(/\/cms\/settings\/webhooks\/([^/]+)/);
@@ -430,10 +441,12 @@ export default function RootLayout({
 		],
 		opal: [
 			{
-				label: "Chats",
+				label: imLayout === "B" || imLayout === "C" ? "Chats" : "Opal Chats",
 				url: "/opal",
 				highlight: "/opal",
-				icon: (
+				icon: imLayout === "B" || imLayout === "C" ? (
+					<IconComments />
+				) : (
 					<span
 						style={{
 							display: "inline-flex",
@@ -459,10 +472,10 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Threads",
-				url: "/opal/im",
+				label: imLayout === "B" ? "Messages" : imLayout === "C" ? "Spaces" : "Threads",
+				url: `/opal/im?layout=${imLayout}`,
 				highlight: "/opal/im",
-				icon: <IconComments />,
+				icon: imLayout === "B" || imLayout === "C" ? <IconUsers /> : <IconComments />,
 				customLayout: true,
 			},
 			{

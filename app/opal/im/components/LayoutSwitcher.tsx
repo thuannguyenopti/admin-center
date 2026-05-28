@@ -1,17 +1,17 @@
 "use client";
 
 import { Box, Button, Text, Tooltip } from "@optiaxiom/react";
-import { IconGear, IconArrowsRotate } from "@optiaxiom/icons";
+import { IconSliders, IconArrowsRotate } from "@optiaxiom/icons";
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { UserSwitcher } from "./UserSwitcher";
 
 export type LayoutKey = "A" | "B" | "C";
 
 const LABELS: Record<LayoutKey, string> = {
-  A: "Sidebar",
-  B: "Full page",
-  C: "Panel",
+  A: "Pei",
+  B: "Erika",
+  C: "Ana",
 };
 
 const KEYS: LayoutKey[] = ["A", "B", "C"];
@@ -20,19 +20,33 @@ function isLayoutKey(value: string | null): value is LayoutKey {
   return value === "A" || value === "B" || value === "C";
 }
 
+function readStoredLayout(): LayoutKey {
+  try {
+    const raw = localStorage.getItem("im-layout");
+    if (!raw) return "A";
+    const parsed = JSON.parse(raw);
+    return isLayoutKey(parsed) ? parsed : "A";
+  } catch {
+    return "A";
+  }
+}
+
 const DEMO_CONVERSATIONS = [
   { id: "conv-vau-tony", label: "Reset Tony's killswitch thread" },
 ];
 
 export function LayoutSwitcher() {
   const router = useRouter();
-  const params = useSearchParams();
-  const current: LayoutKey = isLayoutKey(params.get("layout"))
-    ? (params.get("layout") as LayoutKey)
-    : "A";
+  const pathname = usePathname();
+  const [current, setCurrent] = useState<LayoutKey>("A");
   const [open, setOpen] = useState(false);
   const [resetting, setResetting] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  // Sync active pill from localStorage after hydration
+  useEffect(() => {
+    setCurrent(readStoredLayout());
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -44,9 +58,12 @@ export function LayoutSwitcher() {
   }, [open]);
 
   const setLayout = (key: LayoutKey) => {
-    const next = new URLSearchParams(params.toString());
-    next.set("layout", key);
-    router.replace(`?${next.toString()}`);
+    setCurrent(key);
+    try { localStorage.setItem("im-layout", JSON.stringify(key)); } catch { /* ignore */ }
+    window.dispatchEvent(new CustomEvent("im-layout-change", { detail: key }));
+    if (pathname.startsWith("/opal/im")) {
+      router.replace(`/opal/im?layout=${key}`);
+    }
   };
 
   const resetConversation = async (convId: string) => {
@@ -93,7 +110,7 @@ export function LayoutSwitcher() {
             color: "var(--ax-colors-fg-default)",
           }}
         >
-          <IconGear size={20} />
+          <IconSliders size={20} />
         </button>
       </Tooltip>
       {open && (

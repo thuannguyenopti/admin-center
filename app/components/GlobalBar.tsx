@@ -414,11 +414,9 @@ export default function GlobalBar({onOpalClick}: GlobalBarProps) {
 			<Box display="flex" alignItems="center" gap="4">
 				{isOpalRoute ? (
 					<>
-						{isImRoute && (
-							<Suspense fallback={null}>
-								<LayoutSwitcher />
-							</Suspense>
-						)}
+						<Suspense fallback={null}>
+							<LayoutSwitcher />
+						</Suspense>
 						<Button appearance="subtle" size="md" icon={<IconSearch size={20} />} aria-label="Search" />
 						<NotificationDropdown />
 						<Button appearance="subtle" size="md" icon={<IconHelp size={20} />} aria-label="Help" />

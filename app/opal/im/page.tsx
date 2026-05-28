@@ -3,8 +3,8 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { LayoutASidebar } from "./layouts/LayoutA-Sidebar";
-import { LayoutBFullPage } from "./layouts/LayoutB-FullPage";
-import { LayoutCPanel } from "./layouts/LayoutC-Panel";
+import { LayoutBErika } from "./layouts/LayoutB-Erika";
+import { LayoutCAna } from "./layouts/LayoutC-Ana";
 import { type LayoutKey } from "./components/LayoutSwitcher";
 
 function isLayoutKey(value: string | null): value is LayoutKey {
@@ -19,8 +19,8 @@ function IMPageInner() {
   return (
     <>
       {layout === "A" && <LayoutASidebar />}
-      {layout === "B" && <LayoutBFullPage />}
-      {layout === "C" && <LayoutCPanel />}
+      {layout === "B" && <LayoutBErika />}
+      {layout === "C" && <LayoutCAna />}
     </>
   );
 }
