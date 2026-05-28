@@ -61,14 +61,15 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 					{isMenuOpen && (showFields ? (
 						<FieldPickerInline
 							onBack={() => setShowFields(false)}
-							onSelect={(field) => { d.onAddNodeBelow?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
+							onSelect={(field) => { d.onAddSectionChild?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
 							customFields={d.customFields}
 							onOpenCreateField={() => { d.onOpenCreateField?.(); setIsMenuOpen(false); setShowFields(false); }}
 						/>
 					) : (
 						<NodeAddMenu
-							onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
-							onAddSection={() => { d.onAddNodeBelow?.("section"); setIsMenuOpen(false); }}
+							disableSection
+							onAddText={() => { d.onAddSectionChild?.("text"); setIsMenuOpen(false); }}
+							onAddSection={() => {}}
 							onOpenFieldPicker={() => setShowFields(true)}
 							onClose={() => setIsMenuOpen(false)}
 						/>
@@ -213,26 +214,6 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						<IconPlus size={12} />
 						Add
 					</button>
-					{isMenuOpen && (
-						<div style={{ position: "relative" }}>
-							{showFields ? (
-								<FieldPickerInline
-									onBack={() => setShowFields(false)}
-									onSelect={(field) => { d.onAddNodeBelow?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
-									customFields={d.customFields}
-									onOpenCreateField={() => { d.onOpenCreateField?.(); setIsMenuOpen(false); setShowFields(false); }}
-								/>
-							) : (
-								<NodeAddMenu
-									disableSection
-									onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
-									onAddSection={() => {}}
-									onOpenFieldPicker={() => setShowFields(true)}
-									onClose={() => setIsMenuOpen(false)}
-								/>
-							)}
-						</div>
-					)}
 				</div>
 			)}
 

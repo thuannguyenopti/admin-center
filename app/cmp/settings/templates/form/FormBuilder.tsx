@@ -345,20 +345,19 @@ export function FormBuilder() {
 					) {
 						parentId = section.id;
 						const siblings = nodes.filter((n) => n.parentId === section.id && !n.hidden);
-						const FIELD_H = 72;
 						const FIELD_W = 280;
 						const GAP = 12;
 						const PAD = 24;
+						const childY = SECTION_HEADER_HEIGHT + 16;
 						if (siblings.length === 0) {
-							finalPosition = { x: 16, y: SECTION_HEADER_HEIGHT + 16 };
+							finalPosition = { x: 16, y: childY };
 						} else {
-							const lastBottom = Math.max(
-								...siblings.map((s) => s.position.y + Number((s as any).measured?.height ?? FIELD_H)),
+							const lastRight = Math.max(
+								...siblings.map((s) => s.position.x + Number((s as any).measured?.width ?? FIELD_W)),
 							);
-							finalPosition = { x: 16, y: lastBottom + GAP };
+							finalPosition = { x: lastRight + GAP, y: childY };
 						}
-						const childBottom = finalPosition.y + FIELD_H;
-						const newH = Math.max(sh, childBottom + PAD);
+						const newH = sh;
 						const newW = Math.max(sw, finalPosition.x + FIELD_W + PAD);
 						if (newH !== sh || newW !== sw) {
 							pendingSectionResize = { id: section.id, width: newW, height: newH };
@@ -459,6 +458,49 @@ export function FormBuilder() {
 			if (type === "field" || type === "text") selectNode(newId);
 		},
 		[nodes, customFields, addNodeWithEdge],
+	);
+
+	const handleAddSectionChild = useCallback(
+		(sectionId: string, type: "text" | "field", fieldDefId?: string) => {
+			const sectionNode = nodes.find((n) => n.id === sectionId);
+			if (!sectionNode) return;
+
+			const children = nodes.filter((n) => (n as any).parentId === sectionId);
+			const newId = getNodeId();
+			const FIELD_W = 280;
+			const GAP = 12;
+			const PAD = 24;
+			const y = SECTION_HEADER_HEIGHT + 16;
+
+			const x = children.length === 0
+				? 16
+				: Math.max(...children.map((c) => c.position.x + ((c as any).measured?.width ?? FIELD_W))) + GAP;
+
+			// Expand section width if the new child would overflow
+			const sw = Number(sectionNode.style?.width ?? 480);
+			const sh = Number(sectionNode.style?.height ?? 220);
+			const neededW = x + FIELD_W + PAD;
+			if (neededW > sw) {
+				setNodes((nds) => nds.map((n) =>
+					n.id === sectionId ? { ...n, style: { ...(n.style ?? {}), width: neededW, height: sh, overflow: "visible" } } : n,
+				));
+			}
+
+			let newNode: any;
+			if (type === "text") {
+				const c = CONTENT_COMPONENTS.find((x) => x.id === "paragraph") ?? CONTENT_COMPONENTS[0];
+				newNode = { id: newId, type: "formContent", position: { x, y }, parentId: sectionId, data: { label: "", icon: c.icon, contentType: "paragraph" } };
+			} else if (type === "field" && fieldDefId) {
+				const f = WORK_REQUEST_FIELDS.find((fld) => fld.id === fieldDefId) ?? customFields.find((fld) => fld.id === fieldDefId);
+				if (!f) return;
+				newNode = { id: newId, type: "formField", position: { x, y }, parentId: sectionId, data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id } };
+			}
+
+			if (!newNode) return;
+			addNode(newNode);
+			selectNode(newId);
+		},
+		[nodes, customFields, addNode, setNodes, selectNode],
 	);
 
 	const handleCreateCustomField = useCallback(
@@ -593,13 +635,14 @@ export function FormBuilder() {
 				...extra,
 				...addCallbacks,
 				childCount,
+				onAddSectionChild: (type: string, fieldDefId?: string) => handleAddSectionChild(n.id, type as any, fieldDefId),
 				onToggleCollapse: () => toggleSectionCollapse(n.id),
 				onDuplicate: () => duplicateSection(n.id),
 				onLabelChange: (label: string) => updateNodeData(n.id, { label }),
 			},
 		};
 	}), [nodes, conflictHighlight, highlightedSet, highlightedTargets, selectedNodeId, customFields,
-		handleAddNodeBelow, toggleSectionCollapse, duplicateSection, updateNodeData, setIsCanvasCreateFieldOpen]);
+		handleAddNodeBelow, handleAddSectionChild, toggleSectionCollapse, duplicateSection, updateNodeData, setIsCanvasCreateFieldOpen]);
 
 	const patchedEdges = useMemo(() => {
 		// Identify undefined edges: source has 2+ outgoing edges but this one has no label
