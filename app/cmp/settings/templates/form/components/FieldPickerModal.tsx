@@ -40,9 +40,9 @@ function FieldRow({ field, onSelect }: { field: FormFieldDef; onSelect: (f: Form
 			style={{
 				display: "flex",
 				alignItems: "center",
-				gap: 10,
-				padding: "8px 4px",
-				background: hovered ? "var(--ax-colors-bg-secondary)" : "transparent",
+				gap: 8,
+				padding: "6px 8px",
+				background: hovered ? "var(--ax-colors-bg-default-hovered)" : "transparent",
 				border: "none",
 				borderRadius: 6,
 				cursor: "pointer",
@@ -63,14 +63,9 @@ function FieldRow({ field, onSelect }: { field: FormFieldDef; onSelect: (f: Form
 			>
 				{field.icon}
 			</Box>
-			<div>
-				<div style={{ fontSize: 13, fontWeight: 500, color: "var(--ax-colors-fg-default)" }}>
-					{field.name}
-				</div>
-				<div style={{ fontSize: 11, color: "var(--ax-colors-fg-tertiary)", marginTop: 1 }}>
-					{field.typeLabel}
-				</div>
-			</div>
+			<span style={{ fontSize: 14, color: "var(--ax-colors-fg-default)" }}>
+				{field.name}
+			</span>
 		</button>
 	);
 }
@@ -175,29 +170,18 @@ export function FieldPickerInline({ onBack, onSelect, customFields = [], onOpenC
 
 			{/* Field list */}
 			<div style={{ maxHeight: 280, overflowY: "auto" }}>
-				{/* Standard fields */}
-				{filteredStandard.length > 0 && (
+				{filteredStandard.map((field) => (
+					<FieldRow key={field.id} field={field} onSelect={onSelect} />
+				))}
+
+				{filteredCustom.length > 0 && (
 					<>
-						<SectionHeader label="Standard fields" />
-						{filteredStandard.map((field) => (
+						<SectionHeader label="Custom fields" />
+						{filteredCustom.map((field) => (
 							<FieldRow key={field.id} field={field} onSelect={onSelect} />
 						))}
 					</>
 				)}
-
-				{/* Custom fields */}
-				<>
-					<SectionHeader label="Custom fields" />
-					{filteredCustom.length === 0 ? (
-						<div style={{ padding: "4px 4px 8px", fontSize: 12, color: "var(--ax-colors-fg-tertiary)", fontFamily: "inherit" }}>
-							No custom fields yet.
-						</div>
-					) : (
-						filteredCustom.map((field) => (
-							<FieldRow key={field.id} field={field} onSelect={onSelect} />
-						))
-					)}
-				</>
 
 				{filteredStandard.length === 0 && filteredCustom.length === 0 && (
 					<div style={{ padding: "12px 4px", textAlign: "center", fontSize: 12, color: "var(--ax-colors-fg-tertiary)", fontFamily: "inherit" }}>

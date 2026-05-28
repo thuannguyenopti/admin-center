@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Switch } from "@optiaxiom/react";
+import {
+	Box, Switch, Input, Textarea, Field, Radio, RadioGroup, Checkbox,
+	Disclosure, DisclosureTrigger, DisclosureContent,
+	Popover, PopoverAnchor, PopoverContent,
+} from "@optiaxiom/react";
 import {
 	DetailsPanel,
 	DetailsPanelBody,
@@ -9,7 +13,7 @@ import {
 } from "@optiaxiom/react/unstable";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
-import { IconX, IconPlus, IconTrash } from "@tabler/icons-react";
+import { IconX, IconPlus, IconTrash, IconEyeOff } from "@tabler/icons-react";
 import { STANDARD_FIELDS } from "../../data";
 import type { ConditionClause, ActionRow, ElseIfBlock, FieldOption } from "../../types";
 
@@ -937,6 +941,51 @@ function LogicRulesManager({
 	);
 }
 
+// ─── Field config helpers ─────────────────────────────────────────────────────
+
+const TYPE_LABEL_TO_MODAL_TYPE: Record<string, string> = {
+	"Long Text":   "text-area",
+	"Text":        "text",
+	"Radio Button":"radio-button",
+	"Dropdown":    "dropdown",
+	"Date":        "date",
+	"File Upload": "file-upload",
+	"Checkbox":    "checkbox",
+	"Number":      "number",
+	"Rich Text":   "rich-text",
+	"Image":       "image",
+	"Label":       "label",
+	"Video":       "video",
+};
+
+const LABEL_COLOR_PALETTE = [
+	"#facc15", "#60a5fa", "#34d399", "#f87171",
+	"#a78bfa", "#fb923c", "#9ca3af", "#ec4899",
+];
+
+const FILTER_CONTEXTS = [
+	{ id: "analytics",     label: "Analytics" },
+	{ id: "plan",          label: "Plan" },
+	{ id: "library",       label: "Library" },
+	{ id: "work-requests", label: "Work Requests" },
+];
+
+const NUMBER_SUBTYPES = [
+	{ value: "number",   label: "Number" },
+	{ value: "currency", label: "Currency" },
+	{ value: "percent",  label: "Percent" },
+];
+
+const QUESTION_PLACEHOLDER = "Your question";
+
+const OPTION_PLACEHOLDERS: Record<string, string> = {
+	"dropdown":     QUESTION_PLACEHOLDER,
+	"radio-button": QUESTION_PLACEHOLDER,
+	"label":        QUESTION_PLACEHOLDER,
+};
+
+type DropdownOption = { id: string; value: string; hidden: boolean; color?: string };
+
 // ─── FieldPreview ─────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
@@ -1070,6 +1119,7 @@ export function FieldDetailsPanel({
 	onApplyLogic,
 	onHighlightNodes,
 	onClearHighlight,
+	onUpdateField,
 	customFields = [],
 }: {
 	node: any;
@@ -1078,17 +1128,82 @@ export function FieldDetailsPanel({
 	onApplyLogic: (ruleSets: NodeConditionLogic[]) => void;
 	onHighlightNodes?: (targets: Array<{ nodeId: string; actionLabel: string }>) => void;
 	onClearHighlight?: () => void;
+	onUpdateField?: (data: Partial<Record<string, any>>) => void;
 	customFields?: import("../../types").FormFieldDef[];
 }) {
 	const [isLogicEditMode, setIsLogicEditMode] = useState(false);
 	const d = node.data as any;
-	const [isRequired, setIsRequired] = useState<boolean>(d.required ?? false);
+
+	const fieldType = TYPE_LABEL_TO_MODAL_TYPE[d.typeLabel ?? ""] ?? "";
+	const isDropdown = fieldType === "dropdown";
+	const isRadioButton = fieldType === "radio-button";
+	const isLabel = fieldType === "label";
+	const isCheckbox = fieldType === "checkbox";
+	const isDate = fieldType === "date";
+	const isNumber = fieldType === "number";
+	const isOptionBased = isDropdown || isRadioButton || isLabel;
+	const isRichText = fieldType === "rich-text";
+	const isFilterable = isLabel || isCheckbox || isDropdown || isDate;
+
+	const [fieldName, setFieldName] = useState<string>(d.label ?? "");
+	const [helperText, setHelperText] = useState<string>(d.description ?? "");
+	const [isMandatory, setIsMandatory] = useState<boolean>(d.required ?? false);
+	const [isMultiSelect, setIsMultiSelect] = useState<boolean>(d.isMultiSelect ?? false);
+	const [textLimit, setTextLimit] = useState<string>(String(d.textLimit ?? ""));
+	const [numberSubtype, setNumberSubtype] = useState<string>(d.numberSubtype ?? "number");
+	const [decimalPlaces, setDecimalPlaces] = useState<string>(String(d.decimalPlaces ?? "2"));
+	const [useThousandSeparator, setUseThousandSeparator] = useState<boolean>(d.useThousandSeparator ?? false);
+	const [showInFilter, setShowInFilter] = useState<string[]>(d.showInFilter ?? []);
+	const [isActive, setIsActive] = useState<boolean>(d.isActive ?? true);
+	const [isReadOnly, setIsReadOnly] = useState<boolean>(d.isReadOnly ?? false);
+	const [dropdownOptions, setDropdownOptions] = useState<DropdownOption[]>(() => {
+		if (d.options && Array.isArray(d.options)) {
+			return d.options.map((o: any, i: number) => ({
+				id: `opt-${i}`,
+				value: o.label ?? o.value ?? "",
+				hidden: false,
+				color: LABEL_COLOR_PALETTE[i % LABEL_COLOR_PALETTE.length],
+			}));
+		}
+		return [
+			{ id: "opt-1", value: "", hidden: false, color: LABEL_COLOR_PALETTE[0] },
+			{ id: "opt-2", value: "", hidden: false, color: LABEL_COLOR_PALETTE[1] },
+		];
+	});
+
 	const allFields = [...STANDARD_FIELDS, ...customFields];
-	const fieldDef = allFields.find((f) => f.id === d.fieldDefId);
-	const fieldOptions: FieldOption[] = fieldDef?.options ?? [];
 	const connectedTargetNodes = allCanvasNodes;
 	const initialRuleSets: NodeConditionLogic[] = d.ruleSets ?? [];
-	const OPTION_BASED_TYPES = ["Dropdown", "Checkbox", "Radio Button"];
+
+	const currentFieldOptions: FieldOption[] = isOptionBased
+		? dropdownOptions.filter((o) => o.value.trim() !== "").map((o) => ({ label: o.value.trim(), value: o.value.trim().toLowerCase().replace(/\s+/g, "_") }))
+		: (d.options ?? []);
+
+	const handleSave = () => {
+		const options = isOptionBased
+			? dropdownOptions.filter((o) => o.value.trim() !== "").map((o) => ({
+				label: o.value.trim(),
+				value: o.value.trim().toLowerCase().replace(/\s+/g, "_"),
+				...(isLabel && o.color ? { color: o.color } : {}),
+			}))
+			: undefined;
+		const parsedLimit = isRichText && textLimit.trim() !== "" ? parseInt(textLimit, 10) : undefined;
+		const parsedDecimals = isNumber && decimalPlaces.trim() !== "" ? parseInt(decimalPlaces, 10) : undefined;
+		onUpdateField?.({
+			label: fieldName.trim() || d.label,
+			description: helperText.trim(),
+			required: isMandatory,
+			...(options ? { options } : {}),
+			...(isDropdown ? { isMultiSelect } : {}),
+			...(parsedLimit !== undefined && !isNaN(parsedLimit) ? { textLimit: parsedLimit } : {}),
+			...(isNumber ? {
+				numberSubtype,
+				...(parsedDecimals !== undefined && !isNaN(parsedDecimals) ? { decimalPlaces: parsedDecimals } : {}),
+				useThousandSeparator,
+			} : {}),
+			...(isFilterable && showInFilter.length > 0 ? { showInFilter } : {}),
+		});
+	};
 
 	return (
 		<DetailsPanel style={{ borderRadius: 0 }}>
@@ -1096,96 +1211,197 @@ export function FieldDetailsPanel({
 				<Box display="flex" alignItems="center" justifyContent="space-between" w="full">
 					<Box display="flex" alignItems="center" gap="8">
 						{d.icon && (
-							<Box
-								p="6"
-								rounded="sm"
-								bg="bg.accent.subtle"
-								color="fg.default"
-								display="flex"
-								alignItems="center"
-								justifyContent="center"
-							>
+							<Box p="6" rounded="sm" bg="bg.accent.subtle" color="fg.default" display="flex" alignItems="center" justifyContent="center">
 								{d.icon}
 							</Box>
 						)}
 						<Box>
-							<Text fontWeight="600" color="fg.default" style={{ display: "block" }}>
-								{d.label}
-							</Text>
-							{d.typeLabel && (
-								<Text fontSize="xs" color="fg.tertiary">{d.typeLabel}</Text>
-							)}
+							<Text fontWeight="600" color="fg.default" style={{ display: "block" }}>{d.label}</Text>
+							{d.typeLabel && <Text fontSize="xs" color="fg.tertiary">{d.typeLabel}</Text>}
 						</Box>
 					</Box>
-					<Button
-						appearance="subtle"
-						icon={<IconX size={16} />}
-						onClick={onClose}
-						aria-label="Close panel"
-					/>
+					<Button appearance="subtle" icon={<IconX size={16} />} onClick={onClose} aria-label="Close panel" />
 				</Box>
 			</DetailsPanelHeader>
 
 			<DetailsPanelBody>
-				<Box display="flex" flexDirection="column" gap="24" p="16">
+				<Box display="flex" flexDirection="column" gap="20" p="16">
 
-					{/* Field preview */}
-					<FieldPreview fieldDef={fieldDef} label={d.label} required={isRequired} fallbackTypeLabel={d.typeLabel} />
-
-					{/* Divider */}
-					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px" }} />
-
-					{/* Required */}
-					{fieldDef && (
+					{/* Field config — branches by type */}
+					{isOptionBased ? (<>
+						{isDropdown && (
+							<RadioGroup value={isMultiSelect ? "multi" : "single"} onValueChange={(v) => setIsMultiSelect(v === "multi")}>
+								<Box display="flex" alignItems="center" gap="20">
+									<Radio value="single">Single-Select</Radio>
+									<Radio value="multi">Multi-Select</Radio>
+								</Box>
+							</RadioGroup>
+						)}
+						<Field label="Your question" required>
+							<Input value={fieldName} onValueChange={setFieldName} placeholder={OPTION_PLACEHOLDERS[fieldType] ?? "Enter field name"} />
+						</Field>
+						<Box display="flex" flexDirection="column" gap="4">
+							<Field label="Helper text">
+								<Textarea value={helperText} onValueChange={(v) => setHelperText(v.slice(0, 1000))} placeholder="Optional helper text shown below the field" rows={2} resize="none" />
+							</Field>
+							<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+						</Box>
 						<Box display="flex" alignItems="center" justifyContent="space-between">
-							<Text fontSize="sm" fontWeight="500" color="fg.default">
-								Required
-							</Text>
-							<Switch checked={isRequired} onCheckedChange={setIsRequired} />
+							<Text fontSize="md" color="fg.default">Required</Text>
+							<Switch checked={isMandatory} onCheckedChange={setIsMandatory} />
 						</Box>
-					)}
+						{/* Options */}
+						<Box display="flex" flexDirection="column" gap="8">
+							<Box display="flex" flexDirection="column" gap="4">
+								{dropdownOptions.map((opt) => (
+									<Box key={opt.id} display="flex" alignItems="center" gap="8">
+										{isLabel && (
+											<Popover>
+												<PopoverAnchor>
+													<button type="button" aria-label="Pick color" style={{ width: 30, height: 30, borderRadius: 6, border: "1px solid var(--ax-colors-border-default)", background: opt.color ?? LABEL_COLOR_PALETTE[0], cursor: "pointer", padding: 0, flexShrink: 0 }} />
+												</PopoverAnchor>
+												<PopoverContent>
+													<Box p="8" display="flex" style={{ gap: 6, flexWrap: "wrap", width: 152 }}>
+														{LABEL_COLOR_PALETTE.map((c) => (
+															<button key={c} type="button" onClick={() => setDropdownOptions((prev) => prev.map((o) => o.id === opt.id ? { ...o, color: c } : o))} aria-label={`Color ${c}`} style={{ width: 28, height: 28, borderRadius: 6, border: opt.color === c ? "2px solid var(--ax-colors-border-accent)" : "1px solid var(--ax-colors-border-default)", background: c, cursor: "pointer", padding: 0 }} />
+														))}
+													</Box>
+												</PopoverContent>
+											</Popover>
+										)}
+										<Box flex="1">
+											<Input value={opt.value} onValueChange={(v) => setDropdownOptions((prev) => prev.map((o) => o.id === opt.id ? { ...o, value: v } : o))} placeholder="Enter an option" />
+										</Box>
+										<button type="button" onClick={() => setDropdownOptions((prev) => prev.map((o) => o.id === opt.id ? { ...o, hidden: !o.hidden } : o))} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", color: opt.hidden ? "var(--ax-colors-fg-accent)" : "var(--ax-colors-fg-tertiary)" }} aria-label={opt.hidden ? "Show option" : "Hide option"}>
+											<IconEyeOff size={16} />
+										</button>
+										<button type="button" onClick={() => setDropdownOptions((prev) => prev.filter((o) => o.id !== opt.id))} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", color: "var(--ax-colors-fg-tertiary)" }} aria-label="Delete option">
+											<IconTrash size={16} />
+										</button>
+									</Box>
+								))}
+							</Box>
+							<button type="button" onClick={() => setDropdownOptions((prev) => [...prev, { id: `opt-${Date.now()}`, value: "", hidden: false, color: LABEL_COLOR_PALETTE[prev.length % LABEL_COLOR_PALETTE.length] }])} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "4px", alignSelf: "flex-start" }}>
+								<IconPlus size={14} color="var(--ax-colors-fg-accent)" />
+								<Text fontSize="sm" color="fg.accent">Add option</Text>
+							</button>
+						</Box>
+					</>) : isNumber ? (<>
+						<RadioGroup value={numberSubtype} onValueChange={setNumberSubtype}>
+							<Box display="flex" alignItems="center" gap="20">
+								{NUMBER_SUBTYPES.map((s) => <Radio key={s.value} value={s.value}>{s.label}</Radio>)}
+							</Box>
+						</RadioGroup>
+						<Field label="Your question" required>
+							<Input value={fieldName} onValueChange={setFieldName} placeholder="Your question" />
+						</Field>
+						<Box display="flex" flexDirection="column" gap="4">
+							<Field label="Helper text">
+								<Textarea value={helperText} onValueChange={(v) => setHelperText(v.slice(0, 1000))} placeholder="Optional helper text shown below the field" rows={2} resize="none" />
+							</Field>
+							<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+						</Box>
+						<Box display="flex" alignItems="center" justifyContent="space-between">
+							<Text fontSize="md" color="fg.default">Required</Text>
+							<Switch checked={isMandatory} onCheckedChange={setIsMandatory} />
+						</Box>
+						<Field label="Decimal Places">
+							<Box display="flex" alignItems="center" gap="12">
+								<Box style={{ width: 96 }}>
+									<Input type="number" inputMode="numeric" min={0} value={decimalPlaces} onValueChange={(v) => setDecimalPlaces(v.replace(/[^0-9]/g, ""))} />
+								</Box>
+								<Text fontSize="sm" color="fg.tertiary">eg. {(1000).toFixed(Math.max(0, parseInt(decimalPlaces || "0", 10) || 0))}</Text>
+							</Box>
+						</Field>
+						<Box display="flex" alignItems="center" gap="8">
+							<Checkbox checked={useThousandSeparator} onCheckedChange={(v) => setUseThousandSeparator(!!v)}>Use 1000 separator (,)</Checkbox>
+						</Box>
+					</>) : (<>
+						<Field label="Your question" required>
+							<Input value={fieldName} onValueChange={setFieldName} placeholder="Your question" />
+						</Field>
+						<Box display="flex" flexDirection="column" gap="4">
+							<Field label="Helper text">
+								<Textarea value={helperText} onValueChange={(v) => setHelperText(v.slice(0, 1000))} placeholder="Optional helper text shown below the field" rows={2} resize="none" />
+							</Field>
+							<Text fontSize="xs" color="fg.tertiary">{helperText.length}/1000</Text>
+						</Box>
+						<Box display="flex" alignItems="center" justifyContent="space-between">
+							<Text fontSize="md" color="fg.default">Required</Text>
+							<Switch checked={isMandatory} onCheckedChange={setIsMandatory} />
+						</Box>
+						{isRichText && (
+							<Field label="Text limit">
+								<Box style={{ width: 160 }}>
+									<Input type="number" inputMode="numeric" min={0} value={textLimit} onValueChange={(v) => setTextLimit(v.replace(/[^0-9]/g, ""))} placeholder="Max characters" />
+								</Box>
+							</Field>
+						)}
+					</>)}
 
-					{/* Divider + Logic Rules — for option-based fields */}
-					{OPTION_BASED_TYPES.includes(d.typeLabel) && <>
-					<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "0 -16px" }} />
+					{/* Advanced settings */}
+					<Disclosure>
+						<DisclosureTrigger>
+							<Text fontSize="md" fontWeight="600" color="fg.default">Advanced settings</Text>
+						</DisclosureTrigger>
+						<DisclosureContent>
+							<Box display="flex" flexDirection="column" gap="24" pt="16">
+								<Box display="flex" alignItems="center" justifyContent="space-between">
+									<Text fontSize="md" color="fg.default">Active</Text>
+									<Switch checked={isActive} onCheckedChange={setIsActive} />
+								</Box>
+								<Box display="flex" alignItems="center" justifyContent="space-between">
+									<Text fontSize="md" color="fg.default">Mark as read only field</Text>
+									<Switch checked={isReadOnly} onCheckedChange={setIsReadOnly} />
+								</Box>
+								{isFilterable && (
+									<Box display="flex" flexDirection="column" gap="8">
+										<Text fontSize="md" color="fg.default">Show in Filter</Text>
+										<Box display="flex" flexDirection="column" gap="8">
+											{FILTER_CONTEXTS.map((ctx) => (
+												<Checkbox key={ctx.id} checked={showInFilter.includes(ctx.id)} onCheckedChange={(v) => setShowInFilter((prev) => v ? Array.from(new Set([...prev, ctx.id])) : prev.filter((x) => x !== ctx.id))}>
+													{ctx.label}
+												</Checkbox>
+											))}
+										</Box>
+									</Box>
+								)}
+							</Box>
+						</DisclosureContent>
+					</Disclosure>
 
-					{/* Logic Rules */}
+					{/* Logic */}
 					<Box>
-						<Box display="flex" alignItems="center" justifyContent="space-between" mb="16">
-							<Text fontSize="sm" fontWeight="600" color="fg.default">
-								Logic Rules
-							</Text>
-							{!isLogicEditMode && initialRuleSets.length > 0 && (
-								<button
-									onClick={() => setIsLogicEditMode(true)}
-									style={{
-										background: "none",
-										border: "none",
-										cursor: "pointer",
-										fontSize: "12px",
-										color: "var(--ax-colors-fg-accent)",
-										padding: 0,
-									}}
-								>
-									Edit
-								</button>
-							)}
+						<Box style={{ height: 1, background: "var(--ax-colors-border-tertiary)", margin: "4px 0 0" }} />
+						<Box pt="16" display="flex" flexDirection="column" gap="16">
+							<Box display="flex" alignItems="center" justifyContent="space-between">
+								<Text fontSize="md" fontWeight="600" color="fg.default">Logic</Text>
+								{!isLogicEditMode && initialRuleSets.length > 0 && (
+									<button onClick={() => setIsLogicEditMode(true)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "12px", color: "var(--ax-colors-fg-accent)", padding: 0 }}>
+										Edit
+									</button>
+								)}
+							</Box>
+							<LogicRulesManager
+								key={node.id}
+								initialRuleSets={initialRuleSets}
+								fieldOptions={currentFieldOptions}
+								allFields={allFields}
+								connectedTargetNodes={connectedTargetNodes}
+								isEditMode={isLogicEditMode}
+								onApply={onApplyLogic}
+								onEnterEdit={() => setIsLogicEditMode(true)}
+								onExitEdit={() => setIsLogicEditMode(false)}
+								onHighlightRule={onHighlightNodes}
+								onClearHighlight={onClearHighlight}
+							/>
 						</Box>
-						<LogicRulesManager
-							key={node.id}
-							initialRuleSets={initialRuleSets}
-							fieldOptions={fieldOptions}
-							allFields={allFields}
-							connectedTargetNodes={connectedTargetNodes}
-							isEditMode={isLogicEditMode}
-							onApply={onApplyLogic}
-							onEnterEdit={() => setIsLogicEditMode(true)}
-							onExitEdit={() => setIsLogicEditMode(false)}
-							onHighlightRule={onHighlightNodes}
-							onClearHighlight={onClearHighlight}
-						/>
 					</Box>
-					</>}
+
+					{/* Save */}
+					<Button appearance="primary" onClick={handleSave} style={{ width: "100%", justifyContent: "center" }}>
+						Save changes
+					</Button>
 				</Box>
 			</DetailsPanelBody>
 		</DetailsPanel>

@@ -117,7 +117,7 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 						color="fg.default"
 						style={{ display: "block" }}
 					>
-						{d.label}
+						{d.label || <span style={{ color: "var(--ax-colors-fg-tertiary)", fontWeight: 400 }}>Your question</span>}
 					</Text>
 					{d.typeLabel && (
 						<Text

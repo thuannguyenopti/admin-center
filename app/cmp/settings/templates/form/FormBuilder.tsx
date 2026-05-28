@@ -276,6 +276,11 @@ export function FormBuilder() {
 		canRedo,
 	} = useFormBuilderState();
 
+	const selectNode = useCallback((id: string | null) => {
+		setSelectedNodeId(id);
+		setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === id })));
+	}, [setNodes]);
+
 	// ─── Node types ──────────────────────────────────────────────────────────────
 
 	const nodeTypes = useMemo(
@@ -370,8 +375,8 @@ export function FormBuilder() {
 				...(parentId ? { parentId } : {}),
 				...(nodeType === "formSection" ? { style: { width: 480, height: 220, overflow: "visible" } } : {}),
 				data: {
-					label: name,
-					typeLabel: typeLabel || undefined,
+					label: nodeType === "formField" ? "" : name,
+					typeLabel: fieldDef?.typeLabel || typeLabel || undefined,
 					icon: item?.icon,
 					required: fieldDef?.required ?? false,
 					fieldDefId: iconId,
@@ -386,6 +391,7 @@ export function FormBuilder() {
 				));
 			}
 			addNode(newNode);
+			if (nodeType === "formField") selectNode(newNode.id);
 		},
 		[reactFlowInstance, addNode, setNodes, nodes],
 	);
@@ -438,7 +444,7 @@ export function FormBuilder() {
 					id: newId, type: "formField",
 					position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
 					...(inSection ? { parentId } : {}),
-					data: { label: f.name, typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id },
+					data: { label: "", typeLabel: f.typeLabel, icon: f.icon, required: f.required ?? false, fieldDefId: f.id },
 				};
 			}
 
@@ -450,6 +456,7 @@ export function FormBuilder() {
 				type: "smoothstep",
 				markerEnd: { type: MarkerType.ArrowClosed },
 			} as any);
+			if (type === "field") selectNode(newId);
 		},
 		[nodes, customFields, addNodeWithEdge],
 	);
@@ -480,6 +487,7 @@ export function FormBuilder() {
 							markerEnd: { type: MarkerType.ArrowClosed },
 						} as any,
 					);
+					selectNode(newId);
 					return;
 				}
 			}
@@ -492,6 +500,7 @@ export function FormBuilder() {
 				position: { x, y },
 				data: { label: field.name, typeLabel: field.typeLabel, icon: field.icon, required: field.required ?? false, fieldDefId: field.id },
 			} as any);
+			selectNode(newId);
 		},
 		[nodes, addNode, addNodeWithEdge],
 	);
@@ -652,7 +661,7 @@ export function FormBuilder() {
 	// ─── Node click ───────────────────────────────────────────────────────────────
 
 	const onNodeClick = useCallback((_: any, node: any) => {
-		setSelectedNodeId(node.id);
+		selectNode(node.id);
 		setHighlightedTargets([]);
 		setConflictHighlight(null);
 		setActiveConflictId(null);
@@ -785,6 +794,13 @@ export function FormBuilder() {
 		jump_to: "Jump to", show: "Show", hide: "Hide", show_values: "Show values", hide_values: "Hide values",
 	};
 
+	const handleUpdateFieldData = useCallback(
+		(nodeId: string, data: Partial<Record<string, any>>) => {
+			updateNodeData(nodeId, data);
+		},
+		[updateNodeData],
+	);
+
 	const handleApplyLogic = useCallback(
 		(nodeId: string, ruleSets: NodeConditionLogic[]) => {
 			updateNodeData(nodeId, { ruleSets });
@@ -909,6 +925,7 @@ export function FormBuilder() {
 					onClose={() => setSelectedNodeId(null)}
 					allCanvasNodes={allCanvasNodes}
 					onApplyLogic={(ruleSets) => handleApplyLogic(selectedNode.id, ruleSets)}
+					onUpdateField={(data) => handleUpdateFieldData(selectedNode.id, data)}
 					onHighlightNodes={(targets) => { setHighlightedTargets(targets); setConflictHighlight(null); }}
 					onClearHighlight={() => setHighlightedTargets([])}
 					customFields={customFields}
@@ -941,7 +958,7 @@ export function FormBuilder() {
 		}
 		return null;
 	}, [
-		isPreviewOpen, formTitle, selectedNode, nodes, handleApplyLogic, customFields,
+		isPreviewOpen, formTitle, selectedNode, nodes, handleApplyLogic, handleUpdateFieldData, customFields,
 		handleContentNodeLabelChange, isConflictsPanelOpen, conflicts, activeConflictId, isAllConflictsHighlighted,
 	]);
 
