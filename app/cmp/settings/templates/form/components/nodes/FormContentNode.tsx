@@ -101,9 +101,14 @@ export function FormContentNode({ data, selected }: NodeProps) {
 				>
 					{d.icon}
 				</Box>
-				<Text fontSize="sm" color={d.label ? "fg.default" : "fg.tertiary"}>
-					{(d.label as string) || "Your text"}
-				</Text>
+				<Box style={{ flex: 1, minWidth: 0 }}>
+					<Text fontSize="sm" fontWeight="500" color={d.label ? "fg.default" : "fg.tertiary"} style={{ display: "block" }}>
+						{(d.label as string) || "Your text"}
+					</Text>
+					<Text fontSize="xs" color="fg.tertiary" style={{ display: "block", marginTop: "1px" }}>
+						Paragraph
+					</Text>
+				</Box>
 				<Handle type="source" position={Position.Bottom} style={handleStyle} />
 			</Box>
 		</>
