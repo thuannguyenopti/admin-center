@@ -98,18 +98,30 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 				}}
 			>
 				<Handle type="target" position={Position.Top} style={handleStyle} />
-				<Box
-					p="6"
-					rounded="sm"
-					bg="bg.accent.subtle"
-					color="fg.default"
-					display="flex"
-					alignItems="center"
-					justifyContent="center"
-					style={{ flexShrink: 0 }}
-				>
-					{d.icon}
-				</Box>
+				{d.isStartingNode ? (
+					<Box
+						color="fg.secondary"
+						display="flex"
+						alignItems="center"
+						justifyContent="center"
+						style={{ flexShrink: 0, width: 28, height: 28 }}
+					>
+						{d.icon}
+					</Box>
+				) : (
+					<Box
+						p="6"
+						rounded="sm"
+						bg="bg.accent.subtle"
+						color="fg.default"
+						display="flex"
+						alignItems="center"
+						justifyContent="center"
+						style={{ flexShrink: 0 }}
+					>
+						{d.icon}
+					</Box>
+				)}
 				<Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
 					<Text
 						fontSize="sm"
