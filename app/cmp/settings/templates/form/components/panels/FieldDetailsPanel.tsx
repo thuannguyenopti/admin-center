@@ -1141,7 +1141,7 @@ export function FieldDetailsPanel({
 	const isCheckbox = fieldType === "checkbox";
 	const isDate = fieldType === "date";
 	const isNumber = fieldType === "number";
-	const isOptionBased = isDropdown || isRadioButton || isLabel;
+	const isOptionBased = isDropdown || isRadioButton || isLabel || isCheckbox;
 	const isRichText = fieldType === "rich-text";
 	const isFilterable = isLabel || isCheckbox || isDropdown || isDate;
 
