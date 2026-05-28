@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Button as AxiomButton } from "@optiaxiom/react";
+import { Box, Button as AxiomButton, Textarea } from "@optiaxiom/react";
 import { Button } from "@/app/components/Button";
 import { Text } from "@/app/components/Text";
 import { IconAgent, IconCircleCheckSolid, IconArrowLeft } from "@optimizely/axiom-icons";
@@ -185,26 +185,13 @@ function ApprovalActionCard({ state, changesMessage, noteValue, onApprove, onAsk
             Let Frank know what needs to be updated before publishing.
           </Text>
         </Box>
-        <textarea
+        <Textarea
           autoFocus
           value={noteValue ?? ''}
           onChange={e => onNoteChange(e.target.value)}
           placeholder="Describe the changes needed…"
           rows={3}
-          style={{
-            width: '100%',
-            resize: 'none',
-            border: '1px solid var(--ax-colors-border-default)',
-            borderRadius: 8,
-            padding: '8px 12px',
-            fontSize: 13,
-            lineHeight: 1.5,
-            color: 'var(--ax-colors-fg-default)',
-            background: 'var(--ax-colors-bg-page)',
-            outline: 'none',
-            fontFamily: 'inherit',
-            boxSizing: 'border-box',
-          }}
+          w="full"
         />
         <Box display="flex" justifyContent="flex-end" gap="4">
           <AxiomButton appearance="subtle" size="md" onClick={onNoteCancel}>Cancel</AxiomButton>

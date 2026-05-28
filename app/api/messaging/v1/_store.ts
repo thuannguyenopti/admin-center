@@ -57,6 +57,34 @@ const SEED: StoreShape = {
       member_count: 2,
     },
     {
+      id: "conv-jamie-frank",
+      instance_id: "im-prototype",
+      type: "dm",
+      created_by: "jamie",
+      created_at: new Date(Date.now() - 7200000).toISOString(),
+      updated_at: new Date(Date.now() - 1800000).toISOString(),
+      archived: false,
+      participants: [
+        participant("jamie", "owner"),
+        participant("frank", "member"),
+      ],
+      member_count: 2,
+    },
+    {
+      id: "conv-jamie-maryanne",
+      instance_id: "im-prototype",
+      type: "dm",
+      created_by: "jamie",
+      created_at: new Date(Date.now() - 10800000).toISOString(),
+      updated_at: new Date(Date.now() - 3600000).toISOString(),
+      archived: false,
+      participants: [
+        participant("jamie", "owner"),
+        participant("mary-anne", "member"),
+      ],
+      member_count: 2,
+    },
+    {
       id: "conv-design-crew",
       instance_id: "im-prototype",
       type: "group",
@@ -222,6 +250,14 @@ const SEED: StoreShape = {
       message("msg-1", "conv-frank", "frank", "Hey — I'm reviewing the share dialog PR now, looking good!"),
       message("msg-2", "conv-frank", "pei", "Thanks! Let me know if anything looks off."),
     ],
+    "conv-jamie-frank": [
+      message("msg-jf1", "conv-jamie-frank", "frank", "Hey, you joining the campaign review call today?"),
+      message("msg-jf2", "conv-jamie-frank", "jamie", "Yeah, at 3 — sending you the agenda now"),
+    ],
+    "conv-jamie-maryanne": [
+      message("msg-jm1", "conv-jamie-maryanne", "jamie", "Can you review the Q3 brief before EOD?"),
+      message("msg-jm2", "conv-jamie-maryanne", "mary-anne", "On it — I'll have notes back by 4pm"),
+    ],
     "conv-design-crew": [
       message("msg-3", "conv-design-crew", "jamie", "Pushed the new VAU card sort to main 🎉"),
       message("msg-4", "conv-design-crew", "mary-anne", "Looks great! I'll start on the detail page polish."),
@@ -307,7 +343,7 @@ function message(id: string, convId: string, sender: string, content: string): I
 }
 
 // Bump this when SEED participants change so old persisted cache is discarded.
-const SEED_VERSION = "v7-tony-followup-clean";
+const SEED_VERSION = "v8-human-dms";
 
 async function load(): Promise<StoreShape> {
   if (cache) return cache;

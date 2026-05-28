@@ -17,6 +17,8 @@ export type ChatHistoryItem = {
   preview?: string;
   /** When true, surface a "Needs input" indicator — chat has a pending action card. */
   needsInput?: boolean;
+  /** Presence status for DM avatars ("online" | "away" | "offline"). */
+  presenceStatus?: string;
 };
 
 export type OpalMode = 'docked' | 'popped-out';
