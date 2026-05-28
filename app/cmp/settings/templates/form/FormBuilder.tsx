@@ -375,7 +375,7 @@ export function FormBuilder() {
 				...(parentId ? { parentId } : {}),
 				...(nodeType === "formSection" ? { style: { width: 480, height: 220, overflow: "visible" } } : {}),
 				data: {
-					label: nodeType === "formField" ? "" : name,
+					label: (nodeType === "formField" || nodeType === "formContent") ? "" : name,
 					typeLabel: fieldDef?.typeLabel || typeLabel || undefined,
 					icon: item?.icon,
 					required: fieldDef?.required ?? false,
