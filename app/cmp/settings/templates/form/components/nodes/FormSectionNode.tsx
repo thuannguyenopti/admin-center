@@ -25,8 +25,9 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [showFields, setShowFields] = useState(false);
 	const [plusHovered, setPlusHovered] = useState(false);
+	const [addBtnHovered, setAddBtnHovered] = useState(false);
 
-	useEffect(() => { if (!selected) { setIsMenuOpen(false); setShowFields(false); } }, [selected]);
+	useEffect(() => { if (!selected && !isMenuOpen) { setShowFields(false); } }, [selected, isMenuOpen]);
 
 	const commitTitle = useCallback(() => {
 		setIsEditing(false);
@@ -36,7 +37,7 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 
 	return (
 		<>
-			<NodeToolbar position={Position.Bottom} isVisible={selected} align="center" offset={8}>
+			<NodeToolbar position={Position.Bottom} isVisible={selected || isMenuOpen} align="center" offset={8}>
 				<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
 					<button
 						className="nodrag nopan"
@@ -196,6 +197,9 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						Drop fields here
 					</div>
 					<button
+						className="nodrag nopan nowheel"
+						onMouseEnter={() => setAddBtnHovered(true)}
+						onMouseLeave={() => setAddBtnHovered(false)}
 						onClick={(e) => { e.stopPropagation(); setIsMenuOpen((v) => { if (v) setShowFields(false); return !v; }); }}
 						style={{
 							display: "flex",
@@ -204,11 +208,12 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 							padding: "4px 10px",
 							border: "1px solid var(--ax-colors-border-default)",
 							borderRadius: 6,
-							background: "none",
+							background: addBtnHovered ? "var(--ax-colors-bg-secondary)" : "none",
 							cursor: "pointer",
 							fontSize: 12,
-							color: "var(--ax-colors-fg-secondary)",
+							color: addBtnHovered ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
 							fontFamily: "inherit",
+							pointerEvents: "all",
 						}}
 					>
 						<IconPlus size={12} />
