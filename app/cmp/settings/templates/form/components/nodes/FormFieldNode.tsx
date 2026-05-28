@@ -76,7 +76,7 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 				alignItems="center"
 				gap="10"
 				style={{
-					minWidth: "280px",
+					width: "280px",
 					border: d.isHighlighted
 						? d.isConflictHighlighted
 							? "2px solid #ca8a04"

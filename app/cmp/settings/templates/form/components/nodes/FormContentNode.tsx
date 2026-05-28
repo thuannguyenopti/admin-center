@@ -75,7 +75,7 @@ export function FormContentNode({ data, selected }: NodeProps) {
 				alignItems="center"
 				gap="10"
 				style={{
-					minWidth: "280px",
+					width: "280px",
 					border: d.isHighlighted
 						? "2px solid var(--ax-colors-border-warning)"
 						: selected
