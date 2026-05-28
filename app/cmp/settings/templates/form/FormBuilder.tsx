@@ -391,7 +391,7 @@ export function FormBuilder() {
 				));
 			}
 			addNode(newNode);
-			if (nodeType === "formField") selectNode(newNode.id);
+			if (nodeType === "formField" || nodeType === "formContent") selectNode(newNode.id);
 		},
 		[reactFlowInstance, addNode, setNodes, nodes],
 	);
@@ -456,7 +456,7 @@ export function FormBuilder() {
 				type: "smoothstep",
 				markerEnd: { type: MarkerType.ArrowClosed },
 			} as any);
-			if (type === "field") selectNode(newId);
+			if (type === "field" || type === "text") selectNode(newId);
 		},
 		[nodes, customFields, addNodeWithEdge],
 	);
