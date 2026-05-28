@@ -1,12 +1,11 @@
 "use client";
 
-import { Box, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
+import { Badge, Box, Checkbox, Spinner, Tabs, TabsList, TabsTrigger, TabsContent } from "@optiaxiom/react";
 import { Text } from "@/app/components/Text";
 import { Button } from "@/app/components/Button";
 import {
   IconXmark,
   IconCalendar,
-  IconCheck,
   IconCircleCheckSolid,
   IconChevronRight,
   IconChevronDown,
@@ -18,8 +17,9 @@ import {
   IconPlus,
   IconEye,
 } from "@optiaxiom/icons";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InitialsAvatar } from "./InitialsAvatar";
+import { avatarFor } from "@/app/opal/im/lib/avatars";
 
 type WorkflowStep = {
   id: string;
@@ -28,10 +28,15 @@ type WorkflowStep = {
   hours: string;
   date: string;
   assignee: string;
+  assigneeAvatar?: string;
+  description?: string;
   done: boolean;
+  loading?: boolean;
 };
 
 type ChecklistItem = { id: string; label: string; done: boolean };
+
+type HeaderAvatar = { initials: string; src?: string };
 
 export type HeadlessTaskVariant = "newsletter-campaign" | "geo-qa";
 
@@ -41,11 +46,14 @@ type TaskData = {
   workflowName: string;
   startedLabel: string;
   dueLabel: string;
+  headerAvatars: HeaderAvatar[];
+  headerOverflow: number;
   steps: WorkflowStep[];
   expandedDefault: string;
   expandedDetail: {
     stepId: string;
     assignee: string;
+    assigneeAvatar?: string;
     description: string;
     checklist: ChecklistItem[];
     statusLabel: string;
@@ -62,6 +70,12 @@ const TASKS: Record<HeadlessTaskVariant, TaskData> = {
     workflowName: "Newsletter Workflow",
     startedLabel: "Started • May 31",
     dueLabel: "Due • Jun 4",
+    headerAvatars: [
+      { initials: "MK" },
+      { initials: "JP" },
+      { initials: "SC" },
+    ],
+    headerOverflow: 3,
     steps: [
       { id: "1", number: 1, title: "Define target audience", hours: "40", date: "Nov 25", assignee: "MK", done: true },
       { id: "2", number: 2, title: "Develop core messaging", hours: "40", date: "Nov 25", assignee: "MK", done: false },
@@ -94,9 +108,16 @@ const TASKS: Record<HeadlessTaskVariant, TaskData> = {
     workflowName: "GEO Content Workflow",
     startedLabel: "Started • May 24",
     dueLabel: "Due • May 26",
+    headerAvatars: [
+      { initials: "FR", src: avatarFor("vau-frank") },
+      { initials: "JC", src: avatarFor("jamie") },
+      { initials: "MT", src: avatarFor("mary-anne") },
+    ],
+    headerOverflow: 0,
     steps: [
-      { id: "1", number: 1, title: "Audit site and draft Q&A", hours: "3h", date: "May 25", assignee: "FR", done: true },
-      { id: "2", number: 2, title: "Team review and publish", hours: "1h", date: "May 26", assignee: "TM", done: false },
+      { id: "1", number: 1, title: "Audit site and draft Q&A", hours: "3h", date: "May 25", assignee: "FR", assigneeAvatar: avatarFor("vau-frank"), done: true },
+      { id: "2", number: 2, title: "Team review", hours: "1h", date: "May 26", assignee: "TM", done: false },
+      { id: "3", number: 3, title: "Publish", hours: "10m", date: "May 26", assignee: "FR", assigneeAvatar: avatarFor("vau-frank"), description: "Publish to live", done: false },
     ],
     expandedDefault: "2",
     expandedDetail: {
@@ -108,7 +129,6 @@ const TASKS: Record<HeadlessTaskVariant, TaskData> = {
         { id: "c1", label: "Verify Stride voice on opening Q&As", done: true },
         { id: "c2", label: "Confirm Activities section coverage", done: true },
         { id: "c3", label: "Team approval", done: false },
-        { id: "c4", label: "Publish to live", done: false },
       ],
       statusLabel: "In Review",
       plannedStart: "May 26",
@@ -120,14 +140,38 @@ const TASKS: Record<HeadlessTaskVariant, TaskData> = {
 
 const Avatar = ({
   initials,
+  src,
   size = 24,
   withBorder = true,
 }: {
   initials: string;
+  src?: string;
   size?: number;
   idx?: number;
   withBorder?: boolean;
-}) => <InitialsAvatar initials={initials} size={size} withBorder={withBorder} />;
+}) => {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={initials}
+        width={size}
+        height={size}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          flexShrink: 0,
+          border: withBorder ? "2px solid var(--ax-colors-bg-default)" : "none",
+          boxSizing: "border-box",
+        }}
+      />
+    );
+  }
+  return <InitialsAvatar initials={initials} size={size} withBorder={withBorder} />;
+};
 
 function StatusBadge({ children, intent = "information" }: { children: React.ReactNode; intent?: "information" | "neutral" }) {
   const colors = intent === "information"
@@ -156,11 +200,13 @@ function StepRow({
   step,
   expanded,
   onToggle,
+  onToggleDone,
   children,
 }: {
   step: WorkflowStep;
   expanded: boolean;
   onToggle: () => void;
+  onToggleDone: () => void;
   children?: React.ReactNode;
 }) {
   return (
@@ -181,16 +227,37 @@ function StepRow({
           alignItems="center"
           justifyContent="center"
           rounded="full"
+          role="button"
+          tabIndex={0}
+          aria-label={step.done ? "Mark step as not done" : "Mark step as done"}
+          aria-pressed={step.done}
+          aria-busy={step.loading || undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (step.loading) return;
+            onToggleDone();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === " " || e.key === "Enter") {
+              e.preventDefault();
+              e.stopPropagation();
+              if (step.loading) return;
+              onToggleDone();
+            }
+          }}
           style={{
             width: 20,
             height: 20,
             flexShrink: 0,
-            border: step.done ? "none" : "1.5px solid var(--ax-colors-border-default)",
+            cursor: step.loading ? "default" : "pointer",
+            border: step.done || step.loading ? "none" : "1.5px solid var(--ax-colors-border-default)",
           }}
         >
-          {step.done && (
+          {step.loading ? (
+            <Spinner size="sm" />
+          ) : step.done ? (
             <IconCircleCheckSolid size={20} color="var(--ax-colors-fg-success)" />
-          )}
+          ) : null}
         </Box>
         <Text
           style={{
@@ -208,7 +275,7 @@ function StepRow({
         <Text color="fg.secondary" style={{ fontSize: 12, width: 48, flexShrink: 0 }}>
           {step.date}
         </Text>
-        <Avatar initials={step.assignee} size={24} idx={step.number} withBorder={false} />
+        <Avatar initials={step.assignee} src={step.assigneeAvatar} size={24} idx={step.number} withBorder={false} />
       </Box>
       {expanded && children && (
         <Box pb="16" style={{ paddingLeft: 36 }}>
@@ -249,27 +316,116 @@ function PhaseRow({ label }: { label: string }) {
   );
 }
 
-export type HeadlessTaskPanelProps = {
-  open: boolean;
-  onClose: () => void;
-  variant?: HeadlessTaskVariant;
+export type TaskController = {
+  task: (typeof TASKS)[HeadlessTaskVariant];
+  variant: HeadlessTaskVariant;
+  steps: WorkflowStep[];
+  expandedStep: string;
+  checklist: ChecklistItem[];
+  toggleStep: (id: string) => void;
+  toggleStepDone: (id: string) => void;
+  toggleCheck: (id: string) => void;
+  completeStep: (id: string) => void;
+  allStepsDone: boolean;
 };
 
-export function HeadlessTaskPanel({
-  open,
-  onClose,
-  variant = "newsletter-campaign",
-}: HeadlessTaskPanelProps) {
+// Owns step + checklist + expansion state for a workflow task. Hoisted out of
+// the panel so the parent can drive completeStep() even when the panel itself
+// isn't currently mounted (e.g. approving from the action card before the
+// task panel is opened).
+export function useTaskController(
+  variant: HeadlessTaskVariant = "newsletter-campaign",
+  onStepComplete?: (stepId: string) => void,
+): TaskController {
   const task = TASKS[variant];
   const [expandedStep, setExpandedStep] = useState<string>(task.expandedDefault);
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.expandedDetail.checklist);
+  const [steps, setSteps] = useState<WorkflowStep[]>(task.steps);
+  const announcedDoneRef = useRef<Set<string>>(new Set());
+
+  const completeStep = (id: string) => {
+    setSteps((prev) => {
+      const target = prev.find((s) => s.id === id);
+      if (target?.done) return prev;
+      const next = prev.map((s) => (s.id === id ? { ...s, done: true } : s));
+      // Demo cascade: when "Team review" (step 2) flips to done in the geo-qa
+      // variant, expand step 3, show its spinner for 1.5s, then mark "Publish" done.
+      if (variant === "geo-qa" && id === "2") {
+        setExpandedStep("3");
+        setTimeout(() => {
+          setSteps((curr) => curr.map((s) => (s.id === "3" ? { ...s, loading: true } : s)));
+        }, 0);
+        setTimeout(() => {
+          setSteps((curr) => curr.map((s) => (s.id === "3" ? { ...s, loading: false, done: true } : s)));
+        }, 1500);
+      }
+      return next;
+    });
+  };
 
   const toggleStep = (id: string) => setExpandedStep((prev) => (prev === id ? "" : id));
   const toggleCheck = (id: string) =>
     setChecklist((prev) => prev.map((c) => (c.id === id ? { ...c, done: !c.done } : c)));
+  const toggleStepDone = (id: string) =>
+    setSteps((prev) => {
+      const wasDone = prev.find((s) => s.id === id)?.done ?? false;
+      if (wasDone) {
+        announcedDoneRef.current.delete(id);
+        return prev.map((s) => (s.id === id ? { ...s, done: false } : s));
+      }
+      setTimeout(() => completeStep(id), 0);
+      return prev;
+    });
+
+  // When all checklist items are done, auto-complete the step that owns them.
+  useEffect(() => {
+    if (variant !== "geo-qa") return;
+    if (checklist.length === 0) return;
+    if (!checklist.every((c) => c.done)) return;
+    const checklistStepId = task.expandedDetail.stepId;
+    const ownerStep = steps.find((s) => s.id === checklistStepId);
+    if (ownerStep?.done) return;
+    completeStep(checklistStepId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checklist]);
+
+  useEffect(() => {
+    if (!onStepComplete) return;
+    for (const s of steps) {
+      if (s.done && !announcedDoneRef.current.has(s.id)) {
+        announcedDoneRef.current.add(s.id);
+        onStepComplete(s.id);
+      }
+    }
+  }, [steps, onStepComplete]);
+
+  const allStepsDone = steps.length > 0 && steps.every((s) => s.done);
+
+  return {
+    task,
+    variant,
+    steps,
+    expandedStep,
+    checklist,
+    toggleStep,
+    toggleStepDone,
+    toggleCheck,
+    completeStep,
+    allStepsDone,
+  };
+}
+
+export type HeadlessTaskPanelProps = {
+  open: boolean;
+  onClose: () => void;
+  controller: TaskController;
+};
+
+export function HeadlessTaskPanel({ open, onClose, controller }: HeadlessTaskPanelProps) {
+  const { task, steps, expandedStep, checklist, toggleStep, toggleStepDone, toggleCheck, allStepsDone } = controller;
 
   if (!open) return null;
-  const { taskId, title, workflowName, startedLabel, dueLabel, steps, expandedDetail } = task;
+  const { taskId, title, workflowName, dueLabel, expandedDetail, headerAvatars, headerOverflow } = task;
 
   return (
     <Box
@@ -296,29 +452,33 @@ export function HeadlessTaskPanel({
             <Button appearance="subtle" size="md" icon={<IconXmark size={18} />} onClick={onClose} aria-label="Close" />
             <Box style={{ width: 1, height: 16, background: "var(--ax-colors-border-secondary)", flexShrink: 0, margin: "0 4px" }} />
             <div style={{ display: "inline-flex", alignItems: "center" }}>
-              <Avatar initials="MK" size={24} idx={0} />
-              <div style={{ marginLeft: -6, display: "inline-flex" }}><Avatar initials="JP" size={24} idx={1} /></div>
-              <div style={{ marginLeft: -6, display: "inline-flex" }}><Avatar initials="SC" size={24} idx={2} /></div>
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  minWidth: 24,
-                  marginLeft: -6,
-                  borderRadius: "50%",
-                  background: "var(--ax-colors-bg-secondary)",
-                  color: "var(--ax-colors-fg-secondary)",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "2px solid var(--ax-colors-bg-default)",
-                  boxSizing: "border-box",
-                }}
-              >
-                +3
-              </div>
+              {headerAvatars.map((a, i) => (
+                <div key={i} style={{ marginLeft: i === 0 ? 0 : -6, display: "inline-flex" }}>
+                  <Avatar initials={a.initials} src={a.src} size={24} idx={i} />
+                </div>
+              ))}
+              {headerOverflow > 0 && (
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    minWidth: 24,
+                    marginLeft: -6,
+                    borderRadius: "50%",
+                    background: "var(--ax-colors-bg-secondary)",
+                    color: "var(--ax-colors-fg-secondary)",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid var(--ax-colors-bg-default)",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  +{headerOverflow}
+                </div>
+              )}
             </div>
             <Box display="flex" alignItems="center" gap="4" style={{ color: "var(--ax-colors-fg-tertiary)" }}>
               <IconEye size={14} />
@@ -327,18 +487,18 @@ export function HeadlessTaskPanel({
           </Box>
 
           <Box display="flex" alignItems="center" gap="8">
-            <Button appearance="default" size="sm">Mark Complete</Button>
+            {!allStepsDone && (
+              <Button appearance="default" size="sm">Mark Complete</Button>
+            )}
             <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke size={14} />} aria-label="More" />
           </Box>
         </Box>
 
         {/* Status + dates */}
-        <Box display="flex" alignItems="center" gap="16" px="20" pb="8" style={{ flexShrink: 0 }}>
-          <StatusBadge intent="information">In Progress</StatusBadge>
-          <Box display="flex" alignItems="center" gap="6" style={{ color: "var(--ax-colors-fg-secondary)" }}>
-            <IconCalendar size={14} />
-            <Text style={{ fontSize: 12 }}>{startedLabel}</Text>
-          </Box>
+        <Box display="flex" alignItems="center" justifyContent="space-between" gap="16" px="20" pb="8" style={{ flexShrink: 0 }}>
+          <Badge intent={allStepsDone ? "success" : "information"}>
+            {allStepsDone ? "Completed" : "In Progress"}
+          </Badge>
           <Box display="flex" alignItems="center" gap="6" style={{ color: "var(--ax-colors-fg-secondary)" }}>
             <IconCalendar size={14} />
             <Text style={{ fontSize: 12 }}>{dueLabel}</Text>
@@ -380,13 +540,26 @@ export function HeadlessTaskPanel({
                     step={step}
                     expanded={expandedStep === step.id}
                     onToggle={() => toggleStep(step.id)}
+                    onToggleDone={() => toggleStepDone(step.id)}
                   >
+                    {step.id !== expandedDetail.stepId && step.description && (
+                      <Box pt="4">
+                        <Box display="flex" alignItems="center" gap="8" pb="8">
+                          <Text color="fg.tertiary" style={{ fontSize: 12 }}>Assigned to</Text>
+                          <Avatar initials={step.assignee} src={step.assigneeAvatar} size={20} idx={step.number} withBorder={false} />
+                          <Text style={{ fontSize: 13, fontWeight: 500 }}>{step.assignee === "FR" ? "Frank" : step.assignee}</Text>
+                        </Box>
+                        <Text color="fg.secondary" style={{ fontSize: 13, lineHeight: "20px" }}>
+                          {step.description}
+                        </Text>
+                      </Box>
+                    )}
                     {step.id === expandedDetail.stepId && (
                       <Box display="flex" flexDirection="column" gap="12" pt="4">
                         {/* Assigned to */}
                         <Box display="flex" alignItems="center" gap="8">
                           <Text color="fg.tertiary" style={{ fontSize: 12 }}>Assigned to</Text>
-                          <Avatar initials={step.assignee} size={20} idx={step.number} withBorder={false} />
+                          <Avatar initials={step.assignee} src={expandedDetail.assigneeAvatar ?? step.assigneeAvatar} size={20} idx={step.number} withBorder={false} />
                           <Text style={{ fontSize: 13, fontWeight: 500 }}>{expandedDetail.assignee}</Text>
                         </Box>
 
@@ -398,39 +571,23 @@ export function HeadlessTaskPanel({
                         {/* Checklist */}
                         <Box display="flex" flexDirection="column" gap="8">
                           {checklist.map((c) => (
-                            <Box
+                            <Checkbox
                               key={c.id}
-                              display="flex"
-                              alignItems="center"
-                              gap="8"
-                              onClick={() => toggleCheck(c.id)}
-                              style={{ cursor: "pointer" }}
+                              checked={c.done}
+                              onCheckedChange={() => toggleCheck(c.id)}
                             >
-                              <Box
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                style={{
-                                  width: 18,
-                                  height: 18,
-                                  borderRadius: 4,
-                                  flexShrink: 0,
-                                  background: c.done ? "var(--ax-colors-bg-success)" : "transparent",
-                                  border: c.done ? "none" : "1.5px solid var(--ax-colors-border-default)",
-                                }}
-                              >
-                                {c.done && <IconCheck size={12} color="white" />}
-                              </Box>
                               <Text
+                                color={c.done ? "fg.tertiary" : "fg.default"}
                                 style={{
                                   fontSize: 13,
-                                  color: c.done ? "var(--ax-colors-fg-tertiary)" : "var(--ax-colors-fg-default)",
+                                  lineHeight: "20px",
+                                  maxWidth: "none",
                                   textDecoration: c.done ? "line-through" : "none",
                                 }}
                               >
                                 {c.label}
                               </Text>
-                            </Box>
+                            </Checkbox>
                           ))}
                         </Box>
 
