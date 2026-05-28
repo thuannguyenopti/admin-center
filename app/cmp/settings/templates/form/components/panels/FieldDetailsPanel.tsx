@@ -1216,7 +1216,7 @@ export function FieldDetailsPanel({
 							</Box>
 						)}
 						<Box>
-							<Text fontWeight="600" color="fg.default" style={{ display: "block" }}>{d.label}</Text>
+							<Text fontWeight="600" color="fg.default" style={{ display: "block" }}>{node.type === "formContent" ? "Paragraph" : (d.label || "Untitled")}</Text>
 							{d.typeLabel && <Text fontSize="xs" color="fg.tertiary">{d.typeLabel}</Text>}
 						</Box>
 					</Box>
@@ -1226,6 +1226,27 @@ export function FieldDetailsPanel({
 
 			<DetailsPanelBody>
 				<Box display="flex" flexDirection="column" gap="20" p="16">
+
+					{/* Paragraph content node */}
+					{node.type === "formContent" ? (<>
+						<Box display="flex" flexDirection="column" gap="4">
+							<Field label="Paragraph">
+								<Textarea
+									value={fieldName}
+									onValueChange={setFieldName}
+									placeholder="Type something..."
+									rows={4}
+									resize="none"
+								/>
+							</Field>
+							<Text fontSize="xs" color="fg.tertiary">
+								Add a paragraph of text to display on your form — instructions, context, or any descriptive copy.
+							</Text>
+						</Box>
+						<Button appearance="primary" onClick={() => onUpdateField?.({ label: fieldName })} style={{ width: "100%", justifyContent: "center" }}>
+							Save changes
+						</Button>
+					</>) : (<>
 
 					{/* Field config — branches by type */}
 					{isOptionBased ? (<>
@@ -1402,6 +1423,7 @@ export function FieldDetailsPanel({
 					<Button appearance="primary" onClick={handleSave} style={{ width: "100%", justifyContent: "center" }}>
 						Save changes
 					</Button>
+					</>)}
 				</Box>
 			</DetailsPanelBody>
 		</DetailsPanel>

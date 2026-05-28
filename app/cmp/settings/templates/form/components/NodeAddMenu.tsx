@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { IconLetterT, IconLayoutColumns, IconList } from "@tabler/icons-react";
 
+
 interface NodeAddMenuProps {
 	disableSection?: boolean;
 	onAddText: () => void;
@@ -80,7 +81,7 @@ export function NodeAddMenu({
 		<div className="nodrag nopan nowheel" style={menuCard} onClick={(e) => e.stopPropagation()}>
 			{/* Type buttons */}
 			<div style={{ display: "flex", gap: 6 }}>
-				<TypeButton icon={<IconLetterT size={14} />} label="Text" onClick={onAddText} />
+				<TypeButton icon={<IconLetterT size={14} />} label="Paragraph" onClick={onAddText} />
 				<TypeButton icon={<IconLayoutColumns size={14} />} label="Section" disabled={disableSection} onClick={onAddSection} />
 				<TypeButton icon={<IconList size={14} />} label="Field" onClick={onOpenFieldPicker} />
 			</div>

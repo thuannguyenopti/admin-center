@@ -418,12 +418,12 @@ export function FormBuilder() {
 			let newNode: any;
 
 			if (type === "text") {
-				const c = CONTENT_COMPONENTS[0];
+				const c = CONTENT_COMPONENTS.find((x) => x.id === "paragraph") ?? CONTENT_COMPONENTS[0];
 				newNode = {
 					id: newId, type: "formContent",
 					position: { x: sourceNode.position.x, y: sourceNode.position.y + offsetY },
 					...(inSection ? { parentId } : {}),
-					data: { label: c.name, icon: c.icon },
+					data: { label: "", icon: c.icon, contentType: "paragraph" },
 				};
 			} else if (type === "section") {
 				// Place below the parent section (if source is inside one) or below source itself

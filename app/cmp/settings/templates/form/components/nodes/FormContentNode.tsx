@@ -89,11 +89,20 @@ export function FormContentNode({ data, selected }: NodeProps) {
 				}}
 			>
 				<Handle type="target" position={Position.Top} style={handleStyle} />
-				<Box color="fg.tertiary" style={{ flexShrink: 0 }}>
+				<Box
+					p="6"
+					rounded="sm"
+					bg="bg.accent.subtle"
+					color="fg.default"
+					display="flex"
+					alignItems="center"
+					justifyContent="center"
+					style={{ flexShrink: 0 }}
+				>
 					{d.icon}
 				</Box>
-				<Text fontSize="sm" color="fg.default">
-					{d.label as string}
+				<Text fontSize="sm" color={d.label ? "fg.default" : "fg.tertiary"}>
+					{(d.label as string) || "Type something..."}
 				</Text>
 				<Handle type="source" position={Position.Bottom} style={handleStyle} />
 			</Box>
