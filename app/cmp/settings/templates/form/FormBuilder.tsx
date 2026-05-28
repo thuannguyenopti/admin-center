@@ -432,12 +432,16 @@ export function FormBuilder() {
 					: ((refNode as any).measured?.height ?? 60);
 				const sectionY = refNode.position.y + refH + 80;
 
-				// If sibling sections already exist at the same level, place to the right
+				// If sibling sections already exist, place to the right; otherwise center under source
+				const SECTION_W = 480;
 				const siblingTargetIds = new Set(edges.filter((e) => e.source === sourceNodeId).map((e) => e.target));
 				const siblingSections = nodes.filter((n) => siblingTargetIds.has(n.id) && n.type === "formSection");
+				const refNodeW = refNode.type === "formSection"
+					? Number(refNode.style?.width ?? SECTION_W)
+					: ((refNode as any).measured?.width ?? 280);
 				const sectionX = siblingSections.length > 0
-					? Math.max(...siblingSections.map((n) => n.position.x + Number(n.style?.width ?? 480))) + 40
-					: refNode.position.x;
+					? Math.max(...siblingSections.map((n) => n.position.x + Number(n.style?.width ?? SECTION_W))) + 40
+					: refNode.position.x + refNodeW / 2 - SECTION_W / 2;
 
 				newNode = {
 					id: newId, type: "formSection",
