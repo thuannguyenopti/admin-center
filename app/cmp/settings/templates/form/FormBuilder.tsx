@@ -585,7 +585,7 @@ export function FormBuilder() {
 				position: { x: 0, y: 0 },
 				deletable: false,
 				data: {
-					label: templateName,
+					label: "",
 					typeLabel: "Form Title",
 					icon: <IconHeading size={16} />,
 					isStartingNode: true,
