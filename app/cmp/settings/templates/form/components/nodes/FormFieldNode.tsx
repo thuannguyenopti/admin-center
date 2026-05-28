@@ -110,12 +110,12 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 				>
 					{d.icon}
 				</Box>
-				<Box style={{ flex: 1, minWidth: 0 }}>
+				<Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
 					<Text
 						fontSize="sm"
 						fontWeight="500"
 						color="fg.default"
-						style={{ display: "block" }}
+						style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
 					>
 						{d.label || <span style={{ color: "var(--ax-colors-fg-tertiary)", fontWeight: 400 }}>Your question</span>}
 					</Text>
@@ -123,7 +123,7 @@ export function FormFieldNode({ data, selected }: NodeProps) {
 						<Text
 							fontSize="xs"
 							color="fg.tertiary"
-							style={{ display: "block", marginTop: "1px" }}
+							style={{ display: "block", marginTop: "1px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
 						>
 							{d.typeLabel}
 						</Text>

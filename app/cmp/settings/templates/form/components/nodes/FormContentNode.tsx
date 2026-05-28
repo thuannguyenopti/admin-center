@@ -101,8 +101,8 @@ export function FormContentNode({ data, selected }: NodeProps) {
 				>
 					{d.icon}
 				</Box>
-				<Box style={{ flex: 1, minWidth: 0 }}>
-					<Text fontSize="sm" fontWeight="500" color={d.label ? "fg.default" : "fg.tertiary"} style={{ display: "block" }}>
+				<Box style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+					<Text fontSize="sm" fontWeight="500" color={d.label ? "fg.default" : "fg.tertiary"} style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
 						{(d.label as string) || "Your text"}
 					</Text>
 					<Text fontSize="xs" color="fg.tertiary" style={{ display: "block", marginTop: "1px" }}>
