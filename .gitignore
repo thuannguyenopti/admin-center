@@ -34,7 +34,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # env files (can opt-in for committing if needed)
-.env*
 
 # vercel
 .vercel
@@ -47,3 +46,4 @@ yarn.lock
 
 # code viewer source bundle (auto-generated during build)
 /public/source-bundle.json
+config.bat
