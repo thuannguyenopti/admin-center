@@ -123,9 +123,9 @@ function FieldRenderer({
 	const d = node.data as any;
 	const fieldDef = allFields.find((f) => f.id === d.fieldDefId);
 	const type = d.typeLabel ?? fieldDef?.typeLabel ?? "";
-	const options: { value: string; label: string }[] = fieldDef?.options ?? [];
-	const placeholder = fieldDef?.placeholder ?? "";
-	const description = fieldDef?.description;
+	const options: { value: string; label: string }[] = d.options ?? fieldDef?.options ?? [];
+	const placeholder = d.placeholder ?? fieldDef?.placeholder ?? "";
+	const description = d.description ?? fieldDef?.description;
 
 	return (
 		<Box display="flex" flexDirection="column" gap="6">
@@ -179,6 +179,24 @@ function FieldRenderer({
 											: current.filter((v) => v !== o.value);
 										onChange(next.join(","));
 									}}
+									style={{ width: 16, height: 16, flexShrink: 0 }}
+								/>
+								{o.label}
+							</label>
+						),
+					)}
+				</Box>
+			)}
+
+			{type === "Radio Button" && (
+				<Box display="flex" flexDirection="column" gap="8">
+					{(options.length > 0 ? options : [{ value: "option", label: "Option" }]).map(
+						(o: { value: string; label: string }) => (
+							<label key={o.value} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer", color: "var(--ax-colors-fg-default)" }}>
+								<input
+									type="radio"
+									checked={value === o.value}
+									onChange={() => onChange(o.value)}
 									style={{ width: 16, height: 16, flexShrink: 0 }}
 								/>
 								{o.label}
