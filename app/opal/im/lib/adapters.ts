@@ -7,6 +7,7 @@ import type {
 import { getCurrentUserId } from "./currentUser";
 import { avatarFor } from "./avatars";
 import { getVAU } from "./virtualTeammates";
+import { getPresence } from "./presence";
 
 /**
  * Active user ID at module-load time. Prefer `getCurrentUserId()` when you
@@ -43,10 +44,15 @@ export function imToChatMessage(
     role: isOwn ? "user" : "assistant",
     content: body + renderAttachments(m),
     timestamp: Date.parse(m.created_at) || Date.now(),
-    authorName: senderName,
-    authorAvatar: avatarFor(m.sender_id),
-    authorTitle: vau?.template_name,
-    authorInlineAvatar: !isOwn,
+    metadata: {
+      imMode: true,
+      authorName: senderName,
+      authorAvatar: avatarFor(m.sender_id),
+      authorTitle: vau?.template_name,
+      authorInlineAvatar: !isOwn,
+      isVAU: !!vau,
+      presenceStatus: !vau ? getPresence(m.sender_id) : undefined,
+    },
   };
 }
 

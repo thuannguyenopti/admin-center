@@ -893,6 +893,171 @@ export function OpalMessage({
     );
   }
 
+  // IM mode (Threads): Teams-style chat row. VAU messages have an avatar
+  // top-left with name + time as a header, message text wrapping below
+  // (no bubble bg). User messages are fully right-aligned with the time
+  // above a subtle-green bubble, avatar to the right.
+  // Triggered by the adapter setting metadata.imMode = true.
+  if (message.metadata?.imMode) {
+    const authorName: string = message.metadata.authorName ?? '';
+    const authorAvatar: string | undefined = message.metadata.authorAvatar;
+    const time = formatChatTime(message.timestamp);
+    const initials = authorName
+      .split(/\s+/)
+      .map((w: string) => w[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+    const avatarEl = authorAvatar ? (
+      <span style={{ width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', display: 'inline-flex', flexShrink: 0 }}>
+        <img src={authorAvatar} alt={authorName} width={36} height={36} style={{ display: 'block', objectFit: 'cover' }} />
+      </span>
+    ) : (
+      <span style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--ax-colors-bg-tertiary)', color: 'var(--ax-colors-fg-secondary)', fontSize: 12, fontWeight: 600 }}>
+        {initials}
+      </span>
+    );
+    const isVAU: boolean = !!message.metadata?.isVAU;
+    const presenceStatus: string | undefined = !isVAU ? message.metadata?.presenceStatus : undefined;
+    const presenceDot = presenceStatus && presenceStatus !== 'offline' ? (
+      <span style={{
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 12,
+        height: 12,
+        borderRadius: '50%',
+        background: presenceStatus === 'online'
+          ? 'var(--ax-colors-fg-success)'
+          : 'var(--ax-colors-fg-warning)',
+        border: '1.5px solid var(--ax-colors-bg-default)',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+      }} />
+    ) : null;
+    const avatarWithPresence = presenceDot ? (
+      <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+        {avatarEl}
+        {presenceDot}
+      </span>
+    ) : avatarEl;
+    // Humans → accent-subtle (pale lime in V3); VAUs → subtle gray.
+    const bubbleBg = isVAU
+      ? 'var(--ax-colors-bg-secondary)'
+      : 'var(--ax-colors-bg-accent-subtle)';
+    // Layout sums: avatar width (36) + outer gap (8) = 44 → meta-row inset.
+    if (isUser) {
+      return (
+        <div
+          style={{ width: '100%', marginBottom: 16 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Time row, right-aligned, inset on the right to clear avatar+gap */}
+          <Box display="flex" justifyContent="flex-end" style={{ paddingRight: 44, marginBottom: 4 }}>
+            <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
+          </Box>
+          {/* Bubble + avatar row — avatar top-aligns with the bubble */}
+          <Box display="flex" alignItems="start" gap="8" w="full">
+            <Box display="flex" justifyContent="flex-end" style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  maxWidth: '100%',
+                  marginRight: -2,
+                  padding: '12px 16px',
+                  borderRadius: 12,
+                  backgroundColor: bubbleBg,
+                  color: 'var(--opal-text-body)',
+                  fontSize: 14,
+                  lineHeight: '20px',
+                  wordBreak: 'break-word',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+              </div>
+            </Box>
+            {avatarWithPresence}
+          </Box>
+          {/* Action bar + reaction pills */}
+          {reactions && Object.keys(reactions).length > 0 && (
+            <ReactionPills
+              messageId={message.id}
+              reactions={reactions}
+              currentUserId={currentUserId}
+              alignRight
+              onToggleReaction={onToggleReaction}
+            />
+          )}
+          <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', justifyContent: 'flex-end', paddingRight: 44, marginTop: 2 }}>
+            <IMQuickActions
+              messageId={message.id}
+              isOwn
+              onEdit={() => setIsEditing(true)}
+              onCopy={handleCopy}
+              onToggleReaction={onToggleReaction}
+              onQuoteReply={onQuoteReply}
+            />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div
+        style={{ width: '100%', marginBottom: 16 }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Name + time row, inset to clear avatar+gap */}
+        <Box display="flex" alignItems="center" gap="8" style={{ paddingLeft: 44, marginBottom: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ax-colors-fg-default)' }}>{authorName}</span>
+          <span style={{ fontSize: 11, color: 'var(--ax-colors-fg-tertiary)' }}>{time}</span>
+        </Box>
+        {/* Avatar + bubble row — avatar top-aligns with the bubble */}
+        <Box display="flex" alignItems="start" gap="8" w="full">
+          {avatarWithPresence}
+          <Box display="flex" style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                maxWidth: '100%',
+                marginLeft: -2,
+                padding: '8px 12px',
+                borderRadius: 12,
+                backgroundColor: bubbleBg,
+                color: 'var(--opal-text-body)',
+                fontSize: 14,
+                lineHeight: '20px',
+                wordBreak: 'break-word',
+                boxSizing: 'border-box',
+              }}
+            >
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            </div>
+          </Box>
+        </Box>
+        {/* Action bar + reaction pills */}
+        {reactions && Object.keys(reactions).length > 0 && (
+          <ReactionPills
+            messageId={message.id}
+            reactions={reactions}
+            currentUserId={currentUserId}
+            alignRight={false}
+            onToggleReaction={onToggleReaction}
+          />
+        )}
+        <div style={{ opacity: isHovered ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', justifyContent: 'flex-start', paddingLeft: 44, marginTop: 2 }}>
+          <IMQuickActions
+            messageId={message.id}
+            isOwn={false}
+            onCopy={handleCopy}
+            onToggleReaction={onToggleReaction}
+            onQuoteReply={onQuoteReply}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{ width: '100%', display: 'flex', flexDirection: 'column', marginBottom: '16px' }}
