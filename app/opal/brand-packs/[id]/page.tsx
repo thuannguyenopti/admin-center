@@ -7,21 +7,44 @@ import { Box, Button, Text } from "@optiaxiom/react";
 import { IconCheck, IconEllipsisStroke as IconEllipsis } from "@optimizely/axiom-icons";
 import { BrandPackPageHeader } from "../components/BrandPackPageHeader";
 import { StatusBadge } from "../components/StatusBadge";
-import { OverviewTab } from "./components/OverviewTab";
+import { ColoursTab } from "./components/ColoursTab";
+import { TypographyTab } from "./components/TypographyTab";
 import { TemplatesTab } from "./components/TemplatesTab";
-import { AssetsTab } from "./components/AssetsTab";
-import { BrandBriefTab } from "./components/BrandBriefTab";
+import { LogosTab } from "./components/LogosTab";
+import { ImagesTab } from "./components/ImagesTab";
+import { StyleDescriptorsTab } from "./components/StyleDescriptorsTab";
+import { ToneOfVoiceTab } from "./components/ToneOfVoiceTab";
+import { TestPublishTab } from "./components/TestPublishTab";
 import { SettingsTab } from "./components/SettingsTab";
 import { getBrandPackById } from "../data";
 
-type Tab = "overview" | "templates" | "assets" | "brief" | "settings";
+type Tab =
+	| "colours"
+	| "typography"
+	| "templates"
+	| "logos"
+	| "images"
+	| "descriptors"
+	| "tone"
+	| "publish"
+	| "settings";
 
-const tabs: Array<{ id: Tab; label: string }> = [
-	{ id: "overview", label: "Overview" },
-	{ id: "templates", label: "Templates" },
-	{ id: "assets", label: "Assets" },
-	{ id: "brief", label: "Brand Brief" },
-	{ id: "settings", label: "Settings" },
+type TabDef = {
+	id: Tab;
+	label: string;
+	count?: (pack: NonNullable<ReturnType<typeof getBrandPackById>>) => number;
+};
+
+const TAB_DEFS: TabDef[] = [
+	{ id: "colours",     label: "Colours",          count: (p) => p.colors.length },
+	{ id: "typography",  label: "Typography" },
+	{ id: "templates",   label: "Templates",         count: (p) => p.templates.length },
+	{ id: "logos",       label: "Logos",             count: (p) => p.assets.filter((a) => a.type === "logo").length },
+	{ id: "images",      label: "Images",            count: (p) => p.assets.filter((a) => a.type !== "logo").length },
+	{ id: "descriptors", label: "Style Descriptors" },
+	{ id: "tone",        label: "Tone of Voice" },
+	{ id: "publish",     label: "Test & Publish" },
+	{ id: "settings",    label: "Settings" },
 ];
 
 const BRAND_PACKS_HOME = "/opal/context?tab=brand-packs";
@@ -33,7 +56,7 @@ type PageProps = {
 export default function BrandPackDetailPage({ params }: PageProps) {
 	const { id } = use(params);
 	const router = useRouter();
-	const [activeTab, setActiveTab] = useState<Tab>("overview");
+	const [activeTab, setActiveTab] = useState<Tab>("colours");
 
 	const pack = getBrandPackById(id);
 
@@ -111,8 +134,8 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 					}
 				/>
 
+				{/* Tab bar */}
 				<Box
-					borderColor="border.tertiary"
 					display="flex"
 					flexDirection="column"
 					gap="0"
@@ -124,68 +147,61 @@ export default function BrandPackDetailPage({ params }: PageProps) {
 						gap="0"
 						style={{ overflowX: "auto" }}
 					>
-						{tabs.map((tab) => (
-							<button
-								key={tab.id}
-								type="button"
-								onClick={() => setActiveTab(tab.id)}
-								style={{
-									background: "transparent",
-									border: 0,
-									borderBottom: `2px solid ${activeTab === tab.id ? "var(--ax-colors-fg-default)" : "transparent"}`,
-									color: activeTab === tab.id ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
-									cursor: "pointer",
-									fontSize: 14,
-									fontWeight: activeTab === tab.id ? 600 : 400,
-									marginBottom: -1,
-									padding: "10px 16px",
-									transition: "color 0.15s ease, border-color 0.15s ease",
-								}}
-							>
-								{tab.label}
-								{tab.id === "templates" && (
-									<span
-										style={{
-											background: "var(--ax-colors-bg-secondary)",
-											borderRadius: 999,
-											color: "var(--ax-colors-fg-tertiary)",
-											display: "inline-block",
-											fontSize: 11,
-											fontWeight: 600,
-											marginLeft: 6,
-											padding: "1px 6px",
-										}}
-									>
-										{pack.templates.length}
-									</span>
-								)}
-								{tab.id === "assets" && (
-									<span
-										style={{
-											background: "var(--ax-colors-bg-secondary)",
-											borderRadius: 999,
-											color: "var(--ax-colors-fg-tertiary)",
-											display: "inline-block",
-											fontSize: 11,
-											fontWeight: 600,
-											marginLeft: 6,
-											padding: "1px 6px",
-										}}
-									>
-										{pack.assets.length}
-									</span>
-								)}
-							</button>
-						))}
+						{TAB_DEFS.map((tab) => {
+							const count = tab.count?.(pack);
+							return (
+								<button
+									key={tab.id}
+									type="button"
+									onClick={() => setActiveTab(tab.id)}
+									style={{
+										background: "transparent",
+										border: 0,
+										borderBottom: `2px solid ${activeTab === tab.id ? "var(--ax-colors-fg-default)" : "transparent"}`,
+										color: activeTab === tab.id ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
+										cursor: "pointer",
+										fontSize: 14,
+										fontWeight: activeTab === tab.id ? 600 : 400,
+										marginBottom: -1,
+										padding: "10px 16px",
+										transition: "color 0.15s ease, border-color 0.15s ease",
+										whiteSpace: "nowrap",
+									}}
+								>
+									{tab.label}
+									{count !== undefined && (
+										<span
+											style={{
+												background: "var(--ax-colors-bg-secondary)",
+												borderRadius: 999,
+												color: "var(--ax-colors-fg-tertiary)",
+												display: "inline-block",
+												fontSize: 11,
+												fontWeight: 600,
+												marginLeft: 6,
+												padding: "1px 6px",
+											}}
+										>
+											{count}
+										</span>
+									)}
+								</button>
+							);
+						})}
 					</Box>
 				</Box>
 
+				{/* Tab content */}
 				<Box>
-					{activeTab === "overview" && <OverviewTab pack={pack} />}
-					{activeTab === "templates" && <TemplatesTab pack={pack} />}
-					{activeTab === "assets" && <AssetsTab pack={pack} />}
-					{activeTab === "brief" && <BrandBriefTab pack={pack} />}
-					{activeTab === "settings" && <SettingsTab pack={pack} />}
+					{activeTab === "colours"     && <ColoursTab pack={pack} />}
+					{activeTab === "typography"  && <TypographyTab pack={pack} />}
+					{activeTab === "templates"   && <TemplatesTab pack={pack} />}
+					{activeTab === "logos"       && <LogosTab pack={pack} />}
+					{activeTab === "images"      && <ImagesTab pack={pack} />}
+					{activeTab === "descriptors" && <StyleDescriptorsTab />}
+					{activeTab === "tone"        && <ToneOfVoiceTab pack={pack} />}
+					{activeTab === "publish"     && <TestPublishTab pack={pack} />}
+					{activeTab === "settings"    && <SettingsTab pack={pack} />}
 				</Box>
 			</Box>
 		</Box>
