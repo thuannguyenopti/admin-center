@@ -38,7 +38,7 @@ export function CreateTemplateModal({ open, title = "Create Template", initialVa
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [open]);
 
-	const isValid = templateName.trim().length > 0 && description.trim().length > 0;
+	const isValid = description.trim().length > 0;
 
 	const handleSave = () => {
 		if (!isValid) return;
@@ -59,11 +59,11 @@ export function CreateTemplateModal({ open, title = "Create Template", initialVa
 					<DialogBody display="flex" flexDirection="column" gap="20">
 						{/* Template name */}
 						<Box display="flex" flexDirection="column" gap="4">
-							<Field label="Template name" required>
+							<Field label="Template name">
 								<Input
 									value={templateName}
 									onValueChange={(v) => setTemplateName(v.slice(0, 80))}
-									placeholder=""
+									placeholder="Untitled Form"
 								/>
 							</Field>
 							<Text fontSize="xs" color="fg.tertiary">{templateName.length}/80</Text>

@@ -273,7 +273,7 @@ export function FormPreviewPanel({
 	const [values, setValues] = useState<Record<string, string>>({});
 
 	const startNode = useMemo(() => nodes.find((n) => (n.data as any).isStartingNode), [nodes]);
-	const previewTitle = (startNode?.data as any)?.label ?? formTitle;
+	const previewTitle = (startNode?.data as any)?.label || formTitle || "Untitled Form";
 
 	const hidden = useMemo(() => computeHidden(nodes, values), [nodes, values]);
 

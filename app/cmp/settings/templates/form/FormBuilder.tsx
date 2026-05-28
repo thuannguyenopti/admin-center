@@ -227,7 +227,7 @@ export function FormBuilder() {
 	const router = useRouter();
 	const reactFlowWrapper = useRef<HTMLDivElement>(null);
 	const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
-	const [formTitle, setFormTitle] = useState("Untitled Form");
+	const [formTitle, setFormTitle] = useState("");
 	const [formDescription, setFormDescription] = useState("");
 	const [formApplicableTo, setFormApplicableTo] = useState<string[]>([]);
 	const [isActive, setIsActive] = useState(false);

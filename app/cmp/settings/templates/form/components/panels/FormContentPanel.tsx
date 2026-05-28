@@ -64,7 +64,7 @@ export function FormContentPanel({ node, onClose, onLabelChange }: FormContentPa
 						<Input
 							value={label}
 							onValueChange={handleChange}
-							placeholder="Form title"
+							placeholder="Untitled Form"
 						/>
 					</Field>
 				</Box>
