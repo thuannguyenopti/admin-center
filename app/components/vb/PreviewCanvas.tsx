@@ -20,7 +20,18 @@ import {BlockRegistry} from "./blocks";
 import {isImageDrag, isInternalDrag, isValidVBDrag, VB_INTERNAL_MIME} from "./blocks/utils";
 import {Box} from "@optiaxiom/react";
 import StrideHeaderContent from "../../site/StrideHeaderContent";
-import {getSectionTemplateClasses} from "./blocks/templateUtils";
+import StrideHeaderWrapper from "../../site/StrideHeaderWrapper";
+import StrideFooter from "../../site/StrideFooter";
+import StrideColumnGrid from "../../site/StrideColumnGrid";
+import "../../site/StrideGrid.css";
+import {getDisplayTemplateClasses} from "./blocks/displayTemplateRenderer";
+import {getContentType} from "../../db/initialData";
+
+const SECTION_SPACING_MAP: Record<string, string> = {
+	'exp-landing-page': 'space-y-0',   // Sections control their own spacing
+	'ct-page': 'space-y-0',            // Sections control their own spacing
+	'default': 'space-y-0'
+};
 
 export type EleMap = Record<string, {type: string; properties: any}>;
 
@@ -89,9 +100,11 @@ export default function PreviewCanvas({
 	scrollToColumnId,
 	onRowScrollComplete,
 	onColumnScrollComplete,
+	contentTypeId,
 }: {
 	outlines: Outline[];
 	theEles: EleMap;
+	contentTypeId?: string;
 	currentEle: string;
 	currentHoverEle: string;
 	setCurrentEle: (value: React.SetStateAction<string>) => void;
@@ -407,22 +420,82 @@ export default function PreviewCanvas({
 		const isAside = isAsideOutline(outline);
 		return outline.tree.map((section: any, sindex: number) => {
 			const hasBgImage = !!section.bgImage;
+			const noPadding = section.noPadding === true;
 			const isFooterCTA = section.name === "Footer CTA";
 
-			// Get template classes for section (background, padding, etc.)
-			const templateClasses = getSectionTemplateClasses(section, {hasBgImage});
+			// Check if this section contains a hero block
+			const hasHeroBlock = (section.children || []).some((row: any) =>
+				(row.children || []).some((col: any) =>
+					(col.elements || []).some((element: any) => {
+						const ele = outline.elements[element.id];
+						return ele && ele.type === "ct-hero";
+					})
+				)
+			);
+
+			// Count app preview blocks in this section
+			let appPreviewCount = 0;
+			(section.children || []).forEach((row: any) => {
+				(row.children || []).forEach((col: any) => {
+					(col.elements || []).forEach((element: any) => {
+						const ele = outline.elements[element.id];
+						if (ele && ele.type === "ct-app-preview") {
+							appPreviewCount++;
+						}
+					});
+				});
+			});
+
+			const hasAppPreview = appPreviewCount > 0;
+			// Showcase sections have multiple app previews (apply mask to section)
+			const isShowcaseSection = appPreviewCount > 1;
+			// Community sections have single app preview (apply mask to column)
+			const isCommunitySection = appPreviewCount === 1;
+
+			// Get display template classes for section (background, padding, etc.)
+			const templateClasses = section.displayTemplateKey
+				? getDisplayTemplateClasses(
+						section.displayTemplateKey,
+						section.displaySettings || [],
+						{hasBgImage}
+				  )
+				: "";
+
+			// Debug logging
+			console.log("[PreviewCanvas] Section:", {
+				id: section.id,
+				name: section.name,
+				displayTemplateKey: section.displayTemplateKey,
+				displaySettings: section.displaySettings,
+				templateClasses,
+			});
 
 			// Base classes that apply to all sections
-			const baseClasses = "mb-6 last:mb-0 overflow-hidden rounded-[10px]";
+			const baseClasses = "";
 
 			// Additional classes when there's a background image
-			const bgImageClasses = hasBgImage ? "relative min-h-[500px] flex items-center" : "shadow-sm";
+			const bgImageClasses = hasBgImage ? "relative min-h-[500px] flex items-center rounded-stride-lg" : "";
+
+			// Add bottom margin to hero sections
+			const heroBottomMargin = hasHeroBlock ? "mb-[100px]" : "";
+
+			// App preview section padding - showcase needs more top padding to avoid clipping
+			const appPreviewPadding = isShowcaseSection
+				? "md:pt-180 pt-6 pb-20"
+				: hasAppPreview
+				? "md:pt-40 pt-20 pb-20"
+				: "";
+
+			// Add negative margins for showcase overlap effect
+			const showcaseMargins = isShowcaseSection
+				? "md:-mt-120 mt-6 md:-mb-100 -mb-20"
+				: "";
 
 			return (
 				<section
 					key={section.id ?? sindex}
 					data-preview-section-id={section.id}
-					className={`${baseClasses} ${bgImageClasses} ${hasBgImage ? "" : templateClasses} relative`}
+					className={`${baseClasses} ${bgImageClasses} ${heroBottomMargin} ${appPreviewPadding} ${showcaseMargins} ${templateClasses} relative`}
 					onClick={(e) => {
 						// Only trigger if not clicking an element
 						if (!(e.target as HTMLElement).closest('[data-element-id]')) {
@@ -446,33 +519,35 @@ export default function PreviewCanvas({
 					style={
 						hasBgImage
 							? {
-									backgroundImage: `linear-gradient(rgba(25, 75, 255, 0.8), rgba(25, 75, 255, 0.8)), url(${section.bgImage})`,
+									backgroundImage: `linear-gradient(rgba(9, 128, 246, 0.8), rgba(9, 128, 246, 0.8)), url(${section.bgImage})`,
 									backgroundSize: "cover",
 									backgroundPosition: "center",
+								}
+							: isShowcaseSection
+							? {
+									WebkitMaskImage: 'linear-gradient(black 60%, transparent 70%)',
+									maskImage: 'linear-gradient(black 60%, transparent 70%)',
 								}
 							: {}
 					}
 				>
-					{/* Blue border overlay for hover/selection */}
+					{/* Blue outline overlay for hover/selection */}
 					{(currentHoverSection === section.id || currentSection === section.id) && (
 						<div
-							className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+							className="pointer-events-none absolute inset-0"
 							style={{
+								outline: '2px solid #0037FF',
+								outlineOffset: '-2px',
+								borderRadius: '10px',
 								opacity: currentSection === section.id ? 1 : 0.5,
 								zIndex: 5,
 							}}
 						/>
 					)}
-					<div
-						className={
-							hasBgImage
-								? "relative z-10 w-full p-12 md:p-20"
-								: `w-full ${isAside ? "p-8" : "p-8 md:p-12"}`
-						}
-					>
+					<div className="w-full">
 						{(section.children || []).map((row: any, rIndex: number) => (
 							<section
-								className={`grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-4 ${hasBgImage ? "text-white" : "text-[#05051F]"} relative`}
+								className={`${hasAppPreview ? "w-full max-w-[1200px] mx-auto md:flex gap-6 items-start md:-mb-50 mb-6" : hasHeroBlock ? `grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"}` : `max-w-[1200px] mx-auto grid ${isMobileViewport ? "grid-cols-1" : "grid-flow-col auto-cols-fr"} gap-6`} ${hasBgImage ? "text-white" : "text-[#05051F]"} relative`}
 								key={row.id ?? rIndex}
 								data-row-id={row.id}
 								onClick={(e) => {
@@ -500,11 +575,14 @@ export default function PreviewCanvas({
 									setCurrentHoverRow?.(null);
 								}}
 							>
-								{/* Blue border overlay for row hover/selection */}
+								{/* Blue outline overlay for row hover/selection */}
 								{(currentHoverRow === row.id || currentRow === row.id) && (
 									<div
-										className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+										className="pointer-events-none absolute inset-0"
 										style={{
+											outline: '2px solid #0037FF',
+											outlineOffset: '-2px',
+											borderRadius: '10px',
 											opacity: currentRow === row.id ? 1 : 0.5,
 											zIndex: 4,
 										}}
@@ -518,9 +596,24 @@ export default function PreviewCanvas({
 										dropPosition.outlineId === outline.id &&
 										dropPosition.colId === col.id;
 
+									// Check if this column contains an app preview
+									const hasAppPreviewInCol = colChildren.some((element: any) => {
+										const ele = outline.elements[element.id];
+										return ele && ele.type === "ct-app-preview";
+									});
+
+									// Only apply column mask for community sections (single app preview)
+									const applyColumnMask = isCommunitySection && hasAppPreviewInCol;
+
 									return (
 										<div
 											key={col.id ?? cIndex}
+											className={`relative ${hasAppPreview ? "basis-0 grow" : ""}`}
+											style={applyColumnMask ? {
+												marginTop: '-10%',
+												WebkitMaskImage: 'linear-gradient(#000 40%, transparent 75%)',
+												maskImage: 'linear-gradient(#000 40%, transparent 75%)',
+											} : {}}
 											data-column-id={col.id}
 											onClick={(e) => {
 												// Only trigger if not clicking an element
@@ -585,13 +678,15 @@ export default function PreviewCanvas({
 													setDropPosition(null);
 												}
 											}}
-											className="relative"
 										>
-											{/* Blue border overlay for column hover/selection */}
+											{/* Blue outline overlay for column hover/selection */}
 											{(currentHoverColumn === col.id || currentColumn === col.id) && (
 												<div
-													className="pointer-events-none absolute inset-0 border-2 border-[#0037FF] rounded-[10px]"
+													className="pointer-events-none absolute inset-0"
 													style={{
+														outline: '2px solid #0037FF',
+														outlineOffset: '-2px',
+														borderRadius: '10px',
 														opacity: currentColumn === col.id ? 1 : 0.5,
 														zIndex: 3,
 													}}
@@ -782,12 +877,52 @@ export default function PreviewCanvas({
 		});
 	}, [isAsideOutline, isMobileViewport, currentEle, currentHoverEle, setCurrentEle, setCurrentHoverEle, dragOverColumn, dropPosition, setDragOverColumn, setDropPosition]);
 
+	// Detect if content type supports aside/sidenav outlines
+	const contentType = useMemo(() => contentTypeId ? getContentType(contentTypeId) : null, [contentTypeId]);
+	const hasAsideProperty = useMemo(() => contentType?.properties?.some(p => p.id === "asideOutline") ?? false, [contentType]);
+	const hasSidenavProperty = useMemo(() => contentType?.properties?.some(p => p.id === "sidenavOutline") ?? false, [contentType]);
+
+	// Resolve spacing based on content type
+	const sectionSpacing = useMemo(() =>
+		contentTypeId
+			? (SECTION_SPACING_MAP[contentTypeId] ?? SECTION_SPACING_MAP.default)
+			: SECTION_SPACING_MAP.default,
+		[contentTypeId]
+	);
+
 	const mainOutlines = useMemo(() => outlines.filter((o) => !isAsideOutline(o)), [outlines, isAsideOutline]);
 	const asideOutlines = useMemo(() => outlines.filter((o) => isAsideOutline(o)), [outlines, isAsideOutline]);
-	const hasAside = useMemo(() => asideOutlines.length > 0 && mainOutlines.length > 0, [asideOutlines.length, mainOutlines.length]);
+
+	// Only show aside if content type supports it AND we have aside outlines
+	const hasAside = useMemo(() => hasAsideProperty && asideOutlines.length > 0 && mainOutlines.length > 0, [hasAsideProperty, asideOutlines.length, mainOutlines.length]);
+	const hasSidenav = useMemo(() => hasSidenavProperty && asideOutlines.length > 0 && mainOutlines.length > 0, [hasSidenavProperty, asideOutlines.length, mainOutlines.length]);
+
+	// Check if first section has a hero block
+	const firstSectionHasHero = useMemo(() => {
+		if (mainOutlines.length === 0 || mainOutlines[0].tree.length === 0) return false;
+		return (mainOutlines[0].tree[0].children || []).some((row: any) =>
+			(row.children || []).some((col: any) =>
+				(col.elements || []).some((element: any) => {
+					const ele = mainOutlines[0].elements[element.id];
+					return ele && ele.type === "ct-hero";
+				})
+			)
+		);
+	}, [mainOutlines]);
+
+	// Extract hero section if present
+	const heroSection = useMemo(() => firstSectionHasHero && mainOutlines.length > 0 ? mainOutlines[0].tree[0] : null, [firstSectionHasHero, mainOutlines]);
+	const heroElements = useMemo(() => heroSection && mainOutlines.length > 0 ? mainOutlines[0].elements : {}, [heroSection, mainOutlines]);
+
+	// Remaining sections after hero
+	const remainingMainOutlines = useMemo(() => {
+		if (!firstSectionHasHero || mainOutlines.length === 0) return mainOutlines;
+		return [{...mainOutlines[0], tree: mainOutlines[0].tree.slice(1)}, ...mainOutlines.slice(1)];
+	}, [firstSectionHasHero, mainOutlines]);
 
 	// ✅ only break into 1 column on "mobile" preview widths
 	const useTwoCol = useMemo(() => hasAside && !isMobileViewport, [hasAside, isMobileViewport]);
+	const useSidenav = useMemo(() => hasSidenav && !isMobileViewport, [hasSidenav, isMobileViewport]);
 
 	return (
 		<Box
@@ -798,12 +933,12 @@ export default function PreviewCanvas({
 			border="1"
 			borderColor="border.tertiary"
 			style={{
-				background: "var(--ax-colors-bg-tertiary)",
+				background: "#F2F8FC",
 				height: "100%",
 				minHeight: 0,
 				overflow: "hidden",
 				zIndex: 50,
-				boxShadow: "inset 0 0 40px rgba(0,0,0,0.1), 0 20px 70px 0px rgba(0,0,0,0.05), 0 1px 1px 0 rgba(0,0,0,0.01)",
+				boxShadow: "0 20px 70px 0px rgba(0,0,0,0.15), 0 1px 1px 0 rgba(0,0,0,0.1)",
 			}}
 		>
 			<PreviewWrapper
@@ -841,42 +976,93 @@ export default function PreviewCanvas({
 				}}
 				style={{transition: "opacity 0.2s"}}
 			>
-				{/* Fake Site Header */}
-				<div className="w-full bg-white px-4 md:px-8 py-4 md:py-5 flex items-center justify-between border-b border-gray-100 shrink-0 sticky top-0 z-50 shadow-sm">
-				<StrideHeaderContent
-					isMobile={isMobileViewport}
-					menuIcon={<IconMenu2 size={24} />}
-					closeIcon={<IconX size={24} />}
-				/>
-				</div>
+				{/* Wrapper to constrain absolutely positioned header within preview */}
+				<div className="relative w-full h-full flex flex-col">
+					{/* Site Header - positioned absolutely to overlay hero */}
+					<StrideHeaderWrapper positioning="absolute" useMaxWidth={false}>
+						<StrideHeaderContent
+							isMobile={isMobileViewport}
+							menuIcon={<IconMenu2 size={24} />}
+							closeIcon={<IconX size={24} />}
+						/>
+					</StrideHeaderWrapper>
 
-				<div
-					className="w-full p-6 md:p-6 flex-1"
-					style={{
-						background: "#F3F4F6",
-					}}
-				>
-					{useTwoCol ? (
-						<div className="grid grid-cols-[minmax(0,1fr)_minmax(0,340px)] gap-6 items-start">
-							<div className="space-y-6">
-								{mainOutlines.map((outline) => (
+					<div
+						className="w-full font-stride-sans relative"
+						style={{
+							background: "#F2F8FC",
+						}}
+					>
+						<StrideColumnGrid />
+					{/* Render hero full-width if present */}
+					{heroSection && (
+						<section className="mb-[100px]">
+							<div className="w-full">
+								{(heroSection.children || []).map((row: any, rIndex: number) => (
+									<div className="grid grid-cols-1 md:grid-flow-col md:auto-cols-fr" key={row.id ?? rIndex}>
+										{(row.children || []).map((col: any, cIndex: number) => {
+											const colChildren = col.elements || col.children || [];
+											return (
+												<div key={col.id ?? cIndex}>
+													{colChildren.map((element: any, eleIndex: number) => {
+														const ele = heroElements[element.id];
+														if (!ele) return null;
+														const BlockComponent = BlockRegistry[ele.type];
+														if (!BlockComponent) return null;
+														return (
+															<BlockComponent
+																key={element.id ?? eleIndex}
+																properties={ele.properties}
+															/>
+														);
+													})}
+												</div>
+											);
+										})}
+									</div>
+								))}
+							</div>
+						</section>
+					)}
+
+					{useSidenav ? (
+						<div className="max-w-[1200px] mx-auto px-6 pt-32 pb-20 grid grid-cols-12 gap-6 items-start overflow-hidden">
+							<aside className="col-span-3 sticky top-32 space-y-1">
+								{asideOutlines.map((outline) => (
+									<div key={outline.id}>{renderOutlineTree(outline)}</div>
+								))}
+							</aside>
+							<div className={`col-span-8 col-start-5 ${sectionSpacing}`}>
+								{remainingMainOutlines.map((outline) => (
+									<div key={outline.id}>{renderOutlineTree(outline)}</div>
+								))}
+							</div>
+						</div>
+					) : useTwoCol ? (
+						<div className="max-w-[1200px] mx-auto px-6 grid grid-cols-12 gap-6 items-start overflow-hidden">
+							<div className={`col-span-8 ${sectionSpacing}`}>
+								{remainingMainOutlines.map((outline) => (
 									<div key={outline.id}>{renderOutlineTree(outline)}</div>
 								))}
 							</div>
 
-							<aside className="space-y-6">
+							<aside className="col-span-4 space-y-6">
 								{asideOutlines.map((outline) => (
 									<div key={outline.id}>{renderOutlineTree(outline)}</div>
 								))}
 							</aside>
 						</div>
 					) : (
-						<div className="space-y-6">
-							{[...mainOutlines, ...asideOutlines].map((outline) => (
+						<div className={heroSection ? `max-w-[1200px] mx-auto px-6 mt-6 ${sectionSpacing}` : `max-w-[1200px] mx-auto px-6 ${sectionSpacing}`}>
+							{[...remainingMainOutlines, ...asideOutlines].map((outline) => (
 								<div key={outline.id}>{renderOutlineTree(outline)}</div>
 							))}
 						</div>
 					)}
+
+				</div>
+					{/* Footer - outside grid container */}
+					<StrideFooter />
 				</div>
 			</PreviewWrapper>
 		</Box>
