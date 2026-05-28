@@ -170,6 +170,7 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 			{/* Empty-state placeholder — shown when the section has no children */}
 			{((d.childCount ?? 0) === 0) && (
 				<div
+					className="nodrag nopan nowheel"
 					style={{
 						position: "absolute",
 						left: 16,
@@ -183,19 +184,55 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						flexDirection: "column",
 						alignItems: "center",
 						justifyContent: "center",
-						gap: 4,
+						gap: 8,
 						padding: 12,
 						boxSizing: "border-box",
-						pointerEvents: "none",
 						zIndex: 1,
 					}}
+					onClick={(e) => e.stopPropagation()}
 				>
 					<div style={{ fontSize: 13, fontWeight: 500, color: "var(--ax-colors-fg-secondary)" }}>
 						Drop fields here
 					</div>
-					<div style={{ fontSize: 12, color: "var(--ax-colors-fg-tertiary)" }}>
-						Drag a field from the left into this section
-					</div>
+					<button
+						onClick={(e) => { e.stopPropagation(); setIsMenuOpen((v) => { if (v) setShowFields(false); return !v; }); }}
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: 4,
+							padding: "4px 10px",
+							border: "1px solid var(--ax-colors-border-default)",
+							borderRadius: 6,
+							background: "none",
+							cursor: "pointer",
+							fontSize: 12,
+							color: "var(--ax-colors-fg-secondary)",
+							fontFamily: "inherit",
+						}}
+					>
+						<IconPlus size={12} />
+						Add
+					</button>
+					{isMenuOpen && (
+						<div style={{ position: "relative" }}>
+							{showFields ? (
+								<FieldPickerInline
+									onBack={() => setShowFields(false)}
+									onSelect={(field) => { d.onAddNodeBelow?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
+									customFields={d.customFields}
+									onOpenCreateField={() => { d.onOpenCreateField?.(); setIsMenuOpen(false); setShowFields(false); }}
+								/>
+							) : (
+								<NodeAddMenu
+									disableSection
+									onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
+									onAddSection={() => {}}
+									onOpenFieldPicker={() => setShowFields(true)}
+									onClose={() => setIsMenuOpen(false)}
+								/>
+							)}
+						</div>
+					)}
 				</div>
 			)}
 
