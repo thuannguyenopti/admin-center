@@ -1,6 +1,8 @@
-# Frontend Design Skill
+# Frontend Design Rule
 
 Design and refine Optimizely product UI with a clean, calm, premium frontend sensibility while staying compliant with Axiom V3 / Optiaxiom React patterns.
+
+This is a rule, not a suggestion. When this skill applies, the agent must behave like a senior frontend product designer using the repo's component library, tokens, typography, sizing, spacing, and interaction patterns. Do not invent a separate visual system.
 
 ## When to use this skill
 
@@ -31,12 +33,31 @@ This is not a marketing site, CMS admin clone, or generic dashboard. For Brand P
 Before writing UI code:
 - Read `DESIGN_SYSTEM.md`
 - Read `OPAL_DESIGN_SYSTEM.md` when working in `app/opal/`
+- Inspect nearby production-quality screens and reuse their page structure, control sizing, and interaction patterns
 - Use `@optiaxiom/react` components whenever an equivalent exists
 - Use Axiom V3 / Optiaxiom semantic tokens instead of hardcoded colors
 - Use spacing tokens instead of arbitrary pixel spacing
 - Prefer `@optimizely/axiom-icons` for product UI icons
 - Inspect nearby screens before inventing a new pattern
 - Do not extend monolithic files; split large multi-concern files first
+
+If any of these checks fail, stop and fix the violation before continuing.
+
+## Non-negotiable implementation contract
+
+For product UI, these are hard requirements:
+- Use Axiom `Button`, `Input`, `Select`, `Textarea`, `Switch`, `Tabs`, `Menu`, `Tooltip`, `Badge`, `Card`, `Box`, `Grid`, `Group`, `Heading`, and `Text` instead of raw equivalents
+- Do not use raw `button`, `input`, `select`, or `textarea` unless the native element is unavoidable, such as `input type="color"` or file upload internals
+- Do not use hardcoded hex/rgb colors for UI chrome; use semantic tokens or documented CSS variables
+- Do not use arbitrary spacing for layout; use the repo spacing scale
+- Primary page actions use Axiom `Button appearance="primary"` with `size="md"` or `size="lg"` unless the surrounding existing pattern proves otherwise
+- Icon-only actions must use Axiom `Button` and have an accessible label or tooltip
+- Never leave dead controls in the UI, including ellipsis menus with no actions
+- Never add a Settings tab for one or two controls; move small identity/status controls into the page header or a contextual menu
+- Files over 300 lines or with multiple concerns must be split before adding more behavior
+- Before finishing, verify the changed route at desktop and narrower widths
+
+If a prototype, screenshot, HTML file, or PM mock uses raw controls, tiny CTAs, hardcoded colors, or inconsistent sizing, treat those as prototype artifacts. Extract the product requirements, then rebuild with Axiom V3 components and this repo's visual system.
 
 ## Axiom V3 implementation rules
 
@@ -57,6 +78,8 @@ Avoid:
 - Nested cards
 - Decorative blobs, excessive gradients, and noisy surfaces
 - Pills or badges that do not carry decision-making value
+
+When a required Axiom component does not support the exact layout prop needed, wrap it in `Box` instead of replacing it with a raw native control.
 
 ## Visual hierarchy rules
 
@@ -209,6 +232,12 @@ Check:
 - Controls align into predictable toolbars
 - Search and filters feel like one system, not scattered inputs
 
+Control sizing must feel intentional:
+- Main CTAs: `size="md"` or `size="lg"`
+- Secondary toolbar actions: usually `size="sm"` only when they sit inside dense product chrome
+- Form controls in editing surfaces: use the same size within a row or section
+- Do not mix tiny dropdowns, large text fields, and small save buttons in the same editing surface unless a clear hierarchy requires it
+
 ## Motion personality
 
 Motion should feel intelligent, soft, responsive, and frictionless.
@@ -300,8 +329,11 @@ When these appear, simplify first. Do not decorate your way out of weak hierarch
 ## Review checklist
 
 Before finishing UI work, check:
+- `DESIGN_SYSTEM.md` and `OPAL_DESIGN_SYSTEM.md` were read
 - Axiom V3 components and tokens are used wherever available
+- No raw product `button`, `input`, `select`, or `textarea` was introduced except unavoidable native internals
 - The primary action is visually correct
+- Primary CTAs are `md`/`lg`, not tiny
 - Spacing follows a consistent 8/12/16/24/32 rhythm
 - Metadata and pills are reduced
 - Surfaces feel soft, layered, and restrained
@@ -311,4 +343,6 @@ Before finishing UI work, check:
 - Icons are from the product icon system
 - Hover, selected, empty, loading, and responsive states are handled
 - No overlapping text, clipped labels, nested cards, arbitrary colors, or decorative noise slipped in
+- No empty ellipsis menus, decorative controls, or dead settings tabs slipped in
+- PM/vibe-coded prototypes were translated into requirements, not copied as UI
 - The result looks designed, not assembled

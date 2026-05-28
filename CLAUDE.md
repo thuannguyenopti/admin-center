@@ -54,6 +54,10 @@ Full reference: **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md)** — read before writing
 
 All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements if an Axiom equivalent exists.
 
+For frontend/product UI work, also read **[.claude/skills/frontend-design.md](.claude/skills/frontend-design.md)** and treat it as an implementation rule. The agent must behave like a senior frontend product designer using Axiom V3, not like a prototype copier.
+
+**Prototype handling rule**: screenshots, PM HTML, and vibe-coded demos are requirements input only. Extract the user need, then rebuild it with Axiom components, semantic tokens, existing repo patterns, and clean product hierarchy. Do not copy raw `button`, `input`, `select`, `textarea`, tiny CTAs, hardcoded colors, or inconsistent spacing from prototypes.
+
 **Exception**: `app/components/vb/blocks/` uses raw HTML + Tailwind (Visual Builder renders customer website content, not product UI).
 
 **Axiom versions by area:**
@@ -71,6 +75,9 @@ All UI must use **`@optiaxiom/react`** components. Never use raw HTML elements i
 - `Input`/`SearchInput` only support `size="md"` (default), `"lg"`, `"xl"` — never `"sm"`
 - Wrap inputs with `<Field label="...">` — never manual `<Text>` labels
 - Dark mode: use `[data-theme="dark"]` selector — never `@media (prefers-color-scheme: dark)`
+- Product controls: use Axiom `Button`, `Input`, `Select`, `Textarea`, `Switch`, `Tabs`, `Menu`, and `Tooltip`; raw product controls are forbidden when an Axiom equivalent exists
+- Main CTAs: use `Button appearance="primary"` with `size="md"` or `size="lg"` unless matching an existing dense-toolbar pattern
+- Empty ellipsis menus, decorative controls, and Settings tabs for one or two fields are not allowed
 
 **Additional rules for `app/opal/` (Axiom V3 + Opal layer):**
 - Opal gradient colors → CSS custom properties (`--opal-gradient-*`), never `bg.*` tokens

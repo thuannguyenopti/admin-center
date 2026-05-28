@@ -29,6 +29,16 @@
 
 These are non-negotiable. Every LLM must follow them.
 
+### 0. Product UI must look designed, not assembled
+
+Agents must act like senior frontend product designers using Axiom, not like prototype copiers.
+
+- Treat screenshots, PM HTML, and vibe-coded prototypes as product requirements only.
+- Do not copy their raw controls, hardcoded colors, tiny CTAs, dashed controls, or inconsistent sizing.
+- Rebuild the idea using Axiom components, semantic tokens, spacing tokens, and existing repo patterns.
+- Inspect nearby screens before inventing a new layout.
+- If a UI feels cluttered, generic, inverted, visually noisy, or inconsistent with Axiom V3, simplify and align it before adding features.
+
 ### 1. Always use Axiom components
 ```tsx
 // YES
@@ -38,6 +48,8 @@ import { Button, Box, Input, Card } from "@optiaxiom/react";
 // NO - never use raw HTML when an Axiom component exists
 <button className="bg-blue-500 text-white px-4 py-2">Save</button>
 ```
+
+For product UI, raw `button`, `input`, `select`, and `textarea` are forbidden when Axiom equivalents exist. Use `Button`, `Input`, `Select`, `Textarea`, `Switch`, `Tabs`, `Menu`, and `Tooltip`. Native controls are allowed only for unavoidable browser internals such as `input type="color"` or hidden file inputs.
 
 ### 2. Never use arbitrary spacing values
 ```tsx
@@ -61,6 +73,20 @@ import { Button, Box, Input, Card } from "@optiaxiom/react";
 
 ### 4. Exception: "Stride" website blocks
 Files in `app/components/vb/blocks/` represent a customer's website, not Optimizely product UI. These blocks should use **raw HTML + Tailwind**, not Axiom components.
+
+### 5. Product UI quality gate
+
+Before finishing any product UI change:
+
+- Read this file.
+- Read `OPAL_DESIGN_SYSTEM.md` for anything under `app/opal/`.
+- Confirm no raw product controls were introduced.
+- Confirm no hardcoded UI colors were introduced.
+- Confirm primary CTAs use `Button appearance="primary"` with `size="md"` or `size="lg"` unless matching a proven existing dense-toolbar pattern.
+- Confirm icon-only controls have accessible labels or tooltips.
+- Confirm there are no dead ellipsis menus or settings tabs for one or two controls.
+- Confirm touched files over 300 lines were split or intentionally left unchanged.
+- Verify the changed route at desktop and narrower widths before pushing.
 
 ---
 
