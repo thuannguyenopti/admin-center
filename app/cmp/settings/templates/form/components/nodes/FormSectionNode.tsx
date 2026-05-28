@@ -33,6 +33,7 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 	const [emptyShowFields, setEmptyShowFields] = useState(false);
 	const [addBtnHovered, setAddBtnHovered] = useState(false);
 	const emptyMenuRef = useRef<HTMLDivElement>(null);
+	const originalHeightRef = useRef<number>(d.sectionHeight ?? 220);
 
 	useEffect(() => { if (!selected) { setIsMenuOpen(false); setShowFields(false); } }, [selected]);
 
@@ -49,22 +50,37 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 		return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
 	}, [isMenuOpen]);
 
-	// Close empty-state menu on outside click; expand/shrink section height
+	// Expand/shrink height when empty-state menu or field picker opens/closes
+	const MENU_HEIGHT = SECTION_HEADER_HEIGHT + 16 + 160 + 16;       // header + padding + NodeAddMenu + padding
+	const PICKER_HEIGHT = SECTION_HEADER_HEIGHT + 16 + 460 + 16;     // header + padding + FieldPickerInline + padding
+
 	useEffect(() => {
 		if (isEmptyMenuOpen) {
-			d.onResizeSection?.(Math.max(d.sectionHeight ?? 220, SECTION_HEADER_HEIGHT + 320));
-			const handler = (e: MouseEvent) => {
-				if (!emptyMenuRef.current?.contains(e.target as Node)) {
-					setIsEmptyMenuOpen(false);
-					setEmptyShowFields(false);
-				}
-			};
-			const id = setTimeout(() => document.addEventListener("mousedown", handler), 0);
-			return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
-		} else {
-			d.onResizeSection?.(d.sectionHeight ?? 220);
+			originalHeightRef.current = d.sectionHeight ?? 220;
 		}
 	}, [isEmptyMenuOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	useEffect(() => {
+		if (isEmptyMenuOpen) {
+			const needed = emptyShowFields ? PICKER_HEIGHT : MENU_HEIGHT;
+			d.onResizeSection?.(Math.max(originalHeightRef.current, needed));
+		} else {
+			d.onResizeSection?.(originalHeightRef.current);
+		}
+	}, [isEmptyMenuOpen, emptyShowFields]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Close empty-state menu on outside click
+	useEffect(() => {
+		if (!isEmptyMenuOpen) return;
+		const handler = (e: MouseEvent) => {
+			if (!emptyMenuRef.current?.contains(e.target as Node)) {
+				setIsEmptyMenuOpen(false);
+				setEmptyShowFields(false);
+			}
+		};
+		const id = setTimeout(() => document.addEventListener("mousedown", handler), 0);
+		return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
+	}, [isEmptyMenuOpen]);
 
 	const commitTitle = useCallback(() => {
 		setIsEditing(false);
