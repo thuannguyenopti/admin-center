@@ -1230,11 +1230,11 @@ export function FieldDetailsPanel({
 					{/* Paragraph content node */}
 					{node.type === "formContent" ? (<>
 						<Box display="flex" flexDirection="column" gap="4">
-							<Field label="Paragraph">
+							<Field label="Your text">
 								<Textarea
 									value={fieldName}
 									onValueChange={setFieldName}
-									placeholder="Type something..."
+									placeholder="Your text"
 									rows={4}
 									resize="none"
 								/>

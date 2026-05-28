@@ -102,7 +102,7 @@ export function FormContentNode({ data, selected }: NodeProps) {
 					{d.icon}
 				</Box>
 				<Text fontSize="sm" color={d.label ? "fg.default" : "fg.tertiary"}>
-					{(d.label as string) || "Type something..."}
+					{(d.label as string) || "Your text"}
 				</Text>
 				<Handle type="source" position={Position.Bottom} style={handleStyle} />
 			</Box>
