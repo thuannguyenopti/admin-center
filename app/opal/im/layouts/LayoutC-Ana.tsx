@@ -787,8 +787,8 @@ function PinAction({ pinned, hovered, onToggle }: { pinned?: boolean; hovered: b
           appearance="subtle"
           size="sm"
           icon={pinned
-              ? <IconThumbtackSolid style={{ color: "#202320" }} />
-              : <IconThumbtack />}
+              ? <IconThumbtackSolid size={16} style={{ color: "#202320" }} />
+              : <IconThumbtack size={16} />}
           aria-label={pinned ? "Unpin" : "Pin"}
           style={pinned ? { color: "#202320" } : undefined}
         />
@@ -1000,7 +1000,7 @@ function DMChatHeader({ contact }: { contact: DMContact }) {
 
 const YOU_BG = "#8a6abf";
 const YOU_INITIALS = "AS";
-const YOU_PHOTO = "/avatars/user.png";
+const YOU_PHOTO = "/avatars/me.jpg";
 
 // ── DMNavRow ──────────────────────────────────────────────────────────────────
 // Second header row: tabs (Messages / Pins / Activity) + Shared & Search buttons.
@@ -2363,7 +2363,7 @@ const PINNED_ARTIFACTS: PinnedArtifact[] = [
     id: "p1", projectId: "q3", kind: "image",
     title: "Glow Drop · Foundation Campaign",
     meta: "Viewed 1 hour ago",
-    imageUrl: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&q=80",
+    imageUrl: "/genz.jpg",
     contributors: [
       { initials: "S", bg: "#7c6fad", src: "https://i.pravatar.cc/96?img=47" }, // Sofia
       { initials: "F", bg: "#3ecfb2", src: "/avatars/vau-frank.png?v=2" },           // Frank
@@ -2374,7 +2374,7 @@ const PINNED_ARTIFACTS: PinnedArtifact[] = [
     id: "p2", projectId: "q3", kind: "image",
     title: "Color Stories · Beauty Campaign",
     meta: "Shared 3 hours ago",
-    imageUrl: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=600&q=80",
+    imageUrl: "/products.jpg",
     contributors: [
       { initials: "R", bg: "#5b7fa6", src: "https://i.pravatar.cc/96?img=52" }, // Raj
       { initials: "H", bg: "#9b6fd4", src: "/avatars/vau-henry.png?v=2" },           // Henry
@@ -2386,7 +2386,7 @@ const PINNED_ARTIFACTS: PinnedArtifact[] = [
     id: "p3", projectId: "q4", kind: "image",
     title: "Peticure · Brand Identity System",
     meta: "Updated 45 minutes ago",
-    imageUrl: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80",
+    imageUrl: "/A.jpg",
     objectPosition: "top",
     imageHeight: 380,
     contributors: [
@@ -2399,7 +2399,7 @@ const PINNED_ARTIFACTS: PinnedArtifact[] = [
     id: "p4", projectId: "q4", kind: "image",
     title: "Peticure · Product Launch Video Brief",
     meta: "Shared 2 hours ago",
-    imageUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80",
+    imageUrl: "/yo.jpg",
     objectPosition: "top",
     imageHeight: 380,
     contributors: [
@@ -3451,7 +3451,7 @@ function ProjectEmptyState({ projectName, onAddArtifact }: { projectName: string
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://images.unsplash.com/photo-1482480605706-9e4e3f41ba29?w=800&q=80"
+            src="/Sunset.jpg"
             alt=""
             style={{
               width: "100%",
@@ -3619,6 +3619,18 @@ function WorkspacePanel({ projectId, title, subtitle, avatars, onToggleWorkspace
                 />
               </Tooltip>
             )}
+            {onToggleRight && rightCollapsed && (
+              <Tooltip content="Show chat" delayDuration={300}>
+                <Button
+                  appearance="subtle"
+                  size="sm"
+                  icon={<IconMessageLines />}
+                  aria-label="Show chat"
+                  onClick={onToggleRight}
+                  style={{ flexShrink: 0 }}
+                />
+              </Tooltip>
+            )}
             <Text
               color="fg.default"
               fontFamily="heading"
@@ -3637,18 +3649,6 @@ function WorkspacePanel({ projectId, title, subtitle, avatars, onToggleWorkspace
             <Tooltip content="More">
               <Button appearance="subtle" size="sm" icon={<IconEllipsisStroke />} aria-label="More options" />
             </Tooltip>
-            {onToggleRight && rightCollapsed && (
-              <Tooltip content="Show chat" delayDuration={300}>
-                <Button
-                  appearance="subtle"
-                  size="sm"
-                  icon={<IconChevronLeft />}
-                  aria-label="Show chat"
-                  onClick={onToggleRight}
-                  style={{ flexShrink: 0 }}
-                />
-              </Tooltip>
-            )}
           </Group>
         </Box>
         <Text fontSize="sm" color="fg.secondary">{subtitle}</Text>
@@ -4991,7 +4991,7 @@ export function LayoutCAna() {
   const [isDragging, setIsDragging] = useState(false);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [navCollapsed, setNavCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(true);
   const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false);
 
   // Plus picker + creation flows

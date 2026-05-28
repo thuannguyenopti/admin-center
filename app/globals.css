@@ -436,3 +436,51 @@ html[data-theme="dark"] [data-brand="v3"] {
 	box-shadow: var(--ax-shadows-lg);
 	border-color: var(--ax-colors-border-accent);
 }
+
+/* Pinned artifact cards — hover reveals actions + extras footer */
+.pinned-card .pinned-actions {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card .pinned-extras {
+	max-height: 0;
+	opacity: 0;
+	overflow: hidden;
+	transition: max-height 220ms ease, opacity 150ms ease, margin-top 220ms ease;
+	margin-top: 0;
+}
+.pinned-card:hover .pinned-actions,
+.pinned-card:focus-within .pinned-actions {
+	opacity: 1;
+	pointer-events: auto;
+}
+.pinned-card:hover .pinned-extras,
+.pinned-card:focus-within .pinned-extras {
+	max-height: 56px;
+	opacity: 1;
+	margin-top: 8px;
+	pointer-events: auto;
+}
+.pinned-card .pinned-pin-inactive {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.pinned-card:hover .pinned-pin-inactive,
+.pinned-card:focus-within .pinned-pin-inactive {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* File card hover — pin button reveal */
+.file-card .file-hover-pin {
+	opacity: 0;
+	transition: opacity 150ms ease;
+	pointer-events: none;
+}
+.file-card:hover .file-hover-pin,
+.file-card:focus-within .file-hover-pin {
+	opacity: 1;
+	pointer-events: auto;
+}

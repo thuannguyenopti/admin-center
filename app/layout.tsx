@@ -475,7 +475,7 @@ export default function RootLayout({
 				label: imLayout === "B" ? "Messages" : imLayout === "C" ? "Spaces" : "Threads",
 				url: `/opal/im?layout=${imLayout}`,
 				highlight: "/opal/im",
-				icon: imLayout === "B" || imLayout === "C" ? <IconUsers /> : <IconComments />,
+				icon: imLayout === "B" || imLayout === "C" ? <IconUserGroup /> : <IconComments />,
 				customLayout: true,
 			},
 			{
