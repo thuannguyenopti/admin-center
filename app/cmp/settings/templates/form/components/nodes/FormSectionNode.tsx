@@ -22,14 +22,21 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [title, setTitle] = useState<string>(d.label ?? "Section");
 	const inputRef = useRef<HTMLInputElement>(null);
+	// Toolbar menu (bottom "+") — adds items OUTSIDE the section
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [showFields, setShowFields] = useState(false);
 	const [plusHovered, setPlusHovered] = useState(false);
-	const [addBtnHovered, setAddBtnHovered] = useState(false);
 	const menuRef = useRef<HTMLDivElement>(null);
 
-	useEffect(() => { if (!selected && !isMenuOpen) { setShowFields(false); } }, [selected, isMenuOpen]);
+	// Empty-state menu — adds items INSIDE the section
+	const [isEmptyMenuOpen, setIsEmptyMenuOpen] = useState(false);
+	const [emptyShowFields, setEmptyShowFields] = useState(false);
+	const [addBtnHovered, setAddBtnHovered] = useState(false);
+	const emptyMenuRef = useRef<HTMLDivElement>(null);
 
+	useEffect(() => { if (!selected) { setIsMenuOpen(false); setShowFields(false); } }, [selected]);
+
+	// Close toolbar menu on outside click
 	useEffect(() => {
 		if (!isMenuOpen) return;
 		const handler = (e: MouseEvent) => {
@@ -41,6 +48,23 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 		const id = setTimeout(() => document.addEventListener("mousedown", handler), 0);
 		return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
 	}, [isMenuOpen]);
+
+	// Close empty-state menu on outside click; expand/shrink section height
+	useEffect(() => {
+		if (isEmptyMenuOpen) {
+			d.onResizeSection?.(Math.max(d.sectionHeight ?? 220, SECTION_HEADER_HEIGHT + 320));
+			const handler = (e: MouseEvent) => {
+				if (!emptyMenuRef.current?.contains(e.target as Node)) {
+					setIsEmptyMenuOpen(false);
+					setEmptyShowFields(false);
+				}
+			};
+			const id = setTimeout(() => document.addEventListener("mousedown", handler), 0);
+			return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
+		} else {
+			d.onResizeSection?.(d.sectionHeight ?? 220);
+		}
+	}, [isEmptyMenuOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	const commitTitle = useCallback(() => {
 		setIsEditing(false);
@@ -75,15 +99,14 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 					{isMenuOpen && (showFields ? (
 						<FieldPickerInline
 							onBack={() => setShowFields(false)}
-							onSelect={(field) => { d.onAddSectionChild?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
+							onSelect={(field) => { d.onAddNodeBelow?.("field", field.id); setIsMenuOpen(false); setShowFields(false); }}
 							customFields={d.customFields}
 							onOpenCreateField={() => { d.onOpenCreateField?.(); setIsMenuOpen(false); setShowFields(false); }}
 						/>
 					) : (
 						<NodeAddMenu
-							disableSection
-							onAddText={() => { d.onAddSectionChild?.("text"); setIsMenuOpen(false); }}
-							onAddSection={() => {}}
+							onAddText={() => { d.onAddNodeBelow?.("text"); setIsMenuOpen(false); }}
+							onAddSection={() => { d.onAddNodeBelow?.("section"); setIsMenuOpen(false); }}
 							onOpenFieldPicker={() => setShowFields(true)}
 							onClose={() => setIsMenuOpen(false)}
 						/>
@@ -185,6 +208,7 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 			{/* Empty-state placeholder — shown when the section has no children */}
 			{((d.childCount ?? 0) === 0) && (
 				<div
+					ref={emptyMenuRef}
 					className="nodrag nopan nowheel"
 					style={{
 						position: "absolute",
@@ -198,11 +222,12 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						display: "flex",
 						flexDirection: "column",
 						alignItems: "center",
-						justifyContent: "center",
+						justifyContent: isEmptyMenuOpen ? "flex-start" : "center",
 						gap: 8,
 						padding: 12,
 						boxSizing: "border-box",
 						zIndex: 1,
+						overflowY: "auto",
 					}}
 					onClick={(e) => e.stopPropagation()}
 				>
@@ -213,7 +238,7 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						className="nodrag nopan nowheel"
 						onMouseEnter={() => setAddBtnHovered(true)}
 						onMouseLeave={() => setAddBtnHovered(false)}
-						onClick={(e) => { e.stopPropagation(); setIsMenuOpen((v) => { if (v) setShowFields(false); return !v; }); }}
+						onClick={(e) => { e.stopPropagation(); setIsEmptyMenuOpen((v) => { if (v) setEmptyShowFields(false); return !v; }); }}
 						style={{
 							display: "flex",
 							alignItems: "center",
@@ -232,6 +257,26 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 						<IconPlus size={12} />
 						Add
 					</button>
+					{isEmptyMenuOpen && (
+						<div style={{ width: "100%" }}>
+							{emptyShowFields ? (
+								<FieldPickerInline
+									onBack={() => setEmptyShowFields(false)}
+									onSelect={(field) => { d.onAddSectionChild?.("field", field.id); setIsEmptyMenuOpen(false); setEmptyShowFields(false); }}
+									customFields={d.customFields}
+									onOpenCreateField={() => { d.onOpenCreateField?.(); setIsEmptyMenuOpen(false); setEmptyShowFields(false); }}
+								/>
+							) : (
+								<NodeAddMenu
+									disableSection
+									onAddText={() => { d.onAddSectionChild?.("text"); setIsEmptyMenuOpen(false); }}
+									onAddSection={() => {}}
+									onOpenFieldPicker={() => setEmptyShowFields(true)}
+									onClose={() => setIsEmptyMenuOpen(false)}
+								/>
+							)}
+						</div>
+					)}
 				</div>
 			)}
 

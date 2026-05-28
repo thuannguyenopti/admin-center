@@ -498,9 +498,22 @@ export function FormBuilder() {
 
 			if (!newNode) return;
 			addNode(newNode);
+
+			// Connect to previous sibling
+			if (children.length > 0) {
+				const lastChild = [...children].sort((a, b) => b.position.x - a.position.x)[0];
+				setEdges((prev) => [...prev, {
+					id: `e-section-${lastChild.id}-${newId}`,
+					source: lastChild.id,
+					target: newId,
+					type: "smoothstep",
+					markerEnd: { type: MarkerType.ArrowClosed },
+				} as any]);
+			}
+
 			selectNode(newId);
 		},
-		[nodes, customFields, addNode, setNodes, selectNode],
+		[nodes, customFields, addNode, setEdges, setNodes, selectNode],
 	);
 
 	const handleCreateCustomField = useCallback(
@@ -627,6 +640,7 @@ export function FormBuilder() {
 			return { ...n, data: { ...n.data, ...extra, ...addCallbacks } };
 		}
 		const childCount = nodes.filter((c) => (c as any).parentId === n.id).length;
+		const sectionHeight = Number(n.style?.height ?? 220);
 		return {
 			...n,
 			zIndex: -1,
@@ -635,7 +649,11 @@ export function FormBuilder() {
 				...extra,
 				...addCallbacks,
 				childCount,
+				sectionHeight,
 				onAddSectionChild: (type: string, fieldDefId?: string) => handleAddSectionChild(n.id, type as any, fieldDefId),
+				onResizeSection: (height: number) => setNodes((nds) => nds.map((nd) =>
+					nd.id === n.id ? { ...nd, style: { ...(nd.style ?? {}), height, overflow: "visible" } } : nd,
+				)),
 				onToggleCollapse: () => toggleSectionCollapse(n.id),
 				onDuplicate: () => duplicateSection(n.id),
 				onLabelChange: (label: string) => updateNodeData(n.id, { label }),
