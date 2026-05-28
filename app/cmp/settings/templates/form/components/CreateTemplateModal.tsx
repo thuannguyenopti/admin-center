@@ -63,7 +63,7 @@ export function CreateTemplateModal({ open, title = "Create Template", initialVa
 								<Input
 									value={templateName}
 									onValueChange={(v) => setTemplateName(v.slice(0, 80))}
-									placeholder="Untitled Form"
+									placeholder=""
 								/>
 							</Field>
 							<Text fontSize="xs" color="fg.tertiary">{templateName.length}/80</Text>
