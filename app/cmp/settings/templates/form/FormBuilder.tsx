@@ -430,9 +430,18 @@ export function FormBuilder() {
 				const refH = refNode.type === "formSection"
 					? Number(refNode.style?.height ?? 220)
 					: ((refNode as any).measured?.height ?? 60);
+				const sectionY = refNode.position.y + refH + 80;
+
+				// If sibling sections already exist at the same level, place to the right
+				const siblingTargetIds = new Set(edges.filter((e) => e.source === sourceNodeId).map((e) => e.target));
+				const siblingSections = nodes.filter((n) => siblingTargetIds.has(n.id) && n.type === "formSection");
+				const sectionX = siblingSections.length > 0
+					? Math.max(...siblingSections.map((n) => n.position.x + Number(n.style?.width ?? 480))) + 40
+					: refNode.position.x;
+
 				newNode = {
 					id: newId, type: "formSection",
-					position: { x: refNode.position.x, y: refNode.position.y + refH + 80 },
+					position: { x: sectionX, y: sectionY },
 					style: { width: 480, height: 220, overflow: "visible" },
 					data: { label: "New Section", onToggleCollapse: () => {}, onDuplicate: () => {} },
 				};
@@ -457,7 +466,7 @@ export function FormBuilder() {
 			} as any);
 			if (type === "field" || type === "text") selectNode(newId);
 		},
-		[nodes, customFields, addNodeWithEdge],
+		[nodes, edges, customFields, addNodeWithEdge],
 	);
 
 	const handleAddSectionChild = useCallback(
