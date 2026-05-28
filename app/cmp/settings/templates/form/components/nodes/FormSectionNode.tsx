@@ -26,8 +26,21 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 	const [showFields, setShowFields] = useState(false);
 	const [plusHovered, setPlusHovered] = useState(false);
 	const [addBtnHovered, setAddBtnHovered] = useState(false);
+	const menuRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => { if (!selected && !isMenuOpen) { setShowFields(false); } }, [selected, isMenuOpen]);
+
+	useEffect(() => {
+		if (!isMenuOpen) return;
+		const handler = (e: MouseEvent) => {
+			if (!menuRef.current?.contains(e.target as Node)) {
+				setIsMenuOpen(false);
+				setShowFields(false);
+			}
+		};
+		const id = setTimeout(() => document.addEventListener("mousedown", handler), 0);
+		return () => { clearTimeout(id); document.removeEventListener("mousedown", handler); };
+	}, [isMenuOpen]);
 
 	const commitTitle = useCallback(() => {
 		setIsEditing(false);
@@ -38,7 +51,7 @@ export function FormSectionNode({ data, selected }: NodeProps) {
 	return (
 		<>
 			<NodeToolbar position={Position.Bottom} isVisible={selected || isMenuOpen} align="center" offset={8}>
-				<div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+				<div ref={menuRef} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
 					<button
 						className="nodrag nopan"
 						onClick={(e) => { e.stopPropagation(); setIsMenuOpen((v) => { if (v) { setShowFields(false); } return !v; }); }}
