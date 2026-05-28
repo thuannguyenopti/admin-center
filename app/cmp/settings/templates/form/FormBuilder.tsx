@@ -524,7 +524,10 @@ export function FormBuilder() {
 				},
 			};
 			setNodes([startingNode as any]);
-			setTimeout(() => reactFlowInstance?.fitView({ padding: 0.4 }), 50);
+			setTimeout(() => {
+				reactFlowInstance?.fitView({ padding: 0.4 });
+				selectNode(STARTING_NODE_ID);
+			}, 50);
 		},
 		[setNodes, reactFlowInstance],
 	);
@@ -862,6 +865,7 @@ export function FormBuilder() {
 				customFields: template.customFields,
 			}));
 			reactFlowInstance?.fitView({ padding: 0.4 });
+			selectNode(STARTING_NODE_ID);
 		}, 50);
 	}, [editingFormId, formTemplates, setNodes, setEdges, reactFlowInstance]);
 
