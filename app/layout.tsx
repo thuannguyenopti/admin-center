@@ -459,7 +459,7 @@ export default function RootLayout({
 				customLayout: true,
 			},
 			{
-				label: "Messages",
+				label: "Threads",
 				url: "/opal/im",
 				highlight: "/opal/im",
 				icon: <IconComments />,
