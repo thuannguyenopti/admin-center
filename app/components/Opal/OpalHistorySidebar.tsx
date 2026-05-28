@@ -8,7 +8,6 @@ import { Input } from "../Input";
 import { OpalHistoryItem } from "./OpalHistoryItem";
 import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import IconSearch from "@/app/assets/opal/icon-search.svg";
-import IconInfo from "@/app/assets/opal/icon-info.svg";
 import { opalTypography } from "@/app/styles/opalTypography";
 
 type OpalHistorySidebarProps = {
@@ -68,7 +67,7 @@ export function OpalHistorySidebar({
       }}
     >
       {/* Search and New Chat */}
-      <Box display="flex" flexDirection="row" gap="2" alignItems="center" justifyContent="space-between">
+      <Box display="flex" flexDirection="row" gap="8" alignItems="center">
         <Button
           appearance="subtle"
           size="md"
@@ -77,56 +76,28 @@ export function OpalHistorySidebar({
             width: '32px',
             height: '32px',
             padding: 0,
-            borderRadius: '6px',
             minWidth: '32px',
             flexShrink: 0,
           }}
         >
           <IconSearch style={{ width: '16px', height: '16px' }} />
         </Button>
-        
-        <Box
-          onClick={onNewChat}
-          style={{
-            height: '32px',
-            borderRadius: '6px',
-            border: '1px solid var(--opal-border-input)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '0 12px',
-            cursor: 'pointer',
-            backgroundColor: 'transparent',
-            transition: 'background-color 0.2s ease',
-            whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--opal-bg-history-active)';
-            e.currentTarget.style.borderColor = 'var(--opal-border-primary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.borderColor = 'var(--opal-border-input)';
-          }}
-        >
-          <IconInfo style={{ width: '16px', height: '16px', flexShrink: 0 }} />
-          <Text
-            style={{
-              fontSize: '14px',
-              fontWeight: 400,
-              letterSpacing: '-0.10px',
-              fontFamily: 'Inter, sans-serif',
-              margin: 0,
-              color: 'var(--opal-text-primary)',
-            }}
+
+        <Box style={{ width: 120, marginLeft: 'auto' }}>
+          <Button
+            appearance="default"
+            size="md"
+            onClick={onNewChat}
+            icon={<IconPlus size={16} />}
+            w="full"
           >
             {newChatLabel}
-          </Text>
+          </Button>
         </Box>
       </Box>
 
       {/* Chat History Groups */}
-      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', minHeight: 0 }}>
+      <Box display="flex" flexDirection="column" gap="16" style={{ flex: 1, overflowY: 'auto', overflowX: 'clip', minHeight: 0, paddingRight: 2 }}>
         {Object.entries(groupedHistory).map(([dateLabel, items]) => {
           if (items.length === 0) return null;
           const isCollapsed = collapsedSections.has(dateLabel);

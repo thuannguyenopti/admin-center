@@ -25,14 +25,22 @@ function initials(name: string): string {
     .join("");
 }
 
+const PRESENCE_COLORS: Record<string, string> = {
+  online: "var(--ax-colors-fg-success)",
+  away: "var(--ax-colors-fg-warning)",
+  offline: "var(--ax-colors-fg-disabled)",
+};
+
 function AvatarTile({
   url,
   name,
   size,
+  presenceStatus,
 }: {
   url?: string;
   name: string;
   size: number;
+  presenceStatus?: string;
 }) {
   const common: React.CSSProperties = {
     width: size,
@@ -45,20 +53,17 @@ function AvatarTile({
     alignItems: "center",
     justifyContent: "center",
   };
-  if (url) {
-    return (
-      <span style={common}>
-        <img
-          src={url}
-          alt={name}
-          width={size}
-          height={size}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
-      </span>
-    );
-  }
-  return (
+  const inner = url ? (
+    <span style={common}>
+      <img
+        src={url}
+        alt={name}
+        width={size}
+        height={size}
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      />
+    </span>
+  ) : (
     <span style={common}>
       <span
         style={{
@@ -71,6 +76,30 @@ function AvatarTile({
       >
         {initials(name)}
       </span>
+    </span>
+  );
+
+  if (!presenceStatus) return inner;
+
+  const dot = Math.round(size * 0.34);
+  return (
+    <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
+      {inner}
+      <span
+        aria-label={presenceStatus}
+        style={{
+          position: "absolute",
+          bottom: 0,
+          right: 0,
+          width: dot,
+          height: dot,
+          borderRadius: "50%",
+          background: PRESENCE_COLORS[presenceStatus] ?? PRESENCE_COLORS.offline,
+          border: "1.5px solid var(--ax-colors-bg-default)",
+          boxSizing: "border-box",
+          pointerEvents: "none",
+        }}
+      />
     </span>
   );
 }
@@ -109,7 +138,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
     >
       {singleAvatar && (
         <Box display="flex" alignItems="center" style={{ flexShrink: 0 }}>
-          <AvatarTile url={singleAvatar.url} name={singleAvatar.name} size={TILE_SIZE} />
+          <AvatarTile url={singleAvatar.url} name={singleAvatar.name} size={TILE_SIZE} presenceStatus={item.presenceStatus} />
         </Box>
       )}
       <Box style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>

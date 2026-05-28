@@ -349,6 +349,7 @@ function TemplateContent({
 			<OpalVariationBuildProvider addMessage={addMessage} updateMessage={updateMessage}>
 				<Box
 					className="grid grid-rows-[auto_1fr] h-screen"
+					overflow="hidden"
 					style={{
 						gridTemplateColumns: `${sidebarColWidth}px 1fr`,
 						transition: "grid-template-columns 0.2s ease-out",
