@@ -238,7 +238,7 @@ export function FormBuilder() {
 	const editingFormId = searchParams.get("id");
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(!editingFormId);
 	const [isEditDetailsOpen, setIsEditDetailsOpen] = useState(false);
-	const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+	const [isLibraryOpen, setIsLibraryOpen] = useState(true);
 	const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 	const [validationWarnings, setValidationWarnings] = useState<ValidationWarning[] | null>(null);
 	const [highlightedTargets, setHighlightedTargets] = useState<Array<{ nodeId: string; actionLabel: string }>>([]);
