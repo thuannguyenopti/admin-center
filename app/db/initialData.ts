@@ -1810,7 +1810,7 @@ export const initialPages: Page[] = [
 							"ele-hero-block": {
 								type: "ct-hero",
 								properties: {
-									heading: "Set it. Sweat it. Send it.",
+									heading: "Set it. Sweat it.\nSend it.",
 									subheading: "Let the streets, and the world know.",
 									primaryButton: "GET STARTED",
 									secondaryButton: "BOOK A DEMO",
