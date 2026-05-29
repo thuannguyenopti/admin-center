@@ -1,0 +1,8 @@
+# Code owners for axiom-play.
+# Last matching pattern wins. Lines below override earlier ones.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+# Global shell files — changes require @Ben-Holme review
+app/globals.css              @Ben-Holme
+app/layout.tsx               @Ben-Holme
+app/components/template.tsx  @Ben-Holme

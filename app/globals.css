@@ -1,5 +1,5 @@
 @import "./styles/opalStyles.css";
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap');
+@import '@fontsource-variable/roboto-mono';
 
 /* Nudge SemiNormal — Optimizely brand heading font */
 @font-face {
@@ -29,42 +29,42 @@
 
 /* Die Grotesk B — Axiom V3 brand UI font */
 @font-face {
-  font-family: "Die Grotesk B";
+  font-family: "DI Grotesk B";
   src: url("/fonts/die-grotesk-b-regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Die Grotesk B";
+  font-family: "DI Grotesk B";
   src: url("/fonts/die-grotesk-b-italic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
-  font-family: "Die Grotesk B";
+  font-family: "DI Grotesk B";
   src: url("/fonts/die-grotesk-b-medium.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Die Grotesk B";
+  font-family: "DI Grotesk B";
   src: url("/fonts/die-grotesk-b-medium-italic.woff2") format("woff2");
   font-weight: 500;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
-  font-family: "Die Grotesk B";
+  font-family: "DI Grotesk B";
   src: url("/fonts/die-grotesk-b-bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Die Grotesk B";
+  font-family: "DI Grotesk B";
   src: url("/fonts/die-grotesk-b-bold-italic.woff2") format("woff2");
   font-weight: 700;
   font-style: italic;
@@ -334,82 +334,6 @@ body.dark .newly-imported {
 	100% {
 		background-position: -200% 0;
 	}
-}
-
-/* ============================================
-   Axiom V3 Brand Theme
-   Applied to [data-brand="v3"] wrappers.
-   Lime green accent, green-tinted palette.
-   Reference: .claude/FIGMA_LIBRARY_V3.md
-   ============================================ */
-
-[data-brand="v3"] {
-	/* Font — Die Grotesk B overrides the body { font-family: Arial } rule.
-	   Attribute selector (0,1,0) > element selector (0,0,1). */
-	font-family: "Die Grotesk B", Inter, system-ui, sans-serif;
-	--ax-fontFamily-sans: "Die Grotesk B", Inter, system-ui, sans-serif;
-
-	/* Accent / Primary button — apply in both light and dark */
-	--ax-colors-bg-accent: #abff44;
-	--ax-colors-bg-accent-hovered: #99e83d;
-	--ax-colors-bg-accent-pressed: #88cc36;
-	--ax-colors-border-accent: #abff44;
-	/* --ax-colors-fg-default-inverse intentionally NOT overridden here —
-	   tooltips use fg-default-inverse for text on dark backgrounds (must stay white/light).
-	   Primary button dark text is handled by --v3iotm below instead. */
-	--v3iotm: #202320; /* dark text on lime-green primary buttons (Axiom v1.9.x compat) */
-
-	/* Accent subtle (NavItem active background) — apply in both modes */
-	--ax-colors-bg-accent-subtle: rgba(94, 139, 39, 0.16);
-	--ax-colors-bg-accent-subtle-hovered: rgba(94, 139, 39, 0.24);
-
-	/* Nav icon size — @optiaxiom/icons Material icons sized via --ax-size-2xs (1rem=16px by default).
-	   Override to 1.25rem (20px) so thin-stroke Material icons match Figma's 20px NavItem icon spec. */
-	--ax-size-2xs: 1.25rem;
-}
-
-/* Light-mode-only surface/foreground overrides.
-   Scoped to :not([data-theme="dark"]) so Axiom's dark tokens are not overridden. */
-html:not([data-theme="dark"]) [data-brand="v3"] {
-	/* Page & surface backgrounds */
-	--ax-colors-bg-page: #f9fcf8;
-	--ax-colors-bg-secondary: #eff5eb;
-	--ax-colors-bg-secondary-hovered: #dcefd4;
-	--ax-colors-bg-default-hovered: rgba(95, 147, 31, 0.08);
-	--ax-colors-bg-default-pressed: rgba(95, 147, 31, 0.16);
-
-	/* Borders */
-	--ax-colors-border-default: #d8e4cb;
-	--ax-colors-border-secondary: #e4f0da;
-	--ax-colors-border-tertiary: #e4f0da;
-	--ax-colors-border-focus: #226b1e;
-
-	/* Opal custom surfaces */
-	--opal-neutral-50: #F6FAF3;
-
-	/* Foreground */
-	--ax-colors-fg-default: #202320;
-	--ax-colors-fg-secondary: #484e46;
-	--ax-colors-fg-tertiary: #616755;
-	--ax-colors-fg-accent: #226b1e;
-	--ax-colors-fg-accent-hovered: #1a5216;
-	--ax-colors-fg-accent-strong: #226b1e;
-	--ax-colors-fg-link-default: #226b1e;
-	--ax-colors-fg-link-default-hovered: #1a5216;
-}
-
-[data-brand="v3"] button {
-	font-weight: 500;
-}
-
-/* Headings use VC Nudge (= Nudge SemiNormal) per Axiom V3 type spec */
-[data-brand="v3"] h1,
-[data-brand="v3"] h2,
-[data-brand="v3"] h3,
-[data-brand="v3"] h4,
-[data-brand="v3"] h5,
-[data-brand="v3"] h6 {
-	font-family: "Nudge SemiNormal", sans-serif;
 }
 
 .vau-card {
