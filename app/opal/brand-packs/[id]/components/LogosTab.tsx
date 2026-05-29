@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Select, Text } from "@optiaxiom/react";
-import { IconArrowUpRightFromSquare, IconDownload } from "@optimizely/axiom-icons";
+import { Badge, Box, Button, Select, Text } from "@optiaxiom/react";
+import { IconArrowUpRightFromSquare, IconDownload, IconPlus } from "@optimizely/axiom-icons";
 import type { BrandPack } from "../../types";
 
 type LogosTabProps = {
@@ -16,9 +16,17 @@ const CLASSIFICATION_OPTIONS = [
 	{ label: "Style reference", value: "style-ref" },
 ];
 
+function logoPreviewStyle(asset: BrandPack["assets"][0]) {
+	const isWhite = /white|light/i.test(asset.name);
+	return {
+		background: isWhite ? "var(--ax-colors-fg-default)" : "var(--ax-colors-bg-secondary)",
+		filter: isWhite ? "invert(1)" : undefined,
+	};
+}
+
 function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
-	const [hovered, setHovered] = useState(false);
 	const [classification, setClassification] = useState<Classification>("logo");
+	const preview = logoPreviewStyle(asset);
 
 	return (
 		<Box
@@ -29,81 +37,37 @@ function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 			flexDirection="column"
 			overflow="hidden"
 			rounded="xl"
-			shadow={hovered ? "md" : "sm"}
+			shadow="sm"
 			style={{
 				cursor: "pointer",
-				transform: hovered ? "translateY(-2px)" : "none",
 				transition: "box-shadow 0.18s ease, transform 0.18s ease",
 			}}
-			onMouseEnter={() => setHovered(true)}
-			onMouseLeave={() => setHovered(false)}
 		>
-			{/* Preview — checkered background for transparency */}
 			<Box
 				alignItems="center"
 				display="flex"
 				justifyContent="center"
 				overflow="hidden"
-				style={{
-					backgroundImage:
-						"linear-gradient(45deg, var(--ax-colors-bg-secondary) 25%, transparent 25%), linear-gradient(-45deg, var(--ax-colors-bg-secondary) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, var(--ax-colors-bg-secondary) 75%), linear-gradient(-45deg, transparent 75%, var(--ax-colors-bg-secondary) 75%)",
-					backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0",
-					backgroundSize: "16px 16px",
-					height: 120,
-					position: "relative",
-				}}
+				style={{ background: preview.background, height: 144, padding: 24 }}
 			>
 				<img
 					alt={asset.name}
 					src={asset.url}
 					style={{
-						height: "100%",
-						maxHeight: 80,
-						maxWidth: "70%",
+						filter: preview.filter,
+						maxHeight: "100%",
+						maxWidth: "82%",
 						objectFit: "contain",
-						width: "auto",
+						width: "100%",
 					}}
 				/>
-				{hovered && (
-					<Box
-						alignItems="center"
-						display="flex"
-						gap="6"
-						justifyContent="center"
-						style={{
-							background: "rgba(0,0,0,0.3)",
-							bottom: 0,
-							left: 0,
-							position: "absolute",
-							right: 0,
-							top: 0,
-						}}
-					>
-						<Button
-							appearance="default"
-							size="sm"
-							icon={<IconArrowUpRightFromSquare />}
-							aria-label="View"
-							onClick={(e) => e.stopPropagation()}
-						/>
-						<Button
-							appearance="subtle"
-							size="sm"
-							icon={<IconDownload />}
-							aria-label="Download"
-							onClick={(e) => e.stopPropagation()}
-							style={{ background: "rgba(255,255,255,0.15)", color: "#fff" }}
-						/>
-					</Box>
-				)}
 			</Box>
 
-			{/* Info */}
-			<Box display="flex" flexDirection="column" gap="4" p="12">
+			<Box display="flex" flexDirection="column" gap="10" p="16">
 				<Text
-					fontWeight="500"
+					fontWeight="600"
 					style={{
-						fontSize: 13,
+						fontSize: 14,
 						overflow: "hidden",
 						textOverflow: "ellipsis",
 						whiteSpace: "nowrap",
@@ -111,14 +75,21 @@ function LogoCard({ asset }: { asset: BrandPack["assets"][0] }) {
 				>
 					{asset.name}
 				</Text>
-				<Text color="fg.tertiary" fontSize="xs">
-					{asset.format}
-				</Text>
+				<Box alignItems="center" display="flex" gap="6">
+					<Badge intent="neutral" variant="subtle">{asset.format}</Badge>
+					<Badge intent={classification === "logo" ? "success" : "neutral"} variant="subtle">
+						{classification === "logo" ? "Logo" : "Style reference"}
+					</Badge>
+				</Box>
 				<Select
 					value={classification}
 					onValueChange={(value) => setClassification(value as Classification)}
 					options={CLASSIFICATION_OPTIONS}
 				/>
+				<Box alignItems="center" display="flex" gap="6">
+					<Button appearance="subtle" aria-label={`View ${asset.name}`} icon={<IconArrowUpRightFromSquare />} size="sm" />
+					<Button appearance="subtle" aria-label={`Download ${asset.name}`} icon={<IconDownload />} size="sm" />
+				</Box>
 			</Box>
 		</Box>
 	);
@@ -169,23 +140,21 @@ export function LogosTab({ pack }: LogosTabProps) {
 	const logos = pack.assets.filter((a) => a.type === "logo");
 
 	return (
-		<Box display="flex" flexDirection="column" gap="20">
-			{/* Header */}
+		<Box display="flex" flexDirection="column" gap="16">
 			<Box alignItems="center" display="flex" gap="12" justifyContent="space-between">
 				<Text color="fg.secondary" fontSize="sm">
 					{logos.length} logo{logos.length !== 1 ? "s" : ""}
 				</Text>
-				<Button appearance="default" size="md">
+				<Button appearance="primary" icon={<IconPlus />} size="md">
 					Upload logo
 				</Button>
 			</Box>
 
-			{/* Logo grid */}
 			{logos.length > 0 ? (
 				<Box
 					display="grid"
 					gap="12"
-					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))" }}
+					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}
 				>
 					{logos.map((asset) => (
 						<LogoCard key={asset.id} asset={asset} />
@@ -193,7 +162,6 @@ export function LogosTab({ pack }: LogosTabProps) {
 				</Box>
 			) : null}
 
-			{/* Upload zone */}
 			<UploadZone />
 
 			{logos.length === 0 && (

@@ -55,9 +55,26 @@ For product UI, these are hard requirements:
 - Never leave dead controls in the UI, including ellipsis menus with no actions
 - Never add a Settings tab for one or two controls; move small identity/status controls into the page header or a contextual menu
 - Files over 300 lines or with multiple concerns must be split before adding more behavior
-- Before finishing, verify the changed route at desktop and narrower widths
+- Before finishing, visually verify the changed route at desktop and narrower widths
 
 If a prototype, screenshot, HTML file, or PM mock uses raw controls, tiny CTAs, hardcoded colors, or inconsistent sizing, treat those as prototype artifacts. Extract the product requirements, then rebuild with Axiom V3 components and this repo's visual system.
+
+## Mandatory visual QA
+
+Design work is not complete until the rendered UI is checked visually.
+
+When the user provides a reference image and asks to match it, treat the reference as the acceptance spec, not moodboard inspiration.
+
+After changing product UI:
+- Open the changed local route
+- Capture a screenshot at the primary desktop width
+- Capture a screenshot at a narrower width when the layout is responsive
+- Compare the rendered screenshot against the provided reference, screenshot, or stated design intent
+- Match the reference's layout proportions, modal width, column balance, control hierarchy, typography scale, and spacing before introducing local reinterpretation
+- Check specifically for collapsed controls, broken grids, clipping, overflow, wrong CTA hierarchy, inconsistent pills, unintended scrollbars, and dead whitespace
+- Fix visual mismatches before reporting the work done
+
+If screenshot capture or browser verification is unavailable, say that explicitly and do not claim the UI was visually verified. TypeScript, lint, and route `200` checks are necessary but never sufficient for frontend design work.
 
 ## Axiom V3 implementation rules
 
@@ -80,6 +97,24 @@ Avoid:
 - Pills or badges that do not carry decision-making value
 
 When a required Axiom component does not support the exact layout prop needed, wrap it in `Box` instead of replacing it with a raw native control.
+
+## Shared micro-patterns
+
+Repeated UI atoms must be consistent across the whole feature, not recreated per file.
+
+Use:
+- Axiom `Badge variant="subtle"` for chips, tags, statuses, and short metadata pills
+- One shared local wrapper when a repeated badge needs sizing or casing tweaks
+- The same chip density, casing, and contrast across overview cards, detail tabs, and editing surfaces
+- Axiom `Button` for removable chips or chip actions, with accessible labels
+
+Avoid:
+- Custom pill `Box` components when `Badge` works
+- Mixing hand-rolled pills with Axiom badges in the same feature
+- Making pills longer, taller, greener, or louder just because they are on a different tab
+- Treating badges as decoration instead of decision-making metadata
+
+If a screenshot exposes inconsistent chip styling, normalize the component pattern before polishing spacing.
 
 ## Visual hierarchy rules
 
@@ -121,6 +156,25 @@ Avoid:
 - Layouts that feel either sparse by accident or crowded by default
 
 The best density feels efficient, not cramped.
+
+## Product shell spacing
+
+Use one owner for page spacing. Do not stack route-level padding on top of shell padding.
+
+Default rules:
+- Standard app shell page padding: 32px
+- Dense secondary product pages inside an existing shell: no extra top padding
+- Custom full-page work surfaces that own their shell: 24px top padding
+- Header-to-tabs rhythm: 16px
+- Tabs-to-content rhythm: 16px for immediate work surfaces, 24px only when the first content module is visually dense
+- Major section separation inside content: 24px or 32px
+
+Avoid:
+- 64px top offsets in product work surfaces
+- Adding a page title, tab row, and content card with separate large gaps between each
+- Local scrollbars on tab rows unless tabs truly overflow at the tested width
+
+The active tab content should start quickly and feel connected to the page chrome.
 
 ## Surface philosophy
 
@@ -200,6 +254,8 @@ Guidance:
 - Never allow text clipping, collisions, or awkward wrapping
 - For font management UI, show a real specimen: family name, Aa, pangram, uppercase alphabet, lowercase alphabet, numerals, and available weights/styles
 - Let users understand whether a font is from the library, uploaded, linked from the web, or name-only metadata
+- Match the approved specimen composition. Do not add extra decorative samples, captions, or background artwork when the reference intentionally omits them.
+- Use readable spacing between metadata bullets; metadata should feel quiet and precise, not cramped.
 
 If everything is bold, reduce weight until the page has a clear hierarchy again.
 
@@ -226,6 +282,33 @@ Avoid:
 - Decorative status labels
 - Long helper text in primary work surfaces
 - Toolbars crowded with low-frequency actions
+
+## Action architecture
+
+Before finishing a screen, pressure-test the workflow, not only the visuals.
+
+Every product surface should answer:
+- What is the primary action?
+- What is the secondary action?
+- What action happens when a user selects an item?
+- Are multiple buttons opening the same workflow?
+
+Prefer:
+- One clear add/create action per surface
+- Direct selection for list/grid items that open detail editing
+- Modal or sheet editing for focused item-level changes
+- Contextual actions only where they represent genuinely different workflows
+- Page-level create/upload actions use Axiom `Button appearance="primary"` with a plus icon
+- Inline secondary add actions inside cards, modals, and chip editors use Axiom `Button appearance="default"` with a plus icon
+
+Avoid:
+- Duplicate CTAs that lead to the same modal, sheet, or page
+- Repeated edit-icon buttons on every row when the entire row can be selected
+- Dead or vague actions such as `Manage`, `More`, or ellipsis menus without a distinct purpose
+- Separate settings or management screens for concepts that belong inside item editing
+- Page-level save buttons when item-level modals already commit changes
+
+If a screen offers more than three primary ways to act, simplify the action model before polishing the UI. Premium product UX usually reduces workflows to: create, select, edit.
 
 ## Color and green usage
 
@@ -305,6 +388,43 @@ AI cues should help the user understand priority, confidence, recommendation, or
 ## Brand Packs guidance
 
 Brand Packs should feel like brand intelligence, not a template marketplace.
+
+## Stride prototype content rules
+
+For Brand Packs prototype work, the primary fictive brand is `Stride`: an endurance sports / triathlon brand used to test Opal brand intelligence workflows. Treat Stride as a believable product brand, not generic placeholder content.
+
+Stride content should feel:
+- Endurance-driven
+- High-performance
+- Athletic and professional
+- Editorial but real
+- Focused on triathlon: swimming, cycling, running, transitions, race day, and finish-line energy
+
+Use imagery that shows real athletes in action:
+- Open-water swimmers and competitive pool swimmers
+- Professional road cyclists, pelotons, time-trial riders, and race climbs
+- Runners in races, track starts, road running packs, finish chutes, and endurance moments
+- Triathlon transition energy when the athlete is actively competing or preparing to compete
+- High-quality sport photography with motion, effort, pace, water, road, track, weather, or race context
+
+Avoid Stride imagery that is merely adjacent to sport:
+- Solo product/object shots such as a bike against a wall
+- Yoga, stretching, generic gym classes, dumbbells, lifting, or wellness lifestyle content
+- Smiling fitness portraits that do not show sport action
+- Casual jogging, posed stock-photo workouts, or influencer-style training images
+- Broken images, duplicate images, or generic placeholders
+
+For Stride logos and marks:
+- Use intentional logo specimens such as white logo on dark surface and black/dark logo on light surface
+- Do not use random photography as logo placeholders
+- Logo cards should make the mark inspectable and full-bleed or specimen-like, not tiny thumbnails floating in empty space
+
+For Stride templates:
+- Use action sport creative, race-day energy, endurance campaign language, and Optimizely/Stride wordmark placement
+- Templates should feel like generated brand outputs, not generic marketplace cards
+- When creating new template or image placeholders, prefer fewer high-quality examples over many weak examples
+
+When adding fake content, name it as if it came from a real brand library. Bad names: `Image 1`, `Bike photo`, `Hero`. Better names: `Open Water Race Pack`, `Peloton Race Attack`, `Finish Chute Sprint`, `Aero Position Push`.
 
 Hero / active pack:
 - Keep the left side informational and scannable

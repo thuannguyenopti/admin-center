@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Button, Select, Text, Textarea } from "@optiaxiom/react";
-import { IconArrowUpRightFromSquare, IconDownload } from "@optimizely/axiom-icons";
+import { Badge, Box, Button, Select, Text, Textarea } from "@optiaxiom/react";
+import { IconArrowUpRightFromSquare, IconDownload, IconPlus } from "@optimizely/axiom-icons";
 import type { BrandAsset, BrandPack } from "../../types";
 
 type ImagesTabProps = {
@@ -57,21 +57,18 @@ function ImageCard({
 		>
 			<Box
 				alignItems="center"
-				bg="bg.secondary"
 				display="flex"
 				justifyContent="center"
 				overflow="hidden"
-				style={{ height: 120, position: "relative" }}
+				style={{ height: 172, position: "relative" }}
 			>
 				<img
 					alt={asset.name}
 					src={asset.url}
 					style={{
 						height: "100%",
-						maxHeight: 96,
-						maxWidth: "80%",
-						objectFit: "contain",
-						width: "auto",
+						objectFit: "cover",
+						width: "100%",
 					}}
 				/>
 				{hovered && (
@@ -121,9 +118,12 @@ function ImageCard({
 					>
 						{asset.name}
 					</Text>
-					<Text color="fg.tertiary" fontSize="xs">
-						{ASSET_TYPE_LABEL[asset.type]} · {asset.format}
-					</Text>
+					<Box alignItems="center" display="flex" gap="6">
+						<Badge intent="neutral" variant="subtle">{ASSET_TYPE_LABEL[asset.type]}</Badge>
+						<Badge intent={classification === "style-ref" ? "success" : "neutral"} variant="subtle">
+							{classification === "style-ref" ? "Style reference" : "Logo"}
+						</Badge>
+					</Box>
 				</Box>
 
 				<Select
@@ -148,24 +148,13 @@ function ImageCard({
 						}}
 					/>
 				) : (
-					<button
-						type="button"
+					<Button
+						appearance="subtle"
 						onClick={(e) => { e.stopPropagation(); setConstraintExpanded(true); }}
-						style={{
-							background: "transparent",
-							border: 0,
-							color: "var(--ax-colors-fg-tertiary)",
-							cursor: "pointer",
-							fontSize: 11,
-							padding: 0,
-							textAlign: "left",
-							transition: "color 0.15s",
-						}}
-						onMouseEnter={(e) => { e.currentTarget.style.color = "var(--ax-colors-fg-accent)"; }}
-						onMouseLeave={(e) => { e.currentTarget.style.color = "var(--ax-colors-fg-tertiary)"; }}
+						size="sm"
 					>
-						+ Add LLM guidance
-					</button>
+						Add LLM guidance
+					</Button>
 				)}
 			</Box>
 		</Box>
@@ -191,40 +180,23 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 	const types = Array.from(new Set(images.map((a) => a.type)));
 
 	return (
-		<Box display="flex" flexDirection="column" gap="20">
+		<Box display="flex" flexDirection="column" gap="16">
 			<Box
 				alignItems="center"
 				display="flex"
 				justifyContent="space-between"
 				style={{ flexWrap: "wrap", gap: 12 }}
 			>
-				<Box
-					alignItems="center"
-					bg="bg.secondary"
-					display="inline-flex"
-					gap="2"
-					p="2"
-					rounded="full"
-				>
+				<Box alignItems="center" display="flex" gap="6" style={{ flexWrap: "wrap" }}>
 					{(["all", ...types] as Array<"all" | BrandAsset["type"]>).map((t) => (
-						<button
+						<Button
 							key={t}
-							type="button"
 							onClick={() => setActiveType(t)}
-							style={{
-								background: activeType === t ? "var(--ax-colors-bg-default)" : "transparent",
-								border: 0,
-								borderRadius: 999,
-								color: activeType === t ? "var(--ax-colors-fg-default)" : "var(--ax-colors-fg-secondary)",
-								cursor: "pointer",
-								fontSize: 13,
-								fontWeight: activeType === t ? 600 : 400,
-								padding: "4px 12px",
-								transition: "all 0.12s ease",
-							}}
+							appearance={activeType === t ? "default" : "subtle"}
+							size="sm"
 						>
 							{t === "all" ? "All" : ASSET_TYPE_LABEL[t]}
-						</button>
+						</Button>
 					))}
 				</Box>
 
@@ -232,7 +204,7 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 					<Text color="fg.secondary" fontSize="sm">
 						{filtered.length} image{filtered.length !== 1 ? "s" : ""}
 					</Text>
-					<Button appearance="default" size="sm">
+					<Button appearance="primary" icon={<IconPlus />} size="md">
 						Upload images
 					</Button>
 				</Box>
@@ -261,8 +233,8 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 			{filtered.length > 0 ? (
 				<Box
 					display="grid"
-					gap="12"
-					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}
+					gap="16"
+					style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
 				>
 					{filtered.map((asset) => (
 						<ImageCard
@@ -290,7 +262,7 @@ export function ImagesTab({ pack }: ImagesTabProps) {
 					<Text color="fg.secondary" fontSize="sm">
 						Upload photos and illustrations to guide Opal's visual style
 					</Text>
-					<Button appearance="default" size="sm" style={{ marginTop: 4 }}>
+					<Button appearance="primary" icon={<IconPlus />} size="md" style={{ marginTop: 4 }}>
 						Upload images
 					</Button>
 				</Box>
