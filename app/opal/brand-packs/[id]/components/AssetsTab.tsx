@@ -54,8 +54,8 @@ function AssetCard({ asset }: { asset: BrandAsset }) {
 			flexDirection="column"
 			overflow="hidden"
 			rounded="xl"
+			shadow={hovered ? "md" : "sm"}
 			style={{
-				boxShadow: hovered ? "var(--ax-boxShadow-md)" : "var(--ax-boxShadow-sm)",
 				cursor: "pointer",
 				transform: hovered ? "translateY(-2px)" : "none",
 				transition: "box-shadow 0.18s ease, transform 0.18s ease",

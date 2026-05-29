@@ -46,8 +46,8 @@ function TemplateGridCard({
 			flexDirection="column"
 			overflow="hidden"
 			rounded="xl"
+			shadow={hovered ? "md" : "sm"}
 			style={{
-				boxShadow: hovered ? "var(--ax-boxShadow-md)" : "var(--ax-boxShadow-sm)",
 				cursor: "pointer",
 				transform: hovered ? "translateY(-2px)" : "none",
 				transition: "box-shadow 0.18s ease, transform 0.18s ease",
@@ -97,7 +97,7 @@ function TemplateGridCard({
 							icon={<IconBolt size={14} />}
 							iconPosition="start"
 							onClick={(e) => { e.stopPropagation(); onUseTemplate(template); }}
-							style={{ color: "#202320", fontWeight: 600 }}
+							style={{ color: "var(--ax-colors-fg-default)", fontWeight: 600 }}
 						>
 							Use template
 						</Button>
@@ -148,8 +148,8 @@ function TemplateListRow({
 			gap="16"
 			p="12"
 			rounded="lg"
+			shadow={hovered ? "sm" : undefined}
 			style={{
-				boxShadow: hovered ? "var(--ax-boxShadow-sm)" : "none",
 				cursor: "pointer",
 				transition: "box-shadow 0.15s ease",
 			}}
@@ -188,7 +188,7 @@ function TemplateListRow({
 						icon={<IconBolt size={14} />}
 						iconPosition="start"
 						onClick={() => onUseTemplate(template)}
-						style={{ color: "#202320", fontWeight: 600 }}
+						style={{ color: "var(--ax-colors-fg-default)", fontWeight: 600 }}
 					>
 						Use template
 					</Button>
