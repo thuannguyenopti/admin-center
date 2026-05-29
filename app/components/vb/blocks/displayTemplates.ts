@@ -510,7 +510,8 @@ export const DISPLAY_TEMPLATES: DisplayTemplate[] = [
 				sortOrder: 10,
 				choices: {
 					"default": { displayName: "Default", sortOrder: 10 },
-					"centered": { displayName: "Centered", sortOrder: 20 }
+					"centered": { displayName: "Centered", sortOrder: 20 },
+					"event": { displayName: "Event", sortOrder: 30 }
 				}
 			}
 		}

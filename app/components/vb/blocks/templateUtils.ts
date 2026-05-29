@@ -8,7 +8,6 @@ import { ELEMENT_TEMPLATES, SECTION_TEMPLATES } from './templates';
 
 /**
  * Helper to extract property values from element properties object
- * Handles both direct values and {value: ...} structure
  */
 function getProperty(properties: any, ...names: string[]): any {
     if (!properties) return undefined;
@@ -16,10 +15,6 @@ function getProperty(properties: any, ...names: string[]): any {
     for (const name of names) {
         const prop = properties[name];
         if (prop !== undefined) {
-            // Handle {value: ...} structure
-            if (prop && typeof prop === 'object' && 'value' in prop) {
-                return prop.value;
-            }
             return prop;
         }
     }

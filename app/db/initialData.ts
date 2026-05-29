@@ -1,3 +1,5 @@
+import { MARATHON_EVENT_OUTLINE } from "./marathonEventOutline";
+
 // --- SEO Block Type ---
 export type SEOBlockLocale = {
 	title: string;
@@ -579,6 +581,16 @@ export const initialContentTypes: ContentType[] = [
 		properties: [
 			{ id: "mainOutline", name: "Main", type: "outline" },
 			{ id: "sidenavOutline", name: "Sidenav", type: "outline" },
+		],
+	},
+	{
+		id: "exp-event-page",
+		name: "Event Page",
+		displayName: "Event Page",
+		baseType: "Experience",
+		description: "Event landing page with hero, registration form, and content sections",
+		properties: [
+			{ id: "mainOutline", name: "Main", type: "outline" },
 		],
 	},
 	{
@@ -5356,6 +5368,38 @@ export const initialPages: Page[] = [
 <p>Unless you have a specific injury history, prioritize what feels natural and stable. If possible, test-run them on a treadmill or outside.</p>`,
 			author: "1",
 		},
+	},
+
+	{
+		id: "page-site-marathon-2027",
+		name: "Boston Marathon 2027",
+		parentId: "page-site-home",
+		status: "Published",
+		lastModified: "2026-05-29",
+		contentTypeId: "exp-event-page",
+		slug: "boston-marathon-2027",
+		data: {
+			seo: {
+				en: {
+					original: {
+						title: "Boston Marathon 2027 | Stride",
+						description: "Set it. Sweat it. Sign up now! Join Stride for the world's most iconic marathon.",
+						canonicalUrl: "https://stride.com/boston-marathon-2027",
+						robots: "index,follow",
+						ogTitle: "Boston Marathon 2027 — Sign up today!",
+						ogDescription: "The world's most iconic marathon is back. Sign up now.",
+					},
+				},
+			},
+		},
+		variations: [
+			{
+				id: "original",
+				name: "Original",
+				status: "Published",
+				outlines: [MARATHON_EVENT_OUTLINE],
+			},
+		],
 	},
 
 	{

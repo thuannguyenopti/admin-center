@@ -15,7 +15,8 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 	const heading = getProperty(properties, "heading", "Heading") || "Set it. Sweat it. Send it.";
 	const subheading = getProperty(properties, "subheading", "Subheading") || "Let the streets, and the world know.";
 	const primaryButtonText = getProperty(properties, "primaryButton", "Primary Button") || "GET STARTED";
-	const secondaryButtonText = getProperty(properties, "secondaryButton", "Secondary Button") || "BOOK A DEMO";
+	const rawSecondaryButton = getProperty(properties, "secondaryButton", "Secondary Button");
+	const secondaryButtonText = rawSecondaryButton === "" ? "" : (rawSecondaryButton || "BOOK A DEMO");
 	const backgroundImage = getProperty(properties, "backgroundImage", "Background Image") || "/stride-hero/hero.png";
 	const backgroundVideo = getProperty(properties, "backgroundVideo", "Background Video") || "";
 	const appMockupImage = getProperty(properties, "appMockupImage", "App Mockup Image");
@@ -79,6 +80,47 @@ export const HeroBlock = React.memo(function StrideHeroBlock({
 					<p className="text-xl font-stride-normal font-stride-sans leading-relaxed text-stride-dark mx-auto max-w-[800px]">
 						{subheading}
 					</p>
+				</div>
+			</div>
+		);
+	}
+
+	// Event template — white text on dark background, left-aligned
+	if (layout === "event") {
+		return (
+			<div className="relative w-full overflow-hidden mt-[76px]">
+				{/* Background image */}
+				<div className="absolute inset-0">
+					<img
+						src={backgroundImage}
+						alt=""
+						className="absolute w-full h-full object-cover"
+					/>
+					<div className="absolute inset-0 bg-black/40" />
+				</div>
+
+				{/* Content */}
+				<div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 pt-[200px] pb-20">
+					{badge && (
+						<div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-1.5 rounded-[5px] border border-white/20 mb-4">
+							<span className="text-white text-xs font-stride-semibold font-stride-sans uppercase tracking-wider">{badge}</span>
+						</div>
+					)}
+					<h1 className="text-5xl md:text-7xl font-stride-bold font-stride-sans tracking-tight text-white pb-4 max-w-3xl">
+						{heading}
+					</h1>
+					{subheading && (
+						<p className="text-xl md:text-2xl font-stride-sans text-white/80 max-w-2xl mb-8">
+							{subheading}
+						</p>
+					)}
+					{primaryButtonText && (
+						<div className="flex flex-wrap gap-4">
+							<button className="bg-stride-blue text-white px-8 py-3 rounded-[5px] font-stride-semibold font-stride-sans text-sm uppercase tracking-wider hover:bg-stride-blue-dark transition-colors">
+								{primaryButtonText}
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 		);

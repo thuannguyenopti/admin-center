@@ -380,7 +380,7 @@ export default function PreviewCanvas({
 					[uKey]: {
 						type: "ct-image-block",
 						properties: {
-							image: {value: imageUrl},
+							image: imageUrl,
 						},
 					},
 				};
