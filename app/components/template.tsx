@@ -354,7 +354,6 @@ function TemplateContent({
 						gridTemplateColumns: `${sidebarColWidth}px 1fr`,
 						transition: "grid-template-columns 0.2s ease-out",
 					}}
-					bg="bg.page"
 				>
 					{!isCanvasMode && <GlobalBar onOpalClick={toggleOpal} />}
 					{!isOpalStudio && !isCanvasMode ? (
