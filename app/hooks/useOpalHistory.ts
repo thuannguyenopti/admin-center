@@ -19,6 +19,10 @@ export type ChatHistoryItem = {
   needsInput?: boolean;
   /** Presence status for DM avatars ("online" | "away" | "offline"). */
   presenceStatus?: string;
+  /** When true, render the AI/VAU wand badge instead of a presence dot. */
+  isVAU?: boolean;
+  /** Template name for VAU DMs (e.g. "Experiment Monitor"). */
+  vauTemplateName?: string;
 };
 
 export type OpalMode = 'docked' | 'popped-out';

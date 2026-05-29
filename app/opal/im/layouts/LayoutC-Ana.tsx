@@ -3709,22 +3709,35 @@ function ArtifactCard({ icon, title, time, description, contributors }: Artifact
 
 // ── Canvas Overlay ────────────────────────────────────────────────────────────
 
+const CURSOR_LABEL_FADE_MS = 2000;
+
 function CollabCursor({ name, color }: { name: string; color: string }) {
+  const [labelVisible, setLabelVisible] = useState(true);
+  const fadeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const scheduleFade = () => {
+    if (fadeTimer.current) clearTimeout(fadeTimer.current);
+    fadeTimer.current = setTimeout(() => setLabelVisible(false), CURSOR_LABEL_FADE_MS);
+  };
+
+  useEffect(() => {
+    scheduleFade();
+    return () => { if (fadeTimer.current) clearTimeout(fadeTimer.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Box
       asChild
-      style={{
-        display: "inline-block",
-        position: "relative",
-        verticalAlign: "middle",
-      }}
+      style={{ display: "inline-block", position: "relative", verticalAlign: "middle" }}
     >
       <span>
         <Box
           style={{
             position: "absolute",
-            top: -22,
+            bottom: "100%",
             left: 0,
+            marginBottom: 3,
             background: color,
             color: "#fff",
             fontSize: 11,
@@ -3732,13 +3745,23 @@ function CollabCursor({ name, color }: { name: string; color: string }) {
             padding: "2px 6px",
             borderRadius: 4,
             whiteSpace: "nowrap",
+            userSelect: "none",
             pointerEvents: "none",
             zIndex: 2,
+            opacity: labelVisible ? 1 : 0,
+            transition: "opacity 0.3s ease",
           }}
         >
           {name}
         </Box>
-        <Box style={{ display: "inline-block", width: 2, height: "1.2em", background: color, borderRadius: 1, verticalAlign: "text-bottom" }} />
+        <Box
+          style={{ display: "inline-block", width: 2, height: "1.2em", background: color, borderRadius: 1, verticalAlign: "text-bottom", pointerEvents: "auto", cursor: "default" }}
+          onMouseEnter={() => {
+            if (fadeTimer.current) clearTimeout(fadeTimer.current);
+            setLabelVisible(true);
+          }}
+          onMouseLeave={scheduleFade}
+        />
       </span>
     </Box>
   );
@@ -4128,6 +4151,7 @@ function CanvasOverlay({ artifactId, onClose }: { artifactId: string; onClose: (
     return () => timers.forEach(clearTimeout);
   }, []);
 
+
   // ── Enhance with Opal state ─────────────────────────────────────────────
   const editorRef = useRef<HTMLDivElement>(null);
   const [selMeta, setSelMeta] = useState<SelectionMeta | null>(null);
@@ -4362,27 +4386,7 @@ function CanvasOverlay({ artifactId, onClose }: { artifactId: string; onClose: (
                         pointerEvents: "none",
                       }}
                     >
-                      {/* Name chip */}
-                      <Box
-                        style={{
-                          position: "absolute",
-                          bottom: "100%",
-                          left: 0,
-                          marginBottom: 3,
-                          background: cursor.color,
-                          color: "#fff",
-                          fontSize: 11,
-                          fontWeight: 600,
-                          padding: "2px 6px",
-                          borderRadius: 4,
-                          whiteSpace: "nowrap",
-                          userSelect: "none",
-                        }}
-                      >
-                        {cursor.name}
-                      </Box>
-                      {/* Cursor bar */}
-                      <Box style={{ width: 2, height: 20, background: cursor.color, borderRadius: 1 }} />
+                      <CollabCursor name={cursor.name} color={cursor.color} />
                     </Box>
                   );
                 })}

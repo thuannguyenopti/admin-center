@@ -20,6 +20,7 @@ import {
   IconShareNodes,
   IconThumbtack,
   IconLink,
+  IconBolt,
 } from "@optiaxiom/icons";
 import { Text } from "../Text";
 import { ChatMessage } from "@/app/hooks/useOpalState";
@@ -935,10 +936,30 @@ export function OpalMessage({
         pointerEvents: 'none',
       }} />
     ) : null;
-    const avatarWithPresence = presenceDot ? (
+    const vauBadge = isVAU ? (
+      <span style={{
+        position: 'absolute',
+        bottom: -1,
+        right: -1,
+        width: 14,
+        height: 14,
+        borderRadius: '50%',
+        background: 'var(--ax-colors-bg-accent)',
+        border: '1.5px solid var(--ax-colors-bg-default)',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <IconBolt style={{ width: 9, height: 9, color: 'var(--ax-colors-fg-accent)', flexShrink: 0 }} />
+      </span>
+    ) : null;
+    const avatarWithPresence = (presenceDot || vauBadge) ? (
       <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
         {avatarEl}
         {presenceDot}
+        {vauBadge}
       </span>
     ) : avatarEl;
     // Humans → accent-subtle (pale lime in V3); VAUs → subtle gray.

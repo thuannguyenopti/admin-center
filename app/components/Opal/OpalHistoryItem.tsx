@@ -6,8 +6,7 @@ import { ChatHistoryItem } from "@/app/hooks/useOpalHistory";
 import { useState } from "react";
 import IconSmile from "@/app/assets/opal/icon-smile.svg";
 import IconRedDot from "@/app/assets/opal/icon-red-dot.svg";
-import { IconDots, IconTrash } from "@tabler/icons-react";
-import { IconBell } from "@optiaxiom/icons";
+import { IconBell, IconSparkles, IconTrashCan } from "@optiaxiom/icons";
 
 type OpalHistoryItemProps = {
   item: ChatHistoryItem;
@@ -36,11 +35,13 @@ function AvatarTile({
   name,
   size,
   presenceStatus,
+  isVAU,
 }: {
   url?: string;
   name: string;
   size: number;
   presenceStatus?: string;
+  isVAU?: boolean;
 }) {
   const common: React.CSSProperties = {
     width: size,
@@ -79,14 +80,17 @@ function AvatarTile({
     </span>
   );
 
-  if (!presenceStatus) return inner;
+  if (!presenceStatus && !isVAU) return inner;
 
   const dot = Math.round(size * 0.34);
+  const dotColor = isVAU
+    ? "var(--ax-colors-bg-accent)"
+    : PRESENCE_COLORS[presenceStatus!] ?? PRESENCE_COLORS.offline;
   return (
     <span style={{ position: "relative", display: "inline-flex", flexShrink: 0 }}>
       {inner}
       <span
-        aria-label={presenceStatus}
+        aria-label={isVAU ? "AI teammate" : presenceStatus}
         style={{
           position: "absolute",
           bottom: 0,
@@ -94,7 +98,7 @@ function AvatarTile({
           width: dot,
           height: dot,
           borderRadius: "50%",
-          background: PRESENCE_COLORS[presenceStatus] ?? PRESENCE_COLORS.offline,
+          background: dotColor,
           border: "1.5px solid var(--ax-colors-bg-default)",
           boxSizing: "border-box",
           pointerEvents: "none",
@@ -128,7 +132,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
         backgroundColor: isActive ? 'var(--opal-bg-history-active)' : 'transparent',
         borderRadius: '4px',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         gap: '8px',
         transition: 'background-color 0.2s ease',
@@ -137,32 +141,53 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
       }}
     >
       {singleAvatar && (
-        <Box display="flex" alignItems="center" style={{ flexShrink: 0 }}>
-          <AvatarTile url={singleAvatar.url} name={singleAvatar.name} size={TILE_SIZE} presenceStatus={item.presenceStatus} />
+        <Box display="flex" alignItems="start" style={{ flexShrink: 0 }}>
+          <AvatarTile url={singleAvatar.url} name={singleAvatar.name} size={TILE_SIZE} presenceStatus={item.presenceStatus} isVAU={item.isVAU} />
         </Box>
       )}
-      <Box style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Text
-          style={{
-            fontSize: '14px',
-            fontWeight: 400,
-            letterSpacing: '-0.13px',
-            color: 'var(--opal-text-body)',
-            margin: 0,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {item.title.startsWith('🔒 ') ? (
-            <>
-              <span style={{ fontSize: '11px', marginRight: 0 }}>🔒</span>
-              {item.title.slice(2)}
-            </>
-          ) : (
-            item.title
+      <Box style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 0, marginTop: -2 }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+          <Text
+            style={{
+              fontSize: '14px',
+              fontWeight: item.hasRedDot ? 600 : 400,
+              letterSpacing: '-0.13px',
+              color: 'var(--opal-text-body)',
+              margin: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+            }}
+          >
+            {item.title.startsWith('🔒 ') ? (
+              <>
+                <span style={{ fontSize: '11px', marginRight: 0 }}>🔒</span>
+                {item.title.slice(2)}
+              </>
+            ) : (
+              item.title
+            )}
+          </Text>
+          {item.isVAU && (
+            <IconSparkles style={{ width: 12, height: 12, color: 'var(--ax-colors-fg-accent)', flexShrink: 0 }} />
           )}
-        </Text>
+        </span>
+        {item.vauTemplateName && (
+          <Text
+            style={{
+              fontSize: '11px',
+              fontWeight: 400,
+              color: 'var(--ax-colors-fg-tertiary)',
+              margin: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {item.vauTemplateName}
+          </Text>
+        )}
         {(() => {
           // Channels render with a "# " or "🔒 " prefix in the title — indent
           // the preview so its text lines up with the channel name, not the prefix.
@@ -177,7 +202,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
                   gap: 4,
                   fontSize: 12,
                   fontWeight: 500,
-                  color: 'var(--ax-colors-fg-link-default, #226b1e)',
+                  color: 'var(--ax-colors-fg-warning)',
                   paddingLeft: previewIndent,
                 }}
               >
@@ -236,7 +261,7 @@ export function OpalHistoryItem({ item, isActive, onClick, onDelete }: OpalHisto
                 minWidth: 'auto',
               }}
             >
-              <IconTrash size={16} />
+              <IconTrashCan style={{ width: 16, height: 16 }} />
             </Button>
           )}
         </div>

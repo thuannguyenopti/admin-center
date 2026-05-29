@@ -225,7 +225,7 @@ const SEED: StoreShape = {
       updated_at: new Date().toISOString(),
       archived: false,
       participants: [
-        unreadParticipant("jamie", "owner"),
+        participant("jamie", "owner"),
         participant("vau-poppy", "member"),
       ],
       member_count: 2,
@@ -343,7 +343,7 @@ function message(id: string, convId: string, sender: string, content: string): I
 }
 
 // Bump this when SEED participants change so old persisted cache is discarded.
-const SEED_VERSION = "v8-human-dms";
+const SEED_VERSION = "v9-unread-state";
 
 async function load(): Promise<StoreShape> {
   if (cache) return cache;

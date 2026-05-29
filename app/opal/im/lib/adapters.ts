@@ -89,7 +89,13 @@ export function conversationToHistoryItem(
     if (c.conversation_type === "dm" && c.other_participant_ids.length === 1) {
       const other = c.other_participant_ids[0];
       item.avatarUrl = avatarFor(other);
-      if (!getVAU(other)) item.presenceStatus = getPresence(other);
+      const vau = getVAU(other);
+      if (vau) {
+        item.isVAU = true;
+        item.vauTemplateName = vau.template_name;
+      } else {
+        item.presenceStatus = getPresence(other);
+      }
     } else {
       // group — stack up to 3 other participants
       item.avatarStack = c.other_participant_ids
